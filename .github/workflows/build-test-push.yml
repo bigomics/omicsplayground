@@ -8,36 +8,35 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_TAG: bigomics/omicsplayground:test
-  LATEST_TAG: bigomics/omicsplayground:latest
+  TEST_TAG: masierom/omicsplayground:test
+  LATEST_TAG: masierom/omicsplayground:latest
 
 jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN  }}
-      -
-        name: Shinytest docker
-        id: test
-        run: |
-          docker build -t ${{ env.TEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
-          docker run --rm ${{ env.TEST_TAG }}
-      -
-        name: Print test result
-        run: echo "Test result = ${{ steps.test.outputs.test_result }}"
-      -
-        name: Push
-        if: steps.test.outputs.test_result == 'FALSE'
-        run: |
-          docker push ${{ env.TEST_TAG }}
+  runs-on: ubuntu-latest
+  steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v3
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    -
+      name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN  }}
+    -
+      name: Shinytest docker
+      id: test
+      run: |
+        docker build -t ${{ env.TEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
+        docker run --rm ${{ env.TEST_TAG }}
+    -
+      name: Print test result
+      run: echo "Test result = ${{ steps.test.outputs.test_result }}"
+    -
+      name: Push
+      if: steps.test.outputs.test_result == 'TRUE'
+      run: |
+        docker push ${{ env.TEST_TAG }}
