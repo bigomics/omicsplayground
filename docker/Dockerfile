@@ -30,19 +30,24 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /
+COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
 RUN R -e "devtools::install_github('bigomics/shinyChatR')"
 RUN R -e "devtools::install_github('JohnCoene/bsutils')"
 RUN R -e "devtools::install_github('ropensci/iheatmapr')"
 RUN R -e "BiocManager::install(c('topGO','survcomp'))"
-RUN R -e "install.packages(c('BH','plsRcox','blastula'))"  
+RUN R -e "install.packages(c('BH','plsRcox','blastula','shinytest2'))"  
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
 #------------------------------------------------------------
 
 WORKDIR /
-RUN R -e "options(timeout=60*30);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+##RUN R -e "options(timeout=9999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
@@ -55,18 +60,22 @@ RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 WORKDIR /
 ARG BRANCH=master
 RUN echo Downloading $BRANCH branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
-    && rm -fr /omicsplayground*  \
-    && unzip $BRANCH.zip \
-    && mv omicsplayground-$BRANCH omicsplayground \
-    && chmod -R ugo+rwX /omicsplayground \
-    && rm $BRANCH.zip   
+# RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
+#     && rm -fr /omicsplayground*  \
+#     && unzip $BRANCH.zip \
+#     && mv omicsplayground-$BRANCH omicsplayground \
+#     && chmod -R ugo+rwX /omicsplayground \
+#     && rm $BRANCH.zip   
+
+RUN rm -fr /omicsplayground  \
+    && git clone -b $BRANCH --single-branch --depth 1 \
+       https://github.com/bigomics/omicsplayground.git \   
+    && chmod -R ugo+rwX /omicsplayground 
 
 ## tag docker version
 WORKDIR /omicsplayground
 #RUN make version
 #COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
-
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image

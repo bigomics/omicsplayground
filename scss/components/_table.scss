@@ -64,6 +64,7 @@ html {
 
     table.dataTable td, table.dataTable th {
 	border-bottom: solid 1px #aaa !important;
+    vertical-align: middle;
 //	border-style: none !important;
     }
 
@@ -89,6 +90,16 @@ html {
 	background-color: #e9ecef;
 	color: black;
 	font-weight: 600;
+    }
+
+    .icon_container {
+        position: relative
+    }
+      
+    .icon_nested {
+    position: absolute;
+    left: 5px;
+    color: rgba(217, 83, 79, 1);
     }
 
 }

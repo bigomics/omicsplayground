@@ -31,12 +31,12 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     enable_button = TRUE,
     alertready = TRUE,
-    height = 720) {
+    height = 720,
+    recompute_info) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-
       ## statistical method for GENE level testing
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
@@ -109,7 +109,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
-                      ns("upload_description"), NULL, ## "Description:",
+                      ns("upload_description"), NULL,
                       placeholder = "Give a short description of your dataset",
                       height = 100, resize = "none"
                     ),
@@ -148,8 +148,6 @@ upload_module_computepgx_server <- function(
                       "only.proteincoding",
                       "remove.unknown",
                       "remove.notexpressed"
-                      ## "excl.immuno"
-                      ## "excl.xy"
                     ),
                   choiceNames =
                     c(
@@ -237,20 +235,32 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
-
-      shiny::observeEvent(metaRT(), {
+      # Inpute name and description
+      shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
-
-        if (!is.null(meta[["name"]])) {
+        pgx_info <- recompute_info()
+        # If the user recomputes, recycle old names/description
+        if (is.null(pgx_info)) {
+          if (!is.null(meta[["name"]])) {
+            shiny::updateTextInput(session,
+              "upload_name",
+              value = meta[["name"]]
+            )
+          }
+          if (!is.null(meta[["description"]])) {
+            shiny::updateTextAreaInput(session,
+              "upload_description",
+              value = meta[["description"]]
+            )
+          }
+        } else {
           shiny::updateTextInput(session,
             "upload_name",
-            value = meta[["name"]]
+            value = gsub(".pgx$", "", pgx_info[["name"]])
           )
-        }
-        if (!is.null(meta[["description"]])) {
           shiny::updateTextAreaInput(session,
             "upload_description",
-            value = meta[["description"]]
+            value = pgx_info[["description"]]
           )
         }
       })

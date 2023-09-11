@@ -87,6 +87,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         ## add current contrast
         cc <- getCurrentContrast()
         shiny::req(cc)
+
         fc <- cc$fc[match(rownames(F), names(cc$fc))]
         names(fc) <- rownames(F)
         #
@@ -172,8 +173,8 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
 
       plot_RENDER <- function() {
         pd <- plot_data()
-        F <- pd$F
         score <- pd$score
+        F <- pd$F
         shiny::req(F)
         ngenes <- as.numeric(input$ngenes)
         nsig <- as.numeric(input$nsig)
