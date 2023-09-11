@@ -58,6 +58,11 @@ ConnectivityInputs <- function(id) {
         ),
         "Paste a list of genes that defines your signature. By default, the top50 most (absolute) differentially expressed genes (by logFC) are chosen for the selected comparison."
       ),
+      shiny::radioButtons(
+                 ns("genelist_ntop"),
+                 "ngenes:", choices = c(10,50,100),
+                 sel = 50, inline = TRUE
+             ),
       br(),
       withTooltip(
         shiny::actionButton(ns("recalc"), "recalculate"),

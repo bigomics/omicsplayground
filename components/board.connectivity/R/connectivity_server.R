@@ -69,25 +69,34 @@ ConnectivityBoard <- function(
       ct <- input$contrast
       meta1 <- pgx$gx.meta$meta
       meta2 <- pgx$gset.meta$meta
-      if (!ct %in% names(meta1) || !ct %in% names(meta2)) {
+      has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
+      shiny::req(has.contrast)
+      
+      if (!has.contrast) {
         dbg("[ConnectivityBoard:getCurrentContrast] ERROR! ct = ", ct)
         dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gx.meta) = ", names(meta1))
         dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gset.meta) = ", names(meta2))
         return(NULL)
       }
-
-      fc <- pgx$gx.meta$meta[[ct]]$meta.fx
-      names(fc) <- rownames(pgx$gx.meta$meta[[ct]])
-      gs <- pgx$gset.meta$meta[[ct]]$meta.fx
-      names(gs) <- rownames(pgx$gset.meta$meta[[ct]])
+      
+      fc <- meta1[[ct]]$meta.fx
+      names(fc) <- rownames(meta1[[ct]])
+      gs <- meta2[[ct]]$meta.fx
+      names(gs) <- rownames(meta2[[ct]])
       names(fc) <- toupper(names(fc)) ## de-MOUSE
       list(name = ct, fc = fc, gs = gs)
     })
 
-    observeEvent(getCurrentContrast(), {
-      res <- getCurrentContrast()
-      top50 <- head(names(sort(abs(res$fc), decreasing = TRUE)), 50)
-      top50 <- paste(top50, collapse = " ")
+##    observeEvent({
+##        getCurrentContrast()
+##        input$genelist_ntop
+##    },{
+    observe({
+      contr <- getCurrentContrast()
+      shiny::req(contr)
+      ntop <- as.integer(input$genelist_ntop)
+      top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
+      top50 <- paste(top50, collapse = " ")      
       updateTextAreaInput(session, "genelist", value = top50)
     })
 
@@ -182,12 +191,13 @@ ConnectivityBoard <- function(
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
 
       ## add current contrast
-      ct <- getCurrentContrast()
-      gx <- ct$gs[match(rownames(F), names(ct$gs))]
+      contr <- getCurrentContrast()
+      shiny::req(contr)
+      gx <- contr$gs[match(rownames(F), names(contr$gs))]
       names(gx) <- rownames(F)
       gx[is.na(gx)] <- 0
       F <- cbind(gx, F)
-      colnames(F)[1] <- ct$name
+      colnames(F)[1] <- contr$name
 
       return(F)
     })
@@ -259,6 +269,8 @@ ConnectivityBoard <- function(
       }
 
       scores <- as.data.frame(all.scores[[ct]])
+      dbg("[getConnectivityScores] dim.scores=",dim(scores))
+      
       if (input$abs_score == FALSE) {
         ## put sign back!!!
         scores$score <- scores$score * sign(scores$rho)
@@ -273,7 +285,7 @@ ConnectivityBoard <- function(
       }
 
       if (input$hideclustcontrasts) {
-        sel <- grep("cluster[:]", scores$pathway, invert = TRUE)
+        sel <- grep("cluster:|PC[0-9]+:", scores$pathway, invert = TRUE)
         scores <- scores[sel, , drop = FALSE]
       }
 
@@ -288,13 +300,16 @@ ConnectivityBoard <- function(
       abs_score <- input$abs_score
       ntop <- 100
 
+      contr <- getCurrentContrast()
+      shiny::req(contr)
+      fc <- contr$fc
+      fc <- fc[order(-abs(fc))]
+      fc.up <- head(names(fc[fc > 0]), ntop)
+      fc.dn <- head(names(fc[fc < 0]), ntop)
+
       if (no.le && abs_score == TRUE) {
         ## recreate "leadingEdge" list
         sig <- playbase::sigdb.getSignatureMatrix(sigdb, path = sigpath)
-        fc <- getCurrentContrast()$fc
-        fc <- fc[order(-abs(fc))]
-        fc.up <- head(names(fc[fc > 0]), ntop)
-        fc.dn <- head(names(fc[fc < 0]), ntop)
         ff <- c(fc.up, fc.dn)
         e1 <- apply(sig$up, 2, function(g) intersect(ff, g))
         e2 <- apply(sig$dn, 2, function(g) intersect(ff, g))
@@ -306,11 +321,6 @@ ConnectivityBoard <- function(
       if (no.le && abs_score == FALSE) {
         ## recreate "leadingEdge" list
         sig <- getSignatureMatrix(sigdb)
-        fc <- getCurrentContrast()$fc
-        fc <- fc[order(-abs(fc))]
-
-        fc.up <- head(names(fc[fc > 0]), ntop)
-        fc.dn <- head(names(fc[fc < 0]), ntop)
 
         p1 <- apply(sig$up, 2, function(g) intersect(fc.up, g))
         p2 <- apply(sig$dn, 2, function(g) intersect(fc.dn, g))
