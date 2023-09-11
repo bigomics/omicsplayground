@@ -138,6 +138,13 @@ upload_module_preview_server <- function(id, uploaded) {
             title = 'Data Upload Preview',
             label = 'Data Upload Preview',
             do.call(tabsetPanel, tabs),
+            fluidRow(
+              column(12,
+                     span(style='color: orange','Orange'),
+                     span('= warning but data will still be uploaded. '),
+                     span(style='color:red', 'Red'),
+                     span('= error and data will not be uploaded.'))
+            ),
             footer = div(
               style = 'float: right',
               shiny::actionButton(
