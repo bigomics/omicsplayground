@@ -56,13 +56,13 @@ docker.base: FORCE
 	@echo building docker BASE
 	docker build  \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204 .
+	  	-t bigomics/omicsplayground-base:ub2204_v2 .
 
 docker.base2: FORCE
 	@echo building docker BASE
 	docker build --no-cache \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204 .
+	  	-t bigomics/omicsplayground-base:ub2204_v2 .
 
 docker.test: FORCE
 	@echo building test docker 
