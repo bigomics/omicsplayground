@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM masierom/omicsplayground:latest
+FROM bigomics/omicsplayground:latest
 
 #------------------------------------------------------------
 # Set env variables 
