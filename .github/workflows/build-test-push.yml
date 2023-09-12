@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_TAG: masierom/omicsplayground:test
-  LATEST_TAG: masierom/omicsplayground:latest
+  TEST_TAG: bigomics/omicsplayground:test
+  LATEST_TAG: bigomics/omicsplayground:latest
 
 jobs:
   unittest:
