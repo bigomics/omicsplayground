@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run Docker container 
-docker run --rm -it -p 4000:3838 --name test_container bigomics/omicsplayground:latest
+docker run --rm -it -p 4000:3838 --name test_container masierom/omicsplayground:latest
 
 # capture test results
 docker exec -it test_container R --slave -e "all(test_results[[2]])" > test_results.txt
