@@ -63,7 +63,7 @@ WORKDIR /omicsplayground
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; f
+RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
 #------------------------------------------------------------
