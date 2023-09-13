@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204_v2
+FROM mauromiguelm/omicsplayground-base:ub2204_v2
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
@@ -50,7 +50,7 @@ RUN echo Downloading $BRANCH branch
 
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/bigomics/omicsplayground.git \   
+       https://github.com/mauromiguelm/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 ## tag docker version
 
