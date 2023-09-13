@@ -16,7 +16,7 @@ FROM masierom/omicsplayground:latest
 # Set env variables 
 #------------------------------------------------------------
 
-ARG BRANCH=gha_shinytest
+ARG BRANCH=master
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -36,13 +36,17 @@ RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 #------------------------------------------------------------
 WORKDIR /
 RUN echo Downloading $BRANCH branch
-RUN wget -nv https://github.com/mauromiguelm/omicsplayground/archive/$BRANCH.zip \
-    && rm -fr /omicsplayground*  \
-    && unzip $BRANCH.zip \
-    && mv omicsplayground-$BRANCH omicsplayground \
-    && chmod -R ugo+rwX /omicsplayground \
-    && rm $BRANCH.zip   
-    
+# RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
+#     && rm -fr /omicsplayground*  \
+#     && unzip $BRANCH.zip \
+#     && mv omicsplayground-$BRANCH omicsplayground \
+#     && chmod -R ugo+rwX /omicsplayground \
+#     && rm $BRANCH.zip   
+
+RUN rm -fr /omicsplayground  \
+    && git clone -b $BRANCH --single-branch --depth 1 \
+       https://github.com/bigomics/omicsplayground.git \   
+    && chmod -R ugo+rwX /omicsplayground     
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
