@@ -37,7 +37,7 @@ jobs:
           no-cache: false
           build-args: |
             BRANCH=master
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:latest
       -
         name: Push
         if: steps.test.outputs.test_result == 'FALSE'
