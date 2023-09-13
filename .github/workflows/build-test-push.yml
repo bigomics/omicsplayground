@@ -31,6 +31,14 @@ jobs:
         run: |
           docker build -t ${{ env.TEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --rm ${{ env.TEST_TAG }}
+      
+      - name: Upload snapshots
+        uses: actions/upload-artifact@v3
+        with:
+          name: testthat-snapshots
+          path: ./omicsplayground/tests/testthat/_snaps/
+          if-no-files-found: ignore
+        
       -
         name: Print test result
         run: echo "Test result = ${{ steps.test.outputs.test_result }}"
