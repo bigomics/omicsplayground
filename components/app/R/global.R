@@ -191,6 +191,7 @@ if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
 }
 ACTIVE_SESSIONS <- c()
 MAX_SESSIONS <- 10
+if(!is.null(opt$MAX_SESSIONS)) MAX_SESSIONS <- opt$MAX_SESSIONS
 
 message("\n\n")
 message("=================================================================")
