@@ -84,7 +84,7 @@ app_server <- function(input, output, session) {
       email = username
     )
   } else if (authentication == "none2") {
-    ## no authentication but also not showing main modal (enter)
+    ## no authentication grabbing user from cookie, to be used for a certain client
     auth <- NoAuthenticationModule2(id = "auth", show_modal = FALSE)
   } else {
     ## } else if(authentication == "none") {
