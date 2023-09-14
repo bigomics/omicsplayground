@@ -1,4 +1,4 @@
-BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
+BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
 run: sass version 
@@ -88,12 +88,12 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.25-"$(BRANCH)""$(DATE)
+VERSION = "v3.2.26"
+BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
-	@echo "new version ->" $(VERSION)
-##	sed -i "1s/.*/$(VERSION)/" VERSION
-	echo $(VERSION) > VERSION
+	@echo "new version ->" $(BUILD)
+	echo $(BUILD) > VERSION
 
 LAST=awk -v RS='(\r?\n){3,}' 'NR<=4'
 changelog:
