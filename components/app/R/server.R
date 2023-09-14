@@ -85,7 +85,13 @@ app_server <- function(input, output, session) {
     )
   } else if (authentication == "none2") {
     ## no authentication but also not showing main modal (enter)
-    auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
+    username <- Sys.getenv("PLAYGROUND_USERNAME")      
+    auth <- NoAuthenticationModule(
+      id = "auth",
+      show_modal = FALSE,
+      username = username,
+      email = username
+    )
   } else {
     ## } else if(authentication == "none") {
     auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
