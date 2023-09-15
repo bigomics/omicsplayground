@@ -328,7 +328,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       res <- data.frame(res)
 
       if (nrow(res) == 0) {
-        shiny::validate(shiny::need(nrow(res) > 0, "No genesets passed current statistical thresholds. Please update the thresholds on he right settings sidebar."))
+        shiny::validate(shiny::need(nrow(res) > 0, "No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar."))
         return(NULL)
       }
       return(res)
