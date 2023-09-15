@@ -74,8 +74,8 @@ UploadUI <- function(id) {
           shiny::sidebarPanel(
             width = "100%",
             fileInput2(ns("upload_files"),
-                       shiny::h4("Choose files"),
-                       multiple = TRUE, accept = c(".csv", ".pgx")
+              shiny::h4("Choose files"),
+              multiple = TRUE, accept = c(".csv", ".pgx")
             ),
             shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
@@ -84,7 +84,7 @@ UploadUI <- function(id) {
         shiny::div(shiny::uiOutput(ns("upload_info")))
       ),
       bslib::layout_column_wrap(
-        width = 1/3,
+        width = 1 / 3,
         upload_plot_countstats_ui(
           id = ns("countStats"),
           title = "Count Stats",
