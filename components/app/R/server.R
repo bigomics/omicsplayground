@@ -289,121 +289,120 @@ app_server <- function(input, output, session) {
       })
 
 
-    shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
-      if (ENABLED["dataview"]) {
-        info("[SERVER] calling module dataview")
-        DataViewBoard("dataview", pgx = PGX)
-      }
+      shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
+        if (ENABLED["dataview"]) {
+          info("[SERVER] calling module dataview")
+          DataViewBoard("dataview", pgx = PGX)
+        }
 
-      if (ENABLED["clustersamples"]) {
-        info("[SERVER] calling module clustersamples")
-        ClusteringBoard("clustersamples", pgx = PGX)
-      }
+        if (ENABLED["clustersamples"]) {
+          info("[SERVER] calling module clustersamples")
+          ClusteringBoard("clustersamples", pgx = PGX)
+        }
 
-      if (ENABLED["wordcloud"]) {
-        info("[SERVER] calling WordCloudBoard module")
-        WordCloudBoard("wordcloud", pgx = PGX)
-      }
-      shiny::incProgress(0.2)
+        if (ENABLED["wordcloud"]) {
+          info("[SERVER] calling WordCloudBoard module")
+          WordCloudBoard("wordcloud", pgx = PGX)
+        }
+        shiny::incProgress(0.2)
 
-      if (ENABLED["diffexpr"]) {
-        info("[SERVER] calling ExpressionBoard module")
-        ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
-      }
+        if (ENABLED["diffexpr"]) {
+          info("[SERVER] calling ExpressionBoard module")
+          ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
+        }
 
-      if (ENABLED["clusterfeatures"]) {
-        info("[SERVER] calling FeatureMapBoard module")
-        FeatureMapBoard("clusterfeatures", pgx = PGX)
-      }
+        if (ENABLED["clusterfeatures"]) {
+          info("[SERVER] calling FeatureMapBoard module")
+          FeatureMapBoard("clusterfeatures", pgx = PGX)
+        }
 
-      if (ENABLED["enrich"]) {
-        info("[SERVER] calling EnrichmentBoard module")
-        EnrichmentBoard("enrich",
-          pgx = PGX,
-          selected_gxmethods = env$diffexpr$selected_gxmethods
-        ) -> env$enrich
-      }
-      if (ENABLED["pathway"]) {
-        info("[SERVER] calling PathwayBoard module")
-        PathwayBoard("pathway",
-          pgx = PGX,
-          selected_gsetmethods = env$enrich$selected_gsetmethods
-        )
-      }
+        if (ENABLED["enrich"]) {
+          info("[SERVER] calling EnrichmentBoard module")
+          EnrichmentBoard("enrich",
+            pgx = PGX,
+            selected_gxmethods = env$diffexpr$selected_gxmethods
+          ) -> env$enrich
+        }
+        if (ENABLED["pathway"]) {
+          info("[SERVER] calling PathwayBoard module")
+          PathwayBoard("pathway",
+            pgx = PGX,
+            selected_gsetmethods = env$enrich$selected_gsetmethods
+          )
+        }
 
-      shiny::incProgress(0.4)
+        shiny::incProgress(0.4)
 
-      if (ENABLED["drug"]) {
-        info("[SERVER] calling DrugConnectivityBoard module")
-        DrugConnectivityBoard("drug", pgx = PGX)
-      }
+        if (ENABLED["drug"]) {
+          info("[SERVER] calling DrugConnectivityBoard module")
+          DrugConnectivityBoard("drug", pgx = PGX)
+        }
 
-      if (ENABLED["isect"]) {
-        info("[SERVER] calling IntersectionBoard module")
-        IntersectionBoard("isect",
-          pgx = PGX,
-          selected_gxmethods = env$diffexpr$selected_gxmethods,
-          selected_gsetmethods = env$enrich$selected_gsetmethods
-        )
-      }
+        if (ENABLED["isect"]) {
+          info("[SERVER] calling IntersectionBoard module")
+          IntersectionBoard("isect",
+            pgx = PGX,
+            selected_gxmethods = env$diffexpr$selected_gxmethods,
+            selected_gsetmethods = env$enrich$selected_gsetmethods
+          )
+        }
 
-      if (ENABLED["sig"]) {
-        info("[SERVER] calling SignatureBoard module")
-        SignatureBoard("sig",
-          pgx = PGX,
-          selected_gxmethods = env$diffexpr$selected_gxmethods
-        )
-      }
+        if (ENABLED["sig"]) {
+          info("[SERVER] calling SignatureBoard module")
+          SignatureBoard("sig",
+            pgx = PGX,
+            selected_gxmethods = env$diffexpr$selected_gxmethods
+          )
+        }
 
-      if (ENABLED["corr"]) {
-        info("[SERVER] calling CorrelationBoard module")
-        CorrelationBoard("corr", pgx = PGX)
-      }
-      shiny::incProgress(0.6)
+        if (ENABLED["corr"]) {
+          info("[SERVER] calling CorrelationBoard module")
+          CorrelationBoard("corr", pgx = PGX)
+        }
+        shiny::incProgress(0.6)
 
-      if (ENABLED["bio"]) {
-        info("[SERVER] calling BiomarkerBoard module")
-        BiomarkerBoard("bio", pgx = PGX)
-      }
+        if (ENABLED["bio"]) {
+          info("[SERVER] calling BiomarkerBoard module")
+          BiomarkerBoard("bio", pgx = PGX)
+        }
 
-      if (ENABLED["cmap"]) {
-        info("[SERVER] calling ConnectivityBoard module")
-        ConnectivityBoard("cmap",
-          pgx = PGX,
-          auth = auth,
-          reload_pgxdir = reload_pgxdir
-        )
-      }
+        if (ENABLED["cmap"]) {
+          info("[SERVER] calling ConnectivityBoard module")
+          ConnectivityBoard("cmap",
+            pgx = PGX,
+            auth = auth,
+            reload_pgxdir = reload_pgxdir
+          )
+        }
 
-      if (ENABLED["cell"]) {
-        info("[SERVER] calling SingleCellBoard module")
-        SingleCellBoard("cell", pgx = PGX)
-      }
+        if (ENABLED["cell"]) {
+          info("[SERVER] calling SingleCellBoard module")
+          SingleCellBoard("cell", pgx = PGX)
+        }
 
-      shiny::incProgress(0.8)
-      if (ENABLED["tcga"]) {
-        info("[SERVER] calling TcgaBoard module")
-        TcgaBoard("tcga", pgx = PGX)
-      }
+        shiny::incProgress(0.8)
+        if (ENABLED["tcga"]) {
+          info("[SERVER] calling TcgaBoard module")
+          TcgaBoard("tcga", pgx = PGX)
+        }
 
-      if (ENABLED["wgcna"]) {
-        info("[SERVER] calling WgcnaBoard module")
-        WgcnaBoard("wgcna", pgx = PGX)
-      }
+        if (ENABLED["wgcna"]) {
+          info("[SERVER] calling WgcnaBoard module")
+          WgcnaBoard("wgcna", pgx = PGX)
+        }
 
-      if (ENABLED["pcsf"]) {
-        info("[SERVER] calling PcsfBoard module")
-        PcsfBoard("pcsf", pgx = PGX)
-      }
+        if (ENABLED["pcsf"]) {
+          info("[SERVER] calling PcsfBoard module")
+          PcsfBoard("pcsf", pgx = PGX)
+        }
 
-      if (ENABLED["comp"]) {
-        info("[SERVER] calling CompareBoard module")
-        CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
-      }
+        if (ENABLED["comp"]) {
+          info("[SERVER] calling CompareBoard module")
+          CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
+        }
 
-      info("[SERVER] calling modules done!")
-    })
-
+        info("[SERVER] calling modules done!")
+      })
     }
 
     if (env$load$is_data_loaded() == 1) {
