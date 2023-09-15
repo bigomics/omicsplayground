@@ -191,7 +191,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, he
             shiny::selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
               selected = sel.par, multiple = TRUE
             ),
-            "Please specify <b>all</b> your model parameters. These are the parameters of interest that will determine your groupings.",
+            "Please specify all your model parameters. These are the parameters of interest that will determine your groupings.",
             placement = "top", options = list(container = "body")
           ),
           withTooltip(
@@ -208,7 +208,7 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, he
               selected = bc.selected,
               inline = FALSE
             ),
-            "Unsupervised correction methods. Correction will be performed additional to the (supervised) corrections above. <b>PCA</b> iteratively corrects low rank PC components not correlated to any model parameters; <b>SVA</b> applies surrogate variable analysis (Leek et al.); <b>NNM</b> applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data (unpublished).",
+            "Unsupervised correction methods. Correction will be performed additional to the (supervised) corrections above. PCA iteratively corrects low rank PC components not correlated to any model parameters; SVA applies surrogate variable analysis (Leek et al.); NNM applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data (unpublished).",
             placement = "left", options = list(container = "body")
           ),
           withTooltip(
