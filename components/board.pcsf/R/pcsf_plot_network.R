@@ -92,7 +92,9 @@ pcsf_plot_network_server <- function(id,
           return(NULL)
         }
       )
-      if (is.null(net)) return(NULL)
+      if (is.null(net)) {
+        return(NULL)
+      }
       igraph::V(net)$group <- idx[igraph::V(net)$name]
 
       ## remove small clusters...
@@ -112,9 +114,10 @@ pcsf_plot_network_server <- function(id,
         edges <- data.frame()
         return(
           visNetwork::visNetwork(nodes, edges,
-                                 main='PCSF Network could not be computed for the
+            main = "PCSF Network could not be computed for the
                      given parameters. Try changing the solution size in the
-                     settings bar.')
+                     settings bar."
+          )
         )
       }
 
