@@ -287,7 +287,7 @@ app_server <- function(input, output, session) {
           immediate = TRUE
         )
       })
-    }
+
 
     shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
       if (ENABLED["dataview"]) {
@@ -403,6 +403,8 @@ app_server <- function(input, output, session) {
 
       info("[SERVER] calling modules done!")
     })
+
+    }
 
     if (env$load$is_data_loaded() == 1) {
       # this is a function - like "handleSettings()" in bigdash- needed to
