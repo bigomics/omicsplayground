@@ -94,8 +94,10 @@ pcsf_plot_network_server <- function(id,
       )
 
       if (is.null(net)) {
-        shiny::validate(shiny::need(!is.na(net),
-        "PCSF Network could not be computed for the given parameters. Try increasing the solution size in the settings bar."))
+        shiny::validate(shiny::need(
+          !is.na(net),
+          "PCSF Network could not be computed for the given parameters. Try increasing the solution size in the settings bar."
+        ))
         return(NULL)
       }
 
