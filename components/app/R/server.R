@@ -92,8 +92,9 @@ app_server <- function(input, output, session) {
       username = username,
       email = username
     )
+  } else if (authentication == "apache-cookie") {
+    auth <- AuthenticationModuleApacheCookie(id = "auth", show_modal = FALSE)
   } else {
-    ## } else if(authentication == "none") {
     auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
   }
 
