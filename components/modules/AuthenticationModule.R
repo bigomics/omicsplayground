@@ -727,28 +727,6 @@ PasswordAuthenticationModule <- function(id,
 
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
-
-
-      #browser()
-
-        key <- "your_secret_key"
-        claim <- jose::jwt_claim(
-          user = "jeroen",
-          session_key = 123456
-        )
-        key <- charToRaw("SuperSecret")
-        jwt <- jose::jwt_encode_hmac(claim, secret = key)
-        browser()
-        cookies::set_cookie_response("my_cookie", "contents of my cookie", content = "Your cookie is set.", domain = "127.0.0.1", path = "/")
-        cookies::set_cookie(
-          cookie_name = "sessionOPG",
-          cookie_value = jwt,
-          expiration = 1#,
-          #secure_only = TRUE,
-        )
-        
-
-
       } else {
         message("[PasswordAuthenticationModule::login] WARNING : login failed ")
         if (!valid.date) {
