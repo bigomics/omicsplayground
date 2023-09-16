@@ -101,9 +101,5 @@ html {
     left: 5px;
     color: rgba(217, 83, 79, 1);
     }
-    table.dataTable>tbody>tr.selected>* {
-        --dt-row-selected: 204, 204, 204;
-        --dt-row-selected-text: 0, 0, 0;
-    }
 
 }
