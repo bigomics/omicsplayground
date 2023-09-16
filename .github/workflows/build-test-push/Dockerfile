@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204
+FROM bigomics/omicsplayground-base:ub2204_v2
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
@@ -42,7 +42,6 @@ RUN R -e "install.packages(c('BH','plsRcox','blastula'))"
 #------------------------------------------------------------
 
 WORKDIR /
-RUN R -e "options(timeout=60*30);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
@@ -83,6 +82,10 @@ EXPOSE 3838
 CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
 
 # add entrypoint to execute when the docker container starts up
+
+RUN pwd
+RUN ls .github/workflows/build-test-push 
 COPY .github/workflows/build-test-push/entrypoint.sh /entrypoint.sh
+
 
 ENTRYPOINT ["/entrypoint.sh"]

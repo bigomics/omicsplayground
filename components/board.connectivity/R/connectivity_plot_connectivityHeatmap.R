@@ -24,13 +24,6 @@ connectivity_plot_connectivityHeatmap_ui <- function(
 
   plot_opts <- shiny::tagList(
     withTooltip(
-      shiny::radioButtons(ns("ngenes"), "Number of genes",
-        choices = c(50, 200, 500), inline = TRUE
-      ),
-      "Number of genes to show."
-    ),
-    hr(),
-    withTooltip(
       shiny::radioButtons(ns("nsig"), "Number of signatures",
         choices = c(10, 20, 40, 100), selected = 20, inline = TRUE
       ),
@@ -43,6 +36,10 @@ connectivity_plot_connectivityHeatmap_ui <- function(
     ),
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Use absolute foldchange", FALSE),
       "Take the absolute foldchange for calculating the cumulative sum.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("reverse_neg"), "Reverse negative contrasts", TRUE),
+      "Reverses negative correlated contrasts so they become positively correlated with respect to the query profile. We simply reverse the sign of the logFC profile. Contrast names (A vs B) are also correctly reversed (B vs A).",
       placement = "right", options = list(container = "body")
     )
   )
@@ -90,7 +87,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
 
         fc <- cc$fc[match(rownames(F), names(cc$fc))]
         names(fc) <- rownames(F)
-        #
+
         F <- cbind(fc[rownames(F)], F)
         colnames(F)[1] <- "thisFC"
         colnames(F)[1] <- cc$name
@@ -127,11 +124,38 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         )
       }
 
+      reverse_negative <- function(F, k = 1) {
+        ## reverse sign of negative profiles
+        fsign <- sign(cor(F, F[, k])[, 1])
+        F2 <- t(t(F) * fsign)
+        ii <- which(fsign < 0)
+        if (length(ii)) {
+          reverse_contrast_name <- function(s) {
+            prefix <- sub(":.*", "", s)
+            if (prefix == s) {
+              prefix <- NULL
+            } else {
+              prefix <- paste0(prefix, ":")
+            }
+            vs.name <- sub(".*[:]", "", s)
+            vs.name2 <- strsplit(vs.name, split = "_vs_")[[1]]
+            paste0(prefix, paste(rev(vs.name2), collapse = "_vs_"))
+          }
+          rev.name <- sapply(colnames(F2)[ii], reverse_contrast_name)
+          colnames(F2)[ii] <- rev.name
+        }
+        F2
+      }
+
       create_iheatmap <- function(F, score, maxfc = 20, maxgenes = 60) {
         sel <- 1:min(NCOL(F), maxfc)
         F <- F[, sel, drop = FALSE]
         score <- score[colnames(F)]
         F <- head(F, maxgenes)
+        if (input$reverse_neg) {
+          F <- reverse_negative(F, k = 1)
+          score <- abs(score)
+        }
         ii <- order(rowMeans(F, na.rm = TRUE))
         F <- F[ii, ]
 
@@ -176,9 +200,8 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         score <- pd$score
         F <- pd$F
         shiny::req(F)
-        ngenes <- as.numeric(input$ngenes)
         nsig <- as.numeric(input$nsig)
-        create_iheatmap(F, score, maxfc = nsig, maxgenes = ngenes)
+        create_iheatmap(F, score, maxfc = nsig, maxgenes = 999)
       }
 
       plot_RENDER2 <- function() {
@@ -186,9 +209,8 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         F <- pd$F
         score <- pd$score
         shiny::req(F)
-        ngenes <- as.numeric(input$ngenes) * 1.5
         nsig <- as.numeric(input$nsig) * 2
-        create_iheatmap(F, score, maxfc = nsig, maxgenes = ngenes)
+        create_iheatmap(F, score, maxfc = nsig, maxgenes = 999)
       }
 
       PlotModuleServer(

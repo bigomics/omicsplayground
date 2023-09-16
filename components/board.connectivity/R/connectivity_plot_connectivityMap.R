@@ -381,6 +381,11 @@ connectivity_plot_connectivityMap_server <- function(id,
           ) %>%
           plotly::event_register("plotly_selected")
 
+        plt <- plt %>%
+          plotly::layout(
+            margin = list(l = 0, r = 0, b = 0, t = 0)
+          )
+
         if ("dark" %in% input$plotoptions) {
           plt <- playbase::darkmode(plt, dim = ncol(pos))
         }
@@ -396,7 +401,10 @@ connectivity_plot_connectivityMap_server <- function(id,
           return(NULL)
         }
         plt <- plt %>%
-          plotly::layout(showlegend = FALSE) %>%
+          plotly::layout(
+            showlegend = FALSE,
+            margin = list(l = 0, r = 0, b = 0, t = 0)
+          ) %>%
           plotly::hide_colorbar()
         return(plt)
       })

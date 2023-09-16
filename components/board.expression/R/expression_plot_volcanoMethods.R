@@ -24,8 +24,8 @@ expression_plot_volcanoMethods_ui <- function(
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", TRUE),
-      "Scale the volcano plots individually per method..",
+    withTooltip(shiny::checkboxInput(ns("scale_per_plot"), "scale plots", FALSE),
+      "Scale each volcano plot individually.",
       placement = "right", options = list(container = "body")
     )
   )
@@ -128,7 +128,7 @@ expression_plot_volcanoMethods_server <- function(id,
           is.sig2 <- fc.genes %in% genes2
 
           ymax1 <- ymax
-          if (input$scale_per_method) {
+          if (input$scale_per_plot) {
             ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
           }
 

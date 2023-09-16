@@ -58,13 +58,25 @@ NoAuthenticationModule <- function(id,
 
       output$login_warning <- shiny::renderText("")
 
-      shiny::observeEvent(input$login_btn, {
-        shiny::removeModal()
-        USER$logged <- TRUE
+      shiny::observeEvent(
+        {
+          input$login_btn
+        },
+        {
+          shiny::removeModal()
+          USER$logged <- TRUE
 
-        # set options
-        USER$options <- read_user_options(PGX.DIR)
-      })
+          ## set options. NEED RETHINK!!! should we allow USERDIR???
+          ## should we allow OPTIONS???
+          USER$options <- read_user_options(PGX.DIR)
+
+          if (!is.null(username) && username != "") {
+            USER$username <- username
+            USER$email <- email
+            ## dbg("[NoAuthenticationModule] setting username=",username)
+          }
+        }
+      )
 
       ## export 'public' function
       USER$resetUSER <- resetUSER
@@ -141,7 +153,6 @@ AuthenticationModuleApacheCookie <- function(id,
     } ## end-of-server
   )
 }
-
 
 ## ================================================================================
 ## FirebaseAuthenticationModule
