@@ -269,7 +269,7 @@ clustering_plot_splitmap_server <- function(id,
       obj2 <- plt %>% iheatmapr::to_plotly_list()
       plt <- plotly::as_widget(obj2) %>%
         plotly::layout(
-          margin = list(l = 5, r = 5, t = 5, b = 5)
+          margin = list(l = 10, r = 5, t = 5, b = 5)
         )
 
       return(plt)
