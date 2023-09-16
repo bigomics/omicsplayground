@@ -86,6 +86,8 @@ app_server <- function(input, output, session) {
   } else if (authentication == "none2") {
     ## no authentication grabbing user from cookie, to be used for a certain client
     auth <- NoAuthenticationModule2(id = "auth", show_modal = FALSE)
+  } else if (authentication == "apache-cookie") {
+    auth <- AuthenticationModuleApacheCookie(id = "auth", show_modal = FALSE)
   } else {
     ## } else if(authentication == "none") {
     auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
