@@ -51,9 +51,11 @@ TableModuleUI <- function(id,
       shiny::hr(),
       div(
         style = "text-align: center;",
-        shiny::downloadButton(
-          outputId = ns("download"),
-          label = "Download",
+        shinyjs::disabled(
+          shiny::downloadButton(
+            outputId = ns("download"),
+            label = "Download",
+          )
         )
       )
     ),
