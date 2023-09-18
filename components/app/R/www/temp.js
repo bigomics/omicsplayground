@@ -434,3 +434,39 @@ $(document).ready(function() {
 
 
 
+document.addEventListener('shown.bs.popover', function(event) {
+	// Get the popover container (Bootstrap 5 attaches the popover to the body by default)
+	var popover = document.body.querySelector('.popover');
+  
+	if (!popover) {
+	  console.log("Popover not found.");
+	  return;
+	}
+  
+	// Find the download button inside the popover using its class
+	var targetNode = popover.querySelector('.shiny-download-link');
+  
+	if (!targetNode) {
+	  console.log("Download button not found.");
+	  return;
+	}
+  
+	// Options for the observer (which attributes to watch)
+	var config = { attributes: true, attributeFilter: ['href'] };
+  
+	// Callback function to execute when mutations are observed
+	var callback = function(mutationsList, observer) {
+	  for (var mutation of mutationsList) {
+		if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
+		  // Enable the button by removing the "disabled" attribute
+		  $(targetNode).removeClass('disabled');
+		}
+	  }
+	};
+  
+	// Create an observer instance linked to the callback function
+	var observer = new MutationObserver(callback);
+  
+	// Start observing the target node for configured mutations
+	observer.observe(targetNode, config);
+  });
