@@ -73,7 +73,13 @@ splashLoginModal <- function(ns = NULL,
   if (with.email) {
     div.email <- div(
       id = "splash-email",
-      textInput(ns("login_email"), NULL, placeholder = "your email")
+      tags$input(
+        type = "email",
+        id = ns("login_email"),
+        placeholder = "your email",
+        autocomplete = "email",
+        class = "form-control shiny-bound-input shinyjs-resettable"
+      )
     )
   }
   if (with.username) {
