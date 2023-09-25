@@ -343,11 +343,13 @@ upload_module_computepgx_server <- function(
         }
 
         # error message if custom genesets not detected or GSET_CHECK is FALSE
+        # add https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html to guidelins, target blank as html
         if (is.null(custom.geneset$gmt) || !GSET_CHECK) {
           shinyalert::shinyalert(
             title = "Invalid custom genesets",
-            text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
+             text = "Please update a tsv file. See guidelines <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html' target='_blank'>here</a>.",
             type = "error",
+            html = TRUE,
             closeOnClickOutside = TRUE
           )
           custom.geneset <- list(gmt = NULL, info = NULL)
