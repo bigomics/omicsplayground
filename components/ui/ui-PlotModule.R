@@ -104,12 +104,10 @@ PlotModuleUI <- function(id,
 
   if (cards == FALSE) {
     download_buttons <- div(
-      shinyjs::disabled(
-        shiny::downloadButton(
-          outputId = ns("download"),
-          label = "Download",
-          class = "btn-outline-primary"
-        )
+      shiny::downloadButton(
+        outputId = ns("download"),
+        label = "Download",
+        class = "btn-outline-primary"
       )
     )
   } else {
