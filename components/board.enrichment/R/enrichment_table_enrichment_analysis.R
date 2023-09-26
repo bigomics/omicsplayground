@@ -39,6 +39,9 @@ enrichment_table_enrichment_analysis_server <- function(id,
     table_data <- shiny::reactive({
       rpt <- getFilteredGeneSetTable()
       if (!("GS" %in% colnames(rpt))) rpt <- cbind(GS = rownames(rpt), rpt)
+      if ("matched.genes" %in% names(rpt)) {
+        names(rpt)[names(rpt) == "matched.genes"] <- "size"
+      }
       rpt
     })
 
@@ -59,7 +62,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       if (length(fx.col) > 0) fx <- rpt[, fx.col]
 
-      jj <- which(sapply(rpt, is.numeric))
+      jj <- which(sapply(rpt, function(col) is.numeric(col) && !is.integer(col)))
       if (length(jj) > 0) rpt[, jj] <- round(rpt[, jj], digits = 4)
       jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
       if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 100)
@@ -77,7 +80,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       )
       selectmode <- "single"
 
-      is.numcol <- sapply(rpt, is.numeric)
+      is.numcol <- sapply(rpt, function(col) is.numeric(col) && !is.integer(col))
       numcols <- which(is.numcol & !colnames(rpt) %in% c("size"))
       numcols <- colnames(rpt)[numcols]
 

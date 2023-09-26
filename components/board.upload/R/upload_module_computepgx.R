@@ -514,7 +514,8 @@ upload_module_computepgx_server <- function(
           title = "Crunching your data!",
           text = "Your dataset will be computed in the background.
           You can continue to play with a different dataset in the meantime.
-          When it is ready, it will appear in your dataset library.",
+          When it is ready, it will appear in your dataset library. Most datasets
+          take between 30 - 60 minutes to complete.",
           type = "info",
           timer = 60000
         )

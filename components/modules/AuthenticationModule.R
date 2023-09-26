@@ -58,6 +58,86 @@ NoAuthenticationModule <- function(id,
 
       output$login_warning <- shiny::renderText("")
 
+      shiny::observeEvent(
+        {
+          input$login_btn
+        },
+        {
+          shiny::removeModal()
+          USER$logged <- TRUE
+
+          ## set options. NEED RETHINK!!! should we allow USERDIR???
+          ## should we allow OPTIONS???
+          USER$options <- read_user_options(PGX.DIR)
+
+          if (!is.null(username) && username != "") {
+            USER$username <- username
+            USER$email <- email
+            ## dbg("[NoAuthenticationModule] setting username=",username)
+          }
+        }
+      )
+
+      ## export 'public' function
+      USER$resetUSER <- resetUSER
+
+      return(USER)
+    } ## end-of-server
+  )
+}
+
+AuthenticationModuleApacheCookie <- function(id,
+                                             show_modal = TRUE,
+                                             username = "",
+                                             email = "") {
+  shiny::moduleServer(
+    id, function(input, output, session) {
+      message("[NoAuthenticationModule] >>>> no authentication -- reading user from apache cookie <<<<")
+      email <- extract_cookie_value(session$request$HTTP_COOKIE, "user")
+      ns <- session$ns
+      USER <- shiny::reactiveValues(
+        method = "none",
+        logged = FALSE,
+        username = "",
+        email = email,
+        level = "",
+        limit = "",
+        options = opt, ## init from global
+        user_dir = PGX.DIR ## global
+      )
+
+      m <- splashLoginModal(
+        ns = ns,
+        with.username = FALSE,
+        with.email = FALSE,
+        with.password = FALSE,
+        title = "Sign in",
+        subtitle = "Ready to explore your data?",
+        button.text = "Sure I am!"
+      )
+      shiny::showModal(m)
+
+      resetUSER <- function() {
+        USER$logged <- FALSE
+        USER$username <- ""
+        USER$email <- ""
+        USER$level <- ""
+        USER$limit <- ""
+        if (show_modal) {
+          shiny::showModal(m)
+        } else {
+          USER$logged <- TRUE
+        }
+        USER$username <- username
+        USER$email <- email
+      }
+
+      output$showLogin <- shiny::renderUI({
+        resetUSER()
+      })
+
+      output$login_warning <- shiny::renderText("")
+
       shiny::observeEvent(input$login_btn, {
         shiny::removeModal()
         USER$logged <- TRUE
@@ -73,7 +153,6 @@ NoAuthenticationModule <- function(id,
     } ## end-of-server
   )
 }
-
 
 ## ================================================================================
 ## FirebaseAuthenticationModule
