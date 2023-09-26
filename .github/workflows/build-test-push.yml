@@ -30,7 +30,7 @@ jobs:
         id: test
         run: |
           docker build -t ${{ env.LATEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
-          docker run --rm ${{ env.LATEST_TAG }}
+          docker run --rm -d ${{ env.LATEST_TAG }}
       
       - name: Upload snapshots
         uses: actions/upload-artifact@v3
