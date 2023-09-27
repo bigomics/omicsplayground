@@ -8,4 +8,4 @@ test_result=$(cat test_result.txt)
 echo "Test results: $test_result"
 
 # return test result as an output
-echo "{test_result}={test_result}" >> $GITHUB_OUTPUT
+echo "test_result=$test_result" >> $GITHUB_OUTPUT
