@@ -136,6 +136,21 @@ UploadBoard <- function(id,
       }
     })
 
+    
+    shiny::hideTab("tabs", "Upload Files")
+
+    # create an observer that will hide tabs Upload Files if selected species if null and show if the button proceed_to_upload is clicked
+    observeEvent(input$proceed_to_upload,{
+      # print something to console log with shinyjs
+      shinyjs::runjs("console.log('selected_species is not null')")
+
+      # show tab Upload Files
+      shiny::showTab("tabs", "Upload Files")
+
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+    })
+
+
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
