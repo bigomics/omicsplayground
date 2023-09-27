@@ -18,15 +18,14 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
           "Hello,
 
           The user <strong>{sender}</strong> shared a dataset with you on Omics Playground.
-
-          You can find the shared dataset in the 'Load dataset' dashboard.
-
+          
           If you are a new user, please register here: https://auth.bigomics.ch/#!/register
 
-          If you already use Omics Playground, simply log-in here: https://auth.bigomics.ch/#!/login
+          If you already use Omics Playground, simply login here: https://auth.bigomics.ch/#!/login
+
+          You can find the shared dataset in the 'Load dataset/Sharing' tab.
 
           Yours,
-
           BigOmics Team"
         )
       ),
@@ -36,7 +35,7 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
     ),
     from = "bigomics.app@gmail.com",
     to = share_user,
-    subject = paste("Omics Playground: You received a new dataset from", sender,"."),
+    subject = paste("Omics Playground: You received a new dataset from", sender),
     credentials = blastula::creds_file(path_to_creds)
   )
 }
