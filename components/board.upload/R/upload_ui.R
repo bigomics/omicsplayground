@@ -55,6 +55,17 @@ UploadUI <- function(id) {
     )
   )
 
+upload_select_db <- shiny::tabPanel(
+    "Select Species",
+    bslib::layout_column_wrap(
+      width = 1,
+      heights_equal = "row",
+      height = "calc(100vh - 180px)",
+      div("hello")
+    )
+  )
+ 
+
   upload_panel <- shiny::tabPanel(
     "Upload",
     bslib::layout_column_wrap(
@@ -149,6 +160,7 @@ UploadUI <- function(id) {
     board_header,
     shiny::tabsetPanel(
       id = ns("tabs"),
+      upload_select_db,
       upload_panel,
       batch_panel,
       comparisons_panel,
