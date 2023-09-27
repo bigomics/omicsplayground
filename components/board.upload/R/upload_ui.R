@@ -46,7 +46,7 @@ UploadUI <- function(id) {
     flex = c(NA, NA, 1),
     shiny::div(
       id = "navheader-current-section",
-      HTML("Upload New Data &nbsp;"),
+      HTML("Create New Dataset &nbsp;"),
       shiny::actionLink(
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
@@ -93,7 +93,7 @@ upload_select_db <- shiny::tabPanel(
  
 
   upload_panel <- shiny::tabPanel(
-    "Upload",
+    "Upload Files",
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",

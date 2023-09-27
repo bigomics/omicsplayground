@@ -77,7 +77,7 @@ app_ui <- function() {
       "Load" = c(
         welcome = "Welcome",
         load    = "Load dataset",
-        upload  = "Upload new"
+        upload  = "New dataset"
       ),
       "DataView" = c(
         dataview = "DataView"
