@@ -1,8 +1,8 @@
 BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
-run: sass version 
-	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
+run: sass version
+	Rscript dev/run_app.R
 
 run.headless:
 	R -e "shiny::runApp('components/app/R',launch=FALSE,port=3838,host='0.0.0.0')"

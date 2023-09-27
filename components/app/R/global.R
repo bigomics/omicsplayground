@@ -13,6 +13,9 @@ message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \
 message("                                          |___/ |___/                              ")
 message("\n\n\n")
 
+shiny::addResourcePath("custom", "www")
+
+
 
 message("[GLOBAL] reading global.R ...")
 
@@ -142,6 +145,7 @@ message("************************************************")
 
 ## MAIN SOURCING FUNCTION. SOURCES ALL R/SHINY CODE. ONLY SOURCE IF
 ## RUN IN SAME FOLDER.
+
 if (file.exists("global.R")) {
   source(file.path(OPG, "components/00SourceAll.R"), chdir = TRUE)
 }

@@ -353,7 +353,7 @@ PlotModuleUI <- function(id,
         shiny::tags$head(shiny::tags$style(modalbody.style)),
         shiny::tags$head(shiny::tags$style(modalcontent.style)),
         shiny::tags$head(shiny::tags$style(modalfooter.none)),
-        shiny::tags$script(src = "dropdown-helper.js")
+        shiny::tags$script(src = "custom/dropdown-helper.js")
       )
     ),
     bslib::card_body(

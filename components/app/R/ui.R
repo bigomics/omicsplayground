@@ -3,7 +3,39 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-app_ui <- function() {
+app_ui <- function(x) {
+  if (identical("/cookie", x$PATH_INFO)) {
+    value <- x$HTTP_HEADER_USER_COOKIE
+    return(cookies::set_cookie_response(
+      cookie_name = "persistentOPG",
+      cookie_value = value,
+      http_only = TRUE,
+      secure_only = TRUE,
+      redirect = "/close",
+      same_site = "Strict"
+    ))
+  } else if (identical("/cookie_nonce", x$PATH_INFO)) {
+    value <- x$HTTP_HEADER_USER_COOKIE
+    return(cookies::set_cookie_response(
+      cookie_name = "persistentOPG_nonce",
+      cookie_value = value,
+      http_only = TRUE,
+      secure_only = TRUE,
+      redirect = "/close",
+      same_site = "Strict"
+    ))
+  } else if (identical("/cookie_remove", x$PATH_INFO)) {
+    return(cookies::set_cookie_response(
+      cookie_name = "persistentOPG",
+      cookie_value = "",
+      http_only = TRUE,
+      secure_only = TRUE,
+      redirect = "/close"
+    ))
+  }
+  else if(identical("/close", x$PATH_INFO)) {}
+  else if(identical("/", x$PATH_INFO)) {
+
   #-------------------------------------------------------
   ## Build USERMENU
   #-------------------------------------------------------
@@ -33,12 +65,13 @@ app_ui <- function() {
     version <- scan(file.path(OPG, "VERSION"), character())[1]
     id <- "maintabs"
     header <- shiny::tagList(
-      shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
+      # shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
+      shiny::tags$head(shiny::tags$script("hubspot-embed.js")),
       ##    gtag2, ## Google Tag Manager???
-      shiny::tags$head(shiny::tags$script(src = "temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "dropdown-helper.js")),
-      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "styles.min.css")),
-      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "favicon.ico")),
+      shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
+      shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
+      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
       shinyjs::useShinyjs(),
       waiter::use_waiter(),
       sever::useSever(),
@@ -270,20 +303,20 @@ app_ui <- function() {
           "load-tab",
           "Load dataset",
           "This panel shows the available datasets within the platform. These data sets
-                     have been pre-computed and are ready to be used. Select a
-                     dataset in the table and load the data set by clicking the 'load' button."
+                    have been pre-computed and are ready to be used. Select a
+                    dataset in the table and load the data set by clicking the 'load' button."
         ),
         bigdash::sidebarTabHelp(
           "upload-tab",
           "Upload new",
           "Here you can upload your own transcriptomics and proteomics data into
-                     the platform and perform computations for the Playground."
+                    the platform and perform computations for the Playground."
         ),
         bigdash::sidebarTabHelp(
           "dataview-tab",
           "DataView",
           "Information and descriptive statistics to quickly lookup a gene,
-                     check your experiment QC, view the raw data, sample or contrast tables."
+                    check your experiment QC, view the raw data, sample or contrast tables."
         ),
         bigdash::sidebarTabHelp(
           "clustersamples-tab",
@@ -295,24 +328,24 @@ app_ui <- function() {
           "wgcna-tab",
           "Weighted Correlation",
           "Weighted correlation network analysis (WGCNA) is a gene-level cluster
-                     analysis method based on pairwise correlations between genes. It
-                     allows one to define modules (clusters), intramodular hubs, and
-                     network nodes with regard to module membership, to study the
-                     relationships between co-expression modules."
+                    analysis method based on pairwise correlations between genes. It
+                    allows one to define modules (clusters), intramodular hubs, and
+                    network nodes with regard to module membership, to study the
+                    relationships between co-expression modules."
         ),
         bigdash::sidebarTabHelp(
           "pcsf-tab",
           "PCSF Network Analysis",
           "PCSF performs fast and user-friendly network analysis using
-                     interaction networks as a template, it determines high-confidence
-                     subnetworks relevant to the data, which potentially leads to
-                     predictions of functional units."
+                    interaction networks as a template, it determines high-confidence
+                    subnetworks relevant to the data, which potentially leads to
+                    predictions of functional units."
         ),
         bigdash::sidebarTabHelp(
           "diffexpr-tab",
           "Expression Analysis",
           "Compare expression between two conditions. Determine which genes are
-                     significantly downregulated or overexpressed in one of the groups."
+                    significantly downregulated or overexpressed in one of the groups."
         ),
         bigdash::sidebarTabHelp(
           "corr-tab",
@@ -429,4 +462,4 @@ app_ui <- function() {
   info("[ui.R] <<< finished UI!")
 
   return(ui)
-}
+}}
