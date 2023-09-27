@@ -67,18 +67,20 @@ upload_select_db <- shiny::tabPanel(
       shiny::div(
           style = "text-align: center;",
           shiny::HTML("<b>Species:</b>"),
+          div(
+            style = "margin-top: 10px;",
           withTooltip(
             shiny::selectInput(
-              ns("species"),
+              ns("selected_species"),
               NULL,
-              width = "400px",
+              width = "300px",
               choices =  playbase::SPECIES_TABLE$species_name,
               selected = NULL,
               multiple = FALSE
             ),
             "Select the species of interest.",
             placement = "left", options = list(container = "body")
-          )
+          ))
         ),
         shiny::div(
                 shiny::actionButton(ns("proceed_to_upload"), "Next",
