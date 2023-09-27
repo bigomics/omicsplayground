@@ -60,4 +60,4 @@ RUN chmod +x /omicsplayground/entrypoint.sh
 RUN cat /omicsplayground/entrypoint.sh
 
 WORKDIR /omicsplayground
-# ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
+ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
