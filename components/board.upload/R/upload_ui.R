@@ -74,7 +74,7 @@ upload_select_db <- shiny::tabPanel(
               ns("selected_species"),
               NULL,
               width = "300px",
-              choices =  playbase::SPECIES_TABLE$description,
+              choices =  playbase::SPECIES_TABLE$species_name,
               selected = NULL,
               multiple = FALSE
             ),
