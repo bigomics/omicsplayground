@@ -15,8 +15,19 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
     blastula::compose_email(
       body = blastula::md(
         glue::glue(
-          "Hello, {sender} shared a dataset with you on OmicsPlayground! ",
-          "Log in to your account to accept the new dataset."
+          "Hello,
+
+          The user <strong>{sender}</strong> shared a dataset with you on Omics Playground.
+
+          You can find the shared dataset in the 'Load dataset' dashboard.
+
+          If you are a new user, please register here: https://auth.bigomics.ch/#!/register
+
+          If you already use Omics Playground, simply log-in here: https://auth.bigomics.ch/#!/login
+
+          Yours,
+
+          BigOmics Team"
         )
       ),
       footer = blastula::md(
@@ -25,7 +36,7 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
     ),
     from = "bigomics.app@gmail.com",
     to = share_user,
-    subject = paste(sender, "shared a dataset with you on OmicsPlayground"),
+    subject = paste("Omics Playground: You received a new dataset from", sender,"."),
     credentials = blastula::creds_file(path_to_creds)
   )
 }
