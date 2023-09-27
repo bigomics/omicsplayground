@@ -27,6 +27,7 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
+    selected_species,
     auth,
     create_raw_dir,
     enable_button = TRUE,
@@ -471,7 +472,9 @@ upload_module_computepgx_server <- function(
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
         # Define create_pgx function arguments
+        
         params <- list(
+          species = selected_species(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
