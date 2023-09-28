@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# define output file
-GITHUB_OUTPUT="/github/workspace/output.txt"
-
 # Set output variable with current working directory
 echo "::set-output name=working_directory::$(pwd)"
 
