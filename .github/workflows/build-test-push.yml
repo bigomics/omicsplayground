@@ -38,6 +38,10 @@ jobs:
           name: testthat-snapshots
           path: /omicsplayground/tests/testthat/_snaps/*
           if-no-files-found: ignore
+      -
+        name: Print working directory
+        run: echo "pwd = ${{ steps.test.outputs.working.directory }}"
+
         
       -
         name: Print test result
