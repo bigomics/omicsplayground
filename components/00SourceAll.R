@@ -232,6 +232,7 @@ if (!file.exists("00SourceAll.R")) {
   source("ui/ui-TableModule2.R", encoding = "UTF-8")
   source("ui/ui-tooltip.R", encoding = "UTF-8")
   source("ui/ui-utils.R", encoding = "UTF-8")
+  source("ui/ui-utilsCookies.R", encoding = "UTF-8")
   source("ui/ui-vizpanels.R", encoding = "UTF-8")
   message("done! (sourcing all code)")
 }
