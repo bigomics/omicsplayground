@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Define GITHUB_OUTPUT environment variable
+# define output file
 GITHUB_OUTPUT="/github/workspace/output.txt"
 
 # Set output variable with current working directory
