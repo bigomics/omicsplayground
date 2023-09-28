@@ -95,13 +95,6 @@ PlotModuleUI <- function(id,
     )
   }
 
-  dload.csv <- dload.pdf <- dload.png <- dload.html <- dload.obj <- NULL
-  if ("pdf" %in% download.fmt) dload.pdf <- shiny::downloadButton(ns("pdf"), "PDF")
-  if ("png" %in% download.fmt) dload.png <- shiny::downloadButton(ns("png"), "PNG")
-  if ("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
-  if ("csv" %in% download.fmt) dload.csv <- shiny::downloadButton(ns("csv"), "CSV")
-  if ("obj" %in% download.fmt) dload.obj <- shiny::downloadButton(ns("obj"), "obj")
-
   if (cards == FALSE) {
     download_buttons <- div(
       shiny::downloadButton(
