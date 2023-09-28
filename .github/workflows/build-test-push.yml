@@ -36,11 +36,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: testthat-snapshots
-          path: ./omicsplayground/tests/testthat/_snaps/
+          path: ./omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/
           if-no-files-found: ignore
       -
         name: Print working directory
-        run: echo "pwd = ${{ steps.test.outputs.working.directory }}"
+        run: echo "pwd = ${{ steps.test.outputs.working_directory }}"
 
         
       -
