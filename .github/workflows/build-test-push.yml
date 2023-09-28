@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: testthat-snapshots
-          path: /omicsplayground/tests/testthat/_snaps/*
+          path: ./omicsplayground/tests/testthat/_snaps/
           if-no-files-found: ignore
       -
         name: Print working directory
