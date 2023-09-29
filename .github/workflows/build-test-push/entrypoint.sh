@@ -13,5 +13,6 @@ git_diff=$(git diff)
 echo "::set-output name=git_diff::$(git_diff)"
 
 # return test result as an output
-echo "test_result=$test_result" >> $GITHUB_OUTPUT
+#echo ::set-output name=test_result::$test_result
+echo "{test_result}={$test_result}" >> $test_result # return test result as an output
 
