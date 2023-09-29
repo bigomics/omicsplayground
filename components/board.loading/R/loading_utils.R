@@ -18,7 +18,7 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
           "Hello,
 
           The user <strong>{sender}</strong> shared a dataset with you on Omics Playground.
-          
+
           If you are a new user, please register here: https://auth.bigomics.ch/#!/register
 
           If you already use Omics Playground, simply login here: https://auth.bigomics.ch/#!/login
