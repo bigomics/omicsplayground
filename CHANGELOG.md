@@ -1,4 +1,402 @@
-##### v3.2.11-master230722 (2023-07-22)
+### v3.2.26 (2023-09-14)
+
+-  minimal board launch example [view](https://github.com/bigomics/omicsplayground/commit/c074fe48e9655f738044519924185989506c65ea)
+-  exposing pgx [view](https://github.com/bigomics/omicsplayground/commit/29c4f2cccb38b5c031993eec05888cb5b73759f5)
+-  comment out server sourcing as we declare in the script [view](https://github.com/bigomics/omicsplayground/commit/00bdcfe5c6cb7f174d0b16213261b1b0f0618ff6)
+-  exposing runApp [view](https://github.com/bigomics/omicsplayground/commit/9078b5f1fabb2a7c25738d126f4c5427c22b8bc3)
+-  headless driver without header [view](https://github.com/bigomics/omicsplayground/commit/af4da9852becf06ea29fac2c45dfcdc77fccbb35)
+-  add path to app_ui [view](https://github.com/bigomics/omicsplayground/commit/c7324a3194c9f8dc4d2cde11ef855a6d895a2fec)
+-  add ui server dev prototype [view](https://github.com/bigomics/omicsplayground/commit/2a7d229f5d18e1ec3f501f2b5c2732aeb075ff8f)
+-  attempt to pass pgx objects into server [view](https://github.com/bigomics/omicsplayground/commit/b41289e6fc41b81aef97e614faaddec2a00f03ff)
+-  removed server to avoid confusion [view](https://github.com/bigomics/omicsplayground/commit/9578af048e1d308b88013bac43ecc17b9153bee6)
+-  app running; driver not running [view](https://github.com/bigomics/omicsplayground/commit/085af8619dab3b159f2b22a9fd06ee8e5f1516c7)
+-  hotfix [view](https://github.com/bigomics/omicsplayground/commit/0c53f3d95ebfef4ec902762425616ff9437cb125)
+-  return get_opg_root to default master [view](https://github.com/bigomics/omicsplayground/commit/0d937f2d17ed55aff0c46ec1f40052f2587abc25)
+-  feat: driver now works with relative paths [view](https://github.com/bigomics/omicsplayground/commit/6794379ea990232d47ae91920be0ef743ba5c470)
+-  tricking down to minimal driver launch [view](https://github.com/bigomics/omicsplayground/commit/34ac48ad008199197ed0ebcb26620f8edbb12592)
+-  no need to source at testing file anymore [view](https://github.com/bigomics/omicsplayground/commit/011b28ab24566e3fe6bffe978b69d280f8c3bb84)
+-  sourcing from UI, no need to source at server [view](https://github.com/bigomics/omicsplayground/commit/bb85ce90d094e0be2df1e55319ccab0182c78334)
+-  remove all absolute paths [view](https://github.com/bigomics/omicsplayground/commit/7d1f187937e7263b6cc0dfad90d75639a53e544a)
+-  pgx assigned in reactive container; no crash [view](https://github.com/bigomics/omicsplayground/commit/fc31bd0319094dc1cfc7870914de67ec39fa2889)
+-  update driver input [view](https://github.com/bigomics/omicsplayground/commit/47d4a1b6fb7093eea15d4fa4a8b1f7ff322d3467)
+-  add two possible attempt without error [view](https://github.com/bigomics/omicsplayground/commit/792fb4a7f3bdedd81296358cb7513018dca6ec10)
+-  default to option 1 [view](https://github.com/bigomics/omicsplayground/commit/102582b4abfc63e08622f5ed8fb27d9726619bba)
+-  update paths for example data [view](https://github.com/bigomics/omicsplayground/commit/2a1a232036bd9c537ce2e27b264bad85db118b79)
+-  add comments [view](https://github.com/bigomics/omicsplayground/commit/eea121782c7c442b9ce4fe2a8a2df34361bf0205)
+-  attempt to return error log as output [view](https://github.com/bigomics/omicsplayground/commit/209069a2e89be0b99d10bea317756652a804e586)
+-  feat: error output now works [view](https://github.com/bigomics/omicsplayground/commit/19991e55c7a29f8886f33b644ef58abbc5371aa9)
+-  get error when board is unable to load [view](https://github.com/bigomics/omicsplayground/commit/21ba5775e9e05372d03c1bd57c50872ad4d589aa)
+-  feat: shiny parent env e passed to error_log [view](https://github.com/bigomics/omicsplayground/commit/842ae19a15adc4222c101874f9d380710242b418)
+-  brute force kill the app [view](https://github.com/bigomics/omicsplayground/commit/f6b9ea2ccbedcda2d88cfa12381156f0096f6d17)
+-  get return from other sessions [view](https://github.com/bigomics/omicsplayground/commit/ba990d34e8e4d00e489e6ce71099b0ccd6191d90)
+-  moved engine to chromote [view](https://github.com/bigomics/omicsplayground/commit/178af3ead8ca055d00cc6665df083d720ee8e006)
+-  pass board as options [view](https://github.com/bigomics/omicsplayground/commit/4ca80116ff84e0953ab959a5a10c0f2984c0f5dd)
+-  source board based on options board [view](https://github.com/bigomics/omicsplayground/commit/31bce8e46c7e9b3398b5bf285052b32302302b2b)
+-  better folder structure [view](https://github.com/bigomics/omicsplayground/commit/4430bbdc2e7be12b81bbb9d6bed5f74a6425bed4)
+-  failed: attempt to eval board function expression [view](https://github.com/bigomics/omicsplayground/commit/8ea842e777c9c1456b56ebb189b7d5b058ac5352)
+-  add VERSION [view](https://github.com/bigomics/omicsplayground/commit/9c0791dc835c1cab23f48d60ed0ab3232aa11d3a)
+-  v3.2.17 [view](https://github.com/bigomics/omicsplayground/commit/5a1d7cdaa066835d52ba5770ad7cf4bb02a3efb7)
+-  solve merge conflict [view](https://github.com/bigomics/omicsplayground/commit/a5f07fd98260ddcc48bebf8f7c04e3cf3e470011)
+-  feat: use popover instead of dropdown BS [view](https://github.com/bigomics/omicsplayground/commit/f469005ca1c185643417686095333f8f225d7a99)
+-  `shiny::runApp("components/board.single/")` now works again [view](https://github.com/bigomics/omicsplayground/commit/a075d75425bfdbb06cd7a86992b82aff350a5819)
+-  update to shinytest2 [view](https://github.com/bigomics/omicsplayground/commit/6af4be1a49e6750071ea391124e284ce918be166)
+-  remove not used runApp [view](https://github.com/bigomics/omicsplayground/commit/68dbb7f147113027f908e6c3a4c11af3360fe873)
+-  Revert "remove not used runApp" [view](https://github.com/bigomics/omicsplayground/commit/f7db50062934aeed8706807af813527d563f602a)
+-  feat: board.single now works for all boards [view](https://github.com/bigomics/omicsplayground/commit/3a92f5d71322b142bd12de2e9ed881612653d02b)
+-  feaat: expand agnostic code to UI [view](https://github.com/bigomics/omicsplayground/commit/b0676d61af94f194715b118c143464194cbbb7b3)
+-  feat: now server is agnostic of board [view](https://github.com/bigomics/omicsplayground/commit/d1f2dd81e82d60bfed910d19966dc64af6b8eee7)
+-  code clean [view](https://github.com/bigomics/omicsplayground/commit/5b189a229f8028c07258c09968ba51c7e27947ea)
+-  switch load of pgx to playbase [view](https://github.com/bigomics/omicsplayground/commit/9d793863e9748a999ff676e9872c3b206af797b8)
+-  feat: all boards are running and returning errors [view](https://github.com/bigomics/omicsplayground/commit/9950d7f4b85d0d2cb20c36f89a483f9d11e74200)
+-  rename board.single to dev [view](https://github.com/bigomics/omicsplayground/commit/64cae8a89bc5782a4931981be46129a4abfd05d1)
+-  move checks to test folder [view](https://github.com/bigomics/omicsplayground/commit/82754c99ef975dc5bb1103b96bb933556a737da2)
+-  update source [view](https://github.com/bigomics/omicsplayground/commit/74604c224fa55e0ec4ce688e153b07688497f98a)
+-  add generalized board to makefile [view](https://github.com/bigomics/omicsplayground/commit/bc27051e8eb613b6c42d9e29833de4a185753163)
+-  update make file so we can pass board in cmd [view](https://github.com/bigomics/omicsplayground/commit/8a987796cdd8b7d3cb8d06c3a7cce9b8cd58aff3)
+-  add placeholder for example-data [view](https://github.com/bigomics/omicsplayground/commit/7a4d5cc65b5c9f08f7b0b5fd45a985b376f7a4d7)
+-  remove Keyword option under word cloud [view](https://github.com/bigomics/omicsplayground/commit/7ed3d1378af2a63ba69af2f8f72934adac6c9505)
+-  add cmd line option to load example data automatically [view](https://github.com/bigomics/omicsplayground/commit/21ac4717f6d4a055fc6c8b95a28e6eba067514ce)
+-  update makefile for auto example data [view](https://github.com/bigomics/omicsplayground/commit/667baff31eeb4ff3f11c0a545681dda319ede90b)
+-  clear test script [view](https://github.com/bigomics/omicsplayground/commit/4560904663237794da3d9cf4cc1eb9ce098b4a17)
+-  add a script to check many pgx files compatibility with OPG [view](https://github.com/bigomics/omicsplayground/commit/4a31fe6d94d0b16b56882b6d93cc451582a4dfec)
+-  dont run script if --data is not provided [view](https://github.com/bigomics/omicsplayground/commit/b44dc36e11561c0cbfd44489001d18c1ad3da71d)
+-  get all pgx file paths [view](https://github.com/bigomics/omicsplayground/commit/b1e71fae235234d9344149a63841c713df3dc335)
+-  feat: check pgx script running in cmd [view](https://github.com/bigomics/omicsplayground/commit/fb29b32d99a7a4393309c6d757a27078e5912c3d)
+-  add  example data option [view](https://github.com/bigomics/omicsplayground/commit/484b2b7914e52ceec20f474a9cd78812a61cf5d2)
+-  v3.2.21 [view](https://github.com/bigomics/omicsplayground/commit/d63669c46a7f671ab055e47edb3d49accd3ccb75)
+-  Fix only one sample in all the groups [view](https://github.com/bigomics/omicsplayground/commit/59a928265eb400dc439cf07c6120afa1bbedd723)
+-  replace shiny::reactive by shiny::reactivePoll [view](https://github.com/bigomics/omicsplayground/commit/f607193b370b877c00d8678d9db1999695bd3795)
+-  remove current_page; add ds counter to be invalidated [view](https://github.com/bigomics/omicsplayground/commit/eb93156c280a75fe5a327c90cc3b904a9a5da899)
+-  receive ds modal [view](https://github.com/bigomics/omicsplayground/commit/48fa9cd980e330f4b60ec60ce6bb05b096679826)
+-  counter -1 when accepting or declining [view](https://github.com/bigomics/omicsplayground/commit/f82556faa7bb0451c4b2d72458cfbe0d251156ea)
+-  simplify reactivePoll [view](https://github.com/bigomics/omicsplayground/commit/f2f88afab032a14eec257c16a8fe2c74a80237bf)
+-  clean code [view](https://github.com/bigomics/omicsplayground/commit/6282137146b0291c4b8e2ee185c330474ee9a96d)
+-  earlier normalize path [view](https://github.com/bigomics/omicsplayground/commit/47757a454562f94d839fc0de5c4f0c88e740c0e8)
+-  add option to go to load dataset [view](https://github.com/bigomics/omicsplayground/commit/cd7b39affd1143695122c849d30fcb334921b23e)
+-  remove unnecesary files [view](https://github.com/bigomics/omicsplayground/commit/bb6531430e5ac21d43b18ec2e54c8498f25ecc9d)
+-  add code to go to load tab [view](https://github.com/bigomics/omicsplayground/commit/8cb86fbc0427bae886a6d0c5e46084828536aaed)
+-  add styles and source [view](https://github.com/bigomics/omicsplayground/commit/304b9ac095d389e3c5480470c3d633ef648958d6)
+-  feat: move to `Sharing` tab panel [view](https://github.com/bigomics/omicsplayground/commit/fd81bea794ebb853685e967b2e3de5d1de56bf79)
+-  remove duplicated code [view](https://github.com/bigomics/omicsplayground/commit/76db6d4cd1e0f6b3179a198a673b19c8a4100acb)
+-  add GHA docker file with entrypoint [view](https://github.com/bigomics/omicsplayground/commit/355f90868715f6ce3b1f23643b5ed1570bc3a040)
+-  add testhat check [view](https://github.com/bigomics/omicsplayground/commit/5db9aee71e4047b0692d634e159c650a227e1268)
+-  commit snapshots [view](https://github.com/bigomics/omicsplayground/commit/258182247dc620a70a62d7e1f0a956020a7f0b94)
+-  rename AppDriver [view](https://github.com/bigomics/omicsplayground/commit/961e5d0d6481490e237f0e0da63735106051be6e)
+-  defer app stop [view](https://github.com/bigomics/omicsplayground/commit/33f3a9b827ff36893a792831d37033737606bc75)
+-  feat: setup testing via `shiny::runTests()` [view](https://github.com/bigomics/omicsplayground/commit/dc2df8229ea0ae2a4e457c0a96ba980544f23930)
+-  Add multiple choices gene and geneset annotation [view](https://github.com/bigomics/omicsplayground/commit/1b6df5c9b8ed3cc3f9c40b50cbd58e6849e2e738)
+-  replace for loop [view](https://github.com/bigomics/omicsplayground/commit/0c50beedb84d4d728877f3ab2e316add2197ea15)
+-  simplify code [view](https://github.com/bigomics/omicsplayground/commit/79ea8ed5ca96b054814889626c28b7f9994f034f)
+-  add multiple choices for genes and genesets [view](https://github.com/bigomics/omicsplayground/commit/715eff1be664ee2afefb7f3960d3d1c0d11a7057)
+-  fix functional clusters annotation mismatch [view](https://github.com/bigomics/omicsplayground/commit/f5db8a457023aa16c4e91871bf737c5ccef6c02f)
+-  update images for higher res [view](https://github.com/bigomics/omicsplayground/commit/dfafaab809de7292ae2c86b45d4916382b9bd8d5)
+-  simplify; use same header as opg [view](https://github.com/bigomics/omicsplayground/commit/35c5d44a0f2ff9cdb47f8e25471ba03122d32986)
+-  change dir; add global.R to make launch similar to actual app [view](https://github.com/bigomics/omicsplayground/commit/4e33a235560e304fbe15dd06f96f898923115661)
+-  update test to new dir [view](https://github.com/bigomics/omicsplayground/commit/8d44dccdcf7b2b9b982f8a16573117c85a90992b)
+-  fix no files shared [view](https://github.com/bigomics/omicsplayground/commit/04f3dad33090c7384432e1c6497911909d68e142)
+-  remove dbg lines [view](https://github.com/bigomics/omicsplayground/commit/b41184c559e5b445d48c6ae7f0b46aa7d2755321)
+-  simplify [view](https://github.com/bigomics/omicsplayground/commit/4fc27a01170ed8ae8976c8bd36b273ecea87ef75)
+-  add script for expected_values [view](https://github.com/bigomics/omicsplayground/commit/6e7390677f09e25997bdaf49110fe56129c1ebeb)
+-  add script for expected_values [view](https://github.com/bigomics/omicsplayground/commit/275a6c2982867bb750763b918caf762ba2a66490)
+-  removed unused code [view](https://github.com/bigomics/omicsplayground/commit/0f5a78eec336812c74b3111e7c758e0231277510)
+-  convert enrichment volcano to plotly [view](https://github.com/bigomics/omicsplayground/commit/df26225da2b3cbbd0f8699da3545a25d06092713)
+-  remove unused code [view](https://github.com/bigomics/omicsplayground/commit/f53fdd736b82cc740a692ea864763684ebfeef1b)
+-  update tab names [view](https://github.com/bigomics/omicsplayground/commit/00feae15bb963ac6e85305f8b98e1858394faa65)
+-  add more descriptive names for tabs [view](https://github.com/bigomics/omicsplayground/commit/d1193ad7a43713f3e1792b371f607b58aad57f5c)
+-  source all [view](https://github.com/bigomics/omicsplayground/commit/e3615ec9c4e3562fea97a2389e3e1cb24f2b8700)
+-  change_name_of_plots [view](https://github.com/bigomics/omicsplayground/commit/749adc2eaf6fd06d347f3aac85cf516fc8008808)
+-  use title as filename [view](https://github.com/bigomics/omicsplayground/commit/bd1f3048063a0e93f6294fff8eec8b50b1f6eb5b)
+-  Fix #472, plot working [view](https://github.com/bigomics/omicsplayground/commit/6dca5ba0e8540e519c1add66783ae2d9d47e7ab1)
+-  simplify plot_interactive_comp_fc [view](https://github.com/bigomics/omicsplayground/commit/b2644ad58f237ac0b556600d669113abc89e799c)
+-  fix userdir for dataset2 [view](https://github.com/bigomics/omicsplayground/commit/688749e741785b85f5d41afb1adb76b2412bc778)
+-  bring back snapshots and old error code [view](https://github.com/bigomics/omicsplayground/commit/9d32f44176a341f24988bb3a3c5c720cafb8ac07)
+-  v3.2.22: fix dataset2 user_dir [view](https://github.com/bigomics/omicsplayground/commit/6ef2a6e1c2e7d386749cd2dd459ce7ba4a6d08d0)
+-  feat: enrichment board now works w/o errors [view](https://github.com/bigomics/omicsplayground/commit/b9a1eaebf7fb3850a6bfa5a9c10403a36bb0b0b0)
+-  attempt: connectivity board almost working [view](https://github.com/bigomics/omicsplayground/commit/93e759f9c3058f4a04ba86f9325b906fb4055dfc)
+-  Revert "change_name_of_plots" [view](https://github.com/bigomics/omicsplayground/commit/91da6b7bdc1046bd3dc9143552a3c990f7a4bb15)
+-  feat: connectivity board works [view](https://github.com/bigomics/omicsplayground/commit/93ee1f4d27b951a466cb7d43a58913a4236e351a)
+-  Update ui-TableModule2.R [view](https://github.com/bigomics/omicsplayground/commit/7d2f7188209c4753da6e229edfb5d0ed26394ee1)
+-  update readme [view](https://github.com/bigomics/omicsplayground/commit/12be6033606e903fd62132b4eb134c95081984df)
+-  change filename to customname [view](https://github.com/bigomics/omicsplayground/commit/155425b0934dd166556e963252d1a3c8a534a818)
+-  feat: styles now work [view](https://github.com/bigomics/omicsplayground/commit/11fccbaae3ad86957a4c056047f2454d1029cdb0)
+-  feat: screenshot test now works [view](https://github.com/bigomics/omicsplayground/commit/e220c850c55994dba912cd27772d14a5030f1137)
+-  add Mauro's code after revert and small changes [view](https://github.com/bigomics/omicsplayground/commit/bc05f8a3bd1426eab32e19d8602584de64d563b3)
+-  v3.2.22-popover-bslib230822 [view](https://github.com/bigomics/omicsplayground/commit/bc1ac71c9327eb6e04c68d347abd05e7c46806dc)
+-  add comma-line758 [view](https://github.com/bigomics/omicsplayground/commit/4c23d0c8c8e15caee4bf6b3143f62aa6cf482b98)
+-  Also add custom name for csv [view](https://github.com/bigomics/omicsplayground/commit/78af7aa667068509fdb513a3274da2cdcfae6027)
+-  fix startup message check bug [view](https://github.com/bigomics/omicsplayground/commit/22404eb14061b1aefd919586f4fae6933a7030eb)
+-  fix: pass JS onclick [view](https://github.com/bigomics/omicsplayground/commit/ff3a24f66760b287051d040054b638a586db4c6d)
+-  feat: snapshot tests now works [view](https://github.com/bigomics/omicsplayground/commit/82d354e9740cd9487cf86836b5911cdd9b745e02)
+-  minor update in expression/enrichment tab names [view](https://github.com/bigomics/omicsplayground/commit/5bc451df1b3b042381fcf57b927f045038fca976)
+-  not required filter [view](https://github.com/bigomics/omicsplayground/commit/0341dfaefdb3c493f9b0b03ac7b74c1e312c0145)
+-  feat: basic logic to get screenshot after app renders example data [view](https://github.com/bigomics/omicsplayground/commit/4edfb80a1f526aa57a70074d696ba9b7cb5bb044)
+-  attempt: server status [view](https://github.com/bigomics/omicsplayground/commit/92a0b9df66c305bdc57d5a7e76d547c692ca2391)
+-  v3.2.23 [view](https://github.com/bigomics/omicsplayground/commit/7ace7594b3c6e1da7e92b4eb41d3752f47043b72)
+-  fix: navbar does not get re-rendered on tab change [view](https://github.com/bigomics/omicsplayground/commit/3c32c604abf0bc14a0d93494b37ccf62d1f104b9)
+-  observe to observeEvent, better target [view](https://github.com/bigomics/omicsplayground/commit/1119def15a1abcbe37172bd0d4e6ccc36d6f2425)
+-  send nav [view](https://github.com/bigomics/omicsplayground/commit/7f29f06010b3d96c0bcd5a5b36eafade97297842)
+-  feat: screenshot test running [view](https://github.com/bigomics/omicsplayground/commit/0aa7a59a77fb10bd808905bb3e2e63bcc67ed4a8)
+-  remove golem [view](https://github.com/bigomics/omicsplayground/commit/dac87173bb47a4e99623da7586f59d2b2297c049)
+-  preparing for GHA [view](https://github.com/bigomics/omicsplayground/commit/f329f28a70831d0fa4553b8828bd2726fce2ad04)
+-  style: middle horizontal alignment on tables [view](https://github.com/bigomics/omicsplayground/commit/04100fb9e3937d60ffb281e2c5e3efc4e878710b)
+-  feat: links as rowname icon [view](https://github.com/bigomics/omicsplayground/commit/d31bd525e3917aa4f4cc2ef1fdf9b4688dd3be8e)
+-  feat: plots with `wrapHyperLink` icons to have same feeling [view](https://github.com/bigomics/omicsplayground/commit/7c1fad4af7af44c33f58f715bf7d0b4e955808b8)
+-  style: handle no link icons [view](https://github.com/bigomics/omicsplayground/commit/f448eb88d19cb06f71c23ba0a8dbca8032aaaa61)
+-  feat: remove icons from csv [view](https://github.com/bigomics/omicsplayground/commit/73d31aec6150c0c752fd76fa088d1aebb7d92117)
+-  add spinner outside container [view](https://github.com/bigomics/omicsplayground/commit/4b5d5416d0a581e196210faf36dfefed99e9f9c9)
+-  remove nav from upload board [view](https://github.com/bigomics/omicsplayground/commit/10cddb7e5fe3e4c7ed049cd34718abdf0a1cd44b)
+-  simplify code [view](https://github.com/bigomics/omicsplayground/commit/8697d880df9deeb17bba5604d84a4f5a37902316)
+-  Update README documentation [view](https://github.com/bigomics/omicsplayground/commit/911f39a01d7b22f623144498a31e288548759edb)
+-  Add recompute btn [view](https://github.com/bigomics/omicsplayground/commit/002fb3cf68b891b98392f3fda7e8f1d74b8d7729)
+-  clean filename [view](https://github.com/bigomics/omicsplayground/commit/af6602f64b0a65ff59ac8b4abc41393a627087a2)
+-  rename board functional to pathway [view](https://github.com/bigomics/omicsplayground/commit/a45fd4b870fd662a12e018c675ddf8feece80979)
+-  rename functions to allow board.launch to work [view](https://github.com/bigomics/omicsplayground/commit/05c96b16f6ba29988a498cadfe9b7f84f9bcb90c)
+-  feat: pathway board now works as single board [view](https://github.com/bigomics/omicsplayground/commit/3cde67cc3af827d17bc05558e9592ee0985aa682)
+-  feat: compare board now works [view](https://github.com/bigomics/omicsplayground/commit/2da19d8987678460ab50167a3eeb3521fe9aefa0)
+-  feat: intersection works (with error as warnings) [view](https://github.com/bigomics/omicsplayground/commit/3616920f429115412c5d6f217d8454bcb1ee579e)
+-  feat: signature now works [view](https://github.com/bigomics/omicsplayground/commit/fde4ea7e68d1b9720245fc16fd34979710ce9e66)
+-  update boards to test [view](https://github.com/bigomics/omicsplayground/commit/f742d8ec6b48c8131047acb99331e6cefdd934e0)
+-  add mini example data [view](https://github.com/bigomics/omicsplayground/commit/afd3bb91faecb81f6cfa9249e252241e98aa8230)
+-  improve makefile [view](https://github.com/bigomics/omicsplayground/commit/28f30b800ed98bd0384e33217db7b0f7cb98e1fb)
+-  bring mini example to /data [view](https://github.com/bigomics/omicsplayground/commit/f9cfdae755d9a9be7e909f6c1e89fd940563b417)
+-  add snaps [view](https://github.com/bigomics/omicsplayground/commit/4fda2be791ab5800a22812133b185113584c886d)
+-  udpate make file for new board structure [view](https://github.com/bigomics/omicsplayground/commit/5187f108b686be6eb9089e9d087ccf377879cae6)
+-  add mini data for testing [view](https://github.com/bigomics/omicsplayground/commit/973de7a672dd44881a3c65ba214068185c3bff18)
+-  use mini example ds to compare board (failing with data/ giving changing datasets) [view](https://github.com/bigomics/omicsplayground/commit/109b010e94178f0b96bfe1dbd52180e2f4eba1a0)
+-  style: wikipathway link as icon [view](https://github.com/bigomics/omicsplayground/commit/e158b6cc03aa5355d6b6e382e406b3a1cb5ec315)
+-  add snaps for mini data [view](https://github.com/bigomics/omicsplayground/commit/b195b4d8eba81369f78ea9388c5615fe8111ab48)
+-  style: reactome link as icon [view](https://github.com/bigomics/omicsplayground/commit/87c21f9f20aeece0b4757b1a645c5429eeaf3a0d)
+-  add snaps for tcga and wgcna [view](https://github.com/bigomics/omicsplayground/commit/19b44c8721382032727f233ec0f697bdb3441be9)
+-  feat: remove icons from csv [view](https://github.com/bigomics/omicsplayground/commit/11704a44b9929c3a0fd1194b093596aaf38d362d)
+-  feat: add authentication [view](https://github.com/bigomics/omicsplayground/commit/9032ef48b5a3ee72c3fd84a8cae24fa2d404f660)
+-  remove uninformative info [view](https://github.com/bigomics/omicsplayground/commit/6f698cfe3a406f57f0a43177e32ef0449d4878b1)
+-  ciao old test [view](https://github.com/bigomics/omicsplayground/commit/a5106285ff367369683488145c4ee5674878ca10)
+-  delete obsolete file [view](https://github.com/bigomics/omicsplayground/commit/db85bf5ab5c6ea78d56c1774f1867253018e21cf)
+-  change code to remove uninformative info [view](https://github.com/bigomics/omicsplayground/commit/da0216d4022c457e598ff50e48d6c9fa08a8e909)
+-  check pgx fn now works again [view](https://github.com/bigomics/omicsplayground/commit/bd729a012e50552cfd32d65bfcdaa160c4f086ac)
+-  remove unnecessary fn call [view](https://github.com/bigomics/omicsplayground/commit/a235d36582f8751be9e273e26f1bb343af9cf064)
+-  clean code [view](https://github.com/bigomics/omicsplayground/commit/b07ed5b7109e14e7eeaf459021e01212fdd552f8)
+-  rename makefile target [view](https://github.com/bigomics/omicsplayground/commit/e8319fa28c2faaacd57a52e0db1447ca3a43b77d)
+-  feat: disable browser back and forward buttons [view](https://github.com/bigomics/omicsplayground/commit/a8fb6af37e12e18bebe8b1b3287313edd451517e)
+-  fix: unclude rowname handling in `table_data()` [view](https://github.com/bigomics/omicsplayground/commit/4c57a937f851bffa36d34665463405bd29d8d12d)
+-  recode: give plot/table output unique name using ns() [view](https://github.com/bigomics/omicsplayground/commit/3a92a93b6670e192c28269b1d6d7b8d249603b55)
+-  add pgx to uplodaded object with $ [view](https://github.com/bigomics/omicsplayground/commit/42769d6e11ada63c9567007fb4d5a814e73de39b)
+-  errored files are shown in preview [view](https://github.com/bigomics/omicsplayground/commit/c9a1789c97bea93b6bc4738a1f53193d5df7ca5c)
+-  null checks displayed now instead showing success [view](https://github.com/bigomics/omicsplayground/commit/cf79f36cb612d1344f3bfe383d7235aecf3b5599)
+-  make pgx recompute data show up [view](https://github.com/bigomics/omicsplayground/commit/6cef8057a0448377364be724ba09e29a7498a607)
+-  add check_pgx in makefile [view](https://github.com/bigomics/omicsplayground/commit/3cb0e7a46be6d0d6a5570d0883ab54537dee2995)
+-  add GHA to push to omicsplayground:test [view](https://github.com/bigomics/omicsplayground/commit/83fc13f983ca1984a08fca56b5853b7a5bac314d)
+-  separate build from push [view](https://github.com/bigomics/omicsplayground/commit/3aa19ecabc4c92011f4537fe891500b8283cf3cd)
+-  remove print statements [view](https://github.com/bigomics/omicsplayground/commit/1054d257fa4497e72f15215a1a345151e75ebfd3)
+-  Improve aesthetics [view](https://github.com/bigomics/omicsplayground/commit/fc837a24b4e0c091a23a4b7ef63848441cc0e16f)
+-  Clean code [view](https://github.com/bigomics/omicsplayground/commit/f7ae2bcc9c0da70fba3893db53e9a4c31ce4a450)
+-  Add preload old pgx name and description [view](https://github.com/bigomics/omicsplayground/commit/bddb318022e8383bc231b34d2c13f9f0af97c543)
+-  Add library prefixes [view](https://github.com/bigomics/omicsplayground/commit/e7ef47544289ac7cece9d31c69b6abd3864d6225)
+-  Clean code [view](https://github.com/bigomics/omicsplayground/commit/b6628db80c05417b3d05db08db3658eff290c614)
+-  add basic test entrypoint [view](https://github.com/bigomics/omicsplayground/commit/490e56fb080bbb2d586c9d08faab33b6dd333471)
+-  only run push if test pass [view](https://github.com/bigomics/omicsplayground/commit/eed906a254dcb8cb3a4344c11de66017531565e2)
+-  fix identical job names [view](https://github.com/bigomics/omicsplayground/commit/0a495e5a7433b2a5d3da7c0a4e229229d71598a0)
+-  organize files in workflow folder [view](https://github.com/bigomics/omicsplayground/commit/1ed12a381318e10e3ad82136f42c340bb5a35378)
+-  update paths [view](https://github.com/bigomics/omicsplayground/commit/74a764f36b4d8f1d726703fb663b40b72d6575bf)
+-  minor fix to file path to support different OS [view](https://github.com/bigomics/omicsplayground/commit/a3751e4f49252ee7ffeeef89b27a307927464dfb)
+-  add target to run tests [view](https://github.com/bigomics/omicsplayground/commit/190222fc5ad3affcbb8b857f7de3500817dc6909)
+-  minor fix to allow single board to launch [view](https://github.com/bigomics/omicsplayground/commit/39ce01a80a39140086679fb99d198e439fab1483)
+-  remove return NULL as req is capturing that [view](https://github.com/bigomics/omicsplayground/commit/96ba71fb1b63a92c16ceda3a2d3a4cdc136fe29a)
+-  expose react val [view](https://github.com/bigomics/omicsplayground/commit/81b1fe4c01479e67b65170784cb867e67398aff7)
+-  add req for contrasts [view](https://github.com/bigomics/omicsplayground/commit/96fbcca49114061c9a177165b8d18a9df7c82a9b)
+-  remove unused code [view](https://github.com/bigomics/omicsplayground/commit/549672d0bfa4a05bcd02ff656dca683f21509f3a)
+-  remove return NULL [view](https://github.com/bigomics/omicsplayground/commit/4e843bace1f849a8ed471e35bc493853f04eb3e0)
+-  remove duplicated fn arg [view](https://github.com/bigomics/omicsplayground/commit/6b395c333ca437fffcd2d50aec8d54e3ae3d493f)
+-  remove return NULL; add validate [view](https://github.com/bigomics/omicsplayground/commit/42e8865c41d1f5f187ef4455ae0f964a070600b1)
+-  remove return NULL [view](https://github.com/bigomics/omicsplayground/commit/62b474c1c84ddcb0d0e955cbe546479f36f333cf)
+-  avoid dt to invalidate reactiveval [view](https://github.com/bigomics/omicsplayground/commit/4f37ff51330dd0b06c29959d7b3474036a188861)
+-  clean getOmicsScoreTable [view](https://github.com/bigomics/omicsplayground/commit/0386eb7d3bfa7c43c72c9c0d429d43dca30765ba)
+-  invalidate plots when one of the contrasts are changed [view](https://github.com/bigomics/omicsplayground/commit/22142e5f084940fe5ee5c030225c6495a5c4366b)
+-  feat: most plots now invalidate based on hilightgenes [view](https://github.com/bigomics/omicsplayground/commit/ecec9f9aca1dacc3966cee9515b2385f24488101)
+-  debug: connectivity map [view](https://github.com/bigomics/omicsplayground/commit/dc591b01dcc8b56b9718b44918d46c282b812653)
+-  v3.2.25 [view](https://github.com/bigomics/omicsplayground/commit/43d59fd67ab114a02f2f736acb3ad8ae7db308de)
+-  feat: score table works [view](https://github.com/bigomics/omicsplayground/commit/e468a51f101c2a5de70c997966c036f166adf01a)
+-  wait for table to render [view](https://github.com/bigomics/omicsplayground/commit/471aa95d7a1533018fdf86ac104b53773c271f42)
+-  remove unnecessary req [view](https://github.com/bigomics/omicsplayground/commit/80e30cb034e3d64871f38ac70084802303735c1d)
+-  Revert "minor fix to allow single board to launch" [view](https://github.com/bigomics/omicsplayground/commit/3ac98cd4d347853e015237913d0832f63513d74d)
+-  copy entrypoint to runner [view](https://github.com/bigomics/omicsplayground/commit/29a0a42707e8478fe6eb5eb7d7918e4e22be22a3)
+-  feat: board.launch now works in windows [view](https://github.com/bigomics/omicsplayground/commit/3039bb9bbdf20ba8d4d40a1ee4d4352b60c17973)
+-  remove browser [view](https://github.com/bigomics/omicsplayground/commit/ad3ed7d1aa7a26772e5afa71b5bf5202b50999ac)
+-  minor improvements to UI [view](https://github.com/bigomics/omicsplayground/commit/fc5b33db3fff9f4225f5feebd37eba839ef2a941)
+-  update snaps [view](https://github.com/bigomics/omicsplayground/commit/938a2ea4a6afd2c6178a2136c0aab63ff9f8ab67)
+-  fix: create a tab to remove pgx-path from testing [OS compatibility] [view](https://github.com/bigomics/omicsplayground/commit/5554b8517561d417b48647e68781ba63e3ca15f3)
+-  update snaps [view](https://github.com/bigomics/omicsplayground/commit/bad32fc12d1f7454617bdb87c239eec2ca3386e5)
+-  update screenshots (ivo) [view](https://github.com/bigomics/omicsplayground/commit/5e3a8f53060d68483a3743f19f193aefed890d3b)
+-  change viewport to html [view](https://github.com/bigomics/omicsplayground/commit/65f8a872036470b60f7ae30baad32e8558db0b37)
+-  switch to viewport [view](https://github.com/bigomics/omicsplayground/commit/b6ddeccd686ff7d8e1aaf0a58939616b862fb012)
+-  increase timeout [view](https://github.com/bigomics/omicsplayground/commit/dfa81d2a0eae8672246e97b95b864f216b924699)
+-  increase timeout [view](https://github.com/bigomics/omicsplayground/commit/5ea1c7b2fb7e58f6e98398d02efe2acaa8953596)
+-  allow save pgx locally [view](https://github.com/bigomics/omicsplayground/commit/0e679fc59e5baf7b6de32a77ef1c8ef805247006)
+-  update snaps [view](https://github.com/bigomics/omicsplayground/commit/bfc440c15401d18be03f8010f3c6152f9eae8a27)
+-  set threshold to 40 [view](https://github.com/bigomics/omicsplayground/commit/8156f5cf534e8adba544221881fd5e0bdc553d01)
+-  add Rprofile for docker [view](https://github.com/bigomics/omicsplayground/commit/e5e1a0b46646a2f5aa6662556138a0dfbd3559a3)
+-  add Rprofile for docker [view](https://github.com/bigomics/omicsplayground/commit/37f514d1cc9f93f3c50a17dde0a8a74da8a3d53b)
+-  replace wget with git clone [view](https://github.com/bigomics/omicsplayground/commit/fa5202ede09fa66ad7a3b250511e05888bf12dcd)
+-  suppress messages [view](https://github.com/bigomics/omicsplayground/commit/717f407ffccd68b81771889440cf3de0d319a8f4)
+-  set verbose=FALSE [view](https://github.com/bigomics/omicsplayground/commit/78ff365f4878ad9087742c5d7d42ff12e5ebf0f8)
+-  suppress messages [view](https://github.com/bigomics/omicsplayground/commit/9e6e5e1164f2cd5ca7f65d9d3aaf5010d1d6e3e6)
+-  fix scatterplot/heatmap [view](https://github.com/bigomics/omicsplayground/commit/5d1c70c4b22f1f0494e5c26daa2d5bbd4881314d)
+-  add return if NULL [view](https://github.com/bigomics/omicsplayground/commit/100d5b8f63243b25643bc83ce4489e4faf6bc87a)
+-  cleanup code, add update scripts [view](https://github.com/bigomics/omicsplayground/commit/c6f6f6fe59764ab301eeb94f05761258d8f60825)
+-  fix source [view](https://github.com/bigomics/omicsplayground/commit/13781fdb95b6531df37df92cd84daafcf7a2e647)
+-  test: add `build-test-push` action at every PR [view](https://github.com/bigomics/omicsplayground/commit/802bf91c87530884b5aea0251468c3f714a68612)
+-  update workflow paths and dockerfile name [view](https://github.com/bigomics/omicsplayground/commit/f11564502d104bd2d338ce73618957c7b39ed645)
+-  move yml file to workflows/ [view](https://github.com/bigomics/omicsplayground/commit/b24e615a24b8cb0c782f7c01e70aab98b0c18b56)
+-  update workflow name [view](https://github.com/bigomics/omicsplayground/commit/90e1d2ed13262cf2689a768d795bb9125558b761)
+-  remove old workflow [view](https://github.com/bigomics/omicsplayground/commit/52a9a678d7b0fb6a781a23c28636f342fdb15eba)
+-  fix: require data to avoid error message [view](https://github.com/bigomics/omicsplayground/commit/e7c499c655b847c34b7b5c042e76dad8baa8effa)
+-  fix: require F to avoid error [view](https://github.com/bigomics/omicsplayground/commit/9e668ff5b2105ac32926f34bc76e2ed2f275899f)
+-  fix: require res$W to avoid error [view](https://github.com/bigomics/omicsplayground/commit/ab43c66cb5d0d833cfa6567c2360acc245c62b7d)
+-  update source, styles [view](https://github.com/bigomics/omicsplayground/commit/a565afea34512dba003299581da008f4fe4ea550)
+-  run tests on boards featuremap, intersection and wordcloud [view](https://github.com/bigomics/omicsplayground/commit/f465adde7d131fd8366ab68cf89886cc38f3d581)
+-  add snaps [view](https://github.com/bigomics/omicsplayground/commit/be40669ce9ff60b021850db3ea8636ef1bf5b06b)
+-  temporarily stop running tests at every PR [view](https://github.com/bigomics/omicsplayground/commit/33d35d8414755687b58d73ae3176824afc60e029)
+-  delete unused dockerfile [view](https://github.com/bigomics/omicsplayground/commit/0b5aa08f3827453f85b18d556cffb62d1b95738e)
+-  move standard dependency installs to base [view](https://github.com/bigomics/omicsplayground/commit/2ad8253ddd539ad6015703229ee90b6dee0afa9c)
+-  change tag [view](https://github.com/bigomics/omicsplayground/commit/d7cc0d490e33a7d92741b1b65e12875e80d26fb9)
+-  move packages to requirements.R [view](https://github.com/bigomics/omicsplayground/commit/7e845855d749932c06e47b35f995bee60152d41f)
+-  remove double PCSF install [view](https://github.com/bigomics/omicsplayground/commit/283d860de0a00733befa7383c965449908311fe8)
+-  remove install of playbase/requirements.R [view](https://github.com/bigomics/omicsplayground/commit/588910fb571f991aa8d6fb948bc1b5c543079b55)
+-  comment out monocle3 [view](https://github.com/bigomics/omicsplayground/commit/05cf098e6e24961d7206cc6db0ece1c41638bdf4)
+-  fix logical warning [view](https://github.com/bigomics/omicsplayground/commit/b36ad9188c2aa9c0535d71f373400516737495ab)
+-  fix reanalyze message to be accurate re: contrasts [view](https://github.com/bigomics/omicsplayground/commit/0f3a0e2da9c0d717a4c883e6baeeea5ceebac499)
+-  update main docker file [view](https://github.com/bigomics/omicsplayground/commit/68df31433db865abbf37599596239b7cd40b59eb)
+-  force install dependencies in playbase [view](https://github.com/bigomics/omicsplayground/commit/73caab9252b4f3a91423c6339ef2ef6e738d5675)
+-  install remotes [view](https://github.com/bigomics/omicsplayground/commit/1de5cbaed750fa2ded5a4287cb09fec04d8ebc9c)
+-  install chrome [view](https://github.com/bigomics/omicsplayground/commit/518139814899af5fcbd02abe77ee6675d2d1383c)
+-  build and push docker.base [view](https://github.com/bigomics/omicsplayground/commit/ea7f82deb723c44b4b34503bc02f1da69e124740)
+-  update workflow name [view](https://github.com/bigomics/omicsplayground/commit/ee2e2c7a612e6a48d3fc4618989a77f7398040f3)
+-  only dispatch [view](https://github.com/bigomics/omicsplayground/commit/a18c476a55a41353a7e54ad67afcba2bed031117)
+-  generalize to h5 extension [view](https://github.com/bigomics/omicsplayground/commit/da7be7e5cb73c9c4c9f65440ebb0d1c25809a1f1)
+-  remove dbg output [view](https://github.com/bigomics/omicsplayground/commit/578923a08fe93594bd6041bf6520ef26445e7be4)
+-  fix checks not working on cancel and reupload [view](https://github.com/bigomics/omicsplayground/commit/7663ae62fc50b7e98e3d7121e2f17305f9106e1c)
+-  add legend [view](https://github.com/bigomics/omicsplayground/commit/643fe146088f9c4f6f828dcf8d55ba36db500a9f)
+-  copy original csv file [view](https://github.com/bigomics/omicsplayground/commit/bbc25326694b258244209edfc35ec27fa40d9da7)
+-  add revert profile option [view](https://github.com/bigomics/omicsplayground/commit/81485a910e87cfdf937fa6fd0d3894ec74fa13c4)
+-  rename to scale_per_plot [view](https://github.com/bigomics/omicsplayground/commit/523f97506deba94aa4a4d22a21d05e85d5a3eeed)
+-  update dockerhub -u [view](https://github.com/bigomics/omicsplayground/commit/6e6a988ccc4e920e528c99fca6aaf574733365e6)
+-  remove playdata install, switch to ub2204_v2 [view](https://github.com/bigomics/omicsplayground/commit/6ee7ae5e4041f65f9b8aafa7c493f2b74e4ec638)
+-  investigate why entrypoint is not working [view](https://github.com/bigomics/omicsplayground/commit/8c8d3bd5a582f56d66cb700a16d5a5bc8e6e4a63)
+-  fix: column type and name [view](https://github.com/bigomics/omicsplayground/commit/3442d222d57ed064a3725c40da64efc7b850b897)
+-  add MAX_SESSIONS option [view](https://github.com/bigomics/omicsplayground/commit/9a1b75efe263573516858912b06ec6aacd9e4e02)
+-  add PLAYGROUND_USERNAME option [view](https://github.com/bigomics/omicsplayground/commit/afca4457f021434939fce4ba31a74fec5e7f0276)
+-  add PLAYGROUND_USERNAME option [view](https://github.com/bigomics/omicsplayground/commit/45c7afae5ada7e80d533a7402dd1c5442daf8e80)
+-  add MAX_SESSIONS option [view](https://github.com/bigomics/omicsplayground/commit/3d4ac7052a97c762936a6c4db1702ce4673b420c)
+-  update version v3.2.26 [view](https://github.com/bigomics/omicsplayground/commit/eefcbba5945e4917e7f70b4bfb41aeb09ad813ba)
+
+
+### v3.2.21-master230808 (2023-08-08)
+
+-  feat: make clipping solution a global call [view](https://github.com/bigomics/omicsplayground/commit/dfe4b65238de60ed6ac133f1061e94eee77453ad)
+-  feat: dropdown solution as a function [view](https://github.com/bigomics/omicsplayground/commit/a469f4d88a57701af51248dc379662ed82afc086)
+-  fix various uploading issues in samples.csv [view](https://github.com/bigomics/omicsplayground/commit/8f236a7c6cd99a28cb00b9d48418e07d5c88ba06)
+-  v3.2.16: improved uploading samples.csv [view](https://github.com/bigomics/omicsplayground/commit/1d70fbb062a1558f8f38a8409150db8b63435984)
+-  update version [view](https://github.com/bigomics/omicsplayground/commit/0b23c5a3fb1d6887be442f363b4c31088fc15538)
+-  fix: remove white space around email. blastula crashed [view](https://github.com/bigomics/omicsplayground/commit/56eff1bd016b0b40c31438f8a78cf381a2be8474)
+-  save user contrast in raw folder; code clean up [view](https://github.com/bigomics/omicsplayground/commit/e65004fe0047a0f192ab994f5d1d221b927be13e)
+-  fix: actionMenu carson fix [view](https://github.com/bigomics/omicsplayground/commit/71eee543f632b0eebeb32c19d5c38b84e72d97a3)
+-  fix: added tooltip [view](https://github.com/bigomics/omicsplayground/commit/52607a4d9c329a2754be89207d0af408bcc4b589)
+-  feat: warn user about on_process_error [view](https://github.com/bigomics/omicsplayground/commit/ac49972bafa09b49654f071652ad372efcd3ce57)
+-  v3.2.17 [view](https://github.com/bigomics/omicsplayground/commit/22e8fc64e6106319c2662972c6ff886c8541aa8d)
+-  Delete docker-v2.yml [view](https://github.com/bigomics/omicsplayground/commit/64f7ea6ee5ab2e3971246fae1654040d1f9c2ede)
+-  feat: remote login [view](https://github.com/bigomics/omicsplayground/commit/0b5b8bb67983c0b3247a2b69b4c448177537fbbc)
+-  add ignoreInit/ignoreNULL [view](https://github.com/bigomics/omicsplayground/commit/94aaa70e81a60f27eca4237cdfb5bdc2552aaaa5)
+-  v3.2.18: adding email query string [view](https://github.com/bigomics/omicsplayground/commit/5a59e36c745d4b41f73b2f72ff429fcdb8cce035)
+-  add invalidatelater(Inf) [view](https://github.com/bigomics/omicsplayground/commit/fd46a1222cba82b4f9bff8f6af03dc18b6315c20)
+-  correct log layout [view](https://github.com/bigomics/omicsplayground/commit/c898082840f2e9feff953a6ebd24032bd321b97a)
+-  prototype of modal [view](https://github.com/bigomics/omicsplayground/commit/c4ad4b3a14e45fdafb644ebc13909e9306984bc6)
+-  add newline [view](https://github.com/bigomics/omicsplayground/commit/37c432724804e486f3422e00927e1a9ad79b22e3)
+-  feat: modal is not correct size; messages are passed correctly [view](https://github.com/bigomics/omicsplayground/commit/e4e5c9878f40b6ab57816c09f7296da80b0d49f2)
+-  add styles, call modal on server [view](https://github.com/bigomics/omicsplayground/commit/7a38d75199d3ca7dd64828d32452a3b87f470a77)
+-  improve styles [view](https://github.com/bigomics/omicsplayground/commit/f26bb52fc5a8fb56f5b4f3610228f4a69871f0f7)
+-  improve styles [view](https://github.com/bigomics/omicsplayground/commit/804078ada505234930ed730cae012cb5ed68b9e2)
+-  update bs style to danger [view](https://github.com/bigomics/omicsplayground/commit/368cfd1a43be3ab91671b1ab2dfd2726d7300e4a)
+-  bring showmodal to utils [view](https://github.com/bigomics/omicsplayground/commit/9082491c94a1b9e28187e1b5cbef0cff3e330045)
+-  create raw_dir also if no upload [view](https://github.com/bigomics/omicsplayground/commit/90d7e5c09343c6311b0305d82b7dece32892e1d6)
+-  v3.2.19 [view](https://github.com/bigomics/omicsplayground/commit/f34a2eb1325dd81f1e3f39ac93132d89a9a12b2d)
+-  upload utils function to send email [view](https://github.com/bigomics/omicsplayground/commit/e09458110cdb0eabed7332b2a42a16fe68a92754)
+-  logic to send email in case pgx fails [view](https://github.com/bigomics/omicsplayground/commit/6a1ece3c1e1aedeed3bc9076736ccba2bc67a169)
+-  feat: successfully send email to CS when pgx fails to compute [view](https://github.com/bigomics/omicsplayground/commit/74ebb6938fc45392ecc016da3435fb726cfae41e)
+-  update email logic and content [view](https://github.com/bigomics/omicsplayground/commit/7b2e63af62f8080f0ba34752b9a091f894b3ec08)
+-  feat: upon click sent to CS, disable modal and warn user that message was sent [view](https://github.com/bigomics/omicsplayground/commit/86fbd778be6508feeb09084521b92389e6a1efd1)
+-  feat: logic when no email detected works! [view](https://github.com/bigomics/omicsplayground/commit/0d7d44818a87479055d8f356160f3d62cd91e4c7)
+-  feat: error data correctly passed to email function [view](https://github.com/bigomics/omicsplayground/commit/a2b0fad018e74e482e88efc1d8ecb37661506a6f)
+-  feat: add pgx_path to CS email [view](https://github.com/bigomics/omicsplayground/commit/b8e8343ccf92b964b3da4a395a863c7520ebda45)
+-  change email to support@bigomics [view](https://github.com/bigomics/omicsplayground/commit/9031e45b319944022b1db109c163c389da3e9b14)
+-  move upload code to upload utils [view](https://github.com/bigomics/omicsplayground/commit/1a887f75f713c1df22855a289f829c2490dfec7a)
+-  feat: email send to user on all errors [view](https://github.com/bigomics/omicsplayground/commit/31f1c7fd1573fae74bc195b7416114ee0f2e6e52)
+-  minor fix on etc folder [view](https://github.com/bigomics/omicsplayground/commit/5dfbf8b575cc38dcd92b0bce615f78e8cb43d0ab)
+-  update email text [view](https://github.com/bigomics/omicsplayground/commit/6402f7e2cd1593653496cef56ffc816572103b5c)
+-  feat: email user when pgx is completed [view](https://github.com/bigomics/omicsplayground/commit/0f5c06f3fbdd21cf7afaaa32b85a801af50b845c)
+-  one sample in a group fix [view](https://github.com/bigomics/omicsplayground/commit/93dcdb0614eea4f0e83361e1557b19d15f348022)
+-  recoding reactive [view](https://github.com/bigomics/omicsplayground/commit/27474f4f5047bec28d47c50bba805573bd0a4c6c)
+-  fix for one sample in a group [view](https://github.com/bigomics/omicsplayground/commit/9bd859711294476e7ffef240bde3a426fdde9753)
+-  fix for one sample in a group [view](https://github.com/bigomics/omicsplayground/commit/d53227c2ed6ec106bfbf873f922d610df75d0803)
+-  fix for one sample in a group - remove unwanted lines [view](https://github.com/bigomics/omicsplayground/commit/26c65e3a4abcebf75ea32186087c9e5e78db00da)
+-  fix for one sample in a group [view](https://github.com/bigomics/omicsplayground/commit/369ea2b0de3b2de0dc1f90f1aefa2cddd327230d)
+-  fix for one sample in a group [view](https://github.com/bigomics/omicsplayground/commit/703a744a1bbeea9f36696acb7f84a0e420ba5e5c)
+-  add scale per method option, set default=TRUE [view](https://github.com/bigomics/omicsplayground/commit/363b09a2cefa4d3dabec78d0c13b153586d85e0f)
+-  add xmax to expression_plot_volcanoAll.R [view](https://github.com/bigomics/omicsplayground/commit/4d6377fb2af75b02230ee96ccde70f4cfc961004)
+-  minor fix in email text [view](https://github.com/bigomics/omicsplayground/commit/379b5491444d072d5a81036f3a74aac136d8c3e8)
+-  minor fix in email text [view](https://github.com/bigomics/omicsplayground/commit/40c198b7cd6b62931af0c26f95ecb3f94fddbbf3)
+-  fix for one sample in a group [view](https://github.com/bigomics/omicsplayground/commit/55f42ba83149b11bb65baa251a8fca05fc1b189f)
+-  comment out console.log mesg [view](https://github.com/bigomics/omicsplayground/commit/f4ef32671ac6278038755a928a6fdc31f01e2bc7)
+
+
+### v3.2.15 (2023-07-27)
+
+-  show only available h5 databases; remove sig filter [view](https://github.com/bigomics/omicsplayground/commit/90ce0e03f5fcace20110f262e2f3308dec8cd775)
+-  add VERSION [view](https://github.com/bigomics/omicsplayground/commit/7612ac134f51d1ecab0ff42ffe94d719ff7e669a)
+-  make connectivityboard react on datasets changes; add recalculate button [view](https://github.com/bigomics/omicsplayground/commit/daa5f3c027771a0027e451d0afb4fd8fa4f0f952)
+-  start reload_pgxdir with 0 [view](https://github.com/bigomics/omicsplayground/commit/1e9b888267e0a1d0e8bf89ceadf34b15aeb21a5b)
+-  solve merge conflict [view](https://github.com/bigomics/omicsplayground/commit/420ff7b259e14cce69e1ae1bd55061746811014e)
+-  new version v3.2.14: improved connectivity board reactivity [view](https://github.com/bigomics/omicsplayground/commit/b957a075c8c9e214c98e83ebb58df9bc66c02239)
+-  version v3.2.15: playbase fread fix [view](https://github.com/bigomics/omicsplayground/commit/739df449d43a1250d2431c2eae6be39af133fbc3)
+
+
+### v3.2.13-master230726 (2023-07-26)
+
+-  implementing navigation counting and timing for user event tracking [view](https://github.com/bigomics/omicsplayground/commit/763146e25bb5ebf28c25dae4fcaf987ff97cd73c)
+-  merge master; resolve merge conflict [view](https://github.com/bigomics/omicsplayground/commit/41a0f25c73688196c5a2feff48d0976fe63ace77)
+-  rearrange code [view](https://github.com/bigomics/omicsplayground/commit/063c74ddf50f8389a4e6352ff0c64b9a9bdb6232)
+-  rearrange code [view](https://github.com/bigomics/omicsplayground/commit/fedf152ede6c1a2dc3f32efedb58df88293b1e3b)
+-  add method parameter and select alert message [view](https://github.com/bigomics/omicsplayground/commit/9df16f7838230d7c0d1fee5f2f052957b53ac6e5)
+-  revert-clipped-dropdown [view](https://github.com/bigomics/omicsplayground/commit/d6405cce60cbe71cbac1616cb66cc7cee715ee33)
+-  Revert "revert-clipped-dropdown" [view](https://github.com/bigomics/omicsplayground/commit/c76311bfae41938e3ea5a50205fa058c12598a20)
+-  reverted mistake add [view](https://github.com/bigomics/omicsplayground/commit/836aacfb2ed0c392f8de59171237f53f912b15ed)
+-  change getPgxDir() for auth$options$user_dir [view](https://github.com/bigomics/omicsplayground/commit/13400d7063304dd92dd9982b6ef94c4aef405df2)
+-  Change auth$options$user_dir for auth$user_dir [view](https://github.com/bigomics/omicsplayground/commit/749d59fcdd1b9c19a962c7101bd35aed8926969c)
+-  Add auth argument to connectivity_server [view](https://github.com/bigomics/omicsplayground/commit/eb3db14b7fb2431e2d18854004fbc16e0357e596)
+-  dev: add create automatic changelog [view](https://github.com/bigomics/omicsplayground/commit/9cb96c181da5bfa3dbb40f32cb054216ed25988d)
+-  edit some titles/navigation labels [view](https://github.com/bigomics/omicsplayground/commit/4b020a54c303dfd0022562eb7bbc56d5b78ee2d6)
+-  add automatic creation of changelog [view](https://github.com/bigomics/omicsplayground/commit/e1cecfc587830b8a5e9a469300fbae545cc16820)
+-  move resources tab to app setttings tab [view](https://github.com/bigomics/omicsplayground/commit/142e95a00287fa25e0eeed95821ec9f584752283)
+-  resolve merge conflict [view](https://github.com/bigomics/omicsplayground/commit/6af015f868a4477b083f8bd172a42868c91cd9f7)
+-  isolate some reactive variable [view](https://github.com/bigomics/omicsplayground/commit/fd20a0479c0275c90c831318e6a580875c4c234f)
+-  fix reactivity for navbar title name [view](https://github.com/bigomics/omicsplayground/commit/93ea377bdfde4387b036f527ee760ce4d0156fd2)
+-  simplify send message code [view](https://github.com/bigomics/omicsplayground/commit/8ccfee74cd9134e47e30349aa9d8b36ba6c77210)
+-  update changelog [view](https://github.com/bigomics/omicsplayground/commit/3d16bd81aaf89f61e271fd201484c8d5580e8e3c)
+-  add features.md and changelog.md in docker [view](https://github.com/bigomics/omicsplayground/commit/053ab603e47a8af14506aed25a2ac6a58aaf24aa)
+-  add features.md and changelog.md in docker [view](https://github.com/bigomics/omicsplayground/commit/84f4da335528b85b3c2f84f2e882b870552ee20c)
+-  uncomment, not needed [view](https://github.com/bigomics/omicsplayground/commit/d02f5d2b2af77bd43f363a2056d31b00f30139e1)
+-  remove honcho code and sendlog [view](https://github.com/bigomics/omicsplayground/commit/dd24621dca383ca67c70dccaea5ca21ef3e423b1)
+-  unify shinyalert [view](https://github.com/bigomics/omicsplayground/commit/e99b8bf6296fbf82ec169fab30750d90f41c6e1f)
+-  make navbar bottom blue [view](https://github.com/bigomics/omicsplayground/commit/0cc101360e604e3826c85aa7634461fa18e7ce91)
+-  change displayed name of NNM [view](https://github.com/bigomics/omicsplayground/commit/27053d83664b1b60807602d61246c44faa05ed6d)
+-  replace logo with local image [view](https://github.com/bigomics/omicsplayground/commit/0b5da2fccce25496a26dd70e56974db66e777f0a)
+-  version 3.2.12 [view](https://github.com/bigomics/omicsplayground/commit/293ec7ed62f7622504a6b99cdf593e75a01cd395)
+-  fix bug in different pgx and filename [view](https://github.com/bigomics/omicsplayground/commit/5ebe738edb94d6fac6da59d75388d76fe6378528)
+-  fix (non)reactivity if no connectivity slot is present [view](https://github.com/bigomics/omicsplayground/commit/0931d96bb97c8ce17eab909aad9a09615883b9b3)
+-  add filter significant option [view](https://github.com/bigomics/omicsplayground/commit/ac623bc055ace6e558aff29fd015553db64eea75)
+-  version v3.2.13 [view](https://github.com/bigomics/omicsplayground/commit/b5c8a7df19ecff9290fbda3771b9ba55d0ce4156)
+
+
+### v3.2.11-master230722 (2023-07-22)
 
 -  remove all if(0) and if(1) [view](https://github.com/bigomics/omicsplayground/commit/7e0b73930461d7a54373632dcc7a0c074c1c2721)
 -  Remove commented code [view](https://github.com/bigomics/omicsplayground/commit/fec584a9a0ddbed67f94013235498c21832132b7)
@@ -299,7 +697,7 @@
 -  add if-block heartbeat at userlogout [view](https://github.com/bigomics/omicsplayground/commit/1f70e480b8c2543ca73cf32d0dd11ad7c83ae6e2)
 
 
-##### v3.1.1 (2023-07-05)
+### v3.1.1 (2023-07-05)
 
 -  allow html in startup message [view](https://github.com/bigomics/omicsplayground/commit/7fb4ab9e64ff1326d7603826f44b7e53cb393f2f)
 -  allow html in startup message [view](https://github.com/bigomics/omicsplayground/commit/de8515545fca46a2afc9bd69ba00791e7171ae45)
@@ -309,7 +707,7 @@
 -  edit login title [view](https://github.com/bigomics/omicsplayground/commit/7804bace78720331e2687c3767110a5b3327008f)
 
 
-##### v3.1.0 (2023-07-04)
+### v3.1.0 (2023-07-04)
 
 -  update gitignore [view](https://github.com/bigomics/omicsplayground/commit/9c0a58a988f97736c6779756f68f90aa3e6d9f25)
 -  part1 of removing pryr package from the app [view](https://github.com/bigomics/omicsplayground/commit/57e621ae66b2da795451d8b6e1ba62655346218a)
@@ -2313,7 +2711,7 @@
 -  move color_from_middle function to omp because it relies on DT [view](https://github.com/bigomics/omicsplayground/commit/ce01a2d9f297c57f84f9686f18840b7afcf2098a)
 
 
-##### v2.8.19 (2023-07-04)
+### v2.8.19 (2023-07-04)
 
 -  update gitignore [view](https://github.com/bigomics/omicsplayground/commit/9c0a58a988f97736c6779756f68f90aa3e6d9f25)
 -  part1 of removing pryr package from the app [view](https://github.com/bigomics/omicsplayground/commit/57e621ae66b2da795451d8b6e1ba62655346218a)
@@ -3898,7 +4296,7 @@
 -  fix dimension error check [view](https://github.com/bigomics/omicsplayground/commit/9e0db5e377734e5531d93c7ec69e959dc907c744)
 
 
-##### v3.0-RC9 (2023-05-12)
+### v3.0-RC9 (2023-05-12)
 
 -  versioning to v3.beta.1 [view](https://github.com/bigomics/omicsplayground/commit/8f3cba8b7544e104cb8b49ac58033c970631c491)
 -  fix: ensure pw.genes length is correct [view](https://github.com/bigomics/omicsplayground/commit/cec3fe4ca55a6d4796aee10a115ec255fb4705e2)
@@ -4664,7 +5062,7 @@
 -  fix tSNE calc [view](https://github.com/bigomics/omicsplayground/commit/0a8e4f356edd9ad74bc45a383f8cb84eaf6f0d51)
 
 
-##### v3.0.0 (2023-03-01)
+### v3.0.0 (2023-03-01)
 
 -  update gitignore [view](https://github.com/bigomics/omicsplayground/commit/9c0a58a988f97736c6779756f68f90aa3e6d9f25)
 -  part1 of removing pryr package from the app [view](https://github.com/bigomics/omicsplayground/commit/57e621ae66b2da795451d8b6e1ba62655346218a)
@@ -5462,7 +5860,7 @@
 -  update gitignore [view](https://github.com/bigomics/omicsplayground/commit/bb5741f04f504b1807a7c94e1686ab5355d15d95)
 
 
-##### v2.8.18 (2023-03-01)
+### v2.8.18 (2023-03-01)
 
 -  increase max session [view](https://github.com/bigomics/omicsplayground/commit/74ebaa5febc1cb3a3b87d77f22d8281ac7be271c)
 -  increase max session [view](https://github.com/bigomics/omicsplayground/commit/706b21ed274384b0b05fa99129b25e5866aa3b53)
@@ -5472,7 +5870,7 @@
 -  gitignore + rproj file [view](https://github.com/bigomics/omicsplayground/commit/a4a5b39a9d5732ea211c437bb6137f52fc3b27b5)
 
 
-##### v2.8.16 (2023-02-21)
+### v2.8.16 (2023-02-21)
 
 -  add session control [view](https://github.com/bigomics/omicsplayground/commit/d07130ea704b54fa5e693c4c0755661c430e0d04)
 -  remove we're full image [view](https://github.com/bigomics/omicsplayground/commit/7cef0c4ee166f001457d931ebd55ebc80e29d4f7)
@@ -5481,7 +5879,7 @@
 -  update [view](https://github.com/bigomics/omicsplayground/commit/b0d9e4b46edd77a4b9b2363b46b5bea7d2053bed)
 
 
-##### v2.8.14 (2023-01-30)
+### v2.8.14 (2023-01-30)
 
 -  v2.8.13 [view](https://github.com/bigomics/omicsplayground/commit/9f505febcf89c5472b4f94e4f26309e68e69b4d5)
 -  repo maintenance [view](https://github.com/bigomics/omicsplayground/commit/10265f7aa01ad0524881fb6d218bcaa501ba3e5c)
@@ -5503,21 +5901,21 @@
 -  update version 2.8.14 [view](https://github.com/bigomics/omicsplayground/commit/00d8af2ce309a921f0bb2008be6d8bf09be1f463)
 
 
-##### v2.8.12 (2022-12-04)
+### v2.8.12 (2022-12-04)
 
 -  cleanup dockerfiles [view](https://github.com/bigomics/omicsplayground/commit/0d413e4f60525734237e872bd56434899658fa2d)
 -  add make testing profile [view](https://github.com/bigomics/omicsplayground/commit/692aa67fa361e6183752cfde1452059d24cf81cd)
 -  fix memleak by shinylogs [view](https://github.com/bigomics/omicsplayground/commit/596d157093db001552729accc3458a49999c6633)
 
 
-##### v2.8.11 (2022-09-08)
+### v2.8.11 (2022-09-08)
 
 -  change ubuntu repo [view](https://github.com/bigomics/omicsplayground/commit/f46aea14fee46542d7e31b471c5bec85e1825d79)
 -  correct search_gene observer [view](https://github.com/bigomics/omicsplayground/commit/90bfe82e5f9a0dcb20832dbf70a6cb9824010923)
 -  tag version v2.8.11 [view](https://github.com/bigomics/omicsplayground/commit/dda86faee98b3b10b1d924d3053cbe152943632f)
 
 
-##### v2.8.10 (2022-06-23)
+### v2.8.10 (2022-06-23)
 
 -  correct type.convert with as.is=FALSE for compatibility with R4.0 [view](https://github.com/bigomics/omicsplayground/commit/d6c0fade9f7522f9fa0156fecf63acc037c0060e)
 -  edit [view](https://github.com/bigomics/omicsplayground/commit/ceee1ba42ca9a622da6df03df299a6434dcb63da)
@@ -5525,7 +5923,7 @@
 -  fix USERDIR in compare module [view](https://github.com/bigomics/omicsplayground/commit/006465b86149926d6549873cf2cbad88fb06bba9)
 
 
-##### v2.8.9 (2022-05-19)
+### v2.8.9 (2022-05-19)
 
 -  correct double ns [view](https://github.com/bigomics/omicsplayground/commit/377a74cb02a7f67014c83469f59148389a024641)
 -  add example-data.pgx [view](https://github.com/bigomics/omicsplayground/commit/e65e90dbf9d12dc7ee006fec89112ea0728daadd)
@@ -5533,13 +5931,13 @@
 -  correct color bug in activity map of Drug Connectivity; restyle NEWS in user settings; v2.8.9 [view](https://github.com/bigomics/omicsplayground/commit/cc64651a5837a6c954019d79381ebdded97bd7be)
 
 
-##### "v2.8.8" (2022-04-26)
+### "v2.8.8" (2022-04-26)
 
 -  change count table to multi-page [view](https://github.com/bigomics/omicsplayground/commit/8c48a948d6a8d250299ab1aa078d5e0c84ac758c)
 -  remove init in data folder [view](https://github.com/bigomics/omicsplayground/commit/4cd4b13a644cc77f489334fb69367ce79c878b8b)
 
 
-##### v2.8.8 (2022-04-26)
+### v2.8.8 (2022-04-26)
 
 -  add URL query; correct special chars in filename [view](https://github.com/bigomics/omicsplayground/commit/1a5db40ddb11a60d2d8e057d565394a101f6a15d)
 -  correct special chars in filename [view](https://github.com/bigomics/omicsplayground/commit/8a1a54e2338eff3a2abbd76e373b4088c483de79)
@@ -5674,7 +6072,7 @@
 -  add expression export (log2CPM), increase entries count table (v2.8.8) [view](https://github.com/bigomics/omicsplayground/commit/282679bf3c7ce3bbabbf73db5d67407a1bc9bcd6)
 
 
-##### v2.8.0 (2021-11-15)
+### v2.8.0 (2021-11-15)
 
 -  tag v2.8 [view](https://github.com/bigomics/omicsplayground/commit/70263f44cb1f4395a46c642b246168695cd82e34)
 -  remove logout callback in shinyproxy [view](https://github.com/bigomics/omicsplayground/commit/046df2c484be09665332578b97d5af4b47639513)
@@ -5698,7 +6096,7 @@
 -  correct fisher-test if nsig<100 [view](https://github.com/bigomics/omicsplayground/commit/56903fda5217bb572720ee697bcb5d2e95b3cb22)
 
 
-##### v2.8 (2021-11-09)
+### v2.8 (2021-11-09)
 
 -  fix dockerfile to install {rhdf5}, {mygene} from correct repos [view](https://github.com/bigomics/omicsplayground/commit/961902ca54b088b8669665b9932e241d7e4dda35)
 -  escape stars column in enrichment table [view](https://github.com/bigomics/omicsplayground/commit/fa5901aeb42379b92f8c29504badc05b45271e2c)
@@ -5907,7 +6305,7 @@
 -  remove subscription buttons from Userboard [view](https://github.com/bigomics/omicsplayground/commit/f0c1bf25523898a96bcd1440cdf2fb98d3093838)
 
 
-##### v2.7.19 (2021-05-19)
+### v2.7.19 (2021-05-19)
 
 -  hide _vs_ from phenotype list [view](https://github.com/bigomics/omicsplayground/commit/756811d51ea3fac65251cef4aac839ba853a12a8)
 -  fix/change drug actmap for 1 comparison [view](https://github.com/bigomics/omicsplayground/commit/97bbf7ef4ae0da353fd7a6ecf85da8ce02e2149f)
@@ -5961,7 +6359,7 @@
 -  update volcano all using ggplot [view](https://github.com/bigomics/omicsplayground/commit/fff2a9dc0f290c6a7054d361612912a404589328)
 
 
-##### v2.7.12 (2021-03-12)
+### v2.7.12 (2021-03-12)
 
 -  sync [view](https://github.com/bigomics/omicsplayground/commit/e495b40ffa637a87f68f9ef03208e9fc711f7198)
 -  add shinybusy at startup [view](https://github.com/bigomics/omicsplayground/commit/27a8247b239c56d2431087bb43d391225ee29cd6)
@@ -5978,7 +6376,7 @@
 -  tag v2.7.12 [view](https://github.com/bigomics/omicsplayground/commit/ba1f7c0c74f5efe73dc74d060f59e520476cb864)
 
 
-##### v2.7.10 (2021-03-05)
+### v2.7.10 (2021-03-05)
 
 -  update [view](https://github.com/bigomics/omicsplayground/commit/9d71eeaf62542b2136cc7ece4639dc1306ee765a)
 -  sync [view](https://github.com/bigomics/omicsplayground/commit/c2dad8c71366b40a2d5c4de57f2ef99e72f9a487)
@@ -5993,7 +6391,7 @@
 -  v2.7.10 [view](https://github.com/bigomics/omicsplayground/commit/f93e24adf9d34e664ec1919634db115eef77fad3)
 
 
-##### v2.7.9 (2021-03-03)
+### v2.7.9 (2021-03-03)
 
 -  correct extra method bug [view](https://github.com/bigomics/omicsplayground/commit/ebc41f469ea046cc7c63bb7a8743adb711e1bd16)
 -  autosave after pgx computation [view](https://github.com/bigomics/omicsplayground/commit/5b9ff1854a5c9869147ce78b8ba9c3a3e167d282)
@@ -6079,7 +6477,7 @@
 -  v2.7.9 [view](https://github.com/bigomics/omicsplayground/commit/7a84da41dea5f58404d836ba374590324ec60bbc)
 
 
-##### v2.7 (2021-02-12)
+### v2.7 (2021-02-12)
 
 -  revert to fgseaSimple [view](https://github.com/bigomics/omicsplayground/commit/053d6197e14eb034409bbf3023b51a02008fb48e)
 -  correct upload contrast reset [view](https://github.com/bigomics/omicsplayground/commit/abac222eef2d1276114b1d7069754e6c6e4f03e9)
@@ -6091,7 +6489,7 @@
 -  v2.7 [view](https://github.com/bigomics/omicsplayground/commit/acc3bb5af4e6328a39a33bfc173070217256f779)
 
 
-##### v2.6.5 (2021-02-11)
+### v2.6.5 (2021-02-11)
 
 -  update for v2.5 [view](https://github.com/bigomics/omicsplayground/commit/3fb7d1a967ed5eed2de44850baa93bf1c34f606e)
 -  correct reading accessfiles [view](https://github.com/bigomics/omicsplayground/commit/7883dfa860fa46c6a390a83fca15e023356c1f56)
@@ -6169,7 +6567,7 @@
 -  correct proportion plot [view](https://github.com/bigomics/omicsplayground/commit/ff81e4bec5d2d611c4663d410db1bc3496d23f5f)
 
 
-##### v2.5 (2020-07-13)
+### v2.5 (2020-07-13)
 
 -  sync [view](https://github.com/bigomics/omicsplayground/commit/2d3b232bd63e6c018dba2671d3a6be10a46f764a)
 -  update [view](https://github.com/bigomics/omicsplayground/commit/30106ce126ec9c989171b82fe28a744e4bf8c895)
@@ -6241,7 +6639,7 @@
 -  update for v2.5 [view](https://github.com/bigomics/omicsplayground/commit/364fc901504e3d39d7bd33cfdefac0f1f652af03)
 
 
-##### v2.4.1 (2020-06-25)
+### v2.4.1 (2020-06-25)
 
 -  sync [view](https://github.com/bigomics/omicsplayground/commit/7f72f94202c9d44ee01e2ac6703036120537f3cd)
 -  sync [view](https://github.com/bigomics/omicsplayground/commit/69f0b7328fd28a3a010439bfc22d00886ef8dffe)
@@ -6252,7 +6650,7 @@
 -  reset version to 2.4 [view](https://github.com/bigomics/omicsplayground/commit/68f270dcfd7c429e37f9c239879f3988774414f0)
 
 
-##### v2.4 (2020-06-25)
+### v2.4 (2020-06-25)
 
 -  move caption on top [view](https://github.com/bigomics/omicsplayground/commit/4756846cdff56f455536ae2e0a1b20ad28b805c9)
 -  redesign CellProfiling module [view](https://github.com/bigomics/omicsplayground/commit/d413cfecab2e39835b57e85b4ce93c8c64937b68)
@@ -6260,7 +6658,7 @@
 -  filter access.log dirs [view](https://github.com/bigomics/omicsplayground/commit/5bb614f6c2052073fb8303b85814d5eb2635033e)
 
 
-##### v2.3.2 (2020-06-24)
+### v2.3.2 (2020-06-24)
 
 -  correct button:hover color [view](https://github.com/bigomics/omicsplayground/commit/d21e92a8be0c03e68ec8f074a18caa0b5e4d4a16)
 -  correct button:hover color [view](https://github.com/bigomics/omicsplayground/commit/d9f33d9d5c9653b26c33201de39a5417ebab36fa)
@@ -6522,7 +6920,7 @@
 -  rename SingleCell to CellProfiling and auto-enable [view](https://github.com/bigomics/omicsplayground/commit/30001cf5c24fb5292e264075b147209dd5009bba)
 
 
-##### v2.2 (2020-01-06)
+### v2.2 (2020-01-06)
 
 -  move build folder to root [view](https://github.com/bigomics/omicsplayground/commit/c1b466060d2292c51e24c295c098866feedac93f)
 -  implement maximize button; new CorrelationModule [view](https://github.com/bigomics/omicsplayground/commit/1ec73f15cd89499d024d78e5dbcf14e9df3e9b69)
@@ -6532,7 +6930,7 @@
 -  tag v2.2 [view](https://github.com/bigomics/omicsplayground/commit/47705d3f95ea050e4ed37f77f5fddb448af53800)
 
 
-##### v2.1 (2019-12-24)
+### v2.1 (2019-12-24)
 
 -  corrected social buttons [view](https://github.com/bigomics/omicsplayground/commit/9d333137aebd34654105fa527bedc1e3466eb281)
 -  corrected social buttons [view](https://github.com/bigomics/omicsplayground/commit/63e953b13d78b74dd80b1ade02c6c7b30eb7d0b1)
@@ -6629,7 +7027,7 @@
 -  update dockerfile [view](https://github.com/bigomics/omicsplayground/commit/b9d96ce6c040dadcf9d4ddccc0dce3771c12f651)
 
 
-##### v2.0 (2019-12-19)
+### v2.0 (2019-12-19)
 
 -  update version [view](https://github.com/bigomics/omicsplayground/commit/c6844905f8e58400e9c1bb2dea5c6acddbe7d4c6)
 -  change shinyparticles to particlesjs [view](https://github.com/bigomics/omicsplayground/commit/4a44baf63120dc3b5fa69930c2537c269d5d7c3d)
@@ -6702,11 +7100,11 @@
 -  updated CSS for logo/header [view](https://github.com/bigomics/omicsplayground/commit/bde9e9280c2b0a5290f89dddf39f2b4284127b94)
 
 
-##### v1.2 (2019-12-02)
+### v1.2 (2019-12-02)
 
 
 
-##### v1.1 (2019-12-02)
+### v1.1 (2019-12-02)
 
 -  update docs/examples.rst [view](https://github.com/bigomics/omicsplayground/commit/96ae586d35bda3d31fda96134245c43a5e22c030)
 -  update docs/examples.rst [view](https://github.com/bigomics/omicsplayground/commit/fe4653a3734bd1ed53249e2ea5fcd4095433842b)
@@ -6727,7 +7125,7 @@
 -  force version BioConductor 3.10 [view](https://github.com/bigomics/omicsplayground/commit/73c40ba08323d5acfb4087e309c76d9d14b629f2)
 
 
-##### v1.0 (2019-10-16)
+### v1.0 (2019-10-16)
 
 -  added arginine example [view](https://github.com/bigomics/omicsplayground/commit/acc83fc5c49e59ec6ef47aba604cd0f49bd5730b)
 -  align GMT [view](https://github.com/bigomics/omicsplayground/commit/9e4c8d661d9427428d7511bd6366ba3e5b4937bd)
@@ -6954,13 +7352,13 @@
 -  corrected dockerfile2 [view](https://github.com/bigomics/omicsplayground/commit/ad0de6d6815d8acfaea8572f765f70fb7754ea47)
 
 
-##### 1.0-rc11 (2019-05-14)
+### 1.0-rc11 (2019-05-14)
 
 -  corrected gset logFC, remove pct column in KEGG [view](https://github.com/bigomics/omicsplayground/commit/f89c15f266fc0a66f88b81c081998798742ba0b5)
 -  lowered default logFC in gset [view](https://github.com/bigomics/omicsplayground/commit/c1640c1b8e0b68f8c56d4d8a03b4765ae9e53c0a)
 
 
-##### 1.0-rc10 (2019-05-12)
+### 1.0-rc10 (2019-05-12)
 
 -  take out BRAF.BT in scmelanoma.R [view](https://github.com/bigomics/omicsplayground/commit/cec575a8e0612b925f153237a6ad423b9d52896a)
 -  modified [view](https://github.com/bigomics/omicsplayground/commit/5a33541c8673d76e078f488305304cc4a3082080)
@@ -6969,7 +7367,7 @@
 -  added new [view](https://github.com/bigomics/omicsplayground/commit/5f04a484ee601705d7e5c0332361f078d81da500)
 
 
-##### 1.0-rc9 (2019-05-10)
+### 1.0-rc9 (2019-05-10)
 
 -  add VERSION file [view](https://github.com/bigomics/omicsplayground/commit/b46c527568b00102ab58075ba9fa1dcdde0ad4f6)
 -  update [view](https://github.com/bigomics/omicsplayground/commit/b48cc7b2c8a4dbe1ea0589bc160212eb2cda35ea)
@@ -6986,7 +7384,7 @@
 -  changed option name [view](https://github.com/bigomics/omicsplayground/commit/b968007df80fbb0b0e80db236cc9e6dac8a6db3a)
 
 
-##### 1.0-rc8 (2019-05-10)
+### 1.0-rc8 (2019-05-10)
 
 -  Update README.md [view](https://github.com/bigomics/omicsplayground/commit/16ef5084e2581bcf27ad22b7bf6b8dbf535dcc0a)
 -  update scripts [view](https://github.com/bigomics/omicsplayground/commit/6265d9c44be4b900f975828b7075b7aab7babe15)
@@ -6996,13 +7394,13 @@
 -  add make-release [view](https://github.com/bigomics/omicsplayground/commit/eaa7d827c164813fe3326f4323d59775865efe27)
 
 
-##### v1.0-rc7 (2019-05-09)
+### v1.0-rc7 (2019-05-09)
 
 -  rearrange expert/dev modules [view](https://github.com/bigomics/omicsplayground/commit/f022c5ebe1d763c509b3c1bc2f4770ea6d17a751)
 -  add expert.Rmd [view](https://github.com/bigomics/omicsplayground/commit/5b3b030356f8d5b3f58ba0ee1c8cff7822ddbea0)
 
 
-##### v1.0-rc6 (2019-05-09)
+### v1.0-rc6 (2019-05-09)
 
 -  added quickguide pdf [view](https://github.com/bigomics/omicsplayground/commit/df1f7c0751e6d81e97b5ccc449bff4500c780a57)
 -  Delete test-p2rx7.r [view](https://github.com/bigomics/omicsplayground/commit/364933aa0124727a86503f1ef9d188255f9fb3eb)
@@ -7031,7 +7429,7 @@
 -  try server [view](https://github.com/bigomics/omicsplayground/commit/0c518559556231ae5e3f575ce8e1a4d33a2d39fb)
 
 
-##### v1.0-rc4 (2019-05-09)
+### v1.0-rc4 (2019-05-09)
 
 -  remove files [view](https://github.com/bigomics/omicsplayground/commit/97c6bc4fe59b992913a7204eb95795b4ba95ef50)
 -  Update README.md [view](https://github.com/bigomics/omicsplayground/commit/b0282cc9c0849552466b478c58a2529ff04a0f79)
