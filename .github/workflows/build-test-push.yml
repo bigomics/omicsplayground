@@ -30,12 +30,25 @@ jobs:
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --rm ${{ env.DOCKER_TAG }}
       
-      - name: Upload snapshots
+      - name: Upload snapshots as artifact
         uses: actions/upload-artifact@v3
         with:
           name: testthat-snapshots
           path: /omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
           if-no-files-found: ignore
+      
+      - name: Configure Git
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      
+      - name: Commit and push snapshots
+        run: |
+          cd /omicsplayground
+          git add tests/testthat/_snaps/linux-4.1/board-values/*
+          git commit -m "Add new snapshots from testing"
+          git pull --ff-only
+          git push origin
       -
         name: Print working directory
         run: echo "pwd = ${{ steps.test.outputs.working_directory }}"
