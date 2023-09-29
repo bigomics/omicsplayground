@@ -59,5 +59,4 @@ RUN cp .github/workflows/build-test-push/entrypoint.sh .
 RUN chmod +x /omicsplayground/entrypoint.sh
 RUN cat /omicsplayground/entrypoint.sh
 
-WORKDIR /omicsplayground
 ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
