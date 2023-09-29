@@ -43,10 +43,6 @@ RUN echo Downloading $BRANCH branch
 #     && chmod -R ugo+rwX /omicsplayground \
 #     && rm $BRANCH.zip   
 
-RUN rm -fr /omicsplayground  \
-    && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/mauromiguelm/omicsplayground.git \   
-    && chmod -R ugo+rwX /omicsplayground     
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
