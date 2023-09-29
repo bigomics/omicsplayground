@@ -106,6 +106,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       comparisons2 <- names(pgx$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)
       shiny::updateSelectInput(session, "contrast2", choices = comparisons2, selected = sel2)
+      # Save on the server the new `contrast2` input value.
+      # `updateSelectInput` sends message to browser, but the `input$contrast2` value
+      # is not updated on the server instantanely, this creates an issue
+      # on the `getOmicsScoreTable` reactive when triggered by a change in dataset
+      # that makes `input$contrast2` to be outdated and crash the application.
+      updated_contrast2 <- reactiveVal()
+      updated_contrast2(sel2)
       pgx
     })
 
@@ -120,6 +127,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       ct1 <- input$contrast1
       ct2 <- input$contrast2
+      # This is just useful when there's a change in dataset2
+      # read comment on dataset2 reactive for info
+      if(updated_contrast2() != ct2) {
+        ct2 <- updated_contrast2()
+      }
 
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
