@@ -1,10 +1,6 @@
 name: Shinytest boards
-on:
-  schedule:
-    - cron:  '0 4 * * *'
-  pull_request:
-  workflow_dispatch:
-
+on: 
+  push:
 env:
   DOCKER_TAG: masierom/omicsplayground:latest
 jobs:
