@@ -253,7 +253,7 @@ ExpressionBoard <- function(id, pgx) {
       }
 
       if (nrow(res) == 0) {
-        shiny::validate(shiny::need(nrow(res) > 0, "warning. no genes passed current filters."))
+        shiny::validate(shiny::need(nrow(res) > 0, "No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar."))
         return(NULL)
       }
 

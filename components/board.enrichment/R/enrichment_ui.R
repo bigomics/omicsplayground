@@ -44,7 +44,7 @@ EnrichmentInputs <- function(id) {
           placement = "right", options = list(container = "body")
         ),
         withTooltip(shiny::checkboxInput(ns("gs_top10"), "top 10 gene sets", FALSE),
-          "Display only top 10 differentially enirhced gene sets (positively and negatively) in the <b>enrihcment analysis</b> table.",
+          "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
           placement = "top", options = list(container = "body")
         ),
       )

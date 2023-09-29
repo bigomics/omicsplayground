@@ -328,9 +328,11 @@ upload_module_computepgx_server <- function(
           custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
           custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt, length)
 
+          GSET_CHECK <- any(as.logical(unlist(custom.geneset$info$GSET_SIZE)))
+
           # tell user that custom genesets are "ok"
           # we could perform an additional check to verify that items in lists are genes
-          if (gmt.length > 0 && gmt.is.list) {
+          if (gmt.length > 0 && gmt.is.list && GSET_CHECK) {
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
               text = "Your genesets will be incorporated in the analysis.",
@@ -340,12 +342,14 @@ upload_module_computepgx_server <- function(
           }
         }
 
-        # error message if custom genesets not detected
-        if (is.null(custom.geneset$gmt)) {
+        # error message if custom genesets not detected or GSET_CHECK is FALSE
+        # add https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html to guidelins, target blank as html
+        if (is.null(custom.geneset$gmt) || !GSET_CHECK) {
           shinyalert::shinyalert(
             title = "Invalid custom genesets",
-            text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
+            text = "Please update a tsv file. See guidelines <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html' target='_blank'>here</a>.",
             type = "error",
+            html = TRUE,
             closeOnClickOutside = TRUE
           )
           custom.geneset <- list(gmt = NULL, info = NULL)

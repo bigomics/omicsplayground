@@ -92,9 +92,15 @@ pcsf_plot_network_server <- function(id,
           return(NULL)
         }
       )
+
       if (is.null(net)) {
+        shiny::validate(shiny::need(
+          !is.na(net),
+          "PCSF Network could not be computed for the given parameters. Try increasing the solution size in the settings bar."
+        ))
         return(NULL)
       }
+
       igraph::V(net)$group <- idx[igraph::V(net)$name]
 
       ## remove small clusters...
@@ -108,18 +114,7 @@ pcsf_plot_network_server <- function(id,
     visnetwork.RENDER <- function() {
       res <- pcsf_compute()
       net <- get_network()
-
-      if (is.null(net)) {
-        nodes <- data.frame()
-        edges <- data.frame()
-        return(
-          visNetwork::visNetwork(nodes, edges,
-            main = "PCSF Network could not be computed for the
-                     given parameters. Try changing the solution size in the
-                     settings bar."
-          )
-        )
-      }
+      shiny::req(net)
 
       .colorby <- colorby()
       .contrast <- contrast()

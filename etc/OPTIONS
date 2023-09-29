@@ -1,5 +1,5 @@
 TITLE                = 'Omics Playground'
-AUTHENTICATION       = none
+AUTHENTICATION       = none2
 #AUTHENTICATION      = password
 #AUTHENTICATION      = email-link
 #AUTHENTICATION      = firebase
