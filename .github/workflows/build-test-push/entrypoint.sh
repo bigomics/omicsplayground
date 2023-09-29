@@ -8,9 +8,10 @@ R -e "x <- shiny::runTests(assert = FALSE); writeLines(as.character(all(x[[2]]))
 test_result=$(cat test_result.txt)
 echo "Test results: $test_result"
 
+# return git diff to output
+git_diff=$(git diff)
+echo "::set-output name=git_diff::$(git_diff)"
+
 # return test result as an output
 echo "test_result=$test_result" >> $GITHUB_OUTPUT
 
-# return git diff to output
-git_diff=$(git diff)
-echo "git_diff=$git_diff" >> $GITHUB_OUTPUT
