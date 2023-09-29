@@ -35,6 +35,11 @@ RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
 WORKDIR /
+
+# get omicsplayground from the github checkout action
+COPY . /omicsplayground
+
+WORKDIR /omicsplayground
 # RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 #     && rm -fr /omicsplayground*  \
 #     && unzip $BRANCH.zip \
