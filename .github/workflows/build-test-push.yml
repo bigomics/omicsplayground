@@ -41,6 +41,9 @@ jobs:
       -
         name: Print working directory
         run: echo "pwd = ${{ steps.test.outputs.working_directory }}"
+      -
+        name: Print git diff
+        run: echo "git diff = ${{ steps.test.outputs.git_diff }}"
 
         
       -
