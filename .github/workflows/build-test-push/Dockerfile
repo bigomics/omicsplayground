@@ -50,13 +50,12 @@ RUN rm -fr /omicsplayground  \
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
 # add entrypoint to execute when the docker container starts up
 RUN cp .github/workflows/build-test-push/entrypoint.sh .
-RUN chmod +x /omicsplayground/entrypoint.sh
-RUN cat /omicsplayground/entrypoint.sh
+RUN chmod +x /entrypoint.sh
+RUN cat /entrypoint.sh
 
-ENTRYPOINT ["/omicsplayground/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
