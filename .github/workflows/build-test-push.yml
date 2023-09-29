@@ -6,9 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_TAG: masierom/omicsplayground:test
-  LATEST_TAG: masierom/omicsplayground:latest
-
+  DOCKER_TAG: masierom/omicsplayground:latest
 jobs:
   unittest:
     runs-on: ubuntu-latest
@@ -29,8 +27,8 @@ jobs:
         name: Shinytest docker
         id: test
         run: |
-          docker build -t ${{ env.LATEST_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
-          docker run --rm ${{ env.LATEST_TAG }}
+          docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
+          docker run --rm ${{ env.DOCKER_TAG }}
       
       - name: Upload snapshots
         uses: actions/upload-artifact@v3
@@ -44,7 +42,6 @@ jobs:
       -
         name: Print git diff
         run: echo "git diff = ${{ steps.test.outputs.git_diff }}"
-
         
       -
         name: Print test result
@@ -53,4 +50,4 @@ jobs:
         name: Push
         if: steps.test.outputs.test_result == 'TRUE'
         run: |
-          docker push ${{ env.TEST_TAG }}
+          docker push ${{ env.DOCKER_TAG }}
