@@ -35,7 +35,6 @@ RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
 WORKDIR /
-RUN echo Downloading $BRANCH branch
 # RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
 #     && rm -fr /omicsplayground*  \
 #     && unzip $BRANCH.zip \
@@ -46,14 +45,13 @@ RUN echo Downloading $BRANCH branch
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
 
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
 # add entrypoint to execute when the docker container starts up
-RUN cp omicsplayground/.github/workflows/build-test-push/entrypoint.sh .
-RUN chmod +x /entrypoint.sh
-RUN cat /entrypoint.sh
+#RUN cp /.github/workflows/build-test-push/entrypoint.sh .
+#RUN chmod +x /entrypoint.sh
+#RUN cat /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT [".github/workflows/build-test-push/entrypoint.sh"]
