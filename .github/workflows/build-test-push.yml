@@ -44,7 +44,8 @@ jobs:
       
       - name: Commit and push snapshots
         run: |
-          git add *
+          cd /github/workspace
+          git add /omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
           git commit -m "Add new snapshots from testing"
           git pull --ff-only
           git push origin
