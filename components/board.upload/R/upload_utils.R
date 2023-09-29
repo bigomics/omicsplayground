@@ -116,11 +116,11 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
   }
 
   user_email <- trimws(user_email)
-  if(is.null(user_email) || user_email=="") {
+  if (is.null(user_email) || user_email == "") {
     info("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
     return(NULL)
   }
-  
+
 
   blastula::smtp_send(
     blastula::compose_email(
@@ -161,8 +161,8 @@ sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmai
   }
 
   user_email <- trimws(user_email)
-  
-  if(is.null(user_email) || user_email=="") {
+
+  if (is.null(user_email) || user_email == "") {
     info("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
     return(NULL)
   }
