@@ -13,4 +13,4 @@ echo "test_result=$test_result" >> $GITHUB_OUTPUT
 
 # return git diff to output
 git_diff=$(git diff)
-echo "git_diff=$git_diff" >> $GITHUB_OUTPUT```
+echo "git_diff=$git_diff" >> $GITHUB_OUTPUT
