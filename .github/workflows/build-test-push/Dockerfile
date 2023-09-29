@@ -56,7 +56,7 @@ RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
 # add entrypoint to execute when the docker container starts up
-RUN cp .github/workflows/build-test-push/entrypoint.sh .
+RUN cp omicsplayground/.github/workflows/build-test-push/entrypoint.sh .
 RUN chmod +x /entrypoint.sh
 RUN cat /entrypoint.sh
 
