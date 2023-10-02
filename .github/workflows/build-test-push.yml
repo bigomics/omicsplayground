@@ -33,11 +33,7 @@ jobs:
         run: |
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --rm ${{ env.DOCKER_TAG }}
-      - 
-        name: Print ls recursive after docker run
-        run: ls -R
       
-
       - name: Upload snapshots as artifact
         uses: actions/upload-artifact@v3
         with:
