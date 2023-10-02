@@ -111,6 +111,7 @@ app_server <- function(input, output, session) {
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
+  inactivityCounter <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
@@ -624,7 +625,7 @@ app_server <- function(input, output, session) {
   #' in the ONLINE_DIR folder.
   if (isTRUE(opt$ENABLE_HEARTBEAT)) {
     ONLINE_DIR <- file.path(ETC, "online")
-    heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
+    heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR, inactivityCounter = inactivityCounter)
     observe({
       heartbeat()
     }) ## run indefinitely
@@ -865,6 +866,12 @@ app_server <- function(input, output, session) {
       html = TRUE
     )
   }
+
+
+  # Resest inactivity counter when there is user activity (a click on the UI)
+  observeEvent(input$userActivity, {
+    inactivityCounter(0)  # Reset counter on any user activity
+  })
 
   ## -------------------------------------------------------------
   ## report server times
