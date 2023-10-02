@@ -33,24 +33,28 @@ jobs:
         run: |
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --rm ${{ env.DOCKER_TAG }}
+
       - 
         name: Print ls recursive after docker run
         run: ls -R
       
 
-      - name: Upload snapshots as artifact
+      - 
+        name: Upload snapshots as artifact
         uses: actions/upload-artifact@v3
         with:
           name: testthat-snapshots
           path: /omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
           if-no-files-found: ignore
       
-      - name: Configure Git
+      - 
+        name: Configure Git
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
-      - name: Commit and push snapshots
+      - 
+        name: Commit and push snapshots
         run: |
           cd ${{ github.workspace }}
           git add ./omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
