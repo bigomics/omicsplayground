@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "::set-output name=working_directory::$(sudo pwd)"
+echo "::set-output name=working_directory::$(pwd)"
 # Run tests
 R -e "x <- shiny::runTests(assert = FALSE); writeLines(as.character(all(x[[2]])), 'test_result.txt')"
 
