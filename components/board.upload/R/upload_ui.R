@@ -86,7 +86,7 @@ upload_select_db <- shiny::tabPanel(
               ),
         div(
           style="margin-top: 120px",
-          h3("Not sure how to proceed?")
+          h3("Try our example dataset:")
           ),
         shiny::div(
           style="margin-top: 30px",
