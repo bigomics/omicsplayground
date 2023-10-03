@@ -63,12 +63,12 @@ upload_select_db <- shiny::tabPanel(
       height = "calc(100vh - 180px)",
       # add a drop down selector for species
      shiny::div(
-      style = "display: flex; justify-content: center; align-items: center; margin-top: 50px;",
+      style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
       shiny::div(
           style = "text-align: center;",
           h3(shiny::HTML("<b>Select your dataset species:</b>")),
           div(
-            style = "margin-top: 30px; margin-left: 160px; text-align: center;",
+            style = "margin-top: 30px; padding-left: 200px; text-align: center;",
             shiny::selectInput(
               ns("selected_species"),
               NULL,
@@ -78,25 +78,27 @@ upload_select_db <- shiny::tabPanel(
               multiple = FALSE
             )),
         shiny::div(
-          style = "margin-top: 30px;text-align: center;",
+          style = "margin-top: 20px;text-align: center;",
                 shiny::actionButton(ns("proceed_to_upload"), "Next",
                   icon = icon("arrow-right"),
                   class = "btn-outline-primary"
                 )
               ),
         div(
-          style="margin-top: 100px",
+          style="margin-top: 120px",
           h3("Not sure how to proceed?")
           ),
         shiny::div(
           style="margin-top: 30px",
           shiny::actionButton(
                             ns("load_example"),
-                            label = "Load example data",
+                            width = "350px",
+                            label = "Use example data",
                             class = "btn btn-outline-info welcome-btn"
                           ),
           shiny::actionButton(
                             ns("download_example"),
+                            width = "350px",
                             label = "Download example data",
                             class = "btn btn-outline-info welcome-btn"
                           )
