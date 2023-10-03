@@ -78,16 +78,29 @@ upload_select_db <- shiny::tabPanel(
               selected = NULL,
               multiple = FALSE
             )),
-          div(shinyWidgets::prettySwitch(ns("load_example"), "Load example data"))
-        ),
+        shiny::div(shinyWidgets::prettySwitch(ns("load_example"), "Load example data")),
         shiny::div(
                 shiny::actionButton(ns("proceed_to_upload"), "Next",
                   icon = icon("arrow-right"),
                   class = "btn-outline-primary"
                 ),
                 style = "padding-left: 40px;"
-              )
+              ),
+        h3("Not sure how to proceed?"),
+        shiny::div(
+          shiny::actionButton(
+                            ns("load_example"),
+                            label = "load example dataset",
+                            class = "btn btn-outline-info welcome-btn"
+                          ),
+          shiny::actionButton(
+                            ns("download_example"),
+                            label = "Download example",
+                            class = "btn btn-outline-info welcome-btn"
+                          )
+        )
       )
+    )
     )
   )
  
