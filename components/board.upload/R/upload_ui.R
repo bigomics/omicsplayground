@@ -66,10 +66,9 @@ upload_select_db <- shiny::tabPanel(
       style = "display: flex; justify-content: center; align-items: center; margin-top: 50px;",
       shiny::div(
           style = "text-align: center;",
-          shiny::HTML("<b>Species:</b>"),
+          h3(shiny::HTML("<b>Species:</b>")),
           div(
             style = "margin-top: 10px;",
-          withTooltip(
             shiny::selectInput(
               ns("selected_species"),
               NULL,
@@ -78,10 +77,7 @@ upload_select_db <- shiny::tabPanel(
               choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart=="ensembl")],
               selected = NULL,
               multiple = FALSE
-            ),
-            "Select the species of interest.",
-            placement = "left", options = list(container = "body")
-          )),
+            )),
           div(shinyWidgets::prettySwitch(ns("load_example"), "Load example data"))
         ),
         shiny::div(
