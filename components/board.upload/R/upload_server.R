@@ -386,6 +386,10 @@ UploadBoard <- function(id,
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
       if (input$load_example) {
+        # go to upload tab
+        shiny::showTab("tabs", "Upload Files")
+        shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+        
         zipfile <- file.path(FILES, "exampledata.zip")
         readfromzip1 <- function(file) {
           read.csv(unz(zipfile, file),
@@ -404,6 +408,7 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
       } else {
+        shiny::hideTab("tabs", "Upload Files")
         uploaded$counts.csv <- NULL
         uploaded$samples.csv <- NULL
         uploaded$contrasts.csv <- NULL

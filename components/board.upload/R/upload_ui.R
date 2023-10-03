@@ -74,13 +74,15 @@ upload_select_db <- shiny::tabPanel(
               ns("selected_species"),
               NULL,
               width = "300px",
+              # restrict to ensembl species, as we are validating them in the first place
               choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart=="ensembl")],
               selected = NULL,
               multiple = FALSE
             ),
             "Select the species of interest.",
             placement = "left", options = list(container = "body")
-          ))
+          )),
+          div(shinyWidgets::prettySwitch(ns("load_example"), "Load example data"))
         ),
         shiny::div(
                 shiny::actionButton(ns("proceed_to_upload"), "Next",
@@ -116,7 +118,6 @@ upload_select_db <- shiny::tabPanel(
               shiny::h4("Choose files"),
               multiple = TRUE, accept = c(".csv", ".pgx")
             ),
-            shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
           )
         ),
