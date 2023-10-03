@@ -625,7 +625,7 @@ app_server <- function(input, output, session) {
   #' in the ONLINE_DIR folder.
   if (isTRUE(opt$ENABLE_HEARTBEAT)) {
     ONLINE_DIR <- file.path(ETC, "online")
-    heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR, inactivityCounter = inactivityCounter)
+    heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
     observe({
       heartbeat()
     }) ## run indefinitely
@@ -868,10 +868,17 @@ app_server <- function(input, output, session) {
   }
 
 
-  # Resest inactivity counter when there is user activity (a click on the UI)
-  observeEvent(input$userActivity, {
-    inactivityCounter(0)  # Reset counter on any user activity
-  })
+  if (isTRUE(opt$ENABLE_INACTIVITY)) {
+    # Resest inactivity counter when there is user activity (a click on the UI)
+    observeEvent(input$userActivity, {
+      inactivityCounter(0)  # Reset counter on any user activity
+    })
+
+    inactivityControl <- start_inactivityControl(session, delta = 300, inactivityCounter)
+    observe({
+      inactivityControl()
+    })
+  }
 
   ## -------------------------------------------------------------
   ## report server times

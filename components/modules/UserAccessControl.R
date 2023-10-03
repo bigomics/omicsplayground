@@ -277,7 +277,7 @@ FolderLock <- R6::R6Class("FolderLock",
 ) ## end of R6 class
 
 
-pgx.start_heartbeat <- function(auth, session, online_dir, inactivityCounter, delta = 60) {
+pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
   reactive({
     ## shiny::req(auth$email)
     user <- auth$email
@@ -316,16 +316,6 @@ pgx.start_heartbeat <- function(auth, session, online_dir, inactivityCounter, de
 
     ## invalidate-rinse-repeat
     ##    dbg("[pgx.start_heartbeat] ticking...")
-    invalidateLater(delta * 1000)
-
-    # Add 1 to inactivity counter
-    shiny::isolate(inactivityCounter(inactivityCounter() + 1))
-    # If >30 min inactivity, close session
-    if(inactivityCounter() == 6){
-      dbg("[SERVER:userLogout] >>> USER session ended due to inactivity")
-      sever::sever(sever_ciao(), bg_color = "#004c7d")
-      session$close()
-    }
 
     ## return filename
     invisible(online_file)
