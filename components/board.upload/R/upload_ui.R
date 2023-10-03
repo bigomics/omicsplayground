@@ -66,36 +66,38 @@ upload_select_db <- shiny::tabPanel(
       style = "display: flex; justify-content: center; align-items: center; margin-top: 50px;",
       shiny::div(
           style = "text-align: center;",
-          h3(shiny::HTML("<b>Species:</b>")),
+          h3(shiny::HTML("<b>Select your dataset species:</b>")),
           div(
-            style = "margin-top: 10px;",
+            style = "margin-top: 30px; margin-left: 160px; text-align: center;",
             shiny::selectInput(
               ns("selected_species"),
               NULL,
-              width = "300px",
               # restrict to ensembl species, as we are validating them in the first place
               choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart=="ensembl")],
               selected = NULL,
               multiple = FALSE
             )),
-        shiny::div(shinyWidgets::prettySwitch(ns("load_example"), "Load example data")),
         shiny::div(
+          style = "margin-top: 30px;text-align: center;",
                 shiny::actionButton(ns("proceed_to_upload"), "Next",
                   icon = icon("arrow-right"),
                   class = "btn-outline-primary"
-                ),
-                style = "padding-left: 40px;"
+                )
               ),
-        h3("Not sure how to proceed?"),
+        div(
+          style="margin-top: 100px",
+          h3("Not sure how to proceed?")
+          ),
         shiny::div(
+          style="margin-top: 30px",
           shiny::actionButton(
                             ns("load_example"),
-                            label = "load example dataset",
+                            label = "Load example data",
                             class = "btn btn-outline-info welcome-btn"
                           ),
           shiny::actionButton(
                             ns("download_example"),
-                            label = "Download example",
+                            label = "Download example data",
                             class = "btn btn-outline-info welcome-btn"
                           )
         )
