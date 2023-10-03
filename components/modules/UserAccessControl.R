@@ -316,6 +316,7 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
 
     ## invalidate-rinse-repeat
     ##    dbg("[pgx.start_heartbeat] ticking...")
+    invalidateLater(delta * 1000)
 
     ## return filename
     invisible(online_file)
