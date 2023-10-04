@@ -68,7 +68,7 @@ upload_select_db <- shiny::tabPanel(
           style = "text-align: center;",
           h3(shiny::HTML("<b>Select your dataset species:</b>")),
           div(
-            style = "margin-top: 30px; padding-left: 200px; text-align: center;",
+            style = "margin-top: 30px; padding-left: 70px; text-align: center;",
             shiny::selectInput(
               ns("selected_species"),
               NULL,
@@ -92,15 +92,17 @@ upload_select_db <- shiny::tabPanel(
           style="margin-top: 30px",
           shiny::actionButton(
                             ns("load_example"),
-                            width = "350px",
+                            width = "220px",
+                            icon = icon("table"),
                             label = "Use example data",
-                            class = "btn btn-outline-info welcome-btn"
+                            class = "btn-outline-primary"
                           ),
           shiny::actionButton(
                             ns("download_example"),
-                            width = "350px",
+                            width = "220px",
+                            icon = icon("download"),
                             label = "Download example data",
-                            class = "btn btn-outline-info welcome-btn"
+                            class = "btn-outline-primary"
                           )
         )
       )
