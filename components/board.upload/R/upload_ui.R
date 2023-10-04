@@ -81,7 +81,7 @@ upload_select_db <- shiny::tabPanel(
           style = "margin-top: 20px;text-align: center;",
                 shiny::actionButton(ns("proceed_to_upload"), "Next",
                   icon = icon("arrow-right"),
-                  class = "btn-outline-primary"
+                  class = "btn btn-success"
                 )
               ),
         div(
