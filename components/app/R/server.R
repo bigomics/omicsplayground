@@ -766,6 +766,7 @@ app_server <- function(input, output, session) {
 
     if(authentication == "apache-cookie") {
       jsCode <- '
+        console.log("trigger SSO logout");
         var currentUrl = window.location.href;
         if (!currentUrl.endsWith("/")) {
             currentUrl += "/";
