@@ -725,7 +725,7 @@ app_server <- function(input, output, session) {
     }
   }
 
-  userLogoutSequence <- function(auth, action) {
+  userLogoutSequence <- function(auth, action) { 
     message("--------- user logout ---------")
     message("username       = ", isolate(auth$username))
     message("email          = ", isolate(auth$email))
@@ -763,6 +763,18 @@ app_server <- function(input, output, session) {
 
     ## clear PGX data as soon as the user logs out (if not done)
     clearPGX()
+
+    if(authentication == "apache-cookie") {
+      jsCode <- '
+        var currentUrl = window.location.href;
+        if (!currentUrl.endsWith("/")) {
+            currentUrl += "/";
+        }
+        var newUrl = currentUrl + "mellon/logout?ReturnTo=" + currentUrl;
+        window.location.href = newUrl;
+      '
+      shinyjs::runjs(jsCode)
+    }
   }
 
 
