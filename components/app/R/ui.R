@@ -75,7 +75,6 @@ app_ui <- function() {
       ## For apache SSO we need to redirect to /mellon/logout for SSO logout
       logout.tab <- bigdash::navbarDropdownItem(
         "Exit",
-        # onClick = "shinyproxy_logout();",
         link = "/app/omicsplayground/mellon/logout?ReturnTo=#"
       )
     }
