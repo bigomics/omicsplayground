@@ -767,15 +767,15 @@ app_server <- function(input, output, session) {
         window.location.href = newUrl;
       '
       shinyjs::runjs(jsCode)
+    } else {
+      ## reset (logout) user. This should already have been done with
+      ## the JS call but this is a cleaner (preferred) shiny method.
+      dbg("[SERVER:userLogout] >>> resetting USER")
+      isolate(auth$resetUSER())
+
+      ## clear PGX data as soon as the user logs out (if not done)
+      clearPGX()
     }
-
-    ## reset (logout) user. This should already have been done with
-    ## the JS call but this is a cleaner (preferred) shiny method.
-    dbg("[SERVER:userLogout] >>> resetting USER")
-    isolate(auth$resetUSER())
-
-    ## clear PGX data as soon as the user logs out (if not done)
-    clearPGX()
     
   }
 
