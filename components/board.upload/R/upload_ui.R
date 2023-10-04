@@ -86,25 +86,27 @@ upload_select_db <- shiny::tabPanel(
               ),
         div(
           style="margin-top: 120px",
-          h3("Try our example dataset:")
+          h3("Need a dataset to try?")
           ),
         shiny::div(
           style="margin-top: 30px",
+          shiny::downloadButton(
+                            ns("downloadExampleData"),
+                            width = "220px",
+                            icon = icon("download"),
+                            label = "Download example data",
+                            class = "btn-outline-primary",
+                            style = "margin-right: 10px;"
+                          ),
           shiny::actionButton(
                             ns("load_example"),
                             width = "220px",
                             icon = icon("table"),
                             label = "Use example data",
-                            class = "btn-outline-primary"
-                          ),
-          shiny::actionButton(
-                            ns("download_example"),
-                            width = "220px",
-                            icon = icon("download"),
-                            label = "Download example data",
-                            class = "btn-outline-primary"
+                            class = "btn-outline-primary",
+                            style = "margin-left: 10px;"
                           )
-        )
+                  )
       )
     )
     )
