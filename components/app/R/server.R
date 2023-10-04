@@ -761,9 +761,8 @@ app_server <- function(input, output, session) {
     dbg("[SERVER:userLogout] >>> resetting USER")
     isolate(auth$resetUSER())
 
-      ## clear PGX data as soon as the user logs out (if not done)
-      clearPGX()
-    
+    ## clear PGX data as soon as the user logs out (if not done)
+    clearPGX()
   }
 
 
