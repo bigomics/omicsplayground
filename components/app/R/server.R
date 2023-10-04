@@ -756,14 +756,6 @@ app_server <- function(input, output, session) {
       comment = nav_count.str
     )
 
-    ## reset (logout) user. This should already have been done with
-    ## the JS call but this is a cleaner (preferred) shiny method.
-    dbg("[SERVER:userLogout] >>> resetting USER")
-    isolate(auth$resetUSER())
-
-    ## clear PGX data as soon as the user logs out (if not done)
-    clearPGX()
-
     if(authentication == "apache-cookie") {
       jsCode <- '
         console.log("trigger SSO logout");
@@ -776,6 +768,15 @@ app_server <- function(input, output, session) {
       '
       shinyjs::runjs(jsCode)
     }
+
+    ## reset (logout) user. This should already have been done with
+    ## the JS call but this is a cleaner (preferred) shiny method.
+    dbg("[SERVER:userLogout] >>> resetting USER")
+    isolate(auth$resetUSER())
+
+    ## clear PGX data as soon as the user logs out (if not done)
+    clearPGX()
+    
   }
 
 
