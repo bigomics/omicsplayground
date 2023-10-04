@@ -136,17 +136,10 @@ UploadBoard <- function(id,
       }
     })
 
-    
-    shiny::hideTab("tabs", "Upload Files")
-
     # create an observer that will hide tabs Upload Files if selected species if null and show if the button proceed_to_upload is clicked
     observeEvent(input$proceed_to_upload,{
-      # print something to console log with shinyjs
-      shinyjs::runjs("console.log('selected_species is not null')")
-
       # show tab Upload Files
       shiny::showTab("tabs", "Upload Files")
-
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
     })
 
@@ -160,6 +153,7 @@ UploadBoard <- function(id,
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
+        shiny::showTab("tabs", "Upload Files")
         shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
@@ -172,6 +166,7 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
+        shiny::hideTab("tabs", "Upload Files")
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
@@ -385,11 +380,8 @@ UploadBoard <- function(id,
     ## trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
-      if (input$load_example) {
         # go to upload tab
-        shiny::showTab("tabs", "Upload Files")
-        shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
-        
+                
         zipfile <- file.path(FILES, "exampledata.zip")
         readfromzip1 <- function(file) {
           read.csv(unz(zipfile, file),
@@ -407,12 +399,9 @@ UploadBoard <- function(id,
         uploaded$counts.csv <- readfromzip2("exampledata/counts.csv")
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
-      } else {
-        shiny::hideTab("tabs", "Upload Files")
-        uploaded$counts.csv <- NULL
-        uploaded$samples.csv <- NULL
-        uploaded$contrasts.csv <- NULL
-      }
+
+        shiny::showTab("tabs", "Upload Files")
+        shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
     })
 
     ## =====================================================================
