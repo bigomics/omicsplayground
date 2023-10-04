@@ -76,10 +76,7 @@ app_ui <- function() {
       logout.tab <- bigdash::navbarDropdownItem(
         "Exit",
         # onClick = "shinyproxy_logout();",
-        link = paste0(
-          "/mellon/logout?ReturnTo=",
-          
-        )
+        link = "/mellon/logout?ReturnTo=#"
       )
     }
 
