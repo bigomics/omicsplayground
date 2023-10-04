@@ -593,11 +593,9 @@ UploadBoard <- function(id,
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
 
-    ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       X = shiny::reactive(uploaded$counts.csv),
-      ## X = normalized_counts,  !
       is.count = TRUE,
       pheno = shiny::reactive(uploaded$samples.csv),
       height = height
