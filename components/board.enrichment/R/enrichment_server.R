@@ -403,17 +403,27 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       ## in multi-mode we select *common* genes
       ns <- length(gs)
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
+      
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
-      genes <- intersect(genes, pgx$genes[rownames(limma1), "gene_name"])
-      genes <- setdiff(genes, c("", NA, "NA", " "))
+      if(is.null(pgx$genes$hsapiens_homolog_associated_gene_name)){
+        pgx$genes$hsapiens_homolog_associated_gene_name <- NA
+      }
+      genes_user <- pgx$genes[rownames(limma1),]
+      genes_user <- ifelse(is.na(pgx$genes$hsapiens_homolog_associated_gene_name),pgx$genes$gene_name, pgx$genes$hsapiens_homolog_associated_gene_name)
+      genes <- intersect(genes, genes_user)
 
-      title <- rep(NA, length(genes))
-      title <- as.character(playdata::GENE_TITLE[genes])
       title[is.na(title)] <- " "
 
       rpt <- data.frame("gene_name" = genes, "gene_title" = as.character(title))
       genes <- rpt[, "gene_name"]
+      
       genes1 <- pgx$genes[rownames(limma1), "gene_name"]
+
+      genes_matched_in_gene_name <- match(genes1, pgx$genes$gene_name)
+      homolog <- pgx$genes$hsapiens_homolog_associated_gene_name[genes_matched_in_gene_name]
+      genes1 <- ifelse(is.na(homolog), genes1, homolog)
+
+    
       limma1 <- limma1[match(genes, genes1), , drop = FALSE] ## align limma1
       rpt <- cbind(rpt, limma1)
       rpt <- rpt[which(!is.na(rpt$fc) & !is.na(rownames(rpt))), , drop = FALSE]
