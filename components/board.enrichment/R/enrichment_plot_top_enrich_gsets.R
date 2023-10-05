@@ -69,7 +69,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       rnk0 <- gx.meta$meta.fx
       names(rnk0) <- pgx$genes[rownames(gx.meta), "gene_name"]
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
-      names(rnk0) <- toupper(names(rnk0))
+      #names(rnk0) <- toupper(names(rnk0))
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       qv.col <- grep("meta.q|q$", colnames(rpt))[1]

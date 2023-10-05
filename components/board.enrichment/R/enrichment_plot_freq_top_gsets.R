@@ -71,10 +71,9 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       ## filter on active rows (using search)
       ii <- gseatable$rows_current()
+      req(ii)
       rpt <- rpt[ii, , drop = FALSE]
-      if (nrow(rpt) == 0) {
-        return(NULL)
-      }
+      
       ntop <- as.integer(input$gs_enrichfreq_ntop)
       gset.weight <- input$gs_enrichfreq_gsetweight
       fcweight <- input$gs_enrichfreq_fcweight
@@ -120,12 +119,16 @@ enrichment_plot_freq_top_gsets_server <- function(id,
         F <- Matrix::t(Matrix::t(F) * abs(fx[top]))
         wt <- TRUE
       }
+      # sum duplicated rows
+      F <-  rowsum(F, row.names(F))
+
       F <- head(F[order(-Matrix::rowSums(abs(F))), , drop = FALSE], ngenes)
       F <- F[order(-Matrix::rowSums(F)), , drop = FALSE]
 
       sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
       if (length(sel.zero)) rownames(F)[sel.zero] <- ""
 
+      
       playbase::pgx.stackedBarplot(
         x = F,
         ylab = ifelse(wt, "weighted frequency", "frequency"),
