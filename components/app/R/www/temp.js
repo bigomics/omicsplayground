@@ -432,5 +432,58 @@ $(document).ready(function() {
 });
 
 
+var hrefUpdatedStatus = {};  // Object to track href update status for each popover
 
+document.addEventListener('shown.bs.popover', function(event) {
+	// Get the popover container (Bootstrap 5 attaches the popover to the body by default)
+	var popover = document.body.querySelector('.popover');
+  
+	if (!popover) {
+	  console.log("Popover not found.");
+	  return;
+	}
+  
+	// Find the download button inside the popover using its class
+	var targetNode = popover.querySelector('.shiny-download-link');
+  
+	if (!targetNode) {
+	  console.log("Download button not found.");
+	  return;
+	}
 
+	// Get the id attribute of the download button
+    var buttonId = targetNode.getAttribute('id');
+    if (!buttonId) {
+        console.log("Download button ID not found.");
+        return;
+    }
+
+	// If href has been updated previously for this popover, always remove the disabled class
+    if (hrefUpdatedStatus[buttonId]) {
+        //$(targetNode).removeClass('disabled');
+		return;
+    } else {
+		$(targetNode).addClass('disabled');
+	}
+  
+	// Options for the observer (which attributes to watch)
+	var config = { attributes: true, attributeFilter: ['href'] };
+  
+	// Callback function to execute when mutations are observed
+	var callback = function(mutationsList, observer) {
+	  for (var mutation of mutationsList) {
+		if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
+		  // Enable the button by removing the "disabled" attribute
+		  $(targetNode).removeClass('disabled');
+		  // Set the flag to true as href has been updated for this popover
+		  hrefUpdatedStatus[buttonId] = true;
+		}
+	  }
+	};
+  
+	// Create an observer instance linked to the callback function
+	var observer = new MutationObserver(callback);
+  
+	// Start observing the target node for configured mutations
+	observer.observe(targetNode, config);
+  });
