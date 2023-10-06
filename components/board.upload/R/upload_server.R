@@ -223,7 +223,7 @@ UploadBoard <- function(id,
 
       upload_table <- input$upload_files
 
-      if(upload_table == "hello_example"){
+      if(class(upload_table) != "data.frame" && upload_table == "hello_example"){
         upload_table <- data.frame(
           name = c("counts.csv", "samples.csv", "contrasts.csv"),
           type = c("text/csv", "text/csv", "text/csv"),
