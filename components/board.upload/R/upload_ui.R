@@ -137,8 +137,8 @@ upload_select_db <- shiny::tabPanel(
             ),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
           )
-        )#,
-        #shiny::div(shiny::uiOutput(ns("upload_info")))
+        ),
+        shiny::div(shiny::uiOutput(ns("upload_info")))
       ),
       bslib::layout_column_wrap(
          width = 1 / 3,

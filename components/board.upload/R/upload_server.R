@@ -141,12 +141,6 @@ UploadBoard <- function(id,
       # show tab Upload Files
       shiny::showTab("tabs", "Upload Files")
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
-      uploaded[["counts.csv"]] <- NULL
-      uploaded[["samples.csv"]] <- NULL
-      uploaded[["contrasts.csv"]] <- NULL
-      uploaded[["pgx"]] <- NULL
-      uploaded[["last_uploaded"]] <- NULL
-      uploaded[["checklist"]] <- NULL
       shinyjs::runjs('document.querySelector("a[data-value=\'Select Species\']").click();')
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
     })
@@ -393,6 +387,9 @@ UploadBoard <- function(id,
     ## trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
+        shiny::showTab("tabs", "Upload Files")
+        shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+
         # go to upload tab
                 
         zipfile <- file.path(FILES, "exampledata.zip")
@@ -413,9 +410,8 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
 
-        shiny::showTab("tabs", "Upload Files")
-        shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
-    })
+        shinyjs::runjs('document.querySelector("a[data-value=\'Comparisons\']").click();')
+      })
 
     ## =====================================================================
     ## ===================== checkTables ===================================
@@ -589,9 +585,9 @@ UploadBoard <- function(id,
     )
 
     output$upload_info <- shiny::renderUI({
-      upload_info <- "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. You can upload a maximum of <u>LIMITS</u>."
+      upload_info <- "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>."
       #DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
-      upload_info <- sub("EXAMPLEZIP", upload_info)
+      #upload_info <- sub("EXAMPLEZIP", upload_info)
 
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
