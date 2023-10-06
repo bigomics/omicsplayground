@@ -141,8 +141,19 @@ UploadBoard <- function(id,
       # show tab Upload Files
       shiny::showTab("tabs", "Upload Files")
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+      uploaded[["counts.csv"]] <- NULL
+      uploaded[["samples.csv"]] <- NULL
+      uploaded[["contrasts.csv"]] <- NULL
+      uploaded[["pgx"]] <- NULL
+      uploaded[["last_uploaded"]] <- NULL
+      uploaded[["checklist"]] <- NULL
+      shinyjs::runjs('document.querySelector("a[data-value=\'Select Species\']").click();')
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
     })
 
+    
+    # upload tab should be hidden when when no selected species is selected (when componene is loaded)
+    shiny::hideTab("tabs", "Upload Files")
 
 
     ## Hide/show tabpanels upon available data like a wizard dialog
@@ -166,7 +177,7 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
-        shiny::hideTab("tabs", "Upload Files")
+        #shiny::hideTab("tabs", "Upload Files")
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
@@ -184,6 +195,8 @@ UploadBoard <- function(id,
         shiny::hideTab("tabs", "BatchCorrect")
       }
     })
+
+
 
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
@@ -577,8 +590,8 @@ UploadBoard <- function(id,
 
     output$upload_info <- shiny::renderUI({
       upload_info <- "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. You can upload a maximum of <u>LIMITS</u>."
-      DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
-      upload_info <- sub("EXAMPLEZIP", DLlink, upload_info)
+      #DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
+      upload_info <- sub("EXAMPLEZIP", upload_info)
 
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
