@@ -221,9 +221,19 @@ UploadBoard <- function(id,
         raw_dir(create_raw_dir(auth))
       }
 
+      upload_table <- input$upload_files
+
+      if(upload_table == "hello_example"){
+        upload_table <- data.frame(
+          name = c("counts.csv", "samples.csv", "contrasts.csv"),
+          type = c("text/csv", "text/csv", "text/csv"),
+          datapath = c("examplecounts","examplesamples","examplecontrasts")
+        )
+      }
+
       message("[upload_files] >>> reading uploaded files")
-      message("[upload_files] upload_files$name=", input$upload_files$name)
-      message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
+      message("[upload_files] upload_files$name=", upload_table$name)
+      message("[upload_files] upload_files$datapath=", upload_table$datapath)
 
       uploaded[["counts.csv"]] <- NULL
       uploaded[["samples.csv"]] <- NULL
@@ -233,31 +243,31 @@ UploadBoard <- function(id,
       uploaded[["checklist"]] <- NULL
 
       ## read uploaded files
-      pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
+      pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
       matlist <- list()
       checklist <- list()
 
       if (pgx.uploaded) {
         ## If the user uploaded a PGX file, we extract the matrix
         ## dimensions from the given PGX/NGS object. Really?
-        i <- grep("[.]pgx$", input$upload_files$name)
-        pgxfile <- input$upload_files$datapath[i]
+        i <- grep("[.]pgx$", upload_table$name)
+        pgxfile <- upload_table$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
 
-        ii <- grep("csv$", input$upload_files$name)
+        ii <- grep("csv$", upload_table$name)
         ii <- grep("sample|count|contrast|expression|comparison",
-          input$upload_files$name,
+          upload_table$name,
           ignore.case = TRUE
         )
         if (length(ii) == 0) {
           return(NULL)
-        }
+          }
 
-        inputnames <- input$upload_files$name[ii]
-        uploadnames <- input$upload_files$datapath[ii]
+        inputnames <- upload_table$name[ii]
+        uploadnames <- upload_table$datapath[ii]
         message("[upload_files] uploaded files: ", inputnames)
 
         ## remove any old gui_contrasts.csv
@@ -268,6 +278,7 @@ UploadBoard <- function(id,
 
         if (length(uploadnames) > 0) {
           for (i in 1:length(uploadnames)) {
+            #i = 1
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
@@ -279,8 +290,14 @@ UploadBoard <- function(id,
 
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
-              df0 <- playbase::read.as_matrix(fn2)
-
+              if(fn2 == "examplecounts"){
+                df0 <- playbase::COUNTS
+                # save a warning file telling this folder is example data
+                writeLines("", file.path(raw_dir(), "EXAMPLE_DATA"))
+              } else {
+                df0 <- playbase::read.as_matrix(fn2)
+              }
+              
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
 
@@ -305,7 +322,11 @@ UploadBoard <- function(id,
             }
 
             if (IS_SAMPLE) {
-              df0 <- playbase::read.as_matrix(fn2)
+              if(fn2 == "examplesamples"){
+                df0 <- playbase::SAMPLES
+              } else {
+                df0 <- playbase::read.as_matrix(fn2)
+              }
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_samples.csv"))
 
@@ -322,7 +343,11 @@ UploadBoard <- function(id,
             }
 
             if (IS_CONTRAST) {
-              df0 <- playbase::read.as_matrix(fn2)
+              if(fn2 == "examplecontrasts"){
+                df0 <- playbase::CONTRASTS
+              } else {
+                df0 <- playbase::read.as_matrix(fn2)
+              }
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_contrasts.csv"))
 
@@ -390,27 +415,30 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Upload Files")
         shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
 
-        # go to upload tab
+        # # # go to upload tab
                 
-        zipfile <- file.path(FILES, "exampledata.zip")
-        readfromzip1 <- function(file) {
-          read.csv(unz(zipfile, file),
-            check.names = FALSE, stringsAsFactors = FALSE,
-            row.names = 1
-          )
-        }
-        readfromzip2 <- function(file) {
-          ## allows for duplicated names
-          df0 <- read.csv(unz(zipfile, file), check.names = FALSE, stringsAsFactors = FALSE)
-          mat <- as.matrix(df0[, -1])
-          rownames(mat) <- as.character(df0[, 1])
-          mat
-        }
-        uploaded$counts.csv <- readfromzip2("exampledata/counts.csv")
-        uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
-        uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
+        # zipfile <- file.path(FILES, "exampledata.zip")
+        # readfromzip1 <- function(file) {
+        #   read.csv(unz(zipfile, file),
+        #     check.names = FALSE, stringsAsFactors = FALSE,
+        #     row.names = 1
+        #   )
+        # }
+        # readfromzip2 <- function(file) {
+        #   ## allows for duplicated names
+        #   df0 <- read.csv(unz(zipfile, file), check.names = FALSE, stringsAsFactors = FALSE)
+        #   mat <- as.matrix(df0[, -1])
+        #   rownames(mat) <- as.character(df0[, 1])
+        #   mat
+        # }
+        #uploaded$counts.csv <- NULL #readfromzip2("exampledata/counts.csv")
+        #uploaded$samples.csv <- NULL #readfromzip1("exampledata/samples.csv")
+        #uploaded$contrasts.csv <- NULL #readfromzip1("exampledata/contrasts.csv")
 
-        shinyjs::runjs('document.querySelector("a[data-value=\'Comparisons\']").click();')
+        shinyjs::runjs('document.queryselector("a[data-value=\'Comparisons\']").click();')
+
+        shinyjs::runjs("Shiny.setInputValue('upload-upload_files', 'hello_example');")
+
       })
 
     ## =====================================================================
