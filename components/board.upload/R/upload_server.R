@@ -140,6 +140,7 @@ UploadBoard <- function(id,
     observeEvent(input$proceed_to_upload,{
       # show tab Upload Files
       shiny::showTab("tabs", "Upload Files")
+      # for some reason, we need to click in another tab to make the upload tab run
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
       shinyjs::runjs('document.querySelector("a[data-value=\'Select Species\']").click();')
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
@@ -412,6 +413,7 @@ UploadBoard <- function(id,
     ## trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
+        shiny::updateSelectInput(session, "selected_species", choices = "Human")
         shiny::showTab("tabs", "Upload Files")
         shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
 
