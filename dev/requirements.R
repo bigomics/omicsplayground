@@ -115,7 +115,7 @@ pkg.extra <- c(
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
-  'blastula','shinytest2'
+  'blastula','shinytest2','sodium','cookies'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
