@@ -8,6 +8,7 @@ shinyApp(
     uiPattern = '.*',
     options = list(
         launch.browser = FALSE,
+        host = "0.0.0.0",
         port = 3838
     )
 )
