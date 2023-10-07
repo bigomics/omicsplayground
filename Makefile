@@ -5,10 +5,10 @@ run: sass version
 	Rscript dev/run_app.R
 
 run.headless:
-	R -e "shiny::runApp('components/app/R',launch=FALSE,port=3838,host='0.0.0.0')"
+	Rscript dev/run_app_headless.R
 
 run.tee: 
-	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)" 2>&1 | tee -a run.log
+	Rscript dev/run_app.R 2>&1 | tee -a run.log
 
 sass: FORCE
 	Rscript dev/sass.R
