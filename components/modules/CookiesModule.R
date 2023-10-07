@@ -48,7 +48,7 @@ get_and_decrypt_cookie <- function(session) {
 save_session_cookie <- function(session, cred) {
   key_base64 <- readLines(paste0(OPG, "/etc/keys/cookie.txt"))[1]
   passkey <- sodium::sha256(charToRaw(key_base64))
-  plaintext <- cred$email
+  plaintext <- isolate(cred$email)
   plaintext.raw <- serialize(plaintext, NULL)
   ciphertext <- sodium::data_encrypt(plaintext.raw, key = passkey)
 

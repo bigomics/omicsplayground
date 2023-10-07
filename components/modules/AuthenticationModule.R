@@ -659,12 +659,13 @@ PasswordAuthenticationModule <- function(id,
     # Get persistent session cookie (if available)
     decrypted_cookie <- get_and_decrypt_cookie(session)
 
-    if(!is.null(decrypted_cookie)){
+    if(!is.null(decrypted_cookie)) {
       message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
         output$login_warning <- shiny::renderText("")
         shiny::removeModal()
         sel <- which(CREDENTIALS$email == decrypted_cookie)[1]
         cred <- CREDENTIALS[sel, ]
+
         USER$username <- cred$username
         USER$level <- cred$level
         USER$limit <- cred$limit
@@ -677,6 +678,7 @@ PasswordAuthenticationModule <- function(id,
         if (!opt$ENABLE_USERDIR) {
           user_dir <- file.path(PGX.DIR)
         }
+        USER$user_dir <- user_dir
         USER$options <- read_user_options(user_dir)
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = cred$username))
@@ -850,6 +852,34 @@ LoginCodeAuthenticationModule <- function(id,
       shiny::showModal(login_modal)
     }
 
+    decrypted_cookie <- get_and_decrypt_cookie(session)
+
+    if(!is.null(decrypted_cookie)) {
+      message("[LoginCodeAuthenticationModule::login] PASSED : login OK! ")
+      output$login_warning <- shiny::renderText("")
+      shiny::removeModal()
+
+      USER$email <- decrypted_cookie
+
+      # create user_dir (always), set path, and set options
+      user_dir <- file.path(PGX.DIR, decrypted_cookie)
+      create_user_dir_if_needed(user_dir, PGX.DIR)
+      if (!opt$ENABLE_USERDIR) {
+        user_dir <- file.path(PGX.DIR)
+      }
+      USER$user_dir <- user_dir
+      USER$options <- read_user_options(user_dir)
+
+      session$sendCustomMessage("set-user", list(user = decrypted_cookie))
+
+      USER$logged <- TRUE
+
+      ## export as 'public' functions
+      USER$resetUSER <- resetUSER
+
+      return(USER)
+    }
+
     sendLoginCode <- function(user_email, login_code, mail_creds) {
       if (!file.exists(mail_creds)) {
         warning("[LoginCodeAuthenticationModule:sendLoginCode] WARNING: no mail_creds file")
@@ -1018,6 +1048,9 @@ LoginCodeAuthenticationModule <- function(id,
           shiny::removeModal()
 
           USER$logged <- TRUE
+
+          # Save session as cookie
+          save_session_cookie(session, USER)
         }
       }
     })
