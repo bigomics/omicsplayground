@@ -28,6 +28,7 @@ app_ui <- function(x) {
     return(cookies::set_cookie_response(
       cookie_name = "persistentOPG",
       cookie_value = "",
+      expiration = -1,
       http_only = TRUE,
       secure_only = TRUE,
       redirect = "/close"

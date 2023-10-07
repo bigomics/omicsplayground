@@ -656,37 +656,23 @@ PasswordAuthenticationModule <- function(id,
     }
 
     CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
+    # Get persistent session cookie (if available)
+    decrypted_cookie <- get_and_decrypt_cookie(session)
 
-    email <- extract_cookie_value(session$request$HTTP_COOKIE, "persistentOPG")
-    if (is.na(email)) {email <- NULL}
-    email_nonce <- extract_cookie_value(session$request$HTTP_COOKIE, "persistentOPG_nonce")
-    # Decrypt email
-    if(!is.null(email) & !is.null(email_nonce)){
-      key_base64 <- readLines(paste0(OPG, "/etc/keys/cookie.txt"))[1]
-      email_nonce_raw <- sodium::hex2bin(email_nonce)
-      email_raw <- sodium::hex2bin(email)
-      attr(email_raw, "nonce") <- email_nonce_raw
-      # Return NULL if not successful decryption
-      email <- tryCatch({
-        unserialize(sodium::data_decrypt(email_raw, key = sodium::sha256(charToRaw(key_base64))))
-      }, error = function(w){
-        NULL
-      })
-    }
-    if(!is.null(email)){
+    if(!is.null(decrypted_cookie)){
       message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
         output$login_warning <- shiny::renderText("")
         shiny::removeModal()
-        sel <- which(CREDENTIALS$email == email)[1]
+        sel <- which(CREDENTIALS$email == decrypted_cookie)[1]
         cred <- CREDENTIALS[sel, ]
         USER$username <- cred$username
         USER$level <- cred$level
         USER$limit <- cred$limit
-        USER$email <- email
+        USER$email <- decrypted_cookie
         USER$logged <- TRUE
 
         # create user_dir (always), set path, and set options
-        user_dir <- file.path(PGX.DIR, email)
+        user_dir <- file.path(PGX.DIR, decrypted_cookie)
         #create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         if (!opt$ENABLE_USERDIR) {
           user_dir <- file.path(PGX.DIR)
@@ -694,6 +680,10 @@ PasswordAuthenticationModule <- function(id,
         USER$options <- read_user_options(user_dir)
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = cred$username))
+
+        ## export 'public' functions
+        USER$resetUSER <- resetUSER
+
        return(USER)
     }
 
@@ -769,17 +759,11 @@ PasswordAuthenticationModule <- function(id,
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
 
-        key_base64 <- readLines(paste0(OPG, "/etc/keys/cookie.txt"))[1]
-        passkey <- sodium::sha256(charToRaw(key_base64))
-        plaintext <- cred$email
-        plaintext.raw <- serialize(plaintext, NULL)
-        ciphertext <- sodium::data_encrypt(plaintext.raw, key = passkey)
+        # Save session as cookie
+        save_session_cookie(session, cred)
 
-        email_encrypted_nonce <- paste(as.character(attr(ciphertext, "nonce")), collapse = "")
-        email_encrypted_value <- paste(as.character(ciphertext), collapse = "")
-
-        session$sendCustomMessage(type = 'redirect', message = email_encrypted_value)
-        session$sendCustomMessage(type = 'redirect_nonce', message = email_encrypted_nonce)
+        ## export 'public' functions
+        USER$resetUSER <- resetUSER
 
       } else {
         message("[PasswordAuthenticationModule::login] WARNING : login failed ")
