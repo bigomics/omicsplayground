@@ -872,7 +872,7 @@ app_server <- function(input, output, session) {
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Resest inactivity counter when there is user activity (a click on the UI)
     observeEvent(input$userActivity, {
-      inactivityCounter(0)  # Reset counter on any user activity
+      inactivityCounter(0) # Reset counter on any user activity
     })
 
     inactivityControl <- start_inactivityControl(session, delta = 300, inactivityCounter)

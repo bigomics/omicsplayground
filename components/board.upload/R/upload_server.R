@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UploadBoard <- function(id, 
+UploadBoard <- function(id,
                         pgx_dir,
                         pgx,
                         auth,
