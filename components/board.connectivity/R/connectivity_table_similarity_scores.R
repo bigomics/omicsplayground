@@ -45,8 +45,17 @@ connectivity_table_similarity_scores_server <- function(id,
       numcols <- c("score", "pval", "padj", "NES.q", "ES", "NES", "rho", "R2")
       numcols <- intersect(numcols, colnames(df))
 
+      feature_link <-playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        df$`dataset/contrast`
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+      )
+
       DT::datatable(df,
-        rownames = FALSE,
+        rownames = feature_link,
+        escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
@@ -68,7 +77,7 @@ connectivity_table_similarity_scores_server <- function(id,
           background = color_from_middle(
             df[, "score"], "lightblue", "#f5aeae"
           ),
-          backgroundSize = "98% 88%",
+          backgroundSize = "98% 88%", 
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
