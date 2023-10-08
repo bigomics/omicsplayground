@@ -111,6 +111,7 @@ app_server <- function(input, output, session) {
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
+  inactivityCounter <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
@@ -159,7 +160,8 @@ app_server <- function(input, output, session) {
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
-      recompute_info = recompute_info
+      recompute_info = recompute_info,
+      inactivityCounter = inactivityCounter
     )
   }
 
@@ -864,6 +866,19 @@ app_server <- function(input, output, session) {
       text = HTML(opt$STARTUP_MESSAGE),
       html = TRUE
     )
+  }
+
+
+  if (isTRUE(opt$ENABLE_INACTIVITY)) {
+    # Resest inactivity counter when there is user activity (a click on the UI)
+    observeEvent(input$userActivity, {
+      inactivityCounter(0)  # Reset counter on any user activity
+    })
+
+    inactivityControl <- start_inactivityControl(session, delta = 300, inactivityCounter)
+    observe({
+      inactivityControl()
+    })
   }
 
   ## -------------------------------------------------------------
