@@ -406,7 +406,7 @@ UploadBoard <- function(id,
 
 
     ## ------------------------------------------------------------------
-    ## Observer for loading from local exampledata.zip file
+    ## Observer for loading example data
     ##
     ## Reads in the data files from zip and puts in the
     ## reactive values object 'uploaded'. Then uploaded should
@@ -592,8 +592,26 @@ UploadBoard <- function(id,
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
       content = function(file) {
-        zip <- file.path(FILES, "exampledata.zip")
-        file.copy(zip, file)
+        # save samples, counts and contrasts locally
+        samples <- playbase::SAMPLES
+        counts <- playbase::COUNTS
+        contrasts <- playbase::CONTRASTS
+
+        # Write each data.frame to a temporary CSV file
+        tempdir <- tempdir()
+        samples_csv <- file.path(tempdir, "samples.csv")
+        counts_csv <- file.path(tempdir, "counts.csv")
+        contrasts_csv <- file.path(tempdir, "contrasts.csv")
+        write.csv(samples, samples_csv, row.names = TRUE)
+        write.csv(counts, counts_csv, row.names = TRUE)
+        write.csv(contrasts, contrasts_csv, row.names = TRUE)
+
+        # Create a zip file containing the CSV files
+        zipfile <- file.path(tempdir,"data.zip")
+        zip(zipfile, files = c(samples_csv, counts_csv, contrasts_csv), flags = "-r9Xj")
+
+        # Return the zip file
+        file.copy(zipfile, file)
       }
     )
 
