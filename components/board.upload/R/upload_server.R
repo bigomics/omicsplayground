@@ -422,7 +422,7 @@ UploadBoard <- function(id,
                 
         shinyjs::runjs('document.queryselector("a[data-value=\'Comparisons\']").click();')
 
-        shinyjs::runjs("Shiny.setInputValue('upload-upload_files', 'hello_example');")
+        shinyjs::runjs("Shiny.setInputValue('upload-upload_files', 'hello_example',{priority: 'event'});")
 
       })
 
