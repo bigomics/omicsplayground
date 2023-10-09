@@ -610,6 +610,9 @@ UploadBoard <- function(id,
         zipfile <- file.path(tempdir,"data.zip")
         zip(zipfile, files = c(samples_csv, counts_csv, contrasts_csv), flags = "-r9Xj")
 
+        # clean up
+        withr::defer(unlink(tempdir, recursive = TRUE), env = globalenv())
+        
         # Return the zip file
         file.copy(zipfile, file)
       }
