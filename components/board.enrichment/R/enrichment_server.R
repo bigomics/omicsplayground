@@ -387,10 +387,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (is.multiomics) {
         ii <- grep("\\[gx\\]|\\[mrna\\]", rownames(mx))
         mx <- mx[ii, ]
-        #
       }
 
-      #
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
       limma1.fc <- mx$meta.fx
@@ -409,7 +407,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         pgx$genes$hsapiens_homolog_associated_gene_name <- NA
       }
       genes_user <- pgx$genes[rownames(limma1),]
-      genes_user <- ifelse(is.na(pgx$genes$hsapiens_homolog_associated_gene_name),pgx$genes$gene_name, pgx$genes$hsapiens_homolog_associated_gene_name)
+      genes_user <- ifelse(is.na(pgx$genes$hsapiens_homolog_associated_gene_name), 
+                           pgx$genes$gene_name, 
+                           pgx$genes$hsapiens_homolog_associated_gene_name)
       genes <- intersect(genes, genes_user)
 
       title[is.na(title)] <- " "
@@ -444,7 +444,14 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
       sel.gene <- rownames(rpt)[i]
       gene <- as.character(rpt$gene_name[i])
-      probe <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
+
+      # Assumning new species will use the homolog associated gene name
+      # For genesets
+      if ("hsapiens_homolog_associated_gene_name" %in% colnames(pgx$genes)) {
+        probe <- rownames(pgx$genes)[match(gene, pgx$genes$hsapiens_homolog_associated_gene_name)]
+      } else {
+        probe <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
+      }
       return(list(gene = gene, probe = probe))
     })
 
