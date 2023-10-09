@@ -415,28 +415,11 @@ UploadBoard <- function(id,
     shiny::observeEvent(input$load_example, {
         shiny::updateSelectInput(session, "selected_species", choices = "Human")
         shiny::showTab("tabs", "Upload Files")
+
         shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
 
-        # # # go to upload tab
+        # go to upload tab
                 
-        # zipfile <- file.path(FILES, "exampledata.zip")
-        # readfromzip1 <- function(file) {
-        #   read.csv(unz(zipfile, file),
-        #     check.names = FALSE, stringsAsFactors = FALSE,
-        #     row.names = 1
-        #   )
-        # }
-        # readfromzip2 <- function(file) {
-        #   ## allows for duplicated names
-        #   df0 <- read.csv(unz(zipfile, file), check.names = FALSE, stringsAsFactors = FALSE)
-        #   mat <- as.matrix(df0[, -1])
-        #   rownames(mat) <- as.character(df0[, 1])
-        #   mat
-        # }
-        #uploaded$counts.csv <- NULL #readfromzip2("exampledata/counts.csv")
-        #uploaded$samples.csv <- NULL #readfromzip1("exampledata/samples.csv")
-        #uploaded$contrasts.csv <- NULL #readfromzip1("exampledata/contrasts.csv")
-
         shinyjs::runjs('document.queryselector("a[data-value=\'Comparisons\']").click();')
 
         shinyjs::runjs("Shiny.setInputValue('upload-upload_files', 'hello_example');")
