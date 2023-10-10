@@ -25,7 +25,7 @@ if (file.exists(params_from_op)) {
 
 # Call create_pgx function
 pgx <- playbase::pgx.createPGX(
-  species = params$species,
+  organism = params$organism,
   counts = params$counts,
   samples = params$samples,
   contrasts = params$contrasts,

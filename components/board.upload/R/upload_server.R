@@ -136,18 +136,18 @@ UploadBoard <- function(id,
       }
     })
 
-    # create an observer that will hide tabs Upload Files if selected species if null and show if the button proceed_to_upload is clicked
+    # create an observer that will hide tabs Upload Files if selected organism if null and show if the button proceed_to_upload is clicked
     observeEvent(input$proceed_to_upload,{
       # show tab Upload Files
       shiny::showTab("tabs", "Upload Files")
       # for some reason, we need to click in another tab to make the upload tab run
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
-      shinyjs::runjs('document.querySelector("a[data-value=\'Select Species\']").click();')
+      shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
     })
 
     
-    # upload tab should be hidden when when no selected species is selected (when componene is loaded)
+    # upload tab should be hidden when when no selected organism is selected (when componene is loaded)
     shiny::hideTab("tabs", "Upload Files")
 
 
@@ -413,7 +413,7 @@ UploadBoard <- function(id,
     ## trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
-        shiny::updateSelectInput(session, "selected_species", choices = "Human")
+        shiny::updateSelectInput(session, "selected_organism", choices = "Human")
         shiny::showTab("tabs", "Upload Files")
 
         shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
@@ -620,7 +620,7 @@ UploadBoard <- function(id,
 
     output$upload_info <- shiny::renderUI({
       
-      upload_info <- glue::glue("<div><h4>Selected species: {input$selected_species}<h4></div><br><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
+      upload_info <- glue::glue("<div><h4>Organism: {input$selected_organism}<h4></div><br><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
 
       #DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
       #upload_info <- sub("EXAMPLEZIP", upload_info)
@@ -693,7 +693,7 @@ UploadBoard <- function(id,
       raw_dir = raw_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
-      selected_species = shiny::reactive(input$selected_species),
+      selected_organism = shiny::reactive(input$selected_organism),
       enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,

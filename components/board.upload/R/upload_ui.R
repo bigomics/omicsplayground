@@ -56,21 +56,21 @@ UploadUI <- function(id) {
   )
 
 upload_select_db <- shiny::tabPanel(
-    "Select Species",
+    "Select Organism",
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",
       height = "calc(100vh - 180px)",
-      # add a drop down selector for species
+      # add a drop down selector for organism
      shiny::div(
       style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
       shiny::div(
           style = "text-align: center;",
-          h3(shiny::HTML("<b>Select your dataset species:</b>")),
+          h3(shiny::HTML("<b>Select the organism:</b>")),
           div(
             style = "margin-top: 30px; padding-left: 70px; text-align: center;",
             shiny::selectInput(
-              ns("selected_species"),
+              ns("selected_organism"),
               NULL,
               # restrict to ensembl species, as we are validating them in the first place
               choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart=="ensembl")],
