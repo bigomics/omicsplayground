@@ -214,6 +214,7 @@ DataViewUI <- function(id) {
       bslib::layout_column_wrap(
         width = 1,
         height = fullH,
+        style = "grid-template-rows: auto 1fr;",
         heights_equal = "row",
         bs_alert("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
         dataview_table_rawdata_ui(
@@ -277,7 +278,8 @@ DataViewUI <- function(id) {
         width = 1,
         height = fullH,
         heights_equal = "row",
-        bs_alert("The Contrasts panel shows information about the phenotype comparisons."),
+        style = "grid-template-rows: auto 1fr;",        
+        bs_alert("The Contrasts panel shows information about the phenotype comparisons."),        
         dataview_table_contrasts_ui(
           ns("contrastTable"),
           title = "Contrast table",
