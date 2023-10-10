@@ -27,7 +27,7 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
-    selected_species,
+    selected_organism,
     auth,
     create_raw_dir,
     enable_button = TRUE,
@@ -478,7 +478,7 @@ upload_module_computepgx_server <- function(
         # Define create_pgx function arguments
         
         params <- list(
-          species = selected_species(),
+          organism = selected_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
