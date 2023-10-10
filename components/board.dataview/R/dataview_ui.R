@@ -278,8 +278,8 @@ DataViewUI <- function(id) {
         width = 1,
         height = fullH,
         heights_equal = "row",
-        style = "grid-template-rows: auto 1fr;",        
-        bs_alert("The Contrasts panel shows information about the phenotype comparisons."),        
+        style = "grid-template-rows: auto 1fr;",
+        bs_alert("The Contrasts panel shows information about the phenotype comparisons."),
         dataview_table_contrasts_ui(
           ns("contrastTable"),
           title = "Contrast table",
