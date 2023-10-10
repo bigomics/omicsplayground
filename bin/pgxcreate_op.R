@@ -11,6 +11,10 @@ args = commandArgs(trailingOnly=TRUE)
 
 temp_dir <- args[1]
 
+if(!exists("temp_dir")) {
+  temp_dir <- getwd()
+}
+
 params_from_op <- file.path(temp_dir,"params.RData")
 
 if (file.exists(params_from_op)) {
@@ -25,6 +29,10 @@ pgx <- playbase::pgx.createPGX(
   counts = params$counts,
   samples = params$samples,
   contrasts = params$contrasts,
+  name <- params$name,
+  datatype <- params$datatype,
+  description <- params$description,
+  creator <- params$creator,
   X = NULL,
   batch.correct = params$batch.correct,
   prune.samples = params$prune.samples,
@@ -52,12 +60,6 @@ pgx <- playbase::pgx.computePGX(
   )
 
 # annotate pgx
-
-pgx$name <- params$name
-pgx$datatype <- params$datatype
-pgx$description <- params$description
-pgx$creator <- params$creator
-pgx$date <- params$date
 
 message("[ComputePgxServer:@compute] initialize object\n")
 
