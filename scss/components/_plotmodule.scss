@@ -1,15 +1,17 @@
 html {
     .plotmodule {
-	padding: 5px 15px 50px 15px;
+	// padding: 5px 15px 50px 15px;
+	padding: 0px;
     }
 
     .plotmodule-header {
-    padding: 6px 9px 5px 9px;
+        padding: 5px 6px 5px 12px;
 	border-bottom: 1px solid #ccc;
     }
 
     .plotmodule-title {
 	font-size: 16px;
+	margin-top: -1px;
     }
 
     .plotmodule-info {
@@ -41,15 +43,17 @@ html {
     /* -------------------------- TableModule ---------------------- */
     .tablemodule {
 //	padding: 5px 15px 50px 15px;
+	padding: 0px;
     }
 
     .tablemodule-header {
-        padding: 6px 9px 5px 9px;
+        padding: 5px 6px 4px 12px;	
         border-bottom: 1px solid #ccc;
-        }
+    }
 
     .tablemodule-title {
 	font-size: 16px;
+	margin-top: -1px;	
     }
 
     .tablemodule-info {
@@ -74,28 +78,6 @@ html {
         margin-left: auto;
         margin-right: auto;
     }
-
-    ul.nav.navbar-nav>li>a {
-        padding: 0px 10px 1px 10px;
-        color: grey;
-	background-color: #e7eaed;
-	border-radius: 50px;
-        font-size: calc(100% - 20%);
-    }
-
-    ul.nav.navbar-nav>li>a:hover ul.nav.navbar-nav>li>a:active {
-        color: black;
-        font-size: calc(100% - 20%);
-    }
-
-    ul.nav.navbar-nav>li {
-        display: inline-block;
-    }
-
-    ul.nav.navbar-nav {
-        display: inline-block !important;
-    }
-
 
 
 }
