@@ -273,7 +273,6 @@ CardUI <- function(...,
                    width = "auto",
                    title = "",
                    caption = "") {
-
   ifnotchar.int <- function(s) {
     suppressWarnings(
       ifelse(!is.na(as.integer(s)), paste0(as.integer(s), "px"), s)
@@ -298,7 +297,7 @@ CardUI <- function(...,
     bslib::as.card_item(div(header)),
     bslib::card_body(
       gap = "0px",
-        ...
+      ...
     ),
     bslib::card_body(
       class = "card-footer", # center the content horizontally and vertically
@@ -309,4 +308,3 @@ CardUI <- function(...,
     )
   ) ## end of card
 }
-

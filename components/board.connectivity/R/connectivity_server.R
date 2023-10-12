@@ -419,7 +419,7 @@ ConnectivityBoard <- function(
     connectivityScoreTable <- connectivity_table_similarity_scores_server(
       "connectivityScoreTable",
       getConnectivityScores = getConnectivityScores,
-      columns = c("pathway", "score", "rho", "NES", "odd.ratio","tau"),
+      columns = c("pathway", "score", "rho", "NES", "odd.ratio", "tau"),
       height = "200px" ## scrollY height
     )
 
