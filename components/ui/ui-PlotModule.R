@@ -14,7 +14,7 @@ PlotModuleUI <- function(id,
                          plotlib = "base",
                          plotlib2 = NULL,
                          outputFunc = NULL,
-                         outputFunc2 = NULL,
+                         outputFunc2 = outputFunc,
                          no.download = FALSE,
                          download.fmt = c("png", "pdf"),
                          just.info = FALSE,
@@ -294,6 +294,7 @@ PlotModuleUI <- function(id,
   }
 
   e <- bslib::card(
+    class = "plotmodule",
     full_screen = FALSE,
     style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
@@ -371,7 +372,7 @@ PlotModuleServer <- function(id,
                              plotlib = "base",
                              plotlib2 = plotlib,
                              renderFunc = NULL,
-                             renderFunc2 = NULL,
+                             renderFunc2 = renderFunc,
                              csvFunc = NULL,
                              download.fmt = c("png", "pdf"),
                              height = c(640, 800),
@@ -632,7 +633,6 @@ PlotModuleServer <- function(id,
                   dev.off()
                 } else if (plotlib == "image") {
                   p <- func()
-                  ## generic function should produce PDF inside plot func()
                 } else if (plotlib == "generic") {
                   ## generic function should produce PDF inside plot func()
                 } else if (plotlib == "base") {

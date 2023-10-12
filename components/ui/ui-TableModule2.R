@@ -7,7 +7,7 @@
 TableModuleUI <- function(id,
                           height = c(400, 800),
                           width = c("auto", "100%"),
-                          info.text = "Figure",
+                          info.text = "Table",
                           title = "",
                           options = NULL,
                           label = "",
@@ -264,3 +264,49 @@ TableModuleServer <- function(id,
     }
   )
 }
+
+
+
+
+CardUI <- function(...,
+                   height = "100%",
+                   width = "auto",
+                   title = "",
+                   caption = "") {
+
+  ifnotchar.int <- function(s) {
+    suppressWarnings(
+      ifelse(!is.na(as.integer(s)), paste0(as.integer(s), "px"), s)
+    )
+  }
+  width.1 <- ifnotchar.int(width)
+  height.1 <- ifnotchar.int(height)
+
+  header <- shiny::fillRow(
+    flex = c(NA, 1),
+    class = "tablemodule-header",
+    shiny::div(class = "plotmodule-title", title = title, title),
+    ##    label,
+    "", ## no labels
+  )
+
+  # Div construction
+  bslib::card(
+    class = "plotmodule",
+    full_screen = FALSE, # full_screen = TRUE breaks reactivity
+    style = paste0("height:", height.1, ";overflow:visible;"),
+    bslib::as.card_item(div(header)),
+    bslib::card_body(
+      gap = "0px",
+        ...
+    ),
+    bslib::card_body(
+      class = "card-footer", # center the content horizontally and vertically
+      div(class = "caption", shiny::HTML(paste0(
+        "<b>", as.character(title), ".</b>",
+        "&nbsp;", as.character(caption)
+      )))
+    )
+  ) ## end of card
+}
+
