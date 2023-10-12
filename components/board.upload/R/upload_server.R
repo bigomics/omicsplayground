@@ -10,7 +10,8 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        recompute_info) {
+                        recompute_info,
+                        inactivityCounter) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -647,7 +648,8 @@ UploadBoard <- function(id,
       auth = auth,
       create_raw_dir = create_raw_dir,
       height = height,
-      recompute_info
+      recompute_info,
+      inactivityCounter = inactivityCounter
     )
 
     uploaded_pgx <- shiny::reactive({
