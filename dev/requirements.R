@@ -236,8 +236,10 @@ if(1) {
     ## Write license file of the used/installed packages
     lisc <- installed.packages(fields = "License")
     sel <- which(lisc[,"Package"] %in% INSTALLED.PKGS)
-    lisc1 <- lisc[sel,]
+    lisc1 <- lisc
+    lisc1 <- lisc[sel,]    
     lisc1 <- lisc1[order(lisc1[,"Package"]),]
+    lisc1 <- lisc1[!duplicated(lisc1[,"Package"]),]
     lisc2 <- lisc1[,c("Package","Version","License")]
     ##write.table(lisc2, "RPackageLicenses.txt",sep='\t', quote=FALSE, row.names=FALSE)
     fixstr <- function(s,n=30) {substring(paste0(s,paste(rep(" ",n),collapse='')),1,n) }
