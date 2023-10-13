@@ -3,6 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+#' Create UI for top enriched gene set plots
+#'
+#' @description 
+#' Generates the Shiny UI for plotting the top enriched gene sets.
+#'
+#' @param id Widget id to use for the output.  
+#' @param title Plot title.
+#' @param info.text Info text to display.
+#' @param caption Plot caption.
+#' @param height Plot height.
+#' @param width Plot width.
+#' 
+#' @return Shiny UI for top enriched plots.
 enrichment_plot_top_enrich_gsets_ui <- function(
     id,
     title,
@@ -25,6 +39,17 @@ enrichment_plot_top_enrich_gsets_ui <- function(
   )
 }
 
+
+#' Plot top enriched gene sets
+#'
+#' @param id Module ID
+#' @param pgx PGX object
+#' @param getFilteredGeneSetTable Function to get filtered gene set table
+#' @param gs_contrast Gene set contrast
+#' @param gseatable Gene set enrichment analysis table 
+#' @param watermark Add watermark to plot  
+#'
+#' @return Shiny module server function 
 enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     pgx,
                                                     getFilteredGeneSetTable,
@@ -63,13 +88,33 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       } else {
         itop <- head(jj, 12)
       }
-      rpt <- rpt[itop, ]
 
+      # Retreive Enrichment info
+      rpt <- rpt[itop, ]
       gx.meta <- pgx$gx.meta$meta[[comp]]
       rnk0 <- gx.meta$meta.fx
-      names(rnk0) <- pgx$genes[rownames(gx.meta), "gene_name"]
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
-      #names(rnk0) <- toupper(names(rnk0))
+
+      # We currently use Human Homolog for GSET 
+      if ("hsapiens_homolog_associated_gene_name" %in% colnames(pgx$genes)) {
+        which_id <- "homologene_id"
+      }
+
+      # Select type of gene_id
+      if (which_id == "feat_id") {
+          genes_id <- pgx$genes[rownames(gx.meta), "gene_name"]
+      } else if (which_id == "homologene_id") {
+          genes_id <- pgx$genes[rownames(gx.meta), "hsapiens_homolog_associated_gene_name"]
+      } else if (which_id == "strain_gene_name") {
+          genes_id <- pgx$genes[rownames(gx.meta), "external_gene_name"]
+      } else {
+          stop("which_id must be one of 'feat_id', 'gene_symbol', or 'entrez_id'")
+      }
+
+      # Temporary deal with NAs and duplicates
+      rnk0 <- rnk0[!is.na(genes_id)]
+      names(rnk0) <- genes_id[!is.na(genes_id)]
+      rnk0 <- rnk0[!duplicated(names(rnk0))]
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       qv.col <- grep("meta.q|q$", colnames(rpt))[1]
@@ -97,7 +142,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         qv = qv,
         fx = fx
       )
-      res
+      return(res)
     })
 
     plot.RENDER <- function() {
@@ -173,17 +218,13 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         genes <- gmt.genes[[i]]
         genes <- toupper(genes)
         names(rnk0) <- toupper(names(rnk0))
-
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
             genes,
-            ## names = NULL, ## main=gset.name,
             main = gset.name,
             xlab = "Rank in ordered dataset",
             ylab = "Rank metric",
-            ## lab.line = c(0, 1.8), cex.lab = 0.75,
-            ## cex.main = 0.78, len.main = 200,
             ticklen = 0.25,
             yth = 1, ## threshold for which points get label
             cbar.width = 32,
@@ -196,7 +237,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
           plt <- playbase::gsea.enplotly(
             rnk0,
             genes,
-            ## names = NULL, ## main=gset.name,
             main = "",
             cex = 0.4,
             xlab = NULL,
@@ -215,11 +255,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             plotly::layout(
               xaxis = list(showticklabels = FALSE),
               margin = list(l = 0, r = 0, t = 80, b = 40)
-              ## annotations = list(
-              ##   list(x = 0.1 , y = y0, xanchor='left',
-              ##     text = gset.name, font = list(size=10),
-              ##     showarrow = FALSE, xref='paper', yref='y')
-              ## )
             )
         }
         plist[[i]] <- plt
@@ -234,7 +269,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         plt <- plotly::subplot(plist,
           nrows = 3,
           shareX = TRUE, shareY = TRUE,
-          ## titleX=FALSE, titleY=FALSE,
           titleX = TRUE, titleY = TRUE,
           margin = c(0.0, 0.0, 0.02, 0.02)
         ) %>%
