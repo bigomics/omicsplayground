@@ -171,7 +171,6 @@ FeatureMapBoard <- function(id, pgx) {
           hilight2 = NULL,
           hilight.col = NULL,
           opacity = opacity,
-          ## xlab = xlab, ylab = ylab,
           xlab = "", ylab = "",
           xaxs = xaxs,
           yaxs = yaxs,

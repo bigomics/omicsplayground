@@ -61,12 +61,6 @@ SingleCellBoard <- function(id, pgx) {
       refsel <- unique(c(grep("LM22", refsets, value = TRUE), refsets))[1]
       shiny::updateSelectInput(session, "refset", choices = refsets, selected = refsel)
       shiny::updateSelectInput(session, "refset2", choices = refsets, selected = refsel)
-
-      ## dcmethods <- names(pgx$deconv[[1]])
-      ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-      ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
-      ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
-
       grpvars <- c("<ungrouped>", colnames(pgx$samples))
       sel <- grpvars[1]
       if (ncol(pgx$X) > 30) sel <- grpvars[2]
