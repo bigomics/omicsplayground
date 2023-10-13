@@ -192,9 +192,12 @@ featuremap_plot_table_geneset_map_server <- function(id,
     # Table
     gsetTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
+      # I will temporarily comment out these lines, they seem to fix the bug when displaying 
+      # the table, but I don't know why pgx$drugs would be required for the table to be displayed
+      # so that when it is null, the table is not displayed. TODO, FIXME 
+      #if (is.null(pgx$drugs)) {
+      #  return(NULL)
+      #}
 
       pos <- getGsetUMAP()
 
