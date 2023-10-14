@@ -96,21 +96,14 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
 
       # We currently use Human Homolog for GSET 
-      if ("hsapiens_homolog_associated_gene_name" %in% colnames(pgx$genes)) {
-        which_id <- "homologene_id"
-      }
+     
+     if(!is.null(pgx$genes$hsapiens_homolog_associated_gene_name)){
+      genes_id <- ifelse(is.na(pgx$genes$hsapiens_homolog_associated_gene_name), pgx$genes$gene_name, pgx$genes$hsapiens_homolog_associated_gene_name)
+     }else{
+      genes_id <- pgx$genes$gene_name
+     }
 
-      # Select type of gene_id
-      if (which_id == "feat_id") {
-          genes_id <- pgx$genes[rownames(gx.meta), "gene_name"]
-      } else if (which_id == "homologene_id") {
-          genes_id <- pgx$genes[rownames(gx.meta), "hsapiens_homolog_associated_gene_name"]
-      } else if (which_id == "strain_gene_name") {
-          genes_id <- pgx$genes[rownames(gx.meta), "external_gene_name"]
-      } else {
-          stop("which_id must be one of 'feat_id', 'gene_symbol', or 'entrez_id'")
-      }
-
+     
       # Temporary deal with NAs and duplicates
       rnk0 <- rnk0[!is.na(genes_id)]
       names(rnk0) <- genes_id[!is.na(genes_id)]
@@ -213,6 +206,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       if (ntop == 12) rowcol <- c(3, 4)
 
       plist <- list()
+
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
