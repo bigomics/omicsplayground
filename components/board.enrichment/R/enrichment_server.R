@@ -285,7 +285,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rpt <- outputs[[gsmethod]]
       }
 
-      rpt <- rpt[order(-rpt$logFC), ] ## positive
+      rpt <- rpt[order(rpt$meta.q), ] ## positive
       rpt <- data.frame(rpt)
 
       return(rpt)
