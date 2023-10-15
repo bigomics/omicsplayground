@@ -409,21 +409,30 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       genes_user <- pgx$genes[rownames(limma1),cols_in_pgx]
       
-      genes_user <- genes_user[,!apply(genes_user,2, function(x) all(is.na(x)))]
+      empty_cols <- apply(genes_user,2, function(x) all(is.na(x)))
 
-      genes_combined <- ifelse(is.na(genes_user$hsapiens_homolog_associated_gene_name),
-        genes_user$gene_name,
-        genes_user$hsapiens_homolog_associated_gene_name)
-      
+      genes_user <- genes_user[,!empty_cols, drop = FALSE]
+
+      if(!is.null(genes_user$hsapiens_homolog_associated_gene_name)){
+        genes_combined <- ifelse(is.na(genes_user$hsapiens_homolog_associated_gene_name),
+          genes_user$gene_name,
+          genes_user$hsapiens_homolog_associated_gene_name)
+      }else{
+        genes_combined <- genes_user$gene_name
+      } 
       genes_user$genes_combined <- genes_combined
       genes <- genes_user[genes_user$genes_combined%in%genes,]
-    
-      limma1 <- limma1[genes$feat_id, , drop = FALSE] ## align limma1
+      if("feat_id" %in% colnames(genes)){
+        limma1 <- limma1[genes$feat_id, , drop = FALSE] ## align limma1
+      }else{
+        limma1 <- limma1[genes$gene_name, , drop = FALSE] ## align limma1
+
+      }
       genes <- cbind(genes, limma1)
       genes <- genes[which(!is.na(genes$fc) & !is.na(rownames(genes))), , drop = FALSE]
 
       genes$genes_combined = NULL
-      
+
       if("hsapiens_homolog_associated_gene_name" %in% colnames(genes)){
         colnames(genes)[colnames(genes)=="hsapiens_homolog_associated_gene_name"] <- "hsa_ortholog"
       }
