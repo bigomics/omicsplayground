@@ -32,7 +32,8 @@ upload_module_computepgx_server <- function(
     enable_button = TRUE,
     alertready = TRUE,
     height = 720,
-    recompute_info) {
+    recompute_info,
+    inactivityCounter) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -561,6 +562,10 @@ upload_module_computepgx_server <- function(
         if (process_counter() == 0) {
           return(NULL)
         }
+
+        # When computing PGX, reset inactivity counter
+        # to avoid session closure while computing
+        inactivityCounter(0)
 
         reactive_timer()
         active_processes <- process_obj()

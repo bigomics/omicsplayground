@@ -108,6 +108,7 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
     credentials = blastula::creds_file(path_to_creds)
   )
 }
+
 sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
     info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
@@ -115,6 +116,11 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
   }
 
   user_email <- trimws(user_email)
+  if (is.null(user_email) || user_email == "") {
+    info("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
+    return(NULL)
+  }
+
 
   blastula::smtp_send(
     blastula::compose_email(
@@ -150,11 +156,16 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
 
 sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
-    info("[compute PGX process] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    info("[sendSuccessMessageToUser] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
 
   user_email <- trimws(user_email)
+
+  if (is.null(user_email) || user_email == "") {
+    info("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
+    return(NULL)
+  }
 
   blastula::smtp_send(
     blastula::compose_email(

@@ -114,6 +114,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       shiny::req(dataset2())
       shiny::req(input$contrast1)
       shiny::req(input$contrast2)
+      shiny::req(
+        input$contrast2 %in% colnames(playbase::pgx.getMetaMatrix(dataset2())$fc)
+      )
 
       pgx1 <- pgx
       pgx2 <- dataset2()

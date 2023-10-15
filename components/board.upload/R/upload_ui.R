@@ -79,6 +79,8 @@ UploadUI <- function(id) {
             ),
             shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
+            # bslib::input_switch(ns("load_example"), "Load example data"),
+            # bslib::input_switch(ns("advanced_mode"), "Batch correction (beta)")
           )
         ),
         shiny::div(shiny::uiOutput(ns("upload_info")))
