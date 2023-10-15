@@ -285,7 +285,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rpt <- outputs[[gsmethod]]
       }
 
-      rpt <- rpt[order(-rpt$logFC), ] ## positive
+      rpt <- rpt[order(rpt$meta.q, -rpt$logFC), ] ## positive
       rpt <- data.frame(rpt)
 
       return(rpt)
@@ -401,37 +401,48 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       ## in multi-mode we select *common* genes
       ns <- length(gs)
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
-      
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
-      if(is.null(pgx$genes$hsapiens_homolog_associated_gene_name)){
-        pgx$genes$hsapiens_homolog_associated_gene_name <- NA
-      }
-      genes_user <- pgx$genes[rownames(limma1),]
-      genes_user <- ifelse(is.na(pgx$genes$hsapiens_homolog_associated_gene_name), 
-                           pgx$genes$gene_name, 
-                           pgx$genes$hsapiens_homolog_associated_gene_name)
-      genes <- intersect(genes, genes_user)
 
-      title[is.na(title)] <- " "
+      # check which columns are in pgx$genes
+      cols_in_pgx <- c("feat_id","gene_name","hsapiens_homolog_associated_gene_name")
+      cols_in_pgx <- cols_in_pgx[which(cols_in_pgx %in% colnames(pgx$genes))]
 
-      rpt <- data.frame("gene_name" = genes, "gene_title" = as.character(title))
-      genes <- rpt[, "gene_name"]
+      genes_user <- pgx$genes[rownames(limma1),cols_in_pgx]
       
-      genes1 <- pgx$genes[rownames(limma1), "gene_name"]
+      empty_cols <- apply(genes_user,2, function(x) all(is.na(x)))
 
-      genes_matched_in_gene_name <- match(genes1, pgx$genes$gene_name)
-      homolog <- pgx$genes$hsapiens_homolog_associated_gene_name[genes_matched_in_gene_name]
-      genes1 <- ifelse(is.na(homolog), genes1, homolog)
+      genes_user <- genes_user[,!empty_cols, drop = FALSE]
 
-    
-      limma1 <- limma1[match(genes, genes1), , drop = FALSE] ## align limma1
-      rpt <- cbind(rpt, limma1)
-      rpt <- rpt[which(!is.na(rpt$fc) & !is.na(rownames(rpt))), , drop = FALSE]
+      if(!is.null(genes_user$hsapiens_homolog_associated_gene_name)){
+        genes_combined <- ifelse(is.na(genes_user$hsapiens_homolog_associated_gene_name),
+          genes_user$gene_name,
+          genes_user$hsapiens_homolog_associated_gene_name)
+      }else{
+        genes_combined <- genes_user$gene_name
+      } 
+      genes_user$genes_combined <- genes_combined
+      genes <- genes_user[genes_user$genes_combined%in%genes,]
+      if("feat_id" %in% colnames(genes)){
+        limma1 <- limma1[genes$feat_id, , drop = FALSE] ## align limma1
+      }else{
+        limma1 <- limma1[genes$gene_name, , drop = FALSE] ## align limma1
 
-      if (nrow(rpt) > 0) {
-        rpt <- rpt[order(-abs(rpt$fc)), , drop = FALSE]
       }
-      return(rpt)
+      genes <- cbind(genes, limma1)
+      genes <- genes[which(!is.na(genes$fc) & !is.na(rownames(genes))), , drop = FALSE]
+
+      genes$genes_combined = NULL
+
+      if("hsapiens_homolog_associated_gene_name" %in% colnames(genes)){
+        colnames(genes)[colnames(genes)=="hsapiens_homolog_associated_gene_name"] <- "hsa_ortholog"
+      }
+
+
+
+      if (nrow(genes) > 0) {
+        genes <- genes[order(-abs(genes$fc)), , drop = FALSE]
+      }
+      return(genes)
     })
 
     gene_selected <- shiny::reactive({
