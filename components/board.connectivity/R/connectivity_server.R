@@ -239,8 +239,9 @@ ConnectivityBoard <- function(
             shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {
               user.scores <- playbase::pgx.computeConnectivityScores(
                 pgx, sigdb.file,
-                ntop = 50, contrasts = NULL,
-                remove.le = TRUE, inmemory = FALSE
+                ntop = 50,
+                contrasts = NULL,
+                remove.le = TRUE
               )
             })
             shiny::removeModal(session)
