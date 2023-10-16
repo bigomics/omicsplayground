@@ -206,8 +206,9 @@ upload_module_computepgx_server <- function(
                         href = path_gmt,
                         target = "_blank",
                         style = "text-decoration: underline;"
+                      ),
+                      downloadLink(ns("download_gmt"), "Download File")
                       )
-                    )
                   ),
                   multiple = FALSE,
                   accept = c(".txt", ".gmt")
@@ -794,6 +795,18 @@ upload_module_computepgx_server <- function(
           type = "success"
         )
       })
+
+        output$download_gmt <- downloadHandler(
+        filename = function() {
+          # Set the filename for the downloaded file
+          "EGFR_TARGET_GENES.v2023.1.Hs.gmt"
+        },
+        content = function(file) {
+          gmt_path <- file.path(FILES, "/gmt/EGFR_TARGET_GENES.v2023.1.Hs.gmt")
+          gmt <- readBin(gmt_path, what = raw(), n=file.info(gmt_path)$size)
+          writeBin(gmt, file)
+        }
+      )
 
       return(computedPGX)
     } ## end-of-server
