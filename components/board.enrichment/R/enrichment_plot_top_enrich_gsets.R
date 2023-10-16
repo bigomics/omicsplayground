@@ -97,8 +97,10 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
 
       # We currently use Human Homolog for GSET 
      
-     if(!is.null(pgx$genes$hsapiens_homolog_associated_gene_name)){
-      genes_id <- ifelse(is.na(pgx$genes$hsapiens_homolog_associated_gene_name), pgx$genes$gene_name, pgx$genes$hsapiens_homolog_associated_gene_name)
+     if(!is.null(pgx$genes$human_ortholog)){
+      genes_id <- ifelse(is.na(pgx$genes$human_ortholog), 
+                               pgx$genes$gene_name, 
+                               pgx$genes$human_ortholog)
      }else{
       genes_id <- pgx$genes$gene_name
      }

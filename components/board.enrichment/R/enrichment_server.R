@@ -449,8 +449,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       # Assumning new species will use the homolog associated gene name
       # For genesets
-      if ("hsapiens_homolog_associated_gene_name" %in% colnames(pgx$genes)) {
-        probe <- rownames(pgx$genes)[match(gene, pgx$genes$hsapiens_homolog_associated_gene_name)]
+      if ("human_ortholog" %in% colnames(pgx$genes)) {
+        probe <- rownames(pgx$genes)[match(gene, pgx$genes$human_ortholog)]
       } else {
         probe <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
       }
