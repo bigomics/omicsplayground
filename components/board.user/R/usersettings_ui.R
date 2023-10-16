@@ -22,14 +22,14 @@ UserSettingsUI <- function(id) {
           width = 1,
           style = htmltools::css(grid_template_columns = "2fr 5fr 5fr"),
           CardUI(
-              bslib::input_switch(ns("enable_beta"), "Enable beta features"),
-              bslib::input_switch(ns("enable_info"), "Show info alerts", value = TRUE),
-              selector_switch(
-                  class = "card-footer-checked",
-                  label = "show captions",
-                  is.checked = FALSE
-              ),
-              title = "Application options"
+            bslib::input_switch(ns("enable_beta"), "Enable beta features"),
+            bslib::input_switch(ns("enable_info"), "Show info alerts", value = TRUE),
+            selector_switch(
+              class = "card-footer-checked",
+              label = "show captions",
+              is.checked = FALSE
+            ),
+            title = "Application options"
           ),
           PlotModuleUI(
             ns("newfeatures"),

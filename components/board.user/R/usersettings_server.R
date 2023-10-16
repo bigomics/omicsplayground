@@ -22,16 +22,18 @@ UserSettingsBoard <- function(id, auth, pgx) {
       ))
     })
 
-#    output$newfeatures <- renderUI({
-#      newfeat <- markdown::markdownToHTML(file = file.path(OPG, "FEATURES.md"),
-#                                          fragment.only = TRUE)
-#      HTML(newfeat)
-#    })
+    #    output$newfeatures <- renderUI({
+    #      newfeat <- markdown::markdownToHTML(file = file.path(OPG, "FEATURES.md"),
+    #                                          fragment.only = TRUE)
+    #      HTML(newfeat)
+    #    })
 
     newfeatures.RENDER <- reactive({
-        newfeat <- markdown::markdownToHTML(file = file.path(OPG, "FEATURES.md"),
-                                            fragment.only = TRUE)
-        HTML(newfeat)
+      newfeat <- markdown::markdownToHTML(
+        file = file.path(OPG, "FEATURES.md"),
+        fragment.only = TRUE
+      )
+      HTML(newfeat)
     })
 
     PlotModuleServer(
@@ -40,19 +42,19 @@ UserSettingsBoard <- function(id, auth, pgx) {
       func = newfeatures.RENDER,
       renderFunc = renderUI
     )
-    
+
     packages.RENDER <- function() {
-      pkg <- read.table(file.path(OPG, "RPackageLicenses.txt"),sep="!",header=TRUE)[,1]
-      pkg <- strsplit(gsub("[ ]{2,}",",", trimws(pkg)),split=",")
+      pkg <- read.table(file.path(OPG, "RPackageLicenses.txt"), sep = "!", header = TRUE)[, 1]
+      pkg <- strsplit(gsub("[ ]{2,}", ",", trimws(pkg)), split = ",")
       pkg <- do.call(rbind, pkg)
-      colnames(pkg) <- c("Package","Version","License")
+      colnames(pkg) <- c("Package", "Version", "License")
       DT::datatable(pkg,
         rownames = FALSE,
         plugins = "scrollResize",
         options = list(
-            dom = "t",
-            pageLength = 999,
-            scrollResize = TRUE
+          dom = "t",
+          pageLength = 999,
+          scrollResize = TRUE
         ),
         class = "compact hover"
       ) %>%
@@ -63,7 +65,7 @@ UserSettingsBoard <- function(id, auth, pgx) {
       "packages",
       func = packages.RENDER
     )
-    
+
     res <- list(
       enable_beta = reactive({
         as.logical(input$enable_beta)

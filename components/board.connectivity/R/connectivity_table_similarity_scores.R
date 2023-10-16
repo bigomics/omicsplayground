@@ -29,26 +29,24 @@ connectivity_table_similarity_scores_server <- function(id,
                                                         columns,
                                                         height) {
   moduleServer(id, function(input, output, session) {
-
     get_datatable <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
-      
+
       kk <- intersect(columns, colnames(df))
       df <- df[, kk]
       df <- df[abs(df$score) > 0, , drop = FALSE]
-      
+
       df$pathway <- playbase::shortstring(df$pathway, 100)
       colnames(df) <- sub("pathway", "dataset/contrast", colnames(df))
       df
     })
 
     createDT <- function(df) {
-
       score.col <- which(colnames(df) == "score")
       numcols <- c("score", "pval", "padj", "NES.q", "odd.ratio", "ES", "NES", "rho", "R2", "tau")
       numcols <- intersect(numcols, colnames(df))
-        
+
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
@@ -80,10 +78,10 @@ connectivity_table_similarity_scores_server <- function(id,
 
     connectivityScoreTable.RENDER <- function() {
       df <- get_datatable()
-      df <- df[,c("dataset/contrast","score","rho")]
+      df <- df[, c("dataset/contrast", "score", "rho")]
       createDT(df)
     }
-      
+
     connectivityScoreTable.RENDER_modal <- function() {
       df <- get_datatable()
       dt <- createDT(df)
