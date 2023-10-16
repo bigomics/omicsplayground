@@ -68,7 +68,7 @@ upload_module_computepgx_server <- function(
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
 
-      path_gmt <- "https://omicsplayground.readthedocs.io/en/latest/"
+      path_gmt <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
         shiny::fillCol(
