@@ -211,11 +211,10 @@ DataViewUI <- function(id) {
     # counts table tab #####
     shiny::tabPanel(
       "Counts table",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
+        row_heights = list("auto", 1),
         height = fullH,
-        style = "grid-template-rows: auto 1fr;",
-        heights_equal = "row",
         bs_alert("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
@@ -230,14 +229,13 @@ DataViewUI <- function(id) {
     # Sample information #####
     shiny::tabPanel(
       "Sample information",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
         height = fullH,
-        heights_equal = "row",
+        col_widths = 12,
+        row_heights = list("auto", 1.33, 1),        
         bs_alert("In the Sample information panel, more complete information about samples can be found."),
-        bslib::layout_column_wrap(
-          width = 1 / 2,
-          heights_equal = "row",
+        bslib::layout_columns(
+          width = 6,
           dataview_plot_phenoheatmap_ui(
             ns("phenoheatmap"),
             title = "Phenotype clustering",
@@ -274,11 +272,10 @@ DataViewUI <- function(id) {
     # contrasts tab #####
     shiny::tabPanel(
       "Contrasts",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
         height = fullH,
-        heights_equal = "row",
-        style = "grid-template-rows: auto 1fr;",
+        col_widths = 12,
+        row_heights = list("auto", 1),
         bs_alert("The Contrasts panel shows information about the phenotype comparisons."),
         dataview_table_contrasts_ui(
           ns("contrastTable"),
