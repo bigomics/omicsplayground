@@ -232,7 +232,7 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         height = fullH,
         col_widths = 12,
-        row_heights = list("auto", 1.33, 1),        
+        row_heights = list("auto", 1.33, 1),
         bs_alert("In the Sample information panel, more complete information about samples can be found."),
         bslib::layout_columns(
           width = 6,
