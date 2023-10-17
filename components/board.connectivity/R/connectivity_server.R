@@ -256,17 +256,16 @@ ConnectivityBoard <- function(
     )
 
     getConnectivityScores <- shiny::reactive({
-        
       pgx.connectivity <- compute_connectivity()
 
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
-      
+
       ct <- "contrast"
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
-        warning("[getConnectivityScores] ERROR : contrast ",ct," not in connectivity scores")
+        warning("[getConnectivityScores] ERROR : contrast ", ct, " not in connectivity scores")
         return(NULL)
       }
 
