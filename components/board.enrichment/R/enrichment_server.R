@@ -404,8 +404,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
 
       # check which columns are in pgx$genes
-      cols_in_pgx <- c("feat_id","gene_name","hsapiens_homolog_associated_gene_name")
+      cols_in_pgx <- c("feature","symbol","human_ortholog")
       cols_in_pgx <- cols_in_pgx[which(cols_in_pgx %in% colnames(pgx$genes))]
+      
 
       genes_user <- pgx$genes[rownames(limma1),cols_in_pgx]
       
@@ -413,31 +414,21 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       genes_user <- genes_user[,!empty_cols, drop = FALSE]
 
-      if(!is.null(genes_user$hsapiens_homolog_associated_gene_name)){
-        genes_combined <- ifelse(is.na(genes_user$hsapiens_homolog_associated_gene_name),
+      if(!is.null(genes_user$human_ortholog)){
+        genes_combined <- ifelse(is.na(genes_user$human_ortholog),
           genes_user$gene_name,
-          genes_user$hsapiens_homolog_associated_gene_name)
+          genes_user$human_ortholog)
       }else{
         genes_combined <- genes_user$gene_name
       } 
       genes_user$genes_combined <- genes_combined
       genes <- genes_user[genes_user$genes_combined%in%genes,]
-      if("feat_id" %in% colnames(genes)){
-        limma1 <- limma1[genes$feat_id, , drop = FALSE] ## align limma1
-      }else{
-        limma1 <- limma1[genes$gene_name, , drop = FALSE] ## align limma1
 
-      }
+      limma1 <- limma1[genes$gene_name, , drop = FALSE] ## align limma1
       genes <- cbind(genes, limma1)
       genes <- genes[which(!is.na(genes$fc) & !is.na(rownames(genes))), , drop = FALSE]
 
       genes$genes_combined = NULL
-
-      if("hsapiens_homolog_associated_gene_name" %in% colnames(genes)){
-        colnames(genes)[colnames(genes)=="hsapiens_homolog_associated_gene_name"] <- "hsa_ortholog"
-      }
-
-
 
       if (nrow(genes) > 0) {
         genes <- genes[order(-abs(genes$fc)), , drop = FALSE]
