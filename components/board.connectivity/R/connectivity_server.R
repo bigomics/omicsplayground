@@ -205,15 +205,13 @@ ConnectivityBoard <- function(
     compute_connectivity <- shiny::eventReactive(
       {
         auth$user_dir
-        input$recalc
-        pgx$X
+        pgx$counts
+        pgx$name
         reload_pgxdir()
       },
       {
-        shiny::req(pgx$X)
+        shiny::req(pgx$connectivity)
         ## shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
-        ##      pgx.connectivity <- list()
-        ##      if ("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
 
         if (!"datasets-sigdb" %in% names(pgx$connectivity)) {
           ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -258,19 +256,21 @@ ConnectivityBoard <- function(
     )
 
     getConnectivityScores <- shiny::reactive({
+        
       pgx.connectivity <- compute_connectivity()
+
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
-
+      
+      ct <- "contrast"
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
-        warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
+        warning("[getConnectivityScores] ERROR : contrast ",ct," not in connectivity scores")
         return(NULL)
       }
 
       scores <- as.data.frame(all.scores[[ct]])
-      dbg("[getConnectivityScores] dim.scores=", dim(scores))
 
       if (input$abs_score == FALSE) {
         ## put sign back!!!
