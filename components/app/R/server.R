@@ -595,13 +595,13 @@ app_server <- function(input, output, session) {
   idle_timer <- TimerModule(
     "idle_timer",
     condition = reactive(!auth$logged),
-    timeout = 300, ## max idle time in seconds
+    timeout = 600, ## max idle time in seconds
     timeout_callback = idle_timeout_callback
   )
 
   idle_timeout_callback <- function() {
-    info("[SERVER] ********** closing idle session **************")
-    sever::sever(sever_disconnected(), bg_color = "#004c7d")
+    info("[SERVER] ********** closing idle login session **************")
+    sever::sever(sever_ciao("Knock, knock — Anybody there?"), bg_color = "#004c7d")
     session$close()
   }
 
@@ -868,14 +868,13 @@ app_server <- function(input, output, session) {
     )
   }
 
-
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Resest inactivity counter when there is user activity (a click on the UI)
     observeEvent(input$userActivity, {
       inactivityCounter(0) # Reset counter on any user activity
     })
 
-    inactivityControl <- start_inactivityControl(session, delta = 300, inactivityCounter)
+    inactivityControl <- start_inactivityControl(session, timeout = 1800, inactivityCounter)
     observe({
       inactivityControl()
     })
