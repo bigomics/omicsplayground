@@ -107,6 +107,7 @@ PcsfBoard <- function(id, pgx) {
 
         list(
           genes = genes,
+          genes_raw = genes_raw,
           meta = meta,
           idx = idx[genes],
           clust = clust,
