@@ -273,9 +273,9 @@ upload_module_computepgx_server <- function(
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = "There are cases where there is only one samples in a group.
-                    Some of the gene tests and enrichment
-                    methods are disabled.",
+            text = stringr::str_squish("There are cases where there is only one samples
+                    in a group. Some of the gene tests and enrichment
+                    methods are disabled."),
             type = "warning"
           )
           shiny::updateCheckboxGroupInput(
@@ -517,10 +517,10 @@ upload_module_computepgx_server <- function(
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
-          text = "Your dataset will be computed in the background.
+          text = stringr::str_squish("Your dataset will be computed in the background.
           You can continue to play with a different dataset in the meantime.
           When it is ready, it will appear in your dataset library. Most datasets
-          take between 30 - 60 minutes to complete.",
+          take between 30 - 60 minutes to complete."),
           type = "info",
           timer = 60000
         )
