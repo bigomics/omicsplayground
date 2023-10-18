@@ -69,6 +69,11 @@ PcsfBoard <- function(id, pgx) {
         )
 
         idx <- clust[["kmeans"]][, 3]
+
+        genes_raw <- genes
+
+        genes <- toupper(genes)
+        
         names(idx) <- genes
 
         ## balance number of gene per group??
@@ -81,7 +86,9 @@ PcsfBoard <- function(id, pgx) {
         table(sel)
         ee <- STRING[sel, ]
         genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
-        rho <- cor(t(pgx$X[genes, ]))
+        rho <- cor(t(pgx$X[genes_raw, ]))
+        rownames(rho) <- toupper(rownames(rho))
+        colnames(rho) <- toupper(colnames(rho))
         #
         rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 0.001)
         ee$cost <- ee$cost**1 / rho.ee ## balance PPI with experiment
@@ -89,12 +96,18 @@ PcsfBoard <- function(id, pgx) {
 
         ## ------------ create igraph network --------------
         ppi <- PCSF::construct_interactome(ee)
-        gset.wt <- (ngmt[genes] / max(ngmt[genes])) ## gene set weighting
-        terminals <- abs(mx[genes])**1 * (0.1 + gset.wt)**1
+        gset.wt <- (ngmt[genes_raw] / max(ngmt[genes_raw])) ## gene set weighting
+        terminals <- abs(mx[genes_raw])**1 * (0.1 + gset.wt)**1
+
+        meta <- meta[genes_raw, ]
+
+        rownames(meta) <- toupper(rownames(meta))
+
+        names(terminals) <- toupper(names(terminals))
 
         list(
           genes = genes,
-          meta = meta[genes, ],
+          meta = meta,
           idx = idx[genes],
           clust = clust,
           ppi = ppi,
