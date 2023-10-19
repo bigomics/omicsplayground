@@ -643,7 +643,7 @@ loading_table_datasets_server <- function(id,
             pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
             file.rename(pgxfile1, pgxfile2)
 
-            ## also delete entry in PGXINFO and allFC !!!
+            ## also delete entry in PGXINFO and allFC (bit slôw)
             pgx.dir <- auth$user_dir
             playbase::pgxinfo.delete(pgx.dir, pgxname)
 
