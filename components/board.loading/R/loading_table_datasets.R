@@ -259,7 +259,8 @@ loading_table_datasets_server <- function(id,
       df$dataset <- sub("[.]pgx$", "", df$dataset)
       df$conditions <- gsub("[,]", " ", df$conditions)
       df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-      df$description <- playbase::shortstring(as.character(df$description), 200)
+      df$description <- gsub("[_]"," ",df$description) ## replace underscore
+      ##  df$description <- playbase::shortstring(as.character(df$description), 200)
       df$nsets <- NULL
       df$organism <- NULL
       return(df)
@@ -409,7 +410,15 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            list(width = "30vw", targets = target2),
+##            list(width = "30vw", targets = target2),
+            list(targets = target2, ## with no rownames column 1 is column 2
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 150 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 150) + '...</span>' : data;",
+                "}"
+              )
+            ),            
             list(sortable = FALSE, targets = ncol(df))
           )
         ) ## end of options.list
