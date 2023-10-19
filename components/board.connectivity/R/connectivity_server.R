@@ -210,18 +210,18 @@ ConnectivityBoard <- function(
         reload_pgxdir()
       },
       {
-        ##shiny::req(pgx$connectivity)  ##??
+        ## shiny::req(pgx$connectivity)  ##??
 
         ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         pgxdir <- auth$user_dir
         sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
-        
+
         need_update <- playbase::pgxinfo.needUpdate(
           pgxdir,
           check.sigdb = TRUE,
           verbose = FALSE
         )
-        
+
         if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
           info("[compute_connectivity] calling updateDatasetFolder")

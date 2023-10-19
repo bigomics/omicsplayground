@@ -279,7 +279,7 @@ sever_ciao <- function(title = "We hope you enjoyed your stay!",
           title,
           style = "color:white;font-family:lato;"
         ),
-        shiny::p( msg, style = "font-size:18px;"),
+        shiny::p(msg, style = "font-size:18px;"),
         shiny::br(),
         shiny::div(
           shiny::img(
@@ -291,7 +291,7 @@ sever_ciao <- function(title = "We hope you enjoyed your stay!",
         ),
         shiny::br(),
         shiny::br(),
-        shiny::br(),        
+        shiny::br(),
         sever::reload_button("Relaunch", class = "info"),
       )
     )

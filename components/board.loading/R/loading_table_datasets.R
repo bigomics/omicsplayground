@@ -88,7 +88,7 @@ loading_table_datasets_server <- function(id,
       ## upstream trigger
       reload_pgxdir()
       pgxdir <- auth$user_dir
-      
+
       shiny::withProgress(message = "Checking datasets library...", value = 0.33, {
         need_update <- playbase::pgxinfo.needUpdate(pgxdir,
           check.sigdb = FALSE,
@@ -117,9 +117,8 @@ loading_table_datasets_server <- function(id,
     })
 
     getFilteredPGXINFO <- shiny::reactive({
+      dbg("[loading_table_datasets_server:getFilteredPGXINFO] reacted!")
 
-      dbg("[loading_table_datasets_server:getFilteredPGXINFO] reacted!")        
-        
       ## get the filtered table of pgx datasets
       df <- getPGXINFO()
       if (is.null(df)) {
@@ -633,7 +632,7 @@ loading_table_datasets_server <- function(id,
           if (input$confirmdelete) {
             pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
             file.rename(pgxfile1, pgxfile2)
-            
+
             ## also delete entry in PGXINFO and allFC !!!
             pgx.dir <- auth$user_dir
             playbase::pgxinfo.delete(pgx.dir, pgxname)
