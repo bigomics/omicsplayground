@@ -41,9 +41,16 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
         status.ds
       )
 
+      if(is.null(uploaded$samples.csv) & !is.null(uploaded$contrasts.csv)){
+        error.msg <- paste(
+          toupper(check["samples.csv", "status"]), "\nPlease upload 'samples.csv':",
+          tolower(check["samples.csv", "description"])
+        )
+      }
+
       shiny::validate(
         shiny::need(
-          status.ok == "OK" && has.contrasts,
+          status.ok == "OK" && has.contrasts && !is.null(uploaded$samples.csv),
           error.msg
         )
       )
