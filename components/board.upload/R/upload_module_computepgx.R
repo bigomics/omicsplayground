@@ -152,7 +152,7 @@ upload_module_computepgx_server <- function(
                     ),
                   choiceNames =
                     c(
-                      "convert to HUGO",
+                      "Transform features to gene symbols",
                       "protein-coding only",
                       "remove Rik/ORF/LOC genes",
                       "remove not-expressed"
