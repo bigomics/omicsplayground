@@ -358,7 +358,7 @@ UploadBoard <- function(id,
       uploaded$samples.csv <- pgx$samples
       uploaded$contrasts.csv <- pgx$contrast
       uploaded$counts.csv <- pgx$counts
-##      corrected_counts <- pgx$counts  ## ?? IK
+      ##      corrected_counts <- pgx$counts  ## ?? IK
       recompute_info(list("name" = pgx$name, "description" = pgx$description))
     })
 
@@ -682,7 +682,7 @@ UploadBoard <- function(id,
       checkTables,
       uploaded
     )
-    
+
     ## buttonInput <- function(FUN, len, id, ...) {
     ##   inputs <- character(len)
     ##   for (i in seq_len(len)) {

@@ -702,7 +702,7 @@ upload_module_computepgx_server <- function(
       # Function to execute when the process is completed successfully
       on_process_completed <- function(raw_dir, nr) {
         dbg("[computePGX:on_process_completed] process", nr, "completed!")
-        process_counter(process_counter() - 1) 
+        process_counter(process_counter() - 1)
 
         path_to_params <- file.path(raw_dir, "params.RData")
         params <- readRDS(path_to_params)
