@@ -82,6 +82,7 @@ loading_table_datasets_server <- function(id,
       if (is.null(auth$logged) || !auth$logged) {
         return(NULL)
       }
+      dbg("[loading_table_datasets_server:getPGXINFO] reacted!")
 
       ## upstream trigger
       reload_pgxdir()
@@ -99,7 +100,12 @@ loading_table_datasets_server <- function(id,
         dbg("[loading_server:getPGXINFO] updating pgxdir =", pgxdir)
         pgx.showSmallModal("Updating your library<br>Please wait...")
         shiny::withProgress(message = "Updating your library...", value = 0.33, {
-          playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb = FALSE)
+          playbase::pgxinfo.updateDatasetFolder(
+            pgxdir,
+            force = FALSE,
+            delete.old = TRUE,
+            update.sigdb = FALSE
+          )
         })
         shiny::removeModal(session)
       }
@@ -110,6 +116,8 @@ loading_table_datasets_server <- function(id,
     })
 
     getFilteredPGXINFO <- shiny::reactive({
+      dbg("[loading_table_datasets_server:getFilteredPGXINFO] reacted!")
+
       ## get the filtered table of pgx datasets
       df <- getPGXINFO()
       if (is.null(df)) {
@@ -246,7 +254,8 @@ loading_table_datasets_server <- function(id,
       df$dataset <- sub("[.]pgx$", "", df$dataset)
       df$conditions <- gsub("[,]", " ", df$conditions)
       df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
-      df$description <- playbase::shortstring(as.character(df$description), 200)
+      df$description <- gsub("[_]", " ", df$description) ## replace underscore
+      ##  df$description <- playbase::shortstring(as.character(df$description), 200)
       df$nsets <- NULL
       return(df)
     })
@@ -395,7 +404,16 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            list(width = "30vw", targets = target2),
+            ##            list(width = "30vw", targets = target2),
+            list(
+              targets = target2, ## with no rownames column 1 is column 2
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 150 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 150) + '...</span>' : data;",
+                "}"
+              )
+            ),
             list(sortable = FALSE, targets = ncol(df))
           )
         ) ## end of options.list
@@ -442,7 +460,6 @@ loading_table_datasets_server <- function(id,
         pgx_name <- dataset_edited
         pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
         pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
-
 
         row_edited <- match(dataset_edited, pgxinfo$dataset)
         new_val <- pgxinfo[row_edited, col_edited]
@@ -620,14 +637,12 @@ loading_table_datasets_server <- function(id,
           if (input$confirmdelete) {
             pgxfile2 <- paste0(pgxfile1, "_") ## mark as deleted
             file.rename(pgxfile1, pgxfile2)
-            ## !!!! we should also delete entry in PGXINFO and allFC !!!
-            ## playbase::pgx.deleteInfoPGX(pgxinfo, pgxname)
-            info <- read.csv(file.path(auth$user_dir, "datasets-info.csv"), row.names = 1)
-            idx <- match(pgxname, info$dataset)
-            if (length(idx)) {
-              info <- info[-idx, ]
-              write.csv(info, file.path(auth$user_dir, "datasets-info.csv"))
-            }
+
+            ## also delete entry in PGXINFO and allFC (bit slôw)
+            pgx.dir <- auth$user_dir
+            playbase::pgxinfo.delete(pgx.dir, pgxname)
+
+            ## signal upstream for update
             reload_pgxdir(reload_pgxdir() + 1)
           }
         }
@@ -644,7 +659,7 @@ loading_table_datasets_server <- function(id,
         } else {
           shinyalert::shinyalert(
             title = "Oops!",
-            text = "Delete is disabled on this server"
+            text = "Delete is disabled for your account"
           )
         }
       },

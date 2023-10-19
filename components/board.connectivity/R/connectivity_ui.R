@@ -63,12 +63,6 @@ ConnectivityInputs <- function(id) {
         "ngenes:",
         choices = c(10, 50, 100),
         sel = 50, inline = TRUE
-      ),
-      br(),
-      withTooltip(
-        shiny::actionButton(ns("recalc"), "recalculate"),
-        "Recalculate connectivity scores. You might want to do this after adding new datasets in your library.",
-        placement = "right", options = list(container = "body")
       )
     )
   )
@@ -105,7 +99,7 @@ ConnectivityUI <- function(id) {
             connectivity_table_similarity_scores_ui(
               ns("connectivityScoreTable"),
               title = "Similarity scores",
-              info.text = "Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. Highlighting a specific dataset will change the FC-FC scatterplot accordingly.",
+              info.text = "Connectivity score (score), Pearson correlation (rho), normalized enrichment scores (NES), odd ratio (odd.ratio), and cosine distance (tau) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculations. The score is calculated as abs(rho)*NES*odd.ratio*abs(tau). Highlighting a specific dataset will change the FC-FC scatterplot accordingly.",
               caption = "Table displaying the most correlated gene expression profiles from public datasets to the selected contrast. Select a profile to visualise the corresponding scatter plot.",
               height = c("50%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%"),

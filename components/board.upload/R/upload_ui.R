@@ -136,6 +136,8 @@ upload_select_db <- shiny::tabPanel(
               multiple = TRUE, accept = c(".csv", ".pgx")
             ),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
+            # bslib::input_switch(ns("load_example"), "Load example data"),
+            # bslib::input_switch(ns("advanced_mode"), "Batch correction (beta)")
           )
         ),
         shiny::div(shiny::uiOutput(ns("upload_info")))
