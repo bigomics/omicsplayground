@@ -416,15 +416,15 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       if(!is.null(genes_user$human_ortholog)){
         genes_combined <- ifelse(is.na(genes_user$human_ortholog),
-          genes_user$gene_name,
+          genes_user$symbol,
           genes_user$human_ortholog)
       }else{
-        genes_combined <- genes_user$gene_name
+        genes_combined <- genes_user$symbol
       } 
       genes_user$genes_combined <- genes_combined
       genes <- genes_user[genes_user$genes_combined%in%genes,]
 
-      limma1 <- limma1[genes$gene_name, , drop = FALSE] ## align limma1
+      limma1 <- limma1[genes$symbol, , drop = FALSE] ## align limma1
       genes <- cbind(genes, limma1)
       genes <- genes[which(!is.na(genes$fc) & !is.na(rownames(genes))), , drop = FALSE]
 
