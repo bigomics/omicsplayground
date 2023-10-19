@@ -210,27 +210,29 @@ ConnectivityBoard <- function(
         reload_pgxdir()
       },
       {
-        shiny::req(pgx$connectivity)
-        ## shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
+        ##shiny::req(pgx$connectivity)  ##??
 
-        if (!"datasets-sigdb" %in% names(pgx$connectivity)) {
-          ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          pgxdir <- auth$user_dir
-          sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
+        ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        pgxdir <- auth$user_dir
+        sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
+        
+        need_update <- playbase::pgxinfo.needUpdate(
+          pgxdir,
+          check.sigdb = TRUE,
+          verbose = FALSE
+        )
+        
+        if (need_update || !file.exists(sigdb.file)) {
+          pgx.showSmallModal("Updating your signature database<br>Please wait...")
+          info("[compute_connectivity] calling updateDatasetFolder")
+          shiny::withProgress(message = "Updating signature database...", value = 0.33, {
+            playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb = TRUE)
+          })
+          shiny::removeModal(session)
+        }
+
+        if (!"datasets-sigdb.h5" %in% names(pgx$connectivity)) {
           user.scores <- NULL
-          need_update <- playbase::pgxinfo.needUpdate(pgxdir,
-            check.sigdb = TRUE,
-            verbose = FALSE
-          )
-
-          if (need_update || !file.exists(sigdb.file)) {
-            pgx.showSmallModal("Updating your signature database<br>Please wait...")
-            info("[compute_connectivity] calling updateDatasetFolder")
-            shiny::withProgress(message = "Updating signature database...", value = 0.33, {
-              playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb = TRUE)
-            })
-            shiny::removeModal(session)
-          }
           if (file.exists(sigdb.file)) {
             info("[compute_connectivity] computing connectivity scores...")
             pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
@@ -245,9 +247,8 @@ ConnectivityBoard <- function(
             shiny::removeModal(session)
           }
           pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
-
-          ## save results?? but what is the real filename?????
-          ## playbase::pgx.save(pgx, file = pgx$name )
+          ## save results back?? but what is the real filename?????
+          ## playbase::pgx.save(pgx, file = file.path(pgxdir,pgx$name))
         }
         pgx$connectivity
       },
