@@ -87,7 +87,7 @@ expression_plot_volcano_server <- function(id,
       ## if no gene selected we should show full volcano plot
 
 
-      fam.genes <- res$gene_name
+      fam.genes <- res$symbol
 
       if (is.null(res)) {
         return(NULL)
@@ -103,10 +103,10 @@ expression_plot_volcano_server <- function(id,
         fam.genes <- unique(unlist(gset))
       }
 
-      jj <- match(toupper(fam.genes), toupper(res$gene_name))
-      sel.genes <- res$gene_name[setdiff(jj, NA)]
+      jj <- match(fam.genes, res$symbol)
+      sel.genes <- res$symbol[setdiff(jj, NA)]
 
-      fc.genes <- as.character(res[, grep("^gene$|gene_name", colnames(res))])
+      fc.genes <- as.character(res[, grep("^gene$|gene_name|symbol", colnames(res))])
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]

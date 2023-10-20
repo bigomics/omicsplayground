@@ -211,6 +211,17 @@ ExpressionBoard <- function(id, pgx) {
       dim(res)
 
       res <- res[order(-abs(res$logFC)), , drop = FALSE]
+
+      
+      #TODO the annot could be moved to geDEGtable function!!!
+      annot <- pgx$genes[match(rownames(res), pgx$genes$symbol),c("feature","symbol","human_ortholog")]
+      res$gene_name <- NULL
+
+      res <- cbind(annot,res)
+
+      if(all(is.na(res$human_ortholog))){
+        res$human_ortholog <- NULL
+      }
       return(res)
     })
 
