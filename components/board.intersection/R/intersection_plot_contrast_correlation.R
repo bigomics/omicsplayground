@@ -104,7 +104,7 @@ contrast_correlation_server <- function(id,
         plt <- plotly::add_annotations(plt,
                               x = 0.5,
                               y = 0.5,
-                              text = "Heatmap plot requires more than two conditions",
+                              text = "Heatmap plot requires \nmore than two conditions",
                               showarrow = FALSE,
                               font = list(size = 20)
                               )
