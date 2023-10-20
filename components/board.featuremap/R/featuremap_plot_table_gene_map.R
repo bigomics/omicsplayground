@@ -220,15 +220,21 @@ featuremap_plot_gene_map_server <- function(id,
         is.fc <- TRUE
       }
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-
-      tt <- playbase::shortstring(pgx$genes[rownames(F), "gene_title"], 60)
-      tt <- as.character(tt)
+      
+      gene_table <- pgx$genes
+      if (all(gene_table$human_ortholog == rownames(gene_table))| all(is.na(gene_table$human_ortholog))) {
+        gene_table_cols <- c("symbol", "gene_title")
+      } else {
+        gene_table_cols <- c("symbol", "human_ortholog", "gene_title")
+      }
+      col <-
+      tt <- playbase::shortstring(pgx$genes[rownames(F), gene_table_cols, drop = FALSE], 60)
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"
       F <- round(F, digits = 3)
 
       df <- data.frame(
-        gene = rownames(F), title = tt, F,
+        gene = rownames(F), tt, F,
         check.names = FALSE
       )
 
