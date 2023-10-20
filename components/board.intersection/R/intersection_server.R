@@ -131,8 +131,6 @@ IntersectionBoard <- function(
           apply(unclass(x$q)[, gxmethods, drop = FALSE], 1, max)
         })
         rownames(qv0) <- rownames(pgx$gx.meta$meta[[1]])
-        dim(fc0)
-        dim(qv0)
 
         ## filter with active filter
         sel.probes <- rownames(fc0) ## default to all probes
