@@ -50,10 +50,15 @@ correlation_table_corr_server <- function(id,
 
       P <- getPartialCorrelation()
       pcor <- P[match(rownames(R), rownames(P)), "pcor"]
+      gene_table <- pgx$genes
+      if (all(gene_table$human_ortholog == rownames(gene_table))| all(is.na(gene_table$human_ortholog))) {
+        gene_table_cols <- c("symbol", "gene_title")
+      } else {
+        gene_table_cols <- c("symbol", "human_ortholog", "gene_title")
+      }
 
-      title <- pgx$genes[rownames(R), "gene_title"]
-      title <- substring(title, 1, 80)
-      df <- data.frame(gene = rownames(R), title = title, cor = R[, "cor"], pcor = pcor)
+      tt <- gene_table[rownames(R), gene_table_cols]
+      df <- data.frame(gene = rownames(R), tt, cor = R[, "cor"], pcor = pcor)
 
       return(df)
     })
@@ -63,10 +68,9 @@ correlation_table_corr_server <- function(id,
       shiny::req(pgx$X)
 
       df <- plot_data()
-
-      numeric.cols <- colnames(df)[3:ncol(df)]
-      #
-
+      char_cols <- c("gene", "symbol", "human_ortholog", "gene_title")
+      numeric.cols <- which(!colnames(localdf) %in% char_cols)
+      
       DT::datatable(
         df,
         rownames = FALSE, #
@@ -77,10 +81,7 @@ correlation_table_corr_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrti",
-          #
-          #
-          #
-          scrollX = FALSE,
+          scrollX = TRUE,
           scrollY = 100,
           scrollResize = TRUE,
           scroller = TRUE,
