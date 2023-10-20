@@ -444,15 +444,16 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (is.null(rpt) || nrow(rpt) == 0) {
         return(list(gene = NA, probe = NA))
       }
+      browser()
       sel.gene <- rownames(rpt)[i]
-      gene <- as.character(rpt$symbol[i])
+      gene <- as.character(rpt$feature[i])
 
       # Assumning new species will use the homolog associated gene name
       # For genesets
-      if (!is.na(unique(pgx$genes$human_ortholog))) {
-        probe <- rownames(pgx$genes)[match(gene, pgx$genes$human_ortholog)]
+      if (all(!is.na(unique(pgx$genes$human_ortholog)))) {
+         probe <- pgx$genes[pgx$genes$feature==gene,"human_ortholog"]
       } else {
-        probe <- rownames(pgx$genes)[match(gene, pgx$genes$symbol)]
+        probe <- rownames(pgx$genes)[match(gene, pgx$genes$feature)]
       }
       return(list(gene = gene, probe = probe))
     })
