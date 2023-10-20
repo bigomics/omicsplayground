@@ -92,16 +92,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       pgx2 <- dataset2()
       org1 <- playbase::pgx.getOrganism(pgx1)
       org2 <- playbase::pgx.getOrganism(pgx2)
-      if (org1 == "human") {
-        org1 <- "Human"
-      } else if(org1 == "mouse") {
-        org1 <- "Mouse"
-      } 
-      if (org2 == "human") {
-        org2 <- "Human"
-      } else if(org2 == "mouse") {
-        org2 <- "Mouse"
-      } 
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
@@ -160,16 +150,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       pgx2 <- dataset2()
       org1 <- playbase::pgx.getOrganism(pgx1)
       org2 <- playbase::pgx.getOrganism(pgx2)
-      if (org1 == "human") {
-        org1 <- "Human"
-      } else if(org1 == "mouse") {
-        org1 <- "Mouse"
-      } 
-      if (org2 == "human") {
-        org2 <- "Human"
-      } else if(org2 == "mouse") {
-        org2 <- "Mouse"
-      } 
 
       F1_2 <-cum_fc()
       F1 <- F1_2[, 1, drop = FALSE]
@@ -191,23 +171,23 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
         X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)
         X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
-
         X1 <- scale(t(pgx1$X[gg, kk]))
         X2 <- scale(t(pgx2$X[gg, kk]))
         rho <- colSums(X1 * X2) / (nrow(X1) - 1)
       }
-      print(head(F1))
-      print(head(F2))
       fc1 <- sqrt(rowMeans(F1**2))
       fc2 <- sqrt(rowMeans(F2**2))
       score <- rho * fc1 * fc2
-
+      
+      # TODO: get teh gene_title
+      # mii <- which(pgx1$genes[ , target_col1] %in% gg)
+      # ii <- ii[!duplicated(ii)]
       title <- pgx1$genes[gg, "gene_title"]
       title <- substring(title, 1, 60)
 
       df <- data.frame(title, score, rho, F1, F2, check.names = FALSE)
       df <- df[order(-df$score), ]
-      print(head(df))
+
       return(df)
     })
 
@@ -217,25 +197,23 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
 
     createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop) {      p <- NULL
-    createPlot_pgx <<- pgx
-    createPlot_pgx1 <<- pgx1
-    createPlot_pgx2 <<- pgx2
-      genes1 <- rownames(createPlot_pgx$X)
+
+      genes1 <- rownames(pgx$X)
       higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
-          pos <- createPlot_pgx$cluster.genes$pos[["umap2d"]]
+          pos <- pgx$cluster.genes$pos[["umap2d"]]
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
         }
 
-        gg <- intersect(toupper(rownames(createPlot_pgx$X)), toupper(rownames(pos)))
+        gg <- intersect(toupper(rownames(pgx$X)), toupper(rownames(pos)))
         jj <- match(gg, toupper(rownames(pos)))
         pos <- pos[jj, ]
-        ii <- match(toupper(rownames(pos)), toupper(rownames(createPlot_pgx$X)))
-        rownames(pos) <- rownames(createPlot_pgx$X)[ii]
+        ii <- match(toupper(rownames(pos)), toupper(rownames(pgx$X)))
+        rownames(pos) <- rownames(pgx$X)[ii]
         p <- playbase::pgx.plotGeneUMAP(
-          createPlot_pgx,
+          pgx,
           contrast = ct, pos = pos,
           cex = 0.9, cex.lab = cex.lab,
           hilight = higenes1, ntop = ntop,
@@ -245,20 +223,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       } else if (type == "heatmap") {
         gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
         if (length(gg) > 1) {
-          jj <- match(gg, toupper(rownames(createPlot_pgx$X)))
-          X1 <- createPlot_pgx$X[jj, , drop = FALSE]
-          Y1 <- createPlot_pgx$samples
+          jj <- match(gg, toupper(rownames(pgx$X)))
+          X1 <- pgx$X[jj, , drop = FALSE]
+          Y1 <- pgx$samples
           playbase::gx.splitmap(X1,
             nmax = 40, col.annot = Y1,
             softmax = TRUE, show_legend = FALSE
           )
         }
       } else {
-        genes1 <- rownames(createPlot_pgx$X)
+        genes1 <- rownames(pgx$X)
         gg <- intersect(toupper(higenes), toupper(genes1))
         higenes1 <- genes1[match(gg, toupper(genes1))]
         p <- playbase::pgx.plotContrast(
-          createPlot_pgx,
+          pgx,
           contrast = ct, hilight = higenes1,
           ntop = ntop, cex.lab = cex.lab, #
           par.sq = TRUE, type = type, plotlib = "base"

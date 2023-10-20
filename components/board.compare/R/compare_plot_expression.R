@@ -40,16 +40,6 @@ compare_plot_expression_server <- function(id,
 
       org1 <- playbase::pgx.getOrganism(pgx1)
       org2 <- playbase::pgx.getOrganism(pgx2)
-      if (org1 == "human") {
-        org1 <- "Human"
-      } else if(org1 == "mouse") {
-        org1 <- "Mouse"
-      } 
-      if (org2 == "human") {
-        org2 <- "Human"
-      } else if(org2 == "mouse") {
-        org2 <- "Mouse"
-      } 
 
       ct1 <- head(names(pgx1$gx.meta$meta), 3)
       ct2 <- head(names(pgx2$gx.meta$meta), 3)
