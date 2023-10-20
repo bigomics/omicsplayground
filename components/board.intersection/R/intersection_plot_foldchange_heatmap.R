@@ -55,17 +55,24 @@ foldchange_heatmap_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       if (input$FoldchangeHeatmap_allfc) {
-        F <- getFoldChangeMatrix()$fc
+        FC <- getFoldChangeMatrix()$fc
       } else {
-        F <- getActiveFoldChangeMatrix()$fc
+        FC <- getActiveFoldChangeMatrix()$fc
       }
 
-      F <- F[order(-rowMeans(F**2)), ]
-      F <- F[order(-abs(rowMeans(F))), ]
-
-      F1 <- head(F, 80)
-      F1 <- F1[order(rowMeans(F1)), ]
-      F1
+      local_FC <<-FC
+      if (ncol(FC) < 2) {
+        FC <- FC[order(-FC**2), , drop = FALSE]
+        FC <- FC[order(-abs(FC)), , drop = FALSE]
+        F1 <- head(FC, 80)
+        F1 <- F1[order(F1), , drop = FALSE]
+      } else {
+        FC <- FC[order(-rowMeans(FC**2)), ]
+        FC <- FC[order(-abs(rowMeans(FC))), ]
+        F1 <- head(FC, 80)
+        F1 <- F1[order(rowMeans(F1)), ]
+      }
+      return(F1)
     })
 
     FoldchangeHeatmap.PLOT <- function() {
