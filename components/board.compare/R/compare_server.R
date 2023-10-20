@@ -17,6 +17,25 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
         frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
 
+    # Helper function
+    rename_by <- function(counts, annot_table, new_id_col = "symbol") {
+      symbol <- annot_table[rownames(counts), new_id_col] 
+
+      # Guard agaisn human_hommolog == NA
+      if (all(is.na(symbol))) { 
+        symbol <- annot_table[rownames(counts), "symbol"] 
+
+      }
+
+      # Sum columns of rows with the same gene symbol
+      if (is.matrix(counts) | is.data.frame(counts)) {
+        rownames(counts) <- symbol
+        return(counts[!rownames(counts) %in% c("", "NA"),, drop = FALSE])
+      } else {
+        return(symbol)
+      }
+    }
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -73,6 +92,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       shiny::req(input$contrast2)
       pgx1 <- pgx
       pgx2 <- dataset2()
+      org1 <- pgx1$organism
+      org2 <- pgx2$organism
+
+      # Assign most likely org
+      if (is.null(org1)) org1 <- "Human"
+      if (is.null(org2)) org2 <- "Human"
+
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input$contrast1
@@ -85,14 +111,49 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
 
       gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
-      g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
-      g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]
-      F1 <- F1[g1, , drop = FALSE]
-      F2 <- F2[g2, , drop = FALSE]
-      colnames(F1) <- paste0("1:", colnames(F1))
-      colnames(F2) <- paste0("2:", colnames(F2))
 
-      return(cbind(F1, F2))
+      if (length(gg) > 2) {
+        g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
+        g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]
+        F1 <- F1[g1, , drop = FALSE]
+        F2 <- F2[g2, , drop = FALSE]
+        colnames(F1) <- paste0("1:", colnames(F1))
+        colnames(F2) <- paste0("2:", colnames(F2))
+
+        return(cbind(F1, F2))
+      } else if (org1 == org2) {
+        # For same org. we ensure compare on symbol
+        F1 <- rename_by(F1, pgx1$genes, "symbol")
+        F2 <- rename_by(F2, pgx2$genes, "symbol")
+        gg <- intersect(rownames(F1), rownames(F2))
+        F1 <- F1[gg, , drop = FALSE]
+        F2 <- F2[gg, , drop = FALSE]
+        F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
+        F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
+
+        colnames(F1) <- paste0("1:", colnames(F1))
+        colnames(F2) <- paste0("2:", colnames(F2))
+
+        return(cbind(F1, F2))
+      } else if (org1 != org2 ) {
+
+          target_col1 <- target_col2<- "human_ortholog"
+          if(!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
+          if(!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
+
+          F1 <- rename_by(F1, pgx1$genes, target_col1)
+          F1 <- rename_by(F2, pgx2$genes, target_col2)
+          gg <- intersect(rownames(F1), rownames(F2))
+          F1 <- F1[gg, , drop = FALSE]
+          F2 <- F2[gg, , drop = FALSE]
+          F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
+          F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
+
+          colnames(F1) <- paste0("1:", colnames(F1))
+          colnames(F2) <- paste0("2:", colnames(F2))
+
+          return(cbind(F1, F2))
+      }
     })
 
     dataset2 <- shiny::reactive({
@@ -102,11 +163,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       } else {
         file2 <- file.path(pgx_dir(), input$dataset2)
         pgx <- playbase::pgx.load(file2)
+        pgx <- playbase::pgx.initialize(pgx)
       }
       comparisons2 <- names(pgx$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)
       shiny::updateSelectInput(session, "contrast2", choices = comparisons2, selected = sel2)
-      pgx
+      return(pgx)
     })
 
     getOmicsScoreTable <- shiny::reactive({
@@ -124,22 +186,73 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ct1 <- input$contrast1
       ct2 <- input$contrast2
 
+      org1 <- pgx1$organism
+      org2 <- pgx2$organism
+
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
-
+      local_f1 <<- F1
+      g_table1 <<- pgx1$genes
+      local_f2 <<- F2
+      g_table2 <<- pgx2$genes
       gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X)))
-      F1 <- F1[match(gg, toupper(rownames(F1))), , drop = FALSE]
-      F2 <- F2[match(gg, toupper(rownames(F2))), , drop = FALSE]
-      rownames(F1) <- gg
-      rownames(F2) <- gg
-      colnames(F1) <- paste0("1:", colnames(F1))
-      colnames(F2) <- paste0("2:", colnames(F2))
+
+      if (length(gg) > 2) {
+        print("intersect exist")
+        target_col1 <- target_col2 <- "gene_name" 
+        F1 <- F1[match(gg, toupper(rownames(F1))), , drop = FALSE]
+        F2 <- F2[match(gg, toupper(rownames(F2))), , drop = FALSE]
+        rownames(F1) <- gg
+        rownames(F2) <- gg
+        colnames(F1) <- paste0("1:", colnames(F1))
+        colnames(F2) <- paste0("2:", colnames(F2))        
+      } else if (!is.null(pgx1$version) && org1 == org2) {
+        print("same org")
+        target_col1 <- target_col2 <- "symbol"
+        # For same org. we ensure compare on symbol
+        F1 <- rename_by(F1, pgx1$genes, target_col1)
+        F2 <- rename_by(F2, pgx2$genes, target_col2)
+        gg <- intersect(rownames(F1), rownames(F2))
+        F1 <- F1[gg, , drop = FALSE]
+        F2 <- F2[gg, , drop = FALSE]
+        F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
+        F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
+
+        colnames(F1) <- paste0("1:", colnames(F1))
+        colnames(F2) <- paste0("2:", colnames(F2))
+      } else if (org1 != org2) {
+
+          target_col1 <- target_col2<- "human_ortholog"
+          if(!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
+          if(!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
+          print("target_col1")
+          print(target_col1)
+          print("target_col2")
+          print(target_col2)
+          F1 <- rename_by(F1, pgx1$genes, target_col1)
+          F2 <- rename_by(F2, pgx2$genes, target_col2)
+          local_f1 <<- F1
+          local_f2 <<- F2
+
+          gg <- intersect(rownames(F1), rownames(F2))
+          F1 <- F1[gg, , drop = FALSE]
+          F2 <- F2[gg, , drop = FALSE]
+          F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
+          F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
+
+          colnames(F1) <- paste0("1:", colnames(F1))
+          colnames(F2) <- paste0("2:", colnames(F2))
+      }
       rho <- 1
 
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
       if (length(kk) >= 10) {
-        match_gg_in_pgx1 <- match(gg, toupper(rownames(pgx1$X)))
-        match_gg_in_pgx2 <- match(gg, toupper(rownames(pgx2$X)))
+
+        X1 <- rename_by(pgx1$X, pgx1$genes, target_col1)
+        X2 <- rename_by(pgx2$X, pgx2$genes, target_col2)
+
+        match_gg_in_pgx1 <- match(toupper(gg), toupper(rownames(X1)))
+        match_gg_in_pgx2 <- match(toupper(gg), toupper(rownames(X2)))
         X1 <- scale(t(pgx1$X[match_gg_in_pgx1, kk]))
         X2 <- scale(t(pgx2$X[match_gg_in_pgx2, kk]))
         rho <- colSums(X1 * X2) / (nrow(X1) - 1)
@@ -162,27 +275,54 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ============================================================================
 
 
-    createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop) {
-      p <- NULL
-      genes1 <- rownames(pgx$X)
+    createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop) {      p <- NULL
+    createPlot_pgx <<- pgx
+    createPlot_pgx1 <<- pgx1
+    createPlot_pgx2 <<- pgx2
+#      if (all(is.null(pgx$version), is.null(pgx1$version), is.null(pgx2$version))) {
+#        id_col <-  "symbol"
+#        print("all old data")
+#      } else if (!all(is.null(pgx$version), is.null(pgx1$version), is.null(pgx2$version))) {
+#        id_col <-  "human_ortholog"
+#        print("one new data")
+#      } else if (pgx1$organism == pgx2$organism) {
+#        id_col <-  "symbol"
+#        print("same org")
+#      } else if (pgx1$organism != pgx2$organism) {
+#        id_col <-  "human_ortholog"
+#        print("diff orgs")
+#      }
+#      createPlot_pgx$X <- rename_by(createPlot_pgx$X, createPlot_pgx$genes, id_col)
+      genes1 <- rownames(createPlot_pgx$X)
+#      higenes <- rename_by(higenes, createPlot_pgx$genes, id_col)
       higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
-
-      # if(type %in% c('UMAP1','UMAP2')) {
+#      print(id_col)
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
-          pos <- pgx1$cluster.genes$pos[["umap2d"]]
+          pos <- createPlot_pgx$cluster.genes$pos[["umap2d"]]
+#          pos <- rename_by(pos, createPlot_pgx$genes, id_col)
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
+#          pos <- rename_by(pos, createPlot_pgx2$genes, id_col)
         }
-        dim(pos)
-        gg <- intersect(toupper(rownames(pgx$X)), toupper(rownames(pos)))
+
+        print("head pxg rn")
+        print(head(rownames(createPlot_pgx$X)))
+        print("head pos rn")
+        print(head(rownames(pos)))
+        gg <- intersect(toupper(rownames(createPlot_pgx$X)), toupper(rownames(pos)))
+        print("head gg")
+        print(head(gg))
         jj <- match(gg, toupper(rownames(pos)))
         pos <- pos[jj, ]
-        ii <- match(toupper(rownames(pos)), toupper(rownames(pgx$X)))
-        rownames(pos) <- rownames(pgx$X)[ii]
-
+        ii <- match(toupper(rownames(pos)), toupper(rownames(createPlot_pgx$X)))
+        rownames(pos) <- rownames(createPlot_pgx$X)[ii]
+        print("head ii")
+        print(head(ii))
+        print("head jj")
+        print(head(jj))
         p <- playbase::pgx.plotGeneUMAP(
-          pgx,
+          createPlot_pgx,
           contrast = ct, pos = pos,
           cex = 0.9, cex.lab = cex.lab,
           hilight = higenes1, ntop = ntop,
@@ -192,20 +332,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       } else if (type == "heatmap") {
         gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
         if (length(gg) > 1) {
-          jj <- match(gg, toupper(rownames(pgx$X)))
-          X1 <- pgx$X[jj, , drop = FALSE]
-          Y1 <- pgx$samples
+          jj <- match(gg, toupper(rownames(createPlot_pgx$X)))
+          X1 <- createPlot_pgx$X[jj, , drop = FALSE]
+          Y1 <- createPlot_pgx$samples
           playbase::gx.splitmap(X1,
             nmax = 40, col.annot = Y1,
             softmax = TRUE, show_legend = FALSE
           )
         }
       } else {
-        genes1 <- rownames(pgx$X)
+        genes1 <- rownames(createPlot_pgx$X)
         gg <- intersect(toupper(higenes), toupper(genes1))
         higenes1 <- genes1[match(gg, toupper(genes1))]
         p <- playbase::pgx.plotContrast(
-          pgx,
+          createPlot_pgx,
           contrast = ct, hilight = higenes1,
           ntop = ntop, cex.lab = cex.lab, #
           par.sq = TRUE, type = type, plotlib = "base"
