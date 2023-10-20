@@ -110,7 +110,8 @@ enrichment_plot_scatter_server <- function(id,
       } else {
         gene <- sel$gene
         gset <- gset[1]
-        gx <- pgx$X[sel$probe, ]
+        selected_gene <- pgx$genes[pgx$genes$feature== sel$gene,"symbol"]
+        gx <- pgx$X[selected_gene, ]
         sx <- pgx$gsetX[gset, ]
         if (length(gx) == 0 || length(sx) == 0 ||
           length(gx) != length(sx)) {

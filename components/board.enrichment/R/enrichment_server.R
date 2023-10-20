@@ -444,7 +444,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (is.null(rpt) || nrow(rpt) == 0) {
         return(list(gene = NA, probe = NA))
       }
-      browser()
       sel.gene <- rownames(rpt)[i]
       gene <- as.character(rpt$feature[i])
 
