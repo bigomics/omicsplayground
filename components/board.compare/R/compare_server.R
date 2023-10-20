@@ -146,6 +146,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           gg <- intersect(rownames(F1), rownames(F2))
           F1 <- F1[gg, , drop = FALSE]
           F2 <- F2[gg, , drop = FALSE]
+          
+          # TODO: implement average or sum
           F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
           F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
 
@@ -191,14 +193,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
-      local_f1 <<- F1
-      g_table1 <<- pgx1$genes
-      local_f2 <<- F2
-      g_table2 <<- pgx2$genes
+
       gg <- intersect(toupper(rownames(pgx1$X)), toupper(rownames(pgx2$X)))
 
       if (length(gg) > 2) {
-        print("intersect exist")
+        # If there is gene intersection, use gene_name
         target_col1 <- target_col2 <- "gene_name" 
         F1 <- F1[match(gg, toupper(rownames(F1))), , drop = FALSE]
         F2 <- F2[match(gg, toupper(rownames(F2))), , drop = FALSE]
@@ -207,14 +206,15 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         colnames(F1) <- paste0("1:", colnames(F1))
         colnames(F2) <- paste0("2:", colnames(F2))        
       } else if (!is.null(pgx1$version) && org1 == org2) {
-        print("same org")
-        target_col1 <- target_col2 <- "symbol"
         # For same org. we ensure compare on symbol
+        target_col1 <- target_col2 <- "symbol"
         F1 <- rename_by(F1, pgx1$genes, target_col1)
         F2 <- rename_by(F2, pgx2$genes, target_col2)
         gg <- intersect(rownames(F1), rownames(F2))
         F1 <- F1[gg, , drop = FALSE]
         F2 <- F2[gg, , drop = FALSE]
+
+        # TODO: implement average or sum
         F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
         F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
 
@@ -225,14 +225,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           target_col1 <- target_col2<- "human_ortholog"
           if(!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
           if(!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
-          print("target_col1")
-          print(target_col1)
-          print("target_col2")
-          print(target_col2)
           F1 <- rename_by(F1, pgx1$genes, target_col1)
           F2 <- rename_by(F2, pgx2$genes, target_col2)
-          local_f1 <<- F1
-          local_f2 <<- F2
 
           gg <- intersect(rownames(F1), rownames(F2))
           F1 <- F1[gg, , drop = FALSE]
@@ -279,48 +273,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     createPlot_pgx <<- pgx
     createPlot_pgx1 <<- pgx1
     createPlot_pgx2 <<- pgx2
-#      if (all(is.null(pgx$version), is.null(pgx1$version), is.null(pgx2$version))) {
-#        id_col <-  "symbol"
-#        print("all old data")
-#      } else if (!all(is.null(pgx$version), is.null(pgx1$version), is.null(pgx2$version))) {
-#        id_col <-  "human_ortholog"
-#        print("one new data")
-#      } else if (pgx1$organism == pgx2$organism) {
-#        id_col <-  "symbol"
-#        print("same org")
-#      } else if (pgx1$organism != pgx2$organism) {
-#        id_col <-  "human_ortholog"
-#        print("diff orgs")
-#      }
-#      createPlot_pgx$X <- rename_by(createPlot_pgx$X, createPlot_pgx$genes, id_col)
       genes1 <- rownames(createPlot_pgx$X)
-#      higenes <- rename_by(higenes, createPlot_pgx$genes, id_col)
       higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
-#      print(id_col)
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- createPlot_pgx$cluster.genes$pos[["umap2d"]]
-#          pos <- rename_by(pos, createPlot_pgx$genes, id_col)
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
-#          pos <- rename_by(pos, createPlot_pgx2$genes, id_col)
         }
 
-        print("head pxg rn")
-        print(head(rownames(createPlot_pgx$X)))
-        print("head pos rn")
-        print(head(rownames(pos)))
         gg <- intersect(toupper(rownames(createPlot_pgx$X)), toupper(rownames(pos)))
-        print("head gg")
-        print(head(gg))
         jj <- match(gg, toupper(rownames(pos)))
         pos <- pos[jj, ]
         ii <- match(toupper(rownames(pos)), toupper(rownames(createPlot_pgx$X)))
         rownames(pos) <- rownames(createPlot_pgx$X)[ii]
-        print("head ii")
-        print(head(ii))
-        print("head jj")
-        print(head(jj))
         p <- playbase::pgx.plotGeneUMAP(
           createPlot_pgx,
           contrast = ct, pos = pos,
