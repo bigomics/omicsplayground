@@ -69,7 +69,7 @@ correlation_table_corr_server <- function(id,
 
       df <- plot_data()
       char_cols <- c("gene", "symbol", "human_ortholog", "gene_title")
-      numeric.cols <- which(!colnames(localdf) %in% char_cols)
+      numeric.cols <- which(!colnames(df) %in% char_cols)
 
       DT::datatable(
         df,
