@@ -237,12 +237,14 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", upload_table$name)
       message("[upload_files] upload_files$datapath=", upload_table$datapath)
 
-      uploaded[["counts.csv"]] <- NULL
-      uploaded[["samples.csv"]] <- NULL
-      uploaded[["contrasts.csv"]] <- NULL
-      uploaded[["pgx"]] <- NULL
-      uploaded[["last_uploaded"]] <- NULL
-      uploaded[["checklist"]] <- NULL
+      if(is.null(uploaded[["last_uploaded"]])){
+        uploaded[["counts.csv"]] <- NULL
+        uploaded[["samples.csv"]] <- NULL
+        uploaded[["contrasts.csv"]] <- NULL
+        uploaded[["pgx"]] <- NULL
+        uploaded[["last_uploaded"]] <- NULL
+        uploaded[["checklist"]] <- NULL
+      }
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
@@ -389,7 +391,7 @@ UploadBoard <- function(id,
           uploaded[[m1]] <- matlist[[i]]
         }
         uploaded[["last_uploaded"]] <- names(matlist)
-        uploaded[["checklist"]] <- checklist
+        uploaded[["checklist"]] <- c(uploaded[["checklist"]], checklist)
       }
 
       message("[upload_files] done!\n")
@@ -486,6 +488,8 @@ UploadBoard <- function(id,
             status["samples.csv"] <- "OK"
             status["counts.csv"] <- "OK"
           }
+        } else if (status["counts.csv"] == "please upload" | status["samples.csv"] == "please upload") {
+          uploaded[["checklist"]][["samples_counts"]] <- FALSE
         }
       }
 
@@ -506,6 +510,8 @@ UploadBoard <- function(id,
           uploaded[["samples.csv"]] <- NULL
           uploaded[["contrasts.csv"]] <- NULL
         }
+      } else if (status["contrasts.csv"] == "please upload" | status["samples.csv"] == "please upload") {
+        uploaded[["checklist"]][["samples_contrasts"]] <- FALSE
       }
 
       MAXSAMPLES <- 25
@@ -557,14 +563,6 @@ UploadBoard <- function(id,
           status["counts.csv"] <- "please upload"
         }
       }
-
-      if (!is.null(uploaded$contrasts.csv) &&
-        (is.null(uploaded$counts.csv) ||
-          is.null(uploaded$samples.csv))) {
-        uploaded[["contrasts.csv"]] <- NULL
-        status["contrasts.csv"] <- "please upload"
-      }
-
 
       ## check files
       description <- c(
