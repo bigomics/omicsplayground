@@ -75,15 +75,13 @@ expression_plot_barplot_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      comp <- comp() # input$gx_contrast
+      comp <- comp() 
       grouped <- input$barplot_grouped
       logscale <- input$barplot_logscale
       showothers <- input$barplot_showothers
       sel <- sel()
       res <- res()
-      browser()
 
-      #
       shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
 
       psel <- rownames(res)[sel]
