@@ -81,6 +81,7 @@ expression_plot_barplot_server <- function(id,
       showothers <- input$barplot_showothers
       sel <- sel()
       res <- res()
+      browser()
 
       #
       shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
@@ -118,8 +119,8 @@ expression_plot_barplot_server <- function(id,
       }
 
       fig <- playbase::pgx.plotExpression(
-        pd[["pgx"]],
-        pd[["gene"]],
+        pgx = pd[["pgx"]],
+        probe = pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
         showothers = pd[["showothers"]],
