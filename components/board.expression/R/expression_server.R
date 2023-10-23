@@ -420,9 +420,15 @@ ExpressionBoard <- function(id, pgx) {
       }
 
       gene0 <- rownames(res)[sel.row]
-      gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
+      gene1 <- gene0
 
-      j <- which(toupper(rownames(pgx$GMT)) == gene1)
+      # if non-human, get ortholog
+
+      if(!pgx$organism %in% c("Human", "human")){
+        gene1 <- pgx$genes[pgx$genes$gene_name == gene0, "human_ortholog"]
+      }
+
+      j <- which(rownames(pgx$GMT) == gene1)
       gset <- names(which(pgx$GMT[j, ] != 0))
       gset <- intersect(gset, rownames(pgx$gsetX))
       if (length(gset) == 0) {
