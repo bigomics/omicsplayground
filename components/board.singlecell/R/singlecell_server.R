@@ -112,9 +112,10 @@ SingleCellBoard <- function(id, pgx) {
       choices <- names(pgx$families)
       selected <- grep("^CD", choices, ignore.case = TRUE, value = TRUE)[1]
       if (input$mrk_level == "geneset") {
-        nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-        choices <- names(playdata::COLLECTIONS)[nn >= 5]
-        selected <- grep("HALLMARK", names(playdata::COLLECTIONS), ignore.case = TRUE, value = TRUE)
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        nn <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
+        choices <- names(gset_collections)[nn >= 5]
+        selected <- grep("HALLMARK", names(gset_collections), ignore.case = TRUE, value = TRUE)
       }
       shiny::updateSelectInput(session, "features", choices = choices, selected = selected)
       shiny::updateSelectInput(session, "mrk_features", choices = choices, selected = selected)

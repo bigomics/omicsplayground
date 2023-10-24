@@ -58,8 +58,8 @@ enrichment_plot_volcanoall_server <- function(id,
       lfc <- as.numeric(gs_lfc())
       sel.gsets <- NULL
       sel.gsets <- rownames(meta[[1]])
-      sel.gsets <- playdata::COLLECTIONS[[1]]
-      sel.gsets <- playdata::COLLECTIONS[[gs_features()]]
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+      sel.gsets <- gset_collections[[gs_features()]]
 
       i <- 1
       mx.list <- list()
