@@ -241,7 +241,6 @@ ConnectivityBoard <- function(
                 pgx, sigdb.file,
                 ntop = 50,
                 contrasts = NULL,
-                contrasts = NULL,
                 remove.le = TRUE
               )
             })
