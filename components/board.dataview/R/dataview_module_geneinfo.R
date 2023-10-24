@@ -40,16 +40,14 @@ dataview_module_geneinfo_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneinfo_data <- shiny::reactive({
-      require(org.Hs.eg.db)
       gene <- r.gene()
       req(gene)
 
       gene <- toupper(sub(".*:", "", gene))
-      eg <- "1017"
-      eg <- names(which(as.list(org.Hs.eg.db::org.Hs.egSYMBOL) == gene))
-      eg <- mget(gene, envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG, ifnotfound = NA)[[1]]
-      if (is.na(eg)) eg <- mget(gene, envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA)[[1]]
-      eg
+      eg <- AnnotationDbi::mget(gene, envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,
+        ifnotfound = NA)[[1]]
+      if (isTRUE(is.na(eg))) eg <- AnnotationDbi::mget(gene,
+        envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA)[[1]]
       eg <- eg[1]
       if (is.null(eg) || length(eg) == 0) {
         return(NULL)
