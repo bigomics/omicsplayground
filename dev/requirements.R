@@ -190,6 +190,11 @@ if(1) {
 
 ## proteus
 devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
+
+#install rliger and dependencies (riverplot)
+devtools::install_github("cran/riverplot")
+BiocManager::install("rliger")
+
 INSTALLED.PKGS <- c(INSTALLED.PKGS, "Proteus")
 
 ##---------------------------------------------------------------------
