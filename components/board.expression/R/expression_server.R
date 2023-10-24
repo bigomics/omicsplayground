@@ -426,9 +426,10 @@ ExpressionBoard <- function(id, pgx) {
       gene0 <- rownames(res)[sel.row]
       gene1 <- gene0
       # if non-human, get ortholog
-      if(!pgx$organism %in% c("Human", "human")){
-        gene1 <- pgx$genes[pgx$genes$gene_name == gene0, "human_ortholog"]
-      }
+      # TODO: remove this code?
+      #if(!pgx$organism %in% c("Human", "human")){
+      #  gene1 <- pgx$genes[pgx$genes$gene_name == gene0, "human_ortholog"]
+      #}
       j <- which(rownames(pgx$GMT) == gene1)
       gset <- names(which(pgx$GMT[j, ] != 0))
       gset <- intersect(gset, rownames(pgx$gsetX))

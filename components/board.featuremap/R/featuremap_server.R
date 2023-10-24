@@ -66,7 +66,6 @@ FeatureMapBoard <- function(id, pgx) {
     ## ============================= FUNCTIONS ========================================
     ## ================================================================================
 
-    #
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, cex.label = 1, source = "", plotlib = "base") {
       if (!is.null(hilight)) {
@@ -207,7 +206,9 @@ FeatureMapBoard <- function(id, pgx) {
       } else {
         pos <- pgx$cluster.genes$pos[["umap2d"]]
       }
-      pos
+      print("getGeneUMAP")
+      print(head(pos))
+      return(pos)
     })
 
     getGsetUMAP_FC <- shiny::reactive({
@@ -222,7 +223,9 @@ FeatureMapBoard <- function(id, pgx) {
         message = "computing foldchange UMAP (genesets)",
         value = 0.5
       )
-      pos
+      print("getGsetUMAP_FC")
+      print(head(pos))
+      return(pos)
     })
 
     getGsetUMAP <- shiny::reactive({
@@ -232,7 +235,9 @@ FeatureMapBoard <- function(id, pgx) {
       } else {
         pos <- pgx$cluster.gsets$pos[["umap2d"]]
       }
-      pos
+      print("getGsetUMAP")
+      print(head(pos))
+      return(pos)
     })
 
     ## ================================================================================

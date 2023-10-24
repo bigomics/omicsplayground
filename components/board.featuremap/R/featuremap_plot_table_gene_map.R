@@ -80,13 +80,30 @@ featuremap_plot_gene_map_server <- function(id,
       shiny::validate(need(filter_genes(), "Please input at least one value in Annotate genes!"))
       sel <- filter_genes()
       filtgenes <- c()
-      filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
+      if (is.null(pgx$version) | pgx$organism == "Human") {
+        print("is null")
 
+        filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
+      } else {
+        print("is not null")
+        filtgenes <- unlist(lapply(sel, function(genes) {
+          if (genes == "<all>") { 
+            x <- pgx$genes$symbol
+          } else {
+            x <- playdata::FAMILIES[[genes]]
+            x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
+
+          }
+          return(x)
+          }
+          ))
+      }
+      print("filteredGenes")
+      print(head(filtgenes, 20))
       filtgenes
     })
 
     plot_data <- shiny::reactive({
-      #
       pos <- getGeneUMAP()
       colnames(pos) <- c("x", "y")
       hilight <- filteredGenes()
@@ -118,6 +135,7 @@ featuremap_plot_gene_map_server <- function(id,
         nlabel = nlabel,
         colorby = colorby
       )
+      return(pd)
     })
 
     render_geneUMAP <- function(cex = 1, cex.label = 1) {
@@ -127,6 +145,17 @@ featuremap_plot_gene_map_server <- function(id,
       hilight <- pd$hilight
       nlabel <- pd$nlabel
       colorby <- pd$colorby
+      print("render_geneUMAP")
+      print("df")
+      print(head(df))
+      print("fc")
+      print(head(fc))
+      print("hilight")
+      print(head(hilight))
+      print("nlabel")
+      print(head(nlabel))
+      print("colorby")
+      print(head(colorby))
 
       p <- plotUMAP(
         pos,
@@ -178,7 +207,7 @@ featuremap_plot_gene_map_server <- function(id,
     # Table
     geneTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
-
+      X <- pgx$X
       ## detect brush
       pos <- getGeneUMAP()
       sel.genes <- NULL
@@ -201,12 +230,14 @@ featuremap_plot_gene_map_server <- function(id,
         }
       }
 
-      pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
       if (pheno %in% colnames(pgx$samples)) {
-        gg <- intersect(sel.genes, rownames(pgx$X))
-        X <- pgx$X[gg, , drop = FALSE]
+        gg <- intersect(sel.genes, rownames(X ))
+        if (length(gg) == 0) {
+          X <- playbase::renam_be(X, pgx$genes, "symbol") 
+        }
+        X <- X[gg, , drop = FALSE]
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
@@ -216,18 +247,21 @@ featuremap_plot_gene_map_server <- function(id,
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
         gg <- intersect(sel.genes, rownames(F))
+        if (length(gg) == 0) {
+          F <- playbase::renam_be(F, pgx$genes, "symbol") 
+          gg <- intersect(sel.genes, rownames(F))
+        }
         F <- F[gg, , drop = FALSE]
         is.fc <- TRUE
       }
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      
       gene_table <- pgx$genes
       if (all(gene_table$human_ortholog == rownames(gene_table))| all(is.na(gene_table$human_ortholog))) {
         gene_table_cols <- c("feature", "symbol", "gene_title")
       } else {
         gene_table_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
       }
-      col <-
+      
       tt <- playbase::shortstring(pgx$genes[rownames(F), gene_table_cols, drop = FALSE], 60)
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "sd.FC"

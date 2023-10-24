@@ -103,8 +103,7 @@ expression_plot_volcano_server <- function(id,
 
       jj <- match(fam.genes, res$symbol)
       sel.genes <- res$symbol[setdiff(jj, NA)]
-
-      fc.genes <- res[, grep("^gene$|gene_name", colnames(res))]
+      fc.genes <- res[, "symbol"]
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
