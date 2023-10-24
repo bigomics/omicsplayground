@@ -75,8 +75,9 @@ ClusteringBoard <- function(id, pgx) {
       shiny::req(input$hm_level)
       choices <- names(pgx$families)
       if (input$hm_level == "gene") {
-        nk <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-        choices <- names(playdata::COLLECTIONS)[nk >= 5]
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        nk <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
+        choices <- names(gset_collections)[nk >= 5]
         subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
         choices <- names(subset_choices)
       }
@@ -138,7 +139,8 @@ ClusteringBoard <- function(id, pgx) {
         ## Gene set level features #########
 
         gsets <- rownames(pgx$gsetX)
-        gsets <- unique(playdata::COLLECTIONS[[ft]])
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        gsets <- unique(gset_collections[[ft]])
         zx <- pgx$gsetX
         if (input$hm_customfeatures != "") {
           gsets1 <- genesets[grep(input$hm_customfeatures, genesets, ignore.case = TRUE)]
@@ -559,8 +561,9 @@ ClusteringBoard <- function(id, pgx) {
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
       }
-      if (ann.level == "geneset" && ann.refset %in% names(playdata::COLLECTIONS)) {
-        ss <- playdata::COLLECTIONS[[ann.refset]]
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+      if (ann.level == "geneset" && ann.refset %in% names(gset_collections)) {
+        ss <- gset_collections[[ann.refset]]
         ss <- intersect(ss, rownames(pgx$gsetX))
         length(ss)
         ref <- pgx$gsetX[ss, ]

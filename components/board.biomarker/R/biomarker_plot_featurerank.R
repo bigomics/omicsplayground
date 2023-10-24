@@ -57,7 +57,8 @@ biomarker_plot_featurerank_server <- function(id,
 
       features <- X <- NULL
       if (ft_level == "geneset") {
-        features <- playdata::COLLECTIONS
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        features <- gset_collections
         X <- pgx$gsetX
       } else {
         features <- pgx$families

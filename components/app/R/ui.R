@@ -258,6 +258,15 @@ app_ui <- function() {
             actionLink("navbar_about", "About")
           ),
           logout.tab
+        ),
+        bigdash::hover_dropdown(
+          bslib::input_switch("enable_beta", "Enable beta features"),
+          bslib::input_switch("enable_info", "Show info alerts", value = TRUE),
+          selector_switch(
+            class = "card-footer-checked",
+            label = "show captions",
+            is.checked = FALSE
+          )
         )
       ),
       settings = bigdash::settings(

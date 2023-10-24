@@ -103,6 +103,7 @@ singlecell_plot_markersplot_server <- function(id,
       if (mrk_features == "") {
         return(NULL)
       }
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
 
       term <- ""
       if (mrk_level == "gene") {
@@ -123,13 +124,13 @@ singlecell_plot_markersplot_server <- function(id,
         pmarkers <- intersect(rownames(pgx$genes)[jj], rownames(pgx$X))
         gx <- pgx$X[pmarkers, rownames(pos), drop = FALSE]
       } else if (mrk_level == "geneset") {
-        markers <- playdata::COLLECTIONS[[1]]
+        markers <- gset_collections[[1]]
         if (is.null(mrk_features)) {
           return(NULL)
         }
         ft <- mrk_features
-        if (mrk_search == "" && ft %in% names(playdata::COLLECTIONS)) {
-          markers <- playdata::COLLECTIONS[[mrk_features]]
+        if (mrk_search == "" && ft %in% names(gset_collections)) {
+          markers <- gset_collections[[mrk_features]]
           markers <- intersect(markers, rownames(pgx$gsetX))
           term <- mrk_features
         } else if (mrk_search != "") {
