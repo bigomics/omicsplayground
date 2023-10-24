@@ -205,50 +205,51 @@ ConnectivityBoard <- function(
     compute_connectivity <- shiny::eventReactive(
       {
         auth$user_dir
-        input$recalc
-        pgx$X
+        pgx$counts
+        pgx$name
         reload_pgxdir()
       },
       {
-        shiny::req(pgx$X)
-        ## shiny::validate(shiny::need("connectivity" %in% names(pgx), "no connectivity in object."))
-        ##      pgx.connectivity <- list()
-        ##      if ("connectivity" %in% names(pgx)) pgx.connectivity <- pgx$connectivity
+        ## shiny::req(pgx$connectivity)  ##??
 
-        if (!"datasets-sigdb" %in% names(pgx$connectivity)) {
-          ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          pgxdir <- auth$user_dir
-          sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
+        ## COMPUTE HERE??? or in pgxCompute() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        pgxdir <- auth$user_dir
+        sigdb.file <- file.path(pgxdir, "datasets-sigdb.h5")
+
+        need_update <- playbase::pgxinfo.needUpdate(
+          pgxdir,
+          check.sigdb = TRUE,
+          verbose = FALSE
+        )
+
+        if (need_update || !file.exists(sigdb.file)) {
+          pgx.showSmallModal("Updating your signature database<br>Please wait...")
+          info("[compute_connectivity] calling updateDatasetFolder")
+          shiny::withProgress(message = "Updating signature database...", value = 0.33, {
+            playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb = TRUE)
+          })
+          shiny::removeModal(session)
+        }
+
+        if (!"datasets-sigdb.h5" %in% names(pgx$connectivity)) {
           user.scores <- NULL
-          need_update <- playbase::pgxinfo.needUpdate(pgxdir,
-            check.sigdb = TRUE,
-            verbose = FALSE
-          )
-
-          if (need_update || !file.exists(sigdb.file)) {
-            pgx.showSmallModal("Updating your signature database<br>Please wait...")
-            info("[compute_connectivity] calling updateDatasetFolder")
-            shiny::withProgress(message = "Updating signature database...", value = 0.33, {
-              playbase::pgxinfo.updateDatasetFolder(pgxdir, update.sigdb = TRUE)
-            })
-            shiny::removeModal(session)
-          }
           if (file.exists(sigdb.file)) {
             info("[compute_connectivity] computing connectivity scores...")
             pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
             shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {
               user.scores <- playbase::pgx.computeConnectivityScores(
                 pgx, sigdb.file,
-                ntop = 50, contrasts = NULL,
+                ntop = 50,
+                contrasts = NULL,
+                contrasts = NULL,
                 remove.le = TRUE
               )
             })
             shiny::removeModal(session)
           }
           pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
-
-          ## save results?? but what is the real filename?????
-          ## playbase::pgx.save(pgx, file = pgx$name )
+          ## save results back?? but what is the real filename?????
+          ## playbase::pgx.save(pgx, file = file.path(pgxdir,pgx$name))
         }
         pgx$connectivity
       },
@@ -258,18 +259,19 @@ ConnectivityBoard <- function(
 
     getConnectivityScores <- shiny::reactive({
       pgx.connectivity <- compute_connectivity()
+
       sigdb <- input$sigdb
       shiny::req(sigdb)
       all.scores <- pgx.connectivity[[sigdb]]
 
+      ct <- "contrast"
       ct <- input$contrast
       if (!ct %in% names(all.scores)) {
-        warning("[getConnectivityScores] ERROR : contrast not in connectivity scores")
+        warning("[getConnectivityScores] ERROR : contrast ", ct, " not in connectivity scores")
         return(NULL)
       }
 
       scores <- as.data.frame(all.scores[[ct]])
-      dbg("[getConnectivityScores] dim.scores=", dim(scores))
 
       if (input$abs_score == FALSE) {
         ## put sign back!!!
@@ -419,7 +421,7 @@ ConnectivityBoard <- function(
     connectivityScoreTable <- connectivity_table_similarity_scores_server(
       "connectivityScoreTable",
       getConnectivityScores = getConnectivityScores,
-      columns = c("pathway", "score", "rho", "NES", "padj"),
+      columns = c("pathway", "score", "rho", "NES", "odd.ratio", "tau"),
       height = "200px" ## scrollY height
     )
 

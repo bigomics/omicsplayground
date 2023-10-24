@@ -76,6 +76,7 @@ connectivity_plot_scatterPlot_server <- function(id,
         shiny::req(pgx$X)
         shiny::req(sigdb)
         shiny::req(logfc)
+        shiny::req(connectivityScoreTable$rows_selected())
 
         all.ct <- getConnectivityContrasts(sigdb)
         fc1 <- getCurrentContrast()$fc

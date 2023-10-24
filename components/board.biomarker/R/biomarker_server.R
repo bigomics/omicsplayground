@@ -82,8 +82,9 @@ BiomarkerBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$X)
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
-        ft <- names(playdata::COLLECTIONS)
-        nn <- sapply(playdata::COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        ft <- names(gset_collections)
+        nn <- sapply(gset_collections, function(x) sum(x %in% rownames(pgx$gsetX)))
         ft <- ft[nn >= 10]
       } else {
         ## gene level

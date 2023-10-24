@@ -262,7 +262,8 @@ sever_crash <- function(error = NULL) {
   )
 }
 
-sever_ciao <- function() {
+sever_ciao <- function(title = "We hope you enjoyed your stay!",
+                       msg = "user session ended due to inactivity") {
   shiny::tagList(
     shiny::div(
       style = "
@@ -275,10 +276,10 @@ sever_ciao <- function() {
             background-color: #004c7d;
           ",
         shiny::tags$h1(
-          "",
+          title,
           style = "color:white;font-family:lato;"
         ),
-        shiny::p("We hope you enjoyed your stay!", style = "font-size:18px;"),
+        shiny::p(msg, style = "font-size:18px;"),
         shiny::br(),
         shiny::div(
           shiny::img(
@@ -288,6 +289,8 @@ sever_ciao <- function() {
           ),
           style = "transform: translateX(50px);"
         ),
+        shiny::br(),
+        shiny::br(),
         shiny::br(),
         sever::reload_button("Relaunch", class = "info"),
       )

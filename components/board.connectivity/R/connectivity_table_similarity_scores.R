@@ -14,7 +14,7 @@ connectivity_table_similarity_scores_ui <- function(
   ns <- shiny::NS(id)
 
   TableModuleUI(
-    id = ns("datasets"),
+    id = ns("scores"),
     info.text = info.text,
     width = width,
     caption = caption,
@@ -29,20 +29,22 @@ connectivity_table_similarity_scores_server <- function(id,
                                                         columns,
                                                         height) {
   moduleServer(id, function(input, output, session) {
-    connectivityScoreTable.RENDER <- shiny::reactive({
+    get_datatable <- shiny::reactive({
       df <- getConnectivityScores()
       shiny::req(df)
 
-      #
       kk <- intersect(columns, colnames(df))
       df <- df[, kk]
       df <- df[abs(df$score) > 0, , drop = FALSE]
 
       df$pathway <- playbase::shortstring(df$pathway, 100)
-
       colnames(df) <- sub("pathway", "dataset/contrast", colnames(df))
+      df
+    })
+
+    createDT <- function(df) {
       score.col <- which(colnames(df) == "score")
-      numcols <- c("score", "pval", "padj", "NES.q", "ES", "NES", "rho", "R2")
+      numcols <- c("score", "pval", "padj", "NES.q", "odd.ratio", "ES", "NES", "rho", "R2", "tau")
       numcols <- intersect(numcols, colnames(df))
 
       feature_link <-playbase::wrapHyperLink(
@@ -81,16 +83,23 @@ connectivity_table_similarity_scores_server <- function(id,
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
-    })
+    }
 
-    connectivityScoreTable.RENDER_modal <- shiny::reactive({
-      dt <- connectivityScoreTable.RENDER()
+    connectivityScoreTable.RENDER <- function() {
+      df <- get_datatable()
+      df <- df[, c("dataset/contrast", "score", "rho")]
+      createDT(df)
+    }
+
+    connectivityScoreTable.RENDER_modal <- function() {
+      df <- get_datatable()
+      dt <- createDT(df)
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    })
+    }
 
     connectivityScoreTable <- TableModuleServer(
-      "datasets",
+      "scores",
       func = connectivityScoreTable.RENDER,
       func2 = connectivityScoreTable.RENDER_modal,
       selector = "single"
