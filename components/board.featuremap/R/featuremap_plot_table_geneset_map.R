@@ -80,7 +80,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     ## the same module server id.
     ##
     ns <- session$ns
-      sel.row <- 1
+    sel.row <- 1
 
     filteredGsets <- shiny::reactive({
       shiny::req(pgx$X)
