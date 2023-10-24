@@ -73,7 +73,7 @@ PcsfBoard <- function(id, pgx) {
         genes_raw <- genes
 
         genes <- toupper(genes)
-        
+
         names(idx) <- genes
 
         ## balance number of gene per group??
