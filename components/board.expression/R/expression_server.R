@@ -125,12 +125,14 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(mx)) {
         return(NULL)
       }
-      mm <- colnames(mx$p)
-      testmethods <- intersect(mm, testmethods)
 
-      mx.p <- mx$p[, testmethods, drop = FALSE]
-      mx.q <- mx$q[, testmethods, drop = FALSE]
-      mx.fc <- mx$fc[, testmethods, drop = FALSE]
+      ## get rid of AsIs so that behaves as data.frame/list 
+      ## For some reason, this seems to be really important.
+      mm <- colnames(unclass(mx$p))
+      testmethods <- intersect(mm, testmethods)
+      mx.p <- unclass(mx$p[, testmethods, drop = FALSE]) 
+      mx.q <- unclass(mx$q[, testmethods, drop = FALSE])
+      mx.fc <- unclass(mx$fc[, testmethods, drop = FALSE])
       rownames(mx.p) <- rownames(mx)
       rownames(mx.q) <- rownames(mx)
       rownames(mx.fc) <- rownames(mx)

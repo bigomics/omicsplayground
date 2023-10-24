@@ -83,9 +83,7 @@ expression_plot_volcano_server <- function(id,
       df1 <- df1()
       sel2 <- sel2()
       df2 <- df2()
-
       ## if no gene selected we should show full volcano plot
-
 
       fam.genes <- res$symbol
 
@@ -106,7 +104,7 @@ expression_plot_volcano_server <- function(id,
       jj <- match(fam.genes, res$symbol)
       sel.genes <- res$symbol[setdiff(jj, NA)]
 
-      fc.genes <- as.character(res[, grep("^gene$|gene_name|symbol", colnames(res))])
+      fc.genes <- res[, grep("^gene$|gene_name", colnames(res))]
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
@@ -178,8 +176,6 @@ expression_plot_volcano_server <- function(id,
         label = pd[["lab.genes"]],
         label.cex = pd[["lab.cex"]],
         group.names = c("group1", "group0"),
-        ## xlim=xlim, ylim=ylim, ## hi.col="#222222",
-        #
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "effect size (log2FC)",
