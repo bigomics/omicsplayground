@@ -60,8 +60,9 @@ IntersectionBoard <- function(
       }
       shiny::req(input$level)
       if (input$level == "geneset") {
-        ft <- names(playdata::COLLECTIONS)
-        nn <- sapply(playdata::COLLECTIONS, function(x) sum(x %in% rownames(pgx$gsetX)))
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        ft <- names(gset_collections)
+        nn <- sapply(gset_collections, function(x) sum(x %in% rownames(pgx$gsetX)))
         ft <- ft[nn >= 10]
       } else {
         ## gene level
@@ -108,7 +109,8 @@ IntersectionBoard <- function(
             gsets <- intersect(rownames(pgx$gsetX), gsets)
           }
         } else if (input$filter != "<all>") {
-          gsets <- unique(unlist(playdata::COLLECTIONS[input$filter]))
+          gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+          gsets <- unique(unlist(gset_collections[input$filter]))
         }
         gsets <- intersect(gsets, rownames(fc0))
         fc1 <- fc0[gsets, , drop = FALSE]

@@ -20,17 +20,7 @@ UserSettingsUI <- function(id) {
         bslib::layout_column_wrap(
           height = "calc(100vh - 183px)",
           width = 1,
-          style = htmltools::css(grid_template_columns = "2fr 5fr 5fr"),
-          CardUI(
-            bslib::input_switch(ns("enable_beta"), "Enable beta features"),
-            bslib::input_switch(ns("enable_info"), "Show info alerts", value = TRUE),
-            selector_switch(
-              class = "card-footer-checked",
-              label = "show captions",
-              is.checked = FALSE
-            ),
-            title = "Application options"
-          ),
+          style = htmltools::css(grid_template_columns = "5fr 5fr"),
           PlotModuleUI(
             ns("newfeatures"),
             outputFunc = htmlOutput,

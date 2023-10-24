@@ -68,8 +68,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     shiny::observe({
       shiny::req(pgx$X)
-      nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
-      gsets.groups <- names(playdata::COLLECTIONS)[which(nn >= 5)]
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+      nn <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
+      gsets.groups <- names(gset_collections)[which(nn >= 5)]
       gsets.groups <- c("<all>", sort(gsets.groups))
       sel <- "<all>"
       hmark <- grep("^H$|hallmark|", gsets.groups, ignore.case = TRUE, value = TRUE)
@@ -160,9 +161,10 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (is.null(input$gs_features)) {
         return(NULL)
       }
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
       if (1 && !(gsfeatures %in% c(NA, "", "*", "<all>")) &&
-        gsfeatures %in% names(playdata::COLLECTIONS)) {
-        sel <- intersect(rownames(mx), playdata::COLLECTIONS[[gsfeatures]])
+        gsfeatures %in% names(gset_collections)) {
+        sel <- intersect(rownames(mx), gset_collections[[gsfeatures]])
         mx <- mx[sel, , drop = FALSE]
       }
 

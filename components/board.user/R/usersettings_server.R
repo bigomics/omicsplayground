@@ -65,15 +65,5 @@ UserSettingsBoard <- function(id, auth, pgx) {
       "packages",
       func = packages.RENDER
     )
-
-    res <- list(
-      enable_beta = reactive({
-        as.logical(input$enable_beta)
-      }),
-      enable_info = reactive({
-        as.logical(input$enable_info)
-      })
-    )
-    return(res)
   })
 }
