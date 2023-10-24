@@ -82,8 +82,9 @@ expression_table_genetable_server <- function(id,
 
       numeric.cols <- which(sapply(res, is.numeric))
       numeric.cols <- colnames(res)[numeric.cols]
-
-      DT::datatable(res,
+      show_res <- res
+      show_res $gene_name <- NULL
+      DT::datatable(show_res ,
         rownames = FALSE,
         class = "compact hover",
         extensions = c("Scroller"),
@@ -105,7 +106,7 @@ expression_table_genetable_server <- function(id,
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle(colnames(res)[fx.col],
+        DT::formatStyle(colnames(show_res)[fx.col],
           background = color_from_middle(fx, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
