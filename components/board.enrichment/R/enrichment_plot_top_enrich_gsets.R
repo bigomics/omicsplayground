@@ -95,16 +95,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       rnk0 <- gx.meta$meta.fx
       rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
 
-      # We currently use Human Homolog for GSET 
-     
-     if(!is.null(pgx$genes$human_ortholog)){
-      genes_id <- ifelse(is.na(pgx$genes$human_ortholog), 
-                               pgx$genes$gene_name, 
-                               pgx$genes$human_ortholog)
-     }else{
-      genes_id <- pgx$genes$gene_name
-     }
-
+      # We currently use GENE SYMBOL for GSET 
+      genes_id <- pgx$genes$symbol
      
       # Temporary deal with NAs and duplicates
       rnk0 <- rnk0[!is.na(genes_id)]
