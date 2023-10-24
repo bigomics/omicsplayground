@@ -195,6 +195,9 @@ devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data"
 devtools::install_github("cran/riverplot")
 BiocManager::install("rliger")
 
+# install maptools
+devtools::install_github("cran/maptools")
+
 INSTALLED.PKGS <- c(INSTALLED.PKGS, "Proteus")
 
 ##---------------------------------------------------------------------
