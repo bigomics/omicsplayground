@@ -68,7 +68,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     shiny::observe({
       shiny::req(pgx$X)
-      nn <- sapply(playdata::COLLECTIONS, function(k) sum(k %in% rownames(pgx$gsetX)))
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+      nn <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
       gsets.groups <- names(playdata::COLLECTIONS)[which(nn >= 5)]
       gsets.groups <- c("<all>", sort(gsets.groups))
       sel <- "<all>"
