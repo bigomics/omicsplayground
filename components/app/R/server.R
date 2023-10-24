@@ -132,9 +132,9 @@ app_server <- function(input, output, session) {
   )
 
   env$user_settings <- list(
-      enable_beta = shiny::reactive(input$enable_beta),
-      enable_info = shiny::reactive(input$enable_info)
-    )
+    enable_beta = shiny::reactive(input$enable_beta),
+    enable_info = shiny::reactive(input$enable_info)
+  )
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
