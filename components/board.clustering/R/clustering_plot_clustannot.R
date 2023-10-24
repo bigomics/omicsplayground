@@ -66,8 +66,9 @@ clustering_plot_clusterannot_server <- function(id,
       ann.types <- sel <- NULL
       if (input$xann_level != "phenotype") {
         if (input$xann_level == "geneset") {
-          ann.types <- names(playdata::COLLECTIONS)
-          cc <- sapply(playdata::COLLECTIONS, function(s) length(intersect(s, rownames(pgx$gsetX))))
+          gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+          ann.types <- names(gset_collections)
+          cc <- sapply(gset_collections, function(s) length(intersect(s, rownames(pgx$gsetX))))
           ann.types <- ann.types[cc >= 3]
         }
         if (input$xann_level == "gene") {
