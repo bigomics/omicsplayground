@@ -68,8 +68,8 @@ upload_module_computepgx_server <- function(
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
 
-      path_gmt <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
-
+      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
+      
       output$UI <- shiny::renderUI({
         shiny::fillCol(
           height = height,
@@ -202,8 +202,8 @@ upload_module_computepgx_server <- function(
                     shiny::tags$h6(
                       "A GMT file as described",
                       tags$a(
-                        "here,",
-                        href = path_gmt,
+                        "here.",
+                        href = readthedocs_url,
                         target = "_blank",
                         style = "text-decoration: underline;"
                       ),
@@ -237,7 +237,7 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
-      # Inpute name and description
+      # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
         pgx_info <- recompute_info()
@@ -274,9 +274,9 @@ upload_module_computepgx_server <- function(
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = "There are cases where there is only one samples in a group.
-                    Some of the gene tests and enrichment
-                    methods are disabled.",
+            text = stringr::str_squish("There are cases where there is only one samples
+                    in a group. Some of the gene tests and enrichment
+                    methods are disabled."),
             type = "warning"
           )
           shiny::updateCheckboxGroupInput(
@@ -364,7 +364,12 @@ upload_module_computepgx_server <- function(
         ## Check validity
         ## -----------------------------------------------------------
         if (!enable_button()) {
-          message("[ComputePgxServer:@compute] WARNING:: *** NOT ENABLED ***")
+          message("[ComputePgxServer:input$compute] WARNING:: *** DISABLED ***")
+          shinyalert::shinyalert(
+            title = "ERROR",
+            text = "Compute is disabled",
+            type = "error"
+          )
           return(NULL)
         }
 
@@ -407,9 +412,6 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         max.genes <- as.integer(auth$options$MAX_GENES)
         max.genesets <- as.integer(auth$options$MAX_GENESETS)
-
-        dbg("[upload_module_computepgx_server] max.genes = ", max.genes)
-        dbg("[upload_module_computepgx_server] max.genesets = ", max.genesets)
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
@@ -459,12 +461,6 @@ upload_module_computepgx_server <- function(
         # button), or user click compute a second time
         if (is.null(raw_dir())) {
           raw_dir(create_raw_dir(auth))
-          ## raw_dir(tempfile(pattern = "pgx_"))
-          ## dir.create(raw_dir())
-          ##
-          ## NOTE: should we save any counts/samples/contrast matrices
-          ## here?? They might be altered here but at least we have
-          ## them saved.
           dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
@@ -518,10 +514,10 @@ upload_module_computepgx_server <- function(
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
-          text = "Your dataset will be computed in the background.
-          You can continue to play with a different dataset in the meantime.
-          When it is ready, it will appear in your dataset library. Most datasets
-          take between 30 - 60 minutes to complete.",
+          text = stringr::str_squish("Your dataset will be computed in the background.
+            You can continue to play with a different dataset in the meantime.
+            When it is ready, it will appear in your dataset library. Most datasets
+            take between 30 - 60 minutes to complete."),
           type = "info",
           timer = 60000
         )
@@ -707,7 +703,7 @@ upload_module_computepgx_server <- function(
       # Function to execute when the process is completed successfully
       on_process_completed <- function(raw_dir, nr) {
         dbg("[computePGX:on_process_completed] process", nr, "completed!")
-        process_counter(process_counter() - 1) # stop the timer
+        process_counter(process_counter() - 1)
 
         path_to_params <- file.path(raw_dir, "params.RData")
         params <- readRDS(path_to_params)

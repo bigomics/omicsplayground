@@ -87,18 +87,14 @@ functional_table_wikipathway_server <- function(id,
         plugins = "scrollResize", ## resizes scrollable area
         options = list(
           dom = "lfrtip",
-
-          ## dom = "ft",
-
           scrollX = FALSE,
-          #
           scrollY = 800,
           scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
           columnDefs = list(list(
-            targets = 1, ## with no rownames column 1 is column 2
+            targets = 2, ## with no rownames column 1 is column 2
             render = DT::JS(
               "function(data, type, row, meta) {",
               "return type === 'display' && data.length > 50 ?",

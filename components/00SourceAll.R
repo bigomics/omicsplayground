@@ -216,6 +216,7 @@ if (!file.exists("00SourceAll.R")) {
   source("modules/SocialMediaModule.R", encoding = "UTF-8")
   source("modules/TimerModule.R", encoding = "UTF-8")
   source("modules/UserAccessControl.R", encoding = "UTF-8")
+  source("modules/UserInactivityControl.R", encoding = "UTF-8")
   source("modules/UsersMapModule.R", encoding = "UTF-8")
   source("modules/WelcomeBoard.R", encoding = "UTF-8")
   source("ui/bs-components.R", encoding = "UTF-8")
