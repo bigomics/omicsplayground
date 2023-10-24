@@ -47,7 +47,7 @@ connectivity_table_similarity_scores_server <- function(id,
       numcols <- c("score", "pval", "padj", "NES.q", "odd.ratio", "ES", "NES", "rho", "R2", "tau")
       numcols <- intersect(numcols, colnames(df))
 
-      feature_link <-playbase::wrapHyperLink(
+      feature_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
         df$`dataset/contrast`
       ) |> HandleNoLinkFound(
@@ -79,7 +79,7 @@ connectivity_table_similarity_scores_server <- function(id,
           background = color_from_middle(
             df[, "score"], "lightblue", "#f5aeae"
           ),
-          backgroundSize = "98% 88%", 
+          backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
