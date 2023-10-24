@@ -68,8 +68,8 @@ upload_module_computepgx_server <- function(
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
 
-      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/"
-
+      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
+      
       output$UI <- shiny::renderUI({
         shiny::fillCol(
           height = height,
@@ -206,8 +206,9 @@ upload_module_computepgx_server <- function(
                         href = readthedocs_url,
                         target = "_blank",
                         style = "text-decoration: underline;"
+                      ),
+                      downloadLink(ns("download_gmt"), shiny::HTML(" or download an <u>example GMT</u> listing the gene targets of the EGFR transcription factor."))
                       )
-                    )
                   ),
                   multiple = FALSE,
                   accept = c(".txt", ".gmt")
@@ -790,6 +791,18 @@ upload_module_computepgx_server <- function(
           type = "success"
         )
       })
+
+        output$download_gmt <- downloadHandler(
+        filename = function() {
+          # Set the filename for the downloaded file
+          "EGFR_TARGET_GENES.v2023.1.Hs.gmt"
+        },
+        content = function(file) {
+          gmt_path <- file.path(FILES, "/gmt/EGFR_TARGET_GENES.v2023.1.Hs.gmt")
+          gmt <- readBin(gmt_path, what = raw(), n=file.info(gmt_path)$size)
+          writeBin(gmt, file)
+        }
+      )
 
       return(computedPGX)
     } ## end-of-server
