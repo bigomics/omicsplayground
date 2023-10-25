@@ -99,7 +99,6 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       F <- td$F
 
       ## wrap with hyperlink
-      # browser()
       geneset_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
         rownames(df)

@@ -80,6 +80,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     ## the same module server id.
     ##
     ns <- session$ns
+    sel.row <- 1
 
     filteredGsets <- shiny::reactive({
       shiny::req(pgx$X)
@@ -192,10 +193,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
     # Table
     gsetTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
-      if (is.null(pgx$drugs)) {
-        return(NULL)
-      }
-
       pos <- getGsetUMAP()
 
       ## detect brush

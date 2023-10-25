@@ -63,12 +63,6 @@ ConnectivityInputs <- function(id) {
         "ngenes:",
         choices = c(10, 50, 100),
         sel = 50, inline = TRUE
-      ),
-      br(),
-      withTooltip(
-        shiny::actionButton(ns("recalc"), "recalculate"),
-        "Recalculate connectivity scores. You might want to do this after adding new datasets in your library.",
-        placement = "right", options = list(container = "body")
       )
     )
   )
