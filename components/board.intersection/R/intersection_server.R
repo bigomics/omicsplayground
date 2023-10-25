@@ -86,8 +86,8 @@ IntersectionBoard <- function(
       shiny::req(pgx$X)
 
       sel <- names(pgx$gset.meta$meta)
-
       if (input$level == "geneset") {
+        
         gsetmethods <- c("gsva", "camera", "fgsea")
         gsetmethods <- selected_gsetmethods()
         if (length(gsetmethods) < 1 || gsetmethods[1] == "") {
