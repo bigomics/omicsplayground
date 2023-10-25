@@ -54,24 +54,23 @@ foldchange_heatmap_server <- function(id,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
+      
       if (input$FoldchangeHeatmap_allfc) {
         FC <- getFoldChangeMatrix()$fc
       } else {
         FC <- getActiveFoldChangeMatrix()$fc
       }
 
-      local_FC <<-FC
       if (ncol(FC) < 2) {
         FC <- FC[order(-FC**2), , drop = FALSE]
         FC <- FC[order(-abs(FC)), , drop = FALSE]
-        F1 <- head(FC, 80)
-        F1 <- F1[order(F1), , drop = FALSE]
       } else {
         FC <- FC[order(-rowMeans(FC**2)), ]
         FC <- FC[order(-abs(rowMeans(FC))), ]
-        F1 <- head(FC, 80)
-        F1 <- F1[order(rowMeans(F1)), ]
       }
+      F1 <- head(FC, 80)
+      F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
+
       return(F1)
     })
 
@@ -88,7 +87,6 @@ foldchange_heatmap_server <- function(id,
       }
       bm <- 5 - mh ## bottom margin
       at <- input$FoldchangeHeatmap_annotype
-
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
 
       plt <- grid::grid.grabExpr({
@@ -96,14 +94,14 @@ foldchange_heatmap_server <- function(id,
         playbase::heatmapWithAnnot(
           F1,
           anno.type = at,
-          bar.height = bh, map.height = mh,
+          bar.height = bh, 
+          map.height = mh,
           mar = c(bm, 0.5, 0.5, 1),
           cluster_columns = cclust,
           inset = c(0.01, 0.01)
         )
       })
 
-      # plt
       grid::grid.draw(plt)
     }
 
