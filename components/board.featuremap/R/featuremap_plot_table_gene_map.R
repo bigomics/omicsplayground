@@ -235,7 +235,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (pheno %in% colnames(pgx$samples)) {
         gg <- intersect(sel.genes, rownames(X ))
         if (length(gg) == 0) {
-          X <- playbase::renam_be(X, pgx$genes, "symbol") 
+          X <- playbase::rename_by(X, pgx$genes, "symbol") 
         }
         X <- X[gg, , drop = FALSE]
         X <- X - rowMeans(X)
@@ -248,7 +248,7 @@ featuremap_plot_gene_map_server <- function(id,
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
         gg <- intersect(sel.genes, rownames(F))
         if (length(gg) == 0) {
-          F <- playbase::renam_be(F, pgx$genes, "symbol") 
+          F <- playbase::rename_by(F, pgx$genes, "symbol") 
           gg <- intersect(sel.genes, rownames(F))
         }
         F <- F[gg, , drop = FALSE]
