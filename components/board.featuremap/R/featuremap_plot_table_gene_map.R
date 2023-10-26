@@ -227,9 +227,6 @@ featuremap_plot_gene_map_server <- function(id,
       X <- playbase::rename_by(X, pgx$genes, "symbol")
       if (pheno %in% colnames(pgx$samples)) {
         gg <- intersect(sel.genes, rownames(X))
-        if (length(gg) == 0) {
-          X <- playbase::rename_by(X, pgx$genes, "symbol") 
-        }
         X <- X[gg, , drop = FALSE]
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
