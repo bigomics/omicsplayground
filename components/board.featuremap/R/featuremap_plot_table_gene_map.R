@@ -81,11 +81,10 @@ featuremap_plot_gene_map_server <- function(id,
       sel <- filter_genes()
       filtgenes <- c()
       if (is.null(pgx$version) | pgx$organism == "Human") {
-        print("is null")
 
         filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
       } else {
-        print("is not null")
+
         filtgenes <- unlist(lapply(sel, function(genes) {
           if (genes == "<all>") { 
             x <- pgx$genes$symbol
@@ -98,8 +97,6 @@ featuremap_plot_gene_map_server <- function(id,
           }
           ))
       }
-      print("filteredGenes")
-      print(head(filtgenes, 20))
       filtgenes
     })
 
@@ -112,10 +109,10 @@ featuremap_plot_gene_map_server <- function(id,
       nlabel <- as.integer(input$umap_nlabel)
 
       ## select on table filter
-      F <- playbase::pgx.getMetaMatrix(pgx)$fc
-      F <- scale(F, center = FALSE)
+      FC <- playbase::pgx.getMetaMatrix(pgx)$fc
+      FC <- scale(FC, center = FALSE)
       if (colorby == "sd.FC") {
-        fc <- (rowMeans(F**2))**0.5
+        fc <- (rowMeans(FC**2))**0.5
       } else {
         cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
@@ -123,6 +120,10 @@ featuremap_plot_gene_map_server <- function(id,
       fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
       ## conform
+      pos <- playbase::rename_by(pos, pgx$genes, "symbol")
+      names(fc) <- pgx$genes$symbol[match(names(fc), rownames(pgx$genes), nomatch = 0)]
+      fc <- fc[!duplicated(names(fc))]
+      pos <- pos[!duplicated(rownames(pos)), , drop = FALSE]
       gg <- intersect(rownames(pos), names(fc))
       pos <- pos[gg, ]
       fc <- fc[gg]
@@ -145,17 +146,6 @@ featuremap_plot_gene_map_server <- function(id,
       hilight <- pd$hilight
       nlabel <- pd$nlabel
       colorby <- pd$colorby
-      print("render_geneUMAP")
-      print("df")
-      print(head(df))
-      print("fc")
-      print(head(fc))
-      print("hilight")
-      print(head(hilight))
-      print("nlabel")
-      print(head(nlabel))
-      print("colorby")
-      print(head(colorby))
 
       p <- plotUMAP(
         pos,
@@ -208,9 +198,10 @@ featuremap_plot_gene_map_server <- function(id,
     geneTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
       X <- pgx$X
-      ## detect brush
       pos <- getGeneUMAP()
+      pos <- playbase::rename_by(pos, pgx$genes, "symbol")
       sel.genes <- NULL
+      ## detect brush
       b <- plotly::event_data("plotly_selected", source = ns("gene_umap"))
       if (!is.null(b) & length(b) > 0) {
         sel <- b$key
@@ -222,6 +213,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (!r_fulltable()) {
         if (!is.null(sel.genes)) {
           filt.genes <- filteredGenes()
+
           sel.genes_aux <- match(filt.genes |> stringr::str_to_upper(), sel.genes |> stringr::str_to_upper())
           sel.genes_aux <- sel.genes_aux[!is.na(sel.genes_aux)]
           sel.genes <- sel.genes[sel.genes_aux]
@@ -232,42 +224,49 @@ featuremap_plot_gene_map_server <- function(id,
 
       pheno <- sigvar()
       is.fc <- FALSE
+      X <- playbase::rename_by(X, pgx$genes, "symbol")
       if (pheno %in% colnames(pgx$samples)) {
-        gg <- intersect(sel.genes, rownames(X ))
+        gg <- intersect(sel.genes, rownames(X))
         if (length(gg) == 0) {
           X <- playbase::rename_by(X, pgx$genes, "symbol") 
         }
         X <- X[gg, , drop = FALSE]
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
-        F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[, i, drop = FALSE])
+        FC <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
+        rowMeans(X[, i, drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
-        F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
-        gg <- intersect(sel.genes, rownames(F))
+        FC <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
+        gg <- intersect(sel.genes, rownames(FC))
         if (length(gg) == 0) {
-          F <- playbase::rename_by(F, pgx$genes, "symbol") 
-          gg <- intersect(sel.genes, rownames(F))
+          FC <- playbase::rename_by(FC, pgx$genes, "symbol") 
+          gg <- intersect(sel.genes, rownames(FC))
         }
-        F <- F[gg, , drop = FALSE]
+        FC <- FC[gg, , drop = FALSE]
         is.fc <- TRUE
       }
-      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+      FC <- FC[order(-rowMeans(FC**2)), , drop = FALSE]
       gene_table <- pgx$genes
       if (all(gene_table$human_ortholog == rownames(gene_table))| all(is.na(gene_table$human_ortholog))) {
         gene_table_cols <- c("feature", "symbol", "gene_title")
       } else {
         gene_table_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
       }
-      
-      tt <- playbase::shortstring(pgx$genes[rownames(F), gene_table_cols, drop = FALSE], 60)
-      F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
-      if (is.fc) colnames(F)[1] <- "sd.FC"
-      F <- round(F, digits = 3)
+      # Retreive gene table with rownames (symbols)
+      tt <- playbase::shortstring(pgx$genes[rownames(FC), gene_table_cols, drop = FALSE], 60)
+      if (all(is.na(tt))) {
+        # If not collaps, rownames are not symbols, thus use origina feature (gene_name)
+        rowids <- pgx$genes$gene_name[match(rownames(FC), pgx$genes$symbol, nomatch = 0)]
+        tt <- playbase::shortstring(pgx$genes[rowids, gene_table_cols, drop = FALSE], 60)
+      }
 
-      df <- data.frame(tt, F,
+      FC <- cbind(sd.X = sqrt(rowMeans(FC**2)), FC)
+      if (is.fc) colnames(FC)[1] <- "sd.FC"
+      FC <- round(FC, digits = 3)
+
+      df <- data.frame(tt, FC,
         check.names = FALSE
       )
 

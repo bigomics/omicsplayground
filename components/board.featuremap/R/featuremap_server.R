@@ -42,7 +42,7 @@ FeatureMapBoard <- function(id, pgx) {
       gsetcats <- c("<all>", gsetcats)
       shiny::updateSelectInput(session, "filter_gsets",
         choices = gsetcats,
-        selected = "H"
+        selected = gsetcats[1]
       )
 
       cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
@@ -188,15 +188,15 @@ FeatureMapBoard <- function(id, pgx) {
       ## buffered reactive
       shiny::withProgress(
         {
-          F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
-          F <- scale(F, center = FALSE)
-          pos <- playbase::pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
+          FC <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
+          FC <- scale(FC, center = FALSE)
+          pos <- playbase::pgx.clusterBigMatrix(t(FC), methods = "umap", dims = 2)[[1]]
           pos <- playbase::pos.compact(pos)
         },
         message = "computing foldchange UMAP",
         value = 0.5
       )
-      pos
+      return(pos)
     })
 
     getGeneUMAP <- shiny::reactive({
@@ -206,8 +206,6 @@ FeatureMapBoard <- function(id, pgx) {
       } else {
         pos <- pgx$cluster.genes$pos[["umap2d"]]
       }
-      print("getGeneUMAP")
-      print(head(pos))
       return(pos)
     })
 
@@ -215,16 +213,14 @@ FeatureMapBoard <- function(id, pgx) {
       ## buffered reactive
       shiny::withProgress(
         {
-          F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
-          F <- scale(F, center = FALSE)
-          pos <- playbase::pgx.clusterBigMatrix(t(F), methods = "umap", dims = 2)[[1]]
+          FC <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
+          FC <- scale(F1, center = FALSE)
+          pos <- playbase::pgx.clusterBigMatrix(t(FC), methods = "umap", dims = 2)[[1]]
           pos <- playbase::pos.compact(pos)
         },
         message = "computing foldchange UMAP (genesets)",
         value = 0.5
       )
-      print("getGsetUMAP_FC")
-      print(head(pos))
       return(pos)
     })
 
@@ -235,8 +231,6 @@ FeatureMapBoard <- function(id, pgx) {
       } else {
         pos <- pgx$cluster.gsets$pos[["umap2d"]]
       }
-      print("getGsetUMAP")
-      print(head(pos))
       return(pos)
     })
 
