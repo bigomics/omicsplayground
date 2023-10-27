@@ -100,7 +100,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
      
       # Temporary deal with NAs and duplicates
       rnk0 <- rnk0[!is.na(genes_id)]
-      names(rnk0) <- genes_id[!is.na(genes_id)]
+      names(rnk0) <- pgx$genes$gene_name#genes_id[!is.na(genes_id)]
       rnk0 <- rnk0[!duplicated(names(rnk0))]
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
@@ -135,7 +135,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     plot.RENDER <- function() {
       res <- get_TopEnriched()
       shiny::req(res)
-
       rnk0 <- res$rnk0
       gmt.genes <- res$gmt.genes
       fc <- res$fc
@@ -170,7 +169,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             ylab <- "Rank metric"
           }
           playbase::gsea.enplot(rnk0, genes,
-            names = NULL, #
+            names = NULL, 
             main = gs1, xlab = xlab, ylab = ylab,
             lab.line = c(0, 1.8), cex.lab = 0.75,
             cex.main = 0.78, len.main = 200
@@ -188,6 +187,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       shiny::req(res)
 
       rnk0 <- res$rnk0
+      names(rnk0) <- pgx$genes[names(rnk0), "symbol"]
+      names(rnk0) <- toupper(names(rnk0))
+      rnk0 <- rnk0[!duplicated(names(rnk0))] # df within gsea.enplotly cannot deal with duplicated names
       gmt.genes <- res$gmt.genes
       fc <- res$fc
       qv <- res$qv
@@ -205,7 +207,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
         genes <- toupper(genes)
-        names(rnk0) <- toupper(names(rnk0))
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
