@@ -11,6 +11,9 @@ jobs:
       -
         name: Print ls recursive
         run: ls -R
+      -
+        name: Checkout
+        uses: actions/checkout@v3
       - 
         name: Print ls recursive after checkout
         run: ls -R
