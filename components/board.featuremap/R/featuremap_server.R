@@ -214,7 +214,7 @@ FeatureMapBoard <- function(id, pgx) {
       shiny::withProgress(
         {
           FC <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
-          FC <- scale(F1, center = FALSE)
+          FC <- scale(FC, center = FALSE)
           pos <- playbase::pgx.clusterBigMatrix(t(FC), methods = "umap", dims = 2)[[1]]
           pos <- playbase::pos.compact(pos)
         },
