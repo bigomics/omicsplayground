@@ -132,54 +132,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       return(res)
     })
 
-    plot.RENDER <- function() {
-      res <- get_TopEnriched()
-      shiny::req(res)
-      rnk0 <- res$rnk0
-      gmt.genes <- res$gmt.genes
-      fc <- res$fc
-      qv <- res$qv
-
-      ntop <- length(gmt.genes)
-      if (ntop == 1) rowcol <- c(1, 1)
-      if (ntop == 12) rowcol <- c(3, 4)
-
-      par(mfrow = rowcol)
-      if (ntop == 1) {
-        par(mar = c(1, 6, 2, 6), mgp = c(1.6, 0.6, 0), oma = c(0.1, 1, 0, 0.1))
-      } else {
-        par(mar = c(0.2, 1.8, 2.3, 0.1), mgp = c(1.6, 0.6, 0), oma = c(0.1, 1, 0, 0.1))
-      }
-
-      for (i in 1:ntop) {
-        gs <- names(gmt.genes)[i]
-        genes <- gmt.genes[[i]]
-        if (i > ntop || is.na(gs)) {
-          frame()
-        } else {
-          genes <- toupper(genes)
-          names(rnk0) <- toupper(names(rnk0))
-          ylab <- ""
-          if (i %% rowcol[2] == 1) ylab <- "Rank metric"
-          xlab <- ""
-          gs1 <- playbase::breakstring(gs, 28, 50, force = FALSE)
-          if (ntop == 1) {
-            gs1 <- playbase::breakstring(gs, 100, 200, force = FALSE)
-            xlab <- "Rank in ordered dataset"
-            ylab <- "Rank metric"
-          }
-          playbase::gsea.enplot(rnk0, genes,
-            names = NULL, 
-            main = gs1, xlab = xlab, ylab = ylab,
-            lab.line = c(0, 1.8), cex.lab = 0.75,
-            cex.main = 0.78, len.main = 200
-          )
-          qv1 <- formatC(qv[gs], format = "e", digits = 2)
-          legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
-        }
-      }
-    }
-
     get_plotly_plots <- function(cex.text) {
       dbg("[enrichment_plot_top_enrich_gsets_server] plotly.RENDER called!")
 
