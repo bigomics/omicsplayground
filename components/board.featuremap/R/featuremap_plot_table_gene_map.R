@@ -231,7 +231,7 @@ featuremap_plot_gene_map_server <- function(id,
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
         FC <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-        rowMeans(X[, i, drop = FALSE])
+          rowMeans(X[, i, drop = FALSE])
         }))
         is.fc <- FALSE
       } else {
