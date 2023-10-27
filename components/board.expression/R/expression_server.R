@@ -409,6 +409,7 @@ ExpressionBoard <- function(id, pgx) {
     # rendering tables ####
     gx_related_genesets <- shiny::reactive({
       res <- filteredDiffExprTable()
+      X <- pgx$X
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
@@ -417,19 +418,12 @@ ExpressionBoard <- function(id, pgx) {
         return(NULL)
       }
       ## get table
-      sel.row <- 1
       sel.row <- genetable_rows_selected()
       if (is.null(sel.row)) {
         return(NULL)
       }
 
-      gene0 <- rownames(res)[sel.row]
-      gene1 <- gene0
-      # if non-human, get ortholog
-      # TODO: remove this code?
-      #if(!pgx$organism %in% c("Human", "human")){
-      #  gene1 <- pgx$genes[pgx$genes$gene_name == gene0, "human_ortholog"]
-      #}
+      gene1 <- res$symbol[sel.row]
       j <- which(rownames(pgx$GMT) == gene1)
       gset <- names(which(pgx$GMT[j, ] != 0))
       gset <- intersect(gset, rownames(pgx$gsetX))
@@ -441,7 +435,8 @@ ExpressionBoard <- function(id, pgx) {
       names(fx) <- rownames(pgx$gset.meta$meta[[contr]])
       fx <- round(fx[gset], digits = 4)
 
-      rho <- cor(t(pgx$gsetX[gset, ]), pgx$X[gene0, ])[, 1]
+      X <- playbase::rename_by(X, pgx$genes, "symbol")
+      rho <- cor(t(pgx$gsetX[gset, ]), X[gene1, ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 

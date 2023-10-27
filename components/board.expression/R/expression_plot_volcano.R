@@ -126,7 +126,7 @@ expression_plot_volcano_server <- function(id,
       gene.selected <- !is.null(sel1) && !is.null(df1)
       gset.selected <- !is.null(sel2) && !is.null(df2)
       if (gene.selected && !gset.selected) {
-        lab.genes <- rownames(df1)[sel1]
+        lab.genes <- df1$symbol[sel1]
         sel.genes <- lab.genes
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
