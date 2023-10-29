@@ -92,26 +92,25 @@ enrichment_plot_scatter_server <- function(id,
     subplot_scatter.RENDER <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
-      shiny::req(pgx$X)
-
-
       gene <- rownames(pgx$X)[1]
       sel <- gene_selected()
       gset <- gset_selected()
-      if (is.null(sel)) {
-        return(NULL)
-      }
-      if (is.null(gset)) {
-        return(NULL)
-      }
+      shiny::req(pgx$X)
+      shiny::req(sel$gene, sel$probe)
+      shiny::req(gset)
 
       if (is.null(sel) || length(sel) == 0) {
         frame()
       } else {
-        gene <- sel$gene
+        gene <- sel$rn
         gset <- gset[1]
-        selected_gene <- pgx$genes[pgx$genes$feature== sel$gene,"symbol"]
-        gx <- pgx$X[selected_gene, ]
+        selected_symbol <- pgx$genes[gene, "symbol"]
+        if (selected_symbol == "") selected_symbol <- gene
+        if (gene %in% rownames(pgx$X)) {
+          gx <- pgx$X[gene, ]
+        } else {
+          gx <- pgx$X[selected_symbol, ]
+        }
         sx <- pgx$gsetX[gset, ]
         if (length(gx) == 0 || length(sx) == 0 ||
           length(gx) != length(sx)) {
@@ -126,11 +125,11 @@ enrichment_plot_scatter_server <- function(id,
 
         cex1 <- c(1.4, 0.8, 0.3)[cut(length(gx), c(0, 100, 500, 99999))]
         gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)
-        tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", gene)
+        tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", selected_symbol)
         base::plot(gx, sx,
           col = klr, main = tt,
           ylab = "gene set enrichment",
-          xlab = paste(gene, "expression"),
+          xlab = paste(selected_symbol, "expression"),
           cex.lab = 1, pch = 19, cex = 1.0 * cex1, cex.main = 0.85
         )
         abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")

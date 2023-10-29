@@ -415,9 +415,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         return(list(gene = NA, probe = NA))
       }
       sel.gene <- rownames(rpt)[i]
-      gene <- as.character(rpt$feature[i])
-      probe <- rownames(pgx$genes)[pgx$genes$symbol %in% gene]
-      return(list(gene = gene, probe = probe))
+      res <- unlist(pgx$genes[sel.gene, c("gene_name", "feature", "symbol")])
+      return(list(rn = res["gene_name"], gene = res["symbol"], probe = res["feature"]))
     })
 
     ## ================================================================================
