@@ -86,6 +86,25 @@ DataViewBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
     })
 
+    # Observe tabPanel change to update Settings visibility
+    observeEvent(input$tabs, {
+      shinyjs::enable("search_gene")
+      shinyjs::enable("data_type")
+      shinyjs::enable("data_groupby")
+      if(input$tabs == "Sample QC") {
+        shinyjs::disable("search_gene")
+        shinyjs::disable("data_type")
+      } else if (input$tabs == "Sample information") {
+        shinyjs::disable("search_gene")
+        shinyjs::disable("data_groupby")
+        shinyjs::disable("data_type")
+      } else if (input$tabs == "Contrasts") {
+        shinyjs::disable("search_gene")
+        shinyjs::disable("data_groupby")
+        shinyjs::disable("data_type")
+      }
+    })
+
 
     shiny::observeEvent(
       {
