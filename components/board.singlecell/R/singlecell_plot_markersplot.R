@@ -85,24 +85,20 @@ singlecell_plot_markersplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
+      shiny::req(pfGetClusterPositions())
+      shiny::req(mrk_features())
 
       mrk_level <- mrk_level()
       mrk_features <- mrk_features()
       mrk_search <- mrk_search()
       mrk_sortby <- mrk_sortby()
-
       clust.pos <- pfGetClusterPositions()
-      if (is.null(clust.pos)) {
-        return(NULL)
-      }
       pos <- clust.pos
+      X <- pgx$X
+      if (all(rownames(X) %in% pgx$genes$feature)) {
+        X <- playbase::rename_by(X, pgx$genes, "symbol")
+      }
 
-      if (is.null(mrk_features)) {
-        return(NULL)
-      }
-      if (mrk_features == "") {
-        return(NULL)
-      }
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
 
       term <- ""
@@ -110,19 +106,20 @@ singlecell_plot_markersplot_server <- function(id,
         markers <- pgx$families[["Transcription factors (ChEA)"]]
         if (mrk_search != "") {
           term <- mrk_search
-          jj <- grep(term, pgx$genes$gene_name, ignore.case = TRUE)
-          markers <- pgx$genes$gene_name[jj]
+          jj <- grep(term, pgx$genes$symbol, ignore.case = TRUE)
+          markers <- pgx$genes$symbol[jj]
           term <- paste("filter:", term)
         } else if (mrk_features %in% names(pgx$families)) {
           markers <- pgx$families[[mrk_features]]
           term <- mrk_features
         } else {
-          markers <- pgx$genes$gene_name
+          markers <- pgx$genes$symbol
         }
-        markers <- intersect(toupper(markers), toupper(pgx$genes$gene_name))
-        jj <- match(markers, toupper(pgx$genes$gene_name))
-        pmarkers <- intersect(rownames(pgx$genes)[jj], rownames(pgx$X))
-        gx <- pgx$X[pmarkers, rownames(pos), drop = FALSE]
+        markers <- intersect(toupper(markers), toupper(pgx$genes$symbol))
+        jj <- match(markers, toupper(pgx$genes$symbol))
+        pmarkers <- intersect(pgx$genes$symbol[jj], rownames(X))
+        gx <- X[pmarkers, rownames(pos), drop = FALSE]
+
       } else if (mrk_level == "geneset") {
         markers <- gset_collections[[1]]
         if (is.null(mrk_features)) {
