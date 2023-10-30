@@ -103,14 +103,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
 
     getCurrentMarkers <- shiny::reactive({
-      ## Get current selection of markers/genes
 
-      if (is.null(pgx)) {
-        return(NULL)
-      }
-
-      type <- input$type
+      shiny::req(pgx)
       shiny::req(input$type, input$feature)
+
+      ## Get current selection of markers/genes
+      type <- input$type
 
       dbg("<signature:getCurrentMarkers> called\n")
 
@@ -268,23 +266,24 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     getOverlapTable <- shiny::reactive({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
 
-      markers <- head(rownames(pgx$X), 100)
+      shiny::req(pgx)
+      shiny::req(getCurrentMarkers())
+
       markers <- getCurrentMarkers()
-      if (is.null(markers)) {
-        return(NULL)
-      }
 
       ## fold change just for ranking of genes
-      F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
-      rownames(F) <- rownames(pgx$gx.meta$meta[[1]])
-      fx <- rowMeans(F**2)
+      FC <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
+      rownames(FC) <- rownames(pgx$gx.meta$meta[[1]])
+      fx <- rowMeans(FC**2)
 
       ## fisher test
       ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
+
+      if (length(ii) == 0) {
+        markers <- pgx$genes[markers, "symbol"]
+        ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
+      }
       N <- cbind(
         k1 = Matrix::rowSums(playdata::GSETxGENE != 0), n1 = ncol(playdata::GSETxGENE),
         k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0), n2 = length(ii)
@@ -292,16 +291,13 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       rownames(N) <- rownames(playdata::GSETxGENE)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
-      dim(N)
 
       ## WOW THIS IS FAST!!!!!!!
       pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
-      head(pv)
       names(pv) <- rownames(N)
       pv <- pv[match(names(odds.ratio), names(pv))]
       qv <- p.adjust(pv, method = "bonferroni")
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
-      dim(A)
 
       ## limit the list??
       A <- A[which(A$q.fisher < 0.999), ]
@@ -389,11 +385,11 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       fc <- fc[genes, , drop = FALSE]
       qv <- qv[genes, , drop = FALSE]
 
-      gene.tt <- substring(playdata::GENE_TITLE[toupper(rownames(fc))], 1, 40)
-      names(gene.tt) <- rownames(fc)
-      df <- data.frame(gene = rownames(fc), title = gene.tt, fc, check.names = FALSE)
+      gene.info <- pgx$genes[rownames(fc), c("feature", "symbol", "gene_title")]
+      gene.info$gene_title <- substring(gene.info$gene_title, 1, 40)
+      df <- data.frame(gene.info, fc, check.names = FALSE)
 
-      df
+      return(df)
     })
 
     ## ================================================================================
