@@ -54,11 +54,11 @@ CorrelationUI <- function(id) {
     id = ns("tabs"),
     shiny::tabPanel(
       "Correlation",
-      bslib::layout_column_wrap(
-        width = 1 / 2,
+      bslib::layout_columns(
+        col_widths = c(6, 6),
         height = "calc(100vh - 180px)",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           correlation_plot_barplot_ui(
             id = ns("cor_barplot"),
             title = "Top correlated genes",
@@ -90,8 +90,8 @@ CorrelationUI <- function(id) {
     ),
     shiny::tabPanel(
       "Graph",
-      bslib::layout_column_wrap(
-        width = 1 / 2,
+      bslib::layout_columns(
+        col_widths = c(6, 6),
         height = "calc(100vh - 180px)",
         correlation_plot_cor_graph_ui(
           ns("cor_graph"),

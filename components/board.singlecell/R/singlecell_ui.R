@@ -42,8 +42,8 @@ SingleCellUI <- function(id) {
           id = ns("tabs"),
           shiny::tabPanel(
             "Cell type",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
+            bslib::layout_columns(
+              col_widths = c(6, 6),
               height = "calc(100vh - 180px)",
               singlecell_plot_icpplot_ui(
                 id = ns("icpplot"),
@@ -68,8 +68,8 @@ SingleCellUI <- function(id) {
           ),
           shiny::tabPanel(
             "Mapping",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
+            bslib::layout_columns(
+              col_widths = c(6, 6),
               height = "calc(100vh - 180px)",
               singlecell_plot_mappingplot_ui(
                 id = ns("mappingplot"),
@@ -95,8 +95,8 @@ SingleCellUI <- function(id) {
           ),
           shiny::tabPanel(
             "Markers",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
+            bslib::layout_columns(
+              col_widths = c(6, 6),
               height = "calc(100vh - 180px)",
               singlecell_plot_markersplot_ui(
                 id = ns("markersplot"),

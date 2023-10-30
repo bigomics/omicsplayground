@@ -19,9 +19,8 @@ upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
   tagList(
-    bslib::layout_column_wrap(
-      width = 1,
-      style = htmltools::css(grid_template_columns = "8fr 3fr;"),
+    bslib::layout_columns(
+      col_widths = c(8, 4),
       height = "50%",
       bslib::card(
         full_screen = TRUE,

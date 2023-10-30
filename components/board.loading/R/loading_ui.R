@@ -36,14 +36,12 @@ LoadingUI <- function(id) {
 
   user_tabpanel <- shiny::tabPanel(
     "My Library",
-    bslib::layout_column_wrap(
-      width = 1,
-      heights_equal = "row",
+    bslib::layout_columns(
+      col_widths = 12,
       height = "calc(100vh - 180px)",
       uiOutput(ns("sharing_alert")),
-      bslib::layout_column_wrap(
-        width = 1,
-        style = htmltools::css(grid_template_columns = "7fr 5fr"),
+      bslib::layout_columns(
+        col_widths = c(7, 5),
         loading_table_datasets_ui(
           ns("pgxtable"),
           title = "Available datasets",
@@ -66,14 +64,12 @@ LoadingUI <- function(id) {
 
   public_tabpanel <- shiny::tabPanel(
     "Public Library",
-    bslib::layout_column_wrap(
-      width = 1,
-      heights_equal = "row",
+    bslib::layout_columns(
+      col_widths = 12,
       height = "calc(100vh - 180px)",
       bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")),
-      bslib::layout_column_wrap(
-        width = 1,
-        style = htmltools::css(grid_template_columns = "7fr 5fr"),
+      bslib::layout_columns(
+        col_widths = c(7, 5),
         loading_table_datasets_public_ui(
           ns("pgxtable_public"),
           title = "Public datasets",
@@ -91,18 +87,17 @@ LoadingUI <- function(id) {
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr
-    ) ## end first layout_column_wrap
+    ) 
   ) ## end of Public tabPanel
 
   sharing_tabpanel <- shiny::tabPanel(
     "Sharing",
-    bslib::layout_column_wrap(
-      width = 1,
-      heights_equal = "row",
+    bslib::layout_columns(
+      col_widths = 12,
       height = "calc(100vh - 180px)",
       bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 180px)",
         uiOutput(ns("sharing_panel_ui"))
       )

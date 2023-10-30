@@ -3,18 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-## if you put a card(style = "overflow: visible") in a parent element
-## that has overflow:auto set (e.g., layout_column_wrap()) you'll run
-## into this issue (because the parent's overflow setting will
-## overrule the child's property). You can currently work around the
-## problem by making sure the layout containers also have overflow:
-## visible,
-layout_column_wrap_visible <- function(...) {
-  res <- bslib::layout_column_wrap(..., style = "overflow:visible;")
-  htmltools::tagQuery(res)$children()$addAttrs(style = "overflow:visible;")$allTags()
-}
-
 ConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
@@ -77,16 +65,15 @@ ConnectivityUI <- function(id) {
     ## ---------------------------- panel1 ------------------------------------------
     shiny::tabPanel(
       "FC correlation",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 180px)",
-        heights_equal = "row",
         bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
-        bslib::layout_column_wrap(
-          width = 1 / 2,
+        bslib::layout_columns(
+          col_widths = c(6, 6),
           height = "calc(100vh - 180px)",
-          bslib::layout_column_wrap(
-            width = 1,
+          bslib::layout_columns(
+            col_widths = 12,
             connectivity_plot_FCFCplots_ui(
               ns("FCFCplots"),
               label = "a",
@@ -123,14 +110,12 @@ ConnectivityUI <- function(id) {
 
     shiny::tabPanel(
       "FC Heatmap",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 180px)",
-        heights_equal = "row",
         bs_alert("Compare the fold-change of similar signatures across different experiments."),
-        bslib::layout_column_wrap(
-          width = 1,
-          style = htmltools::css(grid_template_columns = "3fr 9fr"),
+        bslib::layout_columns(
+          col_widths = c(3, 9),
           connectivity_plot_connectivityMap_ui(
             ns("connectivityMap"),
             title = "Connectivity map",
@@ -149,9 +134,8 @@ ConnectivityUI <- function(id) {
             width = c("auto", "100%")
           )
         ),
-        bslib::layout_column_wrap(
-          width = 1,
-          #
+        bslib::layout_columns(
+          col_widths = 12,
           connectivity_table_foldchange_ui(
             ns("connectivityFoldchangeTable"),
             title = "Fold-change table",
@@ -167,11 +151,11 @@ ConnectivityUI <- function(id) {
     ## ---------------------------- panel3 ------------------------------------------
     shiny::tabPanel(
       "Meta-network",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 180px)",
-        bslib::layout_column_wrap(
-          width = 1 / 2,
+        bslib::layout_columns(
+          col_widths = c(6, 6),
           height = "35%",
           connectivity_plot_leadingEdgeGraph_ui(
             id = ns("leadingEdgeGraph"),
@@ -191,8 +175,8 @@ ConnectivityUI <- function(id) {
             width = c("auto", "100%")
           )
         ),
-        bslib::layout_column_wrap(
-          width = 1 / 2,
+        bslib::layout_columns(
+          col_widths = c(6, 6),
           height = "35%",
           connectivity_plot_cumFCplot_ui(
             id = ns("cumFCplot"),
