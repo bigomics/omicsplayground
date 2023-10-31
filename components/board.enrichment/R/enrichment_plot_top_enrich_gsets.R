@@ -61,8 +61,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X)
       rpt <- getFilteredGeneSetTable()
+      
       shiny::req(rpt, gs_contrast())
-
       comp <- 1
       comp <- gs_contrast()
       if (!(comp %in% names(pgx$gx.meta$meta))) {
@@ -93,14 +93,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       rpt <- rpt[itop, ]
       gx.meta <- pgx$gx.meta$meta[[comp]]
       rnk0 <- gx.meta$meta.fx
-      rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
+      names(rnk0) <- rownames(gx.meta)
 
-      # We currently use GENE SYMBOL for GSET 
-      genes_id <- pgx$genes$symbol
-     
-      # Temporary deal with NAs and duplicates
-      rnk0 <- rnk0[!is.na(genes_id)]
-      names(rnk0) <- pgx$genes$gene_name#genes_id[!is.na(genes_id)]
       rnk0 <- rnk0[!duplicated(names(rnk0))]
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
@@ -118,7 +112,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       for (i in 1:length(top)) {
         gs <- top[i]
         genes <- names(which(pgx$GMT[, gs] != 0))
-        gmt.genes[[gs]] <- toupper(genes)
+        gmt.genes[[gs]] <- genes
       }
 
       dbg("[enrichment_plot_top_enrich_gsets_server] done!")
@@ -139,11 +133,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       shiny::req(res)
 
       rnk0 <- res$rnk0
-      names(rnk0) <- pgx$genes[names(rnk0), "symbol"]
-      names(rnk0) <- toupper(names(rnk0))
       rnk0 <- rnk0[!duplicated(names(rnk0))] # df within gsea.enplotly cannot deal with duplicated names
       gmt.genes <- res$gmt.genes
-      fc <- res$fc
+      fc <- res$fx
       qv <- res$qv
 
       x.title <- 0.01 * length(rnk0)
@@ -158,7 +150,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
-        genes <- toupper(genes)
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
