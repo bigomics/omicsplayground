@@ -23,8 +23,8 @@ clustering_plot_phenoplot_ui <- function(
     title = title,
     label = label,
     ##    plotlib = "plotly",
-    plotlib = "generic",    
-    outputFunc = function(...) uiOutput(...,fill=TRUE),
+    plotlib = "generic",
+    outputFunc = function(...) uiOutput(..., fill = TRUE),
     info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
@@ -150,13 +150,13 @@ clustering_plot_phenoplot_server <- function(id,
 
       return(fig)
     }
-    
+
     plotly.RENDER <- function() {
       pd <- plot_data()
       pheno <- pd[["pheno"]]
       plt <- render_plotly(pd, pheno, cex = 0.85)
       cw <- 12 / ceiling(sqrt(length(plt)))
-      page <- bslib::layout_columns(col_widths=cw, !!!plt)
+      page <- bslib::layout_columns(col_widths = cw, !!!plt)
       return(page)
     }
 
@@ -186,7 +186,7 @@ clustering_plot_phenoplot_server <- function(id,
       "pltmod",
       #      plotlib = "plotly",
       plotlib = "generic",
-      renderFunc = shiny::renderUI,      
+      renderFunc = shiny::renderUI,
       func = plotly.RENDER,
       #      func2 = plotly_modal.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
