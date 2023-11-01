@@ -54,7 +54,8 @@ enrichment_plot_volcanomethods_server <- function(id,
 
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
-      sel.gsets <- playdata::COLLECTIONS[[gs_features()]]
+      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+      sel.gsets <- gset_collections[[gs_features()]]
 
       nlq <- -log10(1e-99 + unlist(Q))
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis

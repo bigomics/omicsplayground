@@ -306,7 +306,7 @@ UploadBoard <- function(id,
             }
 
             if (IS_CONTRAST) {
-              df0 <- playbase::read.as_matrix(fn2)
+              df0 <- playbase::read.as_matrix(fn2, skip_row_check = TRUE)
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_contrasts.csv"))
 
