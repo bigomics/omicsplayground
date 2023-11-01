@@ -6,12 +6,12 @@
 
 # PlotModuleUI for pcaplot
 upload_plot_pcaplot_ui <- function(id,
-                                         title,
-                                         info.text,
-                                         caption,
-                                         label = "",
-                                         height,
-                                         width) {
+                                   title,
+                                   info.text,
+                                   caption,
+                                   label = "",
+                                   height,
+                                   width) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -45,7 +45,6 @@ upload_plot_pcaplot_server <- function(id,
                                        watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         pheno <- phenoRT()
         counts <- countsRT()
@@ -53,7 +52,7 @@ upload_plot_pcaplot_server <- function(id,
         shiny::req(counts)
         method <- input$pcaplot.method
         X <- log2(1 + counts)
-        X[is.na(X)] <- median(X,na.rm=TRUE)
+        X[is.na(X)] <- median(X, na.rm = TRUE)
         clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
         clust$pos2d
       })
@@ -83,4 +82,3 @@ upload_plot_pcaplot_server <- function(id,
     }
   )
 }
-
