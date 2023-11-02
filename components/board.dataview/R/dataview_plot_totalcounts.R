@@ -108,7 +108,7 @@ dataview_plot_totalcounts_server <- function(id,
           xaxis = list(title = FALSE),
           yaxis = list(title = res$ylab),
           margin = list(l = 30, r = 0, t = 0, b = 0)
-        ) 
+        )
 
       fig
     }
@@ -118,8 +118,7 @@ dataview_plot_totalcounts_server <- function(id,
         plotly_modal_default() %>%
         plotly::layout(
           margin = list(l = 35, r = 0, t = 0, b = 0)
-        ) 
-        
+        )
     }
 
     PlotModuleServer(

@@ -73,7 +73,6 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         F <- getProfiles()
         F[is.na(F)] <- 0

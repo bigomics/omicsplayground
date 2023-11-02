@@ -279,7 +279,7 @@ DataViewBoard <- function(id, pgx) {
 
     getCountStatistics <- reactiveVal()
 
-    observeEvent( c(input$data_groupby, input$data_samplefilter, input$data_type),
+    observeEvent(c(input$data_groupby, input$data_samplefilter, input$data_type),
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
@@ -298,8 +298,10 @@ DataViewBoard <- function(id, pgx) {
         gr <- pgx$Y[samples, grpvar]
         grps <- sort(unique(gr))
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-          mx <- tapply( 1:ncol(counts), gr,
-            function(ii) rowMeans(counts[,ii,drop=FALSE],na.rm=TRUE))
+          mx <- tapply(
+            1:ncol(counts), gr,
+            function(ii) rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
+          )
           counts <- do.call(cbind, mx)
         }
 
