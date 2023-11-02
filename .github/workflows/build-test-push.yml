@@ -61,14 +61,6 @@ jobs:
           git add ./omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
           git commit -m "Add new snapshots from testing"
           git push origin
-     
-      -
-        name: Print git diff
-        run: echo "git diff = ${{ steps.test.outputs.git_diff }}"
-        
-      -
-        name: Print test result
-        run: echo "Test result = ${{ steps.test.outputs.test_result }}"
       -
         name: Push
         if: steps.test.outputs.test_result == 'TRUE'
