@@ -46,4 +46,4 @@ RUN make sass
 # give permission to execute the entrypoint
 RUN chmod +x .github/workflows/build-test-push/entrypoint.sh
 
-ENTRYPOINT ["/.github/workflows/build-test-push/entrypoint.sh"]
+#ENTRYPOINT [".github/workflows/build-test-push/entrypoint.sh"]

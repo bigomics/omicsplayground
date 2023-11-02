@@ -27,21 +27,21 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN  }}
       
-      # - 
-      #   name: Setup upterm session
-      #   uses: lhotari/action-upterm@v1
-      #   with:
-      #     ## limits ssh access and adds the ssh public key for the user which triggered the workflow
-      #     limit-access-to-actor: true
-      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
-      #     limit-access-to-users: mauromiguelm
-      #     wait-timeout-minutes: 60
+      - 
+        name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+        with:
+          ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+          limit-access-to-actor: true
+          ## limits ssh access and adds the ssh public keys of the listed GitHub users
+          limit-access-to-users: mauromiguelm
+          wait-timeout-minutes: 60
       -
         name: Shinytest docker
         id: test
         run: |
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
-          docker run --rm ${{ env.DOCKER_TAG }}
+    # docker run --rm ${{ env.DOCKER_TAG }}
       
       - name: Upload snapshots as artifact
         uses: actions/upload-artifact@v3
