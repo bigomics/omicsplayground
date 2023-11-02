@@ -73,6 +73,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+
       plot_data <- shiny::reactive({
         F <- getProfiles()
         F[is.na(F)] <- 0
@@ -98,7 +99,6 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           F <- abs(F)
         }
         F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
-        F <- scale(F, center = FALSE)
 
         list(
           F = F,
@@ -112,7 +112,6 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
         par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
         playbase::gx.splitmap(t(F1),
           split = 1,
-          #
           cluster_columns = TRUE,
           cluster_rows = TRUE,
           rowlab.maxlen = 80,
