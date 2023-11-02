@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM masierom/omicsplayground:latest
+FROM bigomics/omicsplayground-base:ub2204_v2
 
 #------------------------------------------------------------
 # Set env variables 
@@ -37,6 +37,11 @@ RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
+
+RUN rm -fr /omicsplayground  \
+    && git clone -b $BRANCH --single-branch --depth 1 \
+       https://github.com/bigomics/omicsplayground.git \   
+    && chmod -R ugo+rwX /omicsplayground 
 
 # add entrypoint to execute when the docker container starts up
 #RUN cp /.github/workflows/build-test-push/entrypoint.sh .
