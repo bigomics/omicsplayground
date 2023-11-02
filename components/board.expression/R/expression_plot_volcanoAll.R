@@ -187,7 +187,7 @@ expression_plot_volcanoAll_server <- function(id,
     }
 
     modal_plot.RENDER <- function() {
-      plt <- get_plots(cex = 0.9, base_size = 15)
+      plt <- get_plots(cex = 0.75, base_size = 13)
       nplots <- length(plt)
       ## layout
       nr <- 1
