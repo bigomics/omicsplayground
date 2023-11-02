@@ -36,7 +36,7 @@ RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/bigomics/omicsplayground.git \   
+       https://github.com/mauromiguelm/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
 WORKDIR /omicsplayground
