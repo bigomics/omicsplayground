@@ -62,7 +62,7 @@ RUN echo Downloading $BRANCH branch
 
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/bigomics/omicsplayground.git \   
+       https://github.com/mauromiguelm/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
 ## tag docker version
@@ -73,7 +73,6 @@ WORKDIR /omicsplayground
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
