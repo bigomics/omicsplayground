@@ -14,7 +14,7 @@ test_that("example data loads with no error",{
   # remove problematic boards
   boards <- boards[!boards %in% c("tcga")]
 
-  AppLog <- lapply(boards[1:3], function(board){
+  AppLog <- lapply(boards, function(board){
     # get error from App and save it as error_log
     message(board)
     #board = "wordcloud"
