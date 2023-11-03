@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: testthat-snapshots
-          path: /omicsplayground/tests/*
+          path: ./tests/*
           if-no-files-found: ignore
       
       - 
@@ -63,7 +63,7 @@ jobs:
         name: Commit and push snapshots
         run: |
           cd ${{ github.workspace }}
-          git add ./omicsplayground/tests/*
+          git add ./tests/*
           git commit -m "Add test snapshots from shinytest"
           git push origin
       
