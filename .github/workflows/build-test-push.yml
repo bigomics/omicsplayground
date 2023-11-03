@@ -33,7 +33,7 @@ jobs:
         run: |
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --name run_tests masierom/omicsplayground:latest
-          docker cp my_container:omicsplayground/tests .
+          docker cp run_tests:omicsplayground/tests .
           
       - 
         name: Setup upterm session
