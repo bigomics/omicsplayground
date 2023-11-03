@@ -45,31 +45,28 @@ jobs:
           limit-access-to-users: mauromiguelm
           wait-timeout-minutes: 120
 
-
-
-      # - name: Upload snapshots as artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: testthat-snapshots
-      #     path: /omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
-      #     if-no-files-found: ignore
+      - 
+        name: Upload snapshots as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: testthat-snapshots
+          path: /omicsplayground/tests/*
+          if-no-files-found: ignore
       
-      # - name: Configure Git
-      #   run: |
-      #     git config --local user.name "$GITHUB_ACTOR"
-      #     git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - 
+        name: Configure Git
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
-      # - name: Commit and push snapshots
-      #   run: |
-      #     cd ${{ github.workspace }}
-      #     git add ./omicsplayground/tests/testthat/_snaps/linux-4.1/board-values/*
-      #     git commit -m "Add new snapshots from testing"
-      #     git push origin
+      - 
+        name: Commit and push snapshots
+        run: |
+          cd ${{ github.workspace }}
+          git add ./omicsplayground/tests/*
+          git commit -m "Add test snapshots from shinytest"
+          git push origin
+      
       -
         name: Print test result
         run: echo "Test result = ${{ steps.test.outputs.test_result }}"
-      -
-        name: Push
-        if: steps.test.outputs.test_result == 'TRUE'
-        run: |
-          docker push ${{ env.DOCKER_TAG }}
