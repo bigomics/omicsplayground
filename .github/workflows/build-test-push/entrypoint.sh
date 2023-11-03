@@ -8,5 +8,5 @@ test_result=$(cat test_result.txt)
 
 # return test result as an output
 #echo ::set-output name=test_result::$test_result
-echo "{test_result}={$test_result}" >> $GITHUB_OUTPUT # return test result as an output
+echo "{test_result}={$test_result}" >> $env:GITHUB_OUTPUT # return test result as an output
 
