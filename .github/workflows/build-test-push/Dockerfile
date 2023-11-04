@@ -30,8 +30,7 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 # check if playbase@{$BRANCH} exists, other wise install master
 RUN if [ "$BRANCH" = "master" ]; then BRANCH_PLAYBASE=main; else BRANCH_PLAYBASE=$BRANCH; fi
-RUN R -e "remotes::install_github('bigomics/playdata@${BRANCH_PLAYBASE}',dependencies=FALSE)" || \
-    R -e "remotes::install_github('bigomics/playdata',dependencies=FALSE)"
+RUN R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
