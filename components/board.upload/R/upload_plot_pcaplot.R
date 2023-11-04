@@ -3,10 +3,18 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-upload_plot_pcaplot_ui <- function(id, height, width) {
+
+# PlotModuleUI for pcaplot
+upload_plot_pcaplot_ui <- function(id,
+                                   title,
+                                   info.text,
+                                   caption,
+                                   label = "",
+                                   height,
+                                   width) {
   ns <- shiny::NS(id)
 
-  pcaplot.opts <- shiny::tagList(
+  options <- shiny::tagList(
     withTooltip(
       shiny::selectInput(ns("pcaplot.method"), "Method:",
         choices = c("pca", "tsne", "umap"),
@@ -16,64 +24,61 @@ upload_plot_pcaplot_ui <- function(id, height, width) {
     )
   )
 
-  PlotModuleUI(
-    ns("plot"),
-    title = "PCA/tSNE plot",
+  PlotModuleUI(ns("plot"),
+    title = title,
+    caption = caption,
+    label = label,
     plotlib = "plotly",
-    options = pcaplot.opts,
-    height = height,
+    info.text = info.text,
+    options = options,
+    download.fmt = c("png", "pdf", "csv"),
     width = width,
-    download.fmt = c("png", "pdf")
+    height = height
   )
 }
 
+# PlotModuleServer for pcaplot
 upload_plot_pcaplot_server <- function(id,
                                        phenoRT,
                                        countsRT,
                                        sel.conditions,
                                        watermark = FALSE) {
-  moduleServer(id, function(input, output, session) {
-    plot_data <- shiny::reactive({
-      getCurrentWordEnrichment()
-    })
+  moduleServer(
+    id, function(input, output, session) {
+      plot_data <- shiny::reactive({
+        pheno <- phenoRT()
+        counts <- countsRT()
+        shiny::req(pheno)
+        shiny::req(counts)
+        method <- input$pcaplot.method
+        X <- log2(1 + counts)
+        X[is.na(X)] <- median(X, na.rm = TRUE)
+        clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
+        clust$pos2d
+      })
 
-    pcaplot.RENDER <- shiny::reactive({
-      #
-      pheno <- phenoRT()
-      counts <- countsRT()
-      if (is.null(pheno) || is.null(counts)) {
-        return(NULL)
+      plot.RENDER <- function() {
+        pos2d <- plot_data()
+        cond <- sel.conditions()
+        shiny::req(cond)
+        playbase::pgx.scatterPlotXY(
+          pos2d,
+          var = cond,
+          plotlib = "plotly",
+          legend = FALSE
+        )
       }
-      if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
-        return(NULL)
-      }
-      shiny::req(pheno)
-      shiny::req(counts)
 
-      method <- input$pcaplot.method
-      X <- log2(1 + counts)
-      clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
-      names(clust)
-
-      cond <- sel.conditions()
-      if (length(cond) == 0 || is.null(cond)) {
-        return(NULL)
-      }
-      #
-      playbase::pgx.scatterPlotXY(
-        clust$pos2d,
-        var = cond, plotlib = "plotly",
-        legend = FALSE #
+      PlotModuleServer(
+        "plot",
+        plotlib = "plotly",
+        func = plot.RENDER,
+        func2 = plot.RENDER,
+        csvFunc = plot_data,
+        res = c(70, 140),
+        pdf.width = 8, pdf.height = 8,
+        add.watermark = watermark
       )
-    })
-
-    PlotModuleServer(
-      "plot",
-      func = pcaplot.RENDER,
-      plotlib = "plotly",
-      pdf.width = 5, pdf.height = 5,
-      res = 72,
-      add.watermark = watermark
-    )
-  })
+    }
+  )
 }

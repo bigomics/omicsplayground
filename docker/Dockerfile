@@ -30,6 +30,9 @@ WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
 RUN R -e "devtools::install_github('bigomics/shinyChatR')"
+##RUN R -e "install.packages(c('htmltools'),force=TRUE)"
+RUN R -e "remotes::install_github('rstudio/htmltools',dependencies=FALSE)"
+RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
@@ -45,7 +48,6 @@ RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
-RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
@@ -73,7 +75,6 @@ WORKDIR /omicsplayground
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass

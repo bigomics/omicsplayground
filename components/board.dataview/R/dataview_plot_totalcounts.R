@@ -28,25 +28,25 @@ dataview_plot_totalcounts_ui <- function(
 }
 
 dataview_plot_totalcounts_server <- function(id,
-                                             getCountsTable,
+                                             getCountStatistics,
                                              r.data_groupby = reactive(""),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       data_groupby <- r.data_groupby()
 
-      tbl <- getCountsTable()
+      tbl <- getCountStatistics()
       req(tbl)
 
-      ylab <- "Total counts"
+      ylab <- "total counts (log10)"
       if (data_groupby != "<ungrouped>") {
-        ylab <- "Mean total counts"
+        ylab <- "average total counts (log10)"
       }
 
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          counts = tbl$total.counts
+          counts = log10(tbl$total.counts)
         ),
         ylab = ylab
       )
@@ -103,20 +103,22 @@ dataview_plot_totalcounts_server <- function(id,
             "<extra></extra>"
           )
         ) %>%
+        plotly_default() %>%
         plotly::layout(
           xaxis = list(title = FALSE),
           yaxis = list(title = res$ylab),
-          font = list(family = "Lato"),
-          margin = list(l = 10, r = 10, b = 10, t = 10)
-        ) %>%
-        plotly_default()
+          margin = list(l = 30, r = 0, t = 0, b = 0)
+        )
 
       fig
     }
 
     modal_plotly.RENDER <- function() {
       plotly.RENDER() %>%
-        plotly_modal_default()
+        plotly_modal_default() %>%
+        plotly::layout(
+          margin = list(l = 35, r = 0, t = 0, b = 0)
+        )
     }
 
     PlotModuleServer(
