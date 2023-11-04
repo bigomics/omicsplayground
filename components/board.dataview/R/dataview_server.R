@@ -279,7 +279,13 @@ DataViewBoard <- function(id, pgx) {
 
     getCountStatistics <- reactiveVal()
 
-    observeEvent(c(input$data_groupby, input$data_samplefilter),
+    observeEvent(
+      {
+        pgx$X
+        input$data_groupby
+        input$data_samplefilter
+        input$data_type
+      },
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
@@ -288,35 +294,21 @@ DataViewBoard <- function(id, pgx) {
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
-        if ("counts" %in% names(pgx)) {
+        if (input$data_type == "counts") {
           counts <- pgx$counts[, samples, drop = FALSE]
         } else {
-          cat("WARNING:: no counts table. estimating from X\n")
           counts <- pmax(2**pgx$X - 1, 0)
-          k <- grep("lib.size", colnames(pgx$samples))[1]
-          if (length(k) > 0) {
-            libsize <- pgx$samples[colnames(counts), k]
-            libsize
-            counts <- t(t(counts) * libsize)
-          }
-        }
-        if (sum(is.na(counts)) > 0) {
-          cat("WARNING:: plot counts: counts has missing values!\n")
         }
 
         grpvar <- input$data_groupby
         gr <- pgx$Y[samples, grpvar]
         grps <- sort(unique(gr))
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-          newx <- c()
-          for (g in grps) {
-            mx <- rowMeans(counts[, which(gr == g), drop = FALSE], na.rm = TRUE)
-            newx <- cbind(newx, mx)
-          }
-          if (NCOL(newx) == 1) newx <- matrix(newx, ncol = 1)
-          rownames(newx) <- rownames(counts)
-          colnames(newx) <- grps
-          counts <- newx
+          mx <- tapply(
+            1:ncol(counts), gr,
+            function(ii) rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
+          )
+          counts <- do.call(cbind, mx)
         }
 
         ## if too many samples (like scRNA-seq do subsampling...)
@@ -377,7 +369,6 @@ DataViewBoard <- function(id, pgx) {
         names(total.counts) <- substring(names(total.counts), 1, 30)
         colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
         colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)
-
 
         res <- list(
           total.counts = total.counts,

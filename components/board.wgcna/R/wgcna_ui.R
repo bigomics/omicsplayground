@@ -142,7 +142,7 @@ WgcnaUI <- function(id) {
             wgcna_plot_enrichment_ui(
               ns("enrichPlot"),
               label = "c",
-              title = "Module Enrichment",
+              title = "Module Enrichment Plot",
               info.text = "Functional enrichment of the selected module.",
               caption = "Module enrichment plot of top most enriched genesets.",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -164,7 +164,7 @@ WgcnaUI <- function(id) {
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
               label = "e",
-              title = "Module enrichment",
+              title = "Module Enrichment Table",
               info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
               caption = "Functional enrichment of the module calculated using Fisher's exact test.",
               height = c("100%", TABLE_HEIGHT_MODAL),
