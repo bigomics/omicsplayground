@@ -168,7 +168,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
-            title = "Median counts distribution",
+            title = "Counts boxplots",
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = c("100%", TABLE_HEIGHT_MODAL),
