@@ -2,6 +2,8 @@ name: Snapshot test
 on: 
   pull_request:
   workflow_dispatch:
+env:
+  DOCKER_TAG: bigomics/omicsplayground:latest
 jobs:
   unittest:
     runs-on: ubuntu-latest
