@@ -174,7 +174,7 @@ dataview_table_rawdata_server <- function(id,
       DT::datatable(
         dt$x,
         rownames = FALSE,
-        #
+        fillContainer = TRUE, #
         class = "compact hover",
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",

@@ -105,6 +105,12 @@ app_ui <- function(x) {
         onClick = "shinyproxy_logout();",
         link = "/login"
       )
+    } else if (opt$AUTHENTICATION == "apache-cookie") {
+      ## For apache SSO we need to redirect to /mellon/logout for SSO logout
+      logout.tab <- bigdash::navbarDropdownItem(
+        "Logout",
+        link = "/app/omicsplayground/mellon/logout?ReturnTo=#"
+      )
     }
 
     menu_tree <- list(
@@ -286,6 +292,15 @@ app_ui <- function(x) {
             actionLink("navbar_about", "About")
           ),
           logout.tab
+        ),
+        bigdash::hover_dropdown(
+          bslib::input_switch("enable_beta", "Enable beta features"),
+          bslib::input_switch("enable_info", "Show info alerts", value = TRUE),
+          selector_switch(
+            class = "card-footer-checked",
+            label = "show captions",
+            is.checked = FALSE
+          )
         )
       ),
       settings = bigdash::settings(

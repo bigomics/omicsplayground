@@ -194,7 +194,7 @@ if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
   opt$HOSTNAME <- toupper(system("hostname", intern = TRUE))
 }
 ACTIVE_SESSIONS <- c()
-MAX_SESSIONS <- 10
+MAX_SESSIONS <- 3
 if (!is.null(opt$MAX_SESSIONS)) MAX_SESSIONS <- opt$MAX_SESSIONS
 
 message("\n\n")

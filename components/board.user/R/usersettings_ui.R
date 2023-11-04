@@ -20,28 +20,17 @@ UserSettingsUI <- function(id) {
         bslib::layout_column_wrap(
           height = "calc(100vh - 183px)",
           width = 1,
-          style = htmltools::css(grid_template_columns = "6fr 6fr"),
-          bslib::card(
-            ## bslib::card_header(),
-            bslib::card_body(
-              shiny::h3("Application options"),
-              shinyWidgets::prettySwitch(ns("enable_beta"), "Enable beta features"),
-              shinyWidgets::prettySwitch(ns("enable_info"), "Show info alerts", value = TRUE),
-              selector_switch(
-                class = "card-footer-checked",
-                label = "show captions",
-                is.checked = FALSE
-              )
-            ),
-            bslib::card_footer(NULL)
+          style = htmltools::css(grid_template_columns = "5fr 5fr"),
+          PlotModuleUI(
+            ns("newfeatures"),
+            outputFunc = htmlOutput,
+            info.text = "New features and changes",
+            title = "New features"
           ),
-          bslib::card(
-            ## bslib::card_header(),
-            bslib::card_body(
-              shiny::h3("New features"),
-              shiny::htmlOutput(ns("newfeatures"))
-            ),
-            bslib::card_footer(NULL)
+          TableModuleUI(
+            ns("packages"),
+            info.text = "Packages and versions used in Omics Playground.",
+            title = "Package versions"
           )
         )
       ),

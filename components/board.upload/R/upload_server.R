@@ -10,7 +10,8 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        recompute_info) {
+                        recompute_info,
+                        inactivityCounter) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -278,7 +279,7 @@ UploadBoard <- function(id,
               if (COUNTS_check$PASS && IS_EXPRESSION) {
                 df <- as.matrix(COUNTS_check$df)
                 message("[UploadModule::upload_files] converting expression to counts...")
-                df <- 2**df
+                df <- 2**df - 1
                 matname <- "counts.csv"
               }
 
@@ -305,7 +306,7 @@ UploadBoard <- function(id,
             }
 
             if (IS_CONTRAST) {
-              df0 <- playbase::read.as_matrix(fn2)
+              df0 <- playbase::read.as_matrix(fn2, skip_row_check = TRUE)
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_contrasts.csv"))
 
@@ -357,7 +358,7 @@ UploadBoard <- function(id,
       uploaded$samples.csv <- pgx$samples
       uploaded$contrasts.csv <- pgx$contrast
       uploaded$counts.csv <- pgx$counts
-      corrected_counts <- pgx$counts
+      ##      corrected_counts <- pgx$counts  ## ?? IK
       recompute_info(list("name" = pgx$name, "description" = pgx$description))
     })
 
@@ -430,8 +431,6 @@ UploadBoard <- function(id,
             COUNTS = uploaded[["counts.csv"]]
           )
           uploaded[["checklist"]][["samples_counts"]] <- FILES_check$check
-
-
           uploaded[["samples.csv"]] <- FILES_check$SAMPLES
           uploaded[["counts.csv"]] <- FILES_check$COUNTS
           samples1 <- FILES_check$SAMPLES
@@ -588,7 +587,6 @@ UploadBoard <- function(id,
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       X = shiny::reactive(uploaded$counts.csv),
-      ## X = normalized_counts,  !
       is.count = TRUE,
       pheno = shiny::reactive(uploaded$samples.csv),
       height = height
@@ -647,7 +645,8 @@ UploadBoard <- function(id,
       auth = auth,
       create_raw_dir = create_raw_dir,
       height = height,
-      recompute_info
+      recompute_info = recompute_info,
+      inactivityCounter = inactivityCounter
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -683,39 +682,14 @@ UploadBoard <- function(id,
       uploaded
     )
 
-    buttonInput <- function(FUN, len, id, ...) {
-      inputs <- character(len)
-      for (i in seq_len(len)) {
-        inputs[i] <- as.character(FUN(paste0(id, i), ...))
-      }
-      inputs
-    }
 
-    output$checkTablesOutput <- DT::renderDataTable({
-      ## Render the upload status table
-      if (!input$advanced_mode) {
-        return(NULL)
-      }
-      df <- checkTables()
-      dt <- DT::datatable(
-        df,
-        rownames = FALSE,
-        selection = "none",
-        class = "compact cell-border",
-        options = list(
-          dom = "t"
-        )
-      ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "12px", lineHeight = "100%")
-    })
-
-    upload_plot_pcaplot_server(
-      "pcaplot",
-      phenoRT = shiny::reactive(uploaded$samples.csv),
-      countsRT = corrected_counts,
-      sel.conditions = sel.conditions,
-      watermark = WATERMARK
-    )
+    ## upload_plot_pcaplot_server(
+    ##   "pcaplot",
+    ##   phenoRT = shiny::reactive(uploaded$samples.csv),
+    ##   countsRT = corrected_counts,
+    ##   sel.conditions = sel.conditions,
+    ##   watermark = WATERMARK
+    ## )
 
     ## ------------------------------------------------
     ## Board return object

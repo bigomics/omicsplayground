@@ -88,17 +88,17 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.26"
+VERSION = "v3.2.29.9000"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
 	@echo "new version ->" $(BUILD)
 	echo $(BUILD) > VERSION
 
-LAST=awk -v RS='(\r?\n){3,}' 'NR<=4'
 changelog:
-	sh ./dev/create-changelog.sh | $(LAST) >  CHANGELOG.md
-	sh ./dev/create-changelog.sh 'feat' | $(LAST) > FEATURES.md
+	sh ./dev/create-changelog.sh '.*' 3 >  CHANGELOG.md
+	sh ./dev/create-changelog.sh '.*' 999 >  CHANGELOG-full.md
+	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
 
 tags:
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'

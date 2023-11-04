@@ -26,6 +26,7 @@ pgx <- playbase::pgx.createPGX(
   contrasts = params$contrasts,
   X = NULL,
   batch.correct = params$batch.correct,
+  normalize = params$normalize,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   only.known = params$only.known,
@@ -47,6 +48,7 @@ pgx <- playbase::pgx.computePGX(
   use.design = params$use.design,        ## no.design+prune are combined
   prune.samples = params$prune.samples,  ##
   do.cluster = params$do.cluster,
+  pgx.dir = params$pgx.save.folder,
   libx.dir = params$libx.dir
   )
 

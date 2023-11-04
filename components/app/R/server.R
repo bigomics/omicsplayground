@@ -111,6 +111,7 @@ app_server <- function(input, output, session) {
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
+  inactivityCounter <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
@@ -124,10 +125,15 @@ app_server <- function(input, output, session) {
     nav_count = reactive(nav$count)
   )
 
-  env$user_settings <- UserSettingsBoard(
+  UserSettingsBoard(
     "user_settings",
     auth = auth,
     pgx = PGX
+  )
+
+  env$user_settings <- list(
+    enable_beta = shiny::reactive(input$enable_beta),
+    enable_info = shiny::reactive(input$enable_info)
   )
 
   ## Do not display "Welcome" tab on the menu
@@ -159,7 +165,8 @@ app_server <- function(input, output, session) {
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
-      recompute_info = recompute_info
+      recompute_info = recompute_info,
+      inactivityCounter = inactivityCounter
     )
   }
 
@@ -593,13 +600,13 @@ app_server <- function(input, output, session) {
   idle_timer <- TimerModule(
     "idle_timer",
     condition = reactive(!auth$logged),
-    timeout = 300, ## max idle time in seconds
+    timeout = 600, ## max idle time in seconds
     timeout_callback = idle_timeout_callback
   )
 
   idle_timeout_callback <- function() {
-    info("[SERVER] ********** closing idle session **************")
-    sever::sever(sever_disconnected(), bg_color = "#004c7d")
+    info("[SERVER] ********** closing idle login session **************")
+    sever::sever(sever_ciao("Knock, knock — Anybody there?"), bg_color = "#004c7d")
     session$close()
   }
 
@@ -865,6 +872,18 @@ app_server <- function(input, output, session) {
       text = HTML(opt$STARTUP_MESSAGE),
       html = TRUE
     )
+  }
+
+  if (isTRUE(opt$ENABLE_INACTIVITY)) {
+    # Resest inactivity counter when there is user activity (a click on the UI)
+    observeEvent(input$userActivity, {
+      inactivityCounter(0) # Reset counter on any user activity
+    })
+
+    inactivityControl <- start_inactivityControl(session, timeout = 1800, inactivityCounter)
+    observe({
+      inactivityControl()
+    })
   }
 
   ## -------------------------------------------------------------

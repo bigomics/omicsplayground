@@ -32,7 +32,8 @@ upload_module_computepgx_server <- function(
     enable_button = TRUE,
     alertready = TRUE,
     height = 720,
-    recompute_info) {
+    recompute_info,
+    inactivityCounter) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -67,7 +68,7 @@ upload_module_computepgx_server <- function(
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
 
-      path_gmt <- "https://omicsplayground.readthedocs.io/en/latest/"
+      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
         shiny::fillCol(
@@ -147,14 +148,16 @@ upload_module_computepgx_server <- function(
                       "only.hugo",
                       "only.proteincoding",
                       "remove.unknown",
-                      "remove.notexpressed"
+                      "remove.notexpressed",
+                      "skip.normalization"
                     ),
                   choiceNames =
                     c(
                       "convert to HUGO",
                       "protein-coding only",
                       "remove Rik/ORF/LOC genes",
-                      "remove not-expressed"
+                      "remove not-expressed",
+                      "skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -202,10 +205,11 @@ upload_module_computepgx_server <- function(
                       "A GMT file as described",
                       tags$a(
                         "here.",
-                        href = path_gmt,
+                        href = readthedocs_url,
                         target = "_blank",
                         style = "text-decoration: underline;"
-                      )
+                      ),
+                      downloadLink(ns("download_gmt"), shiny::HTML(" or download an <u>example GMT</u> listing the gene targets of the EGFR transcription factor."))
                     )
                   ),
                   multiple = FALSE,
@@ -235,7 +239,7 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
-      # Inpute name and description
+      # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
         pgx_info <- recompute_info()
@@ -272,9 +276,9 @@ upload_module_computepgx_server <- function(
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = "There are cases where there is only one samples in a group.
-                    Some of the gene tests and enrichment
-                    methods are disabled.",
+            text = stringr::str_squish("There are cases where there is only one samples
+                    in a group. Some of the gene tests and enrichment
+                    methods are disabled."),
             type = "warning"
           )
           shiny::updateCheckboxGroupInput(
@@ -328,9 +332,11 @@ upload_module_computepgx_server <- function(
           custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
           custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt, length)
 
+          GSET_CHECK <- any(as.logical(unlist(custom.geneset$info$GSET_SIZE)))
+
           # tell user that custom genesets are "ok"
           # we could perform an additional check to verify that items in lists are genes
-          if (gmt.length > 0 && gmt.is.list) {
+          if (gmt.length > 0 && gmt.is.list && GSET_CHECK) {
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
               text = "Your genesets will be incorporated in the analysis.",
@@ -340,12 +346,14 @@ upload_module_computepgx_server <- function(
           }
         }
 
-        # error message if custom genesets not detected
-        if (is.null(custom.geneset$gmt)) {
+        # error message if custom genesets not detected or GSET_CHECK is FALSE
+        # add https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html to guidelins, target blank as html
+        if (is.null(custom.geneset$gmt) || !GSET_CHECK) {
           shinyalert::shinyalert(
             title = "Invalid custom genesets",
-            text = "Please update a .txt file. See guidelines here <PLACEHOLDER>.",
+            text = "Please update a tsv file. See guidelines <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html' target='_blank'>here</a>.",
             type = "error",
+            html = TRUE,
             closeOnClickOutside = TRUE
           )
           custom.geneset <- list(gmt = NULL, info = NULL)
@@ -358,7 +366,12 @@ upload_module_computepgx_server <- function(
         ## Check validity
         ## -----------------------------------------------------------
         if (!enable_button()) {
-          message("[ComputePgxServer:@compute] WARNING:: *** NOT ENABLED ***")
+          message("[ComputePgxServer:input$compute] WARNING:: *** DISABLED ***")
+          shinyalert::shinyalert(
+            title = "ERROR",
+            text = "Compute is disabled",
+            type = "error"
+          )
           return(NULL)
         }
 
@@ -402,9 +415,6 @@ upload_module_computepgx_server <- function(
         max.genes <- as.integer(auth$options$MAX_GENES)
         max.genesets <- as.integer(auth$options$MAX_GENESETS)
 
-        dbg("[upload_module_computepgx_server] max.genes = ", max.genes)
-        dbg("[upload_module_computepgx_server] max.genesets = ", max.genesets)
-
         ## get selected methods from input
         gx.methods <- input$gene_methods
         gset.methods <- input$gset_methods
@@ -441,6 +451,7 @@ upload_module_computepgx_server <- function(
         only.hugo <- ("only.hugo" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
+        do.normalization <- !("skip.normalization" %in% flt)
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         only.proteincoding <- ("only.proteincoding" %in% flt)
@@ -453,12 +464,6 @@ upload_module_computepgx_server <- function(
         # button), or user click compute a second time
         if (is.null(raw_dir())) {
           raw_dir(create_raw_dir(auth))
-          ## raw_dir(tempfile(pattern = "pgx_"))
-          ## dir.create(raw_dir())
-          ##
-          ## NOTE: should we save any counts/samples/contrast matrices
-          ## here?? They might be altered here but at least we have
-          ## them saved.
           dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
@@ -476,6 +481,7 @@ upload_module_computepgx_server <- function(
           counts = counts,
           contrasts = contrasts,
           batch.correct = FALSE,
+          normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = !remove.unknown,
@@ -512,10 +518,10 @@ upload_module_computepgx_server <- function(
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
-          text = "Your dataset will be computed in the background.
-          You can continue to play with a different dataset in the meantime.
-          When it is ready, it will appear in your dataset library. Most datasets
-          take between 30 - 60 minutes to complete.",
+          text = stringr::str_squish("Your dataset will be computed in the background.
+            You can continue to play with a different dataset in the meantime.
+            When it is ready, it will appear in your dataset library. Most datasets
+            take between 30 - 60 minutes to complete."),
           type = "info",
           timer = 60000
         )
@@ -557,6 +563,10 @@ upload_module_computepgx_server <- function(
         if (process_counter() == 0) {
           return(NULL)
         }
+
+        # When computing PGX, reset inactivity counter
+        # to avoid session closure while computing
+        inactivityCounter(0)
 
         reactive_timer()
         active_processes <- process_obj()
@@ -697,7 +707,7 @@ upload_module_computepgx_server <- function(
       # Function to execute when the process is completed successfully
       on_process_completed <- function(raw_dir, nr) {
         dbg("[computePGX:on_process_completed] process", nr, "completed!")
-        process_counter(process_counter() - 1) # stop the timer
+        process_counter(process_counter() - 1)
 
         path_to_params <- file.path(raw_dir, "params.RData")
         params <- readRDS(path_to_params)
@@ -785,6 +795,18 @@ upload_module_computepgx_server <- function(
           type = "success"
         )
       })
+
+      output$download_gmt <- downloadHandler(
+        filename = function() {
+          # Set the filename for the downloaded file
+          "EGFR_TARGET_GENES.v2023.1.Hs.gmt"
+        },
+        content = function(file) {
+          gmt_path <- file.path(FILES, "/gmt/EGFR_TARGET_GENES.v2023.1.Hs.gmt")
+          gmt <- readBin(gmt_path, what = raw(), n = file.info(gmt_path)$size)
+          writeBin(gmt, file)
+        }
+      )
 
       return(computedPGX)
     } ## end-of-server

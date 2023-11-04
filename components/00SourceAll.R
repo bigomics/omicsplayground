@@ -216,6 +216,7 @@ if (!file.exists("00SourceAll.R")) {
   source("modules/SocialMediaModule.R", encoding = "UTF-8")
   source("modules/TimerModule.R", encoding = "UTF-8")
   source("modules/UserAccessControl.R", encoding = "UTF-8")
+  source("modules/UserInactivityControl.R", encoding = "UTF-8")
   source("modules/UsersMapModule.R", encoding = "UTF-8")
   source("modules/WelcomeBoard.R", encoding = "UTF-8")
   source("ui/bs-components.R", encoding = "UTF-8")
@@ -232,6 +233,7 @@ if (!file.exists("00SourceAll.R")) {
   source("ui/ui-TableModule2.R", encoding = "UTF-8")
   source("ui/ui-tooltip.R", encoding = "UTF-8")
   source("ui/ui-utils.R", encoding = "UTF-8")
+  source("ui/ui-utilsCookies.R", encoding = "UTF-8")
   source("ui/ui-vizpanels.R", encoding = "UTF-8")
   message("done! (sourcing all code)")
 }

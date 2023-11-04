@@ -75,10 +75,13 @@ UploadUI <- function(id) {
             width = "100%",
             fileInput2(ns("upload_files"),
               shiny::h4("Choose files"),
-              multiple = TRUE, accept = c(".csv", ".pgx")
+              multiple = TRUE,
+              accept = c(".csv", ".pgx")
             ),
             shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
+            # bslib::input_switch(ns("load_example"), "Load example data"),
+            # bslib::input_switch(ns("advanced_mode"), "Batch correction (beta)")
           )
         ),
         shiny::div(shiny::uiOutput(ns("upload_info")))
