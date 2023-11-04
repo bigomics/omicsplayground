@@ -1,6 +1,6 @@
 name: Shinytest boards
 on: 
-  push:
+  pull_request:
   workflow_dispatch:
 env:
   DOCKER_TAG: masierom/omicsplayground:latest
