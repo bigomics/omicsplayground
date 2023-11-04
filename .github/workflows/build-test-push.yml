@@ -65,10 +65,10 @@ jobs:
           cd ${{ github.workspace }}
           if [[ `git status --porcelain` ]]; then  
             git checkout -b "${GITHUB_HEAD_REF}"
-            git pull origin "${GITHUB_HEAD_REF}"
+            git pull --ff-only
             git add ./tests/*
             git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)";
-            git push "${GITHUB_HEAD_REF}"
+            git push --force-with-lease origin "${GITHUB_HEAD_REF}"
             echo "snapshots pushed to repo";
           fi
       
