@@ -67,7 +67,7 @@ jobs:
           git add ./tests/*
           if [[ `git status --porcelain` ]]; then
             git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)";
-            git push origin;
+            git push origin "${GITHUB_HEAD_REF}";
             echo "snapshots pushed to repo";
           fi
       
