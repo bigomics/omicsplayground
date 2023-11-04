@@ -26,9 +26,12 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 #------------------------------------------------------------
 
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
+# check if playbase@{$BRANCH} exists, other wise install master
+RUN if [ "$BRANCH" = "master" ]; then BRANCH_PLAYBASE=main; else BRANCH_PLAYBASE=$BRANCH; fi
+RUN R -e "remotes::install_github('bigomics/playdata@${BRANCH_PLAYBASE}',dependencies=FALSE)" || \
+    R -e "remotes::install_github('bigomics/playdata',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image

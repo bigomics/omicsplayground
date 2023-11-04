@@ -64,7 +64,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           git add ./tests/*
-          git commit -m "Snapshot test failed: check with testthat::snapshot_review('snapshot/')(GHA)"
+          git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)"
           git push origin
       
       -
