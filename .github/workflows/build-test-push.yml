@@ -34,17 +34,6 @@ jobs:
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --name run_tests masierom/omicsplayground:latest
           docker cp run_tests:omicsplayground/tests .
-          
-      # - 
-      #   name: Setup upterm session
-      #   uses: lhotari/action-upterm@v1
-      #   with:
-      #     ## limits ssh access and adds the ssh public key for the user which triggered the workflow
-      #     limit-access-to-actor: true
-      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
-      #     limit-access-to-users: mauromiguelm
-      #     wait-timeout-minutes: 120
-
       - 
         name: Upload snapshots as artifact
         uses: actions/upload-artifact@v3
@@ -60,16 +49,26 @@ jobs:
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
       - 
+        name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+        with:
+          ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+          limit-access-to-actor: true
+          ## limits ssh access and adds the ssh public keys of the listed GitHub users
+          limit-access-to-users: mauromiguelm
+          wait-timeout-minutes: 120
+
+      - 
         name: Commit and push snapshots
         if: always()
         run: |
           cd ${{ github.workspace }}
-          git add ./tests/*
-          if [[ `git status --porcelain` ]]; then
-            git checkout -b "${GITHUB_HEAD_REF}" "origin/${GITHUB_HEAD_REF}"
+          if [[ `git status --porcelain` ]]; then  
+            git checkout -b "${GITHUB_HEAD_REF}"
+            git pull --ff-only
             git add ./tests/*
             git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)";
-            git push origin "${GITHUB_HEAD_REF}";
+            git push --force-with-lease origin "${GITHUB_HEAD_REF}"
             echo "snapshots pushed to repo";
           fi
       
