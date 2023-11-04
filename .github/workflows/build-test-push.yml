@@ -64,9 +64,17 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           git add ./tests/*
-          git commit -m "Add test snapshots from shinytest"
+          git commit -m "Snapshot test failed: check with testthat::snapshot_review('snapshot/')(GHA)"
           git push origin
       
       -
         name: Print test result
         run: echo "Test result = ${{ steps.test.outputs.test_result }}"
+      
+      # fail GHA if snapshot test failed
+      -
+        name: Fail if snapshot test failed
+        run: |
+          if [[ "${{ steps.test.outputs.test_result }}" == "FALSE" ]]; then
+            exit 1
+          fi

@@ -11,4 +11,3 @@ echo ::set-output name=test_result::$test_result
 
 # line above should be switched to this, but for some reason it does not work
 #echo "{test_result}={$test_result}" >> $env:GITHUB_OUTPUT # return test result as an output
-
