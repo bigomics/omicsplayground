@@ -34,7 +34,6 @@ jobs:
           docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --name run_tests masierom/omicsplayground:latest
           docker cp run_tests:omicsplayground/tests .
-      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
       - 
         name: Upload snapshots as artifact
         uses: actions/upload-artifact@v3
@@ -64,12 +63,12 @@ jobs:
         if: always()
         run: |
           cd ${{ github.workspace }}
-          git add ./tests/*
-          if [[ `git status --porcelain` ]]; then
-            git checkout -b "${GITHUB_HEAD_REF}" "origin/${GITHUB_HEAD_REF}"
+          if [[ `git status --porcelain` ]]; then  
+            git checkout -b "${GITHUB_HEAD_REF}"
+            git pull origin "${GITHUB_HEAD_REF}"
             git add ./tests/*
             git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)";
-            git push origin "${GITHUB_HEAD_REF}";
+            git push "${GITHUB_HEAD_REF}"
             echo "snapshots pushed to repo";
           fi
       
