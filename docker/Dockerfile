@@ -64,7 +64,7 @@ RUN echo Downloading $BRANCH branch
 
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/mauromiguelm/omicsplayground.git \   
+       https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
 ## tag docker version
