@@ -61,6 +61,7 @@ jobs:
       
       - 
         name: Commit and push snapshots
+        if: always()
         run: |
           cd ${{ github.workspace }}
           git add ./tests/*
