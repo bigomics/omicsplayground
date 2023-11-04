@@ -41,6 +41,6 @@ test_that("example data loads with no error",{
     App$wait_for_idle(duration=10000)
     
     # App$expect_values(cran = TRUE) # TODO: file bug about this...
-    App$expect_screenshot(cran = TRUE, name = board, threshold = 40, selector = "viewport")
+    App$expect_screenshot(cran = TRUE, name = board, threshold = 20, selector = "viewport")
   })
 })
