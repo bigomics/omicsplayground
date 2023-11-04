@@ -64,8 +64,10 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           git add ./tests/*
-          git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)"
-          git push origin
+          if [[ `git status --porcelain` ]]; then
+            git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)"
+            git push origin
+          fi
       
       -
         name: Print test result
