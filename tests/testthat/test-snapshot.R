@@ -32,7 +32,7 @@ test_that("example data loads with no error",{
       ),
       shiny_args = list(port = 8080)
     )
-      
+    
     withr::defer(App$stop())
     
     pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
@@ -41,6 +41,6 @@ test_that("example data loads with no error",{
     App$wait_for_idle(duration=10000)
     
     # App$expect_values(cran = TRUE) # TODO: file bug about this...
-    App$expect_screenshot(cran = TRUE, name = board, threshold = 15, selector = "viewport")
+    App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
   })
 })
