@@ -17,6 +17,7 @@ FROM bigomics/omicsplayground-base:ub2204_v2
 #------------------------------------------------------------
 WORKDIR /
 ARG BRANCH=master
+ARG BRANCH_PLAYBASE=main
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -29,8 +30,8 @@ RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 # check if playbase@{$BRANCH} exists, other wise install master
-RUN if [ "$BRANCH" = "master" ]; then BRANCH_PLAYBASE=main; else BRANCH_PLAYBASE=$BRANCH; fi
-RUN R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)"
+
+RUN R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)" 
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
