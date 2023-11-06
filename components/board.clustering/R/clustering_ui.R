@@ -139,15 +139,13 @@ ClusteringUI <- function(id) {
       id = ns("tabs1"),
       shiny::tabPanel(
         "Heatmap",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
           height = fullH,
-          heights_equal = "row",
+          col_widths = 12,
           bs_alert(heatmap_info),
-          bslib::layout_column_wrap(
-            width = 1,
+          bslib::layout_columns(
+            col_widths = c(7, 5),
             height = fullH,
-            style = htmltools::css(grid_template_columns = "7fr 5fr"),
             clustering_plot_splitmap_ui(
               id = ns("splitmap"),
               label = "a",
@@ -157,9 +155,8 @@ ClusteringUI <- function(id) {
               height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            bslib::layout_column_wrap(
-              width = 1,
-              equal_heights = "row",
+            bslib::layout_columns(
+              col_widths = 12,
               clustering_plot_clusterannot_ui(
                 id = ns("plots_clustannot"),
                 title = "Functional annotation of clusters",
@@ -183,15 +180,13 @@ ClusteringUI <- function(id) {
       ),
       shiny::tabPanel(
         "PCA/tSNE",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = fullH,
-          heights_equal = "row",
           bs_alert(HTML(pca_info)),
-          bslib::layout_column_wrap(
-            width = 1,
+          bslib::layout_columns(
+            col_widths = c(7, 5),
             height = fullH,
-            style = htmltools::css(grid_template_columns = "7fr 5fr"),
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
               title = "PCA/tSNE plot",
@@ -216,18 +211,14 @@ ClusteringUI <- function(id) {
       ),
       shiny::tabPanel(
         "Parallel",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = fullH,
-          heights_equal = "row",
           bs_alert(parallel_info),
-          bslib::layout_column_wrap(
-            width = 1,
-            heights_equal = "row",
-            style = htmltools::css(grid_template_columns = "8fr 4fr"),
-            bslib::layout_column_wrap(
-              width = 1,
-              heights_equal = "row",
+          bslib::layout_columns(
+            col_widths = c(8, 4),
+            bslib::layout_columns(
+              col_widths = 12,
               clustering_plot_parcoord_ui(
                 id = ns("parcoord"),
                 title = "Parallel coordinates",

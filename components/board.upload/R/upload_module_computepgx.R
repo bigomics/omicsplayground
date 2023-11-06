@@ -534,6 +534,7 @@ upload_module_computepgx_server <- function(
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
         dbg("[compute PGX process] : process tmpdir = ", tmpdir)
         dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
+        browser()
         ## append to process list
         process_obj(
           append(

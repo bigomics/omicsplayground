@@ -79,8 +79,8 @@ TcgaUI <- function(id) {
       id = ns("tabs1"),
       tabPanel(
         "TCGA survival",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = "calc(100vh - 180px)",
           tcga_plot_survival_ui(
             ns("tcga_tcgasurv"),

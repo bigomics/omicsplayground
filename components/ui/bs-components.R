@@ -7,17 +7,6 @@
 ##
 ##
 
-## If you put a card(style = "overflow: visible") in a parent element
-## that has overflow:auto set (e.g., layout_column_wrap()) you'll run
-## into this issue (because the parent's overflow setting will
-## overrule the child's property). You can currently work around the
-## problem by making sure the layout containers also have overflow:
-## visible.
-layout_column_wrap_visible <- function(...) {
-  res <- bslib::layout_column_wrap(..., style = "overflow:visible;")
-  htmltools::tagQuery(res)$children()$addAttrs(style = "overflow:visible;")$allTags()
-}
-
 bs_alert <- function(..., conditional = TRUE, style = "primary") {
   id <- bigdash:::make_id()
   alert_tag <- shiny::tags$div(
@@ -28,10 +17,10 @@ bs_alert <- function(..., conditional = TRUE, style = "primary") {
     if (conditional) {
       shiny::tags$button(
         # Use display: none; instead of official boostrap close button.
-        # If not, the element interfers with the bslib::layout_column_wrap
+        # If not, the element interfers with the bslib::layout_columns
         # and we get extra gap on top. The second part of the `onclick` is
         # to also close the box (hide it) when it is not placed inside a
-        # bslib::layout_column_wrap
+        # bslib::layout_columns
         onclick = paste0('$("#', id, ' button").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$("#', id, ' button").parent().css("display", "none");'),
         type = "button",
         class = "btn-close btn-close-bs-conditional",

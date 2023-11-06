@@ -72,10 +72,9 @@ BiomarkerUI <- function(id) {
       id = ns("tabs1"),
       shiny::tabPanel(
         "Feature selection",
-        bslib::layout_column_wrap(
-          width = 1 / 2,
+        bslib::layout_columns(
+          col_widths = c(6, 6),
           height = fullH,
-          heights_equal = "row",
           biomarker_plot_importance_ui(
             ns("pdx_importance"),
             title = "Variable importance",
@@ -116,10 +115,9 @@ BiomarkerUI <- function(id) {
       ), ## tabPanel 1
       shiny::tabPanel(
         "Feature-set ranking",
-        bslib::layout_column_wrap(
-          width = 1 / 2,
+        bslib::layout_columns(
+          col_widths = c(6, 6),
           height = fullH,
-          heights_equal = "row",
           biomarker_plot_featurerank_ui(
             id = ns("featurerank"),
             title = "Feature-set ranking",
