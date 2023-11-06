@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-connectivity_table_foldchange_ui <- function( 
+connectivity_table_foldchange_ui <- function(
     id,
     title,
     info.text,

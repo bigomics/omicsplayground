@@ -87,7 +87,7 @@ LoadingUI <- function(id) {
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr
-    ) 
+    )
   ) ## end of Public tabPanel
 
   sharing_tabpanel <- shiny::tabPanel(
