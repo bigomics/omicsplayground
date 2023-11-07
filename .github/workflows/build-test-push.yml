@@ -18,7 +18,7 @@ jobs:
         name: Shinytest docker
         id: test-snapshot
         run: |
-          docker build -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
+          docker build --build-arg GITHUB_SHA=${{ github.sha }} -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
           docker run --name run_tests bigomics/omicsplayground:latest
           docker cp run_tests:omicsplayground/tests .
       
