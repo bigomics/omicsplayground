@@ -46,9 +46,11 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.g
 
 
 RUN rm -fr /omicsplayground  \
-    && git clone --depth 1 https://github.com/bigomics/omicsplayground.git /omicsplayground \
+    && git clone -b ${BRANCH} --depth 1 \
+    https://github.com/bigomics/omicsplayground.git /omicsplayground \
     && cd /omicsplayground \
-    && git checkout GITHUB_SHA \
+    && git fetch origin $GITHUB_SHA \
+    && git checkout $GITHUB_SHA \
     && chmod -R ugo+rwX /omicsplayground
 
 WORKDIR /omicsplayground
