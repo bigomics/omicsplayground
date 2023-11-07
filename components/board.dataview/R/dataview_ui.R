@@ -250,9 +250,9 @@ DataViewUI <- function(id) {
             height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "b",
-            title = "Phenotype association",
-            info.text = "Phenotype association matrix. Clustered heatmap of phenotype association. The values correspond to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'.",
-            caption = "Clustered heatmap of phenotype association."
+            title = "Phenotype correlation",
+            info.text = "Phenotype correlation matrix. Clustered heatmap of phenotype correlation. Phenotypes are stratified into their conditions. The size of the dots correspond to the absolute correlation between two phenotype conditions. Red corresponds to positive correlation, blue corresponds to negative correlation.",
+            caption = "Clustered heatmap of phenotype correlation."
           )
         ),
         bslib::layout_column_wrap(
