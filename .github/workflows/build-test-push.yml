@@ -22,6 +22,7 @@ jobs:
           docker run --name run_tests bigomics/omicsplayground:latest
       - 
         name: Upload snapshots as artifact
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: testthat-snapshots
@@ -29,6 +30,7 @@ jobs:
           if-no-files-found: ignore
       - 
         name: Configure Git
+        if: always()
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
@@ -48,6 +50,7 @@ jobs:
           fi
       -
         name: Fail GHA if snapshot test failed
+        if: always()
         run: |
           if [[ "${{ steps.test.outputs.test_result }}" == "FALSE" ]]; then
             exit 1
