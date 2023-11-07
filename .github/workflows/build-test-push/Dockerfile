@@ -18,7 +18,6 @@ FROM bigomics/omicsplayground-base:ub2204_v2
 WORKDIR /
 ARG BRANCH=master
 ARG BRANCH_PLAYBASE=main
-ARG GITHUB_SHA
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -48,7 +47,7 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.g
 RUN rm -fr /omicsplayground  \
     && git clone --depth 1 https://github.com/bigomics/omicsplayground.git /omicsplayground \
     && cd /omicsplayground \
-    && git checkout $GITHUB_SHA \
+    && git checkout  GITHUB_SHA=${{ github.sha }} \
     && chmod -R ugo+rwX /omicsplayground
 
 WORKDIR /omicsplayground
