@@ -22,7 +22,7 @@ jobs:
           docker run --name run_tests bigomics/omicsplayground:latest
           docker cp run_tests:omicsplayground/tests .
       
-        - 
+      - 
         name: Upload snapshots as artifact
         if: always()
         uses: actions/upload-artifact@v3
