@@ -35,14 +35,13 @@ DrugConnectivityUI <- function(id) {
 
   panel1 <- shiny::tabPanel(
     "Drug enrichment",
-    bslib::layout_column_wrap(
-      width = 1,
+    bslib::layout_columns(
+      col_widths = c(9, 3),
       height = fullH,
-      style = htmltools::css(grid_template_columns = "9fr 3fr"),
-      bslib::layout_column_wrap(
-        width = 1,
-        bslib::layout_column_wrap(
-          width = 1 / 2,
+      bslib::layout_columns(
+        col_widths = 12,
+        bslib::layout_columns(
+          col_widths = c(6, 6),
           drugconnectivity_plot_enplots_ui(
             id = ns("dsea_enplots"),
             title = "Drug connectivity",
@@ -84,10 +83,10 @@ DrugConnectivityUI <- function(id) {
 
   panel2 <- shiny::tabPanel(
     "Connectivity map (beta)",
-    shiny::div(
-      class = "row",
-      div(
-        class = "col-md-5",
+    bslib::layout_columns(
+      col_widths = c(5, 7),
+      bslib::layout_columns(
+        col_widths = 12,
         drugconnectivity_plot_cmap_enplot_ui(
           id = ns("cmap_enplot"),
           title = "Enrichment plot",
@@ -106,8 +105,8 @@ DrugConnectivityUI <- function(id) {
           width = c("100%", "100%")
         )
       ),
-      div(
-        class = "col-md-7",
+      bslib::layout_columns(
+        col_widths = 12,
         drugconnectivity_plot_cmap_dsea_ui(
           id = ns("cmap_dsea"),
           title = "Connectivity Map",

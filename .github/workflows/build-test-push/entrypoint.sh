@@ -1,22 +1,13 @@
 #!/bin/bash
 
-# Run Docker container 
-docker run --rm -it -p 4000:3838 --name test_container bigomics/omicsplayground:latest
+# Run tests
+R -e "x <- shiny::runTests(assert = FALSE); writeLines(as.character(all(x[[2]])), 'test_result.txt')"
 
-# capture test results
-docker exec -it test_container R --slave -e "all(test_results[[2]])" > test_results.txt
 # Read test results from file
 test_result=$(cat test_result.txt)
-echo "Test results: $test_result"
 
-# return test result as an output
+# return test result as an output (will be deprecated)
 echo ::set-output name=test_result::$test_result
 
-# Check test results and run command
-if [[ $test_result == FALSE ]]; then
-  echo "All tests passed. Running command..."
-  exec "$@"
-else
-  echo "Some tests failed. Not running command."
-  exit 1
-fi
+# line above should be switched to this, but for some reason it does not work
+#echo "{test_result}={$test_result}" >> $env:GITHUB_OUTPUT # return test result as an output

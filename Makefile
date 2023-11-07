@@ -112,17 +112,20 @@ push.version:
 	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
-board:
+board.launch:
 	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
-board_example:
+board.example:
 	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
-check_pgx:
+pgx.check.error:
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
-test_opg:
+app.test:
 	R -e "shiny::runTests()"
+
+app.test.review:
+	R -e "testthat::use snapshot_review('snapshot/')""
 
 update:
 	Rscript dev/update.R
