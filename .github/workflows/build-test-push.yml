@@ -63,6 +63,6 @@ jobs:
         name: Fail GHA if snapshot test failed
         if: always()
         run: |
-          if [[ "${{ steps.test.outputs.test_result }}" == "FALSE" ]]; then
+          if [[ "${{ steps.test-snapshot.outputs.test_result }}" == "FALSE" ]]; then
             exit 1
           fi
