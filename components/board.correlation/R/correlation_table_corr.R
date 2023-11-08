@@ -68,7 +68,7 @@ correlation_table_corr_server <- function(id,
       shiny::req(pgx$X)
 
       df <- plot_data()
-      char_cols <- c("gene", "symbol", "human_ortholog", "gene_title")
+      char_cols <- c("feature", "gene", "symbol", "human_ortholog", "gene_title")
       numeric.cols <- which(!colnames(df) %in% char_cols)
 
       DT::datatable(
