@@ -147,7 +147,7 @@ ClusteringUI <- function(id) {
             col_widths = c(7, 5),
             height = fullH,
             clustering_plot_splitmap_ui(
-              id = ns("spitmap"),
+              id = ns("splitmap"),
               label = "a",
               title = "Clustered Heatmap",
               caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
