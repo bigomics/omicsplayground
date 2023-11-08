@@ -35,15 +35,15 @@ jobs:
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-      - 
-        name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        with:
-          ## limits ssh access and adds the ssh public key for the user which triggered the workflow
-          limit-access-to-actor: true
-          ## limits ssh access and adds the ssh public keys of the listed GitHub users
-          limit-access-to-users: mauromiguelm
-          wait-timeout-minutes: 120
+      # - 
+      #   name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
+      #   with:
+      #     ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+      #     limit-access-to-actor: true
+      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
+      #     limit-access-to-users: mauromiguelm
+      #     wait-timeout-minutes: 120
 
       - 
         name: Commit and push snapshots
@@ -52,7 +52,6 @@ jobs:
           cd ${{ github.workspace }}
           if [[ `git status --porcelain` ]]; then  
             git checkout -b "${GITHUB_HEAD_REF}"
-            git pull -ff --rebase origin "${GITHUB_HEAD_REF}"
             git add ./tests/*
             git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)"
             git push --force-with-lease origin "${GITHUB_HEAD_REF}"
