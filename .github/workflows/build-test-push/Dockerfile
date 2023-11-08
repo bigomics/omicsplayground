@@ -44,7 +44,6 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.g
 # Update configuration files into the Docker image
 #------------------------------------------------------------
 
-
 RUN rm -fr /omicsplayground  \
     && git clone -b ${BRANCH} --depth 1 \
     https://github.com/bigomics/omicsplayground.git /omicsplayground \
