@@ -22,7 +22,9 @@ clustering_plot_phenoplot_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "plotly",
+    ##    plotlib = "plotly",
+    plotlib = "generic",
+    outputFunc = function(...) uiOutput(..., fill = TRUE),
     info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
@@ -115,16 +117,19 @@ clustering_plot_phenoplot_server <- function(id,
           cex.title = cex * 1.2,
           cex.clust = cex * 1.1,
           label.clusters = showlabels
-        ) %>% plotly::layout(
-          plot_bgcolor = "#f8f8f8"
-        )
+        ) %>%
+          plotly_default() %>%
+          plotly::layout(
+            plot_bgcolor = "#f8f8f8",
+            margin = list(l = 0, r = 0, b = 0, t = 20) # lrbt
+          )
 
         plt[[i]] <- p
       }
       return(plt)
     }
 
-    plotly.RENDER <- function() {
+    plotly.RENDER.save <- function() {
       pd <- plot_data()
       pheno <- pd[["pheno"]]
       plt <- render_plotly(pd, pheno, cex = 0.85)
@@ -146,31 +151,31 @@ clustering_plot_phenoplot_server <- function(id,
       return(fig)
     }
 
+    plotly.RENDER <- function() {
+      pd <- plot_data()
+      pheno <- pd[["pheno"]]
+      plt <- render_plotly(pd, pheno, cex = 0.85)
+      nc <- floor(sqrt(length(plt)))
+      cw <- 12 / nc
+      page <- bslib::layout_columns(col_widths = cw, !!!plt)
+      return(page)
+    }
+
     plotly_modal.RENDER <- function() {
       pd <- plot_data()
       pheno <- pd[["pheno"]]
       plt <- render_plotly(pd, pheno, cex = 1.3)
-
-      nc <- min(3, length(plt))
-      if (length(plt) >= 6) nc <- 4
-      if (length(plt) >= 12) nc <- 5
-      nr <- ceiling(length(plt) / nc)
-
-      fig <- plotly::subplot(
-        plt,
-        nrows = nr,
-        margin = c(0.03, 0.03, 0.05, 0.05)
-      ) %>%
-        plotly_modal_default() %>%
-        plotly::layout(
-          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-        )
-      return(fig)
+      nc <- ceiling(sqrt(length(plt)))
+      cw <- 12 / nc
+      page <- bslib::layout_columns(col_widths = cw, !!!plt)
+      return(page)
     }
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "plotly",
+      #      plotlib = "plotly",
+      plotlib = "generic",
+      renderFunc = shiny::renderUI,
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV

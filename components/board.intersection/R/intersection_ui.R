@@ -57,10 +57,9 @@ IntersectionUI <- function(id) {
     id = ns("tabs1"),
     shiny::tabPanel(
       "Pairwise scatter",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = c(7, 5),
         height = fullH,
-        style = htmltools::css(grid_template_columns = "7fr 5fr"),
         intersection_scatterplot_pairs_ui(
           id = ns("scatterplot"),
           title = "Scatterplot pairs",
@@ -69,9 +68,8 @@ IntersectionUI <- function(id) {
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
         ),
-        bslib::layout_column_wrap(
-          width = 1,
-          heights_equal = "row",
+        bslib::layout_columns(
+          col_widths = 12,
           intersection_plot_venn_diagram_ui(
             id = ns("venndiagram"),
             title = "Venn diagram",
@@ -93,10 +91,9 @@ IntersectionUI <- function(id) {
     ),
     shiny::tabPanel(
       "Signature clustering",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = c(7, 5),
         height = fullH,
-        style = htmltools::css(grid_template_columns = "7fr 5fr"),
         foldchange_heatmap_ui(
           id = ns("FoldchangeHeatmap"),
           title = "Folchange heatmap",

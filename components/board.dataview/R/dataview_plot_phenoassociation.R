@@ -14,8 +14,9 @@ dataview_plot_phenoassociation_ui <- function(
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("phenoclustsamples"), "cluster samples", TRUE),
-      "Cluster samples.",
+    withTooltip(
+      shiny::selectInput(ns("vars"), "show variables:", choices = NULL, multiple = TRUE),
+      "Select phenotype variables to show.",
       placement = "top"
     )
   )
@@ -35,11 +36,25 @@ dataview_plot_phenoassociation_ui <- function(
 
 dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    observeEvent(pgx$samples, {
+      vars <- colnames(pgx$samples)
+      vars <- unique(c(grep("^[.]|cluster", vars, invert = TRUE, value = TRUE), vars))
+      sel.vars <- head(vars, 5)
+      shiny::updateSelectInput(session, "vars", choices = vars, selected = sel.vars)
+    })
+
     plot_data <- shiny::reactive({
-      shiny::req(pgx$X, pgx$Y)
+      shiny::req(pgx$samples, input$vars)
+      vars <- input$vars
       samples <- r.samples()
       annot <- pgx$samples
-      annot <- annot[samples, , drop = FALSE]
+      if (!all(vars %in% colnames(annot))) {
+        return(NULL)
+      }
+      if (!all(samples %in% rownames(annot))) {
+        return(NULL)
+      }
+      annot <- annot[samples, vars, drop = FALSE]
       list(annot = annot)
     })
 
@@ -59,9 +74,9 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
         pq <- playbase::pgx.testPhenoCorrelation(
           df = clean_annot,
           plot = TRUE,
-          cex = 1
+          cex = 0.8
         )
-        return(pq)
+        return(NULL)
       } else {
         shiny::validate(shiny::need(nrow(res) > 0, "The filters have no diference across samples,please choose another filter."))
         return(NULL)

@@ -74,13 +74,12 @@ FeatureMapUI <- function(id) {
       id = ns("tabs"),
       shiny::tabPanel(
         "Gene",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = fullH,
-          heights_equal = "row",
           bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
-          bslib::layout_column_wrap(
-            width = 1 / 2,
+          bslib::layout_columns(
+            col_widths = c(6, 6),
             featuremap_plot_gene_map_ui(
               ns("geneUMAP"),
               title = "Gene UMAP",
@@ -110,13 +109,12 @@ FeatureMapUI <- function(id) {
       ),
       shiny::tabPanel(
         "Geneset",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = fullH,
-          heights_equal = "row",
           bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
-          bslib::layout_column_wrap(
-            width = 1 / 2,
+          bslib::layout_columns(
+            col_widths = c(6, 6),
             featuremap_plot_geneset_map_ui(
               ns("gsetUMAP"),
               title = "Geneset UMAP",

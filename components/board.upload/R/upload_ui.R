@@ -114,10 +114,10 @@ upload_select_db <- shiny::tabPanel(
  
 
   upload_panel <- shiny::tabPanel(
-    "Upload Files",
-    bslib::layout_column_wrap(
-      width = 1,
-      heights_equal = "row",
+
+    "Upload",
+    bslib::layout_columns(
+      col_widths = 12,
       height = "calc(100vh - 180px)",
       bs_alert("In this panel, you can upload your data to the platform. The platform
                requires 3 data files as explained below: a data file containing
@@ -125,15 +125,15 @@ upload_select_db <- shiny::tabPanel(
                and a file specifying the statistical comparisons (comparisons.csv).
                NB Users can now create comparisons from the platform itself, so the
                comparisons.csv file is optional."),
-      bslib::layout_column_wrap(
-        width = 1,
-        style = htmltools::css(grid_template_columns = "4fr 8fr"),
+      bslib::layout_columns(
+        col_widths = c(4, 8),
         div(
           shiny::sidebarPanel(
             width = "100%",
             fileInput2(ns("upload_files"),
               shiny::h4("Choose files"),
-              multiple = TRUE, accept = c(".csv", ".pgx")
+              multiple = TRUE,
+              accept = c(".csv", ".pgx")
             ),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
             # bslib::input_switch(ns("load_example"), "Load example data"),
@@ -142,9 +142,10 @@ upload_select_db <- shiny::tabPanel(
         ),
         shiny::div(shiny::uiOutput(ns("upload_info")))
       ),
-      bslib::layout_column_wrap(
-         width = 1 / 3,
-         upload_plot_countstats_ui(
+
+      bslib::layout_columns(
+        col_widths = c(4, 4, 4),
+        upload_plot_countstats_ui(
           id = ns("countStats"),
           title = "Count Stats",
           info.text = "Information about the uploaded counts.",
@@ -184,8 +185,8 @@ upload_select_db <- shiny::tabPanel(
 
   comparisons_panel <- shiny::tabPanel(
     "Comparisons",
-    bslib::layout_column_wrap(
-      width = 1,
+    bslib::layout_columns(
+      col_widths = 12,
       height = "calc(100vh - 200px)",
       heights_equal = "row",
       bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts', 'groups'...). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),

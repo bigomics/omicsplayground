@@ -62,15 +62,15 @@ ExpressionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- "calc(100vh - 120px)" ## full height of page (minus header)
-  halfH <- "height: calc(50vh - 120px);" ## half height of page
+  halfH <- "calc(50vh - 120px)" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
       "Overview",
-      bslib::layout_column_wrap(
-        width = 1 / 4,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = c(3, 3, 3, 3),
+        height = halfH,
         expression_plot_volcano_ui(ns("plots_volcano"),
           label = "a",
           title = "Volcano plot",
@@ -110,9 +110,9 @@ ExpressionUI <- function(id) {
     ),
     shiny::tabPanel(
       "Top genes",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         expression_plot_topgenes_ui(
           id = ns("topgenes"),
           title = "Expression of top differentially expressed genes",
@@ -126,9 +126,9 @@ ExpressionUI <- function(id) {
     ),
     shiny::tabPanel(
       "Volcano by comparison",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         expression_plot_volcanoAll_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
@@ -142,9 +142,9 @@ ExpressionUI <- function(id) {
     ),
     shiny::tabPanel(
       "Volcano by method",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         expression_plot_volcanoMethods_ui(
           id = ns("volcanoMethods"),
           title = "Volcano plots for all methods",
@@ -162,9 +162,9 @@ ExpressionUI <- function(id) {
     id = ns("tabs2"),
     shiny::tabPanel(
       "Table",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = paste(halfH, htmltools::css(grid_template_columns = "2fr 1fr")),
+      bslib::layout_columns(
+        col_widths = c(8, 4),
+        height = halfH,
         expression_table_genetable_ui(
           ns("genetable"),
           title = "Differential expression analysis",
@@ -185,9 +185,9 @@ ExpressionUI <- function(id) {
     ),
     shiny::tabPanel(
       "Foldchange (all)",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         expression_table_fctable_ui(
           ns("fctable"),
           title = "Gene fold changes for all contrasts",
@@ -200,9 +200,9 @@ ExpressionUI <- function(id) {
     ),
     shiny::tabPanel(
       "FDR table",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         expression_table_FDRtable_ui(
           ns("FDRtable"),
           title = "Number of significant genes",
@@ -217,8 +217,8 @@ ExpressionUI <- function(id) {
 
   div(
     boardHeader(title = "Differential expression", info_link = ns("gx_info")),
-    bslib::layout_column_wrap(
-      width = 1,
+    bslib::layout_columns(
+      col_widths = 12,
       height = fullH,
       gap = "0px",
       tabs1,

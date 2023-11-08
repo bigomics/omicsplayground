@@ -56,15 +56,15 @@ EnrichmentUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- "calc(100vh - 120px)" ## full height of page (minus header)
-  halfH <- "height: calc(50vh - 120px);" ## half height of page
+  halfH <- "calc(50vh - 120px)" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
       "Enrichment",
-      bslib::layout_column_wrap(
-        width = 1 / 2,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = c(6, 6),
+        height = halfH,
         enrichment_plot_top_enrich_gsets_ui(
           ns("topEnriched"),
           title = "Top enriched gene sets",
@@ -85,9 +85,9 @@ EnrichmentUI <- function(id) {
     ),
     shiny::tabPanel(
       "Geneset expression",
-      bslib::layout_column_wrap(
-        width = 1 / 4,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = c(3, 3, 3, 3),
+        height = halfH,
         enrichment_plot_volcano_ui(
           ns("subplot_volcano"),
           title = "Volcano plot",
@@ -124,9 +124,9 @@ EnrichmentUI <- function(id) {
     ),
     shiny::tabPanel(
       "Enrichment by comparison",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         enrichment_plot_compare_ui(
           ns("compare"),
           title = "Enrichment of geneset across multiple comparisons",
@@ -139,9 +139,9 @@ EnrichmentUI <- function(id) {
     ),
     shiny::tabPanel(
       "Volcano by comparison",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         enrichment_plot_volcanoall_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
@@ -154,9 +154,9 @@ EnrichmentUI <- function(id) {
     ),
     shiny::tabPanel(
       "Volcano by method",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = halfH,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         enrichment_plot_volcanomethods_ui(
           ns("volcanoMethods"),
           title = "Volcano plots for all methods",
@@ -173,9 +173,9 @@ EnrichmentUI <- function(id) {
     id = ns("tabs2"),
     shiny::tabPanel(
       "Table",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = paste(halfH, htmltools::css(grid_template_columns = "2fr 1fr")),
+      bslib::layout_columns(
+        col_widths = c(8, 4),
+        height = halfH,
         enrichment_table_enrichment_analysis_ui(
           ns("gseatable"),
           title = "Enrichment analysis",
@@ -196,8 +196,9 @@ EnrichmentUI <- function(id) {
     ),
     shiny::tabPanel(
       "Enrichment (all)",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         enrichment_table_gset_enrich_all_contrasts_ui(
           ns("fctable"),
           title = "Gene set enrichment for all contrasts",
@@ -210,8 +211,9 @@ EnrichmentUI <- function(id) {
     ),
     shiny::tabPanel(
       "FDR table",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
         enrichment_table_n_sig_gsets_ui(
           ns("FDRtable"),
           title = "Number of significant gene sets",
@@ -226,8 +228,8 @@ EnrichmentUI <- function(id) {
 
   div(
     boardHeader(title = "Geneset enrichment", info_link = ns("gs_info")),
-    bslib::layout_column_wrap(
-      width = 1,
+    bslib::layout_columns(
+      col_widths = 12,
       height = fullH,
       gap = "0px",
       tabs1,
