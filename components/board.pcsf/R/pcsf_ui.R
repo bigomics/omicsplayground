@@ -82,15 +82,13 @@ PcsfUI <- function(id) {
       id = ns("tabs1"),
       shiny::tabPanel(
         "PCSF network",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = "calc(100vh - 190px)",
-          heights_equal = "row",
-          div(bs_alert(pcsf_module_info), style = "margin-bottom:15px;"),
-          bslib::layout_column_wrap(
-            width = 1,
+          bs_alert(pcsf_module_info),
+          bslib::layout_columns(
+            col_widths = c(5, 7),
             height = "calc(100vh - 190px)",
-            style = htmltools::css(grid_template_columns = "5fr 7fr"),
             pcsf_plot_heatmap_ui(
               id = ns("pcsf_heatmap"),
               caption = "PCSF gene modules",
