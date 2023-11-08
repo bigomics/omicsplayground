@@ -11,7 +11,6 @@
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground-base:ub2204_v2
-##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
 # Install any extra (forgotten...) Ubuntu libs
