@@ -422,11 +422,18 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(sel.row)) {
         return(NULL)
       }
-
       gene1 <- res$symbol[sel.row]
+      # Deal with non-anotated genes
+      if (gene1 == "") {
+        gene1 <- res$feature[sel.row]
+      }
       j <- which(rownames(pgx$GMT) == gene1)
-      gset <- names(which(pgx$GMT[j, ] != 0))
-      gset <- intersect(gset, rownames(pgx$gsetX))
+      if (length(j) == 0) {
+        return(NULL)
+      } else {
+        gset <- names(which(pgx$GMT[j, ] != 0))
+        gset <- intersect(gset, rownames(pgx$gsetX))
+      }
       if (length(gset) == 0) {
         return(NULL)
       }
