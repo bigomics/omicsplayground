@@ -137,19 +137,19 @@ UploadBoard <- function(id,
       }
     })
 
-    # create an observer that will hide tabs Upload Files if selected organism if null and show if the button proceed_to_upload is clicked
+    # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
     observeEvent(input$proceed_to_upload,{
-      # show tab Upload Files
-      shiny::showTab("tabs", "Upload Files")
+      # show tab Upload
+      shiny::showTab("tabs", "Upload")
       # for some reason, we need to click in another tab to make the upload tab run
-      shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
       shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
-      shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
     })
 
     
     # upload tab should be hidden when when no selected organism is selected (when componene is loaded)
-    shiny::hideTab("tabs", "Upload Files")
+    shiny::hideTab("tabs", "Upload")
 
 
     ## Hide/show tabpanels upon available data like a wizard dialog
@@ -160,7 +160,7 @@ UploadBoard <- function(id,
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
-        shiny::showTab("tabs", "Upload Files")
+        shiny::showTab("tabs", "Upload")
         shiny::showTab("tabs", "Comparisons")
         shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
@@ -173,7 +173,6 @@ UploadBoard <- function(id,
         shiny::showTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
       } else {
-        #shiny::hideTab("tabs", "Upload Files")
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Comparisons")
         shiny::hideTab("tabs", "Compute")
@@ -417,9 +416,9 @@ UploadBoard <- function(id,
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
         shiny::updateSelectInput(session, "selected_organism", choices = "Human")
-        shiny::showTab("tabs", "Upload Files")
+        shiny::showTab("tabs", "Upload")
 
-        shinyjs::runjs('document.querySelector("a[data-value=\'Upload Files\']").click();')
+        shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
 
         # go to upload tab
                 
