@@ -64,10 +64,6 @@ expression_table_genetable_server <- function(id,
         return(NULL)
       }
 
-      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(res)))[1]
-      fx.col
-      fx <- res[, fx.col]
-
       if ("gene_title" %in% colnames(res)) res$gene_title <- playbase::shortstring(res$gene_title, 50)
       rownames(res) <- sub(".*:", "", rownames(res))
 
@@ -83,7 +79,10 @@ expression_table_genetable_server <- function(id,
       numeric.cols <- which(sapply(res, is.numeric))
       numeric.cols <- colnames(res)[numeric.cols]
       show_res <- res
-      show_res $gene_name <- NULL
+      show_res$gene_name <- NULL
+      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(show_res)))[1]
+      fx.col
+      fx <- show_res[, fx.col]
       DT::datatable(show_res ,
         rownames = FALSE,
         class = "compact hover",
