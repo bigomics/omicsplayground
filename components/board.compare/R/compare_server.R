@@ -107,13 +107,14 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
         gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
-
+        g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
+        g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]
       } else if (org1 == org2) {
         # For same org. we ensure compare on symbol
         F1 <- playbase::rename_by(F1, pgx1$genes, "symbol")
         F2 <- playbase::rename_by(F2, pgx2$genes, "symbol")
         gg <- intersect(rownames(F1), rownames(F2))
-
+        g1 <- g2 <- gg
       } else if (org1 != org2 ) {
         # For different org. we ensure compare on human_ortholog
         # If it is not present, use gene_name
@@ -123,18 +124,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           F1 <- playbase::rename_by(F1, pgx1$genes, target_col1)
           F2 <- playbase::rename_by(F2, pgx2$genes, target_col2)
           gg <- intersect(rownames(F1), rownames(F2))
+          g1 <- g2 <- gg
       }
-          F1 <- F1[gg, , drop = FALSE]
-          F2 <- F2[gg, , drop = FALSE]
 
-          # TODO: implement average or sum
-          F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
-          F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
+      F1 <- F1[g1, , drop = FALSE]
+      F2 <- F2[g2, , drop = FALSE]
 
-          colnames(F1) <- paste0("1:", colnames(F1))
-          colnames(F2) <- paste0("2:", colnames(F2))
+      # TODO: implement average or sum
+      F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
+      F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
 
-          return(cbind(F1, F2))
+      colnames(F1) <- paste0("1:", colnames(F1))
+      colnames(F2) <- paste0("2:", colnames(F2))
+
+      return(cbind(F1, F2))
 
     })
 
