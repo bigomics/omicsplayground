@@ -41,7 +41,7 @@ PcsfBoard <- function(id, pgx) {
     ## ================================================================================
 
     ## PCSF  analysis
-    pcsf_compute <- eventReactive(
+    pcsf_compute <- shiny::eventReactive(
       {
         pgx$X
       },
@@ -53,7 +53,6 @@ PcsfBoard <- function(id, pgx) {
         meta <- playbase::pgx.getMetaMatrix(pgx)$fc
         mx <- rowMeans(meta**2)**0.5
         genes <- head(names(mx)[order(-abs(mx))], NTOP)
-
         gsmeta <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
         rx <- rowMeans(gsmeta**2)**0.5
         top.gs <- head(names(sort(-abs(rx))), 1000)
@@ -63,49 +62,57 @@ PcsfBoard <- function(id, pgx) {
         ## ------------ find gene clusters --------------
         clust <- playbase::pgx.FindClusters(
           X = scale(t(pgx$X[genes, ])),
-          #
           method = c("kmeans"),
           top.sd = 1000, npca = 40
         )
 
         idx <- clust[["kmeans"]][, 3]
 
+        # Genes in STRING are based in human genome, thus use ortholog
         genes_raw <- genes
+        if (!pgx$organism %in% c("Human", "human")) { 
+          genes_unique <- playbase::probe2symbol(unique(genes), pgx$genes, "human_ortholog")
+          names(genes_unique) <- genes
+          genes <- genes_unique[genes]
+          genes <- genes[genes != ""]
+        }
 
         genes <- toupper(genes)
-
         names(idx) <- genes
 
         ## balance number of gene per group??
-        table(idx)
         genes <- unlist(tapply(genes, idx[genes], function(gg) head(gg, 800)))
-        table(idx[genes])
 
         ## ------------ create edge table --------------
         sel <- (STRING$from %in% genes & STRING$to %in% genes)
-        table(sel)
         ee <- STRING[sel, ]
         genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
         rho <- cor(t(pgx$X[genes_raw, ]))
-        rownames(rho) <- toupper(rownames(rho))
-        colnames(rho) <- toupper(colnames(rho))
-        #
+        # Rename cor matrix according to human orthologs
+        if (!pgx$organism %in% c("Human", "human")) { 
+          human_gnames <- pgx$genes[rownames(rho), "human_ortholog"]
+          rownames(rho) <- human_gnames
+          colnames(rho) <- human_gnames
+          rho <- rho[!rownames(rho) == "", !colnames(rho) == ""]
+        }
         rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 0.001)
         ee$cost <- ee$cost**1 / rho.ee ## balance PPI with experiment
-        #
 
         ## ------------ create igraph network --------------
         ppi <- PCSF::construct_interactome(ee)
-        gset.wt <- (ngmt[genes_raw] / max(ngmt[genes_raw])) ## gene set weighting
-        terminals <- abs(mx[genes_raw])**1 * (0.1 + gset.wt)**1
-
-        meta <- meta[genes_raw, ]
-
+        if (!pgx$organism %in% c("Human", "human")) {
+          gene_symbols <- playbase::probe2symbol(genes_raw, pgx$genes, "symbol")
+          gset.wt <- (ngmt[gene_symbols] / max(ngmt[gene_symbols], na.rm = TRUE))
+          terminals <- abs(mx[genes_raw])**1 * (0.1 + gset.wt)**1
+        } else {
+          gset.wt <- (ngmt[genes_raw] / max(ngmt[genes_raw])) ## gene set weighting
+          terminals <- abs(mx[genes_raw])**1 * (0.1 + gset.wt)**1
+        }
+        meta <- meta[genes_raw, , drop = FALSE]
         rownames(meta) <- toupper(rownames(meta))
-
         names(terminals) <- toupper(names(terminals))
 
-        list(
+        out <- list(
           genes = genes,
           genes_raw = genes_raw,
           meta = meta,
@@ -114,6 +121,8 @@ PcsfBoard <- function(id, pgx) {
           ppi = ppi,
           terminals = terminals
         )
+
+        return(out)
       }
     )
 
