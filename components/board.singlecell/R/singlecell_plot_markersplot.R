@@ -95,8 +95,10 @@ singlecell_plot_markersplot_server <- function(id,
       clust.pos <- pfGetClusterPositions()
       pos <- clust.pos
       X <- pgx$X
-      if (all(rownames(X) %in% pgx$genes$feature)) {
-        X <- playbase::rename_by(X, pgx$genes, "symbol")
+      gene_table <- pgx$genes
+      # Gene name is equal to rownames in counts, X, and genes so we can use it to rename X
+      if (all(gene_table$gene_name == gene_table$feature)) {
+        X <- playbase::rename_by(X, gene_table, "symbol")
       }
 
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
@@ -106,18 +108,25 @@ singlecell_plot_markersplot_server <- function(id,
         markers <- pgx$families[["Transcription factors (ChEA)"]]
         if (mrk_search != "") {
           term <- mrk_search
-          jj <- grep(term, pgx$genes$symbol, ignore.case = TRUE)
-          markers <- pgx$genes$symbol[jj]
+          jj <- grep(term, gene_table$symbol, ignore.case = TRUE)
+          markers <- gene_table$symbol[jj]
           term <- paste("filter:", term)
         } else if (mrk_features %in% names(pgx$families)) {
           markers <- pgx$families[[mrk_features]]
           term <- mrk_features
         } else {
-          markers <- pgx$genes$symbol
+          markers <- gene_table$symbol
         }
-        markers <- intersect(toupper(markers), toupper(pgx$genes$symbol))
-        jj <- match(markers, toupper(pgx$genes$symbol))
-        pmarkers <- intersect(pgx$genes$symbol[jj], rownames(X))
+
+        # TODO: This should be remove once we rename pgx$families
+        total_h_matches <- sum(markers %in% gene_table$human_ortholog, na.rm = TRUE)
+        total_h_matches <- sum(markers %in% gene_table$symbol, na.rm = TRUE)
+        if (total_h_matches > total_h_matches) {
+          markers <- gene_table$symbol[match(markers, gene_table$human_ortholog)]
+        }
+        markers <- intersect(toupper(markers), toupper(gene_table$symbol))
+        jj <- match(markers, toupper(gene_table$symbol))
+        pmarkers <- intersect(gene_table$symbol[jj], rownames(X))
         gx <- X[pmarkers, rownames(pos), drop = FALSE]
 
       } else if (mrk_level == "geneset") {
@@ -171,7 +180,6 @@ singlecell_plot_markersplot_server <- function(id,
         mrk_level = mrk_level,
         mrk_features = mrk_features
       )
-
       return(pd)
     })
 
