@@ -420,8 +420,8 @@ upload_table_preview_contrasts_server <- function(id,
                                                   scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$contrasts.csv$file)
-      uploaded$checklist$contrasts.csv$file
+      shiny::req(uploaded$checklist$contrasts.csv)
+      uploaded$checklist$contrasts.csv$file |> data.frame()
     })
 
     table.RENDER <- function() {
