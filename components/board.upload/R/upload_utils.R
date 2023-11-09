@@ -172,15 +172,11 @@ sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmai
       body = blastula::md(
         glue::glue(
           "Hello,
-
+          
           Congratulations, the dataset {pgx_name} completed successfully!
 
-          The omics revolution is one click away!
-          
-          If you are a new user, please <a href='https://eu1.hubs.ly/H05Z7_H0' target='_blank'>register here.</a>
+          The omics revolution is one click away, simply <a href='https://auth.bigomics.ch/#!/login' target='_blank'>login here.</a> 
 
-          If you already use Omics Playground, simply <a href='https://auth.bigomics.ch/#!/login' target='_blank'>login here.</a> 
-          
           Yours,
 
           BigOmics Developers Team"
