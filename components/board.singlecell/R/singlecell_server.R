@@ -121,7 +121,7 @@ SingleCellBoard <- function(id, pgx) {
       g1 <- g2 <- NULL
 
       F <- playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc
-      F <- F[order(-apply(F, 1, sd)), ]
+      F <- F[order(-apply(F, 1, sd)), , drop = FALSE]
       genes <- rownames(F)
       g1 <- rownames(F)[1]
       g2 <- rownames(F)[2]
