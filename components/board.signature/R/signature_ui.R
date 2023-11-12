@@ -75,13 +75,12 @@ SignatureUI <- function(id) {
     ## ----------------------------- volcano panel  ------------------
     shiny::tabPanel(
       "Volcano plots",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 190px)",
-        heights_equal = "row",
         bs_alert("Overlay your custom list of genes on top of the volcano plots for each comparison. You can enter your list of genes on the right."),
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = "calc(100vh - 190px)",
           signature_plot_volcano_ui(
             ns("volcanoPlots"),
@@ -97,13 +96,12 @@ SignatureUI <- function(id) {
     ## ----------------------------- enrichment panel  ------------------
     shiny::tabPanel(
       "Enrichment",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 190px)",
-        heights_equal = "row",
         bs_alert("This panel shows your custom list of genes on top of the GSEA enrichment plots for each comparison. Enter your list of genes in the right box."),
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = "calc(100vh - 190px)",
           signature_plot_enplots_ui(
             ns("enplots"),
@@ -119,10 +117,9 @@ SignatureUI <- function(id) {
     ## ----------------------------- overlap panel ------------------
     shiny::tabPanel(
       "Overlap/similarity",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 190px)",
-        heights_equal = "row",
         bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),
         signature_plot_overlap_ui(
           ns("overlapScorePlot"),
@@ -145,13 +142,12 @@ SignatureUI <- function(id) {
     ## ----------------------------- panel markers ------------------
     shiny::tabPanel(
       "Markers",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 190px)",
-        heights_equal = "row",
         bs_alert("The markers plot shows the expression levels of the tested genes in the dataset samples as a colored t-SNE plot in red (highly expressed) and light grey (low expressed). The first figure shows the single-sample enrichment of your signature list in red (upregulation) and blue (downregulation)."),
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = "calc(100vh - 190px)",
           signature_plot_markers_ui(
             ns("markers"),
@@ -169,8 +165,8 @@ SignatureUI <- function(id) {
     id = ns("tabs2"),
     shiny::tabPanel(
       "Enrichment table",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = "calc(100vh - 190px)",
         signature_table_enrich_by_contrasts_ui(
           ns("enrichmentContrastTable"),
@@ -194,10 +190,8 @@ SignatureUI <- function(id) {
 
   div(
     boardHeader(title = "Test signatures", info_link = ns("info")),
-    bslib::layout_column_wrap(
-      width = 1,
-      #
-      style = htmltools::css(grid_template_columns = "8fr 4fr"),
+    bslib::layout_columns(
+      col_widths = c(8, 4),
       left.panel,
       right.panel
     )

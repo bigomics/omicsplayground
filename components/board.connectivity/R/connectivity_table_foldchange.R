@@ -13,10 +13,9 @@ connectivity_table_foldchange_ui <- function(
     label = "") {
   ns <- shiny::NS(id)
 
-  bslib::layout_column_wrap(
-    width = 1,
+  bslib::layout_columns(
+    col_widths = 12,
     height = "35%",
-    #
     TableModuleUI(
       id = ns("table"),
       info.text = info.text,

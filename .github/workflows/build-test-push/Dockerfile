@@ -11,81 +11,55 @@
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground-base:ub2204_v2
-##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
-# Install any extra (forgotten...) Ubuntu libs
-#------------------------------------------------------------
-ENV DEBIAN_FRONTEND noninteractive
-
-#RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-RUN apt update && apt install -y locales \
-    librsvg2-dev libgsl-dev curl
-
-# Set the locale (uncomment UTF8)
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
-
-#------------------------------------------------------------
-# Install any extra (forgotten...) R packages since base
-#------------------------------------------------------------
-WORKDIR /
-#RUN pip3 install umap-learn
-RUN R -e "devtools::install_github('bigomics/shinyChatR')"
-RUN R -e "devtools::install_github('JohnCoene/bsutils')"
-RUN R -e "devtools::install_github('ropensci/iheatmapr')"
-RUN R -e "BiocManager::install(c('topGO','survcomp'))"
-RUN R -e "install.packages(c('BH','plsRcox','blastula'))"  
-
-#------------------------------------------------------------
-# Install supporting bigomics stuff (as R packages)
-#------------------------------------------------------------
-
-WORKDIR /
-RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
-RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
-
-#------------------------------------------------------------
-# Download fresh code from GitHub (not an R package)
+# Set env variables 
 #------------------------------------------------------------
 WORKDIR /
 ARG BRANCH=master
-RUN echo Downloading $BRANCH branch
-RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
-    && rm -fr /omicsplayground*  \
-    && unzip $BRANCH.zip \
-    && mv omicsplayground-$BRANCH omicsplayground \
-    && chmod -R ugo+rwX /omicsplayground \
-    && rm $BRANCH.zip   
+ARG BRANCH_PLAYBASE=main
+ARG GITHUB_SHA=master
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
-## tag docker version
-WORKDIR /omicsplayground
-#RUN make version
-#COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
+#------------------------------------------------------------
+# Install de-novo bigomics stuff (as R packages)
+#------------------------------------------------------------
 
+RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
+RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
+RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
+
+# check if playbase@{$GITHUB_HEAD_REF} exists, if it does, install.. other wise install main
+
+RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${GITHUB_HEAD_REF} | wc -l) && \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+        R -e "remotes::install_github('bigomics/playbase@${GITHUB_HEAD_REF}',dependencies=FALSE)"; \
+    else \
+        R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)"; \
+    fi
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
-RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; f
-RUN make sass
 
-#------------------------------------------------------------
-# Expose port and set entry CMD
-#------------------------------------------------------------
-EXPOSE 3838
-##CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
-CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
+RUN rm -fr /omicsplayground  \
+    && git clone -b ${BRANCH} --depth 1 \
+    https://github.com/bigomics/omicsplayground.git /omicsplayground \
+    && cd /omicsplayground \
+    && git fetch origin $GITHUB_SHA \
+    && git checkout $GITHUB_SHA \
+    && chmod -R ugo+rwX /omicsplayground
+
+WORKDIR /omicsplayground
+
+RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
+RUN make sass
 
 # add entrypoint to execute when the docker container starts up
 
-RUN pwd
-RUN ls .github/workflows/build-test-push 
-COPY .github/workflows/build-test-push/entrypoint.sh /entrypoint.sh
+# give permission to execute the entrypoint
+RUN chmod +x .github/workflows/build-test-push/entrypoint.sh
 
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT [".github/workflows/build-test-push/entrypoint.sh"]

@@ -11,7 +11,6 @@
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground-base:ub2204_v2
-##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
 # Install any extra (forgotten...) Ubuntu libs
@@ -75,7 +74,6 @@ WORKDIR /omicsplayground
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass

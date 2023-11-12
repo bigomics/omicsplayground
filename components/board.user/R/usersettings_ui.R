@@ -17,10 +17,9 @@ UserSettingsUI <- function(id) {
       id = ns("tabs1"),
       shiny::tabPanel(
         "App Settings & News",
-        bslib::layout_column_wrap(
+        bslib::layout_columns(
           height = "calc(100vh - 183px)",
-          width = 1,
-          style = htmltools::css(grid_template_columns = "5fr 5fr"),
+          col_widths = c(6, 6),
           PlotModuleUI(
             ns("newfeatures"),
             outputFunc = htmlOutput,
@@ -37,8 +36,8 @@ UserSettingsUI <- function(id) {
       # Resource info #####
       shiny::tabPanel(
         "Resource info",
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           height = "calc(100vh - 183px)",
           user_table_resources_ui(ns("resources"))
         )
