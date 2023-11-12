@@ -21,7 +21,7 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
 
           If you are a new user, please <a href='https://eu1.hubs.ly/H05Z7_H0' target='_blank'>register here.</a>
 
-          If you already use Omics Playground, simply <a href='https://auth.bigomics.ch/#!/login' target='_blank'>login here.</a> 
+          If you already use Omics Playground, simply <a href='https://auth.bigomics.ch/#!/login' target='_blank'>login here.</a>
 
           You can find the shared dataset in the 'Load dataset/Sharing' tab.
 
