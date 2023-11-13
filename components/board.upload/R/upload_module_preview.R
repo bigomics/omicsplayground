@@ -43,6 +43,8 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
             shiny::req(checklist$contrasts.csv$file, checklist$contrasts.csv$checks)
           }
 
+          browser()
+
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
             tabs <- c(
@@ -137,12 +139,12 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(checklist$contrasts.csv$check,
+                    check_to_html(checklist$contrasts.csv$checks,
                       pass_msg = "All contrasts checks passed",
                       null_msg = "Contrasts checks not run. Fix any errors
                                 with contrasts first."
                     ),
-                    check_to_html(checklist$samples_contrasts,
+                    check_to_html(checklist$samples_contrasts$checks,
                       pass_msg = "All samples-contrasts checks passed",
                       null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
