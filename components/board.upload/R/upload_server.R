@@ -425,11 +425,12 @@ UploadBoard <- function(id,
       if (has.pgx == TRUE) {
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
+
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
           FILES_check <- playbase::pgx.crosscheckINPUT(
-            SAMPLES = uploaded[["samples.csv"]],
-            COUNTS = uploaded[["counts.csv"]]
+            SAMPLES = checklist[["samples.csv"]]$file,
+            COUNTS = checklist[["counts.csv"]]$file
           )
           checklist[["samples_counts"]]$checks <- FILES_check$checks
           checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
@@ -461,8 +462,8 @@ UploadBoard <- function(id,
 
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
         FILES_check <- playbase::pgx.crosscheckINPUT(
-          SAMPLES = uploaded[["samples.csv"]],
-          CONTRASTS = uploaded[["contrasts.csv"]]
+          SAMPLES = checklist[["samples.csv"]]$file,
+          CONTRASTS = checklist[["contrasts.csv"]]$file
         )
         checklist[["samples_contrasts"]]$checks <- FILES_check$checks
         checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
