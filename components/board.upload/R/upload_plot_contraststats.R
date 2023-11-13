@@ -30,7 +30,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      ct <- uploaded$contrasts.csv
+      ct <- uploaded$contrasts.csv$file
       has.contrasts <- !is.null(ct) && NCOL(ct) > 0
       check <- checkTables()
 
@@ -48,7 +48,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
         )
       )
 
-      contrasts <- uploaded$contrasts.csv
+      contrasts <- uploaded$contrasts.csv$file
       return(contrasts)
     })
 
