@@ -552,7 +552,7 @@ UploadBoard <- function(id,
       return(df)
     })
 
-    upload_module_preview_server("upload_preview", uploaded)
+    upload_module_preview_server("upload_preview", uploaded, checklist)
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
