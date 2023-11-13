@@ -174,8 +174,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
         X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)
         X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
-        X1 <- scale(t(pgx1$X[gg, kk]))
-        X2 <- scale(t(pgx2$X[gg, kk]))
+        X1 <- scale(t(X1[gg, kk]))
+        X2 <- scale(t(X2[gg, kk]))
         rho <- colSums(X1 * X2) / (nrow(X1) - 1)
       }
       fc1 <- sqrt(rowMeans(F1**2))
