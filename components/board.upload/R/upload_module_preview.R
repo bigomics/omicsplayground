@@ -20,16 +20,29 @@ upload_module_preview_ui <- function(id) {
   tagList()
 }
 
-upload_module_preview_server <- function(id, uploaded) {
+upload_module_preview_server <- function(id, uploaded, checklist) {
   moduleServer(
     id,
     function(input, output, session) {
       # every time something is uploaded, it can be previewed
       observeEvent(uploaded$last_uploaded,
         {
-          has_counts <- !is.null(uploaded$checklist$counts.csv$file)
-          has_samples <- !is.null(uploaded$checklist$samples.csv$file)
-          has_contrasts <- !is.null(uploaded$checklist$contrasts.csv$file)
+          has_counts <- !is.null(uploaded$counts.csv)
+          has_samples <- !is.null(uploaded$samples.csv)
+          has_contrasts <- !is.null(uploaded$contrasts.csv)
+
+          # require checklist of each file if file is uploaded
+          browser()
+          if (has_counts) {
+            shiny::req(checklist$counts.csv$checks)
+          }
+          if (has_samples) {
+            shiny::req(checklist$samples.csv$checks)
+          }
+          if (has_contrasts) {
+            shiny::req(checklist$contrasts.csv$checks)
+          }
+
 
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
@@ -51,12 +64,12 @@ upload_module_preview_server <- function(id, uploaded) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(uploaded$checklist$counts.csv$check,
+                    check_to_html(checklist$counts.csv$checks,
                       pass_msg = "All counts checks passed",
                       null_msg = "Counts checks not run yet.
                                 Fix any errors with counts first."
                     ),
-                    check_to_html(uploaded$checklist$samples_counts,
+                    check_to_html(checklist$samples_counts$checks,
                       pass_msg = "All samples-counts checks passed",
                       null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
@@ -85,17 +98,17 @@ upload_module_preview_server <- function(id, uploaded) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(uploaded$checklist$samples.csv$check,
+                    check_to_html(checklist$samples.csv$check,
                       pass_msg = "All samples checks passed",
                       null_msg = "Samples checks not run. Fix any
                                 errors with samples first."
                     ),
-                    check_to_html(uploaded$checklist$samples_counts,
+                    check_to_html(checklist$samples_counts,
                       pass_msg = "All samples-counts checks passed",
                       null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
                     ),
-                    check_to_html(uploaded$checklist$samples_contrasts,
+                    check_to_html(checklist$samples_contrasts,
                       pass_msg = "All samples-contrasts checks passed",
                       null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
@@ -124,12 +137,12 @@ upload_module_preview_server <- function(id, uploaded) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(uploaded$checklist$contrasts.csv$check,
+                    check_to_html(checklist$contrasts.csv$check,
                       pass_msg = "All contrasts checks passed",
                       null_msg = "Contrasts checks not run. Fix any errors
                                 with contrasts first."
                     ),
-                    check_to_html(uploaded$checklist$samples_contrasts,
+                    check_to_html(checklist$samples_contrasts,
                       pass_msg = "All samples-contrasts checks passed",
                       null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
@@ -286,11 +299,12 @@ upload_table_preview_counts_ui <- function(
 
 upload_table_preview_counts_server <- function(id,
                                                uploaded,
+                                               checklist,
                                                scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$counts.csv$file)
-      uploaded$checklist$counts.csv$file
+      shiny::req(uploade$counts.csv)
+      uploaded$counts.csv
     })
 
     table.RENDER <- function() {
@@ -348,8 +362,8 @@ upload_table_preview_samples_server <- function(id,
                                                 scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$samples.csv$file)
-      uploaded$checklist$samples.csv$file
+      shiny::req(uploaded$samples.csv)
+      uploaded$samples.csv
     })
 
     table.RENDER <- function() {
@@ -407,8 +421,8 @@ upload_table_preview_contrasts_server <- function(id,
                                                   scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$contrasts.csv)
-      uploaded$checklist$contrasts.csv$file |> data.frame()
+      shiny::req(uploaded$contrasts.csv)
+      uploaded$contrasts.csv |> data.frame()
     })
 
     table.RENDER <- function() {

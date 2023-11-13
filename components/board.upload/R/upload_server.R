@@ -269,7 +269,7 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
 
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
-              check <- COUNTS_check$checks
+              checks <- COUNTS_check$checks
 
               if (COUNTS_check$PASS && IS_COUNT) {
                 df <- as.matrix(COUNTS_check$df)
@@ -282,9 +282,8 @@ UploadBoard <- function(id,
                 df <- 2**df - 1
                 matname <- "counts.csv"
               }
-
               # store check and data regardless of it errors
-              checklist[["counts.csv"]]$check <- check
+              checklist[["counts.csv"]]$checks <- checks
               checklist[["counts.csv"]]$file <- COUNTS_check$df
             }
 
@@ -292,16 +291,15 @@ UploadBoard <- function(id,
               df0 <- playbase::read.as_matrix(fn2)
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_samples.csv"))
-
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
-              check <- SAMPLES_check$checks
+              checks <- SAMPLES_check$checks
 
               if (SAMPLES_check$PASS && IS_SAMPLE) {
                 df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
               # store check and data regardless of it errors
-              checklist[["samples.csv"]]$check <- check
+              checklist[["samples.csv"]]$checks <- checks
               checklist[["samples.csv"]]$file <- SAMPLES_check$df
             }
 
@@ -318,7 +316,7 @@ UploadBoard <- function(id,
                 matname <- "contrasts.csv"
               }
               # store check and data regardless of it errors
-              checklist[["contrasts.csv"]]$check <- check
+              checklist[["contrasts.csv"]]$checks <- checks
               checklist[["contrasts.csv"]]$file <- CONTRASTS_check$df
             }
 
