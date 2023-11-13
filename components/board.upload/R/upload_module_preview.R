@@ -32,17 +32,16 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
           has_contrasts <- !is.null(uploaded$contrasts.csv)
 
           # require checklist of each file if file is uploaded
-          browser()
+
           if (has_counts) {
-            shiny::req(checklist$counts.csv$checks)
+            shiny::req(checklist$counts.csv$file, checklist$counts.csv$checks)
           }
           if (has_samples) {
-            shiny::req(checklist$samples.csv$checks)
+            shiny::req(checklist$samples.csv$file, checklist$samples.csv$checks)
           }
           if (has_contrasts) {
-            shiny::req(checklist$contrasts.csv$checks)
+            shiny::req(checklist$contrasts.csv$file, checklist$contrasts.csv$checks)
           }
-
 
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
@@ -98,17 +97,18 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(checklist$samples.csv$check,
+                    check_to_html(checklist$samples.csv$checks,
                       pass_msg = "All samples checks passed",
                       null_msg = "Samples checks not run. Fix any
                                 errors with samples first."
                     ),
-                    check_to_html(checklist$samples_counts,
+                    check_to_html(
+                      check = checklist$samples_counts$checks,
                       pass_msg = "All samples-counts checks passed",
                       null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
                     ),
-                    check_to_html(checklist$samples_contrasts,
+                    check_to_html(checklist$samples_contrasts$checks,
                       pass_msg = "All samples-contrasts checks passed",
                       null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
@@ -299,11 +299,10 @@ upload_table_preview_counts_ui <- function(
 
 upload_table_preview_counts_server <- function(id,
                                                uploaded,
-                                               checklist,
                                                scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploade$counts.csv)
+      shiny::req(uploaded$counts.csv)
       uploaded$counts.csv
     })
 

@@ -215,11 +215,15 @@ UploadBoard <- function(id,
       uploaded[["contrasts.csv"]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
+      checklist[["counts.csv"]] <- NULL
+      checklist[["samples.csv"]] <- NULL
+      checklist[["contrasts.csv"]] <- NULL
+      checklist[["samples_counts"]] <- NULL
+      checklist[["samples_contrasts"]] <- NULL
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
       matlist <- list()
-      checklist <- list()
 
       if (pgx.uploaded) {
         ## If the user uploaded a PGX file, we extract the matrix
