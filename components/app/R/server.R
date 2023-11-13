@@ -304,7 +304,7 @@ app_server <- function(input, output, session) {
         }
 
         if (ENABLED["clustersamples"]) {
-          info("[SERVER] calling module clustersamples")
+          info("[SERVER] calling ClusteringBoard module")
           ClusteringBoard("clustersamples", pgx = PGX)
         }
 
@@ -463,6 +463,7 @@ app_server <- function(input, output, session) {
     user
   })
 
+  ## this avoids flickering
   welcome_detector <- reactiveVal(NULL)
   observeEvent(input$nav, {
     welcome_detector(input$nav == "welcome-tab")
