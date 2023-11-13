@@ -43,8 +43,6 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
             shiny::req(checklist$contrasts.csv$file, checklist$contrasts.csv$checks)
           }
 
-          browser()
-
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
             tabs <- c(
