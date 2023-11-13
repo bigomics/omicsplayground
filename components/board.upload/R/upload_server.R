@@ -607,8 +607,8 @@ UploadBoard <- function(id,
 
     modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
-      phenoRT = shiny::reactive(uploaded$samples.csv),
-      contrRT = shiny::reactive(uploaded$contrasts.csv),
+      phenoRT = shiny::reactive(checklist$samples.csv$file),
+      contrRT = shiny::reactive(checklist$contrasts.csv$file),
       countsRT = corrected_counts,
       height = height
     )
@@ -617,7 +617,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      uploaded$contrasts.csv <- modct$contr
+      checklist[['contrast.csv']]$file <- modct$contr
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
