@@ -224,7 +224,6 @@ upload_module_preview_server <- function(id, uploaded) {
 # convert list of checks to html tags for display in the data preview modal
 check_to_html <- function(check, pass_msg = "", null_msg = "") {
   error_list <- playbase::PGX_CHECKS
-
   if (is.null(check)) {
     tagList(
       span(null_msg, style = "color: red"), br()

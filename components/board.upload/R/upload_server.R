@@ -17,6 +17,7 @@ UploadBoard <- function(id,
 
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
+    checklist <- shiny::reactiveValues()
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -214,7 +215,6 @@ UploadBoard <- function(id,
       uploaded[["contrasts.csv"]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
-      uploaded[["checklist"]] <- NULL
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
@@ -269,7 +269,7 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
 
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
-              check <- COUNTS_check$check
+              check <- COUNTS_check$checks
 
               if (COUNTS_check$PASS && IS_COUNT) {
                 df <- as.matrix(COUNTS_check$df)
@@ -294,7 +294,7 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_samples.csv"))
 
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
-              check <- SAMPLES_check$check
+              check <- SAMPLES_check$checks
 
               if (SAMPLES_check$PASS && IS_SAMPLE) {
                 df <- as.data.frame(SAMPLES_check$df)
@@ -311,7 +311,7 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_contrasts.csv"))
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
-              check <- CONTRASTS_check$check
+              check <- CONTRASTS_check$checks
 
               if (CONTRASTS_check$PASS) {
                 df <- as.matrix(CONTRASTS_check$df)
@@ -346,7 +346,6 @@ UploadBoard <- function(id,
           uploaded[[m1]] <- matlist[[i]]
         }
         uploaded[["last_uploaded"]] <- names(matlist)
-        uploaded[["checklist"]] <- checklist
       }
 
       message("[upload_files] done!\n")
@@ -430,9 +429,9 @@ UploadBoard <- function(id,
             SAMPLES = uploaded[["samples.csv"]],
             COUNTS = uploaded[["counts.csv"]]
           )
-          uploaded[["checklist"]][["samples_counts"]] <- FILES_check$check
-          uploaded[["samples.csv"]] <- FILES_check$SAMPLES
-          uploaded[["counts.csv"]] <- FILES_check$COUNTS
+          checklist[["samples_counts"]]$checks <- FILES_check$checks
+          checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
+          checklist[["counts.csv"]]$file <- FILES_check$COUNTS
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
@@ -441,7 +440,7 @@ UploadBoard <- function(id,
           if (a2 > a1 && NCOL(samples1) > 1) {
             message("[UploadModuleServer] getting sample names from first column\n")
             rownames(samples1) <- samples1[, 1]
-            uploaded[["samples.csv"]] <- samples1[, -1, drop = FALSE]
+            checklist[["samples.csv"]]$file <- samples1[, -1, drop = FALSE]
           }
 
           if (FILES_check$PASS == FALSE) {
@@ -463,11 +462,9 @@ UploadBoard <- function(id,
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
         )
-        uploaded[["checklist"]][["samples_contrasts"]] <- FILES_check$check
-
-        uploaded[["samples.csv"]] <- FILES_check$SAMPLES
-        uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
-
+        checklist[["samples_contrasts"]] <- FILES_check$checks
+        checklist[["samples.csv"]] <- FILES_check$SAMPLES
+        checklist[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
         if (FILES_check$PASS == FALSE) {
           status["samples.csv"] <- "Error, please check your samples files."
