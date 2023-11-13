@@ -427,11 +427,13 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
 
         ## check rownames of samples.csv
-        if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
+        if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
+          
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
           )
+
           checklist[["samples_counts"]]$checks <- FILES_check$checks
           checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
           checklist[["counts.csv"]]$file <- FILES_check$COUNTS
@@ -460,7 +462,7 @@ UploadBoard <- function(id,
         }
       }
 
-      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
+      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK" && is.null(checklist[["samples_contrasts"]]$checks)) {
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
@@ -598,7 +600,7 @@ UploadBoard <- function(id,
         out <- correctedX()
         counts <- pmax(2**out$X - 1, 0)
       } else {
-        counts <- checklist$counts.csv$file
+        counts <- checklist[["counts.csv"]]$file
       }
       counts
     })
@@ -634,8 +636,8 @@ UploadBoard <- function(id,
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = corrected_counts,
-      samplesRT = shiny::reactive(checklist$samples.csv$file),
-      contrastsRT = shiny::reactive(checklist$contrasts.csv$file),
+      samplesRT = shiny::reactive(checklist[["samples.csv"]]$file),
+      contrastsRT = shiny::reactive(checklist[["contrasts.csv"]]$file),
       raw_dir = raw_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
