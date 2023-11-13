@@ -465,7 +465,7 @@ UploadBoard <- function(id,
           CONTRASTS = uploaded[["contrasts.csv"]]
         )
         checklist[["samples_contrasts"]]$checks <- FILES_check$checks
-        checklist[["samples.csv"]] <- FILES_check$SAMPLES
+        checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
         checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
 
         if (FILES_check$PASS == FALSE) {
@@ -621,7 +621,6 @@ UploadBoard <- function(id,
     })
 
     upload_ok <- shiny::reactive({
-      browser()
       check <- checkTables()
       all(check[, "status"] == "OK")
       all(grepl("ERROR", check[, "status"]) == FALSE)
