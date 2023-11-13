@@ -313,7 +313,7 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_contrasts.csv"))
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
-              check <- CONTRASTS_check$checks
+              checks <- CONTRASTS_check$checks
 
               if (CONTRASTS_check$PASS) {
                 df <- as.matrix(CONTRASTS_check$df)
@@ -464,9 +464,9 @@ UploadBoard <- function(id,
           SAMPLES = uploaded[["samples.csv"]],
           CONTRASTS = uploaded[["contrasts.csv"]]
         )
-        checklist[["samples_contrasts"]] <- FILES_check$checks
+        checklist[["samples_contrasts"]]$checks <- FILES_check$checks
         checklist[["samples.csv"]] <- FILES_check$SAMPLES
-        checklist[["contrasts.csv"]] <- FILES_check$CONTRASTS
+        checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
 
         if (FILES_check$PASS == FALSE) {
           status["samples.csv"] <- "Error, please check your samples files."
@@ -483,19 +483,19 @@ UploadBoard <- function(id,
 
       ## check files: maximum contrasts allowed
       if (status["contrasts.csv"] == "OK") {
-        if (ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS) {
+        if (ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
           status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
         }
       }
 
       ## check files: maximum samples allowed
       if (status["counts.csv"] == "OK") {
-        if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
+        if (ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
           status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
         }
       }
       if (status["samples.csv"] == "OK") {
-        if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
+        if (nrow(checklist[["samples.csv"]]$file) > MAXSAMPLES) {
           status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
         }
       }
@@ -597,7 +597,7 @@ UploadBoard <- function(id,
         out <- correctedX()
         counts <- pmax(2**out$X - 1, 0)
       } else {
-        counts <- uploaded$counts.csv
+        counts <- checklist$counts.csv$file
       }
       counts
     })
@@ -621,6 +621,7 @@ UploadBoard <- function(id,
     })
 
     upload_ok <- shiny::reactive({
+      browser()
       check <- checkTables()
       all(check[, "status"] == "OK")
       all(grepl("ERROR", check[, "status"]) == FALSE)
@@ -633,8 +634,8 @@ UploadBoard <- function(id,
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = corrected_counts,
-      samplesRT = shiny::reactive(uploaded$samples.csv),
-      contrastsRT = shiny::reactive(uploaded$contrasts.csv),
+      samplesRT = shiny::reactive(checklist$samples.csv$file),
+      contrastsRT = shiny::reactive(checklist$contrasts.csv$file),
       raw_dir = raw_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
