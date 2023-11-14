@@ -210,14 +210,14 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
-      uploaded[["counts.csv"]] <- NULL
-      uploaded[["samples.csv"]] <- NULL
-      uploaded[["contrasts.csv"]] <- NULL
+      # uploaded[["counts.csv"]] <- NULL
+      # uploaded[["samples.csv"]] <- NULL
+      # uploaded[["contrasts.csv"]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
-      checklist[["counts.csv"]] <- NULL
-      checklist[["samples.csv"]] <- NULL
-      checklist[["contrasts.csv"]] <- NULL
+      # checklist[["counts.csv"]] <- NULL
+      # checklist[["samples.csv"]] <- NULL
+      # checklist[["contrasts.csv"]] <- NULL
       checklist[["samples_counts"]] <- NULL
       checklist[["samples_contrasts"]] <- NULL
 
@@ -467,6 +467,7 @@ UploadBoard <- function(id,
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
         )
+
         checklist[["samples_contrasts"]]$checks <- FILES_check$checks
         checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
         checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
@@ -681,7 +682,7 @@ UploadBoard <- function(id,
     upload_plot_contraststats_server(
       "contrastStats",
       checkTables,
-      uploaded
+      uploaded = checklist
     )
 
 
