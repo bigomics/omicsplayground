@@ -6,6 +6,21 @@ html {
 
     .big-tab {
 	padding: 0px 15px;
+	.tabbable {
+	    height: calc(100vh - 180px);
+	    display: flex;
+	    flex-direction: column;
+	    > .tab-content {
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+		> .tab-pane {
+		    display: flex;
+		    flex-direction: column;
+		    flex: 1 1 auto;
+		}
+	    }
+	}
     }
 
     //---------------- navbar ---------------------

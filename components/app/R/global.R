@@ -177,7 +177,7 @@ message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
-  "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf"
+  "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf", "dataview2" 
 )
 if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(rep(TRUE, length(BOARDS)), dimnames = list(BOARDS))

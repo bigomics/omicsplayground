@@ -88,6 +88,9 @@ app_ui <- function() {
       "DataView" = c(
         dataview = "DataView"
       ),
+      "DataView2" = c(
+        dataview2 = "DataView2"
+      ),
       "Clustering" = c(
         clustersamples = "Samples",
         clusterfeatures = "Features",
@@ -297,6 +300,12 @@ app_ui <- function() {
         bigdash::sidebarTabHelp(
           "dataview-tab",
           "DataView",
+          "Information and descriptive statistics to quickly lookup a gene,
+                     check your experiment QC, view the raw data, sample or contrast tables."
+        ),
+        bigdash::sidebarTabHelp(
+          "dataview2-tab",
+          "DataView2",
           "Information and descriptive statistics to quickly lookup a gene,
                      check your experiment QC, view the raw data, sample or contrast tables."
         ),

@@ -201,6 +201,11 @@ app_server <- function(input, output, session) {
           DataViewUI("dataview")
         ),
         bigdash::bigTabItem(
+          "dataview2-tab",
+          DataViewInputs2("dataview2"),
+          DataViewUI2("dataview2")
+        ),
+        bigdash::bigTabItem(
           "clustersamples-tab",
           ClusteringInputs("clustersamples"),
           ClusteringUI("clustersamples")
@@ -287,6 +292,8 @@ app_server <- function(input, output, session) {
         ),
       )
 
+      dbg("[MAIN] ========= inserting UI ==============")
+      
       shiny::withProgress(message = "Preparing your dashboard (UI)...", value = 0, {
         shiny::insertUI(
           selector = "#big-tabs",
@@ -296,11 +303,13 @@ app_server <- function(input, output, session) {
         )
       })
 
-
+      dbg("[MAIN] ========= calling modules ==============")
+      
       shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
         if (ENABLED["dataview"]) {
           info("[SERVER] calling module dataview")
           DataViewBoard("dataview", pgx = PGX)
+          DataViewBoard2("dataview2", pgx = PGX)
         }
 
         if (ENABLED["clustersamples"]) {
@@ -436,6 +445,8 @@ app_server <- function(input, output, session) {
     shiny::removeModal()
 
     bigdash.showTabsGoToDataView(session)
+
+    dbg("[MAIN] ========= delayed UI done ==============")    
   })
 
 
