@@ -465,6 +465,7 @@ UploadBoard <- function(id,
         if(checklist[['contrasts.csv']]$PASS == FALSE){
           # contrast file is invalid already, do not invalidate samples based on this test
           status[["contrasts.csv"]] <- "ERROR: please check your contrasts files."
+          checklist[["contrasts.csv"]]$file <- NULL
         } else {
           # only run this code is contrast.csv PASS
           checklist[["samples_contrasts"]]$checks <- FILES_check$checks
