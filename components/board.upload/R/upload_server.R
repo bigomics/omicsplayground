@@ -210,14 +210,8 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
-      # uploaded[["counts.csv"]] <- NULL
-      # uploaded[["samples.csv"]] <- NULL
-      # uploaded[["contrasts.csv"]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
-      # checklist[["counts.csv"]] <- NULL
-      # checklist[["samples.csv"]] <- NULL
-      # checklist[["contrasts.csv"]] <- NULL
       checklist[["samples_counts"]] <- NULL
       checklist[["samples_contrasts"]] <- NULL
 
