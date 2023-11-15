@@ -335,10 +335,10 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
               }
               paste(x, collapse = " ")
             }
-
+            
             ct1 <- playbase::makeContrastsFromLabelMatrix(ct)
             ct1[is.na(ct1)] <- 0
-
+            
             if (NCOL(ct) == 1) {
               ss1 <- names(which(ct1[, 1] > 0))
               ss2 <- names(which(ct1[, 1] < 0))
