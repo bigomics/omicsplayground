@@ -30,6 +30,7 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
+RUN R -e "install.github('bigomics/fgsea')"
 
 # check if playbase@{$GITHUB_HEAD_REF} exists, if it does, install.. other wise install main
 
