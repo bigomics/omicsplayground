@@ -309,13 +309,13 @@ UploadBoard <- function(id,
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
               checks <- CONTRASTS_check$checks
 
-              if (CONTRASTS_check$PASS) {
-                df <- as.matrix(CONTRASTS_check$df)
-                matname <- "contrasts.csv"
-              }
+              df <- as.matrix(CONTRASTS_check$df)
+              matname <- "contrasts.csv"
+
               # store check and data regardless of it errors
               checklist[["contrasts.csv"]]$checks <- checks
               checklist[["contrasts.csv"]]$file <- CONTRASTS_check$df
+              checklist[['contrasts.csv']]$PASS <- CONTRASTS_check$PASS
             }
 
             if (!is.null(matname)) {
@@ -421,7 +421,8 @@ UploadBoard <- function(id,
 
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
-          
+
+
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
@@ -460,16 +461,22 @@ UploadBoard <- function(id,
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
         )
+        # if checklist contrast fails, set uploaded to false and status to error
+        if(checklist[['contrasts.csv']]$PASS == FALSE){
+          # contrast file is invalid already, do not invalidate samples based on this test
+          status[["contrasts.csv"]] <- "ERROR: please check your contrasts files."
+        } else {
+          # only run this code is contrast.csv PASS
+          checklist[["samples_contrasts"]]$checks <- FILES_check$checks
+          checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
+          checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
 
-        checklist[["samples_contrasts"]]$checks <- FILES_check$checks
-        checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
-        checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
-
-        if (FILES_check$PASS == FALSE) {
-          status["samples.csv"] <- "Error, please check your samples files."
-          status["contrasts.csv"] <- "Error, please check your contrasts files."
-          uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
+          if (FILES_check$PASS == FALSE) {
+              status["samples.csv"] <- "Error, please check your samples files."
+              status["contrasts.csv"] <- "Error, please check your contrasts files."
+              uploaded[["samples.csv"]] <- NULL
+              uploaded[["contrasts.csv"]] <- NULL
+            }
         }
       }
 
