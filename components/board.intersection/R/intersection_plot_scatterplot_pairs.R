@@ -105,7 +105,7 @@ intersection_scatterplot_pairs_server <- function(id,
 
       ## Tooltip text for all
       tt <- rownames(df) ## strip prefix
-      if (level == "gene") {
+      if (level() == "gene") {
         g <- rownames(df)
         tt <- paste0("<b>", g, "</b> ", pgx$genes[g, "gene_title"])
       }
