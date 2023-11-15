@@ -219,8 +219,9 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         i <- 1
         shiny::withProgress(message = "Computing GSEA ...", value = 0.8, {
           res <- lapply(1:ncol(F), function(i) {
+            set.seed(123)
             suppressWarnings(suppressMessages(
-              res <- fgsea::fgsea(gmt, stats = F[, i], nperm = 1000)
+              res <- fgsea::fgsea(gmt, stats = F[, i], nperm = 1000, nproc=1)
             ))
             res <- as.data.frame(res[, c("pval", "padj", "ES", "NES")])
             rownames(res)[1] <- colnames(F)[i]
