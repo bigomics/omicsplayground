@@ -349,7 +349,6 @@ UploadBoard <- function(id,
         }
         uploaded[["last_uploaded"]] <- names(matlist)
       }
-
       message("[upload_files] done!\n")
     })
 
@@ -530,11 +529,21 @@ UploadBoard <- function(id,
         }
       }
 
-      if (!is.null(uploaded$contrasts.csv) &&
-        (is.null(uploaded$counts.csv) ||
-          is.null(uploaded$samples.csv))) {
+      if (!is.null(uploaded$contrasts.csv) && is.null(uploaded$samples.csv)) {
         uploaded[["contrasts.csv"]] <- NULL
         status["contrasts.csv"] <- "please upload"
+
+        # if contrasts.csv is the only element in last_uploaded, set it to NULL
+        if (length(uploaded$last_uploaded) == 1 && uploaded$last_uploaded == "contrasts.csv") {
+          uploaded[["last_uploaded"]] <- NULL
+        }
+
+        # pop up telling the user to upload samples.csv first
+        shinyalert::shinyalert(
+          title = "Samples.csv file missing",
+          text = "Please upload the samples.csv file first.",
+          type = "error"
+        )
       }
 
 

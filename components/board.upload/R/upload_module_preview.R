@@ -31,20 +31,6 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
           has_samples <- !is.null(uploaded$samples.csv)
           has_contrasts <- !is.null(uploaded$contrasts.csv)
 
-          browser()
-
-          # # require checklist of each file if file is uploaded
-
-          # if (has_counts) {
-          #   shiny::req(checklist$counts.csv$file, checklist$counts.csv$checks)
-          # }
-          # if (has_samples) {
-          #   shiny::req(checklist$samples.csv$file, checklist$samples.csv$checks)
-          # }
-          # if (has_contrasts) {
-          #   shiny::req(checklist$contrasts.csv$file, checklist$contrasts.csv$checks)
-          # }
-
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
             tabs <- c(
