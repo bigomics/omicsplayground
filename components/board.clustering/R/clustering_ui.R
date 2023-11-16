@@ -159,7 +159,7 @@ ClusteringUI <- function(id) {
               col_widths = 12,
               clustering_plot_clusterannot_ui(
                 id = ns("plots_clustannot"),
-                title = "Functional annotation of clusters",
+                title = "Functional annotation of gene modules",
                 info.text = "For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as GO, KEGG and Gene Ontology. In the plot settings, users can specify the level and reference set to be used under the Reference level and Reference set settings, respectively.",
                 caption = "Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap.",
                 label = "a",
