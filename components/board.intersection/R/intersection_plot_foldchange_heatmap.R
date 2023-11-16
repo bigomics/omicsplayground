@@ -51,21 +51,26 @@ foldchange_heatmap_server <- function(id,
                                       getActiveFoldChangeMatrix,
                                       pgx,
                                       level,
+                                      input_comparisons,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
+      shiny::req(input_comparisons())
+      comp <- input_comparisons()
       if (input$FoldchangeHeatmap_allfc) {
-        F <- getFoldChangeMatrix()$fc
+        FC <- getFoldChangeMatrix()$fc
       } else {
-        F <- getActiveFoldChangeMatrix()$fc
+        FC <- getActiveFoldChangeMatrix()$fc
       }
 
-      F <- F[order(-rowMeans(F**2)), ]
-      F <- F[order(-abs(rowMeans(F))), ]
+      FC <- FC[order(-rowMeans(FC**2)), ]
+      FC <- FC[order(-abs(rowMeans(FC))), ]
 
-      F1 <- head(F, 80)
+      F1 <- head(FC, 80)
       F1 <- F1[order(rowMeans(F1)), ]
-      F1
+      F1 <- F1[, comp, drop = FALSE]
+
+      return(F1)
     })
 
     FoldchangeHeatmap.PLOT <- function() {
@@ -81,7 +86,6 @@ foldchange_heatmap_server <- function(id,
       }
       bm <- 5 - mh ## bottom margin
       at <- input$FoldchangeHeatmap_annotype
-
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
 
       plt <- grid::grid.grabExpr({
