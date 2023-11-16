@@ -384,9 +384,13 @@ UploadBoard <- function(id,
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
       } else {
-        uploaded$counts.csv <- NULL
-        uploaded$samples.csv <- NULL
-        uploaded$contrasts.csv <- NULL
+        ## clear files
+        uploaded[["counts.csv"]] <- NULL
+        uploaded[["samples.csv"]] <- NULL
+        uploaded[["contrasts.csv"]] <- NULL
+        uploaded[["pgx"]] <- NULL
+        uploaded[["last_uploaded"]] <- NULL
+        uploaded[["checklist"]] <- NULL
       }
     })
 
@@ -457,6 +461,8 @@ UploadBoard <- function(id,
       }
 
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK" && is.null(checklist[["samples_contrasts"]]$checks)) {
+        ## this converts and check the contrast and samples file.
+
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
@@ -473,16 +479,15 @@ UploadBoard <- function(id,
           checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
 
           if (FILES_check$PASS == FALSE) {
-              status["samples.csv"] <- "Error, please check your samples files."
-              status["contrasts.csv"] <- "Error, please check your contrasts files."
+            # error needs to be capitalized to be detected later on
+              status["samples.csv"] <- "ERROR: please check your samples files."
+              status["contrasts.csv"] <- "ERROR: please check your contrasts files."
               uploaded[["samples.csv"]] <- NULL
               uploaded[["contrasts.csv"]] <- NULL
             }
         }
       }
 
-      MAXSAMPLES <- 25
-      MAXCONTRASTS <- 5
       MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
       MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
 
