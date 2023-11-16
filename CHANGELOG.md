@@ -1,3 +1,12 @@
+### v3.2.31 (2023-11-15)
+
+-  update logs to 3.2.30 [view](https://github.com/bigomics/omicsplayground/commit/a3a162216938945165ae7a27db4da252c79a89a9)
+-  v3.2.30.9002 [view](https://github.com/bigomics/omicsplayground/commit/e1b6bfb244565541339d5aba4e23a537a20d514c)
+-  edit link [view](https://github.com/bigomics/omicsplayground/commit/3b7679483b9930ac0e125921b7b72658cc64b750)
+-  edit output message [view](https://github.com/bigomics/omicsplayground/commit/b633d58187b497fa789d80de4e4332f361a3843c)
+-  v3.2.31 [view](https://github.com/bigomics/omicsplayground/commit/2f70aaa2982880c234c4b552f694236970661f00)
+
+
 ### v3.2.30 (2023-11-13)
 
 -  cache [view](https://github.com/bigomics/omicsplayground/commit/fd4199f63dd33e820bb63564f1e6e98976e8f25d)
@@ -173,23 +182,5 @@
 -  Snapshot test failed: use snapshot_review('snapshot/') (GHA) [view](https://github.com/bigomics/omicsplayground/commit/c33516258a48e4a21334b3340c2c612f186c987b)
 -  fix: reduce label length [view](https://github.com/bigomics/omicsplayground/commit/cf83fc63ef16fe3e99538a14866d7fd0178dc886)
 -  non scaled volcano as default [view](https://github.com/bigomics/omicsplayground/commit/e7227d74334d8b5ca454b5fe2b18a5bbf11ef46e)
-
-
-### v3.2.29 (2023-11-02)
-
--  update changelog [view](https://github.com/bigomics/omicsplayground/commit/5a0f1833e02e9034e7f83ee5add34a9bafaa85fe)
--  replace subplot with layout_columns [view](https://github.com/bigomics/omicsplayground/commit/6f1d474ef84a60cb56a40a0c2529531f0783b0a2)
--  fix two cards with same name in wgcna [view](https://github.com/bigomics/omicsplayground/commit/d79ac75aac47f0624c3e9bb2b10eb6a14158e1a5)
--  code: cleanup pcaplot code [view](https://github.com/bigomics/omicsplayground/commit/3d469762e91f3929078ee1f61250748b9b6597fa)
--  fix: remove scaling from FC heatmap [view](https://github.com/bigomics/omicsplayground/commit/58608c0874c8c060cedc2d33e481ff1b2da0108b)
--  feat: add skip normalization option [view](https://github.com/bigomics/omicsplayground/commit/f1f0deeee4ba1fd92a45c2a8e5c1f44bb18dd0f9)
--  total counts as log10 [view](https://github.com/bigomics/omicsplayground/commit/3b2ba5b27dd3d1d5116407b9889cbe7022c2b877)
--  add normalization option in param [view](https://github.com/bigomics/omicsplayground/commit/1b08f5203fb2c2c70290af7c02add7cad20c3917)
--  smaller font size [view](https://github.com/bigomics/omicsplayground/commit/78ec5bcfbdf40a044351127e59f2e782c7ef3d53)
--  version v3.2.29.9000 [view](https://github.com/bigomics/omicsplayground/commit/daec0b90d6a34575586aefdb586ef034f450521a)
--  v3.2.29.9001 [view](https://github.com/bigomics/omicsplayground/commit/9ed7e5ab744443e450498bead0bb0a85d89c6e8e)
--  rename normalization label [view](https://github.com/bigomics/omicsplayground/commit/43c3a256726a03a269cc1284a58c1bf46c4ced7a)
--  v3.2.29 [view](https://github.com/bigomics/omicsplayground/commit/ede3639fda68d838fed2c6636ff2b12d8c30f53a)
--  fix: getCountStatistics reacts on pgx [view](https://github.com/bigomics/omicsplayground/commit/7021a0aecd3b703f3636d4e9e104a8aa5ecdb018)
 
 
