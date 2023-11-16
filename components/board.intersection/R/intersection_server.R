@@ -284,7 +284,7 @@ IntersectionBoard <- function(
     intersection_plot_venn_diagram_server(
       "venndiagram",
       pgx = pgx,
-      level = input$level,
+      level = shiny::reactive(input$level),
       input_comparisons = input_comparisons,
       getFoldChangeMatrix = getFoldChangeMatrix,
       watermark = WATERMARK
@@ -293,7 +293,7 @@ IntersectionBoard <- function(
     intersection_scatterplot_pairs_server(
       "scatterplot",
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
-      level = input$level,
+      level = shiny::reactive(input$level),
       pgx = pgx,
       watermark = WATERMARK
     )

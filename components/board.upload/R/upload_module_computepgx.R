@@ -210,7 +210,9 @@ upload_module_computepgx_server <- function(
                         target = "_blank",
                         style = "text-decoration: underline;"
                       ),
-                      downloadLink(ns("download_gmt"), shiny::HTML(" or download an <u>example GMT</u> listing the gene targets of the EGFR transcription factor."))
+                      "or download an",
+                      downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
+                      " (gene targets of the EGFR transcription factor)."
                     )
                   ),
                   multiple = FALSE,

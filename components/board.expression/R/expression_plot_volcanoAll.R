@@ -22,7 +22,7 @@ expression_plot_volcanoAll_ui <- function(id,
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_plot"), "scale per plot", TRUE),
+    withTooltip(shiny::checkboxInput(ns("scale_per_plot"), "scale per plot", FALSE),
       "Scale each volcano plots individually.",
       placement = "right", options = list(container = "body")
     )
