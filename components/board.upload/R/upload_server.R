@@ -387,6 +387,17 @@ UploadBoard <- function(id,
         uploaded$counts.csv <- readfromzip2("exampledata/counts.csv")
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
+        # this was re-done in multi-species, it will be much better. Temporary solution for legacy code. MMM
+        checklist[["contrasts.csv"]]$file <- readfromzip2("exampledata/contrasts.csv")
+        checklist[["samples.csv"]]$file <- readfromzip2("exampledata/samples.csv")
+        checklist[["counts.csv"]]$file <- readfromzip2("exampledata/counts.csv")
+        checklist[["contrasts.csv"]]$checks <- list()
+        checklist[["samples.csv"]]$checks <- list()
+        checklist[["counts.csv"]]$checks <- list()
+        checklist[["contrasts.csv"]]$checks <- list()
+        checklist[["contrasts.csv"]]$PASS <- TRUE
+        uploaded[["last_uploaded"]] <- c("counts.csv","samples.csv","contrasts.csv")
+
       } else {
         ## clear files
         uploaded[["counts.csv"]] <- NULL
@@ -635,7 +646,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      checklist[["contrast.csv"]]$file <- modct$contr
+      checklist[["contrasts.csv"]]$file <- modct$contr
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
