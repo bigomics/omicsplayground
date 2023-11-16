@@ -315,7 +315,7 @@ UploadBoard <- function(id,
               # store check and data regardless of it errors
               checklist[["contrasts.csv"]]$checks <- checks
               checklist[["contrasts.csv"]]$file <- CONTRASTS_check$df
-              checklist[['contrasts.csv']]$PASS <- CONTRASTS_check$PASS
+              checklist[["contrasts.csv"]]$PASS <- CONTRASTS_check$PASS
             }
 
             if (!is.null(matname)) {
@@ -422,11 +422,8 @@ UploadBoard <- function(id,
       if (has.pgx == TRUE) {
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
-
         ## check rownames of samples.csv
         if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
-
-
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
@@ -468,7 +465,7 @@ UploadBoard <- function(id,
           CONTRASTS = checklist[["contrasts.csv"]]$file
         )
         # if checklist contrast fails, set uploaded to false and status to error
-        if(checklist[['contrasts.csv']]$PASS == FALSE){
+        if (checklist[["contrasts.csv"]]$PASS == FALSE) {
           # contrast file is invalid already, do not invalidate samples based on this test
           status[["contrasts.csv"]] <- "ERROR: please check your contrasts files."
           checklist[["contrasts.csv"]]$file <- NULL
@@ -480,11 +477,11 @@ UploadBoard <- function(id,
 
           if (FILES_check$PASS == FALSE) {
             # error needs to be capitalized to be detected later on
-              status["samples.csv"] <- "ERROR: please check your samples files."
-              status["contrasts.csv"] <- "ERROR: please check your contrasts files."
-              uploaded[["samples.csv"]] <- NULL
-              uploaded[["contrasts.csv"]] <- NULL
-            }
+            status["samples.csv"] <- "ERROR: please check your samples files."
+            status["contrasts.csv"] <- "ERROR: please check your contrasts files."
+            uploaded[["samples.csv"]] <- NULL
+            uploaded[["contrasts.csv"]] <- NULL
+          }
         }
       }
 
@@ -634,7 +631,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      checklist[['contrast.csv']]$file <- modct$contr
+      checklist[["contrast.csv"]]$file <- modct$contr
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
