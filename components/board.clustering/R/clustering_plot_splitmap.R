@@ -258,6 +258,7 @@ clustering_plot_splitmap_server <- function(id,
         tooltips <- sapply(aa, function(x) {
           playbase::breakstring2(x, 50, brk = "<br>")
         })
+        names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
 
