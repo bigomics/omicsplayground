@@ -396,8 +396,7 @@ UploadBoard <- function(id,
         checklist[["counts.csv"]]$checks <- list()
         checklist[["contrasts.csv"]]$checks <- list()
         checklist[["contrasts.csv"]]$PASS <- TRUE
-        uploaded[["last_uploaded"]] <- c("counts.csv","samples.csv","contrasts.csv")
-
+        uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
       } else {
         ## clear files
         uploaded[["counts.csv"]] <- NULL
