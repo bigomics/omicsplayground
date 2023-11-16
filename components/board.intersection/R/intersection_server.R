@@ -41,9 +41,8 @@ IntersectionBoard <- function(
 
     ## update choices upon change of data set
     shiny::observe({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx)
+
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       shiny::updateSelectInput(session, "comparisons",
@@ -55,10 +54,9 @@ IntersectionBoard <- function(
     ## update choices upon change of feature level
     ## observeEvent( input$level, {
     shiny::observe({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx)
       shiny::req(input$level)
+
       if (input$level == "geneset") {
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
         ft <- names(gset_collections)
@@ -308,6 +306,7 @@ IntersectionBoard <- function(
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
       pgx = pgx,
       level = input$level,
+      input_comparisons = input_comparisons,
       watermark = WATERMARK
     )
 

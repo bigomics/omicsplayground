@@ -16,7 +16,7 @@ contrast_correlation_ui <- function(
   ctcorrplot.opts <- shiny::tagList(
     ## "Show correlation values in cells."),
     withTooltip(
-      shiny::checkboxInput(ns("ctcorrplot_allfc"), "show all contrasts", TRUE),
+      shiny::checkboxInput(ns("ctcorrplot_allfc"), "show all contrasts", FALSE),
       "Show all contrasts or just the selected ones."
     ),
     ##       "Fix heatmap layout when changing number of top genes"),
@@ -51,15 +51,15 @@ contrast_correlation_server <- function(id,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      shiny::req(pgx$X)
 
+      # Input vars
       res <- getFoldChangeMatrix()
-      if (is.null(res)) {
-        return(NULL)
-      }
-      if (NCOL(res$fc) < 2) {
-        return(NULL)
-      }
+      comp <- input_comparisons()
+      
+      # Check requirements
+      shiny::req(pgx$X)
+      shiny::req(res)
+      shiny::req(NCOL(res$fc) > 1)
 
       fc0 <- res$fc
       qv0 <- res$qv
@@ -71,11 +71,8 @@ contrast_correlation_server <- function(id,
 
       allfc <- input$ctcorrplot_allfc
       if (!allfc) {
-        comp <- input_comparisons()
-        if (length(comp) < 2) {
-          return(NULL)
-        }
-        kk <- match(comp, colnames(fc0))
+        shiny::req(length(comp) > 1)
+        kk <-  colnames(fc0)[colnames(fc0) %in% comp]
         fc0 <- fc0[, kk, drop = FALSE]
       }
 
@@ -83,7 +80,7 @@ contrast_correlation_server <- function(id,
       jj <- head(order(-rowMeans(fc0**2)), ntop)
       R <- cor(apply(fc0[jj, ], 2, rank), use = "pairwise")
       R <- round(R, digits = 2)
-      R
+      return(R)
     })
 
     ctcorrplot.PLOTLY <- function() {
@@ -104,7 +101,7 @@ contrast_correlation_server <- function(id,
         colors = bluered.pal,
         limits = c(-1, 1)
       )
-      plt
+      return(plt)
     }
 
     PlotModuleServer(
