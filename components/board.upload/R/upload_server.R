@@ -82,7 +82,7 @@ UploadBoard <- function(id,
       ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
       ## -------------- save PGX file/object ---------------
       # Old pgx does not have name slot, overwrite it with file name
-      if(is.null(new_pgx$name)){
+      if (is.null(new_pgx$name)) {
         new_pgx$name <- sub("[.]pgx$", "", input$upload_files$name)
       }
       pgxfile <- sub("[.]pgx$", "", new_pgx$name)
