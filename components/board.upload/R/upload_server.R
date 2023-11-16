@@ -631,7 +631,7 @@ UploadBoard <- function(id,
 
       ## deselect
       return(df)
-    })
+    }})
 
     upload_module_preview_server("upload_preview", uploaded, checklist)
 
