@@ -61,8 +61,16 @@ contrast_correlation_server <- function(id,
       shiny::req(res)
       shiny::req(NCOL(res$fc) > 1)
 
-      fc0 <- res$fc
-      qv0 <- res$qv
+      fc0 <- res$fc[, input_comparisons(), drop = FALSE]
+      qv0 <- res$qv[, input_comparisons(), drop = FALSE]
+
+      # module can only run with at least two comparisons
+      validate(
+        need(
+          dim(fc0)[2] >= 2,
+          "Less than 2 comparisons selected. Please select at least 2 comparison on the settings sidebar."
+        )
+      )
 
       ntop <- 2000
       ntop <- input$ctcorrplot_ntop

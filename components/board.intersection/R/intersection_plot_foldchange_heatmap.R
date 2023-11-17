@@ -63,6 +63,13 @@ foldchange_heatmap_server <- function(id,
         FC <- getActiveFoldChangeMatrix()$fc
       }
 
+      # check that dim(F)[2] >0, in case user has not selected any comparisons
+      shiny::validate(
+        shiny::need(
+          dim(FC)[2] > 0,
+          "No comparisons selected. Please select a comparison on the settings sidebar."
+        )
+      )
       FC <- FC[order(-rowMeans(FC**2)), ]
       FC <- FC[order(-abs(rowMeans(FC))), ]
 
@@ -71,6 +78,7 @@ foldchange_heatmap_server <- function(id,
       F1 <- F1[, comp, drop = FALSE]
 
       return(F1)
+
     })
 
     FoldchangeHeatmap.PLOT <- function() {
