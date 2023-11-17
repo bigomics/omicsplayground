@@ -482,7 +482,7 @@ UploadBoard <- function(id,
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
-          )
+        )
         # if checklist contrast fails, set uploaded to false and status to error
         if (checklist[["contrasts.csv"]]$PASS == FALSE) {
           # contrast file is invalid already, do not invalidate samples based on this test
