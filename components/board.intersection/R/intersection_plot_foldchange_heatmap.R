@@ -62,7 +62,7 @@ foldchange_heatmap_server <- function(id,
       }
 
       F <- F[, input_comparisons(), drop = FALSE]
-      
+
       # check that dim(F)[2] >0, in case user has not selected any comparisons
       validate(
         need(
@@ -72,7 +72,7 @@ foldchange_heatmap_server <- function(id,
       )
 
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- F[order(-abs(rowMeans(F))), ,drop = FALSE]
+      F <- F[order(-abs(rowMeans(F))), , drop = FALSE]
 
       F1 <- head(F, 80)
       F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
