@@ -305,6 +305,7 @@ IntersectionBoard <- function(
       getFoldChangeMatrix = getFoldChangeMatrix,
       getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
       pgx = pgx,
+      input_comparisons = input_comparisons,
       level = input$level,
       watermark = WATERMARK
     )
