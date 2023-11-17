@@ -30,7 +30,6 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-
       ct <- uploaded[["contrasts.csv"]]$file
       has.contrasts <- !is.null(ct) && NCOL(ct) > 0
       check <- checkTables()
@@ -51,9 +50,10 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
 
       ## we need to return the sample-wise labeled contrast matrix
       contrasts <- uploaded$contrasts.csv$file
-      samples   <- uploaded$samples.csv$file
+      samples <- uploaded$samples.csv$file
       contrasts2 <- playbase::contrasts.convertToLabelMatrix(
-                                contrasts, samples)
+        contrasts, samples
+      )
       return(contrasts2)
     })
 
@@ -62,7 +62,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
       px <- head(colnames(df), 20) ## maximum to show??
       df <- data.frame(df[, px, drop = FALSE], check.names = FALSE)
       tt2 <- paste(nrow(df), "samples x", ncol(df), "comparisons")
-      
+
       p1 <- df %>%
         inspectdf::inspect_cat() %>%
         inspectdf::show_plot()
