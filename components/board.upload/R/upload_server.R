@@ -405,6 +405,15 @@ UploadBoard <- function(id,
         uploaded[["pgx"]] <- NULL
         uploaded[["last_uploaded"]] <- NULL
         uploaded[["checklist"]] <- NULL
+        # reset react value checklist to NULL
+        checklist[["contrasts.csv"]] <- NULL
+        checklist[["samples.csv"]] <- NULL
+        checklist[["counts.csv"]] <- NULL
+        checklist[["samples_contrasts"]] <- NULL
+        checklist[["samples_counts"]] <- NULL
+
+
+
       }
     })
 
