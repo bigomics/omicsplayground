@@ -411,9 +411,6 @@ UploadBoard <- function(id,
         checklist[["counts.csv"]] <- NULL
         checklist[["samples_contrasts"]] <- NULL
         checklist[["samples_counts"]] <- NULL
-
-
-
       }
     })
 
@@ -514,6 +511,17 @@ UploadBoard <- function(id,
       if (status["contrasts.csv"] == "OK") {
         if (ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
           status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
+          uploaded[["contrasts.csv"]] <- NULL
+          checklist[["contrasts.csv"]]$file <- NULL
+          # remove only contrasts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
+
+          # pop up telling user max contrasts reached
+          shinyalert::shinyalert(
+            title = "Maximum contrasts reached",
+            text = paste("You have reached the maximum number of contrasts allowed. Please upload a new contrasts file with a maximum of", MAXCONTRASTS, "contrasts."),
+            type = "error"
+          )
         }
       }
 
@@ -521,14 +529,35 @@ UploadBoard <- function(id,
       if (status["counts.csv"] == "OK") {
         if (ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
           status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+          uploaded[["counts.csv"]] <- NULL
+          checklist[["counts.csv"]]$file <- NULL
+          # remove only contrasts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+
+          # pop up telling user max contrasts reached
+          shinyalert::shinyalert(
+            title = "Maximum counts reached",
+            text = paste("You have reached the maximum number of counts allowed. Please upload a new COUNTS file with a maximum of", MAXCOUNTS, "samples."),
+            type = "error"
+          )
         }
       }
       if (status["samples.csv"] == "OK") {
         if (nrow(checklist[["samples.csv"]]$file) > MAXSAMPLES) {
           status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
+          uploaded[["samples.csv"]] <- NULL
+          checklist[["samples.csv"]]$file <- NULL
+          # remove only contrasts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")
+
+          # pop up telling user max contrasts reached
+          shinyalert::shinyalert(
+            title = "Maximum samples reached",
+            text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
+            type = "error"
+          )
         }
       }
-
       e1 <- grepl("ERROR", status["samples.csv"])
       e2 <- grepl("ERROR", status["contrasts.csv"])
       e3 <- grepl("ERROR", status["counts.csv"])
