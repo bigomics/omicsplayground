@@ -411,9 +411,6 @@ UploadBoard <- function(id,
         checklist[["counts.csv"]] <- NULL
         checklist[["samples_contrasts"]] <- NULL
         checklist[["samples_counts"]] <- NULL
-
-
-
       }
     })
 

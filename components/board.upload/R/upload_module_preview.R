@@ -294,18 +294,18 @@ upload_table_preview_counts_server <- function(id,
       dt <- uploaded$counts.csv
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
-      MAXSHOW=100
-      if(nrow(dt) > MAXSHOW) {
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
         dt <- head(dt, MAXSHOW)
-        dt <- rbind(dt, rep(NA,ncol(dt)))
+        dt <- rbind(dt, rep(NA, ncol(dt)))
         n1 <- nrow0 - MAXSHOW
-        rownames(dt)[nrow(dt)] <- paste0("[+",n1," rows]")
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
       }
-      if(ncol(dt) > MAXSHOW) {
+      if (ncol(dt) > MAXSHOW) {
         dt <- dt[, 1:MAXSHOW]
-        dt <- cbind(dt, rep(NA,nrow(dt)))
+        dt <- cbind(dt, rep(NA, nrow(dt)))
         n1 <- ncol0 - MAXSHOW
-        colnames(dt)[ncol(dt)] <- paste0("[+",n1," columns]")
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
       }
       dt
     })
@@ -313,7 +313,7 @@ upload_table_preview_counts_server <- function(id,
     table.RENDER <- function() {
       dt <- table_data()
       req(dt)
-      
+
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -370,12 +370,12 @@ upload_table_preview_samples_server <- function(id,
       dt <- uploaded$samples.csv
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
-      MAXSHOW=100
-      if(nrow(dt) > MAXSHOW) {
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
         dt <- head(dt, MAXSHOW)
-        dt <- rbind(dt, rep(NA,ncol(dt)))
+        dt <- rbind(dt, rep(NA, ncol(dt)))
         n1 <- nrow0 - MAXSHOW
-        rownames(dt)[nrow(dt)] <- paste0("[+",n1," rows]")
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
       }
       dt
     })
