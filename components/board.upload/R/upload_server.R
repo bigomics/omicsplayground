@@ -515,7 +515,7 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <- NULL
           checklist[["contrasts.csv"]]$file <- NULL
           # remove only contrasts.csv from last_uploaded
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "contrasts.csv") 
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
 
           # pop up telling user max contrasts reached
           shinyalert::shinyalert(
@@ -533,7 +533,7 @@ UploadBoard <- function(id,
           uploaded[["counts.csv"]] <- NULL
           checklist[["counts.csv"]]$file <- NULL
           # remove only contrasts.csv from last_uploaded
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv") 
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
 
           # pop up telling user max contrasts reached
           shinyalert::shinyalert(
@@ -549,7 +549,7 @@ UploadBoard <- function(id,
           uploaded[["samples.csv"]] <- NULL
           checklist[["samples.csv"]]$file <- NULL
           # remove only contrasts.csv from last_uploaded
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv") 
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")
 
           # pop up telling user max contrasts reached
           shinyalert::shinyalert(
