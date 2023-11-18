@@ -3,11 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserProfileInputs <- function(id) {
-  ns <- shiny::NS(id)
-  bigdash::tabSettings()
-}
-
 UserProfileUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 

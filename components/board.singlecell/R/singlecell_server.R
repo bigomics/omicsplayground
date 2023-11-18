@@ -142,6 +142,18 @@ SingleCellBoard <- function(id, pgx) {
       shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Cell type" = list(enable = c("clustmethod"),
+                         disable = NULL),
+      "Mapping" = list(enable = NULL,
+                       disable = c("clustmethod")),
+      "Markers" = list(enable = c("clustmethod"),
+                       disable = NULL)
+    )
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
 
 
     # REACTIVE FUNCTIONS #########

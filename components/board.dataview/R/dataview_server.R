@@ -87,37 +87,20 @@ DataViewBoard <- function(id, pgx) {
     })
 
     # Observe tabPanel change to update Settings visibility
-    observeEvent(input$tabs, {
-      if (input$tabs == "Gene overview") {
-        shinyjs::enable("search_gene")
-        shinyjs::enable("data_samplefilter")
-        shinyjs::enable("data_groupby")
-        shinyjs::enable("data_type")
-      }
-      if (input$tabs == "Sample QC") {
-        shinyjs::disable("search_gene")
-        shinyjs::disable("data_samplefilter")
-        shinyjs::disable("data_groupby")
-        shinyjs::enable("data_type")
-      }
-      if (input$tabs == "Counts table") {
-        shinyjs::enable("search_gene")
-        shinyjs::enable("data_samplefilter")
-        shinyjs::enable("data_groupby")
-        shinyjs::enable("data_type")
-      }
-      if (input$tabs == "Sample information") {
-        shinyjs::disable("search_gene")
-        shinyjs::enable("data_samplefilter")
-        shinyjs::disable("data_groupby")
-        shinyjs::disable("data_type")
-      }
-      if (input$tabs == "Contrasts") {
-        shinyjs::disable("search_gene")
-        shinyjs::enable("data_samplefilter")
-        shinyjs::disable("data_groupby")
-        shinyjs::disable("data_type")
-      }
+    tab_elements <- list(
+      "Gene overview" = list(enable = c("search_gene", "data_samplefilter", "data_groupby", "data_type"), 
+                            disable = NULL),
+      "Sample QC" = list(enable = c("data_type"), 
+                        disable = c("search_gene", "data_samplefilter", "data_groupby")),
+      "Counts table" = list(enable = c("search_gene", "data_samplefilter", "data_groupby", "data_type"), 
+                            disable = NULL),
+      "Sample information" = list(enable = c("data_samplefilter"), 
+                                  disable = c("search_gene", "data_groupby", "data_type")),
+      "Contrasts" = list(enable = c("data_samplefilter"), 
+                        disable = c("search_gene", "data_groupby", "data_type"))
+    )
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
 
