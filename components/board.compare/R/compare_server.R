@@ -29,6 +29,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ))
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Compare expression" = list(enable = NULL,
+                         disable = c("pcor_ntop")),
+      "Foldchange" = list(enable = NULL,
+                       disable = c("plottype")),
+      "Gene Correlation" = list(enable = NULL,
+                       disable = c("plottype", "ntop", "hilighttype"))
+                       )
+
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
     score_table <- reactiveVal(NULL)
 
     shiny::observe({
