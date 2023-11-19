@@ -29,6 +29,17 @@ FeatureMapBoard <- function(id, pgx) {
       ))
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Gene" = list(enable = c("filter_genes"),
+                         disable = c("filter_gsets")),
+      "Geneset" = list(enable = c("filter_gsets"),
+                        disable = c("filter_genes"))
+    )
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
     shiny::observe({
       shiny::req(pgx$X)
 
