@@ -12,15 +12,6 @@ CorrelationBoard <- function(id, pgx) {
 
     cor_infotext <- "The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
 
-    ## ------- observe functions -----------
-    shiny::observeEvent(input$data_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Expression: Correlation analysis board</strong>"),
-        shiny::HTML(cor_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
-
     COL <- RColorBrewer::brewer.pal(12, "Paired")[seq(1, 12, 2)]
     COL <- RColorBrewer::brewer.pal(9, "Set1")[c(2, 1, 3:9)]
     COL2 <- rev(grey.colors(2))
@@ -30,6 +21,24 @@ CorrelationBoard <- function(id, pgx) {
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
+    shiny::observeEvent(input$data_info, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Expression: Correlation analysis board</strong>"),
+        shiny::HTML(cor_infotext),
+        easyClose = TRUE, size = "l"
+      ))
+    })
+    
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Correlation" = list(enable = NULL,
+                         disable = c("pcor_ntop")),
+      "Graph" = list(enable = NULL,
+                       disable = NULL)
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
 
     shiny::observeEvent(input$cor_info, {
       shiny::showModal(shiny::modalDialog(
@@ -107,8 +116,6 @@ CorrelationBoard <- function(id, pgx) {
 
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
-      ## res <- playbase::pgx.computePartialCorrelationAroundGene(
-      ##    X, gene, method=methods, nmax=NTOP, fast=FALSE)
       res <- playbase::pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
       res$meta.pcor <- res$pcor
 
