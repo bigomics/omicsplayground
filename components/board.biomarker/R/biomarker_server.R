@@ -34,6 +34,17 @@ BiomarkerBoard <- function(id, pgx) {
     ## ======================= REACTIVE/OBSERVE FUNCTIONS =============================
     ## ================================================================================
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Feature selection" = list(enable = NULL,
+                         disable = NULL),
+      "Feature-set ranking" = list(enable = NULL,
+                       disable = c("pdx_predicted", "pdx_filter"))
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
     shiny::observeEvent(input$pdx_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Biomarker Board</strong>"),
