@@ -546,7 +546,7 @@ UploadBoard <- function(id,
           
         }
       }
-
+      }
       MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
       MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
 
@@ -631,7 +631,7 @@ UploadBoard <- function(id,
 
       ## deselect
       return(df)
-    }})
+    })
 
     upload_module_preview_server("upload_preview", uploaded, checklist)
 
