@@ -445,13 +445,27 @@ UploadBoard <- function(id,
 
       error_list <- playbase::PGX_CHECKS
 
+      # if checklist file for sample is null, set status to ERROR
+      if (is.null(checklist[["samples.csv"]]$file)) {
+        status["samples.csv"] <- "ERROR: please check your samples files."
+      }
+      # if checklist file for counts is null, set status to ERROR
+      if (is.null(checklist[["counts.csv"]]$file)) {
+        status["counts.csv"] <- "ERROR: please check your counts files."
+      }
+
+      # if checklist file for contrasts is null, set status to ERROR
+      if (is.null(checklist[["contrasts.csv"]]$file)) {
+        status["contrasts.csv"] <- "ERROR: please check your contrasts files."
+      }
+
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
       if (has.pgx == TRUE) {
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
         ## check rownames of samples.csv
-        if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
+        if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["counts.csv"]]$file) && status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
@@ -472,10 +486,12 @@ UploadBoard <- function(id,
           }
 
           if (FILES_check$PASS == FALSE) {
-            status["samples.csv"] <- "Error, please check your samples files."
-            status["counts.csv"] <- "Error, please check your counts files."
-            uploaded[["counts.csv"]] <- NULL
-            uploaded[["samples.csv"]] <- NULL
+            status["samples.csv"] <- "ERROR: please check your samples files."
+            status["counts.csv"] <- "ERROR: please check your counts files."
+            status["contrasts.csv"] <- "ERROR: please check your samples/counts files."
+            checklist[["counts.csv"]]$file <- NULL
+            checklist[["samples.csv"]]$file <- NULL
+            checklist[["contrasts.csv"]]$file <- NULL
           }
 
           if (FILES_check$PASS == TRUE) {
@@ -514,8 +530,10 @@ UploadBoard <- function(id,
             # error needs to be capitalized to be detected later on
             status["samples.csv"] <- "ERROR: please check your samples files."
             status["contrasts.csv"] <- "ERROR: please check your contrasts files."
-            uploaded[["samples.csv"]] <- NULL
-            uploaded[["contrasts.csv"]] <- NULL
+            checklist[["samples.csv"]]$file <- NULL
+            checklist[["contrasts.csv"]]$file <- NULL
+            # uploaded[["samples.csv"]] <- NULL
+            # uploaded[["contrasts.csv"]] <- NULL
           }
         }
       }
@@ -525,7 +543,7 @@ UploadBoard <- function(id,
 
       ## check files: maximum contrasts allowed
       if (status["contrasts.csv"] == "OK") {
-        if (ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
+        if (!is.null(checklist[["contrasts.csv"]]$file) && ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
           status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
           uploaded[["contrasts.csv"]] <- NULL
           checklist[["contrasts.csv"]]$file <- NULL
@@ -586,35 +604,36 @@ UploadBoard <- function(id,
         message("[checkTables] ERROR in contrasts table : e2 = ", e2)
         message("[checkTables] ERROR in counts table : e2 = ", e3)
 
-        if (e1 && !s1) {
-          uploaded[["samples.csv"]] <- NULL
-          status["samples.csv"] <- "please upload"
-        }
-        if (e2 && !s2) {
-          uploaded[["contrasts.csv"]] <- NULL
-          status["contrasts.csv"] <- "please upload"
-        }
-        if (e3 && !s3) {
-          uploaded[["counts.csv"]] <- NULL
-          status["counts.csv"] <- "please upload"
-        }
+        # if (e1 && !s1) {
+        #   uploaded[["samples.csv"]] <- NULL
+        #   status["samples.csv"] <- "please upload"
+        # }
+        # if (e2 && !s2) {
+        #   uploaded[["contrasts.csv"]] <- NULL
+        #   status["contrasts.csv"] <- "please upload"
+        # }
+        # if (e3 && !s3) {
+        #   uploaded[["counts.csv"]] <- NULL
+        #   status["counts.csv"] <- "please upload"
+        # }
       }
 
       if (!is.null(uploaded$contrasts.csv) && is.null(uploaded$samples.csv)) {
-        uploaded[["contrasts.csv"]] <- NULL
-        status["contrasts.csv"] <- "please upload"
+        #         
 
         # if contrasts.csv is the only element in last_uploaded, set it to NULL
         if (length(uploaded$last_uploaded) == 1 && uploaded$last_uploaded == "contrasts.csv") {
           uploaded[["last_uploaded"]] <- NULL
-        }
+          status["contrasts.csv"] <- "please upload"
+          uploaded[["contrasts.csv"]] <- NULL
 
-        # pop up telling the user to upload samples.csv first
-        shinyalert::shinyalert(
-          title = "Samples.csv file missing",
-          text = "Please upload the samples.csv file first.",
-          type = "error"
-        )
+          # pop up telling the user to upload samples.csv first
+          shinyalert::shinyalert(
+            title = "Samples.csv file missing",
+            text = "Please upload the samples.csv file first.",
+            type = "error"
+          )
+        }
       }
 
 
