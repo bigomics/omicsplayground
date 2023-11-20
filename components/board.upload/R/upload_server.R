@@ -151,10 +151,10 @@ UploadBoard <- function(id,
 
       has.contrast <- checklist[["contrasts.csv"]]$file
 
-      if(!is.null(has.contrast) && dim(has.contrast)[2] >= 1){
+      if (!is.null(has.contrast) && dim(has.contrast)[2] >= 1) {
         # show compute if contrast is done
         shiny::showTab("tabs", "Compute")
-      }else{
+      } else {
         # hide compute if contrast is not assembled (prevent user from running corrupted computation)
         shiny::hideTab("tabs", "Compute")
       }
