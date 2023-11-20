@@ -75,7 +75,7 @@ IntersectionBoard <- function(
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Pairwise scatter" = list(enable = c("comparisons"),
+      "Pairwise scatter" = list(enable = NULL,
                          disable = NULL),
       "Signature clustering" = list(enable = NULL,
                        disable = c("comparisons"))

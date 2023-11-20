@@ -55,9 +55,9 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WikiPathways" = list(enable = c("fa_filtertable"),
+      "WikiPathways" = list(enable = NULL,
                          disable = NULL),
-      "Reactome" = list(enable = c("fa_filtertable"),
+      "Reactome" = list(enable = NULL,
                        disable = NULL),
       "GO graph" = list(enable = NULL,
                        disable = c("fa_filtertable"))

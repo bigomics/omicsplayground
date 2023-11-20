@@ -88,15 +88,15 @@ DataViewBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Gene overview" = list(enable = c("search_gene", "data_samplefilter", "data_groupby", "data_type"), 
+      "Gene overview" = list(enable = NULL,
                             disable = NULL),
-      "Sample QC" = list(enable = c("data_type"), 
+      "Sample QC" = list(enable = NULL, 
                         disable = c("search_gene", "data_samplefilter", "data_groupby")),
-      "Counts table" = list(enable = c("search_gene", "data_samplefilter", "data_groupby", "data_type"), 
+      "Counts table" = list(enable = NULL,
                             disable = NULL),
-      "Sample information" = list(enable = c("data_samplefilter"), 
+      "Sample information" = list(enable = NULL,
                                   disable = c("search_gene", "data_groupby", "data_type")),
-      "Contrasts" = list(enable = c("data_samplefilter"), 
+      "Contrasts" = list(enable = NULL,
                         disable = c("search_gene", "data_groupby", "data_type"))
     )
     shiny::observeEvent(input$tabs, {

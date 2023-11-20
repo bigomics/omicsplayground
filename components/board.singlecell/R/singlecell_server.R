@@ -144,11 +144,11 @@ SingleCellBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Cell type" = list(enable = c("clustmethod"),
+      "Cell type" = list(enable = NULL,
                          disable = NULL),
       "Mapping" = list(enable = NULL,
                        disable = c("clustmethod")),
-      "Markers" = list(enable = c("clustmethod"),
+      "Markers" = list(enable = NULL,
                        disable = NULL)
     )
     shiny::observeEvent(input$tabs, {
