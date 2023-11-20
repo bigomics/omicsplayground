@@ -148,11 +148,21 @@ UploadBoard <- function(id,
       has.upload <- Vectorize(function(f) {
         (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
       })
+
+      has.contrast <- checklist[["contrasts.csv"]]$file
+
+      if(!is.null(has.contrast) && dim(has.contrast)[2] >= 1){
+        # show compute if contrast is done
+        shiny::showTab("tabs", "Compute")
+      }else{
+        # hide compute if contrast is not assembled (prevent user from running corrupted computation)
+        shiny::hideTab("tabs", "Compute")
+      }
+
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
         shiny::showTab("tabs", "Comparisons")
-        shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
         }
@@ -161,11 +171,9 @@ UploadBoard <- function(id,
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Comparisons")
-        shiny::hideTab("tabs", "Compute")
       } else {
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Comparisons")
-        shiny::hideTab("tabs", "Compute")
       }
     })
 
