@@ -492,6 +492,8 @@ UploadBoard <- function(id,
             checklist[["counts.csv"]]$file <- NULL
             checklist[["samples.csv"]]$file <- NULL
             checklist[["contrasts.csv"]]$file <- NULL
+            # set last uploaded to NULL
+            uploaded[["last_uploaded"]] <- NULL
           }
 
           if (FILES_check$PASS == TRUE) {
