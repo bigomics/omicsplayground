@@ -485,12 +485,20 @@ UploadBoard <- function(id,
         }
       }
 
+      # in case checklist comes from online comparison maker, run check again
+      if (!is.null(checklist[["contrasts.csv"]]$file)) {
+        checklist[["contrasts.csv"]]$PASS <- playbase::pgx.checkINPUT(checklist[["contrasts.csv"]]$file, "CONTRASTS")$PASS
+      }
+
       if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK" && is.null(checklist[["samples_contrasts"]]$checks)) {
         ## this converts and check the contrast and samples file.
+
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
         )
+
+
         # if checklist contrast fails, set uploaded to false and status to error
         if (checklist[["contrasts.csv"]]$PASS == FALSE) {
           # contrast file is invalid already, do not invalidate samples based on this test
