@@ -592,35 +592,8 @@ UploadBoard <- function(id,
           )
         }
       }
-      e1 <- grepl("ERROR", status["samples.csv"])
-      e2 <- grepl("ERROR", status["contrasts.csv"])
-      e3 <- grepl("ERROR", status["counts.csv"])
-      s1 <- "samples.csv" %in% uploaded$last_uploaded
-      s2 <- "contrasts.csv" %in% uploaded$last_uploaded
-      s3 <- "counts.csv" %in% uploaded$last_uploaded
-
-      if (e1 || e2 || e3) {
-        message("[checkTables] ERROR in samples table : e1 = ", e1)
-        message("[checkTables] ERROR in contrasts table : e2 = ", e2)
-        message("[checkTables] ERROR in counts table : e2 = ", e3)
-
-        # if (e1 && !s1) {
-        #   uploaded[["samples.csv"]] <- NULL
-        #   status["samples.csv"] <- "please upload"
-        # }
-        # if (e2 && !s2) {
-        #   uploaded[["contrasts.csv"]] <- NULL
-        #   status["contrasts.csv"] <- "please upload"
-        # }
-        # if (e3 && !s3) {
-        #   uploaded[["counts.csv"]] <- NULL
-        #   status["counts.csv"] <- "please upload"
-        # }
-      }
 
       if (!is.null(uploaded$contrasts.csv) && is.null(uploaded$samples.csv)) {
-        #         
-
         # if contrasts.csv is the only element in last_uploaded, set it to NULL
         if (length(uploaded$last_uploaded) == 1 && uploaded$last_uploaded == "contrasts.csv") {
           uploaded[["last_uploaded"]] <- NULL
