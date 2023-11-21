@@ -20,13 +20,14 @@ upload_module_preview_ui <- function(id) {
   tagList()
 }
 
-upload_module_preview_server <- function(id, uploaded, checklist) {
+upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
   moduleServer(
     id,
     function(input, output, session) {
-      # every time something is uploaded, it can be previewed
-      observeEvent(uploaded$last_uploaded,
+      # ever/y time something is uploaded, it can be previewed
+      observeEvent(c(uploaded$last_uploaded),
         {
+          checkTables()
           has_counts <- !is.null(uploaded$counts.csv)
           has_samples <- !is.null(uploaded$samples.csv)
           has_contrasts <- !is.null(uploaded$contrasts.csv)
