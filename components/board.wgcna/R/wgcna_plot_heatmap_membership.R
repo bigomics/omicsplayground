@@ -34,6 +34,7 @@ wgcna_plot_heatmap_membership_server <- function(id,
                                                  wgcna.compute,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     intraHeatmap.RENDER <- shiny::reactive({
       out <- wgcna.compute()
 
@@ -45,7 +46,7 @@ wgcna_plot_heatmap_membership_server <- function(id,
         rho2 <- cov(out$datTraits, out$datExpr, use = "pairwise")
         rho2[is.na(rho2) | is.infinite(rho2)] <- 0
 
-        rho3 <- cov(t(rho2), t(rho1), use = "pairwise")
+        rho3 <- cov(t(rho2), t(rho1), use = "pairwise")  ## cor or cov??
         rho3[is.na(rho3) | is.infinite(rho3)] <- 0
       } else {
         rho1 <- cor(MEs, out$datExpr, use = "pairwise")
