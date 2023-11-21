@@ -14,7 +14,8 @@ FeatureMapInputs <- function(id) {
         inline = TRUE,
         choices = c("phenotype", "comparison")
       ),
-      "Show by phenotype or by comparison.",
+      "Show gene signatures colored by phenotype conditions (relative expression)
+       or by comparison (logFC).",
       placement = "right", options = list(container = "body")
     ),
     shiny::conditionalPanel(
