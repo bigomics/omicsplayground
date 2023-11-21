@@ -488,6 +488,9 @@ UploadBoard <- function(id,
             status["samples.csv"] <- "OK"
             status["counts.csv"] <- "OK"
           }
+        } else if (!is.null(checklist[["samples_counts"]]$checks)) {
+          status["samples.csv"] <- "ERROR: please check your samples files."
+          status["counts.csv"] <- "ERROR: please check your counts files."
         }
       }
 
@@ -619,7 +622,7 @@ UploadBoard <- function(id,
       return(df)
     })
 
-    upload_module_preview_server("upload_preview", uploaded, checklist)
+    upload_module_preview_server("upload_preview", uploaded, checklist, checkTables)
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
