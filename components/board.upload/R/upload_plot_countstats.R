@@ -32,7 +32,7 @@ upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark =
     plot_data <- shiny::reactive({
       check <- checkTables()
       req(check)
-      ct <- uploaded$counts.csv
+      ct <- uploaded$counts.csv$file
       has.counts <- !is.null(ct) && NCOL(ct) > 0
 
       status.ok <- check["counts.csv", "status"]
@@ -49,7 +49,7 @@ upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark =
         )
       )
 
-      counts <- uploaded[["counts.csv"]]
+      counts <- uploaded[["counts.csv"]]$file
       return(counts)
     })
 

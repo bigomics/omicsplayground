@@ -746,13 +746,13 @@ UploadBoard <- function(id,
     upload_plot_countstats_server(
       "countStats",
       checkTables,
-      uploaded
+      uploaded = checklist
     )
 
     upload_plot_phenostats_server(
       "phenoStats",
       checkTables,
-      uploaded
+      uploaded = checklist
     )
 
     upload_plot_contraststats_server(
