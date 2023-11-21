@@ -146,7 +146,7 @@ UploadBoard <- function(id,
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
       has.upload <- Vectorize(function(f) {
-        (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
+        (f %in% names(checklist) && !is.null(nrow(checklist[[f]]$file)))
       })
 
       has.contrast <- checklist[["contrasts.csv"]]$file
@@ -161,7 +161,7 @@ UploadBoard <- function(id,
 
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
-      if (all(has.upload(need3))) {
+      if (all(has.upload(need2))) {
         shiny::showTab("tabs", "Comparisons")
         if (input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
@@ -454,6 +454,7 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
         ## check rownames of samples.csv
         if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["counts.csv"]]$file) && is.null(checklist[["samples_counts"]]$checks)) {
+          
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
@@ -476,10 +477,12 @@ UploadBoard <- function(id,
           if (FILES_check$PASS == FALSE) {
             status["samples.csv"] <- "ERROR: please check your samples files."
             status["counts.csv"] <- "ERROR: please check your counts files."
+            status["contrasts.csv"] <- "ERROR: please check your counts/samples files."
             #status["contrasts.csv"] <- "ERROR: please check your samples/counts files."
             checklist[["counts.csv"]]$file <- NULL
             checklist[["samples.csv"]]$file <- NULL
-            #checklist[["contrasts.csv"]]$file <- NULL
+            checklist[["contrasts.csv"]]$checks <- NULL
+            checklist[["contrasts.csv"]]$file <- NULL
             # set last uploaded to NULL
             #uploaded[["last_uploaded"]] <- NULL
           }
@@ -488,9 +491,24 @@ UploadBoard <- function(id,
             status["samples.csv"] <- "OK"
             status["counts.csv"] <- "OK"
           }
-        } else if (!is.null(checklist[["samples_counts"]]$checks)) {
-          status["samples.csv"] <- "ERROR: please check your samples files."
-          status["counts.csv"] <- "ERROR: please check your counts files."
+        } else if (length(checklist[["samples_counts"]]$checks)==0) {
+          # when checkTables run second time, do not return error or please upload, as that will remove correct input files
+          #if status of samples and counts is please upload, then keep please upload.
+          if (status["samples.csv"] == "please upload" && status["counts.csv"] == "please upload") {
+            status["samples.csv"] <- "please upload"
+            status["counts.csv"] <- "please upload"
+          }
+
+          # if status is OK, then keep OK
+          if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
+            status["samples.csv"] <- "OK"
+            status["counts.csv"] <- "OK"
+          }
+          # if status is ERROR:, then keep ERROR:
+          if (status["samples.csv"] == "ERROR: please check your samples files." && status["counts.csv"] == "ERROR: please check your counts files.") {
+            status["samples.csv"] <- "ERROR: please check your samples files."
+            status["counts.csv"] <- "ERROR: please check your counts files."
+          }
         }
       }
 
@@ -653,9 +671,9 @@ UploadBoard <- function(id,
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
-      X = shiny::reactive(uploaded$counts.csv),
+      X = shiny::reactive(checklist$counts.csv$file),
       is.count = TRUE,
-      pheno = shiny::reactive(uploaded$samples.csv),
+      pheno = shiny::reactive(checklist$samples.csv$file),
       height = height
     )
 
