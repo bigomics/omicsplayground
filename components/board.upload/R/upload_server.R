@@ -453,17 +453,19 @@ UploadBoard <- function(id,
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
         ## check rownames of samples.csv
-        if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["counts.csv"]]$file) && is.null(checklist[["samples_counts"]]$checks)) {
-          FILES_check <- playbase::pgx.crosscheckINPUT(
+        if (!is.null(checklist[["samples.csv"]]$file) &&
+            !is.null(checklist[["counts.csv"]]$file) &&
+            is.null(checklist[["samples_counts"]]$checks)) {
+          cross_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
           )
 
-          checklist[["samples_counts"]]$checks <- FILES_check$checks
-          checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
-          checklist[["counts.csv"]]$file <- FILES_check$COUNTS
-          samples1 <- FILES_check$SAMPLES
-          counts1 <- FILES_check$COUNTS
+          checklist[["samples_counts"]]$checks <- cross_check$checks
+          checklist[["samples.csv"]]$file <- cross_check$SAMPLES
+          checklist[["counts.csv"]]$file <- cross_check$COUNTS
+          samples1 <- cross_check$SAMPLES
+          counts1 <- cross_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
           a2 <- mean(samples1[, 1] %in% colnames(counts1))
 
@@ -473,7 +475,7 @@ UploadBoard <- function(id,
             checklist[["samples.csv"]]$file <- samples1[, -1, drop = FALSE]
           }
 
-          if (FILES_check$PASS == FALSE) {
+          if (cross_check$PASS == FALSE) {
             status["samples.csv"] <- "ERROR: please check your samples files."
             status["counts.csv"] <- "ERROR: please check your counts files."
             status["contrasts.csv"] <- "ERROR: please check your counts/samples files."
@@ -486,7 +488,7 @@ UploadBoard <- function(id,
             # uploaded[["last_uploaded"]] <- NULL
           }
 
-          if (FILES_check$PASS == TRUE) {
+          if (cross_check$PASS == TRUE) {
             status["samples.csv"] <- "OK"
             status["counts.csv"] <- "OK"
           }
@@ -498,16 +500,17 @@ UploadBoard <- function(id,
             status["counts.csv"] <- "please upload"
           }
 
-          # if status is OK, then keep OK
-          if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
-            status["samples.csv"] <- "OK"
-            status["counts.csv"] <- "OK"
-          }
-          # if status is ERROR:, then keep ERROR:
-          if (status["samples.csv"] == "ERROR: please check your samples files." && status["counts.csv"] == "ERROR: please check your counts files.") {
-            status["samples.csv"] <- "ERROR: please check your samples files."
-            status["counts.csv"] <- "ERROR: please check your counts files."
-          }
+          ## # if status is OK, then keep OK
+          ## if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
+          ##   status["samples.csv"] <- "OK"
+          ##   status["counts.csv"] <- "OK"
+          ## }
+          ## # if status is ERROR:, then keep ERROR:
+          ## if (status["samples.csv"] == "ERROR: please check your samples files." &&
+          ##   status["counts.csv"] == "ERROR: please check your counts files.") {
+          ##   status["samples.csv"] <- "ERROR: please check your samples files."
+          ##   status["counts.csv"] <- "ERROR: please check your counts files."
+          ## }
         }
       }
 
@@ -517,9 +520,9 @@ UploadBoard <- function(id,
       }
 
       if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["contrasts.csv"]]$file) && is.null(checklist[["samples_contrasts"]]$checks)) {
+        
         ## this converts and check the contrast and samples file.
-
-        FILES_check <- playbase::pgx.crosscheckINPUT(
+        cross_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
         )
@@ -531,15 +534,15 @@ UploadBoard <- function(id,
           checklist[["contrasts.csv"]]$file <- NULL
         } else {
           # only run this code is contrast.csv PASS
-          checklist[["samples_contrasts"]]$checks <- FILES_check$checks
-          checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
-          checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
+          checklist[["samples_contrasts"]]$checks <- cross_check$checks
+          checklist[["samples.csv"]]$file <- cross_check$SAMPLES
+          checklist[["contrasts.csv"]]$file <- cross_check$CONTRASTS
 
-          if (FILES_check$PASS == FALSE) {
+          if (cross_check$PASS == FALSE) {
             # error needs to be capitalized to be detected later on
-            status["samples.csv"] <- "ERROR: please check your samples files."
+##            status["samples.csv"] <- "ERROR: please check your samples files."
             status["contrasts.csv"] <- "ERROR: please check your contrasts files."
-            checklist[["samples.csv"]]$file <- NULL
+##            checklist[["samples.csv"]]$file <- NULL
             checklist[["contrasts.csv"]]$file <- NULL
             # uploaded[["samples.csv"]] <- NULL
             # uploaded[["contrasts.csv"]] <- NULL
@@ -552,7 +555,8 @@ UploadBoard <- function(id,
 
       ## check files: maximum contrasts allowed
       if (status["contrasts.csv"] == "OK") {
-        if (!is.null(checklist[["contrasts.csv"]]$file) && ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
+        if (!is.null(checklist[["contrasts.csv"]]$file) &&
+              ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
           status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
           uploaded[["contrasts.csv"]] <- NULL
           checklist[["contrasts.csv"]]$file <- NULL
@@ -570,7 +574,8 @@ UploadBoard <- function(id,
 
       ## check files: maximum samples allowed
       if (status["counts.csv"] == "OK" && !is.null(checklist[["counts.csv"]]$file)) {
-        if (!is.null(checklist[["counts.csv"]]$file) && ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
+        if (!is.null(checklist[["counts.csv"]]$file) &&
+              ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
           status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
           uploaded[["counts.csv"]] <- NULL
           checklist[["counts.csv"]]$file <- NULL
@@ -665,7 +670,7 @@ UploadBoard <- function(id,
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
-      X = shiny::reactive(checklist$counts.csv$file),
+      X = shiny::reactive(checklist[['counts.csv']]$file),
       is.count = TRUE,
       pheno = shiny::reactive(checklist$samples.csv$file),
       height = height
