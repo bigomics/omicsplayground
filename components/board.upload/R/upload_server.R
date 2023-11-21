@@ -18,6 +18,7 @@ UploadBoard <- function(id,
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
+    status <- shiny::reactiveValues()
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -404,6 +405,8 @@ UploadBoard <- function(id,
         checklist[["counts.csv"]]$checks <- list()
         checklist[["contrasts.csv"]]$checks <- list()
         checklist[["contrasts.csv"]]$PASS <- TRUE
+        checklist[["samples_counts"]] <- NULL
+        checklist[["samples_contrasts"]] <- NULL
         uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
       } else {
         ## clear files
@@ -427,6 +430,7 @@ UploadBoard <- function(id,
     ## =====================================================================
     checkTables <- shiny::reactive({
       ## check dimensions
+      # check if status exists
       status <- rep("please upload", 3)
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
       names(status) <- files.needed
@@ -442,22 +446,7 @@ UploadBoard <- function(id,
           files.ncol[i] <- ncol(upfile)
         }
       }
-
       error_list <- playbase::PGX_CHECKS
-
-      # if checklist file for sample is null, set status to ERROR
-      if (is.null(checklist[["samples.csv"]]$file)) {
-        status["samples.csv"] <- "ERROR: please check your samples files."
-      }
-      # if checklist file for counts is null, set status to ERROR
-      if (is.null(checklist[["counts.csv"]]$file)) {
-        status["counts.csv"] <- "ERROR: please check your counts files."
-      }
-
-      # if checklist file for contrasts is null, set status to ERROR
-      if (is.null(checklist[["contrasts.csv"]]$file)) {
-        status["contrasts.csv"] <- "ERROR: please check your contrasts files."
-      }
 
       has.pgx <- ("pgx" %in% names(uploaded))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
@@ -465,7 +454,7 @@ UploadBoard <- function(id,
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
         ## check rownames of samples.csv
-        if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["counts.csv"]]$file) && status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
+        if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["counts.csv"]]$file) && is.null(checklist[["samples_counts"]]$checks)) {
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
@@ -488,12 +477,12 @@ UploadBoard <- function(id,
           if (FILES_check$PASS == FALSE) {
             status["samples.csv"] <- "ERROR: please check your samples files."
             status["counts.csv"] <- "ERROR: please check your counts files."
-            status["contrasts.csv"] <- "ERROR: please check your samples/counts files."
+            #status["contrasts.csv"] <- "ERROR: please check your samples/counts files."
             checklist[["counts.csv"]]$file <- NULL
             checklist[["samples.csv"]]$file <- NULL
-            checklist[["contrasts.csv"]]$file <- NULL
+            #checklist[["contrasts.csv"]]$file <- NULL
             # set last uploaded to NULL
-            uploaded[["last_uploaded"]] <- NULL
+            #uploaded[["last_uploaded"]] <- NULL
           }
 
           if (FILES_check$PASS == TRUE) {
@@ -508,14 +497,13 @@ UploadBoard <- function(id,
         checklist[["contrasts.csv"]]$PASS <- playbase::pgx.checkINPUT(checklist[["contrasts.csv"]]$file, "CONTRASTS")$PASS
       }
 
-      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK" && is.null(checklist[["samples_contrasts"]]$checks)) {
+      if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["contrasts.csv"]]$file) && is.null(checklist[["samples_contrasts"]]$checks)) {
         ## this converts and check the contrast and samples file.
 
         FILES_check <- playbase::pgx.crosscheckINPUT(
           SAMPLES = checklist[["samples.csv"]]$file,
           CONTRASTS = checklist[["contrasts.csv"]]$file
         )
-
 
         # if checklist contrast fails, set uploaded to false and status to error
         if (checklist[["contrasts.csv"]]$PASS == FALSE) {
@@ -562,8 +550,8 @@ UploadBoard <- function(id,
       }
 
       ## check files: maximum samples allowed
-      if (status["counts.csv"] == "OK") {
-        if (ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
+      if (status["counts.csv"] == "OK" && !is.null(checklist[["counts.csv"]]$file)) {
+        if (!is.null(checklist[["counts.csv"]]$file) && ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
           status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
           uploaded[["counts.csv"]] <- NULL
           checklist[["counts.csv"]]$file <- NULL
@@ -578,7 +566,7 @@ UploadBoard <- function(id,
           )
         }
       }
-      if (status["samples.csv"] == "OK") {
+      if (status["samples.csv"] == "OK" && !is.null(checklist[["samples.csv"]]$file)) {
         if (nrow(checklist[["samples.csv"]]$file) > MAXSAMPLES) {
           status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
           uploaded[["samples.csv"]] <- NULL
