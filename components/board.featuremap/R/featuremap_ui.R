@@ -21,7 +21,7 @@ FeatureMapInputs <- function(id) {
       "input.showvar == 'phenotype'",
       ns = ns,
       withTooltip(
-        shiny::selectInput( ns("sigvar"), NULL, choices = NULL, multiple = FALSE),
+        shiny::selectInput(ns("sigvar"), NULL, choices = NULL, multiple = FALSE),
         "Select the phenotype conditions to show in the signatures plot.",
         placement = "top"
       ),
@@ -35,7 +35,7 @@ FeatureMapInputs <- function(id) {
       "input.showvar == 'comparison'",
       ns = ns,
       withTooltip(
-        shiny::selectizeInput( ns("selcomp"), NULL, choices = NULL, multiple = TRUE),
+        shiny::selectizeInput(ns("selcomp"), NULL, choices = NULL, multiple = TRUE),
         "Select the comparisons to show in the signatures plot.",
         placement = "top"
       )

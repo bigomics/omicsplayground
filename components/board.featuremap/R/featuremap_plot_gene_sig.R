@@ -32,12 +32,11 @@ featuremap_plot_gene_sig_server <- function(id,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       pheno <- sigvar()
       ref <- ref_group()
-      
+
       pos <- pgx$cluster.genes$pos[["umap2d"]]
       if (any(pheno %in% colnames(pgx$samples))) {
         y <- pgx$samples[, pheno]
@@ -55,7 +54,7 @@ featuremap_plot_gene_sig_server <- function(id,
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
         kk <- intersect(pheno, colnames(F))
-        F <- F[,kk]
+        F <- F[, kk]
       }
       if (nrow(F) == 0 || NCOL(F) == 0) {
         return(NULL)
@@ -65,12 +64,12 @@ featuremap_plot_gene_sig_server <- function(id,
 
     renderPlots <- function() {
       dt <- plot_data()
-      
+
       F <- dt[[1]]
       pos <- dt[[2]]
-      shiny::req(F,pos)
+      shiny::req(F, pos)
 
-      nc <- ceiling(sqrt(1.33*ncol(F)))
+      nc <- ceiling(sqrt(1.33 * ncol(F)))
       nr <- ceiling(ncol(F) / nc)
 
       par(mfrow = c(nr, nc), mar = c(2, 1, 1, 0), mgp = c(1.6, 0.55, 0), las = 0)

@@ -141,13 +141,13 @@ featuremap_plot_table_geneset_map_server <- function(id,
       hilight <- pd$hilight
       nlabel <- pd$nlabel
       colorby <- pd$colorby
-      colgamma <- as.numeric(input$gsmap_gamma)      
+      colgamma <- as.numeric(input$gsmap_gamma)
 
-      fc <- sign(fc) * abs(fc / max(abs(fc),na.rm=TRUE))**colgamma
-      if(length(setdiff(names(fc),hilight))) {
+      fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
+      if (length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA
       }
-      
+
       ## filter on table
       p <- plotUMAP(
         pos,
@@ -244,12 +244,12 @@ featuremap_plot_table_geneset_map_server <- function(id,
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
       if (is.fc) colnames(F)[1] <- "rms.FC"
       F <- round(F, digits = 3)
-      gs.db <- sub(":.*","",rownames(F))
-      gs <- sub(".*[:]","",rownames(F))      
+      gs.db <- sub(":.*", "", rownames(F))
+      gs <- sub(".*[:]", "", rownames(F))
       gs <- substring(gs, 1, 100)
       df <- data.frame(DB = gs.db, geneset = gs, F, check.names = FALSE)
       rownames(df) <- rownames(F)
-      
+
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",

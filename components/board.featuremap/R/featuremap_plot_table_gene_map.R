@@ -99,16 +99,16 @@ featuremap_plot_gene_map_server <- function(id,
       F <- playbase::pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
       if (colorby == "rms.FC") {
-        fc <- sqrt(rowMeans(F**2,na.rm=TRUE))
+        fc <- sqrt(rowMeans(F**2, na.rm = TRUE))
       } else {
         cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
 
       ## conform
-      gg  <- intersect(rownames(pos), names(fc))
+      gg <- intersect(rownames(pos), names(fc))
       pos <- pos[gg, ]
-      fc  <- fc[gg]
+      fc <- fc[gg]
 
       pd <- list(
         df = data.frame(pos, fc = fc),
@@ -124,17 +124,17 @@ featuremap_plot_gene_map_server <- function(id,
       pos <- getUMAP()
       fc <- pd$fc
 
-      hilight  <- pd$hilight
-      nlabel   <- pd$nlabel
-      colorby  <- pd$colorby
+      hilight <- pd$hilight
+      nlabel <- pd$nlabel
+      colorby <- pd$colorby
       colgamma <- as.numeric(input$umap_gamma)
 
       ## dim non hilighted genes
-      fc <- sign(fc) * abs(fc / max(abs(fc),na.rm=TRUE))**colgamma
-      if(length(setdiff(names(fc),hilight))) {      
+      fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
+      if (length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA
       }
-      
+
       p <- plotUMAP(
         pos,
         fc,
@@ -182,9 +182,9 @@ featuremap_plot_gene_map_server <- function(id,
       add.watermark = watermark
     )
 
-    #================================================================================
-    #============================= Table server module ==============================
-    #================================================================================    
+    # ================================================================================
+    # ============================= Table server module ==============================
+    # ================================================================================
     geneTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
 

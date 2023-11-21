@@ -21,10 +21,10 @@ FeatureMapBoard <- function(id, pgx) {
     ## ================================================================================
 
     shiny::observeEvent(input$tabs, {
-      dbg("[FeatureMapBoard] input$tabs = ",input$tabs)
+      dbg("[FeatureMapBoard] input$tabs = ", input$tabs)
     })
-    
-    
+
+
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Feature Map Analysis</strong>"),
@@ -34,71 +34,82 @@ FeatureMapBoard <- function(id, pgx) {
     })
 
     ## observe 1
-    shiny::observeEvent({
-      pgx$name
-      pgx$X      
-      pgx$gsetX
-    }, {
-      shiny::req(pgx$X,pgx$gsetX)
-      dbg("[FeatureMapBoard] set families and geneset db..")
-      
-      ## set gene families
-      families <- names(playdata::FAMILIES)
-      shiny::updateSelectInput(session, "filter_genes",
-        choices = families,
-        selected = "<all>"
-      )
+    shiny::observeEvent(
+      {
+        pgx$name
+        pgx$X
+        pgx$gsetX
+      },
+      {
+        shiny::req(pgx$X, pgx$gsetX)
+        dbg("[FeatureMapBoard] set families and geneset db..")
 
-      ## set geneset categories
-      gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
-      gsetcats <- c("<all>", gsetcats)
-      sel0 <- grep("^H$|hallmark",gsetcats,ignore.case=TRUE,value=TRUE)
-      sel0 = "<all>"
-      if(length(sel0)==0) sel0=1
-      shiny::updateSelectInput(session, "filter_gsets",
-        choices = gsetcats, selected = sel0 )
-      
-    })
+        ## set gene families
+        families <- names(playdata::FAMILIES)
+        shiny::updateSelectInput(session, "filter_genes",
+          choices = families,
+          selected = "<all>"
+        )
 
-    observeEvent({
-      pgx$X
-      input$showvar
-    }, {
-      shiny::req(pgx$samples,pgx$contrasts)      
-      if (input$showvar == "phenotype") {
-        cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
-        cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
-        shiny::updateSelectInput( session, "sigvar", choices = cvar, selected = cvar0 )
-        ##shinyjs::enable(ns("ref_group"))        
+        ## set geneset categories
+        gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
+        gsetcats <- c("<all>", gsetcats)
+        sel0 <- grep("^H$|hallmark", gsetcats, ignore.case = TRUE, value = TRUE)
+        sel0 <- "<all>"
+        if (length(sel0) == 0) sel0 <- 1
+        shiny::updateSelectInput(session, "filter_gsets",
+          choices = gsetcats, selected = sel0
+        )
       }
-      if (input$showvar == "comparison") {
-        cvar <- colnames(pgx$contrasts)
-        sel.cvar <- head(cvar, 15) 
-        shiny::updateSelectizeInput( session, "selcomp", choices = cvar,
-          selected = sel.cvar)
-        shiny::updateSelectInput(session, "ref_group", choices = "  ")        
-        ##shinyjs::disable(ns("ref_group"))
-      }
-    })
+    )
 
-    observeEvent( {
-      input$showvar
-      input$sigvar      
-    }, {
-      shiny::req(pgx$samples, input$sigvar, input$showvar)
-      if (input$sigvar %in% colnames(pgx$samples)) {
-        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-        y <- c("<average>", sort(unique(y)))
-        shiny::updateSelectInput(session, "ref_group", choices = y)
+    observeEvent(
+      {
+        pgx$X
+        input$showvar
+      },
+      {
+        shiny::req(pgx$samples, pgx$contrasts)
+        if (input$showvar == "phenotype") {
+          cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+          cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
+          shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
+          ## shinyjs::enable(ns("ref_group"))
+        }
+        if (input$showvar == "comparison") {
+          cvar <- colnames(pgx$contrasts)
+          sel.cvar <- head(cvar, 15)
+          shiny::updateSelectizeInput(session, "selcomp",
+            choices = cvar,
+            selected = sel.cvar
+          )
+          shiny::updateSelectInput(session, "ref_group", choices = "  ")
+          ## shinyjs::disable(ns("ref_group"))
+        }
       }
-    })
+    )
 
-    observeEvent( input$selcomp, {
+    observeEvent(
+      {
+        input$showvar
+        input$sigvar
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar, input$showvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
+      }
+    )
+
+    observeEvent(input$selcomp, {
       shiny::req(pgx$samples, input$sigvar, input$showvar)
       shiny::updateSelectInput(session, "ref_group", choices = " ")
     })
 
-    
+
     ## ================================================================================
     ## ============================= FUNCTIONS ========================================
     ## ================================================================================
@@ -106,12 +117,11 @@ FeatureMapBoard <- function(id, pgx) {
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          zlim = NULL, cex = 0.9, cex.label = 1, source = "",
                          plotlib = "base") {
-
       opc.low <- 1
-      if(!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
+      if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
       }
-      
+
       if (!is.null(hilight)) {
         ## map any case to the correct cased symbol
         sel <- match(toupper(hilight), toupper(names(var)))
@@ -236,11 +246,15 @@ FeatureMapBoard <- function(id, pgx) {
     ## ================================================================================
 
     sigvar2 <- shiny::reactive({
-      if(input$showvar == 'phenotype')  return(input$sigvar)
-      if(input$showvar == 'comparison') return(input$selcomp)
+      if (input$showvar == "phenotype") {
+        return(input$sigvar)
+      }
+      if (input$showvar == "comparison") {
+        return(input$selcomp)
+      }
     })
 
-    
+
     # Gene Map
     featuremap_plot_gene_map_server(
       "geneUMAP",
@@ -256,7 +270,7 @@ FeatureMapBoard <- function(id, pgx) {
     featuremap_plot_gene_sig_server(
       "geneSigPlots",
       pgx = pgx,
-      sigvar = sigvar2,      
+      sigvar = sigvar2,
       ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark = WATERMARK
@@ -268,7 +282,7 @@ FeatureMapBoard <- function(id, pgx) {
       pgx = pgx,
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
-      sigvar = sigvar2,            
+      sigvar = sigvar2,
       r_fulltable = shiny::reactive(input$show_fulltable),
       watermark = WATERMARK
     )
