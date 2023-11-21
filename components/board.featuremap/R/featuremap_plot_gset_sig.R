@@ -35,15 +35,15 @@ featuremap_plot_gset_sig_server <- function(id,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    gsetSigPlots.plot_data <- shiny::reactive({
+
+    plot_data <- shiny::reactive({
       shiny::req(pgx$X)
 
-      pos <- getGsetUMAP()
+      pos <- pgx$cluster.gsets$pos[["umap2d"]]
       hilight <- NULL
-
       pheno <- "tissue"
       pheno <- sigvar()
-      if (pheno %in% colnames(pgx$samples)) {
+      if (any(pheno %in% colnames(pgx$samples))) {
         y <- pgx$samples[, pheno]
         ref <- ref_group()
         if (ref == "<average>") {
@@ -58,6 +58,8 @@ featuremap_plot_gset_sig_server <- function(id,
         }))
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
+        kk <- intersect(pheno, colnames(F))
+        F <- F[,kk]        
       }
       if (nrow(F) == 0) {
         return(NULL)
@@ -65,17 +67,18 @@ featuremap_plot_gset_sig_server <- function(id,
       return(list(F, pos))
     })
 
-    gsetSigPlots.RENDER <- function() {
-      dt <- gsetSigPlots.plot_data()
+    renderPlots <- function() {
+      
+      dt <- plot_data()
       F <- dt[[1]]
       pos <- dt[[2]]
-      dbg("[gsetSigPlots.RENDER] dim.F = ", dim(F))
+      shiny::req(F,pos)
+
       ntop <- 15
-      nc <- ceiling(sqrt(ncol(F)))
+      nc <- ceiling(sqrt(1.33*ncol(F)))      
       nr <- ceiling(ncol(F) / nc)
-      nr2 <- ifelse(nr <= 2, nc, nr)
-      nr2 <- max(nr, 2)
-      par(mfrow = c(nr2, nc), mar = c(3, 1, 1, 0.5), mgp = c(1.6, 0.55, 0))
+
+      par(mfrow = c(nr, nc), mar = c(3, 1, 1, 0.5), mgp = c(1.6, 0.55, 0))
       progress <- NULL
       if (!interactive()) {
         progress <- shiny::Progress$new()
@@ -87,8 +90,8 @@ featuremap_plot_gset_sig_server <- function(id,
 
     PlotModuleServer(
       "gset_sig",
-      func = gsetSigPlots.RENDER,
-      csvFunc = gsetSigPlots.plot_data,
+      func = renderPlots,
+      csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
       add.watermark = watermark
