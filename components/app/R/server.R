@@ -455,6 +455,12 @@ app_server <- function(input, output, session) {
   ## Current navigation
   ## --------------------------------------------------------------------------
 
+  ## Keep navtabs in session$userData
+  session$userData$nav <- reactiveVal() 
+  observeEvent(input$nav, {
+    session$userData$nav(input$nav)
+  })
+
   shinyjs::onclick("logo-bigomics", {
     shinyjs::runjs("console.info('logo-bigomics clicked')")
     bigdash.selectTab(session, selected = "welcome-tab")

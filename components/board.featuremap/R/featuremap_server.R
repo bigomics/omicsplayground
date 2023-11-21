@@ -30,8 +30,19 @@ FeatureMapBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx$X)
+      shiny::req(pgx$X, pgx$gsetX)
 
+      dbg("[FeatureMapBoard:observe:families)] TRIGGERED ")
+      session.navtab <- isolate(session$userData$nav())
+      dbg("[observeEvent:input$showvar] session.nav() = ",session.navtab)
+
+      ##ideally evaluation should pause here and continue is req is met...
+      shiny::req(session$userData$nav() == "clusterfeatures-tab")
+      dbg("[FeatureMapBoard:observe:families)] !!!! SIMULATING LONG INIT.. ")
+      ##Sys.sleep(10)  ## long init...
+      dbg("[FeatureMapBoard:observe:families)] CONTINUED... ")
+
+      
       families <- names(playdata::FAMILIES)
       shiny::updateSelectInput(session, "filter_genes",
         choices = families,
