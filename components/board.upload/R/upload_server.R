@@ -602,7 +602,7 @@ UploadBoard <- function(id,
         }
       }
 
-      if (!is.null(uploaded$contrasts.csv) && is.null(checklist$counts.csv$file) && is.null(checklist$samples.csv$file)) {
+      if (!is.null(checklist$contrasts.csv$file) && is.null(checklist$samples.csv$file)) {
         status["contrasts.csv"] <- "ERROR: please upload samples file first."
         checklist[["contrasts.csv"]]$file <- NULL
         # pop up telling the user to upload samples.csv first
