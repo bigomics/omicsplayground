@@ -174,6 +174,7 @@ install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
 install.github('bigomics/PCSF', force=TRUE)
 install.github('bigomics/shinyChatR')
+install.github('bigomics/fgsea')
 install.github('ropensci/iheatmapr')
 
 ##---------------------------------------------------------------------

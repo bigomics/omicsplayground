@@ -36,7 +36,7 @@ clustering_plot_splitmap_ui <- function(
         "Select the number of top features in the heatmap.",
         placement = "right", options = list(container = "body")
       ),
-      withTooltip(shiny::selectInput(ns("hm_clustk"), "K:", 1:6, selected = 4),
+      withTooltip(shiny::selectInput(ns("hm_clustk"), "K modules:", 1:6, selected = 4),
         "Select the number of gene clusters.",
         placement = "right", options = list(container = "body")
       )
@@ -255,7 +255,10 @@ clustering_plot_splitmap_server <- function(id,
         tooltips <- sapply(rownames(X), getInfo)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
-        tooltips <- playbase::breakstring2(aa, 50, brk = "<br>")
+        tooltips <- sapply(aa, function(x) {
+          playbase::breakstring2(x, 50, brk = "<br>")
+        })
+        names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
 

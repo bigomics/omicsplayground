@@ -346,7 +346,7 @@ intersection_plot_venn_diagram_server <- function(id,
       }
 
       ## add gene name/title
-      if (level == "gene") {
+      if (level() == "gene") {
         gene <- as.character(pgx$genes[rownames(fc0), "gene_name"])
         gene.tt <- substring(playdata::GENE_TITLE[gene], 1, 50)
         gene.tt <- as.character(gene.tt)

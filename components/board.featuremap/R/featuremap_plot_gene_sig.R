@@ -27,22 +27,19 @@ featuremap_plot_gene_sig_ui <- function(
 
 featuremap_plot_gene_sig_server <- function(id,
                                             pgx,
-                                            getGeneUMAP,
                                             sigvar,
                                             ref_group,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    geneSigPlots.plot_data <- shiny::reactive({
+    plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-
-      pos <- getGeneUMAP()
-
-      pheno <- "tissue"
       pheno <- sigvar()
-      if (pheno %in% colnames(pgx$samples)) {
+      ref <- ref_group()
+
+      pos <- pgx$cluster.genes$pos[["umap2d"]]
+      if (any(pheno %in% colnames(pgx$samples))) {
         y <- pgx$samples[, pheno]
-        ref <- ref_group()
         if (ref == "<average>") {
           refX <- rowMeans(pgx$X)
         } else {
@@ -56,24 +53,26 @@ featuremap_plot_gene_sig_server <- function(id,
         }))
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
+        kk <- intersect(pheno, colnames(F))
+        F <- F[, kk]
       }
-      if (nrow(F) == 0) {
+      if (nrow(F) == 0 || NCOL(F) == 0) {
         return(NULL)
       }
       return(list(F, pos))
     })
 
-    geneSigPlots.RENDER <- function() {
-      dt <- geneSigPlots.plot_data()
-      F <- dt[[1]]
-      shiny::req(F)
-      pos <- dt[[2]]
+    renderPlots <- function() {
+      dt <- plot_data()
 
-      nc <- ceiling(sqrt(ncol(F)))
+      F <- dt[[1]]
+      pos <- dt[[2]]
+      shiny::req(F, pos)
+
+      nc <- ceiling(sqrt(1.33 * ncol(F)))
       nr <- ceiling(ncol(F) / nc)
-      #
-      nr2 <- max(nr, 2)
-      par(mfrow = c(nr2, nc), mar = c(2, 1, 1, 0), mgp = c(1.6, 0.55, 0), las = 0)
+
+      par(mfrow = c(nr, nc), mar = c(2, 1, 1, 0), mgp = c(1.6, 0.55, 0), las = 0)
       progress <- NULL
       if (!interactive()) {
         progress <- shiny::Progress$new()
@@ -81,15 +80,13 @@ featuremap_plot_gene_sig_server <- function(id,
         progress$set(message = "Computing feature plots...", value = 0)
       }
       plotFeaturesPanel(pos, F, ntop = ntop, nr, nc, sel = NULL, progress)
-
-      # p
     }
 
     PlotModuleServer(
       "gene_sig",
       plotlib = "base",
-      func = geneSigPlots.RENDER,
-      csvFunc = geneSigPlots.plot_data,
+      func = renderPlots,
+      csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
       add.watermark = watermark

@@ -50,12 +50,28 @@ compare_plot_compare1_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      pgx
+      req(input.contrast2())
+      pgx1 <- pgx
+      pgx2 <- dataset2()
+      all.ct <- names(pgx1$gx.meta$meta)
+      ct1 <- input.contrast1()
+      shiny::req(ct1)
+      if (!all(ct1 %in% all.ct)) {
+        return(NULL)
+      }
+      higenes <- hilightgenes()
+      cex.lab <- 1.0
+      ntop <- 9999
+      type <- plottype()
+
+      if (length(higenes) <= 3) cex.lab <- 1.3
+      data <- createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop, TRUE)
+      return(data)
     })
 
     scatter1.RENDER <- shiny::reactive({
       req(input.contrast2())
-      pgx1 <- plot_data()
+      pgx1 <- pgx
       pgx2 <- dataset2()
       all.ct <- names(pgx1$gx.meta$meta)
       ct1 <- input.contrast1()

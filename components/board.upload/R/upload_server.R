@@ -17,6 +17,7 @@ UploadBoard <- function(id,
 
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
+    checklist <- shiny::reactiveValues()
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -80,6 +81,10 @@ UploadBoard <- function(id,
 
       ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
       ## -------------- save PGX file/object ---------------
+      # Old pgx does not have name slot, overwrite it with file name
+      if (is.null(new_pgx$name)) {
+        new_pgx$name <- sub("[.]pgx$", "", input$upload_files$name)
+      }
       pgxfile <- sub("[.]pgx$", "", new_pgx$name)
       pgxfile <- gsub("^[./-]*", "", pgxfile) ## prevent going to parent folder
       pgxfile <- paste0(gsub("[ \\/]", "_", pgxfile), ".pgx")
@@ -143,11 +148,21 @@ UploadBoard <- function(id,
       has.upload <- Vectorize(function(f) {
         (f %in% names(uploaded) && !is.null(nrow(uploaded[[f]])))
       })
+
+      has.contrast <- checklist[["contrasts.csv"]]$file
+
+      if (!is.null(has.contrast) && dim(has.contrast)[2] >= 1) {
+        # show compute if contrast is done
+        shiny::showTab("tabs", "Compute")
+      } else {
+        # hide compute if contrast is not assembled (prevent user from running corrupted computation)
+        shiny::hideTab("tabs", "Compute")
+      }
+
       need2 <- c("counts.csv", "samples.csv")
       need3 <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (all(has.upload(need3))) {
         shiny::showTab("tabs", "Comparisons")
-        shiny::showTab("tabs", "Compute")
         if (input$advanced_mode) {
           shiny::showTab("tabs", "BatchCorrect")
         }
@@ -156,11 +171,9 @@ UploadBoard <- function(id,
           shiny::showTab("tabs", "BatchCorrect")
         }
         shiny::showTab("tabs", "Comparisons")
-        shiny::hideTab("tabs", "Compute")
       } else {
         shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "Comparisons")
-        shiny::hideTab("tabs", "Compute")
       }
     })
 
@@ -209,17 +222,14 @@ UploadBoard <- function(id,
       message("[upload_files] upload_files$name=", input$upload_files$name)
       message("[upload_files] upload_files$datapath=", input$upload_files$datapath)
 
-      uploaded[["counts.csv"]] <- NULL
-      uploaded[["samples.csv"]] <- NULL
-      uploaded[["contrasts.csv"]] <- NULL
       uploaded[["pgx"]] <- NULL
       uploaded[["last_uploaded"]] <- NULL
-      uploaded[["checklist"]] <- NULL
+      checklist[["samples_counts"]] <- NULL
+      checklist[["samples_contrasts"]] <- NULL
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
       matlist <- list()
-      checklist <- list()
 
       if (pgx.uploaded) {
         ## If the user uploaded a PGX file, we extract the matrix
@@ -269,7 +279,7 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
 
               COUNTS_check <- playbase::pgx.checkINPUT(df0, "COUNTS")
-              check <- COUNTS_check$check
+              checks <- COUNTS_check$checks
 
               if (COUNTS_check$PASS && IS_COUNT) {
                 df <- as.matrix(COUNTS_check$df)
@@ -282,9 +292,8 @@ UploadBoard <- function(id,
                 df <- 2**df - 1
                 matname <- "counts.csv"
               }
-
               # store check and data regardless of it errors
-              checklist[["counts.csv"]]$check <- check
+              checklist[["counts.csv"]]$checks <- checks
               checklist[["counts.csv"]]$file <- COUNTS_check$df
             }
 
@@ -292,16 +301,15 @@ UploadBoard <- function(id,
               df0 <- playbase::read.as_matrix(fn2)
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_samples.csv"))
-
               SAMPLES_check <- playbase::pgx.checkINPUT(df0, "SAMPLES")
-              check <- SAMPLES_check$check
+              checks <- SAMPLES_check$checks
 
               if (SAMPLES_check$PASS && IS_SAMPLE) {
                 df <- as.data.frame(SAMPLES_check$df)
                 matname <- "samples.csv"
               }
               # store check and data regardless of it errors
-              checklist[["samples.csv"]]$check <- check
+              checklist[["samples.csv"]]$checks <- checks
               checklist[["samples.csv"]]$file <- SAMPLES_check$df
             }
 
@@ -311,15 +319,15 @@ UploadBoard <- function(id,
               file.copy(fn2, file.path(raw_dir(), "raw_contrasts.csv"))
 
               CONTRASTS_check <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
-              check <- CONTRASTS_check$check
+              checks <- CONTRASTS_check$checks
 
-              if (CONTRASTS_check$PASS) {
-                df <- as.matrix(CONTRASTS_check$df)
-                matname <- "contrasts.csv"
-              }
+              df <- as.matrix(CONTRASTS_check$df)
+              matname <- "contrasts.csv"
+
               # store check and data regardless of it errors
-              checklist[["contrasts.csv"]]$check <- check
+              checklist[["contrasts.csv"]]$checks <- checks
               checklist[["contrasts.csv"]]$file <- CONTRASTS_check$df
+              checklist[["contrasts.csv"]]$PASS <- CONTRASTS_check$PASS
             }
 
             if (!is.null(matname)) {
@@ -346,9 +354,7 @@ UploadBoard <- function(id,
           uploaded[[m1]] <- matlist[[i]]
         }
         uploaded[["last_uploaded"]] <- names(matlist)
-        uploaded[["checklist"]] <- checklist
       }
-
       message("[upload_files] done!\n")
     })
 
@@ -389,10 +395,30 @@ UploadBoard <- function(id,
         uploaded$counts.csv <- readfromzip2("exampledata/counts.csv")
         uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
         uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
+        # this was re-done in multi-species, it will be much better. Temporary solution for legacy code. MMM
+        checklist[["contrasts.csv"]]$file <- readfromzip2("exampledata/contrasts.csv")
+        checklist[["samples.csv"]]$file <- readfromzip2("exampledata/samples.csv")
+        checklist[["counts.csv"]]$file <- readfromzip2("exampledata/counts.csv")
+        checklist[["contrasts.csv"]]$checks <- list()
+        checklist[["samples.csv"]]$checks <- list()
+        checklist[["counts.csv"]]$checks <- list()
+        checklist[["contrasts.csv"]]$checks <- list()
+        checklist[["contrasts.csv"]]$PASS <- TRUE
+        uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
       } else {
-        uploaded$counts.csv <- NULL
-        uploaded$samples.csv <- NULL
-        uploaded$contrasts.csv <- NULL
+        ## clear files
+        uploaded[["counts.csv"]] <- NULL
+        uploaded[["samples.csv"]] <- NULL
+        uploaded[["contrasts.csv"]] <- NULL
+        uploaded[["pgx"]] <- NULL
+        uploaded[["last_uploaded"]] <- NULL
+        uploaded[["checklist"]] <- NULL
+        # reset react value checklist to NULL
+        checklist[["contrasts.csv"]] <- NULL
+        checklist[["samples.csv"]] <- NULL
+        checklist[["counts.csv"]] <- NULL
+        checklist[["samples_contrasts"]] <- NULL
+        checklist[["samples_counts"]] <- NULL
       }
     })
 
@@ -425,14 +451,15 @@ UploadBoard <- function(id,
         ## Nothing to check. Always OK.
       } else if (!has.pgx) {
         ## check rownames of samples.csv
-        if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK") {
+        if (status["samples.csv"] == "OK" && status["counts.csv"] == "OK" && is.null(checklist[["samples_counts"]]$checks)) {
           FILES_check <- playbase::pgx.crosscheckINPUT(
-            SAMPLES = uploaded[["samples.csv"]],
-            COUNTS = uploaded[["counts.csv"]]
+            SAMPLES = checklist[["samples.csv"]]$file,
+            COUNTS = checklist[["counts.csv"]]$file
           )
-          uploaded[["checklist"]][["samples_counts"]] <- FILES_check$check
-          uploaded[["samples.csv"]] <- FILES_check$SAMPLES
-          uploaded[["counts.csv"]] <- FILES_check$COUNTS
+
+          checklist[["samples_counts"]]$checks <- FILES_check$checks
+          checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
+          checklist[["counts.csv"]]$file <- FILES_check$COUNTS
           samples1 <- FILES_check$SAMPLES
           counts1 <- FILES_check$COUNTS
           a1 <- mean(rownames(samples1) %in% colnames(counts1))
@@ -441,7 +468,7 @@ UploadBoard <- function(id,
           if (a2 > a1 && NCOL(samples1) > 1) {
             message("[UploadModuleServer] getting sample names from first column\n")
             rownames(samples1) <- samples1[, 1]
-            uploaded[["samples.csv"]] <- samples1[, -1, drop = FALSE]
+            checklist[["samples.csv"]]$file <- samples1[, -1, drop = FALSE]
           }
 
           if (FILES_check$PASS == FALSE) {
@@ -458,49 +485,95 @@ UploadBoard <- function(id,
         }
       }
 
-      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK") {
+      # in case checklist comes from online comparison maker, run check again
+      if (!is.null(checklist[["contrasts.csv"]]$file)) {
+        checklist[["contrasts.csv"]]$PASS <- playbase::pgx.checkINPUT(checklist[["contrasts.csv"]]$file, "CONTRASTS")$PASS
+      }
+
+      if (status["contrasts.csv"] == "OK" && status["samples.csv"] == "OK" && is.null(checklist[["samples_contrasts"]]$checks)) {
+        ## this converts and check the contrast and samples file.
+
         FILES_check <- playbase::pgx.crosscheckINPUT(
-          SAMPLES = uploaded[["samples.csv"]],
-          CONTRASTS = uploaded[["contrasts.csv"]]
+          SAMPLES = checklist[["samples.csv"]]$file,
+          CONTRASTS = checklist[["contrasts.csv"]]$file
         )
-        uploaded[["checklist"]][["samples_contrasts"]] <- FILES_check$check
-
-        uploaded[["samples.csv"]] <- FILES_check$SAMPLES
-        uploaded[["contrasts.csv"]] <- FILES_check$CONTRASTS
 
 
-        if (FILES_check$PASS == FALSE) {
-          status["samples.csv"] <- "Error, please check your samples files."
-          status["contrasts.csv"] <- "Error, please check your contrasts files."
-          uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
+        # if checklist contrast fails, set uploaded to false and status to error
+        if (checklist[["contrasts.csv"]]$PASS == FALSE) {
+          # contrast file is invalid already, do not invalidate samples based on this test
+          status[["contrasts.csv"]] <- "ERROR: please check your contrasts files."
+          checklist[["contrasts.csv"]]$file <- NULL
+        } else {
+          # only run this code is contrast.csv PASS
+          checklist[["samples_contrasts"]]$checks <- FILES_check$checks
+          checklist[["samples.csv"]]$file <- FILES_check$SAMPLES
+          checklist[["contrasts.csv"]]$file <- FILES_check$CONTRASTS
+
+          if (FILES_check$PASS == FALSE) {
+            # error needs to be capitalized to be detected later on
+            status["samples.csv"] <- "ERROR: please check your samples files."
+            status["contrasts.csv"] <- "ERROR: please check your contrasts files."
+            uploaded[["samples.csv"]] <- NULL
+            uploaded[["contrasts.csv"]] <- NULL
+          }
         }
       }
 
-      MAXSAMPLES <- 25
-      MAXCONTRASTS <- 5
       MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
       MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
 
       ## check files: maximum contrasts allowed
       if (status["contrasts.csv"] == "OK") {
-        if (ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS) {
+        if (ncol(checklist[["contrasts.csv"]]$file) > MAXCONTRASTS) {
           status["contrasts.csv"] <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
+          uploaded[["contrasts.csv"]] <- NULL
+          checklist[["contrasts.csv"]]$file <- NULL
+          # remove only contrasts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
+
+          # pop up telling user max contrasts reached
+          shinyalert::shinyalert(
+            title = "Maximum contrasts reached",
+            text = paste("You have reached the maximum number of contrasts allowed. Please upload a new contrasts file with a maximum of", MAXCONTRASTS, "contrasts."),
+            type = "error"
+          )
         }
       }
 
       ## check files: maximum samples allowed
       if (status["counts.csv"] == "OK") {
-        if (ncol(uploaded[["counts.csv"]]) > MAXSAMPLES) {
+        if (ncol(checklist[["counts.csv"]]$file) > MAXSAMPLES) {
           status["counts.csv"] <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+          uploaded[["counts.csv"]] <- NULL
+          checklist[["counts.csv"]]$file <- NULL
+          # remove only contrasts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+
+          # pop up telling user max contrasts reached
+          shinyalert::shinyalert(
+            title = "Maximum counts reached",
+            text = paste("You have reached the maximum number of counts allowed. Please upload a new COUNTS file with a maximum of", MAXCOUNTS, "samples."),
+            type = "error"
+          )
         }
       }
       if (status["samples.csv"] == "OK") {
-        if (nrow(uploaded[["samples.csv"]]) > MAXSAMPLES) {
+        if (nrow(checklist[["samples.csv"]]$file) > MAXSAMPLES) {
           status["samples.csv"] <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
+          uploaded[["samples.csv"]] <- NULL
+          checklist[["samples.csv"]]$file <- NULL
+          # remove only contrasts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")
+
+          # pop up telling user max contrasts reached
+          shinyalert::shinyalert(
+            title = "Maximum samples reached",
+            text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
+            type = "error"
+          )
         }
       }
-
       e1 <- grepl("ERROR", status["samples.csv"])
       e2 <- grepl("ERROR", status["contrasts.csv"])
       e3 <- grepl("ERROR", status["counts.csv"])
@@ -527,11 +600,21 @@ UploadBoard <- function(id,
         }
       }
 
-      if (!is.null(uploaded$contrasts.csv) &&
-        (is.null(uploaded$counts.csv) ||
-          is.null(uploaded$samples.csv))) {
+      if (!is.null(uploaded$contrasts.csv) && is.null(uploaded$samples.csv)) {
         uploaded[["contrasts.csv"]] <- NULL
         status["contrasts.csv"] <- "please upload"
+
+        # if contrasts.csv is the only element in last_uploaded, set it to NULL
+        if (length(uploaded$last_uploaded) == 1 && uploaded$last_uploaded == "contrasts.csv") {
+          uploaded[["last_uploaded"]] <- NULL
+        }
+
+        # pop up telling the user to upload samples.csv first
+        shinyalert::shinyalert(
+          title = "Samples.csv file missing",
+          text = "Please upload the samples.csv file first.",
+          type = "error"
+        )
       }
 
 
@@ -555,7 +638,7 @@ UploadBoard <- function(id,
       return(df)
     })
 
-    upload_module_preview_server("upload_preview", uploaded)
+    upload_module_preview_server("upload_preview", uploaded, checklist)
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
@@ -598,15 +681,15 @@ UploadBoard <- function(id,
         out <- correctedX()
         counts <- pmax(2**out$X - 1, 0)
       } else {
-        counts <- uploaded$counts.csv
+        counts <- checklist[["counts.csv"]]$file
       }
       counts
     })
 
     modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
-      phenoRT = shiny::reactive(uploaded$samples.csv),
-      contrRT = shiny::reactive(uploaded$contrasts.csv),
+      phenoRT = shiny::reactive(checklist$samples.csv$file),
+      contrRT = shiny::reactive(checklist$contrasts.csv$file),
       countsRT = corrected_counts,
       height = height
     )
@@ -615,7 +698,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      uploaded$contrasts.csv <- modct$contr
+      checklist[["contrasts.csv"]]$file <- modct$contr
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
@@ -634,8 +717,8 @@ UploadBoard <- function(id,
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = corrected_counts,
-      samplesRT = shiny::reactive(uploaded$samples.csv),
-      contrastsRT = shiny::reactive(uploaded$contrasts.csv),
+      samplesRT = shiny::reactive(checklist[["samples.csv"]]$file),
+      contrastsRT = shiny::reactive(checklist[["contrasts.csv"]]$file),
       raw_dir = raw_dir,
       batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
@@ -679,7 +762,7 @@ UploadBoard <- function(id,
     upload_plot_contraststats_server(
       "contrastStats",
       checkTables,
-      uploaded
+      uploaded = checklist
     )
 
 
