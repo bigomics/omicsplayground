@@ -24,8 +24,8 @@ upload_module_preview_server <- function(id, uploaded, checklist) {
   moduleServer(
     id,
     function(input, output, session) {
-      # every time something is uploaded, it can be previewed
-      observeEvent(uploaded$last_uploaded,
+      # ever/y time something is uploaded, it can be previewed
+      observeEvent(c(uploaded$last_uploaded, uploaded$counts.csv, uploaded$contrasts.csv, uploaded$samples.csv),
         {
           has_counts <- !is.null(uploaded$counts.csv)
           has_samples <- !is.null(uploaded$samples.csv)
