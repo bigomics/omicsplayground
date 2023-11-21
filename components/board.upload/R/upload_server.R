@@ -18,7 +18,6 @@ UploadBoard <- function(id,
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
-    status <- shiny::reactiveValues()
 
     output$navheader <- shiny::renderUI({
       fillRow(
