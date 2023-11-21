@@ -454,7 +454,6 @@ UploadBoard <- function(id,
       } else if (!has.pgx) {
         ## check rownames of samples.csv
         if (!is.null(checklist[["samples.csv"]]$file) && !is.null(checklist[["counts.csv"]]$file) && is.null(checklist[["samples_counts"]]$checks)) {
-          
           FILES_check <- playbase::pgx.crosscheckINPUT(
             SAMPLES = checklist[["samples.csv"]]$file,
             COUNTS = checklist[["counts.csv"]]$file
@@ -478,22 +477,22 @@ UploadBoard <- function(id,
             status["samples.csv"] <- "ERROR: please check your samples files."
             status["counts.csv"] <- "ERROR: please check your counts files."
             status["contrasts.csv"] <- "ERROR: please check your counts/samples files."
-            #status["contrasts.csv"] <- "ERROR: please check your samples/counts files."
+            # status["contrasts.csv"] <- "ERROR: please check your samples/counts files."
             checklist[["counts.csv"]]$file <- NULL
             checklist[["samples.csv"]]$file <- NULL
             checklist[["contrasts.csv"]]$checks <- NULL
             checklist[["contrasts.csv"]]$file <- NULL
             # set last uploaded to NULL
-            #uploaded[["last_uploaded"]] <- NULL
+            # uploaded[["last_uploaded"]] <- NULL
           }
 
           if (FILES_check$PASS == TRUE) {
             status["samples.csv"] <- "OK"
             status["counts.csv"] <- "OK"
           }
-        } else if (length(checklist[["samples_counts"]]$checks)==0) {
+        } else if (length(checklist[["samples_counts"]]$checks) == 0) {
           # when checkTables run second time, do not return error or please upload, as that will remove correct input files
-          #if status of samples and counts is please upload, then keep please upload.
+          # if status of samples and counts is please upload, then keep please upload.
           if (status["samples.csv"] == "please upload" && status["counts.csv"] == "please upload") {
             status["samples.csv"] <- "please upload"
             status["counts.csv"] <- "please upload"
@@ -604,15 +603,15 @@ UploadBoard <- function(id,
       }
 
       if (!is.null(uploaded$contrasts.csv) && is.null(checklist$counts.csv$file) && is.null(checklist$samples.csv$file)) {
-          status["contrasts.csv"] <- "ERROR: please upload samples file first."
-          checklist[["contrasts.csv"]]$file <- NULL
-          # pop up telling the user to upload samples.csv first
-          shinyalert::shinyalert(
-            title = "Samples.csv file missing",
-            text = "Please upload the samples.csv file first.",
-            type = "error"
-          )
-        }
+        status["contrasts.csv"] <- "ERROR: please upload samples file first."
+        checklist[["contrasts.csv"]]$file <- NULL
+        # pop up telling the user to upload samples.csv first
+        shinyalert::shinyalert(
+          title = "Samples.csv file missing",
+          text = "Please upload the samples.csv file first.",
+          type = "error"
+        )
+      }
 
 
       ## check files
