@@ -47,14 +47,14 @@ upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark 
           error.msg
         )
       )
-      pheno <- data.frame(pheno, check.names=FALSE, drop = FALSE)
+      pheno <- as.data.frame(pheno,check.names=FALSE, drop = FALSE)
       return(pheno)
     })
 
     plot.RENDER <- function() {
       pheno <- plot_data()
       px <- head(colnames(pheno), 20) ## show maximum??
-      df <- type.convert(pheno[, px, drop = FALSE], as.is=TRUE)
+      df <- type.convert(pheno[, px, drop = FALSE], as.is = TRUE)
       vt <- df %>% inspectdf::inspect_types()
 
       ## discretized continuous variable into 10 bins
