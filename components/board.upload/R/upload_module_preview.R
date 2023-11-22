@@ -31,7 +31,7 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
           has_counts <- !is.null(uploaded$counts.csv)
           has_samples <- !is.null(uploaded$samples.csv)
           has_contrasts <- !is.null(uploaded$contrasts.csv)
-          
+
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
             tabs <- c(
@@ -451,7 +451,7 @@ upload_table_preview_contrasts_server <- function(id,
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
       dt <- uploaded$contrasts.csv |> data.frame(check.names = FALSE)
-      if(NCOL(dt)==0) dt <- cbind(dt, " "=NA)
+      if (NCOL(dt) == 0) dt <- cbind(dt, " " = NA)
       dt
     })
 
