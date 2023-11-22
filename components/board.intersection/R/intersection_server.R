@@ -75,10 +75,8 @@ IntersectionBoard <- function(
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Pairwise scatter" = list(enable = NULL,
-                         disable = NULL),
-      "Signature clustering" = list(enable = NULL,
-                       disable = c("comparisons"))
+      "Pairwise scatter" = list(disable = NULL),
+      "Signature clustering" = list(disable = c("comparisons"))
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)

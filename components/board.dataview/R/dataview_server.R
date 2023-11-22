@@ -88,16 +88,11 @@ DataViewBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Gene overview" = list(enable = NULL,
-                            disable = NULL),
-      "Sample QC" = list(enable = NULL, 
-                        disable = c("search_gene", "data_samplefilter", "data_groupby")),
-      "Counts table" = list(enable = NULL,
-                            disable = NULL),
-      "Sample information" = list(enable = NULL,
-                                  disable = c("search_gene", "data_groupby", "data_type")),
-      "Contrasts" = list(enable = NULL,
-                        disable = c("search_gene", "data_groupby", "data_type"))
+      "Gene overview" = list(disable = NULL),
+      "Sample QC" = list(disable = c("search_gene", "data_type")),
+      "Counts table" = list(disable = NULL),
+      "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
+      "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type"))
     )
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)

@@ -55,12 +55,9 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WikiPathways" = list(enable = NULL,
-                         disable = NULL),
-      "Reactome" = list(enable = NULL,
-                       disable = NULL),
-      "GO graph" = list(enable = NULL,
-                       disable = c("fa_filtertable"))
+      "WikiPathways" = list(disable = NULL),
+      "Reactome" = list(disable = NULL),
+      "GO graph" = list(disable = c("fa_filtertable"))
     )
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
