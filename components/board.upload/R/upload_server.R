@@ -157,8 +157,9 @@ UploadBoard <- function(id,
 
       has.counts    <- !is.null(checked_counts()$matrix)
       has.samples   <- !is.null(checked_samples()$matrix)
-      has.contrasts <- !is.null(checked_contrasts()$matrix)      
-      has.contrasts <- has.contrasts || !is.null(modified_ct()$contr)
+      has.contrasts <- !is.null(checked_contrasts()$matrix)
+      # check that modified contrast is not NULL and has col dim >0
+      has.contrasts <- !is.null(modified_ct()$contr) && ncol(modified_ct()$contr) > 0
       
       need2 <- has.counts && has.samples
       need3 <- need2 && has.contrasts
