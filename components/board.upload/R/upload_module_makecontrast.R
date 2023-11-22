@@ -119,6 +119,11 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
       shiny::observe({
         rv$contr <- contrRT()
+
+        dbg("[upload_module_makecontrast_server] dim.contrRT = ",dim(contrRT()))
+        dbg("[upload_module_makecontrast_server] dim.phenoRT = ",dim(phenoRT()))
+        dbg("[upload_module_makecontrast_server] dim.countsRT = ",dim(countsRT()))        
+      
       })
 
       shiny::observe({
@@ -127,11 +132,9 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
       })
 
-      observeEvent(
-        {
+      observeEvent({
           phenoRT()
-        },
-        {
+      },{
           phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
           phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
           psel <- c(grep("sample|patient|name|id|^[.]",
@@ -281,6 +284,11 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         samples <- colnames(countsRT())
 
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
+
+        dbg("[upload_module_makecontrast_server] dim.samples = ",dim(samples))
+        dbg("[upload_module_makecontrast_server] dim.rv$contr = ",dim(rv$contr))
+        dbg("[upload_module_makecontrast_server] dim.ctx1 = ",dim(ctx1))        
+        
         if (is.null(rv$contr)) {
           rv$contr <- ctx1
         } else {
