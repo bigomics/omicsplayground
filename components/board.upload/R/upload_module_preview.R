@@ -209,6 +209,11 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
           uploaded[["pgx"]] <- NULL
           uploaded[["last_uploaded"]] <- NULL
           uploaded[["checklist"]] <- NULL
+          checklist[["counts.csv"]] <- NULL
+          checklist[["samples.csv"]] <- NULL
+          checklist[["contrasts.csv"]] <- NULL
+          checklist[["samples_counts"]] <- NULL
+          checklist[["samples_contrasts"]] <- NULL
         },
         ignoreInit = TRUE
       )

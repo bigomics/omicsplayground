@@ -32,13 +32,8 @@ upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark 
     ## extract data from pgx object
     plot_data <- shiny::reactive({
       pheno <- samplesRT()
-
-      dbg("[upload_plot_phenostats_server] 1: dim.pheno=",dim(pheno))
-      
       has.pheno <- !is.null(pheno) && NCOL(pheno) > 0
       check <- checkTables()
-
-      dbg("[upload_plot_phenostats_server] 2:")
       
       status.ok <- check["samples.csv", "status"]
       status.ds <- tolower(check["samples.csv", "description"])
@@ -46,18 +41,13 @@ upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark 
         toupper(status.ok), "\nPlease upload 'samples.csv' (Required):",
         status.ds
       )
-
-      dbg("[upload_plot_phenostats_server] 3:")
-      
       shiny::validate(
         shiny::need(
           status.ok == "OK" && has.pheno,
           error.msg
         )
       )
-
-      dbg("[upload_plot_phenostats_server] 4:")
-      pheno <- data.frame(pheno, check.names=FALSE)
+      pheno <- data.frame(pheno, check.names=FALSE, drop = FALSE)
       return(pheno)
     })
 
