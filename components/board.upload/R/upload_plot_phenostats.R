@@ -26,13 +26,20 @@ upload_plot_phenostats_ui <- function(id,
   )
 }
 
-upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark = FALSE) {
+upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      sm <- uploaded$samples.csv$file
-      has.samples <- !is.null(sm) && NCOL(sm) > 0
+      pheno <- samplesRT()
+
+      dbg("[upload_plot_phenostats_server] 1: dim.pheno=",dim(pheno))
+      
+      has.pheno <- !is.null(pheno) && NCOL(pheno) > 0
       check <- checkTables()
+
+      dbg("[upload_plot_phenostats_server] 2:")
+      
       status.ok <- check["samples.csv", "status"]
       status.ds <- tolower(check["samples.csv", "description"])
       error.msg <- paste(
@@ -40,14 +47,17 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
         status.ds
       )
 
+      dbg("[upload_plot_phenostats_server] 3:")
+      
       shiny::validate(
         shiny::need(
-          status.ok == "OK" && has.samples,
+          status.ok == "OK" && has.pheno,
           error.msg
         )
       )
 
-      pheno <- data.frame(uploaded[["samples.csv"]]$file)
+      dbg("[upload_plot_phenostats_server] 4:")
+      pheno <- data.frame(pheno, check.names=FALSE)
       return(pheno)
     })
 
