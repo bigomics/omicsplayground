@@ -148,9 +148,9 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
-        }        
-        df <- type.convert(df, as.is=TRUE)
-        ii <- which(sapply(type.convert(df, as.is=TRUE), class) %in% c("numeric", "integer"))
+        }
+        df <- type.convert(df, as.is = TRUE)
+        ii <- which(sapply(type.convert(df, as.is = TRUE), class) %in% c("numeric", "integer"))
         if (length(ii)) {
           for (i in ii) {
             x <- df[, i]
