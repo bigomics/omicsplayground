@@ -347,7 +347,7 @@ UploadBoard <- function(id,
           if (names(matlist)[i] %in% c("counts.csv", "contrasts.csv")) {
             matlist[[i]] <- as.matrix(matlist[[i]])
           } else {
-            matlist[[i]] <- type.convert(matlist[[i]])
+            matlist[[i]] <- type.convert(matlist[[i]], as.is=TRUE)
           }
           m1 <- names(matlist)[i]
           message("[upload_files] updating matrix ", m1)

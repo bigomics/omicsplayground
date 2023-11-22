@@ -466,7 +466,6 @@ upload_module_computepgx_server <- function(
         # button), or user click compute a second time
         if (is.null(raw_dir())) {
           raw_dir(create_raw_dir(auth))
-          dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
         dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
