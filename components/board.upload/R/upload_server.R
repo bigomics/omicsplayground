@@ -533,7 +533,7 @@ UploadBoard <- function(id,
         }
       }
       
-      ##-------------- cross-check with samples ------------------      
+      ##-------------- cross-check with counts ------------------      
       cc <- checked_counts()
       if(!is.null(checked) && !is.null(cc$matrix)) {
         cross_check <- playbase::pgx.crosscheckINPUT(
@@ -541,6 +541,9 @@ UploadBoard <- function(id,
           COUNTS = cc$matrix
         )
         checklist[["samples_counts"]]$checks <- cross_check$checks        
+
+        dbg("[eventReactive::checked_samples] cross_check$checks = ",cross_check$checks)
+
         if(cross_check$PASS) {
           checked <- res$df
           status <- "OK"        
@@ -551,7 +554,9 @@ UploadBoard <- function(id,
       }
 
       if(is.null(checked)) {
-        uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")          
+        uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")
+        ## uploaded[["samples.csv"]] <- NULL
+        uploaded[["contrasts.csv"]] <- NULL
       }
       
       list( status = status, matrix = checked )
@@ -751,7 +756,6 @@ UploadBoard <- function(id,
 
     ## Preview Server
     upload_module_preview_server("upload_preview", uploaded, checklist, checkTables)
-    
     
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
