@@ -47,7 +47,7 @@ upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark 
           error.msg
         )
       )
-      pheno <- data.frame(pheno, check.names=FALSE, drop = FALSE)
+      pheno <- as.data.frame(pheno,check.names=FALSE, drop = FALSE)
       return(pheno)
     })
 
