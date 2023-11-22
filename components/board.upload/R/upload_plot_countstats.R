@@ -32,12 +32,8 @@ upload_plot_countstats_server <- function(id, checkTables, countsRT, watermark =
     plot_data <- shiny::reactive({
       counts <- countsRT()
       has.counts <- !is.null(counts) && NCOL(counts) > 0
-      dbg("[upload_plot_countstats_server] dim.counts=", dim(counts))
-
       check <- checkTables()
       shiny::req(check)
-
-      dbg("[upload_plot_countstats_server] 2: ")
 
       status.ok <- check["counts.csv", "status"]
       status.ds <- tolower(check["counts.csv", "description"])
@@ -45,16 +41,12 @@ upload_plot_countstats_server <- function(id, checkTables, countsRT, watermark =
         toupper(status.ok), "\nPlease upload 'counts.csv' (Required):",
         status.ds
       )
-
-      dbg("[upload_plot_countstats_server] 3: ")
-
       shiny::validate(
         shiny::need(
           status.ok == "OK" && has.counts,
           error.msg
         )
       )
-      dbg("[upload_plot_countstats_server] 4: ")
       return(counts)
     })
 

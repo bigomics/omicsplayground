@@ -72,8 +72,6 @@ UploadBoard <- function(id,
     uploaded_method <- NA
 
     shiny::observeEvent(uploaded_pgx(), {
-      dbg("[UploadBoard:observe:uploaded_pgx] uploaded PGX detected!")
-
       new_pgx <- uploaded_pgx()
 
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
@@ -351,7 +349,6 @@ UploadBoard <- function(id,
       if ("counts.csv" %in% names(matlist)) {
         new_hash <- rlang::hash(matlist[["counts.csv"]])
         if (new_hash != last_hash) {
-          dbg("[UploadServer:input$upload_files] NEW counts file detected. clearing old uploads!")
           uploaded[["samples.csv"]] <- NULL
           uploaded[["contrasts.csv"]] <- NULL
           uploaded[["last_uploaded"]] <- NULL
@@ -549,8 +546,6 @@ UploadBoard <- function(id,
           )
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
-          dbg("[eventReactive::checked_samples] cross_check$checks = ", cross_check$checks)
-
           if (cross_check$PASS) {
             checked <- res$df
             status <- "OK"
@@ -585,6 +580,12 @@ UploadBoard <- function(id,
           return(list(status = "Missing contrasts.csv", matrix = NULL))
         }
 
+        ## insanity check
+        if(NCOL(df0)==0) {
+          checked <- NULL
+          status <- "ERROR: no contrasts. please check your input file."
+        }
+        
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
         # store check and data regardless of it errors
@@ -594,9 +595,10 @@ UploadBoard <- function(id,
           status <- "OK"
         } else {
           checked <- NULL
-          status <- "ERROR: please check your contrasts files."
+          status <- "ERROR: invalid contrast. please check your input file."
         }
-
+        
+        
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples()
         if (!is.null(checked) && is.null(cc$matrix)) {
@@ -679,9 +681,6 @@ UploadBoard <- function(id,
         }
       }
       ##      ERROR_CODES <- playbase::PGX_CHECKS
-
-      dbg("[UploadBoard:checkTables] 2 : ")
-
       has.pgx <- ("pgx" %in% names(uploaded))
       has.csv <- any(grepl("csv", names(uploaded)))
       if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
@@ -689,17 +688,9 @@ UploadBoard <- function(id,
         ## Nothing to check. Always OK.
         status <- c("counts.csv" = "OK", "samples.csv" = "OK", "contrasts.csv" = "OK")
       } else if (!has.pgx) {
-        dbg("[UploadBoard:checkTables] 4a : ")
-
         c1 <- checked_counts()
-        dbg("[UploadBoard:checkTables] 4b : ")
-
         c2 <- checked_samples()
-        dbg("[UploadBoard:checkTables] 4c : ")
-
         c3 <- checked_contrasts()
-
-        dbg("[UploadBoard:checkTables] 4d : ")
 
         status <- c(
           "counts.csv" = c1$status,
@@ -707,13 +698,6 @@ UploadBoard <- function(id,
           "contrasts.csv" = c3$status
         )
       }
-
-      # in case checklist comes from online comparison maker, run check again
-      #      if (!is.null(checked[["contrasts.csv"]])) {
-      #        checklist[["contrasts.csv"]]$PASS <- playbase::pgx.checkINPUT(checked[["contrasts.csv"]], "CONTRASTS")$PASS
-      #      }
-
-      dbg("[UploadBoard:checkTables] 4 : ")
 
       ## --------------------------------------------------------
       ## Build summary table
