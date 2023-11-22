@@ -31,7 +31,7 @@ COPY docker/Rprofile .Rprofile
 RUN R -e "devtools::install_github('bigomics/shinyChatR')"
 ##RUN R -e "install.packages(c('htmltools'),force=TRUE)"
 RUN R -e "remotes::install_github('rstudio/htmltools',dependencies=FALSE)"
-RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
+RUN R -e "remotes::install_github('rstudio/bslib@v0.5.1',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
