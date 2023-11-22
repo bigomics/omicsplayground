@@ -581,11 +581,11 @@ UploadBoard <- function(id,
         }
 
         ## insanity check
-        if(NCOL(df0)==0) {
+        if (NCOL(df0) == 0) {
           checked <- NULL
           status <- "ERROR: no contrasts. please check your input file."
         }
-        
+
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
         # store check and data regardless of it errors
@@ -597,8 +597,8 @@ UploadBoard <- function(id,
           checked <- NULL
           status <- "ERROR: invalid contrast. please check your input file."
         }
-        
-        
+
+
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples()
         if (!is.null(checked) && is.null(cc$matrix)) {
