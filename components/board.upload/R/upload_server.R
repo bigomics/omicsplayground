@@ -484,7 +484,7 @@ UploadBoard <- function(id,
               title = "Maximum counts reached",
               text = paste(
                 "You have reached the maximum number of counts allowed. Please",
-                "upload a new COUNTS file with a maximum of", MAXCOUNTS, "samples."
+                "upload a new COUNTS file with a maximum of", MAXSAMPLES, "samples."
               ),
               type = "error"
             )
