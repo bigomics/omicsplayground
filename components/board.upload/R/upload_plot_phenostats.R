@@ -47,7 +47,7 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
         )
       )
 
-      pheno <- data.frame(uploaded[["samples.csv"]]$file)
+      pheno <- data.frame(uploaded[["samples.csv"]]$file, drop = FALSE)
       return(pheno)
     })
 
