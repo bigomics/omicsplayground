@@ -26,14 +26,14 @@ upload_plot_countstats_ui <- function(id,
   )
 }
 
-upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark = FALSE) {
+upload_plot_countstats_server <- function(id, checkTables, countsRT, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
+      counts <- countsRT()
+      has.counts <- !is.null(counts) && NCOL(counts) > 0
       check <- checkTables()
-      req(check)
-      ct <- uploaded$counts.csv
-      has.counts <- !is.null(ct) && NCOL(ct) > 0
+      shiny::req(check)
 
       status.ok <- check["counts.csv", "status"]
       status.ds <- tolower(check["counts.csv", "description"])
@@ -41,15 +41,12 @@ upload_plot_countstats_server <- function(id, checkTables, uploaded, watermark =
         toupper(status.ok), "\nPlease upload 'counts.csv' (Required):",
         status.ds
       )
-
       shiny::validate(
         shiny::need(
           status.ok == "OK" && has.counts,
           error.msg
         )
       )
-
-      counts <- uploaded[["counts.csv"]]
       return(counts)
     })
 

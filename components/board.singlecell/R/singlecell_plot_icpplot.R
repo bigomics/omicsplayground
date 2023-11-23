@@ -203,7 +203,7 @@ singlecell_plot_icpplot_server <- function(id,
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
       cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
+      klrpal <- colorRampPalette(c("grey95", "grey65", "red3"))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66") ## add opacity...
 
       ntop <- 25

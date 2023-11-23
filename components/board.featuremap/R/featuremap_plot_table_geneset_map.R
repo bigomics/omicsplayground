@@ -17,12 +17,12 @@ featuremap_plot_geneset_map_ui <- function(
     shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
       choices = c(0, 10, 20, 50, 100, 1000), selected = 20
     ),
-    shiny::sliderInput(ns("gsmap_gamma"), "color gamma:",
+    shiny::sliderInput(ns("gsmap_gamma"), "tweak colors:",
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("gsmap_colorby"), "color by:",
       #
-      choices = c("sd.X", "sd.FC"),
+      choices = c("sd.X", "rms.FC"),
       selected = "sd.X", inline = TRUE
     )
   )
@@ -65,7 +65,6 @@ featuremap_table_geneset_map_ui <- function(
 
 featuremap_plot_table_geneset_map_server <- function(id,
                                                      pgx,
-                                                     getGsetUMAP,
                                                      plotUMAP,
                                                      filter_gsets,
                                                      sigvar,
@@ -81,6 +80,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
     ##
     ns <- session$ns
     sel.row <- 1
+    getUMAP <- function() {
+      pos <- pgx$cluster.gsets$pos[["umap2d"]]
+      colnames(pos) <- c("x", "y")
+      pos
+    }
 
     filteredGsets <- shiny::reactive({
       shiny::req(pgx$X)
@@ -99,25 +103,22 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gsets
     })
 
-
     plot_data <- shiny::reactive({
-      pos <- getGsetUMAP()
+      pos <- getUMAP()
       colnames(pos) <- c("x", "y")
 
       hilight <- filteredGsets()
-      colgamma <- as.numeric(input$gsmap_gamma)
       nlabel <- as.integer(input$gsmap_nlabel)
       colorby <- input$gsmap_colorby
 
       F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
-      if (colorby == "sd.FC") {
+      if (colorby == "rms.FC") {
         fc <- (rowMeans(F**2))**0.5
       } else {
         cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
-      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
       ## conform
       gg <- intersect(rownames(pos), names(fc))
@@ -128,7 +129,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
         df = data.frame(pos, fc = fc),
         fc = fc,
         hilight = hilight,
-        colgamma = colgamma,
         nlabel = nlabel,
         colorby = colorby
       )
@@ -136,11 +136,17 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     render_gsetUMAP <- function(cex = 1, cex.label = 1) {
       pd <- plot_data()
-      pos <- pd$df[, c("x", "y")]
+      pos <- getUMAP()
       fc <- pd$fc
       hilight <- pd$hilight
       nlabel <- pd$nlabel
       colorby <- pd$colorby
+      colgamma <- as.numeric(input$gsmap_gamma)
+
+      fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
+      if (length(setdiff(names(fc), hilight))) {
+        fc[!names(fc) %in% hilight] <- NA
+      }
 
       ## filter on table
       p <- plotUMAP(
@@ -193,14 +199,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
     # Table
     gsetTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
-      # I will temporarily comment out these lines, they seem to fix the bug when displaying 
-      # the table, but I don't know why pgx$drugs would be required for the table to be displayed
-      # so that when it is null, the table is not displayed. TODO, FIXME 
-      #if (is.null(pgx$drugs)) {
-      #  return(NULL)
-      #}
-
-      pos <- getGsetUMAP()
+      pos <- getUMAP()
 
       ## detect brush
       sel.gsets <- NULL
@@ -225,7 +224,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       pheno <- "tissue"
       pheno <- sigvar()
       is.fc <- FALSE
-      if (pheno %in% colnames(pgx$samples)) {
+      if (any(pheno %in% colnames(pgx$samples))) {
         gg <- intersect(sel.gsets, rownames(pgx$gsetX))
         X <- pgx$gsetX[gg, , drop = FALSE]
         X <- X - rowMeans(X, na.rm = TRUE)
@@ -243,10 +242,13 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
       F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
-      if (is.fc) colnames(F)[1] <- "sd.FC"
+      if (is.fc) colnames(F)[1] <- "rms.FC"
       F <- round(F, digits = 3)
-      gs <- substring(rownames(F), 1, 100)
-      df <- data.frame(geneset = gs, F, check.names = FALSE)
+      gs.db <- sub(":.*", "", rownames(F))
+      gs <- sub(".*[:]", "", rownames(F))
+      gs <- substring(gs, 1, 100)
+      df <- data.frame(DB = gs.db, geneset = gs, F, check.names = FALSE)
+      rownames(df) <- rownames(F)
 
       DT::datatable(df,
         rownames = FALSE,

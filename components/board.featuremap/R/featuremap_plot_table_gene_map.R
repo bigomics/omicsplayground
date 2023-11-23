@@ -18,12 +18,12 @@ featuremap_plot_gene_map_ui <- function(
       c(0, 10, 20, 50, 100, 1000),
       selected = 50
     ),
-    shiny::sliderInput(ns("umap_gamma"), "color gamma:",
+    shiny::sliderInput(ns("umap_gamma"), "tweak colors:",
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("umap_colorby"), "color by:",
       #
-      choices = c("sd.X", "sd.FC"),
+      choices = c("sd.X", "rms.FC"),
       selected = "sd.X", inline = TRUE
     )
   )
@@ -66,7 +66,6 @@ featuremap_table_gene_map_ui <- function(
 
 featuremap_plot_gene_map_server <- function(id,
                                             pgx,
-                                            getGeneUMAP,
                                             plotUMAP,
                                             sigvar,
                                             filter_genes,
@@ -74,6 +73,12 @@ featuremap_plot_gene_map_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    getUMAP <- function() {
+      pos <- pgx$cluster.genes$pos[["umap2d"]]
+      colnames(pos) <- c("x", "y")
+      pos
+    }
 
     filteredGenes <- shiny::reactive({
       shiny::req(pgx$X)
@@ -103,8 +108,8 @@ featuremap_plot_gene_map_server <- function(id,
     plot_data <- shiny::reactive({
       pos <- getGeneUMAP()
       colnames(pos) <- c("x", "y")
+
       hilight <- filteredGenes()
-      colgamma <- as.numeric(input$umap_gamma)
       colorby <- input$umap_colorby
       nlabel <- as.integer(input$umap_nlabel)
 
@@ -113,11 +118,11 @@ featuremap_plot_gene_map_server <- function(id,
       FC <- scale(FC, center = FALSE)
       if (colorby == "sd.FC") {
         fc <- (rowMeans(FC**2))**0.5
+
       } else {
         cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
       }
-      fc <- sign(fc) * abs(fc / max(abs(fc)))**colgamma
 
       ## conform
       pos <- playbase::rename_by(pos, pgx$genes, "symbol")
@@ -132,7 +137,6 @@ featuremap_plot_gene_map_server <- function(id,
         df = data.frame(pos, fc = fc),
         fc = fc,
         hilight = hilight,
-        colgamma = colgamma,
         nlabel = nlabel,
         colorby = colorby
       )
@@ -141,11 +145,19 @@ featuremap_plot_gene_map_server <- function(id,
 
     render_geneUMAP <- function(cex = 1, cex.label = 1) {
       pd <- plot_data()
-      pos <- pd$df[, c("x", "y")]
+      pos <- getUMAP()
       fc <- pd$fc
+
       hilight <- pd$hilight
       nlabel <- pd$nlabel
       colorby <- pd$colorby
+      colgamma <- as.numeric(input$umap_gamma)
+
+      ## dim non hilighted genes
+      fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
+      if (length(setdiff(names(fc), hilight))) {
+        fc[!names(fc) %in% hilight] <- NA
+      }
 
       p <- plotUMAP(
         pos,
@@ -194,12 +206,15 @@ featuremap_plot_gene_map_server <- function(id,
       add.watermark = watermark
     )
 
-    # Table
+    # ================================================================================
+    # ============================= Table server module ==============================
+    # ================================================================================
     geneTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
       X <- pgx$X
       pos <- getGeneUMAP()
       pos <- playbase::rename_by(pos, pgx$genes, "symbol")
+
       sel.genes <- NULL
       ## detect brush
       b <- plotly::event_data("plotly_selected", source = ns("gene_umap"))
@@ -228,6 +243,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (pheno %in% colnames(pgx$samples)) {
         gg <- intersect(sel.genes, rownames(X))
         X <- X[gg, , drop = FALSE]
+
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
         FC <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
@@ -262,6 +278,7 @@ featuremap_plot_gene_map_server <- function(id,
       FC <- cbind(sd.X = sqrt(rowMeans(FC**2)), FC)
       if (is.fc) colnames(FC)[1] <- "sd.FC"
       FC <- round(FC, digits = 3)
+
 
       df <- data.frame(tt, FC,
         check.names = FALSE

@@ -26,12 +26,12 @@ upload_plot_phenostats_ui <- function(id,
   )
 }
 
-upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark = FALSE) {
+upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      sm <- uploaded$samples.csv
-      has.samples <- !is.null(sm) && NCOL(sm) > 0
+      pheno <- samplesRT()
+      has.pheno <- !is.null(pheno) && NCOL(pheno) > 0
       check <- checkTables()
 
       status.ok <- check["samples.csv", "status"]
@@ -40,22 +40,20 @@ upload_plot_phenostats_server <- function(id, checkTables, uploaded, watermark =
         toupper(status.ok), "\nPlease upload 'samples.csv' (Required):",
         status.ds
       )
-
       shiny::validate(
         shiny::need(
-          status.ok == "OK" && has.samples,
+          status.ok == "OK" && has.pheno,
           error.msg
         )
       )
-
-      pheno <- uploaded[["samples.csv"]]
+      pheno <- as.data.frame(pheno, check.names = FALSE, drop = FALSE)
       return(pheno)
     })
 
     plot.RENDER <- function() {
       pheno <- plot_data()
       px <- head(colnames(pheno), 20) ## show maximum??
-      df <- type.convert(pheno[, px, drop = FALSE])
+      df <- type.convert(pheno[, px, drop = FALSE], as.is = TRUE)
       vt <- df %>% inspectdf::inspect_types()
 
       ## discretized continuous variable into 10 bins
