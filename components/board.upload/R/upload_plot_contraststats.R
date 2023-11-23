@@ -26,12 +26,12 @@ upload_plot_contraststats_ui <- function(id,
   )
 }
 
-upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermark = FALSE) {
+upload_plot_contraststats_server <- function(id, checkTables, contrastsRT, samplesRT, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
-      ct <- uploaded$contrasts.csv
-      has.contrasts <- !is.null(ct) && NCOL(ct) > 0
+      contrasts <- contrastsRT()
+      has.contrasts <- !is.null(contrasts) && NCOL(contrasts) > 0
       check <- checkTables()
 
       status.ok <- check["contrasts.csv", "status"]
@@ -48,8 +48,12 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
         )
       )
 
-      contrasts <- uploaded$contrasts.csv
-      return(contrasts)
+      ## we need to return the sample-wise labeled contrast matrix
+      samples <- samplesRT()
+      contrasts2 <- playbase::contrasts.convertToLabelMatrix(
+        contrasts, samples
+      )
+      return(contrasts2)
     })
 
     plot.RENDER <- function() {
@@ -64,7 +68,6 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
 
       p1 <- p1 + ggplot2::ggtitle("COMPARISONS", subtitle = tt2) +
         ggplot2::theme(
-          #
           axis.text.y = ggplot2::element_text(
             size = 12,
             margin = ggplot2::margin(0, 0, 0, 25),
@@ -75,6 +78,11 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
       return(p1)
     }
 
+    regular_plot.RENDER <- function() {
+      plot.RENDER() +
+        ggplot2::scale_x_discrete(label = function(x) stringr::str_trunc(x, 12))
+    }
+
     modal_plot.RENDER <- function() {
       plot.RENDER()
     }
@@ -82,7 +90,7 @@ upload_plot_contraststats_server <- function(id, checkTables, uploaded, watermar
     PlotModuleServer(
       "pltmod",
       plotlib = "base",
-      func = plot.RENDER,
+      func = regular_plot.RENDER,
       func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 90), ## resolution of plots

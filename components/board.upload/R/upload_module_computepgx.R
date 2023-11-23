@@ -148,14 +148,16 @@ upload_module_computepgx_server <- function(
                       "only.hugo",
                       "only.proteincoding",
                       "remove.unknown",
-                      "remove.notexpressed"
+                      "remove.notexpressed",
+                      "skip.normalization"
                     ),
                   choiceNames =
                     c(
                       "convert to HUGO",
                       "protein-coding only",
                       "remove Rik/ORF/LOC genes",
-                      "remove not-expressed"
+                      "remove not-expressed",
+                      "skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -207,7 +209,9 @@ upload_module_computepgx_server <- function(
                         target = "_blank",
                         style = "text-decoration: underline;"
                       ),
-                      downloadLink(ns("download_gmt"), shiny::HTML(" or download an <u>example GMT</u> listing the gene targets of the EGFR transcription factor."))
+                      "or download an",
+                      downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
+                      " (gene targets of the EGFR transcription factor)."
                     )
                   ),
                   multiple = FALSE,
@@ -449,6 +453,7 @@ upload_module_computepgx_server <- function(
         only.hugo <- ("only.hugo" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
+        do.normalization <- !("skip.normalization" %in% flt)
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         only.proteincoding <- ("only.proteincoding" %in% flt)
@@ -461,7 +466,6 @@ upload_module_computepgx_server <- function(
         # button), or user click compute a second time
         if (is.null(raw_dir())) {
           raw_dir(create_raw_dir(auth))
-          dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
         dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
@@ -478,6 +482,7 @@ upload_module_computepgx_server <- function(
           counts = counts,
           contrasts = contrasts,
           batch.correct = FALSE,
+          normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = !remove.unknown,

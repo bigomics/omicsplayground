@@ -19,9 +19,8 @@ upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
   tagList(
-    bslib::layout_column_wrap(
-      width = 1,
-      style = htmltools::css(grid_template_columns = "8fr 3fr;"),
+    bslib::layout_columns(
+      col_widths = c(8, 4),
       height = "50%",
       bslib::card(
         full_screen = TRUE,
@@ -95,7 +94,7 @@ upload_module_makecontrast_ui <- function(id) {
           )
         )
       ),
-      makecontrast_plot_pcaplot_ui(
+      upload_plot_pcaplot_ui(
         ns("pcaplot"),
         title = "PCA/tSNE plot",
         info.text = "",
@@ -148,11 +147,10 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         df <- phenoRT()
 
         if ("<samples>" %in% input$param) {
-          df$"<samples>" <- rownames(df)
+          df <- cbind(df, "<samples>" = rownames(df))
         }
-
-        df <- type.convert(df)
-        ii <- which(sapply(type.convert(df), class) %in% c("numeric", "integer"))
+        df <- type.convert(df, as.is = TRUE)
+        ii <- which(sapply(type.convert(df, as.is = TRUE), class) %in% c("numeric", "integer"))
         if (length(ii)) {
           for (i in ii) {
             x <- df[, i]
@@ -281,7 +279,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         ## update reactive value
         samples <- colnames(countsRT())
-
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
         if (is.null(rv$contr)) {
           rv$contr <- ctx1
@@ -402,7 +399,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         server = FALSE
       )
 
-      makecontrast_plot_pcaplot_server(
+      upload_plot_pcaplot_server(
         "pcaplot",
         phenoRT,
         countsRT,
@@ -419,101 +416,5 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         })
       ) ## pointing to reactive
     } ## end-of-server
-  )
-}
-
-
-# PlotModuleUI for pcaplot
-makecontrast_plot_pcaplot_ui <- function(id,
-                                         title,
-                                         info.text,
-                                         caption,
-                                         label = "",
-                                         height,
-                                         width) {
-  ns <- shiny::NS(id)
-
-  options <- shiny::tagList(
-    withTooltip(
-      shiny::selectInput(ns("pcaplot.method"), "Method:",
-        choices = c("pca", "tsne", "umap"),
-        width = "100%"
-      ), "Choose clustering method.",
-      placement = "right", options = list(container = "body")
-    )
-  )
-
-  PlotModuleUI(ns("plot"),
-    title = title,
-    caption = caption,
-    label = label,
-    plotlib = "plotly",
-    info.text = info.text,
-    options = options,
-    download.fmt = c("png", "pdf", "csv"),
-    width = width,
-    height = height
-  )
-}
-
-# PlotModuleServer for pcaplot
-makecontrast_plot_pcaplot_server <- function(id,
-                                             phenoRT,
-                                             countsRT,
-                                             sel.conditions,
-                                             watermark = FALSE) {
-  moduleServer(
-    id, function(input, output, session) {
-      plot_data <- shiny::reactive({
-        pheno <- phenoRT()
-        counts <- countsRT()
-        res <- list(
-          pheno = pheno,
-          counts = counts
-        )
-        return(res)
-      })
-
-      plot.RENDER <- function() {
-        res <- plot_data()
-        pheno <- res$pheno
-        counts <- res$counts
-
-        if (is.null(pheno) || is.null(counts)) {
-          return(NULL)
-        }
-        if (NCOL(pheno) == 0 || NCOL(counts) == 0) {
-          return(NULL)
-        }
-        shiny::req(pheno)
-        shiny::req(counts)
-
-        method <- input$pcaplot.method
-        X <- log2(1 + counts)
-        clust <- playbase::pgx.clusterMatrix(X, dims = 2, method = method)
-
-        cond <- sel.conditions()
-        if (length(cond) == 0 || is.null(cond)) {
-          return(NULL)
-        }
-        playbase::pgx.scatterPlotXY(
-          clust$pos2d,
-          var = cond,
-          plotlib = "plotly",
-          legend = FALSE
-        )
-      }
-
-      PlotModuleServer(
-        "plot",
-        plotlib = "plotly",
-        func = plot.RENDER,
-        func2 = plot.RENDER,
-        csvFunc = plot_data,
-        res = c(70, 140),
-        pdf.width = 8, pdf.height = 8,
-        add.watermark = watermark
-      )
-    }
   )
 }

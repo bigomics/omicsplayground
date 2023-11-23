@@ -83,11 +83,11 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     ## update choices upon change of level
-    shiny::observeEvent(input$hm_splitvar, {
+    shiny::observeEvent(c(input$hm_splitvar, input$hm_level), {
       shiny::req(pgx$families, pgx$gsetX)
       shiny::req(input$hm_level)
       choices <- names(pgx$families)
-      if (input$hm_level == "gene") {
+      if (input$hm_level == "geneset") {
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
         nk <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
         choices <- names(gset_collections)[nk >= 5]
@@ -265,6 +265,7 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_samplefilter,
       input$hm_filterXY,
       input$hm_filterMitoRibo,
+      pgx$X,
       ## input$hm_group,
       splitmap$hm_ntop()
     )

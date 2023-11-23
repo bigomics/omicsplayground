@@ -6,11 +6,9 @@
 
 user_table_resources_ui <- function(id) {
   ns <- shiny::NS(id)
-  bslib::layout_column_wrap(
-    width = 1,
+  bslib::layout_columns(
+    col_widths = c(4, 4, 4),
     height = "100%",
-    heights_equal = "row",
-    style = htmltools::css(grid_template_columns = "4fr 4fr 4fr"),
     TableModuleUI(ns("timings"),
       info.text = "The <b>timings</b> table reports more detailed
                   information about the object dimensions, object sizes and

@@ -47,11 +47,11 @@ PathwayUI <- function(id) {
     ## ----------------------------- WikiPathway -------------------------------
     shiny::tabPanel(
       "WikiPathways",
-      bslib::layout_column_wrap(
-        width = 1 / 2,
-        style = "height: calc(100vh - 180px);",
-        bslib::layout_column_wrap(
-          width = 1,
+      bslib::layout_columns(
+        col_widths = c(6, 6),
+        height = "calc(100vh - 180px)",
+        bslib::layout_columns(
+          col_widths = 12,
           height = "100%",
           functional_plot_wikipathway_graph_ui(
             ns("wikipathway_graph"),
@@ -89,11 +89,11 @@ PathwayUI <- function(id) {
     ## ----------------------------- REACTOME -------------------------------
     shiny::tabPanel(
       "Reactome",
-      bslib::layout_column_wrap(
-        width = 1 / 2,
-        style = "height: calc(100vh - 180px);",
-        bslib::layout_column_wrap(
-          width = 1,
+      bslib::layout_columns(
+        col_widths = c(6, 6),
+        height = "calc(100vh - 180px)",
+        bslib::layout_columns(
+          col_widths = 12,
           height = "100%",
           functional_plot_reactome_graph_ui(
             ns("reactome_graph"),
@@ -128,18 +128,18 @@ PathwayUI <- function(id) {
     ## ----------------------------- GO GRAPH -------------------------------
     shiny::tabPanel(
       "GO graph",
-      bslib::layout_column_wrap(
-        width = 1 / 2,
-        style = "height: calc(100vh - 180px);",
-        bslib::layout_column_wrap(
-          width = 1,
+      bslib::layout_columns(
+        col_widths = c(6, 6),
+        height = "calc(100vh - 180px)",
+        bslib::layout_columns(
+          col_widths = 12,
           height = "100%",
           functional_plot_go_network_ui(
             id = ns("GO_network"),
             title = "Gene Ontology graph",
             info.text = "Gene Ontology (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with 'child' terms being more specialized than their 'parent' terms. The graph is interactive. You can move the graph and zoom in using the mouse.",
             caption = "The GO graph represents the enrichment of the GO terms as a tree structure.",
-            height = c(435, TABLE_HEIGHT_MODAL),
+            height = c("60%", TABLE_HEIGHT_MODAL),
             width = c("60%", "100%"),
             label = "a"
           ),
@@ -166,9 +166,9 @@ PathwayUI <- function(id) {
     ## ----------------------------- Enrichment Map  -------------------------------
     shiny::tabPanel(
       "Enrichment Map (beta)",
-      bslib::layout_column_wrap(
-        width = 1,
-        style = "height: calc(100vh - 180px);",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = "calc(100vh - 180px)",
         functional_plot_enrichmap_ui(
           id = ns("enrichment_map"),
           title = "Enrichment Map",

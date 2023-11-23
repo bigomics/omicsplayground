@@ -13,7 +13,7 @@ enrichment_plot_volcanoall_ui <- function(
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", TRUE),
+    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
     )

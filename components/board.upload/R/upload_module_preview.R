@@ -20,16 +20,17 @@ upload_module_preview_ui <- function(id) {
   tagList()
 }
 
-upload_module_preview_server <- function(id, uploaded) {
+upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
   moduleServer(
     id,
     function(input, output, session) {
-      # every time something is uploaded, it can be previewed
-      observeEvent(uploaded$last_uploaded,
+      # ever/y time something is uploaded, it can be previewed
+      observeEvent(c(uploaded$last_uploaded),
         {
-          has_counts <- !is.null(uploaded$checklist$counts.csv$file)
-          has_samples <- !is.null(uploaded$checklist$samples.csv$file)
-          has_contrasts <- !is.null(uploaded$checklist$contrasts.csv$file)
+          checkTables()
+          has_counts <- !is.null(uploaded$counts.csv)
+          has_samples <- !is.null(uploaded$samples.csv)
+          has_contrasts <- !is.null(uploaded$contrasts.csv)
 
           tabs <- list(id = session$ns("preview_panel"))
           if (has_counts) {
@@ -51,15 +52,17 @@ upload_module_preview_server <- function(id, uploaded) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(uploaded$checklist$counts.csv$check,
+                    check_to_html(checklist$counts.csv$checks,
                       pass_msg = "All counts checks passed",
                       null_msg = "Counts checks not run yet.
                                 Fix any errors with counts first."
                     ),
-                    check_to_html(uploaded$checklist$samples_counts,
-                      pass_msg = "All samples-counts checks passed",
-                      null_msg = "Samples-counts checks not run yet.
+                    ifelse(!has_samples, "",
+                      check_to_html(checklist$samples_counts$checks,
+                        pass_msg = "All samples-counts checks passed",
+                        null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
+                      )
                     )
                   )
                 )
@@ -85,20 +88,25 @@ upload_module_preview_server <- function(id, uploaded) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(uploaded$checklist$samples.csv$check,
+                    check_to_html(checklist$samples.csv$checks,
                       pass_msg = "All samples checks passed",
                       null_msg = "Samples checks not run. Fix any
                                 errors with samples first."
                     ),
-                    check_to_html(uploaded$checklist$samples_counts,
-                      pass_msg = "All samples-counts checks passed",
-                      null_msg = "Samples-counts checks not run yet.
-                                Fix any errors with samples or counts first."
+                    ifelse(!has_counts, "",
+                      check_to_html(
+                        check = checklist$samples_counts$checks,
+                        pass_msg = "All samples-counts checks passed",
+                        null_msg = "Samples-counts checks not run yet.
+                                  Fix any errors with samples or counts first."
+                      )
                     ),
-                    check_to_html(uploaded$checklist$samples_contrasts,
-                      pass_msg = "All samples-contrasts checks passed",
-                      null_msg = "Samples-contrasts checks not run yet.
+                    ifelse(!has_contrasts, "",
+                      check_to_html(checklist$samples_contrasts$checks,
+                        pass_msg = "All samples-contrasts checks passed",
+                        null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
+                      )
                     )
                   )
                 )
@@ -124,15 +132,17 @@ upload_module_preview_server <- function(id, uploaded) {
                   column(
                     width = 4,
                     "Summary:", br(),
-                    check_to_html(uploaded$checklist$contrasts.csv$check,
+                    check_to_html(checklist$contrasts.csv$checks,
                       pass_msg = "All contrasts checks passed",
                       null_msg = "Contrasts checks not run. Fix any errors
                                 with contrasts first."
                     ),
-                    check_to_html(uploaded$checklist$samples_contrasts,
-                      pass_msg = "All samples-contrasts checks passed",
-                      null_msg = "Samples-contrasts checks not run yet.
-                                Fix any errors with samples or contrasts first."
+                    ifelse(!has_samples, "",
+                      check_to_html(checklist$samples_contrasts$checks,
+                        pass_msg = "All samples-contrasts checks passed",
+                        null_msg = "Samples-contrasts checks not run yet.
+                                  Fix any errors with samples or contrasts first."
+                      )
                     )
                   )
                 )
@@ -207,6 +217,11 @@ upload_module_preview_server <- function(id, uploaded) {
           uploaded[["pgx"]] <- NULL
           uploaded[["last_uploaded"]] <- NULL
           uploaded[["checklist"]] <- NULL
+          checklist[["counts.csv"]] <- NULL
+          checklist[["samples.csv"]] <- NULL
+          checklist[["contrasts.csv"]] <- NULL
+          checklist[["samples_counts"]] <- NULL
+          checklist[["samples_contrasts"]] <- NULL
         },
         ignoreInit = TRUE
       )
@@ -224,7 +239,6 @@ upload_module_preview_server <- function(id, uploaded) {
 # convert list of checks to html tags for display in the data preview modal
 check_to_html <- function(check, pass_msg = "", null_msg = "") {
   error_list <- playbase::PGX_CHECKS
-
   if (is.null(check)) {
     tagList(
       span(null_msg, style = "color: red"), br()
@@ -290,13 +304,30 @@ upload_table_preview_counts_server <- function(id,
                                                scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$counts.csv$file)
-      uploaded$checklist$counts.csv$file
+      shiny::req(uploaded$counts.csv)
+      dt <- uploaded$counts.csv
+      nrow0 <- nrow(dt)
+      ncol0 <- ncol(dt)
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
+        dt <- head(dt, MAXSHOW)
+        dt <- rbind(dt, rep(NA, ncol(dt)))
+        n1 <- nrow0 - MAXSHOW
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+      }
+      if (ncol(dt) > MAXSHOW) {
+        dt <- dt[, 1:MAXSHOW]
+        dt <- cbind(dt, rep(NA, nrow(dt)))
+        n1 <- ncol0 - MAXSHOW
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+      }
+      dt
     })
 
     table.RENDER <- function() {
       dt <- table_data()
       req(dt)
+
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -349,8 +380,18 @@ upload_table_preview_samples_server <- function(id,
                                                 scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$samples.csv$file)
-      uploaded$checklist$samples.csv$file
+      shiny::req(uploaded$samples.csv)
+      dt <- uploaded$samples.csv
+      nrow0 <- nrow(dt)
+      ncol0 <- ncol(dt)
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
+        dt <- head(dt, MAXSHOW)
+        dt <- rbind(dt, rep(NA, ncol(dt)))
+        n1 <- nrow0 - MAXSHOW
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+      }
+      dt
     })
 
     table.RENDER <- function() {
@@ -408,8 +449,10 @@ upload_table_preview_contrasts_server <- function(id,
                                                   scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(uploaded$checklist$contrasts.csv$file)
-      uploaded$checklist$contrasts.csv$file
+      shiny::req(uploaded$contrasts.csv)
+      dt <- uploaded$contrasts.csv |> data.frame(check.names = FALSE)
+      if (NCOL(dt) == 0) dt <- cbind(dt, " " = NA)
+      dt
     })
 
     table.RENDER <- function() {

@@ -1,54 +1,68 @@
-## https://docs.docker.com/ci-cd/github-actions
-
-name: build-test-push
-on:
-  schedule:
-    - cron:  '0 4 * * *'
+name: Snapshot test
+on: 
+  pull_request:
   workflow_dispatch:
-
+env:
+  DOCKER_TAG: bigomics/omicsplayground:latest
 jobs:
-
-  buid-test-push:
-
+  unittest:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Checkout 
+        name: Checkout
         uses: actions/checkout@v3
-        with:
-          ref: master
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
-        name: Build
-        id: test
-        uses: docker/build-push-action@v2
+        name: Shinytest docker
+        id: test-snapshot
+        run: |
+          docker build --build-arg GITHUB_SHA=${{ github.sha }} -t ${{ env.DOCKER_TAG }} -f ./.github/workflows/build-test-push/Dockerfile .
+          docker run --name run_tests bigomics/omicsplayground:latest
+          docker cp run_tests:omicsplayground/tests .
+      - 
+        name: Upload snapshots as artifact
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
-          context: .
-          file: ./.github/workflows/build-test-push/Dockerfile
-          push: false
-          no-cache: true
-          build-args: |
-            BRANCH=master
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
+          name: testthat-snapshots
+          path: ./tests/*
+          if-no-files-found: ignore
+      - 
+        name: Configure Git
+        if: always()
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      # - 
+      #   name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
+      #   with:
+      #     ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+      #     limit-access-to-actor: true
+      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
+      #     limit-access-to-users: mauromiguelm
+      #     wait-timeout-minutes: 120
+
+      - 
+        name: Commit and push snapshots
+        if: always()
+        run: |
+          cd ${{ github.workspace }}
+          if [[ `git status --porcelain` ]]; then  
+            git checkout -b "${GITHUB_HEAD_REF}"
+            git add ./tests/*
+            git fetch origin "${GITHUB_HEAD_REF}"
+            git commit -m "Snapshot test failed: use snapshot_review('snapshot/') (GHA)"
+            git push --force-with-lease origin "${GITHUB_HEAD_REF}"
+            echo "snapshots pushed to repo"
+          fi
+      
       -
-        name: Push
-        if: steps.test.outputs.test_result == 'FALSE'
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./.github/workflows/build-test-push/Dockerfile
-          push: true
-          no-cache: true
-          build-args: |
-            BRANCH=master
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:test
-        
-          
+        name: Fail GHA if snapshot test failed
+        if: always()
+        run: |
+          if [[ "${{ steps.test-snapshot.outputs.test_result }}" == "FALSE" ]]; then
+            exit 1
+          fi

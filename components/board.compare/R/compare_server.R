@@ -176,7 +176,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ============================================================================
 
 
-    createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop) {
+    createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop, get_data = FALSE) {
       p <- NULL
       genes1 <- rownames(pgx$X)
       higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
@@ -194,7 +194,18 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         pos <- pos[jj, ]
         ii <- match(toupper(rownames(pos)), toupper(rownames(pgx$X)))
         rownames(pos) <- rownames(pgx$X)[ii]
-
+        if (get_data) {
+          return(
+            playbase::pgx.plotGeneUMAP(
+              pgx,
+              contrast = ct, pos = pos,
+              cex = 0.9, cex.lab = cex.lab,
+              hilight = higenes1, ntop = ntop,
+              zfix = TRUE, par.sq = TRUE,
+              plotlib = "base", data = TRUE
+            )
+          )
+        }
         p <- playbase::pgx.plotGeneUMAP(
           pgx,
           contrast = ct, pos = pos,
@@ -209,6 +220,15 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           jj <- match(gg, toupper(rownames(pgx$X)))
           X1 <- pgx$X[jj, , drop = FALSE]
           Y1 <- pgx$samples
+          if (get_data) {
+            return(
+              playbase::gx.splitmap(X1,
+                nmax = 40, col.annot = Y1,
+                softmax = TRUE, show_legend = FALSE,
+                data = TRUE
+              )
+            )
+          }
           playbase::gx.splitmap(X1,
             nmax = 40, col.annot = Y1,
             softmax = TRUE, show_legend = FALSE
@@ -218,6 +238,17 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         genes1 <- rownames(pgx$X)
         gg <- intersect(toupper(higenes), toupper(genes1))
         higenes1 <- genes1[match(gg, toupper(genes1))]
+        if (get_data) {
+          return(
+            playbase::pgx.plotContrast(
+              pgx,
+              contrast = ct, hilight = higenes1,
+              ntop = ntop, cex.lab = cex.lab, #
+              par.sq = TRUE, type = type, plotlib = "base",
+              data = TRUE
+            )
+          )
+        }
         p <- playbase::pgx.plotContrast(
           pgx,
           contrast = ct, hilight = higenes1,

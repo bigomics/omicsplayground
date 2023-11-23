@@ -71,16 +71,13 @@ DataViewUI <- function(id) {
     # Gene overview tab #####
     shiny::tabPanel(
       "Gene overview",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = fullH,
-        heights_equal = "row",
         bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
           height = "100%",
-          heights_equal = "row",
-          style = htmltools::css(grid_template_columns = "2fr 10fr"),
+          col_widths = c(2, 10),
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
             title = "Gene info",
@@ -89,10 +86,10 @@ DataViewUI <- function(id) {
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
-          bslib::layout_column_wrap(
-            width = 1,
-            bslib::layout_column_wrap(
-              width = 1 / 3,
+          bslib::layout_columns(
+            col_widths = 12,
+            bslib::layout_columns(
+              col_widths = c(4, 4, 4),
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
                 title = "Gene expression",
@@ -120,9 +117,8 @@ DataViewUI <- function(id) {
                 width = c("auto", "100%")
               )
             ),
-            bslib::layout_column_wrap(
-              width = 1,
-              style = htmltools::css(grid_template_columns = "7fr 5fr"),
+            bslib::layout_columns(
+              col_widths = c(7, 5),
               dataview_plot_correlation_ui(
                 ns("correlationplot"),
                 label = "d",
@@ -150,13 +146,12 @@ DataViewUI <- function(id) {
     # QC tab #####
     shiny::tabPanel(
       "Sample QC",
-      bslib::layout_column_wrap(
-        width = 1,
+      bslib::layout_columns(
+        col_widths = 12,
         height = fullH,
-        heights_equal = "row",
         bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes."),
-        bslib::layout_column_wrap(
-          width = 1 / 3,
+        bslib::layout_columns(
+          col_widths = c(4, 4, 4),
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             label = "a",
@@ -168,7 +163,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
-            title = "Median counts distribution",
+            title = "Counts boxplots",
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -184,9 +179,8 @@ DataViewUI <- function(id) {
             label = "c"
           )
         ),
-        bslib::layout_column_wrap(
-          width = 1,
-          style = htmltools::css(grid_template_columns = "5fr 7fr"),
+        bslib::layout_columns(
+          col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
             title = "Dataset abundance of major gene types",
@@ -250,13 +244,13 @@ DataViewUI <- function(id) {
             height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "b",
-            title = "Phenotype association",
-            info.text = "Phenotype association matrix. Clustered heatmap of phenotype association. The values correspond to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'.",
-            caption = "Clustered heatmap of phenotype association."
+            title = "Phenotype correlation",
+            info.text = "Phenotype correlation matrix. Clustered heatmap of phenotype correlation. Phenotypes are stratified into their conditions. The size of the dots correspond to the absolute correlation between two phenotype conditions. Red corresponds to positive correlation, blue corresponds to negative correlation.",
+            caption = "Clustered heatmap of phenotype correlation."
           )
         ),
-        bslib::layout_column_wrap(
-          width = 1,
+        bslib::layout_columns(
+          col_widths = 12,
           dataview_table_samples_ui(
             ns("sampletable"),
             height = c("50%", TABLE_HEIGHT_MODAL),

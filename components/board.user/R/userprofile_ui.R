@@ -13,18 +13,16 @@ UserProfileUI <- function(id) {
       id = ns("tabs1"),
       shiny::tabPanel(
         "User profile",
-        bslib::layout_column_wrap(
+        bslib::layout_columns(
           height = "calc(100vh - 183px)",
-          width = 1,
-          style = htmltools::css(grid_template_columns = "4fr 8fr"),
+          col_widths = c(4, 8),
           wellPanel(
             shiny::h4("Subscription"),
             uiOutput(ns("plan")),
             shiny::tableOutput(ns("userdata"))
           ),
-          bslib::layout_column_wrap(
-            width = 1,
-            ## shiny::plotOutput(ns("usage")),
+          bslib::layout_columns(
+            col_widths = 12,
             PlotModuleUI(
               ns("usage"),
               plotlib = "plotly",
