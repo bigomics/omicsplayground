@@ -57,9 +57,6 @@ compare_plot_fc_correlation_server <- function(id,
       var <- plot_data()
       pos <- plot_data()
 
-      var1 <<-var
-      pos1 <<-pos
-      hilight <<- hilight
       p <- playbase::pgx.scatterPlotXY(
         pos,
         var = var,
