@@ -106,7 +106,7 @@ featuremap_plot_gene_map_server <- function(id,
     })
 
     plot_data <- shiny::reactive({
-      pos <- getGeneUMAP()
+      pos <- getUMAP()
       colnames(pos) <- c("x", "y")
 
       hilight <- filteredGenes()
@@ -212,7 +212,7 @@ featuremap_plot_gene_map_server <- function(id,
     geneTable.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
       X <- pgx$X
-      pos <- getGeneUMAP()
+      pos <- getUMAP()
       pos <- playbase::rename_by(pos, pgx$genes, "symbol")
 
       sel.genes <- NULL

@@ -62,20 +62,20 @@ foldchange_heatmap_server <- function(id,
         FC <- getActiveFoldChangeMatrix()$fc
       }
 
-      F <- F[, input_comparisons(), drop = FALSE]
+      FC <- FC[, input_comparisons(), drop = FALSE]
 
       # check that dim(F)[2] >0, in case user has not selected any comparisons
       validate(
         need(
-          dim(F)[2] > 0,
+          dim(FC)[2] > 0,
           "No comparisons selected. Please select a comparison on the settings sidebar."
         )
       )
 
-      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- F[order(-abs(rowMeans(F))), , drop = FALSE]
+      FC <- FC[order(-rowMeans(FC**2)), , drop = FALSE]
+      FC <- FC[order(-abs(rowMeans(FC))), , drop = FALSE]
 
-      F1 <- head(F, 80)
+      F1 <- head(FC, 80)
       F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
       F1
     })
