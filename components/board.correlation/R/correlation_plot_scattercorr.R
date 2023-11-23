@@ -109,7 +109,7 @@ correlation_plot_scattercorr_server <- function(id,
       return(dt)
     })
 
-    plot_scatter <- function(nrow, ncol) {
+    plotbase_scatter <- function(nrow, ncol) {
       dt <- cor_scatter.DATA()
       shiny::req(dt)
 
@@ -181,6 +181,75 @@ correlation_plot_scattercorr_server <- function(id,
       }
     }
 
+    plotly_scatter <- function(n_row, n_cols) {
+      
+      # Load input data
+      dt <- cor_scatter.DATA()
+      shiny::req(dt)
+      swapaxis <- input$swapaxis
+      rho <- dt$rho
+      X <- dt$X
+      pheno <- dt$pheno
+      colorby <- dt$colorby
+      this.gene <- dt$this.gene
+      COL <- rep(dt$COL, 99)
+
+      shiny::req(length(rho) > 0) 
+      klr <- COL[as.integer(pheno)]
+
+      nplots <- n_row * n_cols
+      rho <- head(rho, nplots)
+
+      # Aseemble subplots
+      sub_plots <- vector("list", length(rho))
+      for (i in 1:nplots) {
+          gene2 <- names(rho)[i]
+          if (swapaxis) {
+              x <- X[gene2, ]
+              y <- X[this.gene, ]
+              xlab <- gene2
+              ylab <- this.gene
+          } else {
+              y <- X[gene2, ]
+              x <- X[this.gene, ]
+              ylab <- gene2
+              xlab <- this.gene
+          }
+          # Make regression line
+          fit <- lm(y ~ x)
+          newdata <- data.frame(x = range(x))
+          newdata$y <- predict(fit, newdata)
+          plt <- plotly::plot_ly() %>%
+              # Axis
+              plotly::layout(
+                xaxis = list(title = xlab, titlefont = 5),
+                yaxis = list(title = ylab, titlefont = 5),
+                legend = list(x = 0.02, y = 1, bgcolor = "transparent") 
+              ) %>%
+              # Add the points
+              plotly::add_trace(
+              x = x, y = y, name = pheno, color = klr,type = "scatter", mode = "markers",
+              marker = list(size = 15),
+              showlegend = i == 1) %>%
+              # Add the regression line
+              plotly::add_trace(data = newdata,
+              x = ~x, y = ~y, showlegend = FALSE, type = "scatter",
+              line = list(color = 'rgb(22, 96, 167)', dash = 'dot'), mode = "lines", 
+              inherit = FALSE
+              ) 
+          sub_plots[[i]] <- plt
+          }
+
+      # Assemble all subplot in to grid
+      suppressWarnings(
+      plt <- plotly::subplot(sub_plots, nrows = n_row, margin =0.05,
+      titleY = TRUE, titleX = TRUE
+      ))
+      
+      return(plt)
+    }
+
+
     cor_scatter.PLOTFUN <- function() {
       if (input$layout == "3x3") {
         nrow <- ncol <- 3
@@ -189,7 +258,8 @@ correlation_plot_scattercorr_server <- function(id,
       } else {
         nrow <- ncol <- 5
       }
-      plot_scatter(nrow, ncol)
+      plotly_scatter(nrow, ncol) %>%
+        plotly_modal_default()
     }
 
     cor_scatter.PLOTFUN2 <- function() {
@@ -203,12 +273,13 @@ correlation_plot_scattercorr_server <- function(id,
         nrow <- 5
         ncol <- 7
       }
-      plot_scatter(nrow, ncol)
+      plotly_scatter(nrow, ncol) %>%
+        plotly_modal_default()
     }
 
     PlotModuleServer(
-      "plot",
-      plotlib = "base",
+      "pltmod",
+      plotlib = "plotly",
       func = cor_scatter.PLOTFUN,
       func2 = cor_scatter.PLOTFUN2,
       csvFunc = cor_scatter.DATA, ##  NOTE: Not sure what should be the plot data!
