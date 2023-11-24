@@ -1,3 +1,14 @@
+### v3.2.33 (2023-11-23)
+
+-  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/a91190167c959642e7678f54a4e6978c1fb8b1ee)
+-  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/c5e12e420dc092e68cba023f3aec948de7311f62)
+-  fix MAXCOUNTS bug [view](https://github.com/bigomics/omicsplayground/commit/0b018d1c989aa043a4e79ea7b7ada2af96fa18c6)
+-  cleanup dbg [view](https://github.com/bigomics/omicsplayground/commit/4f2a212813e61130f54ffdedbdb256b9a0fc6206)
+-  v3.2.32.9001 [view](https://github.com/bigomics/omicsplayground/commit/c30692b1ea01571baa1c97349ca8419131093b21)
+-  add libx and pgxdir parameters [view](https://github.com/bigomics/omicsplayground/commit/b1f8600e951552c25e202683675a7479feb49700)
+-  v3.2.33: include libx in playbase pgxcompute [view](https://github.com/bigomics/omicsplayground/commit/5d2422df8ed9082dfc927e19abfac2c35a1f6469)
+
+
 ### v3.2.32 (2023-11-22)
 
 -  feat: add covariance option [view](https://github.com/bigomics/omicsplayground/commit/5598c584b22a3a6b692746ef4573269b0adf6d12)
@@ -88,14 +99,5 @@
 -  Snapshot test failed: use snapshot_review('snapshot/') (GHA) [view](https://github.com/bigomics/omicsplayground/commit/a8380f7430f6b838cccf4541197fa3f267f1b3c7)
 -  skip crosscheck if not all matrices present [view](https://github.com/bigomics/omicsplayground/commit/a85cc9c543a039a736f1a5e2cbc4f4cec78d18b3)
 -  when no contrasts in modified_ct, disable compute tab [view](https://github.com/bigomics/omicsplayground/commit/e8a4d6b5ec3c78bc723ff8e82091c987c8c1ca9f)
-
-
-### v3.2.31 (2023-11-15)
-
--  update logs to 3.2.30 [view](https://github.com/bigomics/omicsplayground/commit/a3a162216938945165ae7a27db4da252c79a89a9)
--  v3.2.30.9002 [view](https://github.com/bigomics/omicsplayground/commit/e1b6bfb244565541339d5aba4e23a537a20d514c)
--  edit link [view](https://github.com/bigomics/omicsplayground/commit/3b7679483b9930ac0e125921b7b72658cc64b750)
--  edit output message [view](https://github.com/bigomics/omicsplayground/commit/b633d58187b497fa789d80de4e4332f361a3843c)
--  v3.2.31 [view](https://github.com/bigomics/omicsplayground/commit/2f70aaa2982880c234c4b552f694236970661f00)
 
 
