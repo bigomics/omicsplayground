@@ -454,6 +454,13 @@ UploadBoard <- function(id,
         checklist[["samples_counts"]] <- NULL
         checklist[["samples_contrasts"]] <- NULL
         uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
+
+        shiny::showTab("tabs", "Upload")
+        # for some reason, we need to click in another tab to make the upload tab run
+        shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+        shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
+        shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+
       } else {
         ## clear files
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
@@ -882,6 +889,17 @@ UploadBoard <- function(id,
       }
       return(pgx)
     })
+
+    # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
+    observeEvent(input$proceed_to_upload,{
+      # show tab Upload
+      shiny::showTab("tabs", "Upload")
+      # for some reason, we need to click in another tab to make the upload tab run
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+      shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+    })
+
 
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
