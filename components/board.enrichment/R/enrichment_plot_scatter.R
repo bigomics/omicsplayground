@@ -123,7 +123,6 @@ enrichment_plot_scatter_server <- function(id,
       klrs <- getcolors(pgx, comp0)
       klr <- klrs$samples[names(sx)]
       klr <- paste0(gplots::col2hex(klr), "99")
-      klr <<- klr
       gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)
       comp0 <- playbase::breakstring(substring(comp0, 1, 80), 10)
       tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", gene)
@@ -137,16 +136,18 @@ enrichment_plot_scatter_server <- function(id,
           plotly::layout(
             xaxis = list(title = paste(gene, "expression"), titlefont = 5),
             yaxis = list(title = "gene set enrichment", titlefont = 5),
-            legend = list(x = 0.02, y = 1, bgcolor = "transparent", font = list(size = 10)) 
+            legend = list(x = 0.05, y = 1.1, xanchor = "center",  
+                          orientation = "h", bgcolor = "transparent", 
+                          font = list(size = 7)) 
           ) %>%
           # Add the points
           plotly::add_trace(
           x = gx, y = sx, name = comp0, color = klr,type = "scatter", mode = "markers",
-          marker = list(size = 10),
+          marker = list(size = 5),
           showlegend = TRUE) %>%
           # Add the regression line
           plotly::add_trace(data = newdata,
-          x = ~ gx, y = ~sx, showlegend = FALSE, type = "scatter",
+          x = ~gx, y = ~sx, showlegend = FALSE, type = "scatter",
           line = list(color = 'rgb(22, 96, 167)', dash = 'dot'), mode = "lines", 
           inherit = FALSE
           ) 
@@ -154,20 +155,18 @@ enrichment_plot_scatter_server <- function(id,
       return(plt)
     }
     
-    subplotly_scatter.RENDER <- function() {
+    subplotly_scatter.RENDER <- list(card = function() {
       plotlysubplot_scatter() %>% plotly_default()
-    }
-
-    subplotly_scatter.RENDER2 <- function() {
-      plotlysubplot_scatter() %>% plotly_modal_default()
-    }
-
+    },
+      expand = function() {
+        plotlysubplot_scatter() %>% plotly_default()
+      })
 
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
-      func = subplotly_scatter.RENDER,#basesubplot_scatter.RENDER,
-      func2 = subplotly_scatter.RENDER2,
+      func = subplotly_scatter.RENDER$card,#basesubplot_scatter.RENDER,
+      func2 = subplotly_scatter.RENDER$expand,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
       add.watermark = watermark
