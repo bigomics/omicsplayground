@@ -18,12 +18,12 @@ featuremap_plot_gene_map_ui <- function(
       c(0, 10, 20, 50, 100, 1000),
       selected = 50
     ),
-    shiny::sliderInput(ns("umap_gamma"), "tweak colors:",
+    shiny::sliderInput(ns("umap_gamma"), "color gamma:",
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("umap_colorby"), "color by:",
       #
-      choices = c("sd.X", "rms.FC"),
+      choices = c("sd.X", "sd.FC"),
       selected = "sd.X", inline = TRUE
     )
   )
@@ -66,6 +66,7 @@ featuremap_table_gene_map_ui <- function(
 
 featuremap_plot_gene_map_server <- function(id,
                                             pgx,
+
                                             plotUMAP,
                                             sigvar,
                                             filter_genes,
@@ -118,7 +119,6 @@ featuremap_plot_gene_map_server <- function(id,
       FC <- scale(FC, center = FALSE)
       if (colorby == "sd.FC") {
         fc <- (rowMeans(FC**2))**0.5
-
       } else {
         cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
         fc <- sqrt(rowMeans(cX**2))
@@ -135,6 +135,7 @@ featuremap_plot_gene_map_server <- function(id,
 
       pd <- list(
         df = data.frame(pos, fc = fc),
+        pos = pos, 
         fc = fc,
         hilight = hilight,
         nlabel = nlabel,
@@ -145,7 +146,7 @@ featuremap_plot_gene_map_server <- function(id,
 
     render_geneUMAP <- function(cex = 1, cex.label = 1) {
       pd <- plot_data()
-      pos <- getUMAP()
+      pos <- pd$pos
       fc <- pd$fc
 
       hilight <- pd$hilight
@@ -214,7 +215,6 @@ featuremap_plot_gene_map_server <- function(id,
       X <- pgx$X
       pos <- getUMAP()
       pos <- playbase::rename_by(pos, pgx$genes, "symbol")
-
       sel.genes <- NULL
       ## detect brush
       b <- plotly::event_data("plotly_selected", source = ns("gene_umap"))
@@ -240,10 +240,9 @@ featuremap_plot_gene_map_server <- function(id,
       pheno <- sigvar()
       is.fc <- FALSE
       X <- playbase::rename_by(X, pgx$genes, "symbol")
-      if (pheno %in% colnames(pgx$samples)) {
+      if (any(pheno %in% colnames(pgx$samples))) {
         gg <- intersect(sel.genes, rownames(X))
         X <- X[gg, , drop = FALSE]
-
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
         FC <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
@@ -278,7 +277,6 @@ featuremap_plot_gene_map_server <- function(id,
       FC <- cbind(sd.X = sqrt(rowMeans(FC**2)), FC)
       if (is.fc) colnames(FC)[1] <- "sd.FC"
       FC <- round(FC, digits = 3)
-
 
       df <- data.frame(tt, FC,
         check.names = FALSE
