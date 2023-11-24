@@ -17,6 +17,7 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
 
   PlotModuleUI(
     ns("plot"),
+    plotlib = "plotly",
     title = "Gene correlation",
     label = "c",
     info.text = info_text,
@@ -138,9 +139,97 @@ compare_plot_gene_corr_server <- function(id,
       p
     })
 
+    plotly_genecorr.RENDER <- shiny::reactive({
+      
+      # Requirements
+      shiny::req(getOmicsScoreTable())
+      shiny::req(input$colorby)
+      shiny::req(hilightgenes())
+      shiny::req(input.contrast1())
+      shiny::req(input.contrast2())
+      shiny::req(score_table())
+
+      # Input variables
+      pgx1 <- pgx
+      pgx2 <- dataset2()
+      gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
+      kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
+      dset1 <- paste0("1: expression")
+      dset2 <- paste0("2: expression")
+
+      shiny::validate(shiny::need(
+        length(kk) > 0,
+        "No common samples between datasets, need at least 10 samples to compute gene correlations."
+      ))
+
+      ## conform matrices
+      X1 <- pgx1$X[gg, kk]
+      X2 <- pgx2$X[gg, kk]
+      # Get Omics Score Table for high expr. genes
+      df <- getOmicsScoreTable()
+      sel <- score_table() ## from module
+      shiny::req(sel)
+
+      higenes <- head(rownames(df)[sel], 16)
+      shiny::validate(shiny::need(
+        length(higenes) > 0,
+        "Not valid option."
+      ))
+
+      ## Set color for points
+      klrpal <- rep(1:7, 99)
+      klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
+      colorby <- input$colorby
+      grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
+      grp <- grp[colnames(X1)]
+      klr1 <- klrpal[as.integer(grp)]
+
+      # Aseemble subplots
+      sub_plots <- vector("list", length(higenes))
+      names(sub_plots) <- higenes
+      for (gene_i in higenes) {
+        # Get genes and titles
+        j <- match(gene_i, rownames(X1))
+        title_y <- max(X2[j, ]) + max(X2[j, ]) * .1
+        show_legend <- gene_i == higenes[1]
+        xtitle <- ifelse(gene_i %in% higenes[15], dset1, "")
+        ytitle <- ifelse(gene_i %in% higenes[9], dset2, "")
+        plt <- plotly::plot_ly() %>%
+            # Axis
+            plotly::layout(
+              xaxis = list(title = xtitle),
+              yaxis = list(title = ytitle),
+              legend = list(x = 0.02, y = 1, bgcolor = "transparent")
+            ) %>%
+            # Add the points
+            plotly::add_trace(
+            x = X1[j, ], y = X2[j, ], name = grp, color = klr1, type = "scatter", mode = "markers",
+            marker = list(size = 10),
+            showlegend = show_legend)  %>%
+            plotly::add_annotations(
+              text = paste("<b>", gene_i, "</b>"),
+              font = list(size = 10),
+              showarrow = FALSE,
+              xanchor = "left",
+              yanchor = "bottom",
+              x = 1.5,
+              y = title_y
+              )
+        sub_plots[[gene_i]] <- plt
+      }
+
+      # Assemble all subplot in to grid
+      suppressWarnings(
+      plt <- plotly::subplot(sub_plots, nrows = 4, margin = 0.025,
+        titleX = TRUE, titleY = TRUE
+      )) 
+      return(plt)
+    })
+
     PlotModuleServer(
       "plot",
-      func = genecorr.RENDER,
+      plotlib = "plotly",
+      func = plotly_genecorr.RENDER, #genecorr.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
       add.watermark = watermark
