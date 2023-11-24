@@ -41,7 +41,7 @@ upload_plot_contraststats_server <- function(id, checkTables, contrastsRT, sampl
         status.ds
       )
 
-      if(is.null(uploaded$samples.csv) & !is.null(uploaded$contrasts.csv)){
+      if(is.null(samplesRT()) & !is.null(contrasts)){
         error.msg <- paste(
           toupper(check["samples.csv", "status"]), "\nPlease upload 'samples.csv':",
           tolower(check["samples.csv", "description"])
@@ -50,7 +50,7 @@ upload_plot_contraststats_server <- function(id, checkTables, contrastsRT, sampl
 
       shiny::validate(
         shiny::need(
-          status.ok == "OK" && has.contrasts && !is.null(uploaded$samples.csv),
+          status.ok == "OK" && has.contrasts && !is.null(samplesRT()),
           error.msg
         )
       )
