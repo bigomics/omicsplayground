@@ -199,7 +199,7 @@ compare_plot_gene_corr_server <- function(id,
             plotly::layout(
               xaxis = list(title = xtitle),
               yaxis = list(title = ytitle),
-              legend = list(x = 0.02, y = 1, bgcolor = "transparent")
+              legend = list(x = 0.5, y = -0.1, xanchor = "center", orientation = "h", bgcolor = "transparent")
             ) %>%
             # Add the points
             plotly::add_trace(
@@ -220,7 +220,7 @@ compare_plot_gene_corr_server <- function(id,
 
       # Assemble all subplot in to grid
       suppressWarnings(
-      plt <- plotly::subplot(sub_plots, nrows = 4, margin = 0.025,
+      plt <- plotly::subplot(sub_plots, nrows = 4, margin = 0.03,
         titleX = TRUE, titleY = TRUE
       )) 
       return(plt)
