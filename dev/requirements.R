@@ -176,6 +176,8 @@ install.github('bigomics/PCSF', force=TRUE)
 install.github('bigomics/shinyChatR')
 install.github('bigomics/fgsea')
 install.github('ropensci/iheatmapr')
+install.github('rstudio/bslib@v0.5.1',dependencies=FALSE)
+install.github('rstudio/htmltools',dependencies=FALSE)
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
