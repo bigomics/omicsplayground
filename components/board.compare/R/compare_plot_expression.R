@@ -11,6 +11,7 @@ compare_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
   PlotModuleUI(
     ns("plot"),
     title = "Expression",
+    plotlib = "plotly",
     label = "a",
     info.text = info_text,
     height = height,
@@ -53,13 +54,13 @@ compare_plot_expression_server <- function(id,
 
       xgenes <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       genes <- head(intersect(genes, xgenes), 8)
+      e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
+      e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
 
       par(mfrow = c(2, 4), mar = c(6, 4, 1, 0), mgp = c(2.0, 0.7, 0), oma = c(0, 0, 0, 0))
       for (gene in genes) {
         x1 <- pgx1$X[gene, ]
         x2 <- pgx2$X[gene, ]
-        e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
-        e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
         m1 <- lapply(e1, function(y) tapply(x1, y, mean))
         m2 <- lapply(e2, function(y) tapply(x2, y, mean))
 
@@ -72,8 +73,6 @@ compare_plot_expression_server <- function(id,
         bar.names <- c(b1, b2)
         bar.names <- toupper(substring(bar.names, 1, 1))
 
-        srt <- 10
-        srt <- 0
         srt <- ifelse(max(nchar(grp.names)) <= 5, 0, 25)
 
         mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
@@ -91,9 +90,89 @@ compare_plot_expression_server <- function(id,
       p
     })
 
+    plotly_multibarplot.RENDER <- shiny::reactive({
+      shiny::req(input.contrast1())
+      shiny::req(input.contrast2())
+      shiny::req(getOmicsScoreTable())
+      shiny::req(hilightgenes())
+      shiny::req(score_table())
+      pgx1 <- pgx
+      pgx2 <- dataset2()
+
+      ct1 <- head(names(pgx1$gx.meta$meta), 3)
+      ct2 <- head(names(pgx2$gx.meta$meta), 3)
+      ct1 <- input.contrast1()
+      ct2 <- input.contrast2()
+
+      genes <- rownames(pgx1$X)
+      genes <- hilightgenes()
+
+      df <- getOmicsScoreTable()
+
+      sel <- score_table() ## from module
+      genes <- rownames(df)[sel]
+
+      xgenes <- intersect(rownames(pgx1$X), rownames(pgx2$X))
+      genes <- head(intersect(genes, xgenes), 8)
+      e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
+      e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
+      
+      # Build plots
+      sub_plots <- vector("list", length(genes))
+      names(sub_plots) <- genes
+      for (gene_i in genes) {
+        # Get data
+        x1 <- pgx1$X[gene_i, ]
+        x2 <- pgx2$X[gene_i, ]
+        m1 <- lapply(e1, function(y) tapply(x1, y, mean))
+        m2 <- lapply(e2, function(y) tapply(x2, y, mean))
+        mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
+        
+        # Assemble barplots
+        title_y <- max(mm) + max(mm) * .1 
+        rn <- rownames(mm)
+        # Add bars
+        plt <- plotly::plot_ly()
+        for (i in seq_len(ncol(mm))) {
+          col_i <- mm[, i, drop = FALSE]
+          name_i <- gsub(pattern = "_vs_", replacement = "\nvs ", x = colnames(col_i))
+          show_legend1 <- (i == 1 && gene_i == genes[1])
+          plt <- plotly::add_trace(plt, 
+                                  x = name_i, 
+                                  y = col_i[, 1], 
+                                  name = rn, 
+                                  color = rn, 
+                                  type = "bar", 
+                                  showlegend = show_legend1) %>%
+                plotly::layout(xaxis = list(titlefont = list(size = 5), 
+                                            tickangle = 45))
+          }
+      plt <- plotly::add_annotations(plt,
+        text = paste("<b>", gene_i, "</b>"),
+        font = list(size = 10),
+        showarrow = FALSE,
+        xanchor = "left",
+        yanchor = "bottom",
+        x = 0.5,
+        y = title_y
+        )
+      sub_plots[[gene_i]] <- plt
+      }
+      
+      # Put plots together
+      suppressWarnings(
+        all_plt <- plotly::subplot(sub_plots, nrows = 2,# margin = 0.04,
+                titleX = TRUE, titleY = TRUE, shareX = TRUE
+      ))
+
+      return(all_plt)
+    })
+
+
     PlotModuleServer(
       "plot",
-      func = multibarplot.RENDER,
+      plotlib = "plotly",
+      func = plotly_multibarplot.RENDER, #multibarplot.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 130),
       add.watermark = watermark
