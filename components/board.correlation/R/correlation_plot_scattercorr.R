@@ -44,7 +44,7 @@ correlation_plot_scattercorr_ui <- function(
 
   PlotModuleUI(ns("plot"),
     title = title,
-    plotlib = "base",
+    plotlib = "plotly",
     label = "c",
     info.text = info.text,
     caption = caption,
@@ -278,7 +278,7 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     PlotModuleServer(
-      "pltmod",
+      "plot",
       plotlib = "plotly",
       func = cor_scatter.PLOTFUN,
       func2 = cor_scatter.PLOTFUN2,
