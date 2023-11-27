@@ -34,7 +34,7 @@ expression_plot_volcanoMethods_ui <- function(
     ns("pltmod"),
     title = "Volcano plots for all methods",
     label = label,
-    plotlib = "grid",
+    plotlib = "plotly",
     info.text = info.text,
     caption = caption,
     options = plot_options,
@@ -100,7 +100,6 @@ expression_plot_volcanoMethods_server <- function(id,
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       fc <- unclass(mx$fc)
-      #
       qv <- unclass(mx$q)
       nlq <- -log10(1e-99 + qv)
       ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
@@ -108,8 +107,6 @@ expression_plot_volcanoMethods_server <- function(id,
       xlim <- 1.3 * c(-1, 1) * quantile(abs(fc), probs = 0.999)
       fc.genes <- pd[["pgx"]]$genes[rownames(mx), "gene_name"]
       nplots <- min(24, ncol(qv))
-
-      #
       methods <- colnames(pd[["pgx"]]$gx.meta$meta[[1]]$fc)
       plt <- list()
 
@@ -161,6 +158,92 @@ expression_plot_volcanoMethods_server <- function(id,
       return(plt)
     }
 
+    plotly_plots <- function(cex = 3) {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      # Input vars
+      sel.genes <- pd[["sel.genes"]]
+      fdr <- pd[["fdr"]]
+      lfc <- pd[["lfc"]]
+      ## meta tables
+      comp <- pd[["comp"]]
+      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
+      fc <- unclass(mx$fc)
+      qv <- unclass(mx$q)
+      all_genes <- rownames(mx)
+      fc.genes <- pd[["pgx"]]$genes[rownames(mx), "gene_name"]
+      nplots <- min(24, ncol(qv))
+      methods <- colnames(fc)
+      sub_plots <- vector("list", length = length(methods))
+      names(sub_plots) <- methods
+
+      shiny::withProgress(message = "computing volcano plots ...", value = 0, {
+        for (i in 1:nplots) {
+          # Get plot data
+          fx <- fc[, i]
+          qval <- qv[, i]
+          method_i <- methods[i]
+          is.sig <- (qval <= fdr & abs(fx) >= lfc)
+          sig.genes <- fc.genes[which(is.sig)]
+          qval <- -log(qval)
+          title_y <- max(qval) - max(qval) *.05
+          
+          # Call volcano plot
+          sub_plots[[i]] <- playbase::plotlyVolcano(
+            x = fx,
+            y = qval,
+            names = all_genes,
+            source = "plot1",
+            marker.type = "scattergl",
+            highlight = sig.genes,
+            group.names = c("group1", "group0"),
+            psig = fdr,
+            lfc = lfc,
+            xlab = "effect size (log2FC)",
+            ylab = "significance (-log10q)",
+            marker.size = cex,
+            showlegend = FALSE
+            # Add title
+          ) %>% plotly::add_annotations(
+              text = paste("<b>", method_i, "</b>"),
+              font = list(size = 10),
+              showarrow = FALSE,
+              xanchor = "left",
+              yanchor = "bottom",
+              x = 0,
+              y = title_y
+          )
+        }
+      })
+
+      if (input$scale_per_plot) {
+          # Add scale per plot
+        }
+
+      suppressWarnings(
+      all_plts <- plotly::subplot(sub_plots, nrows = 2, margin = 0.03,
+        titleX = TRUE, titleY = TRUE
+      )) 
+
+      return(all_plts)
+    }
+
+    modal_plotly.RENDER <- function() {
+      fig <- plotly_plots() %>%
+        plotly::layout(
+          font = list(size = 18),
+          legend = list(
+            font = list(size = 18)
+          )
+        ) %>%
+        plotly::style(
+          marker.size = 6
+        )
+      return(fig)
+    }
+
+
     plot.RENDER <- function() {
       plt <- render_plots(cex = 0.45, base_size = 11)
       nplots <- length(plt)
@@ -197,11 +280,9 @@ expression_plot_volcanoMethods_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      #
-      plotlib = "grid",
-      func = plot.RENDER,
-      func2 = modal_plot.RENDER,
-      ## csvFunc = plot_data, ##  *** downloadable data as CSV
+      plotlib = "plotly",
+      func = modal_plotly.RENDER,
+      func2 = modal_plotly.RENDER,
       res = c(80, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
       add.watermark = watermark
