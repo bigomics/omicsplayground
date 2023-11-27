@@ -178,8 +178,6 @@ expression_plot_volcano_server <- function(id,
         label = pd[["lab.genes"]],
         label.cex = pd[["lab.cex"]],
         group.names = c("group1", "group0"),
-        ## xlim=xlim, ylim=ylim, ## hi.col="#222222",
-        #
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "effect size (log2FC)",
