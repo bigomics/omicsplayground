@@ -160,6 +160,11 @@ if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
   message("[GLOBAL] overriding PLAYGROUND_AUTHENTICATION = ", auth)
   opt$AUTHENTICATION <- auth
 }
+if (Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH") != "") {
+  apache_cookie_path <- Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH")
+  message("[GLOBAL] overriding PLAYGROUND_APACHE_COOKIE_PATH = ", apache_cookie_path)
+  opt$APACHE_COOKIE_PATH <- apache_cookie_path
+}
 
 ## copy to global.R environment
 WATERMARK <<- opt$WATERMARK

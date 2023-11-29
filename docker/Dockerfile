@@ -49,6 +49,7 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/fgsea')"
 RUN R -e "remotes::install_github('bigomics/biomaRt',dependencies=FALSE)"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
