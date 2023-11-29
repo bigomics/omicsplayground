@@ -57,7 +57,6 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                       null_msg = "Counts checks not run yet.
                                 Fix any errors with counts first."
                     ),
-
                     ifelse(!has_samples, "",
                       check_to_html(checklist$samples_counts$checks,
                         pass_msg = "All samples-counts checks passed",
@@ -244,7 +243,7 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
     tagList(
       span(null_msg, style = "color: red"), br()
     )
-  } else if(isFALSE(check)) {
+  } else if (isFALSE(check)) {
     tagList(
       span(false_msg, style = "color: orange"), br()
     )

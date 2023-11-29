@@ -51,7 +51,7 @@ correlation_table_corr_server <- function(id,
       P <- getPartialCorrelation()
       pcor <- P[match(rownames(R), rownames(P)), "pcor"]
       gene_table <- pgx$genes
-      if (all(gene_table$human_ortholog == rownames(gene_table))| all(is.na(gene_table$human_ortholog))) {
+      if (all(gene_table$human_ortholog == rownames(gene_table)) | all(is.na(gene_table$human_ortholog))) {
         gene_table_cols <- c("feature", "symbol", "gene_title")
       } else {
         gene_table_cols <- c("feature", "symbol", "human_ortholog", "gene_title")

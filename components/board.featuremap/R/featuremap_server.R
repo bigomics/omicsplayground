@@ -51,20 +51,21 @@ FeatureMapBoard <- function(id, pgx) {
           selected = "<all>"
         )
 
-      gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
-      gsetcats <- c("<all>", gsetcats)
-      shiny::updateSelectInput(session, "filter_gsets",
-        choices = gsetcats,
-        selected = gsetcats[1]
-      )
+        gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
+        gsetcats <- c("<all>", gsetcats)
+        shiny::updateSelectInput(session, "filter_gsets",
+          choices = gsetcats,
+          selected = gsetcats[1]
+        )
 
-      cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
-      cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
-      shiny::updateSelectInput(session, "sigvar",
-        choices = cvar,
-        selected = cvar0
-      )
-    })
+        cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+        cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
+        shiny::updateSelectInput(session, "sigvar",
+          choices = cvar,
+          selected = cvar0
+        )
+      }
+    )
 
     observeEvent(input$sigvar, {
       shiny::req(pgx$samples, input$sigvar)
@@ -72,8 +73,8 @@ FeatureMapBoard <- function(id, pgx) {
         y <- setdiff(pgx$samples[, input$sigvar], c(NA))
         y <- c("<average>", sort(unique(y)))
         shiny::updateSelectInput(session, "ref_group", choices = y)
-      }}
-    )
+      }
+    })
 
     observeEvent(
       {
@@ -171,7 +172,7 @@ FeatureMapBoard <- function(id, pgx) {
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
-        #opc.low = opc.low,
+        # opc.low = opc.low,
         title = title,
         source = source,
         key = rownames(pos)

@@ -150,7 +150,6 @@ UploadBoard <- function(id,
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
-
       has.counts <- !is.null(checked_counts()$matrix)
       has.samples <- !is.null(checked_samples()$matrix)
       has.contrasts <- !is.null(checked_contrasts()$matrix)
@@ -226,11 +225,11 @@ UploadBoard <- function(id,
 
       upload_table <- input$upload_files
 
-      if(class(upload_table) != "data.frame" && upload_table == "hello_example"){
+      if (class(upload_table) != "data.frame" && upload_table == "hello_example") {
         upload_table <- data.frame(
           name = c("counts.csv", "samples.csv", "contrasts.csv"),
           type = c("text/csv", "text/csv", "text/csv"),
-          datapath = c("examplecounts","examplesamples","examplecontrasts")
+          datapath = c("examplecounts", "examplesamples", "examplecontrasts")
         )
       }
 
@@ -268,7 +267,7 @@ UploadBoard <- function(id,
         )
         if (length(ii) == 0) {
           return(NULL)
-          }
+        }
 
         inputnames <- upload_table$name[ii]
         uploadnames <- upload_table$datapath[ii]
@@ -287,7 +286,7 @@ UploadBoard <- function(id,
         ## ---------------------------------------------------------------------
         if (length(uploadnames) > 0) {
           for (i in 1:length(uploadnames)) {
-            #i = 1
+            # i = 1
             fn1 <- inputnames[i]
             fn2 <- uploadnames[i]
             matname <- NULL
@@ -299,14 +298,14 @@ UploadBoard <- function(id,
 
             if (IS_COUNT || IS_EXPRESSION) {
               ## allows duplicated rownames
-              if(fn2 == "examplecounts"){
+              if (fn2 == "examplecounts") {
                 df0 <- playbase::COUNTS
                 # save a warning file telling this folder is example data
                 writeLines("", file.path(raw_dir(), "EXAMPLE_DATA"))
               } else {
                 df0 <- playbase::read.as_matrix(fn2)
               }
-              
+
               # save input as raw file in raw_dir
               file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
 
@@ -323,7 +322,7 @@ UploadBoard <- function(id,
             }
 
             if (IS_SAMPLE) {
-              if(fn2 == "examplesamples"){
+              if (fn2 == "examplesamples") {
                 df0 <- playbase::SAMPLES
               } else {
                 df0 <- playbase::read.as_matrix(fn2)
@@ -335,7 +334,7 @@ UploadBoard <- function(id,
             }
 
             if (IS_CONTRAST) {
-              if(fn2 == "examplecontrasts"){
+              if (fn2 == "examplecontrasts") {
                 df0 <- playbase::CONTRASTS
               } else {
                 df0 <- playbase::read.as_matrix(fn2)
@@ -460,7 +459,6 @@ UploadBoard <- function(id,
         shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
         shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
         shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-
       } else {
         ## clear files
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
@@ -776,23 +774,22 @@ UploadBoard <- function(id,
         write.csv(contrasts, contrasts_csv, row.names = TRUE)
 
         # Create a zip file containing the CSV files
-        zipfile <- file.path(tempdir,"data.zip")
+        zipfile <- file.path(tempdir, "data.zip")
         zip(zipfile, files = c(samples_csv, counts_csv, contrasts_csv), flags = "-r9Xj")
 
         # clean up
         withr::defer(unlink(tempdir, recursive = TRUE), env = globalenv())
-        
+
         # Return the zip file
         file.copy(zipfile, file)
       }
     )
 
     output$upload_info <- shiny::renderUI({
-      
       upload_info <- glue::glue("<div><h4>Organism: {input$selected_organism}<h4></div><br><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
 
-      #DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
-      #upload_info <- sub("EXAMPLEZIP", upload_info)
+      # DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
+      # upload_info <- sub("EXAMPLEZIP", upload_info)
 
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
@@ -891,7 +888,7 @@ UploadBoard <- function(id,
     })
 
     # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
-    observeEvent(input$proceed_to_upload,{
+    observeEvent(input$proceed_to_upload, {
       # show tab Upload
       shiny::showTab("tabs", "Upload")
       # for some reason, we need to click in another tab to make the upload tab run

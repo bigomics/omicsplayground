@@ -73,7 +73,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       ii <- gseatable$rows_current()
       req(ii)
       rpt <- rpt[ii, , drop = FALSE]
-      
+
       ntop <- as.integer(input$gs_enrichfreq_ntop)
       gset.weight <- input$gs_enrichfreq_gsetweight
       fcweight <- input$gs_enrichfreq_fcweight
@@ -120,7 +120,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
         wt <- TRUE
       }
       # sum duplicated rows
-      F <-  rowsum(F, row.names(F))
+      F <- rowsum(F, row.names(F))
 
       F <- head(F[order(-Matrix::rowSums(abs(F))), , drop = FALSE], ngenes)
       F <- F[order(-Matrix::rowSums(F)), , drop = FALSE]

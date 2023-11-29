@@ -126,11 +126,11 @@ ExpressionBoard <- function(id, pgx) {
         return(NULL)
       }
 
-      ## get rid of AsIs so that behaves as data.frame/list 
+      ## get rid of AsIs so that behaves as data.frame/list
       ## For some reason, this seems to be really important.
       mm <- colnames(unclass(mx$p))
       testmethods <- intersect(mm, testmethods)
-      mx.p <- unclass(mx$p[, testmethods, drop = FALSE]) 
+      mx.p <- unclass(mx$p[, testmethods, drop = FALSE])
       mx.q <- unclass(mx$q[, testmethods, drop = FALSE])
       mx.fc <- unclass(mx$fc[, testmethods, drop = FALSE])
       rownames(mx.p) <- rownames(mx)
@@ -214,16 +214,17 @@ ExpressionBoard <- function(id, pgx) {
       res <- res[which(rownames(res) %in% psel), , drop = FALSE]
       res <- res[order(-abs(res$logFC)), , drop = FALSE]
 
-      
-      #TODO the annot could be moved to geDEGtable function!!!
+
+      # TODO the annot could be moved to geDEGtable function!!!
       annot <- pgx$genes[rownames(res),
-                          c("feature","symbol","human_ortholog"), drop = FALSE
-                          ]
-      #res$gene_name <- NULL, better remove before showing the plot
+        c("feature", "symbol", "human_ortholog"),
+        drop = FALSE
+      ]
+      # res$gene_name <- NULL, better remove before showing the plot
 
-      res <- cbind(annot,res)
+      res <- cbind(annot, res)
 
-      if(all(is.na(res$human_ortholog))){
+      if (all(is.na(res$human_ortholog))) {
         res$human_ortholog <- NULL
       }
       return(res)

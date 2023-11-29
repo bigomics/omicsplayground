@@ -55,16 +55,16 @@ UploadUI <- function(id) {
     )
   )
 
-upload_select_db <- shiny::tabPanel(
+  upload_select_db <- shiny::tabPanel(
     "Select Organism",
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",
       height = "calc(100vh - 180px)",
       # add a drop down selector for organism
-     shiny::div(
-      style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
       shiny::div(
+        style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
+        shiny::div(
           style = "text-align: center;",
           h3(shiny::HTML("<b>Select the organism:</b>")),
           div(
@@ -73,48 +73,48 @@ upload_select_db <- shiny::tabPanel(
               ns("selected_organism"),
               NULL,
               # restrict to ensembl species, as we are validating them in the first place
-              choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart=="ensembl")],
+              choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
               selected = NULL,
               multiple = FALSE
-            )),
-        shiny::div(
-          style = "margin-top: 20px;text-align: center;",
-                shiny::actionButton(ns("proceed_to_upload"), "Next",
-                  icon = icon("arrow-right"),
-                  class = "btn btn-success"
-                )
-              ),
-        div(
-          style="margin-top: 120px",
-          h3("Need a dataset to try?")
+            )
           ),
-        shiny::div(
-          style="margin-top: 30px",
-          shiny::downloadButton(
-                            ns("downloadExampleData"),
-                            width = "220px",
-                            icon = icon("download"),
-                            label = "Download example data",
-                            class = "btn-outline-primary",
-                            style = "margin-right: 10px;"
-                          ),
-          shiny::actionButton(
-                            ns("load_example"),
-                            width = "220px",
-                            icon = icon("table"),
-                            label = "Use example data",
-                            class = "btn-outline-primary",
-                            style = "margin-left: 10px;"
-                          )
-                  )
+          shiny::div(
+            style = "margin-top: 20px;text-align: center;",
+            shiny::actionButton(ns("proceed_to_upload"), "Next",
+              icon = icon("arrow-right"),
+              class = "btn btn-success"
+            )
+          ),
+          div(
+            style = "margin-top: 120px",
+            h3("Need a dataset to try?")
+          ),
+          shiny::div(
+            style = "margin-top: 30px",
+            shiny::downloadButton(
+              ns("downloadExampleData"),
+              width = "220px",
+              icon = icon("download"),
+              label = "Download example data",
+              class = "btn-outline-primary",
+              style = "margin-right: 10px;"
+            ),
+            shiny::actionButton(
+              ns("load_example"),
+              width = "220px",
+              icon = icon("table"),
+              label = "Use example data",
+              class = "btn-outline-primary",
+              style = "margin-left: 10px;"
+            )
+          )
+        )
       )
     )
-    )
   )
- 
+
 
   upload_panel <- shiny::tabPanel(
-
     "Upload",
     bslib::layout_columns(
       col_widths = 12,
@@ -142,7 +142,6 @@ upload_select_db <- shiny::tabPanel(
         ),
         shiny::div(shiny::uiOutput(ns("upload_info")))
       ),
-
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
         upload_plot_countstats_ui(

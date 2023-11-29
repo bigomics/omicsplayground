@@ -141,7 +141,7 @@ loading_table_datasets_server <- function(id,
       }
 
       kk <- unique(c(
-        "dataset", "description","organism", "datatype", "nsamples",
+        "dataset", "description", "organism", "datatype", "nsamples",
         "ngenes", "nsets", "conditions", "date",
         "creator"
       ))

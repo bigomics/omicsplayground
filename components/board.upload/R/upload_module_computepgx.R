@@ -478,7 +478,7 @@ upload_module_computepgx_server <- function(
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
         # Define create_pgx function arguments
-        
+
         params <- list(
           organism = selected_organism(),
           samples = samples,

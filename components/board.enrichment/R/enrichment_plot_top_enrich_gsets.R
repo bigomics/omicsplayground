@@ -6,16 +6,16 @@
 
 #' Create UI for top enriched gene set plots
 #'
-#' @description 
+#' @description
 #' Generates the Shiny UI for plotting the top enriched gene sets.
 #'
-#' @param id Widget id to use for the output.  
+#' @param id Widget id to use for the output.
 #' @param title Plot title.
 #' @param info.text Info text to display.
 #' @param caption Plot caption.
 #' @param height Plot height.
 #' @param width Plot width.
-#' 
+#'
 #' @return Shiny UI for top enriched plots.
 enrichment_plot_top_enrich_gsets_ui <- function(
     id,
@@ -46,10 +46,10 @@ enrichment_plot_top_enrich_gsets_ui <- function(
 #' @param pgx PGX object
 #' @param getFilteredGeneSetTable Function to get filtered gene set table
 #' @param gs_contrast Gene set contrast
-#' @param gseatable Gene set enrichment analysis table 
-#' @param watermark Add watermark to plot  
+#' @param gseatable Gene set enrichment analysis table
+#' @param watermark Add watermark to plot
 #'
-#' @return Shiny module server function 
+#' @return Shiny module server function
 enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     pgx,
                                                     getFilteredGeneSetTable,
@@ -61,7 +61,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X)
       rpt <- getFilteredGeneSetTable()
-      
+
       shiny::req(rpt, gs_contrast())
       comp <- 1
       comp <- gs_contrast()

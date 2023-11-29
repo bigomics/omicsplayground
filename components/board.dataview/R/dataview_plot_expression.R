@@ -88,7 +88,7 @@ dataview_plot_expression_server <- function(id,
         gene = gene
       )
       return(pd)
-    }) 
+    })
 
 
     plot.RENDER.SAVE <- function() {

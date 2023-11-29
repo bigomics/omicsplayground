@@ -103,7 +103,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
 
     getCurrentMarkers <- shiny::reactive({
-
       shiny::req(pgx)
       shiny::req(input$type, input$feature)
 
@@ -267,7 +266,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     getOverlapTable <- shiny::reactive({
-
       shiny::req(pgx)
       shiny::req(getCurrentMarkers())
 

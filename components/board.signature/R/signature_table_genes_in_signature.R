@@ -33,7 +33,7 @@ signature_table_genes_in_signature_server <- function(id,
         return(NULL)
       }
 
-      num_cols <-  4:ncol(df)
+      num_cols <- 4:ncol(df)
       color_fx <- as.numeric(df[, num_cols])
       color_fx[is.na(color_fx)] <- 0 ## yikes...
       numeric.cols <- colnames(df)[num_cols]

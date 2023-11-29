@@ -107,7 +107,7 @@ compare_plot_gene_corr_server <- function(id,
       i <- 1
       for (i in 1:length(higenes)) {
         j <- match(higenes[i], rownames(X1))
-        if (is.na(j)| length(j) == 0) {
+        if (is.na(j) | length(j) == 0) {
           X1 <- playbase::rename_by(pgx1$X, pgx1$genes, "symbol")
           X2 <- playbase::rename_by(pgx2$X, pgx2$genes, "symbol")
           j <- match(higenes[i], rownames(X1))
