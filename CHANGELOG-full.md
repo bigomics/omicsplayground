@@ -1,3 +1,10 @@
+### v3.2.34 (2023-11-24)
+
+-  update multi-species docker [view](https://github.com/bigomics/omicsplayground/commit/99bac9c74b6a3125f1845c178a983bee02e7494b)
+-  docker build master on workflow dispatch (to prevent docker latest from having multi-species) [view](https://github.com/bigomics/omicsplayground/commit/4321650b1dc727c91e85751c1a0f84590fb75c0e)
+-  update branch to workflow dispatch branch [view](https://github.com/bigomics/omicsplayground/commit/5149bfde571ecf0caf3f18b380d54014c62f1cc2)
+
+
 ### v3.2.33 (2023-11-23)
 
 -  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/a91190167c959642e7678f54a4e6978c1fb8b1ee)
