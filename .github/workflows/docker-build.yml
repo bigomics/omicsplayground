@@ -8,7 +8,7 @@ on:
       branch:
         description: 'Branch to build'
         required: true
-        default: 'dev-multi-species'
+        default: 'master'
 
 jobs:
 
@@ -36,7 +36,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile_multi_species
+          file: ./docker/Dockerfile
           push: true          
           no-cache: true
           build-args: |
