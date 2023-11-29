@@ -78,6 +78,7 @@ app_server <- function(input, output, session) {
   trigger_server <- reactive({
         req(input$pgx_path)
         pgx <- playbase::pgx.load(input$pgx_path)
+        pgx <- playbase::pgx.initialize(pgx)
         server <- board_server_fn(board, pgx = pgx)
 
   })

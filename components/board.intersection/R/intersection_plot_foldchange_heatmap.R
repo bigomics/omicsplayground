@@ -55,26 +55,27 @@ foldchange_heatmap_server <- function(id,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
+      
       if (input$FoldchangeHeatmap_allfc) {
-        F <- getFoldChangeMatrix()$fc
+        FC <- getFoldChangeMatrix()$fc
       } else {
-        F <- getActiveFoldChangeMatrix()$fc
+        FC <- getActiveFoldChangeMatrix()$fc
       }
 
-      F <- F[, input_comparisons(), drop = FALSE]
+      FC <- FC[, input_comparisons(), drop = FALSE]
 
       # check that dim(F)[2] >0, in case user has not selected any comparisons
       validate(
         need(
-          dim(F)[2] > 0,
+          dim(FC)[2] > 0,
           "No comparisons selected. Please select a comparison on the settings sidebar."
         )
       )
 
-      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- F[order(-abs(rowMeans(F))), , drop = FALSE]
+      FC <- FC[order(-rowMeans(FC**2)), , drop = FALSE]
+      FC <- FC[order(-abs(rowMeans(FC))), , drop = FALSE]
 
-      F1 <- head(F, 80)
+      F1 <- head(FC, 80)
       F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
       F1
     })
@@ -92,7 +93,6 @@ foldchange_heatmap_server <- function(id,
       }
       bm <- 5 - mh ## bottom margin
       at <- input$FoldchangeHeatmap_annotype
-
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
 
       plt <- grid::grid.grabExpr({
@@ -100,14 +100,14 @@ foldchange_heatmap_server <- function(id,
         playbase::heatmapWithAnnot(
           F1,
           anno.type = at,
-          bar.height = bh, map.height = mh,
+          bar.height = bh, 
+          map.height = mh,
           mar = c(bm, 0.5, 0.5, 1),
           cluster_columns = cclust,
           inset = c(0.01, 0.01)
         )
       })
 
-      # plt
       grid::grid.draw(plt)
     }
 

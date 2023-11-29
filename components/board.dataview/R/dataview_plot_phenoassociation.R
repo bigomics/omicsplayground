@@ -67,10 +67,12 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
       }
 
       if (check_diversity_in_colums(res$annot) && is.data.frame(res$annot)) {
-        ## NOTE: the package doesnt allow to change the typeface, the
-        ## spacing of the legend, sizes + formatting of labels, ...
-        pq <- playbase::pgx.testPhenoCorrelation2(
-          df = res$annot,
+        ## NOTE: the package doesnt allow to change the typeface, the spacing of the legend, sizes + formatting of labels, ...
+        ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
+        ## TODO: use na.omit to prevent plot error. This removes all rows where any value is NA. shall we use imputation?
+        clean_annot <- na.omit(res$annot)
+        pq <- playbase::pgx.testPhenoCorrelation(
+          df = clean_annot,
           plot = TRUE,
           cex = 0.8
         )

@@ -14,8 +14,7 @@ loading_table_datasets_ui <- function(
 
   ## not sure if this should be here or in settings (IK)
   options <- tagList(
-    shiny::checkboxGroupInput(ns("flt_datatype"), "Datatype", choices = ""),
-    shiny::checkboxGroupInput(ns("flt_organism"), "Organism", choices = "")
+    shiny::checkboxGroupInput(ns("flt_datatype"), "Datatype", choices = "")
   )
 
   tagList(
@@ -135,7 +134,6 @@ loading_table_datasets_server <- function(id,
         f1 <- f2 <- f3 <- rep(TRUE, nrow(df))
         notnull <- function(x) !is.null(x) && length(x) > 0 && x[1] != "" && !is.na(x[1])
         if (notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
-        if (notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
         df <- df[which(f1 & f2 & f3), , drop = FALSE]
         df$date <- as.Date(df$date, format = "%Y-%m-%d")
         df <- df[order(df$date, decreasing = TRUE), ]
@@ -143,8 +141,8 @@ loading_table_datasets_server <- function(id,
       }
 
       kk <- unique(c(
-        "dataset", "description", "datatype", "nsamples",
-        "ngenes", "nsets", "conditions", "date", "organism",
+        "dataset", "description","organism", "datatype", "nsamples",
+        "ngenes", "nsets", "conditions", "date",
         "creator"
       ))
       kk <- intersect(kk, colnames(df))
@@ -158,9 +156,7 @@ loading_table_datasets_server <- function(id,
         return()
       }
       datatypes <- sort(setdiff(df$datatype, c(NA, "")))
-      organisms <- sort(setdiff(df$organism, c(NA, "")))
       shiny::updateCheckboxGroupInput(session, "flt_datatype", choices = datatypes)
-      shiny::updateCheckboxGroupInput(session, "flt_organism", choices = organisms)
     })
 
 
@@ -261,7 +257,6 @@ loading_table_datasets_server <- function(id,
       df$description <- gsub("[_]", " ", df$description) ## replace underscore
       ##  df$description <- playbase::shortstring(as.character(df$description), 200)
       df$nsets <- NULL
-      df$organism <- NULL
       return(df)
     })
 

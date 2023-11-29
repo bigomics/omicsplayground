@@ -128,6 +128,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       pd <- list(
         df = data.frame(pos, fc = fc),
         fc = fc,
+        pos = pos, 
         hilight = hilight,
         nlabel = nlabel,
         colorby = colorby
@@ -136,7 +137,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
     render_gsetUMAP <- function(cex = 1, cex.label = 1) {
       pd <- plot_data()
-      pos <- getUMAP()
+      pos <- pd$pos
       fc <- pd$fc
       hilight <- pd$hilight
       nlabel <- pd$nlabel

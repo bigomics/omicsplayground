@@ -176,6 +176,7 @@ install.github('bigomics/PCSF', force=TRUE)
 install.github('bigomics/shinyChatR')
 install.github('bigomics/fgsea')
 install.github('ropensci/iheatmapr')
+install_github('bigomics/biomaRt',dependencies=FALSE)
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)

@@ -86,8 +86,8 @@ IntersectionBoard <- function(
       shiny::req(pgx$X)
 
       sel <- names(pgx$gset.meta$meta)
-
       if (input$level == "geneset") {
+        
         gsetmethods <- c("gsva", "camera", "fgsea")
         gsetmethods <- selected_gsetmethods()
         if (length(gsetmethods) < 1 || gsetmethods[1] == "") {
@@ -133,8 +133,6 @@ IntersectionBoard <- function(
           apply(unclass(x$q)[, gxmethods, drop = FALSE], 1, max)
         })
         rownames(qv0) <- rownames(pgx$gx.meta$meta[[1]])
-        dim(fc0)
-        dim(qv0)
 
         ## filter with active filter
         sel.probes <- rownames(fc0) ## default to all probes

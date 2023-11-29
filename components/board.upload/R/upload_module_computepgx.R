@@ -27,6 +27,7 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
+    selected_organism,
     auth,
     create_raw_dir,
     enable_button = TRUE,
@@ -153,7 +154,7 @@ upload_module_computepgx_server <- function(
                     ),
                   choiceNames =
                     c(
-                      "convert to HUGO",
+                      "Transform features to gene symbols",
                       "protein-coding only",
                       "remove Rik/ORF/LOC genes",
                       "remove not-expressed",
@@ -477,7 +478,9 @@ upload_module_computepgx_server <- function(
         # get rid of reactive container
         custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
         # Define create_pgx function arguments
+        
         params <- list(
+          organism = selected_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
