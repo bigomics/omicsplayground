@@ -46,13 +46,13 @@ compare_plot_expression_server <- function(id,
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
-        target_col1 <- target_col2<- "gene_name"
-        } else if (org1 == org2) {
-        target_col1 <- target_col2<- "symbol"
-        } else if (org1 != org2) {
-        target_col1 <- target_col2<- "human_ortholog"
-        if(!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
-        if(!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
+        target_col1 <- target_col2 <- "gene_name"
+      } else if (org1 == org2) {
+        target_col1 <- target_col2 <- "symbol"
+      } else if (org1 != org2) {
+        target_col1 <- target_col2 <- "human_ortholog"
+        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
+        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
       }
 
       X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)

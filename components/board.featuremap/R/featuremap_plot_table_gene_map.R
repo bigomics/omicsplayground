@@ -66,7 +66,6 @@ featuremap_table_gene_map_ui <- function(
 
 featuremap_plot_gene_map_server <- function(id,
                                             pgx,
-
                                             plotUMAP,
                                             sigvar,
                                             filter_genes,
@@ -87,21 +86,17 @@ featuremap_plot_gene_map_server <- function(id,
       sel <- filter_genes()
       filtgenes <- c()
       if (is.null(pgx$version) | pgx$organism == "Human") {
-
         filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
       } else {
-
         filtgenes <- unlist(lapply(sel, function(genes) {
-          if (genes == "<all>") { 
+          if (genes == "<all>") {
             x <- pgx$genes$symbol
           } else {
             x <- playdata::FAMILIES[[genes]]
             x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
-
           }
           return(x)
-          }
-          ))
+        }))
       }
       filtgenes
     })
@@ -135,7 +130,7 @@ featuremap_plot_gene_map_server <- function(id,
 
       pd <- list(
         df = data.frame(pos, fc = fc),
-        pos = pos, 
+        pos = pos,
         fc = fc,
         hilight = hilight,
         nlabel = nlabel,
@@ -253,7 +248,7 @@ featuremap_plot_gene_map_server <- function(id,
         FC <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
         gg <- intersect(sel.genes, rownames(FC))
         if (length(gg) == 0) {
-          FC <- playbase::rename_by(FC, pgx$genes, "symbol") 
+          FC <- playbase::rename_by(FC, pgx$genes, "symbol")
           gg <- intersect(sel.genes, rownames(FC))
         }
         FC <- FC[gg, , drop = FALSE]
@@ -261,7 +256,7 @@ featuremap_plot_gene_map_server <- function(id,
       }
       FC <- FC[order(-rowMeans(FC**2)), , drop = FALSE]
       gene_table <- pgx$genes
-      if (all(gene_table$human_ortholog == rownames(gene_table))| all(is.na(gene_table$human_ortholog))) {
+      if (all(gene_table$human_ortholog == rownames(gene_table)) | all(is.na(gene_table$human_ortholog))) {
         gene_table_cols <- c("feature", "symbol", "gene_title")
       } else {
         gene_table_cols <- c("feature", "symbol", "human_ortholog", "gene_title")

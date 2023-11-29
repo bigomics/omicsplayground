@@ -99,21 +99,20 @@ contrast_correlation_server <- function(id,
       cellnote <- NULL
 
       if (is.null(R) && !is.null(res)) {
-
         # Deal with ncol == 1
         plt <- plotly::plot_ly()
         plt <- plotly::add_annotations(plt,
-                              x = 0.5,
-                              y = 0.5,
-                              text = "Heatmap plot requires \nmore than two conditions",
-                              showarrow = FALSE,
-                              font = list(size = 20)
-                              )
+          x = 0.5,
+          y = 0.5,
+          text = "Heatmap plot requires \nmore than two conditions",
+          showarrow = FALSE,
+          font = list(size = 20)
+        )
 
-        plt <- plotly::layout(plt, 
-                      xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                      yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
-                    )
+        plt <- plotly::layout(plt,
+          xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+        )
       } else {
         plt <- heatmaply::heatmaply(
           R,

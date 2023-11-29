@@ -92,7 +92,7 @@ SingleCellBoard <- function(id, pgx) {
       nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(rownames(pgx$X)))
-      pheno1 <- c("<cell type>", pheno0) 
+      pheno1 <- c("<cell type>", pheno0)
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
       shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])

@@ -70,7 +70,7 @@ PcsfBoard <- function(id, pgx) {
 
         # Genes in STRING are based in human genome, thus use ortholog
         genes_raw <- genes
-        if (!pgx$organism %in% c("Human", "human")) { 
+        if (!pgx$organism %in% c("Human", "human")) {
           genes_unique <- playbase::probe2symbol(unique(genes), pgx$genes, "human_ortholog")
           names(genes_unique) <- genes
           genes <- genes_unique[genes]
@@ -89,7 +89,7 @@ PcsfBoard <- function(id, pgx) {
         genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
         rho <- cor(t(pgx$X[genes_raw, ]))
         # Rename cor matrix according to human orthologs
-        if (!pgx$organism %in% c("Human", "human")) { 
+        if (!pgx$organism %in% c("Human", "human")) {
           human_gnames <- pgx$genes[rownames(rho), "human_ortholog"]
           rownames(rho) <- human_gnames
           colnames(rho) <- human_gnames

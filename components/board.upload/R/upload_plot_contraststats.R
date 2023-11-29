@@ -41,7 +41,7 @@ upload_plot_contraststats_server <- function(id, checkTables, contrastsRT, sampl
         status.ds
       )
 
-      if(is.null(samplesRT()) & !is.null(contrasts)){
+      if (is.null(samplesRT()) & !is.null(contrasts)) {
         error.msg <- paste(
           toupper(check["samples.csv", "status"]), "\nPlease upload 'samples.csv':",
           tolower(check["samples.csv", "description"])

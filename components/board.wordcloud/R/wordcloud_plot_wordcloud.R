@@ -11,13 +11,13 @@
 #'
 #' @param id Module ID string
 #' @param title Plot title
-#' @param label Plot label 
+#' @param label Plot label
 #' @param info.text Info text
-#' @param caption Caption text  
+#' @param caption Caption text
 #' @param height Plot height
 #' @param width Plot width
 #'
-#' @return 
+#' @return
 #' A Shiny Module UI definition
 wordcloud_plot_wordcloud_ui <- function(
     id,
@@ -59,15 +59,15 @@ wordcloud_plot_wordcloud_ui <- function(
 
 #' Word Cloud Plot Server Function
 #'
-#' @description 
+#' @description
 #' Server function for rendering the word cloud plot in the wordcloud module.
 #'
 #' @param id Module id string.
-#' @param getCurrentWordEnrichment Reactive returning the current word enrichment data.  
+#' @param getCurrentWordEnrichment Reactive returning the current word enrichment data.
 #' @param watermark Watermark text.
 #'
 #' @details
-#' This function generates the word cloud plot based on the reactive 
+#' This function generates the word cloud plot based on the reactive
 #' getCurrentWordEnrichment. It handles rendering the plot, updating based on
 #' input settings, and adding the watermark.
 #'

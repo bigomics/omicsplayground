@@ -83,7 +83,7 @@ expression_table_genetable_server <- function(id,
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(show_res)))[1]
       fx.col
       fx <- show_res[, fx.col]
-      DT::datatable(show_res ,
+      DT::datatable(show_res,
         rownames = FALSE,
         class = "compact hover",
         extensions = c("Scroller"),

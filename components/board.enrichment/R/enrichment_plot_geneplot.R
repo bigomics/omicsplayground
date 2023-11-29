@@ -7,13 +7,13 @@
 #' Create UI for gene plot enrichment visualization
 #'
 #' @param id Id prefix for namespace
-#' @param title Plot title 
+#' @param title Plot title
 #' @param caption Plot caption
 #' @param info.text Info text to display
 #' @param height Plot height
 #' @param width Plot width
 #'
-#' @return Shiny UI for gene plot enrichment visualization 
+#' @return Shiny UI for gene plot enrichment visualization
 enrichment_plot_geneplot_ui <- function(
     id,
     title,
@@ -48,15 +48,15 @@ enrichment_plot_geneplot_ui <- function(
 #' Gene Expression Plot Server Function
 #'
 #' Server function for generating the gene expression plot module in Shiny.
-#' 
+#'
 #' @param id Module id
 #' @param pgx PGX object
-#' @param gs_contrast Get the selected contrast function  
+#' @param gs_contrast Get the selected contrast function
 #' @param gene_selected Get the selected gene function
 #' @param subplot.MAR Plot margins
-#' @param watermark Add watermark 
+#' @param watermark Add watermark
 #'
-#' @return Shiny module server function 
+#' @return Shiny module server function
 enrichment_plot_geneplot_server <- function(id,
                                             pgx,
                                             gs_contrast,
@@ -107,10 +107,10 @@ enrichment_plot_geneplot_server <- function(id,
           plotlib = "plotly",
         )
       }
-    } 
+    }
 
     ## -------------------------------------------------------------------
-    ## Render plots 
+    ## Render plots
     ## -------------------------------------------------------------------
 
     subplot_geneplot.RENDER1 <- function() {

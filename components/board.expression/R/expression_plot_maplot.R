@@ -197,7 +197,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      ) 
+      )
       plt
     }
 

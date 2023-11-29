@@ -137,7 +137,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       comp <- input$gs_contrast
       gene_symbols <- pgx$genes[rownames(pgx$gx.meta$meta[[comp]]), "symbol"]
       names(gene_symbols) <- rownames(pgx$gx.meta$meta[[comp]])
-      
+
       if (!(comp %in% names(pgx$gset.meta$meta))) {
         return(NULL)
       }
@@ -356,7 +356,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     })
 
     geneDetails <- shiny::reactive({
-
       ## return details of the genes in the selected gene set
       shiny::req(pgx$X, input$gs_contrast)
       gs <- 1
@@ -388,13 +387,13 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
       # check which columns are in pgx$genes
-      cols_in_pgx <- c("feature","symbol","human_ortholog")
+      cols_in_pgx <- c("feature", "symbol", "human_ortholog")
       cols_in_pgx <- cols_in_pgx[which(cols_in_pgx %in% colnames(pgx$genes))]
-    
+
       genes_user <- pgx$genes[rownames(limma1), cols_in_pgx]
-      empty_cols <- apply(genes_user,2, function(x) all(is.na(x)))
-      genes_user <- genes_user[,!empty_cols, drop = FALSE]
-      genes <- genes_user[genes_user$symbol %in% genes,]
+      empty_cols <- apply(genes_user, 2, function(x) all(is.na(x)))
+      genes_user <- genes_user[, !empty_cols, drop = FALSE]
+      genes <- genes_user[genes_user$symbol %in% genes, ]
       limma1 <- limma1[rownames(genes), , drop = FALSE] ## align limma1
 
       genes <- cbind(genes, limma1)

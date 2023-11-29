@@ -115,16 +115,16 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         F2 <- playbase::rename_by(F2, pgx2$genes, "symbol")
         gg <- intersect(rownames(F1), rownames(F2))
         g1 <- g2 <- gg
-      } else if (org1 != org2 ) {
+      } else if (org1 != org2) {
         # For different org. we ensure compare on human_ortholog
         # If it is not present, use gene_name
-          target_col1 <- target_col2<- "human_ortholog"
-          if(!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
-          if(!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
-          F1 <- playbase::rename_by(F1, pgx1$genes, target_col1)
-          F2 <- playbase::rename_by(F2, pgx2$genes, target_col2)
-          gg <- intersect(rownames(F1), rownames(F2))
-          g1 <- g2 <- gg
+        target_col1 <- target_col2 <- "human_ortholog"
+        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
+        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
+        F1 <- playbase::rename_by(F1, pgx1$genes, target_col1)
+        F2 <- playbase::rename_by(F2, pgx2$genes, target_col2)
+        gg <- intersect(rownames(F1), rownames(F2))
+        g1 <- g2 <- gg
       }
 
       F1 <- F1[g1, , drop = FALSE]
@@ -138,7 +138,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       colnames(F2) <- paste0("2:", colnames(F2))
 
       return(cbind(F1, F2))
-
     })
 
     getOmicsScoreTable <- shiny::reactive({
@@ -154,24 +153,23 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       org1 <- playbase::pgx.getOrganism(pgx1)
       org2 <- playbase::pgx.getOrganism(pgx2)
 
-      F1_2 <-cum_fc()
+      F1_2 <- cum_fc()
       F1 <- F1_2[, 1, drop = FALSE]
       F2 <- F1_2[, 2, drop = FALSE]
       rho <- 1
       gg <- rownames(F1_2)
 
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
-        target_col1 <- target_col2<- "gene_name"
+        target_col1 <- target_col2 <- "gene_name"
       } else if (org1 == org2) {
-        target_col1 <- target_col2<- "symbol"
+        target_col1 <- target_col2 <- "symbol"
       } else if (org1 != org2) {
-        target_col1 <- target_col2<- "human_ortholog"
-        if(!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
-        if(!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
+        target_col1 <- target_col2 <- "human_ortholog"
+        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
+        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
       }
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
       if (length(kk) >= 10) {
-
         X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)
         X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
         X1 <- scale(t(X1[gg, kk]))
@@ -181,7 +179,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       fc1 <- sqrt(rowMeans(F1**2))
       fc2 <- sqrt(rowMeans(F2**2))
       score <- rho * fc1 * fc2
-      
+
       # TODO: get teh gene_title
       # mii <- which(pgx1$genes[ , target_col1] %in% gg)
       # ii <- ii[!duplicated(ii)]

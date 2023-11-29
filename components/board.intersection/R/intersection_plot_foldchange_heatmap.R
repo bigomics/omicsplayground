@@ -55,7 +55,6 @@ foldchange_heatmap_server <- function(id,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      
       if (input$FoldchangeHeatmap_allfc) {
         FC <- getFoldChangeMatrix()$fc
       } else {
@@ -100,7 +99,7 @@ foldchange_heatmap_server <- function(id,
         playbase::heatmapWithAnnot(
           F1,
           anno.type = at,
-          bar.height = bh, 
+          bar.height = bh,
           map.height = mh,
           mar = c(bm, 0.5, 0.5, 1),
           cluster_columns = cclust,
