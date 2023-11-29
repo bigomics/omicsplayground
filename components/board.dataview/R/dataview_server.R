@@ -88,13 +88,14 @@ DataViewBoard <- function(id, pgx) {
 
 
     shiny::observeEvent(
-    {
-      list(
-        input$data_type,
-        pgx$X,
-        pgx$counts
-      )
-    }, {
+      {
+        list(
+          input$data_type,
+          pgx$X,
+          pgx$counts
+        )
+      },
+      {
         shiny::req(input$data_type)
         if (input$data_type %in% c("counts", "CPM")) {
           pp <- rownames(pgx$counts)
@@ -280,13 +281,16 @@ DataViewBoard <- function(id, pgx) {
 
     getCountStatistics <- reactiveVal()
 
-    observeEvent({
-      list(pgx$X,
-           input$data_groupby,
-           input$data_samplefilter,
-           input$data_type
-           )
-    }, {
+    observeEvent(
+      {
+        list(
+          pgx$X,
+          input$data_groupby,
+          input$data_samplefilter,
+          input$data_type
+        )
+      },
+      {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::req(input$data_groupby, input$data_type)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
@@ -304,17 +308,17 @@ DataViewBoard <- function(id, pgx) {
         grpvar <- input$data_groupby
         gr <- pgx$Y[samples, grpvar]
 
-        dbg("[observeEvent] table.gr = ",table(gr))
-        dbg("[observeEvent] length.gr = ",length(gr))
-        dbg("[observeEvent] head.samples = ",head(samples))
-        dbg("[observeEvent] grpvar = ",grpvar)
-        dbg("[observeEvent] dim(counts) = ",dim(counts))                
-        
+        dbg("[observeEvent] table.gr = ", table(gr))
+        dbg("[observeEvent] length.gr = ", length(gr))
+        dbg("[observeEvent] head.samples = ", head(samples))
+        dbg("[observeEvent] grpvar = ", grpvar)
+        dbg("[observeEvent] dim(counts) = ", dim(counts))
+
         grps <- sort(unique(gr))
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-          mx <- tapply( samples, gr, function(ii)
+          mx <- tapply(samples, gr, function(ii) {
             rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
-          )
+          })
           counts <- do.call(cbind, mx)
         }
 
