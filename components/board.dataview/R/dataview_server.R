@@ -303,12 +303,6 @@ DataViewBoard <- function(id, pgx) {
 
         grpvar <- input$data_groupby
         gr <- pgx$Y[samples, grpvar]
-
-        dbg("[observeEvent] table.gr = ",table(gr))
-        dbg("[observeEvent] length.gr = ",length(gr))
-        dbg("[observeEvent] head.samples = ",head(samples))
-        dbg("[observeEvent] grpvar = ",grpvar)
-        dbg("[observeEvent] dim(counts) = ",dim(counts))                
         
         grps <- sort(unique(gr))
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
