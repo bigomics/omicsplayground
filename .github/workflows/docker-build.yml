@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (dev-multi-species)
+name: Build docker from branch
 
 on:
   workflow_dispatch:
