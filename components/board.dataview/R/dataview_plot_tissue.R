@@ -63,9 +63,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
         tx <- tx[jj]
         tissue.klr <- tissue.klr[jj]
-      } else {
-        return(NULL)
       }
+      
       df <- data.frame(
         tissue = names(tx),
         x = tx,
