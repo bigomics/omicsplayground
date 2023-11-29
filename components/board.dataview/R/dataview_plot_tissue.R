@@ -42,7 +42,12 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       hgnc.gene <- toupper(as.character(pgx$genes[pp, "gene_name"]))
 
       tx <- tissue.klr <- grp <- NULL
-      if (hgnc.gene %in% rownames(playdata::TISSUE)) {
+      
+      is.summary.available <- hgnc.gene %in% rownames(playdata::TISSUE)
+      
+      validate(need(is.summary.available, "No tissue data available for this gene."))
+      
+      if (is.summary.available) {
         tx <- playdata::TISSUE[hgnc.gene, ]
         grp <- playdata::TISSUE_GRP[names(tx)]
         tissue.klr <- playdata::COLORS[grp]
@@ -58,9 +63,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
         tx <- tx[jj]
         tissue.klr <- tissue.klr[jj]
-      } else {
-        return(NULL)
       }
+      
       df <- data.frame(
         tissue = names(tx),
         x = tx,
