@@ -38,14 +38,23 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       gene <- r.gene()
       data_type <- r.data_type()
 
-      pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
-      hgnc.gene <- toupper(as.character(pgx$genes[pp, "gene_name"]))
+      # Find ortholog proportion
+      n <- length(pgx$genes$human_ortholog)
+      ortho <- sum(pgx$genes$human_ortholog != "")
+
+      homologue_ratio <- ortho/n
+      if (pgx$organism %in% c("Human", "human")) {
+        hgnc.gene <- pgx$genes[gene, "symbol"]
+      } else if (homologue_ratio > .9) {
+        hgnc.gene <- pgx$genes[gene, "human_ortholog"]
+      } else {
+        shiny::validate(shiny::need(FALSE, "No tissue data available for this organism."))
+      }
 
       tx <- tissue.klr <- grp <- NULL
-      
       is.summary.available <- hgnc.gene %in% rownames(playdata::TISSUE)
       
-      validate(need(is.summary.available, "No tissue data available for this gene."))
+      shiny::validate(shiny::need(is.summary.available, "No tissue data available for this gene."))
       
       if (is.summary.available) {
         tx <- playdata::TISSUE[hgnc.gene, ]
@@ -83,34 +92,17 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       )
     })
 
-    plot.RENDER.base <- function() {
-      pdat <- plot_data()
-      shiny::req(pdat)
-
-      df <- pdat$df
-      ylab <- pdat$ylab
-      gene <- pdat$gene
-
-      par(mar = c(6, 4, 1, 0), mgp = c(1.5, 0.5, 0))
-      barplot(df$x,
-        las = 3, main = gene, cex.main = 1, col.main = "#7f7f7f",
-        col = df$color, border = NA, ylab = ylab, cex.names = 0.9,
-        names.arg = rep(NA, length(df$x))
-      )
-
-      text((1:length(df$x) - 0.5) * 1.2, -0.04 * max(df$x), df$tissue,
-        las = 3,
-        cex = 0.85, pos = 2, adj = 0, offset = 0, srt = 55, xpd = TRUE
-      )
-    }
-
     plot.RENDER <- function() {
       pdat <- plot_data()
       shiny::req(pdat)
 
       df <- pdat$df
       ylab <- stringr::str_to_sentence(pdat$ylab)
-      gene <- pdat$gene
+      if (pgx$organism %in% c("Human", "human")) {
+        title <- FALSE
+      } else {
+        title <- "Expression in human tissue"
+      }
 
       ## plot as regular bar plot
       df <- dplyr::mutate(
@@ -123,7 +115,6 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
       plotly::plot_ly(
         data = df,
-        #
         y = ~tissue,
         x = ~x,
         type = "bar",
@@ -133,7 +124,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         hovertemplate = "%{y}: %{x}<extra></extra>"
       ) %>%
         plotly::layout(
-          yaxis = list(title = FALSE),
+          yaxis = list(title = title),
           xaxis = list(title = ylab),
           font = list(family = "Lato"),
           showlegend = FALSE,
