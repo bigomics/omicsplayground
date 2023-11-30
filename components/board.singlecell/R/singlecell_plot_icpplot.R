@@ -87,17 +87,13 @@ singlecell_plot_icpplot_server <- function(id,
       shiny::req(pgx$X)
       shiny::req(method())
       shiny::req(pfGetClusterPositions())
-      method <- "meta"
-      refset <- "Immune cell (LM22)"
-      layout <- "tsne2d"
-      sortby <- "probability"
-      method <- method() # input$dcmethod
+      method <- method() 
       refset <- refset()
       layout <- layout()
       sortby <- sortby()
 
-      if (!("deconv" %in% names(pgx))) {
-        return(NULL)
+      if (!("deconv" %in% names(pgx)) || length(pgx$deconv) == 0) {
+        shiny::validate(shiny::need(FALSE, "Cell type mapping requires deconvolution"))
       }
       results <- pgx$deconv[[refset]][[method]]
       ## threshold everything (because DCQ can be negative!!!)
@@ -117,9 +113,8 @@ singlecell_plot_icpplot_server <- function(id,
       score <- score / (1e-20 + rowSums(score, na.rm = TRUE))
       score <- tanh(score / mean(abs(score)))
       score <- score / max(score, na.rm = TRUE)
-      summary(as.vector(score))
 
-      ## take top10 features
+      ## take top10 features 
       jj.top <- unique(as.vector(apply(score, 1, function(x) head(order(-x), 10))))
       score <- score[, jj.top]
       score <- score[, order(-colMeans(score**2))]
@@ -127,11 +122,9 @@ singlecell_plot_icpplot_server <- function(id,
       ii <- hclust(dist(score))$order
       jj <- hclust(dist(t(score)))$order
       score <- score[ii, jj]
-
-      score0 <- score
       pos <- pos[rownames(score), ]
-      b0 <- 1 + 0.85 * pmax(30 - ncol(score), 0)
 
+      # Return list
       pd <- list(
         score = score,
         pos = pos,
