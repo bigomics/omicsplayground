@@ -85,8 +85,6 @@ singlecell_plot_icpplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::req(method())
-      shiny::req(pfGetClusterPositions())
       method <- method() 
       refset <- refset()
       layout <- layout()
@@ -99,6 +97,7 @@ singlecell_plot_icpplot_server <- function(id,
       ## threshold everything (because DCQ can be negative!!!)
       results <- pmax(results, 0)
 
+      shiny::req(pfGetClusterPositions())
       clust.pos <- pfGetClusterPositions()
       pos <- clust.pos
       score <- results
@@ -134,60 +133,6 @@ singlecell_plot_icpplot_server <- function(id,
       )
       return(pd)
     })
-
-    base.RENDER <- function() {
-      pd <- plot_data()
-      shiny::req(pd)
-
-      cex1 <- 1.2
-      cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
-      cex1 <- 0.9 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
-      klrpal <- paste0(gplots::col2hex(klrpal), "66")
-
-      ntop <- 25
-      if (pd[["layout"]] == "4x4") ntop <- 16
-      if (pd[["layout"]] == "6x6") ntop <- 36
-
-      i <- 1
-      sel <- NULL
-      sel <- head(order(-colMeans(pd[["score"]]**2)), ntop)
-      if (pd[["sortby"]] == "name") {
-        sel <- sel[order(colnames(pd[["score"]])[sel])]
-      }
-      plt <- list()
-
-      for (i in 1:length(sel)) {
-        j <- sel[i]
-        gx <- pmax(pd[["score"]][, j], 0)
-        gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
-        klr0 <- klrpal[gx]
-        pos <- pd[["pos"]][, ]
-        tt <- colnames(pd[["score"]])[j]
-        ii <- sample(nrow(pos))
-        base::plot(
-          pd[["pos"]][ii, ],
-          pch = 19,
-          cex = 1 * cex1,
-          col = klr0[ii],
-          xlim = 1.2 * range(pd[["pos"]][, 1]),
-          ylim = 1.2 * range(pd[["pos"]][, 2]),
-          fg = gray(0.8),
-          bty = "o",
-          xaxt = "n",
-          yaxt = "n",
-          xlab = "",
-          ylab = ""
-        )
-        legend("topleft",
-          legend = colnames(pd[["score"]])[j], bg = "#AAAAAA88",
-          cex = 1.2, text.font = 1, y.intersp = 0.8, bty = "n",
-          inset = c(-0.05, -0.0)
-        )
-      }
-      refset <- input$refset
-      mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)
-    }
 
     get_ggplots <- function(cex = 1) {
       pd <- plot_data()
