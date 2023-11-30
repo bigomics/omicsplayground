@@ -53,7 +53,7 @@ singlecell_plot_icpplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plot"),
-    plotlib = "ggplot",
+    plotlib = "plotly",
     label = label,
     info.text = info.text,
     title = title,
@@ -134,9 +134,7 @@ singlecell_plot_icpplot_server <- function(id,
       jj <- hclust(dist(t(score)))$order
       score <- score[ii, jj]
 
-      score0 <- score
       pos <- pos[rownames(score), ]
-      b0 <- 1 + 0.85 * pmax(30 - ncol(score), 0)
 
       pd <- list(
         score = score,
@@ -148,125 +146,7 @@ singlecell_plot_icpplot_server <- function(id,
       return(pd)
     })
 
-    base.RENDER <- function() {
-      pd <- plot_data()
-      shiny::req(pd)
-
-      cex1 <- 1.2
-      cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
-      cex1 <- 0.9 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      klrpal <- colorRampPalette(c("grey90", "grey50", "red3"))(16)
-      klrpal <- paste0(gplots::col2hex(klrpal), "66")
-
-      ntop <- 25
-      if (pd[["layout"]] == "4x4") ntop <- 16
-      if (pd[["layout"]] == "6x6") ntop <- 36
-
-      i <- 1
-      sel <- NULL
-      sel <- head(order(-colMeans(pd[["score"]]**2)), ntop)
-      if (pd[["sortby"]] == "name") {
-        sel <- sel[order(colnames(pd[["score"]])[sel])]
-      }
-      plt <- list()
-
-      for (i in 1:length(sel)) {
-        j <- sel[i]
-        gx <- pmax(pd[["score"]][, j], 0)
-        gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
-        klr0 <- klrpal[gx]
-        pos <- pd[["pos"]][, ]
-        tt <- colnames(pd[["score"]])[j]
-        ii <- sample(nrow(pos))
-        base::plot(
-          pd[["pos"]][ii, ],
-          pch = 19,
-          cex = 1 * cex1,
-          col = klr0[ii],
-          xlim = 1.2 * range(pd[["pos"]][, 1]),
-          ylim = 1.2 * range(pd[["pos"]][, 2]),
-          fg = gray(0.8),
-          bty = "o",
-          xaxt = "n",
-          yaxt = "n",
-          xlab = "",
-          ylab = ""
-        )
-        legend("topleft",
-          legend = colnames(pd[["score"]])[j], bg = "#AAAAAA88",
-          cex = 1.2, text.font = 1, y.intersp = 0.8, bty = "n",
-          inset = c(-0.05, -0.0)
-        )
-      }
-      refset <- input$refset
-      mtext(refset, outer = TRUE, line = 0.5, cex = 1.0)
-    }
-
-    get_ggplots <- function(cex = 1) {
-      pd <- plot_data()
-      shiny::req(pd)
-
-      cex1 <- 1.2
-      cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
-      cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      klrpal <- colorRampPalette(c("grey95", "grey65", "red3"))(16)
-      klrpal <- paste0(gplots::col2hex(klrpal), "66") ## add opacity...
-
-      ntop <- 25
-      if (pd[["layout"]] == "4x4") ntop <- 16
-      if (pd[["layout"]] == "6x6") ntop <- 36
-
-      i <- 1
-      sel <- NULL
-      sel <- head(order(-colMeans(pd[["score"]]**2)), ntop)
-      if (pd[["sortby"]] == "name") {
-        sel <- sel[order(colnames(pd[["score"]])[sel])]
-      }
-
-      cmin <- min(pd[["score"]])
-      cmax <- max(pd[["score"]])
-
-
-      plt <- list()
-      for (i in 1:length(sel)) {
-        j <- sel[i]
-        gx <- pmax(pd[["score"]][, j], 0)
-        pos <- pd[["pos"]]
-        tt <- colnames(pd[["score"]])[j]
-
-        if (i == 1) {
-          legend <- TRUE
-        } else {
-          legend <- FALSE
-        }
-        ## ------- start plot ----------
-        p <- playbase::pgx.scatterPlotXY.GGPLOT(
-          pos,
-          var = gx,
-          col = klrpal,
-          zlim = c(0, 16),
-          cex = 0.6 * cex1,
-          xlab = "",
-          ylab = "",
-          cmin = cmin,
-          cmax = cmax,
-          xlim = 1.2 * range(pd[["pos"]][, 1]),
-          ylim = 1.2 * range(pd[["pos"]][, 2]),
-          axis = FALSE,
-          title = tt,
-          cex.title = 0.55,
-          label.clusters = FALSE,
-          legend = legend,
-          gridcolor = "#ffffff",
-          bgcolor = "#f8f8f8",
-          box = TRUE,
-          guide = "legend"
-        )
-        plt[[i]] <- p
-      }
-      return(plt)
-    }
-
+    # Create plot
     get_plotly <- function() {
       pd <- plot_data()
       shiny::req(pd)
@@ -287,13 +167,12 @@ singlecell_plot_icpplot_server <- function(id,
       if (pd[["sortby"]] == "name") {
         sel <- sel[order(colnames(pd[["score"]])[sel])]
       }
-      plt <- list()
-
+      
+      plt <- vector("list", length(sel))
       for (i in 1:length(sel)) {
         j <- sel[i]
         gx <- pmax(pd[["score"]][, j], 0)
         gx <- 1 + round(15 * gx / (1e-8 + max(pd[["score"]])))
-        klr0 <- klrpal[gx]
         ii <- order(gx)
         pos <- pd[["pos"]][ii, ]
         tt <- colnames(pd[["score"]])[j]
@@ -303,25 +182,21 @@ singlecell_plot_icpplot_server <- function(id,
           var = gx,
           col = klrpal,
           zlim = c(0, 16),
-          cex = 0.7 * cex1,
+          cex = 1 * cex1,
           xlab = "",
           ylab = "",
-          xlim = 1.2 * range(pd[["pos"]][, 1]),
-          ylim = 1.2 * range(pd[["pos"]][, 2]),
+          xlim = 1.25 * range(pd[["pos"]][, 1]),
+          ylim = 1.25 * range(pd[["pos"]][, 2]),
           axis = FALSE,
           title = tt,
-          cex.title = 0.5,
-          title.y = 0.9,
+          cex.title = 0.9,
+          title.y = 0.85,
           label.clusters = FALSE,
           legend = FALSE,
           box = TRUE,
           gridcolor = "#ffffff",
           bgcolor = "#f8f8f8",
-          tooltip = FALSE
-        ) %>% plotly::style(
-          hoverinfo = "none"
         )
-
         plt[[i]] <- p
       }
       return(plt)
@@ -341,7 +216,7 @@ singlecell_plot_icpplot_server <- function(id,
       ) %>% plotly::layout(
         title = list(text = pd$refset, size = 14),
         margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-      ) ## %>% plotly_default()
+      ) %>% plotly::partial_bundle()
       return(fig)
     }
 
@@ -350,47 +225,16 @@ singlecell_plot_icpplot_server <- function(id,
         plotly::layout(
           margin = list(l = 0, r = 0, b = 0, t = 50) # lfbt
         ) %>%
-        plotly_modal_default()
-      return(fig)
-    }
-
-    ggplot.RENDER <- function() {
-      pd <- plot_data()
-      plt <- get_ggplots(cex = 1.1)
-      nr <- 5
-      if (pd[["layout"]] == "4x4") nr <- 4
-      if (pd[["layout"]] == "6x6") nr <- 6
-      fig <- gridExtra::grid.arrange(
-        grobs = plt,
-        nrow = nr,
-        ncol = nr,
-        padding = unit(0.01, "line"),
-        top = textGrob(pd$refset, gp = gpar(fontsize = 15))
-      )
-      return(fig)
-    }
-
-    ggplot.RENDER2 <- function() {
-      pd <- plot_data()
-      plt <- get_ggplots(cex = 1.4)
-      nr <- 5
-      if (pd[["layout"]] == "4x4") nr <- 4
-      if (pd[["layout"]] == "6x6") nr <- 6
-      fig <- gridExtra::grid.arrange(
-        grobs = plt,
-        nrow = nr,
-        ncol = nr,
-        padding = unit(0.01, "line"),
-        top = textGrob(pd$refset, gp = gpar(fontsize = 15))
-      )
+        plotly_modal_default() %>%
+        plotly::partial_bundle()
       return(fig)
     }
 
     PlotModuleServer(
       id = "plot",
-      func = ggplot.RENDER,
-      func2 = ggplot.RENDER2,
-      plotlib = "ggplot",
+      func = plotly_modal.RENDER,
+      func2 = plotly.RENDER,
+      plotlib = "plotly",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
       add.watermark = watermark
