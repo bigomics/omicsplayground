@@ -19,11 +19,11 @@ FeatureMapBoard <- function(id, pgx) {
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-    
+
     shiny::observeEvent(input$tabs, {
       dbg("[FeatureMapBoard] input$tabs = ", input$tabs)
     })
-    
+
     # Observer (1):
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
@@ -35,10 +35,14 @@ FeatureMapBoard <- function(id, pgx) {
 
     # Observer (2): tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Gene" = list(enable = c("filter_genes"),
-                         disable = c("filter_gsets")),
-      "Geneset" = list(enable = c("filter_gsets"),
-                        disable = c("filter_genes"))
+      "Gene" = list(
+        enable = c("filter_genes"),
+        disable = c("filter_gsets")
+      ),
+      "Geneset" = list(
+        enable = c("filter_gsets"),
+        disable = c("filter_genes")
+      )
     )
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)

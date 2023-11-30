@@ -29,12 +29,18 @@ ClusteringBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Heatmap" = list(enable = NULL,
-                         disable = c("hm_clustmethod")),
-      "PCA/tSNE" = list(enable = NULL,
-                        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo")),
-      "Parallel" = list(enable = NULL,
-                       disable = c("selected_phenotypes", "hm_clustmethod"))
+      "Heatmap" = list(
+        enable = NULL,
+        disable = c("hm_clustmethod")
+      ),
+      "PCA/tSNE" = list(
+        enable = NULL,
+        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo")
+      ),
+      "Parallel" = list(
+        enable = NULL,
+        disable = c("selected_phenotypes", "hm_clustmethod")
+      )
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)

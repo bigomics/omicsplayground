@@ -28,13 +28,17 @@ CorrelationBoard <- function(id, pgx) {
         easyClose = TRUE, size = "l"
       ))
     })
-    
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Correlation" = list(enable = NULL,
-                         disable = c("pcor_ntop")),
-      "Graph" = list(enable = NULL,
-                       disable = NULL)
+      "Correlation" = list(
+        enable = NULL,
+        disable = c("pcor_ntop")
+      ),
+      "Graph" = list(
+        enable = NULL,
+        disable = NULL
+      )
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
