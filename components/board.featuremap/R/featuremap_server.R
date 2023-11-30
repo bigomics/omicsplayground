@@ -66,14 +66,28 @@ FeatureMapBoard <- function(id, pgx) {
         ## set geneset categories
         gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
         gsetcats <- c("<all>", gsetcats)
-        sel0 <- grep("^H$|hallmark", gsetcats, ignore.case = TRUE, value = TRUE)
-        sel0 <- "<all>"
-        if (length(sel0) == 0) sel0 <- 1
         shiny::updateSelectInput(session, "filter_gsets",
-          choices = gsetcats, selected = sel0
+          choices = gsetcats,
+          selected = gsetcats[1]
+        )
+
+        cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+        cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
+        shiny::updateSelectInput(session, "sigvar",
+          choices = cvar,
+          selected = cvar0
         )
       }
     )
+
+    observeEvent(input$sigvar, {
+      shiny::req(pgx$samples, input$sigvar)
+      if (input$sigvar %in% colnames(pgx$samples)) {
+        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+        y <- c("<average>", sort(unique(y)))
+        shiny::updateSelectInput(session, "ref_group", choices = y)
+      }
+    })
 
     observeEvent(
       {
@@ -171,7 +185,7 @@ FeatureMapBoard <- function(id, pgx) {
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
-        opc.low = opc.low,
+        # opc.low = opc.low,
         title = title,
         source = source,
         key = rownames(pos)
@@ -238,7 +252,6 @@ FeatureMapBoard <- function(id, pgx) {
           hilight2 = NULL,
           hilight.col = NULL,
           opacity = opacity,
-          ## xlab = xlab, ylab = ylab,
           xlab = "", ylab = "",
           xaxs = xaxs,
           yaxs = yaxs,

@@ -38,8 +38,7 @@ compare_plot_fc_correlation_ui <- function(id,
 #' @return
 #' @export
 compare_plot_fc_correlation_server <- function(id,
-                                               pgx,
-                                               dataset2,
+                                               cum_fc,
                                                hilightgenes,
                                                input.contrast1,
                                                input.contrast2,
@@ -49,37 +48,9 @@ compare_plot_fc_correlation_server <- function(id,
 
     plot_data <- shiny::reactive({
       # Require inputs
-      shiny::req(pgx$X)
-      shiny::req(dataset2)
-      shiny::req(input.contrast1())
-      shiny::req(input.contrast2())
-      pgx1 <- pgx
-      pgx2 <- dataset2()
-      ct1 <- input.contrast1()
-      ct2 <- input.contrast2()
-
-      # Allow only common contrats
-      if (!all(ct1 %in% names(pgx1$gx.meta$meta))) {
-        shiny::validate(shiny::need(all(ct1 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
-        return(NULL)
-      }
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
-        return(NULL)
-      }
-
-      # Match matrices from both datasets
-      F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
-      F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
-      gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
-      g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
-      g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]
-      F1 <- F1[g1, , drop = FALSE]
-      F2 <- F2[g2, , drop = FALSE]
-      rownames(F2) <- rownames(F1) ## force same names if mouse .vs human
-      colnames(F1) <- paste0("1:", colnames(F1))
-      colnames(F2) <- paste0("2:", colnames(F2))
-      return(cbind(F1, F2))
+      shiny::req(cum_fc())
+      out_data <- cum_fc()
+      return(out_data)
     })
 
     plot_interactive_comp_fc <- function(plot_data, hilight = NULL, cex = 0.5, cex.axis = 1, cex.space = 0.2) {

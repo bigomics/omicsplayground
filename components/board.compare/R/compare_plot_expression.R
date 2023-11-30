@@ -38,12 +38,27 @@ compare_plot_expression_server <- function(id,
       pgx1 <- pgx
       pgx2 <- dataset2()
 
+      org1 <- playbase::pgx.getOrganism(pgx1)
+      org2 <- playbase::pgx.getOrganism(pgx2)
+
       ct1 <- head(names(pgx1$gx.meta$meta), 3)
       ct2 <- head(names(pgx2$gx.meta$meta), 3)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
+      if (is.null(pgx1$version) && is.null(pgx2$version)) {
+        target_col1 <- target_col2 <- "gene_name"
+      } else if (org1 == org2) {
+        target_col1 <- target_col2 <- "symbol"
+      } else if (org1 != org2) {
+        target_col1 <- target_col2 <- "human_ortholog"
+        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
+        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
+      }
 
-      genes <- rownames(pgx1$X)
+      X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)
+      X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
+
+      genes <- rownames(X1)
       genes <- hilightgenes()
 
       df <- getOmicsScoreTable()
@@ -51,13 +66,13 @@ compare_plot_expression_server <- function(id,
       sel <- score_table() ## from module
       genes <- rownames(df)[sel]
 
-      xgenes <- intersect(rownames(pgx1$X), rownames(pgx2$X))
+      xgenes <- intersect(rownames(X1), rownames(X2))
       genes <- head(intersect(genes, xgenes), 8)
 
       par(mfrow = c(2, 4), mar = c(6, 4, 1, 0), mgp = c(2.0, 0.7, 0), oma = c(0, 0, 0, 0))
       for (gene in genes) {
-        x1 <- pgx1$X[gene, ]
-        x2 <- pgx2$X[gene, ]
+        x1 <- X1[gene, ]
+        x2 <- X2[gene, ]
         e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
         e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
         m1 <- lapply(e1, function(y) tapply(x1, y, mean))
@@ -88,7 +103,7 @@ compare_plot_expression_server <- function(id,
         )
       }
       p <- grDevices::recordPlot()
-      p
+      return(p)
     })
 
     PlotModuleServer(

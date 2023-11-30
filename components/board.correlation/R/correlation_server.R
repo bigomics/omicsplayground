@@ -207,8 +207,10 @@ CorrelationBoard <- function(id, pgx) {
       if (is.null(R)) {
         return(NULL)
       }
-      R <- R[rownames(zx), , drop = FALSE]
-
+      # Conform datasets
+      gg <- intersect(rownames(zx), rownames(R))
+      R <- R[gg, , drop = FALSE]
+      zx <- zx[gg, , drop = FALSE]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2))
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene0])

@@ -78,10 +78,9 @@ singlecell_plot_mappingplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
+      shiny::req(pfGetClusterPositions())
+      shiny::req(pgx$deconv, length(pgx$deconv) > 0)
       clust.pos <- pfGetClusterPositions()
-      if (is.null(clust.pos)) {
-        return(NULL)
-      }
       pos <- pgx$tsne2d
       pos <- clust.pos
 
