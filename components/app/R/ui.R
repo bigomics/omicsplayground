@@ -426,7 +426,6 @@ app_ui <- function() {
         ),
         bigdash::bigTabItem(
           "userprofile-tab",
-          UserProfileInputs("user_profile"),
           UserProfileUI("user_profile")
         ),
         bigdash::bigTabItem(

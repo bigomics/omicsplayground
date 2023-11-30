@@ -73,6 +73,15 @@ IntersectionBoard <- function(
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Pairwise scatter" = list(disable = NULL),
+      "Signature clustering" = list(disable = c("comparisons"))
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
 
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================

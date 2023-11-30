@@ -86,6 +86,18 @@ DataViewBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Gene overview" = list(disable = NULL),
+      "Sample QC" = list(disable = c("search_gene", "data_type")),
+      "Counts table" = list(disable = NULL),
+      "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
+      "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type"))
+    )
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
 
     shiny::observeEvent(
       {
