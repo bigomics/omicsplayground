@@ -13,6 +13,8 @@ splashLoginModal <- function(ns = NULL,
                              with.username = FALSE,
                              with.firebase = FALSE,
                              with.firebase_emailonly = FALSE,
+                             with.link = FALSE,
+                             link = NULL,
                              hide.password = TRUE,
                              button.text = "Login",
                              cancel.text = "cancel",
@@ -69,6 +71,7 @@ splashLoginModal <- function(ns = NULL,
   div.firebase <- div()
   div.title <- div()
   div.subtitle <- div()
+  div.link <- div()
 
   if (with.email) {
     div.email <- div(
@@ -240,6 +243,21 @@ splashLoginModal <- function(ns = NULL,
     )
   }
 
+  if (with.link) {
+  div.link <- div(
+    id = "link",
+    class = "pt-2",
+    tags$a(
+      id = ns("link_btn"),
+      href = link,
+      button.text,
+      class = "btn btn-warning btn-xl",
+      role = "button"
+    )
+  )
+  div.button <- div()
+}
+
   ## splash.panel=div();ns=function(x)
   splash.content <- NULL
   if (with.firebase || with.firebase_emailonly) {
@@ -254,7 +272,8 @@ splashLoginModal <- function(ns = NULL,
       div.username,
       div.email,
       div.password,
-      div.button
+      div.button,
+      div.link
     )
   }
 

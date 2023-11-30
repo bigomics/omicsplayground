@@ -1,9 +1,10 @@
 TITLE                = 'Omics Playground'
 #AUTHENTICATION       = none2
-AUTHENTICATION      = password
+#AUTHENTICATION      = password
 #AUTHENTICATION      = email-link
 #AUTHENTICATION      = firebase
-#AUTHENTICATION      = login-code
+#AUTHENTICATION      = login-code-no-mail
+AUTHENTICATION      = login-code
 ALLOW_NEW_USERS      = TRUE
 ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE

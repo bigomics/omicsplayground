@@ -75,6 +75,15 @@ app_server <- function(input, output, session) {
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )
+  } else if (authentication == "login-code-no-mail") {
+    auth <- LoginCodeNoEmailAuthenticationModule(
+      id = "auth",
+      mail_creds = file.path(ETC, "gmail_creds"),
+      domain = opt$DOMAIN,
+      credentials_file = credentials_file,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+      allow_new_users = opt$ALLOW_NEW_USERS
+    )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
     auth <- NoAuthenticationModule(
@@ -766,7 +775,6 @@ app_server <- function(input, output, session) {
     ## reset (logout) user. This should already have been done with
     ## the JS call but this is a cleaner (preferred) shiny method.
     dbg("[SERVER:userLogout] >>> resetting USER")
-    browser()
     isolate(auth$resetUSER())
 
     ## clear PGX data as soon as the user logs out (if not done)
