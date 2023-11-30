@@ -139,13 +139,16 @@ compare_plot_expression_server <- function(id,
           show_legend1 <- (i == 1 && gene_i == genes[1])
           plt <- plotly::add_trace(plt, 
                                   x = name_i, 
-                                  y = col_i[, 1], 
+                                  y = col_i[, 1] + 0.00001, # We add 0.00001 so that columns don't get ignored
                                   name = rn, 
                                   color = rn, 
                                   type = "bar", 
+                                  width = 0.25,
                                   showlegend = show_legend1) %>%
                 plotly::layout(xaxis = list(titlefont = list(size = 5), 
-                                            tickangle = 45))
+                                            tickangle = 45),
+                                bargap = 0,
+                                bargroupgap = 0)
           }
       plt <- plotly::add_annotations(plt,
         text = paste("<b>", gene_i, "</b>"),
