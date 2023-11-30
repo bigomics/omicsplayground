@@ -49,7 +49,6 @@ expression_table_gsettable_server <- function(id,
     gsettable.RENDER <- shiny::reactive({
       df <- gx_related_genesets()
 
-      #
       shiny::validate(shiny::need(
         !is.null(df),
         "Please select a gene in the table."
@@ -63,7 +62,6 @@ expression_table_gsettable_server <- function(id,
         SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
       DT::datatable(df,
-        #        class = "compact",  ## not good!
         rownames = external_links,
         escape = c(-1, -2),
         extensions = c("Scroller"),

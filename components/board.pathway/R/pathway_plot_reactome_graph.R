@@ -88,10 +88,10 @@ functional_plot_reactome_graph_server <- function(id,
         fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
         pp <- rownames(pgx$gx.meta$meta[[comparison]])
 
-        if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-          names(fc) <- pgx$genes[pp, "hgnc_symbol"]
+        if ("human_homolog" %in% colnames(pgx$genes)) {
+          names(fc) <- pgx$genes[pp, "human_homolog"]
         } else {
-          names(fc) <- toupper(pgx$genes[pp, "gene_name"])
+          names(fc) <- toupper(pgx$genes[pp, "symbol"])
         }
         fc <- fc[order(-abs(fc))]
         fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]

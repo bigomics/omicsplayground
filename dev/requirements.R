@@ -178,6 +178,7 @@ install.github('bigomics/fgsea')
 install.github('ropensci/iheatmapr')
 install.github('rstudio/bslib@v0.5.1',dependencies=FALSE)
 install.github('rstudio/htmltools',dependencies=FALSE)
+install_github('bigomics/biomaRt',dependencies=FALSE)
 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)

@@ -33,6 +33,10 @@ option_list = list(
         help="Compute extra methods [default= %default]", metavar="character"),
     optparse::make_option(c("-f", "--folder"), type="character", default=".", 
         help="Input/output working folder [default= %default]", metavar="character"),        
+    optparse::make_option(c("-p", "--pgxdir"), type="character", default="/omicsplayground/data", 
+        help="User pgx folder [default= %default]", metavar="character"),        
+    optparse::make_option(c("-b", "--libxdir"), type="character", default="/omicsplayground/libx", 
+        help="Libx extended libraries folder [default= %default]", metavar="character"),        
     optparse::make_option(c("-e", "--description"), type="character", default="OmicsPlayground dataset", 
         help="Dataset description or file name [default= %default]", metavar="character"),
     optparse::make_option(c("-y", "--datatype"), type="character", default="RNA-seq", 
@@ -92,7 +96,10 @@ pgx <- playbase::pgx.createFromFiles(
     contrasts.file,
     gxmethods = opt$gxmethods,
     gsetmethods = opt$gsetmethods,
-    extra = opt$extra)
+    extra = opt$extra,
+    pgx.dir = opt$pgxdir,
+    libx.dir = opt$libxdir
+    )
 cat("pgx.createFromFiles finished\n")
 
 if(file.exists(opt$description)) {

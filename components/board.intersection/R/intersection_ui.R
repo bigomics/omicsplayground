@@ -26,7 +26,7 @@ IntersectionInputs <- function(id) {
         "Select feature level: gene or geneset",
         placement = "top"
       ),
-      withTooltip(shiny::selectInput(ns("filter"), "Filter:", choices = NULL, multiple = FALSE),
+      withTooltip(shiny::selectInput(ns("filter"), "Filter:", choices = "<all>", multiple = FALSE),
         "Filter features",
         placement = "top"
       ),

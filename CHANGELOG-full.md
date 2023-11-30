@@ -1,3 +1,14 @@
+### v3.2.33 (2023-11-23)
+
+-  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/a91190167c959642e7678f54a4e6978c1fb8b1ee)
+-  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/c5e12e420dc092e68cba023f3aec948de7311f62)
+-  fix MAXCOUNTS bug [view](https://github.com/bigomics/omicsplayground/commit/0b018d1c989aa043a4e79ea7b7ada2af96fa18c6)
+-  cleanup dbg [view](https://github.com/bigomics/omicsplayground/commit/4f2a212813e61130f54ffdedbdb256b9a0fc6206)
+-  v3.2.32.9001 [view](https://github.com/bigomics/omicsplayground/commit/c30692b1ea01571baa1c97349ca8419131093b21)
+-  add libx and pgxdir parameters [view](https://github.com/bigomics/omicsplayground/commit/b1f8600e951552c25e202683675a7479feb49700)
+-  v3.2.33: include libx in playbase pgxcompute [view](https://github.com/bigomics/omicsplayground/commit/5d2422df8ed9082dfc927e19abfac2c35a1f6469)
+
+
 ### v3.2.32 (2023-11-22)
 
 -  feat: add covariance option [view](https://github.com/bigomics/omicsplayground/commit/5598c584b22a3a6b692746ef4573269b0adf6d12)

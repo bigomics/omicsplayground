@@ -89,9 +89,11 @@ DataViewBoard <- function(id, pgx) {
 
     shiny::observeEvent(
       {
-        input$data_type
-        pgx$X
-        pgx$counts
+        list(
+          input$data_type,
+          pgx$X,
+          pgx$counts
+        )
       },
       {
         shiny::req(input$data_type)
@@ -281,33 +283,42 @@ DataViewBoard <- function(id, pgx) {
 
     observeEvent(
       {
-        pgx$X
-        input$data_groupby
-        input$data_samplefilter
-        input$data_type
+        list(
+          pgx$X,
+          input$data_groupby,
+          input$data_samplefilter,
+          input$data_type
+        )
       },
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
+        shiny::req(input$data_groupby, input$data_type)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
-        subtt <- NULL
 
+        subtt <- NULL
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
         if (input$data_type == "counts") {
           counts <- pgx$counts[, samples, drop = FALSE]
         } else {
-          counts <- pmax(2**pgx$X - 1, 0)
+          counts <- pmax(2**pgx$X[, samples, drop = FALSE] - 1, 0)
         }
 
         grpvar <- input$data_groupby
         gr <- pgx$Y[samples, grpvar]
+
+        dbg("[observeEvent] table.gr = ", table(gr))
+        dbg("[observeEvent] length.gr = ", length(gr))
+        dbg("[observeEvent] head.samples = ", head(samples))
+        dbg("[observeEvent] grpvar = ", grpvar)
+        dbg("[observeEvent] dim(counts) = ", dim(counts))
+
         grps <- sort(unique(gr))
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-          mx <- tapply(
-            1:ncol(counts), gr,
-            function(ii) rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
-          )
+          mx <- tapply(samples, gr, function(ii) {
+            rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
+          })
           counts <- do.call(cbind, mx)
         }
 
@@ -336,7 +347,7 @@ DataViewBoard <- function(id, pgx) {
         gset <- gset[grep("<all>", names(gset), invert = TRUE)]
         gset <- gset[sapply(gset, length) > 10]
 
-        ## Counts per samples, by category
+        ## Counts per sample or group
         total.counts <- Matrix::colSums(counts, na.rm = TRUE)
         summed.counts <- t(sapply(gset, function(f) {
           Matrix::colSums(counts[which(gg %in% f), , drop = FALSE], na.rm = TRUE)

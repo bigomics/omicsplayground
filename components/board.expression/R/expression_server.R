@@ -53,6 +53,9 @@ ExpressionBoard <- function(id, pgx) {
       contr <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "gx_contrast", choices = sort(contr))
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+      if (length(fam) == 0) {
+        fam <- "<all>"
+      }
       names(fam) <- sub(".*:", "", fam)
       shiny::updateSelectInput(session, "gx_features", choices = fam)
 
@@ -122,10 +125,12 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(mx)) {
         return(NULL)
       }
+
+      ## get rid of AsIs so that behaves as data.frame/list
+      ## For some reason, this seems to be really important.
       mm <- colnames(unclass(mx$p))
       testmethods <- intersect(mm, testmethods)
-
-      mx.p <- unclass(mx$p[, testmethods, drop = FALSE]) ## get rid of AsIs
+      mx.p <- unclass(mx$p[, testmethods, drop = FALSE])
       mx.q <- unclass(mx$q[, testmethods, drop = FALSE])
       mx.fc <- unclass(mx$fc[, testmethods, drop = FALSE])
       rownames(mx.p) <- rownames(mx)
@@ -166,12 +171,11 @@ ExpressionBoard <- function(id, pgx) {
         stars = stars, meta.q = mx$meta.q,
         AveExpr0, AveExpr1, check.names = FALSE
       )
-      rownames(res) <- rownames(mx)
 
       if (add.pq) {
         ## add extra columns
-        colnames(mx.q) <- paste0("q.", colnames(mx.q))
-        res <- cbind(res, mx.q[rownames(mx), , drop = FALSE])
+        mx.q <- mx.q[rownames(mx), , drop = FALSE]
+        res <- cbind(res, mx.q)
       }
       return(res)
     }
@@ -208,9 +212,21 @@ ExpressionBoard <- function(id, pgx) {
         psel <- playbase::filterProbes(pgx$genes, gset)
       }
       res <- res[which(rownames(res) %in% psel), , drop = FALSE]
-      dim(res)
-
       res <- res[order(-abs(res$logFC)), , drop = FALSE]
+
+
+      # TODO the annot could be moved to geDEGtable function!!!
+      annot <- pgx$genes[rownames(res),
+        c("feature", "symbol", "human_ortholog"),
+        drop = FALSE
+      ]
+      # res$gene_name <- NULL, better remove before showing the plot
+
+      res <- cbind(annot, res)
+
+      if (all(is.na(res$human_ortholog))) {
+        res$human_ortholog <- NULL
+      }
       return(res)
     })
 
@@ -235,7 +251,7 @@ ExpressionBoard <- function(id, pgx) {
 
       ## just show significant genes
       if (!is.null(input$gx_showall) && !input$gx_showall) {
-        n <- length(input$gx_statmethod)
+        n <- length(tests)
         sel <- which(res$stars == playbase::star.symbols(n))
         res <- res[sel, , drop = FALSE]
       }
@@ -353,7 +369,7 @@ ExpressionBoard <- function(id, pgx) {
       names(Q) <- names(F) <- comp
 
       ct <- list(Q = Q, F = F)
-      ct
+      return(ct)
     })
 
     expression_plot_topgenes_server(
@@ -394,6 +410,7 @@ ExpressionBoard <- function(id, pgx) {
     # rendering tables ####
     gx_related_genesets <- shiny::reactive({
       res <- filteredDiffExprTable()
+      X <- pgx$X
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
@@ -402,18 +419,22 @@ ExpressionBoard <- function(id, pgx) {
         return(NULL)
       }
       ## get table
-      sel.row <- 1
       sel.row <- genetable_rows_selected()
       if (is.null(sel.row)) {
         return(NULL)
       }
-
-      gene0 <- rownames(res)[sel.row]
-      gene1 <- toupper(sub(".*:", "", gene0)) ## always uppercase...
-
-      j <- which(toupper(rownames(pgx$GMT)) == gene1)
-      gset <- names(which(pgx$GMT[j, ] != 0))
-      gset <- intersect(gset, rownames(pgx$gsetX))
+      gene1 <- res$symbol[sel.row]
+      # Deal with non-anotated genes
+      if (gene1 == "") {
+        gene1 <- res$feature[sel.row]
+      }
+      j <- which(rownames(pgx$GMT) == gene1)
+      if (length(j) == 0) {
+        return(NULL)
+      } else {
+        gset <- names(which(pgx$GMT[j, ] != 0))
+        gset <- intersect(gset, rownames(pgx$gsetX))
+      }
       if (length(gset) == 0) {
         return(NULL)
       }
@@ -422,7 +443,8 @@ ExpressionBoard <- function(id, pgx) {
       names(fx) <- rownames(pgx$gset.meta$meta[[contr]])
       fx <- round(fx[gset], digits = 4)
 
-      rho <- cor(t(pgx$gsetX[gset, ]), pgx$X[gene0, ])[, 1]
+      X <- playbase::rename_by(X, pgx$genes, "symbol")
+      rho <- cor(t(pgx$gsetX[gset, ]), X[gene1, ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 

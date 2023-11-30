@@ -85,15 +85,13 @@ singlecell_plot_icpplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-
+      shiny::req(method())
+      shiny::req(pfGetClusterPositions())
       method <- "meta"
       refset <- "Immune cell (LM22)"
       layout <- "tsne2d"
       sortby <- "probability"
       method <- method() # input$dcmethod
-      if (is.null(method)) {
-        return(NULL)
-      }
       refset <- refset()
       layout <- layout()
       sortby <- sortby()
@@ -106,10 +104,6 @@ singlecell_plot_icpplot_server <- function(id,
       results <- pmax(results, 0)
 
       clust.pos <- pfGetClusterPositions()
-      if (is.null(clust.pos)) {
-        return(NULL)
-      }
-      #
       pos <- clust.pos
       score <- results
       if (is.null(score) || length(score) == 0) {
