@@ -43,6 +43,9 @@ WORKDIR /
 
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 
+# bigdash is changed quite regularly, we should install it regularly to avoid updating base too often
+RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
