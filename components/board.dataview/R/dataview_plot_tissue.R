@@ -42,7 +42,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       n <- length(pgx$genes$human_ortholog)
       ortho <- sum(pgx$genes$human_ortholog != "")
 
-      homologue_ratio <- ortho/n
+      homologue_ratio <- ortho / n
       if (pgx$organism %in% c("Human", "human")) {
         hgnc.gene <- pgx$genes[gene, "symbol"]
       } else if (homologue_ratio > .9) {
@@ -53,9 +53,9 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
       tx <- tissue.klr <- grp <- NULL
       is.summary.available <- hgnc.gene %in% rownames(playdata::TISSUE)
-      
+
       shiny::validate(shiny::need(is.summary.available, "No tissue data available for this gene."))
-      
+
       if (is.summary.available) {
         tx <- playdata::TISSUE[hgnc.gene, ]
         grp <- playdata::TISSUE_GRP[names(tx)]
@@ -73,7 +73,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         tx <- tx[jj]
         tissue.klr <- tissue.klr[jj]
       }
-      
+
       df <- data.frame(
         tissue = names(tx),
         x = tx,
