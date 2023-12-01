@@ -32,7 +32,7 @@ expression_plot_volcanoAll_ui <- function(id,
     id = ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "grid",
+    plotlib = "plotly",
     info.text = info.text,
     caption = caption,
     options = plot_options,
@@ -60,29 +60,20 @@ expression_plot_volcanoAll_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx$X)
+      shiny::req(features())
 
+      # Input variables
       features <- features()
       ct <- getAllContrasts()
       F <- ct$F
       Q <- ct$Q
-
-      #
-      comp <- names(F)
-      if (length(comp) == 0) {
-        return(NULL)
-      }
-      if (is.null(features)) {
-        return(NULL)
-      }
-
-      fdr <- 1
-      lfc <- 0
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
+      comp <- names(F)
+      shiny::req(length(comp) > 0)
 
+      # Subset genes if requrired
       sel.genes <- rownames(pgx$X)
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
@@ -109,105 +100,98 @@ expression_plot_volcanoAll_server <- function(id,
       return(pd)
     })
 
-    get_plots <- function(cex = 0.45, base_size = 11, axis = "free") {
+    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
 
-      ymax <- 15
-      nlq <- -log10(1e-99 + unlist(pd[["Q"]]))
-
-      ## maximum 24!!!
+      # Input vars
+      fdr <- pd[["fdr"]]
+      lfc <- pd[["lfc"]]
+      ## meta tables
       nplots <- min(24, length(pd$Q))
-      plt <- list()
-
-      shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
-        i <- 1
+      sub_plots <- vector("list", length = length(nplots))
+      if (nplots <= 5) {
+        n_rows <- n_rows - 1
+        }
+      shiny::withProgress(message = "computing volcano plots ...", value = 0, {
         for (i in 1:nplots) {
+          # Get plot data
           qval <- pd[["Q"]][[i]]
           fx <- pd[["F"]][[i]]
           fc.genes <- names(qval)
-          is.sig <- (qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])
-          sig.genes <- fc.genes[which(is.sig)]
-          genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
-          genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
-          xy <- data.frame(x = fx, y = -log10(qval))
-          is.sig1 <- factor(is.sig, levels = c(FALSE, TRUE))
-          ymax1 <- ymax
-          xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
-
-          if (input$scale_per_plot) {
-            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
-          }
-
-
-          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
-            xy,
-            title = pd[["comp"]][i],
-            cex.title = 0.85,
-            var = is.sig1,
-            type = "factor",
-            col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", #
-            hilight = NULL,
-            hilight2 = genes2,
-            xlim = xmax * c(-1, 1),
-            ylim = c(0, ymax1),
-            xlab = "difference  (log2FC)",
-            ylab = "significance  (-log10q)",
-            hilight.lwd = 0,
-            hilight.col = "#1e60bb",
-            hilight.cex = 1.5,
-            cex = cex,
-            cex.lab = 1.8 * cex,
-            base_size = base_size
-          ) + ggplot2::theme_bw(base_size = base_size)
-
-          if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
+          test_i <- names(pd[["Q"]])[i]
+          is.sig <- (qval <= fdr & abs(fx) >= lfc)
+          sig.genes <- fc.genes[is.sig]
+          qval <- -log(qval + 1e-12)
+          title_y <- max(qval) - max(qval) *(yrange/10) 
+          # Call volcano plot
+          sub_plots[[i]] <- playbase::plotlyVolcano(
+            x = fx,
+            y = qval,
+            names = fc.genes,
+            source = "plot1",
+            marker.type = "scattergl",
+            highlight = sig.genes,
+            group.names = c("group1", "group0"),
+            psig = fdr,
+            lfc = lfc,
+            marker.size = cex,
+            showlegend = FALSE
+            # Add plot title
+          ) %>% plotly::add_annotations(
+              text = paste("<b>", test_i, "</b>"),
+              font = list(size = 15),
+              showarrow = FALSE,
+              xanchor = "left",
+              yanchor = "bottom",
+              x = 0,
+              y = title_y
+          )  %>%
+            shinyHugePlot::plotly_build_light(.)
         }
-      }) ## progress
+      })
 
-      return(plt)
+      # Pass argument scale_per_plot to subplot
+      shareY <- shareX <- ifelse(input$scale_per_plot, TRUE, FALSE)
+
+      # Arrange subplots
+      suppressWarnings(
+      all_plts <- plotly::subplot(sub_plots, nrows = n_rows , margin = 0.01, 
+      titleY = FALSE, titleX = FALSE, shareX = shareX, shareY = shareY) %>%
+      
+      # Add common axis titles
+      plotly::layout(annotations = list(
+                list(x = -0.025, y = 0.5, text = "significance (-log10q)",
+                     font = list(size = 13),
+                     textangle = 270,
+                     showarrow = FALSE, xref='paper', yref='paper'),
+                list(x = 0.5, y = -0.10, text = "effect size (log2FC)",
+                     font = list(size = 13),
+                     showarrow = FALSE, xref='paper', yref='paper')
+                ),
+                  margin = list(l = margin_l, b = margin_b)))
+
+      return(all_plts)
     }
 
-
-    plot.RENDER <- function() {
-      plt <- get_plots(cex = 0.5, base_size = 11, axis = "free")
-      nplots <- length(plt)
-      nr <- 1
-      nc <- max(4, nplots)
-      if (nplots > 6) {
-        nr <- 2
-        nc <- ceiling(nplots / nr)
-      }
-      if (nplots > 12) {
-        nr <- 3
-        nc <- ceiling(nplots / nr)
-      }
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    modal_plotly.RENDER <- function() {
+      fig <- plotly_plots(cex = 0.45, yrange = 0.5, n_rows = 2, margin_b = 30)
+      return(fig)
     }
 
-    modal_plot.RENDER <- function() {
-      plt <- get_plots(cex = 0.75, base_size = 13)
-      nplots <- length(plt)
-      ## layout
-      nr <- 1
-      nc <- max(2, nplots)
-      if (nplots > 3) {
-        nr <- 2
-        nc <- ceiling(nplots / nr)
-      }
-      if (nplots > 8) {
-        nr <- 3
-        nc <- ceiling(nplots / nr)
-      }
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    big_plotly.RENDER <- function() {
+      fig <- plotly_plots(cex = 0.45, yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+        plotly::style(
+          marker.size = 6
+        )
+      return(fig)
     }
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "grid",
-      func = plot.RENDER,
-      func2 = modal_plot.RENDER,
+      plotlib = "plotly",
+      func = modal_plotly.RENDER,
+      func2 = big_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
