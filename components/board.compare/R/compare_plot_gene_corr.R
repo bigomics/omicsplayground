@@ -197,8 +197,8 @@ compare_plot_gene_corr_server <- function(id,
         plt <- plotly::plot_ly() %>%
             # Axis
             plotly::layout(
-              xaxis = list(title = xtitle),
-              yaxis = list(title = ytitle),
+              xaxis = list(title = xtitle, font = list(size = 5)),
+              yaxis = list(title = ytitle, font = list(size = 5)),
               legend = list(x = 0.5, y = -0.1, xanchor = "center", orientation = "h", bgcolor = "transparent")
             ) %>%
             # Add the points
