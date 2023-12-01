@@ -35,15 +35,12 @@ COPY docker/Rprofile .Rprofile
 #------------------------------------------------------------
 
 WORKDIR /
-##RUN R -e "options(timeout=9999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
 #RUN git clone -b main --single-branch --depth 1 \
 #    https://github.com/bigomics/playdata.git \
 #    && R CMD INSTALL playdata \
 #    && rm -fr playdata
-
+RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
-
-# bigdash is changed quite regularly, we should install it regularly to avoid updating base too often
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 
 #------------------------------------------------------------
