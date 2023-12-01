@@ -85,7 +85,7 @@ singlecell_plot_icpplot_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-      method <- method() 
+      method <- method()
       refset <- refset()
       layout <- layout()
       sortby <- sortby()
@@ -113,7 +113,7 @@ singlecell_plot_icpplot_server <- function(id,
       score <- tanh(score / mean(abs(score)))
       score <- score / max(score, na.rm = TRUE)
 
-      ## take top10 features 
+      ## take top10 features
       jj.top <- unique(as.vector(apply(score, 1, function(x) head(order(-x), 10))))
       score <- score[, jj.top]
       score <- score[, order(-colMeans(score**2))]

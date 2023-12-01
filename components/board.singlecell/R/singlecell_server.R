@@ -88,8 +88,11 @@ SingleCellBoard <- function(id, pgx) {
 
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
-      kk <- tryCatch(playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter), 
-                error = function(w){0})
+      kk <- tryCatch(playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter),
+        error = function(w) {
+          0
+        }
+      )
       nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(rownames(pgx$X)))
@@ -98,7 +101,7 @@ SingleCellBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
       shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
-    }) 
+    })
 
     shiny::observe({
       shiny::req(pgx$X, input$mrk_level)
