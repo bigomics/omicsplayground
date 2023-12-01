@@ -88,7 +88,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.2.35.9000"
+VERSION = "v3.2.36"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
