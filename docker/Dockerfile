@@ -80,5 +80,4 @@ RUN make sass
 # Expose port and set entry CMD
 #------------------------------------------------------------
 EXPOSE 3838
-##CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
-CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
+CMD exec Rscript dev/run_app_headless.R 2>&1 | tee -a run.log

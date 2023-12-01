@@ -274,9 +274,18 @@ const logout = () => {
 
 const logoutInApp = () => {
 	unloadSidebar();
-        $(".tab-trigger[data-target='welcome-tab']").trigger('click');
+	$(".tab-trigger[data-target='welcome-tab']").trigger('click');
 	sidebarClose();
-        Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+    Shiny.setInputValue('userLogout', 1, {priority: 'event'});
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", "/cookie_remove", true);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && xhr.status == 200)
+		window.location = message;
+	};
+	xhr.send();
+	
+
 };
 
 const quit = () => {
@@ -431,6 +440,27 @@ $(document).ready(function() {
 
 });
 
+Shiny.addCustomMessageHandler('redirect', function(message) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", "/cookie", true);
+	xhr.setRequestHeader("Header-User-Cookie", message);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && xhr.status == 200)
+		window.location = message;
+	};
+xhr.send();
+});
+
+Shiny.addCustomMessageHandler('redirect_nonce', function(message) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", "/cookie_nonce", true);
+	xhr.setRequestHeader("Header-User-Cookie", message);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && xhr.status == 200)
+		window.location = message;
+	};
+	xhr.send();
+});
 
 var hrefUpdatedStatus = {};  // Object to track href update status for each popover
 
