@@ -21,7 +21,7 @@ enrichment_plot_volcanoall_ui <- function(
 
   PlotModuleUI(
     ns("plot"),
-    plotlib = "grid",
+    plotlib = "plotly",
     title = title,
     info.text = info.text,
     caption = caption,
@@ -43,9 +43,7 @@ enrichment_plot_volcanoall_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-      if (is.null(gs_features())) {
-        return(NULL)
-      }
+      shiny::req(gs_features())
 
       meta <- pgx$gset.meta$meta
       gsmethod <- colnames(meta[[1]]$fc)
@@ -69,135 +67,115 @@ enrichment_plot_volcanoall_server <- function(id,
       names(mx.list) <- names(meta)
 
       Q <- lapply(mx.list, function(mx) mx[, "qv"])
-      F <- lapply(mx.list, function(mx) mx[, "fc"])
-      names(Q) <- names(mx.list)
-      names(F) <- names(mx.list)
-
-      ## select maximum 24 comparisons (because of space...)
-      nlq <- -log10(1e-99 + unlist(Q))
-      ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
-      xmax <- quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]
+      FC <- lapply(mx.list, function(mx) mx[, "fc"])
+      names(FC) <- names(Q) <- names(mx.list)
 
       pd <- list(
-        F = F,
+        FC = FC,
         Q = Q,
         sel.gsets = sel.gsets,
-        xmax = xmax,
-        ymax = ymax,
         fdr = fdr,
         lfc = lfc
       )
       pd
     })
 
-    get_ggplots <- function(cex = 1, base_size = 12) {
+    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
-      F <- pd$F
+
+      # Input vars
+      FC <- pd$FC
       Q <- pd$Q
-      mx.list <- pd$mx.list
-      ymax <- pd$ymax
-      xmax <- pd$xmax
-      nplots <- length(Q)
-      fdr <- pd$fdr
-      lfc <- pd$lfc
-      sel.gsets <- pd$sel.gsets
-
-      shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
-        i <- 1
-        plt <- list()
+      fdr <- pd[["fdr"]]
+      lfc <- pd[["lfc"]]
+      ## meta tables
+      nplots <- min(24, length(pd$Q))
+      sub_plots <- vector("list", length = length(nplots))
+      if (nplots <= 5) {
+        n_rows <- n_rows - 1
+        }
+      shiny::withProgress(message = "computing volcano plots ...", value = 0, {
         for (i in 1:nplots) {
-          fc <- F[[i]]
-          qv <- Q[[i]]
-          is.sig1 <- (qv <= fdr & abs(fc) >= lfc)
-          table(is.sig1)
-          sig.genes <- names(fc)[which(is.sig1)]
-          if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)
-
-          xy <- cbind(x = fc, y = -log10(qv))
-          tt <- names(F)[i]
-          ymax1 <- ymax
-          if (input$scale_per_method) {
-            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
-          }
-
-          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
-            xy,
-            title = tt,
-            cex.title = 0.75,
-            var = is.sig1,
-            type = "factor",
-            col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", #
-            hilight = NULL,
-            hilight2 = NULL,
-            xlim = xmax * c(-1, 1),
-            ylim = c(0, ymax1),
-            xlab = "difference  (log2FC)",
-            ylab = "significance  (-log10q)",
-            hilight.lwd = 0,
-            hilight.col = "#1e60bb",
-            hilight.cex = 1.5,
-            cex = cex,
-            cex.lab = 1.8 * cex,
-            base_size = base_size
-          ) + ggplot2::theme_bw(base_size = base_size)
-
-          shiny::incProgress(1.0 / nplots)
+          # Get plot data
+          fx <- FC[[i]]
+          qval <- Q[[i]]
+          fc.genes <- names(qval)
+          cond_i <- names(pd[["Q"]])[i]
+          is.sig1 <- (qval <= fdr & abs(fx) >= lfc)
+          sig.genes <- names(fx)[which(is.sig1)]
+          qval <- -log(qval + 1e-12)
+          title_y <- max(qval) - max(qval) *(yrange/10) 
+          # Call volcano plot
+          sub_plots[[i]] <- playbase::plotlyVolcano(
+            x = fx,
+            y = qval,
+            names = fc.genes,
+            source = "plot1",
+            marker.type = "scattergl",
+            highlight = sig.genes,
+            group.names = c("group1", "group0"),
+            psig = fdr,
+            lfc = lfc,
+            marker.size = cex,
+            showlegend = FALSE
+            # Add plot title
+          ) %>% plotly::add_annotations(
+              text = paste("<b>", cond_i, "</b>"),
+              font = list(size = 15),
+              showarrow = FALSE,
+              xanchor = "left",
+              yanchor = "bottom",
+              x = 0,
+              y = title_y
+          )  %>%
+            shinyHugePlot::plotly_build_light(.)
         }
       })
-      return(plt)
+
+      # Pass argument scale_per_plot to subplot
+      shareY <- shareX <- ifelse(input$scale_per_method, TRUE, FALSE)
+
+      # Arrange subplots
+      suppressWarnings(
+      all_plts <- plotly::subplot(sub_plots, nrows = n_rows , margin = 0.01, 
+      titleY = FALSE, titleX = FALSE, shareX = shareX, shareY = shareY) %>%
+      
+      # Add common axis titles
+      plotly::layout(annotations = list(
+                list(x = -0.025, y = 0.5, text = "significance (-log10q)",
+                     font = list(size = 13),
+                     textangle = 270,
+                     showarrow = FALSE, xref='paper', yref='paper'),
+                list(x = 0.5, y = -0.10, text = "effect size (log2FC)",
+                     font = list(size = 13),
+                     showarrow = FALSE, xref='paper', yref='paper')
+                ),
+                  margin = list(l = margin_l, b = margin_b)))
+
+      return(all_plts)
     }
 
-
-    volcano.RENDER <- function() {
-      plt <- get_ggplots(cex = 0.4, base_size = 12)
-      shiny::req(plt)
-      ## ------------- layout ----------------
-      nplots <- length(plt)
-      nc <- max(4, nplots)
-      nr <- 1
-      if (nplots > 6) {
-        nc <- ceiling(nplots / 2)
-        nr <- 2
-      }
-      if (nplots > 12) {
-        nc <- ceiling(nplots / 3)
-        nr <- 3
-      }
-      #
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    modal_plotly.RENDER <- function() {
+      fig <- plotly_plots(cex = 0.45, yrange = 0.5, n_rows = 2, margin_b = 30)
+      return(fig)
     }
 
-    volcano.RENDER2 <- function() {
-      plt <- get_ggplots(cex = 0.9, base_size = 16)
-      shiny::req(plt)
-      ## ------------- layout ----------------
-      nplots <- length(plt)
-      nr <- nc <- 1
-      nc <- 3
-      nr <- 1
-      if (nplots > 3) {
-        nc <- ceiling(nplots / 2)
-        nr <- 2
-      }
-      if (nplots > 8) {
-        nc <- ceiling(nplots / 3)
-        nr <- 3
-      }
-      if (nplots > 15) {
-        nc <- ceiling(nplots / 4)
-        nr <- 4
-      }
-      #
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    big_plotly.RENDER <- function() {
+
+      fig <- plotly_plots(cex = 0.45, yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+        plotly::style(
+          marker.size = 6
+        )
+      return(fig)
     }
+
 
     PlotModuleServer(
       "plot",
-      plotlib = "grid",
-      func = volcano.RENDER,
-      func2 = volcano.RENDER2,
+      plotlib = "plotly",
+      func = modal_plotly.RENDER,
+      func2 = big_plotly.RENDER,
       pdf.width = 10,
       pdf.height = 5,
       res = c(72, 85),
