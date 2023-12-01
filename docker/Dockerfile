@@ -49,26 +49,15 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 WORKDIR /
 ARG BRANCH=master
 RUN echo Downloading $BRANCH branch
-# RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
-#     && rm -fr /omicsplayground*  \
-#     && unzip $BRANCH.zip \
-#     && mv omicsplayground-$BRANCH omicsplayground \
-#     && chmod -R ugo+rwX /omicsplayground \
-#     && rm $BRANCH.zip   
-
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
        https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
-## tag docker version
-WORKDIR /omicsplayground
-#RUN make version
-#COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
-
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
+WORKDIR /omicsplayground
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
