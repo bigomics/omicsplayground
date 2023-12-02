@@ -214,14 +214,13 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           ## and rownames(GMT)
           fc <- pgx$gx.meta$meta[[comp]]$meta.fx
           names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
-          
           pp <- intersect(rownames(pgx$GMT), names(fc))
           
           # if pp is null, use human ortholog.
           # pp is null when collapse by gene is false, but we dont have a parameter for that.
           if(length(pp) == 0 || is.null(pp)) {
-            names(fc) <- pgx$genes[names(fc), "human_ortholog"]
-            pp <- intersect(pgx$genes$human_ortholog, names(fc))
+            names(fc) <- pgx$genes[names(fc),"symbol"]
+            pp <- intersect(pgx$genes$symbol, names(fc))
           }
           ## check if multi-omics
           is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
