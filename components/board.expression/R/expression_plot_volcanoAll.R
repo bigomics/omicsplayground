@@ -66,11 +66,11 @@ expression_plot_volcanoAll_server <- function(id,
       # Input variables
       features <- features()
       ct <- getAllContrasts()
-      F <- ct$F
+      FC <- ct$F
       Q <- ct$Q
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
-      comp <- names(F)
+      comp <- names(FC)
       shiny::req(length(comp) > 0)
 
       # Subset genes if requrired
@@ -81,8 +81,8 @@ expression_plot_volcanoAll_server <- function(id,
       }
 
       ## combined matrix for output
-      matF <- do.call(cbind, F)
-      colnames(matF) <- paste0("fc.", names(F))
+      matF <- do.call(cbind, FC)
+      colnames(matF) <- paste0("fc.", names(FC))
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
@@ -93,7 +93,7 @@ expression_plot_volcanoAll_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         sel.genes = sel.genes,
-        F = F,
+        FC = FC,
         Q = Q
       )
 
@@ -117,7 +117,7 @@ expression_plot_volcanoAll_server <- function(id,
         for (i in 1:nplots) {
           # Get plot data
           qval <- pd[["Q"]][[i]]
-          fx <- pd[["F"]][[i]]
+          fx <- pd[["FC"]][[i]]
           fc.genes <- names(qval)
           test_i <- names(pd[["Q"]])[i]
           is.sig <- (qval <= fdr & abs(fx) >= lfc)
@@ -174,8 +174,11 @@ expression_plot_volcanoAll_server <- function(id,
       return(all_plts)
     }
 
-    modal_plotly.RENDER <- function() {
+    modal_plotly.RENDER <<- function() {
       fig <- plotly_plots(cex = 0.45, yrange = 0.5, n_rows = 2, margin_b = 30)
+      suppressMessages(
+      ds <<- shinyHugePlot::downsampler$new(figure = fig, n_out = 10L, verbose = FALSE)
+       )
       return(fig)
     }
 
@@ -186,6 +189,11 @@ expression_plot_volcanoAll_server <- function(id,
         )
       return(fig)
     }
+    
+    shiny::observeEvent(plotly::event_data("plotly_relayout"),{
+      shiny::req(modal_plotly.RENDER())
+      shinyHugePlot::updatePlotlyH(session, "expression-volcanoAll-pltmod-renderfigure", plotly::event_data("plotly_relayout"), ds)
+    })
 
     PlotModuleServer(
       "pltmod",
