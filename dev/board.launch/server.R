@@ -56,7 +56,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
-      credentials_file = credentials_file,
+      user_database = user_database,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
       )

@@ -758,7 +758,8 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
-                                          credentials_file = NULL,
+                                          # credentials_file = NULL,
+                                          user_database = NULL,
                                           allow_personal = TRUE,
                                           allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -769,7 +770,7 @@ LoginCodeAuthenticationModule <- function(id,
       ## we continue but email is not working
       warning("[LoginCodeAuthenticationModule] ERROR : missing mail_creds file!!!")
     }
-    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
+    # if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     ns <- session$ns
     USER <- shiny::reactiveValues(
@@ -880,7 +881,8 @@ LoginCodeAuthenticationModule <- function(id,
           check <- checkEmail(
             email = login_email,
             domain = domain,
-            credentials_file = credentials_file,
+            # credentials_file = credentials_file,
+            user_database = user_database,
             check.personal = !allow_personal,
             check.existing = !allow_new_users
           )
@@ -973,7 +975,8 @@ LoginCodeAuthenticationModule <- function(id,
           if (!opt$ENABLE_USERDIR) {
             USER$user_dir <- file.path(PGX.DIR)
           }
-          USER$options <- read_user_options(USER$user_dir)
+          # USER$options <- read_user_options(USER$user_dir)
+          USER$options <- read_user_options(USER$email)
 
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user

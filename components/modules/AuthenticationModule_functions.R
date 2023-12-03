@@ -15,6 +15,8 @@ create_user_dir_if_needed <- function(user_dir, pgxdir) {
 }
 
 read_user_options <- function(user_dir) {
+  # email <- user_dir
+  # browser()
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global
   if (file.exists(user_opt_file) && !dir.exists(user_opt_file)) {
@@ -182,6 +184,28 @@ checkAuthorizedUser <- function(email, credentials_file = NULL) {
   authorized
 }
 
+checkExpiredUser <- function(email, user_database) {
+  if (is.null(user_database) || user_database == FALSE) {
+    return(TRUE)
+  }
+  if (!file.exists(user_database)) {
+    return(TRUE)
+  }
+  connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
+  query_result <- DBI::dbGetQuery(connection, paste0("
+    SELECT expiry 
+    FROM users 
+    WHERE email = '", email, "'
+  "))
+  DBI::dbDisconnect(connection)
+  if(nrow(query_result) == 0) {
+    return(TRUE)
+  } else {
+    valid_date <- as.Date(query_result[1, 1]) > as.Date(Sys.time())
+    return(valid_date)
+  }
+}
+
 checkValidEmailFormat <- function(email) {
   if (is.null(email)) {
     return(FALSE)
@@ -206,7 +230,7 @@ checkExistUserFolder <- function(email) {
   tolower(email) %in% tolower(user_dirs)
 }
 
-checkEmail <- function(email, domain = NULL, credentials_file = NULL,
+checkEmail <- function(email, domain = NULL, credentials_file = NULL, user_database = NULL,
                        check.personal = TRUE, check.existing = FALSE) {
   chk <- list()
   if (checkMissingEmail(email)) {
@@ -220,6 +244,9 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL,
   }
   if (!checkAuthorizedUser(email, credentials_file)) {
     return(list(valid = FALSE, msg = "user not authorized"))
+  }
+  if (!checkExpiredUser(email, user_database)) {
+    return(list(valid = FALSE, msg = "user expired"))
   }
   if (check.personal) {
     if (checkPersonalEmail(email)) {
