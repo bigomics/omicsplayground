@@ -57,7 +57,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     tab_elements <- list(
       "WikiPathways" = list(disable = NULL),
       "Reactome" = list(disable = NULL),
-      "GO graph" = list(disable = c("fa_filtertable"))
+      "GO graph" = list(disable = c("fa_filtertable", "fa_filtertable_value"))
     )
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -196,7 +196,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       df <- getReactomeTable()
       do.filter <- FALSE
       do.filter <- input$fa_filtertable
-      if (do.filter) df <- df[which(df$meta.q < 0.999), ]
+      if (do.filter) {
+        filter_value <- as.numeric(input$fa_filtertable_value)
+        df <- df[which(df$meta.q < filter_value), ]
+      }
       return(df)
     })
 
@@ -313,7 +316,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       df <- getWikiPathwayTable()
       do.filter <- FALSE
       do.filter <- input$fa_filtertable
-      if (do.filter) df <- df[which(df$meta.q < 0.999), ]
+      if (do.filter) {
+        filter_value <- as.numeric(input$fa_filtertable_value)
+        df <- df[which(df$meta.q < filter_value), ]
+      }
       return(df)
     })
 

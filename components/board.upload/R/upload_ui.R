@@ -29,7 +29,7 @@ UploadInputs <- function(id) {
         withTooltip(
           shiny::checkboxInput(
             ns("fa_filtertable"),
-            "filter signficant (tables)",
+            "filter significant (tables)",
             FALSE
           ),
           "Click to filter the significant entries in the tables."
