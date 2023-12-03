@@ -377,6 +377,15 @@ upload_module_computepgx_server <- function(
           )
           return(NULL)
         }
+        if (!isValidFileName(input$upload_name)) {
+          message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
+          shinyalert::shinyalert(
+            title = "Invalid name",
+            text = "Please remove any slashes (/) from the name",
+            type = "error"
+          )
+          return(NULL)
+        }
 
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
