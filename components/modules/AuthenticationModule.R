@@ -976,7 +976,7 @@ LoginCodeAuthenticationModule <- function(id,
             USER$user_dir <- file.path(PGX.DIR)
           }
           # USER$options <- read_user_options(USER$user_dir)
-          USER$options <- read_user_options(USER$email)
+          USER$options <- read_user_options_db(USER$email, user_database)
 
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
@@ -1004,7 +1004,8 @@ LoginCodeAuthenticationModule <- function(id,
           USER$user_dir <- file.path(PGX.DIR)
         }
         # set options
-        USER$options <- read_user_options(USER$user_dir)
+        # USER$options <- read_user_options(USER$user_dir)
+        USER$options <- read_user_options_db(USER$email, user_database)
         return()
       }
       first_time <<- FALSE

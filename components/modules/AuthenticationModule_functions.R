@@ -15,8 +15,6 @@ create_user_dir_if_needed <- function(user_dir, pgxdir) {
 }
 
 read_user_options <- function(user_dir) {
-  # email <- user_dir
-  # browser()
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global
   if (file.exists(user_opt_file) && !dir.exists(user_opt_file)) {
@@ -38,6 +36,39 @@ read_user_options <- function(user_dir) {
   }
   # add user dir to opt file (IK: this is not an option!)
   ##  new_opt$user_dir <- user_dir
+  new_opt
+}
+
+read_user_options_db <- function(email, user_database = NULL) {
+  connection <- connect_db(user_database)
+  user_opt <- query_by_email(email, connection)
+  new_opt <- opt ## opt from global
+  disconnect_db(connection)
+  if (!is.null(user_opt)) {
+    ## restrict user options only to these options.
+    ALLOWED_USER_OPTS <- c(
+      "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
+      "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
+      "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
+      "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
+      "TIMEOUT", "WATERMARK"
+    )
+    dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
+    user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
+    user_opt <- user_opt %>%
+      dplyr::mutate(
+        ENABLE_CHIRP = as.logical(ENABLE_CHIRP),
+        ENABLE_DELETE = as.logical(ENABLE_DELETE),
+        ENABLE_PGX_DOWNLOAD = as.logical(ENABLE_PGX_DOWNLOAD),
+        ENABLE_PUBLIC_SHARE = as.logical(ENABLE_PUBLIC_SHARE),
+        ENABLE_UPLOAD = as.logical(ENABLE_UPLOAD),
+        ENABLE_USER_SHARE = as.logical(ENABLE_USER_SHARE),
+        WATERMARK = as.logical(WATERMARK)
+      )
+    for (opt_name in names(user_opt)) {
+      new_opt[[opt_name]] <- user_opt[[opt_name]]
+    }
+  }
   new_opt
 }
 
@@ -191,13 +222,15 @@ checkExpiredUser <- function(email, user_database) {
   if (!file.exists(user_database)) {
     return(TRUE)
   }
-  connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
+  connection <- connect_db(user_database)
+  # connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
   query_result <- DBI::dbGetQuery(connection, paste0("
     SELECT expiry 
     FROM users 
     WHERE email = '", email, "'
   "))
-  DBI::dbDisconnect(connection)
+  # DBI::dbDisconnect(connection)
+  disconnect_db(connection)
   if(nrow(query_result) == 0) {
     return(TRUE)
   } else {
