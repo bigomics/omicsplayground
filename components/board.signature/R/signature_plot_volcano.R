@@ -51,14 +51,12 @@ signature_plot_volcano_server <- function(id,
     ##    volcanoPlots.RENDER <- shiny::reactive({
     volcanoPlots.RENDER <- function() {
       alertDataLoaded(session, pgx)
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx)
+      shiny::req(sigCalculateGSEA())
 
+      # Input vars
       gsea <- sigCalculateGSEA()
-      if (is.null(gsea)) {
-        return(NULL)
-      }
+      mm <- selected_gxmethods()
 
       ## filter with table selection/search
       ii <- enrichmentContrastTable$rows_selected()
@@ -69,20 +67,26 @@ signature_plot_volcano_server <- function(id,
 
       ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- rownames(gsea$output)[ii]
-
-      mm <- selected_gxmethods()
       meta <- playbase::pgx.getMetaMatrix(pgx, methods = mm)
       F <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
       score <- abs(F) * -log(qv)
-      gset <- head(rownames(F), 100)
-      gset <- intersect(gsea$gset, rownames(F))
+      gset <- data.table::chmatch(toupper(gsea$gset), toupper(pgx$genes[, "gene_name"]))
+      gset <- pgx$genes[gset, "gene_name"]
+      gset <- intersect(gset, rownames(F))
 
       sel <- enrichmentGeneTable$rows_selected()
       sel.gene <- NULL
       if (length(sel)) {
         df <- getEnrichmentGeneTable()
-        sel.gene <- df$gene[sel]
+        sel.gene <- df$symbol[sel]
+
+        # Use symbol/feature if in gset
+        if (sel.gene %in% gset) {
+          gset <- sel.gene
+        } else {
+          sel.gene <- df$feature[sel]
+        }
       }
 
       if (ncol(F) == 1) {
