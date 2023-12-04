@@ -62,12 +62,12 @@ biomarker_plot_boxplots_server <- function(id,
         res <- calcVariableImportance()
         shiny::req(res)
 
+        ## get variables used in the tree solution
         vars <- setdiff(res$rf$frame$var, "<leaf>")
         vars <- res$rf$orig.names[vars]
         if (length(vars) == 0) {
           return(NULL)
         }
-
         vars <- intersect(vars, rownames(res$X))
 
         ## add some other variables
