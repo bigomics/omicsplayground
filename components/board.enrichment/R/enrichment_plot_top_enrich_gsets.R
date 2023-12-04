@@ -100,7 +100,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       # if names of rnk0 does nto match rownames(pgx$GMT), then use gene symbols
       # this is needed when collapse by gene is not used
       if (!all(rownames(pgx$GMT) %in% names(rnk0))) {
-        names(rnk0) <- pgx$genes[names(rnk0),"symbol"]
+        names(rnk0) <- pgx$genes[names(rnk0), "symbol"]
       }
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
