@@ -68,7 +68,8 @@ biomarker_plot_decisiontree_server <- function(id,
           rf <- partykit::as.party(res$rf)
           is.multinomial <- length(table(res$y)) > 2
           if(is.multinomial) {
-            plot(rf, type="extended")
+            ##plot(rf, type="extended")
+            plot(rf, type="simple")
           } else {
             plot(rf, type="simple")
           }
@@ -81,7 +82,7 @@ biomarker_plot_decisiontree_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(72, 120),
+        res = c(60, 100),
         pdf.width = 10, pdf.height = 6,
         add.watermark = watermark
       )
