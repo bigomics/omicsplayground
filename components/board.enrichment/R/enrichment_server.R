@@ -164,6 +164,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
 
       rpt <- NULL
+      
       if (is.null(outputs) || length(gsmethod) > 1) {
         ## show meta-statistics table (multiple methods)
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
@@ -203,6 +204,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rnaX <- pgx$X
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
         gsdiff.method <- "fc" ## OLD default
+        
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1])
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0])
@@ -210,8 +212,16 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         } else {
           ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(pgx$X)
           ## and rownames(GMT)
-          fc <- pgx$gx.meta$meta[[comp]]$meta.fx ## stable
+          fc <- pgx$gx.meta$meta[[comp]]$meta.fx
+          names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
           pp <- intersect(rownames(pgx$GMT), names(fc))
+          
+          # if pp is null, use human ortholog.
+          # pp is null when collapse by gene is false, but we dont have a parameter for that.
+          if(length(pp) == 0 || is.null(pp)) {
+            names(fc) <- pgx$genes[names(fc),"symbol"]
+            pp <- intersect(pgx$genes$symbol, names(fc))
+          }
           ## check if multi-omics
           is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
           if (is.multiomics) {
