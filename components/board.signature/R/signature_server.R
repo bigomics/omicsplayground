@@ -102,7 +102,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     getCurrentMarkers <- shiny::reactive({
       shiny::req(pgx)
-      shiny::req(input$type, input$feature)
+      shiny::req(input$type, input$feature, input_genelistUP())
 
       ## Get current selection of markers/genes
       type <- input$type
@@ -111,6 +111,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       features <- toupper(pgx$genes$gene_name)
       xfeatures <- toupper(pgx$genes[rownames(pgx$X), "gene_name"])
       gset <- NULL
+      browser()
       if (input$feature == "<custom>") {
         gset <- input_genelistUP()
         if (is.null(gset) || length(gset) == 0 || gset[1] == "") {
