@@ -134,16 +134,16 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         input$feature %in% names(pgx$gx.meta$meta)) {
         contr <- input$feature
         fx <- pgx$gx.meta$meta[[contr]]$meta.fx
+        names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         probes <- rownames(pgx$gx.meta$meta[[contr]])
 
         match_input_genes <- all(input_genelistUP() %in% probes)
-
+        
         if(match_input_genes == FALSE){
           # use human ortholog in case no matched found in proves
           probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
         }
-        genes <- toupper(pgx$genes[probes, "gene_name"])
-        browser()
+        genes <- pgx$genes[probes, "gene_name"]
 
         # if length(genes) == 0, return validate message
         validate(need(
@@ -151,11 +151,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
           )
         )
 
-        top.genes <- genes[order(-fx)]
+        fx <- fx[genes]
+        top.genes <- fx[order(-abs(fx))]
         top.genes <- head(top.genes, 100)
         top.genes0 <- paste(top.genes, collapse = " ")
         #shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
-        gset <- top.genes
+        gset <- names(top.genes)
       } else if (input$feature %in% names(playdata::iGSETS)) {
         gset <- toupper(unlist(playdata::getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
