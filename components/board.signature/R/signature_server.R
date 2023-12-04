@@ -138,8 +138,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         probes <- rownames(pgx$gx.meta$meta[[contr]])
 
         match_input_genes <- all(input_genelistUP() %in% probes)
-        
-        if(match_input_genes == FALSE){
+
+        if (match_input_genes == FALSE) {
           # use human ortholog in case no matched found in proves
           probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
         }
@@ -148,14 +148,13 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         # if length(genes) == 0, return validate message
         validate(need(
           length(genes) > 0, "No genes found in the signature. Please check the gene list."
-          )
-        )
+        ))
 
         fx <- fx[genes]
         top.genes <- fx[order(-abs(fx))]
         top.genes <- head(top.genes, 100)
         top.genes0 <- paste(top.genes, collapse = " ")
-        #shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
+        # shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
         gset <- names(top.genes)
       } else if (input$feature %in% names(playdata::iGSETS)) {
         gset <- toupper(unlist(playdata::getGSETS(input$feature)))
@@ -366,7 +365,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       shiny::req(pgx$X)
       shiny::req(sigCalculateGSEA())
       shiny::req(getCurrentMarkers())
-      
+
       # Input vars
       gsea <- sigCalculateGSEA()
       gset <- getCurrentMarkers()
@@ -379,8 +378,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       fc <- meta$fc
       qv <- meta$qv
-      
-      # Convert to upper for old pgx 
+
+      # Convert to upper for old pgx
       if (is.null(pgx$version)) {
         rownames(fc) <- toupper(rownames(fc))
         rownames(qv) <- toupper(rownames(qv))
@@ -395,7 +394,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       genes <- data.table::chmatch(toupper(gset), toupper(pgx$genes[, "gene_name"]))
       genes <- pgx$genes[genes, "gene_name"]
       # Convert to upper for old pgx and intersect with FC
-      if (is.null(pgx$version)) { 
+      if (is.null(pgx$version)) {
         gg <- intersect(rownames(fc), toupper(genes))
       } else {
         gg <- intersect(rownames(fc), genes)
@@ -405,7 +404,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       gene.info <- pgx$genes[gg, c("feature", "symbol", "gene_title")]
       fc <- fc[gg, , drop = FALSE]
       gene.info$gene_title <- substring(gene.info$gene_title, 1, 40)
-      
+
       # Return df
       df <- data.frame(gene.info, fc, check.names = FALSE)
       return(df)
