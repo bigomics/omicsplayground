@@ -92,10 +92,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     input_genelistUP <- shiny::reactive({
+      shiny::req(input$genelistUP)
       gg <- input$genelistUP
-      if (is.null(gg)) {
-        return(NULL)
-      }
       gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
       return(gg)
@@ -108,8 +106,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
       ## Get current selection of markers/genes
       type <- input$type
-
-      dbg("<signature:getCurrentMarkers> called\n")
 
       level <- "gene"
       features <- toupper(pgx$genes$gene_name)
@@ -352,42 +348,50 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     getEnrichmentGeneTable <- shiny::reactive({
       shiny::req(pgx$X)
-
+      shiny::req(sigCalculateGSEA())
+      shiny::req(getCurrentMarkers())
+      
+      # Input vars
       gsea <- sigCalculateGSEA()
-      if (is.null(gsea)) {
-        return(NULL)
-      }
-
+      gset <- getCurrentMarkers()
       i <- enrichmentContrastTable$rows_selected()
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
 
+      # Get metaFC mat
       meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       fc <- meta$fc
       qv <- meta$qv
-      rownames(fc) <- toupper(rownames(fc))
-      rownames(qv) <- toupper(rownames(qv))
-
-      contr <- rownames(gsea$output)[i]
-      fc <- fc[, contr, drop = FALSE]
-
-      gset <- getCurrentMarkers()
-      if (is.null(gset)) {
-        return(NULL)
+      
+      # Convert to upper for old pgx 
+      if (is.null(pgx$version)) {
+        rownames(fc) <- toupper(rownames(fc))
+        rownames(qv) <- toupper(rownames(qv))
+        gset <- setdiff(toupper(gset), c("", NA))
+      } else {
+        gset <- setdiff(gset, c("", NA))
       }
 
-      gset <- setdiff(toupper(gset), c("", NA))
-      genes <- intersect(gset, rownames(fc))
-      dd1 <- setdiff(genes, rownames(fc))
-      dd2 <- setdiff(genes, rownames(qv))
-      fc <- fc[genes, , drop = FALSE]
-      qv <- qv[genes, , drop = FALSE]
-
-      gene.info <- pgx$genes[rownames(fc), c("feature", "symbol", "gene_title")]
+      # Get contrasts, FC, and gene info
+      contr <- rownames(gsea$output)[i]
+      fc <- fc[, contr, drop = FALSE]
+      genes <- data.table::chmatch(toupper(gset), toupper(pgx$genes[, "gene_name"]))
+      genes <- pgx$genes[genes, "gene_name"]
+      # Convert to upper for old pgx and intersect with FC
+      if (is.null(pgx$version)) { 
+        gg <- intersect(rownames(fc), toupper(genes))
+      } else {
+        gg <- intersect(rownames(fc), genes)
+      }
+      fc <- fc[gg, , drop = FALSE]
+      qv <- qv[gg, , drop = FALSE]
+      gene.info <- pgx$genes[gg, c("feature", "symbol", "gene_title")]
+      fc <- fc[gg, , drop = FALSE]
       gene.info$gene_title <- substring(gene.info$gene_title, 1, 40)
+      
+      # Return df
       df <- data.frame(gene.info, fc, check.names = FALSE)
-
       return(df)
     })
 
