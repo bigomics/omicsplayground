@@ -162,7 +162,7 @@ BiomarkerBoard <- function(id, pgx) {
       y <- y0[!is.na(y0)]
 
       ## augment to at least 100 samples per level :)
-      ii <- tapply(1:length(y), y, function(ii) sample(c(ii,ii), size = 100, replace = TRUE))
+      ii <- tapply(1:length(y), y, function(ii) sample(c(ii, ii), size = 100, replace = TRUE))
       y <- y[unlist(ii)]
 
       ## -------------------------------------------
@@ -231,11 +231,13 @@ BiomarkerBoard <- function(id, pgx) {
         y1 <- y
         names(y1) <- colnames(X1) <- paste0("x", 1:ncol(X))
         res <- playbase::pgx.variableImportance(
-           X1, y1, methods = methods, reduce = 1000, resample = 0,
-           scale = FALSE, add.noise = 0)
+          X1, y1,
+          methods = methods, reduce = 1000, resample = 0,
+          scale = FALSE, add.noise = 0
+        )
         P <- res$importance
       }
-      P <- abs(P)  ## sometimes negative according to sign
+      P <- abs(P) ## sometimes negative according to sign
 
       P[is.na(P)] <- 0
       P[is.nan(P)] <- 0
@@ -260,7 +262,7 @@ BiomarkerBoard <- function(id, pgx) {
       sel <- head(rownames(R), NFEATURES) ## top50 features
       tx <- t(X[sel, , drop = FALSE])
 
-      
+
       ## formula wants clean names, so save original names
       colnames(tx) <- gsub("[: +-.,]", "_", colnames(tx))
       colnames(tx) <- gsub("[')(]", "", colnames(tx))

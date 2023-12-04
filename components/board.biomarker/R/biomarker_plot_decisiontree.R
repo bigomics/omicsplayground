@@ -64,14 +64,19 @@ biomarker_plot_decisiontree_server <- function(id,
           rf <- partykit::as.party(res$rf)
           partykit::plot.party(rf)
         } else {
-          ##rpart.plot::rpart.plot(res$rf)
+          ## rpart.plot::rpart.plot(res$rf)
           rf <- partykit::as.party(res$rf)
           is.multinomial <- length(table(res$y)) > 2
+<<<<<<< HEAD
           if(is.multinomial) {
             ##plot(rf, type="extended")
             plot(rf, type="simple")
+=======
+          if (is.multinomial) {
+            plot(rf, type = "extended")
+>>>>>>> 36219402ea3ceeff98e4745c2f67ce6c6f66c595
           } else {
-            plot(rf, type="simple")
+            plot(rf, type = "simple")
           }
         }
       }
