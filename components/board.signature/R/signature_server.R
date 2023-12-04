@@ -132,18 +132,18 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         }
       } else if (type == "contrast" &&
         input$feature %in% names(pgx$gx.meta$meta)) {
-        browser()
-        
         contr <- input$feature
         fx <- pgx$gx.meta$meta[[contr]]$meta.fx
         probes <- rownames(pgx$gx.meta$meta[[contr]])
 
         match_input_genes <- all(input_genelistUP() %in% probes)
+
         if(match_input_genes == FALSE){
           # use human ortholog in case no matched found in proves
-          probes <- pgx$genes[pgx$genes$human_ortholog %in% probes, "gene_name"]
+          probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
         }
         genes <- toupper(pgx$genes[probes, "gene_name"])
+        browser()
 
         # if length(genes) == 0, return validate message
         validate(need(
