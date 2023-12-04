@@ -92,13 +92,13 @@ biomarker_plot_heatmap_server <- function(id,
         tree.vars <- setdiff(res$rf$frame$var, "<leaf>")
         tree.vars <- res$rf$orig.names[tree.vars]
         tree.vars <- intersect(tree.vars, rownames(X))
-        
+
         rownames(X) <- substring(rownames(X), 1, 40)
-        ii <- which( rownames(X) %in% tree.vars)
-        if(length(ii)) {
+        ii <- which(rownames(X) %in% tree.vars)
+        if (length(ii)) {
           rownames(X)[ii] <- paste(rownames(X)[ii], "*****")
         }
-        
+
         annot <- pgx$Y[colnames(X), ]
         sdx <- apply(X, 1, sd)
 
