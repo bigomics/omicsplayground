@@ -51,9 +51,7 @@ FeatureMapBoard <- function(id, pgx) {
     # Observer (3):
     shiny::observeEvent(
       {
-        pgx$name
-        pgx$X
-        pgx$gsetX
+        list( pgx$name, pgx$X, pgx$gsetX )
       },
       {
         shiny::req(pgx$X, pgx$gsetX)
@@ -64,23 +62,18 @@ FeatureMapBoard <- function(id, pgx) {
         shiny::updateSelectInput(session, "filter_genes",
           choices = families,
           selected = "<all>"
-        )
-
-
+          )
+        
         ## set geneset categories
         gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
         gsetcats <- c("<all>", gsetcats)
+        sel0 <- grep("^H$|hallmark", gsetcats, ignore.case = TRUE, value = TRUE)
+        sel0 <- "<all>"
+        
+        if (length(sel0) == 0) sel0 <- 1
         shiny::updateSelectInput(session, "filter_gsets",
-          choices = gsetcats,
-          selected = gsetcats[1]
-        )
-
-        cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
-        cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
-        shiny::updateSelectInput(session, "sigvar",
-          choices = cvar,
-          selected = cvar0
-        )
+          choices = gsetcats, selected = sel0
+          )
       }
     )
 
@@ -95,11 +88,10 @@ FeatureMapBoard <- function(id, pgx) {
 
     observeEvent(
       {
-        pgx$X
-        input$showvar
+        list( pgx$X, input$showvar)
       },
       {
-        shiny::req(pgx$samples, pgx$contrasts)
+        shiny::req(pgx$samples, pgx$contrasts, input$showvar)
         if (input$showvar == "phenotype") {
           cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
           cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
@@ -121,8 +113,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     observeEvent(
       {
-        input$showvar
-        input$sigvar
+        list( pgx$samples, input$showvar, input$sigvar)
       },
       {
         shiny::req(pgx$samples, input$sigvar, input$showvar)

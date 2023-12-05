@@ -1,18 +1,17 @@
+### v3.2.35 (2023-11-29)
+
+-  tagged to v3.2.34 [view](https://github.com/bigomics/omicsplayground/commit/48121cdb8b500cd4961420c7d8c611d894297eef)
+-  supress message [view](https://github.com/bigomics/omicsplayground/commit/7733a1a0cef361257d01a1eb488b2dd58719b278)
+-  fix: add parameter to control logout path [view](https://github.com/bigomics/omicsplayground/commit/364ba5f2e174e3a52ba6303737bf98a6fd8df732)
+-  feat: new OPTION for `apache-cookie` auth [view](https://github.com/bigomics/omicsplayground/commit/e03a0926d7dfd1a18da39bcd8d8a575e88187369)
+-  feat: path for logout on `apache-cookie` [view](https://github.com/bigomics/omicsplayground/commit/c35043c65728f5827a18645d0c59efaafcc66e9a)
+-  fix: bug in sample subselection and pgx [view](https://github.com/bigomics/omicsplayground/commit/efc56207fcf75c1c1c4d9004939343bc1f919895)
+
+
 ### v3.2.34 (2023-11-24)
 
 -  update multi-species docker [view](https://github.com/bigomics/omicsplayground/commit/99bac9c74b6a3125f1845c178a983bee02e7494b)
 -  docker build master on workflow dispatch (to prevent docker latest from having multi-species) [view](https://github.com/bigomics/omicsplayground/commit/4321650b1dc727c91e85751c1a0f84590fb75c0e)
 -  update branch to workflow dispatch branch [view](https://github.com/bigomics/omicsplayground/commit/5149bfde571ecf0caf3f18b380d54014c62f1cc2)
-
-
-### v3.2.33 (2023-11-23)
-
--  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/a91190167c959642e7678f54a4e6978c1fb8b1ee)
--  version 3.2.32.9001 (dev) [view](https://github.com/bigomics/omicsplayground/commit/c5e12e420dc092e68cba023f3aec948de7311f62)
--  fix MAXCOUNTS bug [view](https://github.com/bigomics/omicsplayground/commit/0b018d1c989aa043a4e79ea7b7ada2af96fa18c6)
--  cleanup dbg [view](https://github.com/bigomics/omicsplayground/commit/4f2a212813e61130f54ffdedbdb256b9a0fc6206)
--  v3.2.32.9001 [view](https://github.com/bigomics/omicsplayground/commit/c30692b1ea01571baa1c97349ca8419131093b21)
--  add libx and pgxdir parameters [view](https://github.com/bigomics/omicsplayground/commit/b1f8600e951552c25e202683675a7479feb49700)
--  v3.2.33: include libx in playbase pgxcompute [view](https://github.com/bigomics/omicsplayground/commit/5d2422df8ed9082dfc927e19abfac2c35a1f6469)
 
 

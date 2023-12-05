@@ -28,6 +28,7 @@ functional_table_go_table_server <- function(id,
                                              pgx,
                                              fa_contrast,
                                              fa_filtertable,
+                                             fa_filtertable_value,
                                              selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -72,7 +73,8 @@ functional_table_go_table_server <- function(id,
       dt <- table_data()
       filtertable <- fa_filtertable()
       if (filtertable) {
-        dt <- dt[which(dt$meta.q <= 0.05), ]
+        filter_value <- as.numeric(fa_filtertable_value())
+        df <- df[which(df$meta.q < filter_value), ]
       }
 
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
@@ -83,7 +85,7 @@ functional_table_go_table_server <- function(id,
         NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
         SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
-
+      
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,
