@@ -85,7 +85,7 @@ functional_table_go_table_server <- function(id,
         NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
         SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
-      
+
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,
