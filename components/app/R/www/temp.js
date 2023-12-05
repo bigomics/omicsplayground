@@ -273,19 +273,12 @@ const logout = () => {
 };
 
 const logoutInApp = () => {
-	unloadSidebar();
-	$(".tab-trigger[data-target='welcome-tab']").trigger('click');
-	sidebarClose();
-    Shiny.setInputValue('userLogout', 1, {priority: 'event'});
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", "/cookie_remove", true);
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == 4 && xhr.status == 200)
-		window.location = message;
-	};
+	xhr.onload = function() {
+		window.location = window.location.origin + '/';
+    };
 	xhr.send();
-	
-
 };
 
 const quit = () => {
