@@ -79,35 +79,38 @@ expression_plot_maplot_server <- function(id,
         return(NULL)
       }
       shiny::req(pgx$X)
+      sel1 <- sel1()
+      df1 <- df1()
+      sel2 <- sel2()
+      df2 <- df2()
+      X <- pgx$X
+      res <- res()
+      lfc <- as.numeric(gx_lfc())
+      fdr <- as.numeric(gx_fdr())
 
       dbg("[expression_plot_maplot.R] sel1 = ", sel1())
-      #
 
-      fdr <- as.numeric(gx_fdr())
-      lfc <- as.numeric(gx_lfc())
-
-      res <- res()
       if (is.null(res)) {
         return(NULL)
       }
-      fc.genes <- as.character(res[, grep("^gene$|gene_name", colnames(res))])
 
       ## filter genes by gene family or gene set
-      fam.genes <- unique(unlist(pgx$families[10]))
-      fam.genes <- res$gene_name
+      fam.genes <- res$symbol
       if (gx_features() != "<all>") {
         gset <- playdata::getGSETS(gx_features())
         fam.genes <- unique(unlist(gset))
       }
-      jj <- match(toupper(fam.genes), toupper(res$gene_name))
-      sel.genes <- res$gene_name[setdiff(jj, NA)]
+
+      jj <- match(toupper(fam.genes), toupper(res$symbol))
+      sel.genes <- res$symbol[setdiff(jj, NA)]
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
 
       scaled.x <- scale(-log10(qval), center = FALSE)
       scaled.y <- scale(y, center = FALSE)
-      fc.genes <- rownames(res)
+      fc.genes <- res$symbol
+
       impt <- function(g) {
         j <- match(g, fc.genes)
         x1 <- scaled.x[j]
@@ -119,22 +122,15 @@ expression_plot_maplot_server <- function(id,
 
       sig.genes <- fc.genes[which(qval <= fdr & abs(y) > lfc)]
       sel.genes <- intersect(sig.genes, sel.genes)
-
-      ## are there any genes/genesets selected?
-      sel1 <- sel1()
-      df1 <- df1()
-      sel2 <- sel2()
-      df2 <- df2()
       lab.cex <- 1
       gene.selected <- !is.null(sel1) && !is.null(df1)
       gset.selected <- !is.null(sel2) && !is.null(df2)
       if (gene.selected && !gset.selected) {
-        lab.genes <- rownames(df1)[sel1]
+        lab.genes <- df1$symbol[sel1]
         sel.genes <- lab.genes
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
         gs <- rownames(df2)[sel2]
-        #
         gset <- unlist(playdata::getGSETS(gs))
         sel.genes <- intersect(sel.genes, gset)
         lab.genes <- c(
@@ -151,7 +147,7 @@ expression_plot_maplot_server <- function(id,
       }
 
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
-      x <- rowMeans(pgx$X[rownames(res), ], na.rm = TRUE)
+      x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
 
       impt <- function(g) {
         j <- match(g, fc.genes)
@@ -201,7 +197,7 @@ expression_plot_maplot_server <- function(id,
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE
-      ) ## %>% plotly::layout(margin = list(b = 65))
+      )
       plt
     }
 

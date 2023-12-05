@@ -68,7 +68,6 @@ signature_plot_overlap_server <- function(id,
   moduleServer(id, function(input, output, session) {
     overlapScorePlot.RENDER <- shiny::reactive({
       df <- getOverlapTable()
-      sel <- 1:nrow(df)
       sel <- overlapTable$rows_all()
       shiny::req(df, sel)
 
@@ -76,7 +75,6 @@ signature_plot_overlap_server <- function(id,
       df1$geneset <- as.character(rownames(df1))
       df1$db <- factor(df1$db)
 
-      ntop <- 1000
       ntop <- as.integer(input$overlapScorePlot_ntop)
       df1 <- df1[head(order(-df1$score), ntop), ]
       jj <- order(df1$db, -df1$score)

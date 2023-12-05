@@ -57,10 +57,12 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                       null_msg = "Counts checks not run yet.
                                 Fix any errors with counts first."
                     ),
-                    check_to_html(checklist$samples_counts$checks,
-                      pass_msg = "All samples-counts checks passed",
-                      null_msg = "Samples-counts checks not run yet.
+                    ifelse(!has_samples, "",
+                      check_to_html(checklist$samples_counts$checks,
+                        pass_msg = "All samples-counts checks passed",
+                        null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
+                      )
                     )
                   )
                 )
@@ -91,16 +93,20 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                       null_msg = "Samples checks not run. Fix any
                                 errors with samples first."
                     ),
-                    check_to_html(
-                      check = checklist$samples_counts$checks,
-                      pass_msg = "All samples-counts checks passed",
-                      null_msg = "Samples-counts checks not run yet.
-                                Fix any errors with samples or counts first."
+                    ifelse(!has_counts, "",
+                      check_to_html(
+                        check = checklist$samples_counts$checks,
+                        pass_msg = "All samples-counts checks passed",
+                        null_msg = "Samples-counts checks not run yet.
+                                  Fix any errors with samples or counts first."
+                      )
                     ),
-                    check_to_html(checklist$samples_contrasts$checks,
-                      pass_msg = "All samples-contrasts checks passed",
-                      null_msg = "Samples-contrasts checks not run yet.
+                    ifelse(!has_contrasts, "",
+                      check_to_html(checklist$samples_contrasts$checks,
+                        pass_msg = "All samples-contrasts checks passed",
+                        null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
+                      )
                     )
                   )
                 )
@@ -131,10 +137,12 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                       null_msg = "Contrasts checks not run. Fix any errors
                                 with contrasts first."
                     ),
-                    check_to_html(checklist$samples_contrasts$checks,
-                      pass_msg = "All samples-contrasts checks passed",
-                      null_msg = "Samples-contrasts checks not run yet.
-                                Fix any errors with samples or contrasts first."
+                    ifelse(!has_samples, "",
+                      check_to_html(checklist$samples_contrasts$checks,
+                        pass_msg = "All samples-contrasts checks passed",
+                        null_msg = "Samples-contrasts checks not run yet.
+                                  Fix any errors with samples or contrasts first."
+                      )
                     )
                   )
                 )
@@ -209,6 +217,11 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
           uploaded[["pgx"]] <- NULL
           uploaded[["last_uploaded"]] <- NULL
           uploaded[["checklist"]] <- NULL
+          checklist[["counts.csv"]] <- NULL
+          checklist[["samples.csv"]] <- NULL
+          checklist[["contrasts.csv"]] <- NULL
+          checklist[["samples_counts"]] <- NULL
+          checklist[["samples_contrasts"]] <- NULL
         },
         ignoreInit = TRUE
       )
@@ -224,11 +237,15 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
 }
 
 # convert list of checks to html tags for display in the data preview modal
-check_to_html <- function(check, pass_msg = "", null_msg = "") {
+check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
   error_list <- playbase::PGX_CHECKS
   if (is.null(check)) {
     tagList(
       span(null_msg, style = "color: red"), br()
+    )
+  } else if (isFALSE(check)) {
+    tagList(
+      span(false_msg, style = "color: orange"), br()
     )
   } else {
     if (length(check) > 0) {
@@ -437,7 +454,9 @@ upload_table_preview_contrasts_server <- function(id,
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
-      uploaded$contrasts.csv |> data.frame(check.names = FALSE)
+      dt <- uploaded$contrasts.csv |> data.frame(check.names = FALSE)
+      if (NCOL(dt) == 0) dt <- cbind(dt, " " = NA)
+      dt
     })
 
     table.RENDER <- function() {

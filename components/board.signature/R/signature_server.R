@@ -92,10 +92,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     input_genelistUP <- shiny::reactive({
+      shiny::req(input$genelistUP)
       gg <- input$genelistUP
-      if (is.null(gg)) {
-        return(NULL)
-      }
       gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
       return(gg)
@@ -103,16 +101,11 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
 
     getCurrentMarkers <- shiny::reactive({
+      shiny::req(pgx)
+      shiny::req(input$type, input$feature, input_genelistUP())
+
       ## Get current selection of markers/genes
-
-      if (is.null(pgx)) {
-        return(NULL)
-      }
-
       type <- input$type
-      shiny::req(input$type, input$feature)
-
-      dbg("<signature:getCurrentMarkers> called\n")
 
       level <- "gene"
       features <- toupper(pgx$genes$gene_name)
@@ -141,13 +134,28 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         input$feature %in% names(pgx$gx.meta$meta)) {
         contr <- input$feature
         fx <- pgx$gx.meta$meta[[contr]]$meta.fx
+        names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         probes <- rownames(pgx$gx.meta$meta[[contr]])
-        genes <- toupper(pgx$genes[probes, "gene_name"])
-        top.genes <- genes[order(-fx)]
+
+        match_input_genes <- all(input_genelistUP() %in% probes)
+
+        if (match_input_genes == FALSE) {
+          # use human ortholog in case no matched found in proves
+          probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
+        }
+        genes <- pgx$genes[probes, "gene_name"]
+
+        # if length(genes) == 0, return validate message
+        validate(need(
+          length(genes) > 0, "No genes found in the signature. Please check the gene list."
+        ))
+
+        fx <- fx[genes]
+        top.genes <- fx[order(-abs(fx))]
         top.genes <- head(top.genes, 100)
         top.genes0 <- paste(top.genes, collapse = " ")
-        shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
-        gset <- top.genes
+        # shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
+        gset <- names(top.genes)
       } else if (input$feature %in% names(playdata::iGSETS)) {
         gset <- toupper(unlist(playdata::getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
@@ -269,23 +277,23 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     getOverlapTable <- shiny::reactive({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx)
+      shiny::req(getCurrentMarkers())
 
-      markers <- head(rownames(pgx$X), 100)
       markers <- getCurrentMarkers()
-      if (is.null(markers)) {
-        return(NULL)
-      }
 
       ## fold change just for ranking of genes
-      F <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
-      rownames(F) <- rownames(pgx$gx.meta$meta[[1]])
-      fx <- rowMeans(F**2)
+      FC <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
+      rownames(FC) <- rownames(pgx$gx.meta$meta[[1]])
+      fx <- rowMeans(FC**2)
 
       ## fisher test
       ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
+
+      if (length(ii) == 0) {
+        markers <- pgx$genes[markers, "symbol"]
+        ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
+      }
       N <- cbind(
         k1 = Matrix::rowSums(playdata::GSETxGENE != 0), n1 = ncol(playdata::GSETxGENE),
         k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0), n2 = length(ii)
@@ -293,16 +301,13 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       rownames(N) <- rownames(playdata::GSETxGENE)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
-      dim(N)
 
       ## WOW THIS IS FAST!!!!!!!
       pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
-      head(pv)
       names(pv) <- rownames(N)
       pv <- pv[match(names(odds.ratio), names(pv))]
       qv <- p.adjust(pv, method = "bonferroni")
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
-      dim(A)
 
       ## limit the list??
       A <- A[which(A$q.fisher < 0.999), ]
@@ -358,43 +363,51 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     getEnrichmentGeneTable <- shiny::reactive({
       shiny::req(pgx$X)
+      shiny::req(sigCalculateGSEA())
+      shiny::req(getCurrentMarkers())
 
+      # Input vars
       gsea <- sigCalculateGSEA()
-      if (is.null(gsea)) {
-        return(NULL)
-      }
-
+      gset <- getCurrentMarkers()
       i <- enrichmentContrastTable$rows_selected()
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
 
+      # Get metaFC mat
       meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
       fc <- meta$fc
       qv <- meta$qv
-      rownames(fc) <- toupper(rownames(fc))
-      rownames(qv) <- toupper(rownames(qv))
 
-      contr <- rownames(gsea$output)[i]
-      fc <- fc[, contr, drop = FALSE]
-
-      gset <- getCurrentMarkers()
-      if (is.null(gset)) {
-        return(NULL)
+      # Convert to upper for old pgx
+      if (is.null(pgx$version)) {
+        rownames(fc) <- toupper(rownames(fc))
+        rownames(qv) <- toupper(rownames(qv))
+        gset <- setdiff(toupper(gset), c("", NA))
+      } else {
+        gset <- setdiff(gset, c("", NA))
       }
 
-      gset <- setdiff(toupper(gset), c("", NA))
-      genes <- intersect(gset, rownames(fc))
-      dd1 <- setdiff(genes, rownames(fc))
-      dd2 <- setdiff(genes, rownames(qv))
-      fc <- fc[genes, , drop = FALSE]
-      qv <- qv[genes, , drop = FALSE]
+      # Get contrasts, FC, and gene info
+      contr <- rownames(gsea$output)[i]
+      fc <- fc[, contr, drop = FALSE]
+      genes <- data.table::chmatch(toupper(gset), toupper(pgx$genes[, "gene_name"]))
+      genes <- pgx$genes[genes, "gene_name"]
+      # Convert to upper for old pgx and intersect with FC
+      if (is.null(pgx$version)) {
+        gg <- intersect(rownames(fc), toupper(genes))
+      } else {
+        gg <- intersect(rownames(fc), genes)
+      }
+      fc <- fc[gg, , drop = FALSE]
+      qv <- qv[gg, , drop = FALSE]
+      gene.info <- pgx$genes[gg, c("feature", "symbol", "gene_title")]
+      fc <- fc[gg, , drop = FALSE]
+      gene.info$gene_title <- substring(gene.info$gene_title, 1, 40)
 
-      gene.tt <- substring(playdata::GENE_TITLE[toupper(rownames(fc))], 1, 40)
-      names(gene.tt) <- rownames(fc)
-      df <- data.frame(gene = rownames(fc), title = gene.tt, fc, check.names = FALSE)
-
-      df
+      # Return df
+      df <- data.frame(gene.info, fc, check.names = FALSE)
+      return(df)
     })
 
     ## ================================================================================

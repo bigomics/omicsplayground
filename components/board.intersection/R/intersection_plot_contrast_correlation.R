@@ -84,11 +84,12 @@ contrast_correlation_server <- function(id,
       jj <- head(order(-rowMeans(fc0**2)), ntop)
       R <- cor(apply(fc0[jj, ], 2, rank), use = "pairwise")
       R <- round(R, digits = 2)
-      R
+      return(R)
     })
 
     ctcorrplot.PLOTLY <- function() {
       R <- plot_data()
+      res <- getFoldChangeMatrix()
       col <- playdata::BLUERED(16)
       col <- gplots::colorpanel(64, "royalblue3", "grey90", "indianred3")
       if (min(R, na.rm = TRUE) >= 0) col <- tail(col, 32)
@@ -97,15 +98,32 @@ contrast_correlation_server <- function(id,
       bluered.pal <- colorRampPalette(colors = c("royalblue3", "grey90", "indianred3"))
       cellnote <- NULL
 
-      plt <- heatmaply::heatmaply(
-        R,
-        margins = c(250, 200, NA, 0),
-        cellnote = cellnote, cellnote_size = 11,
-        cellnote_textposition = "middle center",
-        colors = bluered.pal,
-        limits = c(-1, 1)
-      )
-      plt
+      if (is.null(R) && !is.null(res)) {
+        # Deal with ncol == 1
+        plt <- plotly::plot_ly()
+        plt <- plotly::add_annotations(plt,
+          x = 0.5,
+          y = 0.5,
+          text = "Heatmap plot requires \nmore than two conditions",
+          showarrow = FALSE,
+          font = list(size = 20)
+        )
+
+        plt <- plotly::layout(plt,
+          xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+        )
+      } else {
+        plt <- heatmaply::heatmaply(
+          R,
+          margins = c(250, 200, NA, 0),
+          cellnote = cellnote, cellnote_size = 11,
+          cellnote_textposition = "middle center",
+          colors = bluered.pal,
+          limits = c(-1, 1)
+        )
+      }
+      return(plt)
     }
 
     PlotModuleServer(

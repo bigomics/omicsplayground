@@ -33,10 +33,10 @@ signature_table_genes_in_signature_server <- function(id,
         return(NULL)
       }
 
-      color_fx <- as.numeric(df[, 3:ncol(df)])
+      num_cols <- sapply(df, is.numeric)
+      color_fx <- df[, num_cols]
       color_fx[is.na(color_fx)] <- 0 ## yikes...
-
-      numeric.cols <- colnames(df)[3:ncol(df)]
+      numeric.cols <- colnames(df)[num_cols]
 
       DT::datatable(df,
         class = "compact cell-border stripe",

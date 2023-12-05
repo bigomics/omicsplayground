@@ -70,6 +70,10 @@ singlecell_plot_crosstabPlot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
+      shiny::req(pgx$deconv)
+      if (!("deconv" %in% names(pgx)) || length(pgx$deconv) == 0) {
+        shiny::validate(shiny::need(FALSE, "Proportions requires deconvolution"))
+      }
       crosstabvar <- crosstabvar()
       gene <- gene()
       pheno <- pheno()
@@ -120,7 +124,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       getProportionsTable <- function(pheno, is.gene = FALSE) {
         y <- NULL
         if (is.gene) {
-          xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
+          xgene <- pgx$genes[rownames(pgx$X), ]$symbol
           gx <- pgx$X[which(xgene == pheno), kk, drop = FALSE]
           gx.highTH <- mean(gx, na.rm = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]

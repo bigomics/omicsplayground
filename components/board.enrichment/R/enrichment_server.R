@@ -96,7 +96,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         return(NULL)
       }
       mx.methods <- colnames(unclass(mx$fc))
-      mx.methods
       methods <- intersect(methods, mx.methods)
       if (is.null(methods) || length(methods) == 0) {
         cat("ERROR: calcGsetMeta:: no valid methods\n")
@@ -117,7 +116,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       qv[is.na(qv)] <- 1
       fc[is.na(fc)] <- 0
       score <- fc * (-log10(qv))
-      dim(pv)
       if (NCOL(pv) > 1) {
         ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)
         fc <- rowMeans(fc, na.rm = TRUE) ## NEED RETHINK!!!
@@ -134,16 +132,16 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     getFullGeneSetTable <- shiny::reactive({
       shiny::req(pgx$X)
-      comp <- 1
+      shiny::req(input$gs_contrast)
+      shiny::req(input$gs_features)
       comp <- input$gs_contrast
-      if (is.null(comp)) {
-        return(NULL)
-      }
+      gene_symbols <- pgx$genes[rownames(pgx$gx.meta$meta[[comp]]), "symbol"]
+      names(gene_symbols) <- rownames(pgx$gx.meta$meta[[comp]])
+
       if (!(comp %in% names(pgx$gset.meta$meta))) {
         return(NULL)
       }
       mx <- pgx$gset.meta$meta[[comp]]
-      dim(mx)
 
       outputs <- NULL
       gsmethod <- colnames(unclass(mx$fc))
@@ -158,9 +156,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       ## filter gene sets for table
       gsfeatures <- "<all>"
       gsfeatures <- input$gs_features
-      if (is.null(input$gs_features)) {
-        return(NULL)
-      }
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
       if (1 && !(gsfeatures %in% c(NA, "", "*", "<all>")) &&
         gsfeatures %in% names(gset_collections)) {
@@ -169,6 +164,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
 
       rpt <- NULL
+
       if (is.null(outputs) || length(gsmethod) > 1) {
         ## show meta-statistics table (multiple methods)
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
@@ -191,7 +187,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         ## ------------ calculate META parameters ----------------
         meta <- calcGsetMeta(comp, gsmethod, pgx = pgx)
         meta <- meta[rownames(mx), , drop = FALSE]
-        dim(meta)
 
         if (!is.data.frame(pgx$gset.meta$info)) {
           # below is legacy code, before branch dev-gmt 2023-05
@@ -205,10 +200,11 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         ##
         s1 <- names(which(pgx$model.parameters$exp.matrix[, comp] > 0))
         s0 <- names(which(pgx$model.parameters$exp.matrix[, comp] < 0))
-        jj <- colnames(pgx$GMT)
         jj <- rownames(mx)
-
+        rnaX <- pgx$X
+        rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
         gsdiff.method <- "fc" ## OLD default
+
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1])
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0])
@@ -216,22 +212,25 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         } else {
           ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(pgx$X)
           ## and rownames(GMT)
-          fc <- pgx$gx.meta$meta[[comp]]$meta.fx ## stable
+          fc <- pgx$gx.meta$meta[[comp]]$meta.fx
           names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
           pp <- intersect(rownames(pgx$GMT), names(fc))
-          rnaX <- pgx$X
 
+          # if pp is null, use human ortholog.
+          # pp is null when collapse by gene is false, but we dont have a parameter for that.
+          if (length(pp) == 0 || is.null(pp)) {
+            names(fc) <- pgx$genes[names(fc), "symbol"]
+            pp <- intersect(pgx$genes$symbol, names(fc))
+          }
           ## check if multi-omics
           is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
-          is.multiomics
           if (is.multiomics) {
             ii <- grep("\\[gx\\]|\\[mrna\\]", names(fc))
             fc <- fc[ii]
-            rnaX <- pgx$X[names(fc), ]
+            rnaX <- rnaX[names(fc), ]
             names(fc) <- sub(".*:|.*\\]", "", names(fc))
             rownames(rnaX) <- sub(".*:|.*\\]", "", rownames(rnaX))
             pp <- intersect(rownames(pgx$GMT), names(fc))
-            length(pp)
           }
 
           G <- Matrix::t(pgx$GMT[pp, jj] != 0)
@@ -249,10 +248,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         AveExpr1 <- mean0 + meta.fc / 2
         AveExpr0 <- mean0 - meta.fc / 2
 
-        ##
         gs <- intersect(names(meta.fc), rownames(meta))
-        length(gs)
-
         if (!is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
             logFC = meta.fc[gs],
@@ -287,7 +283,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rpt <- outputs[[gsmethod]]
       }
 
-      rpt <- rpt[order(-rpt$logFC), ] ## positive
+      rpt <- rpt[order(rpt$meta.q, -rpt$logFC), ] ## positive
       rpt <- data.frame(rpt)
 
       return(rpt)
@@ -371,12 +367,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     geneDetails <- shiny::reactive({
       ## return details of the genes in the selected gene set
-      ##
-
       shiny::req(pgx$X, input$gs_contrast)
       gs <- 1
       comp <- 1
-
       comp <- input$gs_contrast
       gs <- gset_selected()
       if (is.null(gs) || length(gs) == 0) {
@@ -385,14 +378,11 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       mx <- pgx$gx.meta$meta[[comp]]
       is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", rownames(mx)))
-      is.multiomics
       if (is.multiomics) {
         ii <- grep("\\[gx\\]|\\[mrna\\]", rownames(mx))
         mx <- mx[ii, ]
-        #
       }
 
-      #
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
       limma1.fc <- mx$meta.fx
@@ -406,24 +396,23 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       ns <- length(gs)
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
-      genes <- intersect(genes, pgx$genes[rownames(limma1), "gene_name"])
-      genes <- setdiff(genes, c("", NA, "NA", " "))
+      # check which columns are in pgx$genes
+      cols_in_pgx <- c("feature", "symbol", "human_ortholog")
+      cols_in_pgx <- cols_in_pgx[which(cols_in_pgx %in% colnames(pgx$genes))]
 
-      title <- rep(NA, length(genes))
-      title <- as.character(playdata::GENE_TITLE[genes])
-      title[is.na(title)] <- " "
+      genes_user <- pgx$genes[rownames(limma1), cols_in_pgx]
+      empty_cols <- apply(genes_user, 2, function(x) all(is.na(x)))
+      genes_user <- genes_user[, !empty_cols, drop = FALSE]
+      genes <- genes_user[genes_user$symbol %in% genes, ]
+      limma1 <- limma1[rownames(genes), , drop = FALSE] ## align limma1
 
-      rpt <- data.frame("gene_name" = genes, "gene_title" = as.character(title))
-      genes <- rpt[, "gene_name"]
-      genes1 <- pgx$genes[rownames(limma1), "gene_name"]
-      limma1 <- limma1[match(genes, genes1), , drop = FALSE] ## align limma1
-      rpt <- cbind(rpt, limma1)
-      rpt <- rpt[which(!is.na(rpt$fc) & !is.na(rownames(rpt))), , drop = FALSE]
+      genes <- cbind(genes, limma1)
+      genes <- genes[which(!is.na(genes$fc) & !is.na(rownames(genes))), , drop = FALSE]
 
-      if (nrow(rpt) > 0) {
-        rpt <- rpt[order(-abs(rpt$fc)), , drop = FALSE]
+      if (nrow(genes) > 0) {
+        genes <- genes[order(-abs(genes$fc)), , drop = FALSE]
       }
-      return(rpt)
+      return(genes)
     })
 
     gene_selected <- shiny::reactive({
@@ -435,9 +424,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         return(list(gene = NA, probe = NA))
       }
       sel.gene <- rownames(rpt)[i]
-      gene <- as.character(rpt$gene_name[i])
-      probe <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
-      return(list(gene = gene, probe = probe))
+      res <- unlist(pgx$genes[sel.gene, c("gene_name", "feature", "symbol")])
+      return(list(rn = res["gene_name"], gene = res["symbol"], probe = res["feature"]))
     })
 
     ## ================================================================================

@@ -147,11 +147,10 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         df <- phenoRT()
 
         if ("<samples>" %in% input$param) {
-          df$"<samples>" <- rownames(df)
+          df <- cbind(df, "<samples>" = rownames(df))
         }
-
-        df <- type.convert(df)
-        ii <- which(sapply(type.convert(df), class) %in% c("numeric", "integer"))
+        df <- type.convert(df, as.is = TRUE)
+        ii <- which(sapply(type.convert(df, as.is = TRUE), class) %in% c("numeric", "integer"))
         if (length(ii)) {
           for (i in ii) {
             x <- df[, i]
@@ -280,7 +279,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         ## update reactive value
         samples <- colnames(countsRT())
-
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
         if (is.null(rv$contr)) {
           rv$contr <- ctx1

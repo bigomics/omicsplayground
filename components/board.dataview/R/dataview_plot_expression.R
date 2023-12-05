@@ -39,7 +39,7 @@ dataview_plot_expression_server <- function(id,
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
-
+      shiny::req(all(colnames(pgx$X) == rownames(pgx$samples)))
       ## dereference reactives
       gene <- r.gene()
       samples <- r.samples()
@@ -60,13 +60,10 @@ dataview_plot_expression_server <- function(id,
       grpvar <- 1
       grp <- rep(NA, length(samples))
       if (groupby != "<ungrouped>") {
-        #
         grp <- factor(as.character(pgx$Y[samples, groupby]))
       }
 
       pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
-      gx <- NULL
-      ylab <- NULL
       if (data_type == "counts") {
         gx <- pgx$counts[pp, samples]
         ylab <- "expression (counts)"
@@ -79,8 +76,6 @@ dataview_plot_expression_server <- function(id,
       }
 
       geneplot_type <- "barplot"
-
-
       pd <- list(
         df = data.frame(
           x = gx,

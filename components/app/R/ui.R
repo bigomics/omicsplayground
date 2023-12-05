@@ -75,7 +75,7 @@ app_ui <- function() {
       ## For apache SSO we need to redirect to /mellon/logout for SSO logout
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
-        link = "/app/omicsplayground/mellon/logout?ReturnTo=#"
+        link = paste0(opt$APACHE_COOKIE_PATH, "mellon/logout?ReturnTo=#")
       )
     }
 
@@ -83,7 +83,7 @@ app_ui <- function() {
       "Load" = c(
         welcome = "Welcome",
         load    = "Load dataset",
-        upload  = "Upload new"
+        upload  = "New dataset"
       ),
       "DataView" = c(
         dataview = "DataView"
@@ -426,7 +426,6 @@ app_ui <- function() {
         ),
         bigdash::bigTabItem(
           "userprofile-tab",
-          UserProfileInputs("user_profile"),
           UserProfileUI("user_profile")
         ),
         bigdash::bigTabItem(

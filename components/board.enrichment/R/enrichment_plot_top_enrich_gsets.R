@@ -3,6 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+#' Create UI for top enriched gene set plots
+#'
+#' @description
+#' Generates the Shiny UI for plotting the top enriched gene sets.
+#'
+#' @param id Widget id to use for the output.
+#' @param title Plot title.
+#' @param info.text Info text to display.
+#' @param caption Plot caption.
+#' @param height Plot height.
+#' @param width Plot width.
+#'
+#' @return Shiny UI for top enriched plots.
 enrichment_plot_top_enrich_gsets_ui <- function(
     id,
     title,
@@ -25,6 +39,17 @@ enrichment_plot_top_enrich_gsets_ui <- function(
   )
 }
 
+
+#' Plot top enriched gene sets
+#'
+#' @param id Module ID
+#' @param pgx PGX object
+#' @param getFilteredGeneSetTable Function to get filtered gene set table
+#' @param gs_contrast Gene set contrast
+#' @param gseatable Gene set enrichment analysis table
+#' @param watermark Add watermark to plot
+#'
+#' @return Shiny module server function
 enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     pgx,
                                                     getFilteredGeneSetTable,
@@ -36,8 +61,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X)
       rpt <- getFilteredGeneSetTable()
-      shiny::req(rpt, gs_contrast())
 
+      shiny::req(rpt, gs_contrast())
       comp <- 1
       comp <- gs_contrast()
       if (!(comp %in% names(pgx$gx.meta$meta))) {
@@ -63,13 +88,20 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       } else {
         itop <- head(jj, 12)
       }
-      rpt <- rpt[itop, ]
 
+      # Retreive Enrichment info
+      rpt <- rpt[itop, ]
       gx.meta <- pgx$gx.meta$meta[[comp]]
       rnk0 <- gx.meta$meta.fx
-      names(rnk0) <- pgx$genes[rownames(gx.meta), "gene_name"]
-      rnk0 <- rnk0 - mean(rnk0, na.rm = TRUE) #
-      names(rnk0) <- toupper(names(rnk0))
+      names(rnk0) <- rownames(gx.meta)
+
+      rnk0 <- rnk0[!duplicated(names(rnk0))]
+
+      # if names of rnk0 does nto match rownames(pgx$GMT), then use gene symbols
+      # this is needed when collapse by gene is not used
+      if (!all(rownames(pgx$GMT) %in% names(rnk0))) {
+        names(rnk0) <- pgx$genes[names(rnk0), "symbol"]
+      }
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       qv.col <- grep("meta.q|q$", colnames(rpt))[1]
@@ -86,7 +118,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       for (i in 1:length(top)) {
         gs <- top[i]
         genes <- names(which(pgx$GMT[, gs] != 0))
-        gmt.genes[[gs]] <- toupper(genes)
+        gmt.genes[[gs]] <- genes
       }
 
       dbg("[enrichment_plot_top_enrich_gsets_server] done!")
@@ -97,57 +129,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         qv = qv,
         fx = fx
       )
-      res
+      return(res)
     })
-
-    plot.RENDER <- function() {
-      res <- get_TopEnriched()
-      shiny::req(res)
-
-      rnk0 <- res$rnk0
-      gmt.genes <- res$gmt.genes
-      fc <- res$fc
-      qv <- res$qv
-
-      ntop <- length(gmt.genes)
-      if (ntop == 1) rowcol <- c(1, 1)
-      if (ntop == 12) rowcol <- c(3, 4)
-
-      par(mfrow = rowcol)
-      if (ntop == 1) {
-        par(mar = c(1, 6, 2, 6), mgp = c(1.6, 0.6, 0), oma = c(0.1, 1, 0, 0.1))
-      } else {
-        par(mar = c(0.2, 1.8, 2.3, 0.1), mgp = c(1.6, 0.6, 0), oma = c(0.1, 1, 0, 0.1))
-      }
-
-      for (i in 1:ntop) {
-        gs <- names(gmt.genes)[i]
-        genes <- gmt.genes[[i]]
-        if (i > ntop || is.na(gs)) {
-          frame()
-        } else {
-          genes <- toupper(genes)
-          names(rnk0) <- toupper(names(rnk0))
-          ylab <- ""
-          if (i %% rowcol[2] == 1) ylab <- "Rank metric"
-          xlab <- ""
-          gs1 <- playbase::breakstring(gs, 28, 50, force = FALSE)
-          if (ntop == 1) {
-            gs1 <- playbase::breakstring(gs, 100, 200, force = FALSE)
-            xlab <- "Rank in ordered dataset"
-            ylab <- "Rank metric"
-          }
-          playbase::gsea.enplot(rnk0, genes,
-            names = NULL, #
-            main = gs1, xlab = xlab, ylab = ylab,
-            lab.line = c(0, 1.8), cex.lab = 0.75,
-            cex.main = 0.78, len.main = 200
-          )
-          qv1 <- formatC(qv[gs], format = "e", digits = 2)
-          legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
-        }
-      }
-    }
 
     get_plotly_plots <- function(cex.text) {
       dbg("[enrichment_plot_top_enrich_gsets_server] plotly.RENDER called!")
@@ -156,8 +139,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       shiny::req(res)
 
       rnk0 <- res$rnk0
+      rnk0 <- rnk0[!duplicated(names(rnk0))] # df within gsea.enplotly cannot deal with duplicated names
       gmt.genes <- res$gmt.genes
-      fc <- res$fc
+      fc <- res$fx
       qv <- res$qv
 
       x.title <- 0.01 * length(rnk0)
@@ -168,22 +152,17 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       if (ntop == 12) rowcol <- c(3, 4)
 
       plist <- list()
+
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
-        genes <- toupper(genes)
-        names(rnk0) <- toupper(names(rnk0))
-
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
             genes,
-            ## names = NULL, ## main=gset.name,
             main = gset.name,
             xlab = "Rank in ordered dataset",
             ylab = "Rank metric",
-            ## lab.line = c(0, 1.8), cex.lab = 0.75,
-            ## cex.main = 0.78, len.main = 200,
             ticklen = 0.25,
             yth = 1, ## threshold for which points get label
             cbar.width = 32,
@@ -196,7 +175,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
           plt <- playbase::gsea.enplotly(
             rnk0,
             genes,
-            ## names = NULL, ## main=gset.name,
             main = "",
             cex = 0.4,
             xlab = NULL,
@@ -215,11 +193,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             plotly::layout(
               xaxis = list(showticklabels = FALSE),
               margin = list(l = 0, r = 0, t = 80, b = 40)
-              ## annotations = list(
-              ##   list(x = 0.1 , y = y0, xanchor='left',
-              ##     text = gset.name, font = list(size=10),
-              ##     showarrow = FALSE, xref='paper', yref='y')
-              ## )
             )
         }
         plist[[i]] <- plt
@@ -234,7 +207,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         plt <- plotly::subplot(plist,
           nrows = 3,
           shareX = TRUE, shareY = TRUE,
-          ## titleX=FALSE, titleY=FALSE,
           titleX = TRUE, titleY = TRUE,
           margin = c(0.0, 0.0, 0.02, 0.02)
         ) %>%

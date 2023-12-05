@@ -28,52 +28,36 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
-RUN R -e "devtools::install_github('bigomics/shinyChatR')"
 ##RUN R -e "install.packages(c('htmltools'),force=TRUE)"
-RUN R -e "remotes::install_github('rstudio/htmltools',dependencies=FALSE)"
-RUN R -e "remotes::install_github('rstudio/bslib',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
 #------------------------------------------------------------
 
 WORKDIR /
-##RUN R -e "options(timeout=9999);remotes::install_github('bigomics/playdata',dependencies=FALSE)"
 #RUN git clone -b main --single-branch --depth 1 \
 #    https://github.com/bigomics/playdata.git \
 #    && R CMD INSTALL playdata \
 #    && rm -fr playdata
-RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
+RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/fgsea')"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
 WORKDIR /
 ARG BRANCH=master
 RUN echo Downloading $BRANCH branch
-# RUN wget -nv https://github.com/bigomics/omicsplayground/archive/$BRANCH.zip \
-#     && rm -fr /omicsplayground*  \
-#     && unzip $BRANCH.zip \
-#     && mv omicsplayground-$BRANCH omicsplayground \
-#     && chmod -R ugo+rwX /omicsplayground \
-#     && rm $BRANCH.zip   
-
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
        https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
-## tag docker version
-WORKDIR /omicsplayground
-#RUN make version
-#COPY FEATURES.md CHANGELOG.md VERSION /omicsplayground/
-
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
+WORKDIR /omicsplayground
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass

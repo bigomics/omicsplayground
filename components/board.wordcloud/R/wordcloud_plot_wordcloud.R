@@ -3,6 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+#' Word Cloud Plot UI
+#'
+#' @description
+#' Creates the UI for the word cloud plot module.
+#'
+#' @param id Module ID string
+#' @param title Plot title
+#' @param label Plot label
+#' @param info.text Info text
+#' @param caption Caption text
+#' @param height Plot height
+#' @param width Plot width
+#'
+#' @return
+#' A Shiny Module UI definition
 wordcloud_plot_wordcloud_ui <- function(
     id,
     title,
@@ -40,6 +56,23 @@ wordcloud_plot_wordcloud_ui <- function(
   )
 }
 
+
+#' Word Cloud Plot Server Function
+#'
+#' @description
+#' Server function for rendering the word cloud plot in the wordcloud module.
+#'
+#' @param id Module id string.
+#' @param getCurrentWordEnrichment Reactive returning the current word enrichment data.
+#' @param watermark Watermark text.
+#'
+#' @details
+#' This function generates the word cloud plot based on the reactive
+#' getCurrentWordEnrichment. It handles rendering the plot, updating based on
+#' input settings, and adding the watermark.
+#'
+#' @return
+#' Shiny module server function.
 wordcloud_plot_wordcloud_server <- function(id,
                                             getCurrentWordEnrichment,
                                             watermark = FALSE) {
@@ -67,6 +100,7 @@ wordcloud_plot_wordcloud_server <- function(id,
       cex1 <- 1 + round((5 * rank(abs(df$NES)) / nrow(df))**2)
       cex2 <- (-log10(df$padj))**1.0
       size <- 10 * abs(cex1 * cex2)**1
+      size[is.na(size)] <- 0
       minsize <- tail(sort(size), 250)[1]
 
       color.pal <- input$wordcloud_colors
