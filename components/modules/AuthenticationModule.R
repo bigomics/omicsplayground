@@ -867,17 +867,20 @@ LoginCodeAuthenticationModule <- function(id,
       shiny::showModal(login_modal)
     }
 
+    ## --------------------------------------
+    ## Step 0: detect cookie and pass
+    ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
-
     if (!is.null(decrypted_cookie)) {
-      message("[LoginCodeAuthenticationModule::login] PASSED : login OK! ")
+      message("[LoginCodeAuthenticationModule] cookies found : login OK! ")
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()
 
-      USER$email <- decrypted_cookie
+      user_email<- decrypted_cookie
+      USER$email <- user_email
 
       # create user_dir (always), set path, and set options
-      user_dir <- file.path(PGX.DIR, decrypted_cookie)
+      user_dir <- file.path(PGX.DIR, user_email)
       create_user_dir_if_needed(user_dir, PGX.DIR)
       if (!opt$ENABLE_USERDIR) {
         user_dir <- file.path(PGX.DIR)
@@ -885,14 +888,23 @@ LoginCodeAuthenticationModule <- function(id,
       USER$user_dir <- user_dir
       USER$options <- read_user_options(user_dir)
 
-      session$sendCustomMessage("set-user", list(user = decrypted_cookie))
+      session$sendCustomMessage("set-user", list(user = user_email))
 
       USER$logged <- TRUE
 
       ## export as 'public' functions
       USER$resetUSER <- resetUSER
+      
+      shinyalert::shinyalert(
+        title = "",
+        text = "Hail frynd! Thy biscuit is yaccepted, and thou art granted fri passage...",
+        size = "xs",
+        timer = 1900
+      )
 
       return(USER)
+    } else {
+      dbg("[LoginCodeAuthenticationModule:sendLoginCode] no cookies found")
     }
 
     sendLoginCode <- function(user_email, login_code, mail_creds) {

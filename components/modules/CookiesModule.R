@@ -15,7 +15,7 @@ extract_cookie_value <- function(session, cookie_name) {
 
 # Decrypt cookie
 decrypt_cookie <- function(cookie, nonce) {
-  key_base64 <- readLines(paste0(OPG, "/etc/keys/cookie.txt"))[1]
+  key_base64 <- readLines(file.path(OPG, "etc/keys/cookie.txt"))[1]
   email_nonce_raw <- sodium::hex2bin(nonce)
   email_raw <- sodium::hex2bin(cookie)
   attr(email_raw, "nonce") <- email_nonce_raw
