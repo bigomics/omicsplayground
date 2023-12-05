@@ -30,10 +30,19 @@ PathwayInputs <- function(id) {
         withTooltip(
           shiny::checkboxInput(
             ns("fa_filtertable"),
-            "filter signficant (tables)",
+            "filter significant (tables)",
             FALSE
           ),
           "Click to filter the significant entries in the tables."
+        ),
+        withTooltip(
+          shiny::selectInput(
+            inputId = ns("fa_filtertable_value"),
+            label = "Filter threshold",
+            choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1),
+            selected = 1
+          ),
+          "Threshold value for the significant entries."
         )
       )
     )

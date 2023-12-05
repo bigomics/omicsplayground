@@ -193,7 +193,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       df <- getReactomeTable()
       do.filter <- FALSE
       do.filter <- input$fa_filtertable
-      if (do.filter) df <- df[which(df$meta.q < 0.05), ]
+      if (do.filter) {
+        filter_value <- as.numeric(input$fa_filtertable_value)
+        df <- df[which(df$meta.q < filter_value), ]
+      }
       return(df)
     })
 
@@ -310,7 +313,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       df <- getWikiPathwayTable()
       do.filter <- FALSE
       do.filter <- input$fa_filtertable
-      if (do.filter) df <- df[which(df$meta.q < 0.05), ]
+      if (do.filter) {
+        filter_value <- as.numeric(input$fa_filtertable_value)
+        df <- df[which(df$meta.q < filter_value), ]
+      }
       return(df)
     })
 
