@@ -27,6 +27,7 @@ functional_table_go_table_ui <- function(
 functional_table_go_table_server <- function(id,
                                              pgx,
                                              fa_contrast,
+                                             fa_filtertable,
                                              scrollY,
                                              selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
@@ -49,7 +50,8 @@ functional_table_go_table_server <- function(id,
       res <- table_data()
       pgx <- res$pgx
       comparison <- res$fa_contrast
-
+      filtertable <- input$fa_filtertable()
+      
       if (is.null(pgx$meta.go)) {
         return(NULL)
       }
@@ -86,7 +88,10 @@ functional_table_go_table_server <- function(id,
         NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
         SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
-
+      if(filtertable) {
+        dt <- dt[which(dt$meta.q < 0.05),,drop=FALSE]
+      }
+      
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,

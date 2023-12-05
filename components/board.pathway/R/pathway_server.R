@@ -243,6 +243,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       "GO_table",
       pgx = pgx,
       fa_contrast = reactive(input$fa_contrast),
+      fa_filtertable = reactive(input$fa_filtertable),
       scrollY = 180,
       selected_gsetmethods = selected_gsetmethods
     )
