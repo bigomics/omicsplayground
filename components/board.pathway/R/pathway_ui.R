@@ -14,6 +14,7 @@ PathwayInputs <- function(id) {
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
     ),
+    shiny::br(), shiny::br(), shiny::br(),
     withTooltip(
       shiny::actionLink(ns("fa_options"), "Options",
         icon = icon("cog", lib = "glyphicon")
@@ -21,7 +22,7 @@ PathwayInputs <- function(id) {
       "Show/hide advanced options",
       placement = "top"
     ),
-    shiny::br(),
+    shiny::br(), shiny::br(),
     shiny::conditionalPanel(
       "input.fa_options % 2 == 1",
       ns = ns,

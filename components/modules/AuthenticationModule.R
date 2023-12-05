@@ -800,7 +800,9 @@ LoginCodeAuthenticationModule <- function(id,
                                           domain = NULL,
                                           credentials_file = NULL,
                                           allow_personal = TRUE,
-                                          allow_new_users = TRUE) {
+                                          allow_new_users = TRUE,
+                                          redirect_login = FALSE
+                                          ) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 
@@ -826,15 +828,30 @@ LoginCodeAuthenticationModule <- function(id,
     email_sent <- FALSE
     login_code <- NULL
 
-    login_modal <- splashLoginModal(
-      ns = ns,
-      with.email = TRUE,
-      with.username = FALSE,
-      with.password = FALSE,
-      title = "Enter Email",
-      subtitle = "To register or sign in, enter your email and we'll send you a login code.",
-      button.text = "Send code!"
-    )
+    if (!redirect_login) {
+      login_modal <- splashLoginModal(
+        ns = ns,
+        with.email = TRUE,
+        with.username = FALSE,
+        with.password = FALSE,
+        title = "Enter Email",
+        subtitle = "To register or sign in, enter your email and we'll send you a login code.",
+        button.text = "Send code!"
+      )
+    } else {
+      login_modal <- splashLoginModal(
+        ns = ns,
+        with.email = FALSE,
+        with.username = FALSE,
+        with.password = FALSE,
+        with.link = TRUE,
+        link = "https://auth.bigomics.ch/#!/login",
+        title = "Welcome!",
+        subtitle = "To register or sign in, click the Log in! button.",
+        button.text = "Log in!"
+      )
+    }
+
     shiny::showModal(login_modal) ## need first time
 
     resetUSER <- function() {

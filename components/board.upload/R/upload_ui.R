@@ -73,7 +73,7 @@ UploadUI <- function(id) {
               ns("selected_organism"),
               NULL,
               # restrict to ensembl species, as we are validating them in the first place
-              choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
+              choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
               selected = NULL,
               multiple = FALSE
             )

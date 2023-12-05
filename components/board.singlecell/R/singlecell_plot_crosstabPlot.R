@@ -71,7 +71,9 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$deconv)
-      shiny::req(length(pgx$deconv) > 0)
+      if (!("deconv" %in% names(pgx)) || length(pgx$deconv) == 0) {
+        shiny::validate(shiny::need(FALSE, "Proportions requires deconvolution"))
+      }
       crosstabvar <- crosstabvar()
       gene <- gene()
       pheno <- pheno()

@@ -88,7 +88,11 @@ SingleCellBoard <- function(id, pgx) {
 
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
       pheno0 <- grep("sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
-      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter)
+      kk <- tryCatch(playbase::selectSamplesFromSelectedLevels(pgx$Y, input$samplefilter),
+        error = function(w) {
+          0
+        }
+      )
       nphenolevel <- apply(pgx$samples[kk, pheno0, drop = FALSE], 2, function(v) length(unique(v)))
       pheno0 <- pheno0[which(nphenolevel > 1)]
       genes <- sort(as.character(rownames(pgx$X)))
@@ -177,7 +181,10 @@ SingleCellBoard <- function(id, pgx) {
       rownames(pos) <- colnames(zx)
 
       return(pos)
-    })
+    }) %>% bindEvent(
+      input$samplefilter,
+      pgx$X
+    )
 
     # Type mapping (heatmap) reactivity ##########
 

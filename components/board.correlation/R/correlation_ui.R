@@ -18,15 +18,6 @@ CorrelationInputs <- function(id) {
       "Filter gene features.",
       placement = "top"
     ),
-    shiny::br(),
-    withTooltip(
-      shiny::radioButtons(ns("pcor_ntop"), "Nr of top genes to compute partial correlation.",
-        c(50, 100, 250),
-        selected = 100, inline = TRUE
-      ),
-      "Top genes",
-      placement = "top"
-    ),
     shiny::conditionalPanel(
       "input.cor_features == '<custom>'",
       ns = ns,
@@ -38,6 +29,24 @@ CorrelationInputs <- function(id) {
           rows = 5, placeholder = "Paste your custom gene list"
         ),
         "Paste a custom list of genes to be used as features.",
+        placement = "top"
+      )
+    ),
+    shiny::br(), shiny::br(), shiny::br(), shiny::br(),
+    withTooltip(shiny::actionLink(ns("adv_options"), "Options", icon = icon("cog", lib = "glyphicon")),
+      "Toggle advanced options.",
+      placement = "top"
+    ),
+    shiny::br(), shiny::br(),
+    shiny::conditionalPanel(
+      "input.adv_options % 2 == 1",
+      ns = ns,
+      withTooltip(
+        shiny::radioButtons(ns("pcor_ntop"), "Nr. of genes to compute partial correlation.",
+          c(50, 100, 250),
+          selected = 100, inline = TRUE
+        ),
+        "Number of top genes to compute partial correlation",
         placement = "top"
       )
     )

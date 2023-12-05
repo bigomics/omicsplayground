@@ -64,29 +64,18 @@ correlation_plot_cor_graph_server <- function(
     plot_data <- shiny::reactive({
       shiny::req(cor_gene())
 
-      dbg("[correlation_plot_cor_graph.R] plot_data called!")
-
       res <- getPartialCorrelationMatrix()
       gene <- "XIST"
       rho.min <- 0.3
       layout <- "kk"
 
-      dbg("[correlation_plot_cor_graph.R] plot_data : 1")
-
       gene <- cor_gene()
-
-      dbg("[correlation_plot_cor_graph.R] plot_data : 2")
-
       rho.min <- input$cor_graph_threshold
       layout <- input$cor_graph_layout
       numnodes <- nrow(res$cor)
       vsize <- ifelse(numnodes > 50, 10, 12)
       vsize <- ifelse(numnodes > 100, 8, vsize)
       radius <- as.integer(input$cor_graph_radius)
-
-      dbg("[correlation_plot_cor_graph.R] gene=", gene)
-      dbg("[correlation_plot_cor_graph.R] dim.cor=", dim(res$cor))
-      dbg("[correlation_plot_cor_graph.R] rownames.cor=", head(rownames(res$cor)))
 
       gr <- playbase::pgx.plotPartialCorrelationGraph(
         res,
