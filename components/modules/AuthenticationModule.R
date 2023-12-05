@@ -761,8 +761,7 @@ LoginCodeAuthenticationModule <- function(id,
                                           credentials_file = NULL,
                                           allow_personal = TRUE,
                                           allow_new_users = TRUE,
-                                          redirect_login = FALSE
-                                          ) {
+                                          redirect_login = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 

@@ -244,19 +244,19 @@ splashLoginModal <- function(ns = NULL,
   }
 
   if (with.link) {
-  div.link <- div(
-    id = "link",
-    class = "pt-2",
-    tags$a(
-      id = ns("link_btn"),
-      href = link,
-      button.text,
-      class = "btn btn-warning btn-xl",
-      role = "button"
+    div.link <- div(
+      id = "link",
+      class = "pt-2",
+      tags$a(
+        id = ns("link_btn"),
+        href = link,
+        button.text,
+        class = "btn btn-warning btn-xl",
+        role = "button"
+      )
     )
-  )
-  div.button <- div()
-}
+    div.button <- div()
+  }
 
   ## splash.panel=div();ns=function(x)
   splash.content <- NULL
