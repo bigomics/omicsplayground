@@ -25,10 +25,18 @@ functional_plot_wikipathway_actmap_ui <- function(
     withTooltip(
       shiny::checkboxInput(
         ns("normalize"),
-        "normalize activation matrix",
+        "Normalize activation matrix.",
         FALSE
       ),
       "Click to normalize the columns of the activation matrices."
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("rotate"),
+        "Rotate activation matrix.",
+        FALSE
+      ),
+      "Click to rotate the activation matrix."
     )
   )
 
@@ -64,7 +72,6 @@ functional_plot_wikipathway_actmap_server <- function(id,
         df <- getWikiPathwayTable()
         meta <- pgx$gset.meta$meta
         shiny::req(df, pgx$X, meta)
-
         res <- list(
           df = df,
           meta = meta
@@ -75,7 +82,6 @@ functional_plot_wikipathway_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
@@ -83,6 +89,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
           meta,
           df,
           normalize = input$normalize,
+          rotate = input$rotate,
           nterms = 50,
           nfc = 20,
           tl.cex = 0.95,
@@ -94,7 +101,6 @@ functional_plot_wikipathway_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
@@ -102,10 +108,11 @@ functional_plot_wikipathway_actmap_server <- function(id,
           meta,
           df,
           normalize = input$normalize,
+          rotate = input$rotate,
           nterms = 50,
           nfc = 100,
           tl.cex = 1.1,
-          row.nchar = 200
+          row.nchar = ifelse(input$rotate, 60, 200)
         )
       }
 
@@ -115,7 +122,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = c(100, 140),
+        res = c(100, 115),
         remove_margins = FALSE,
         pdf.height = 11,
         pdf.width = 6,

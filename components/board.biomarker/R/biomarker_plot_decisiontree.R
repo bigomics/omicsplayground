@@ -45,25 +45,21 @@ biomarker_plot_decisiontree_ui <- function(
 #' @export
 biomarker_plot_decisiontree_server <- function(id,
                                                calcVariableImportance,
+                                               is_computed,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res)
-
-        res <- list(
-          res = res
-        )
         return(res)
       })
 
       plot.RENDER <- function() {
         res <- plot_data()
-        shiny::req(res$res)
 
-        res <- res$res
-
+        shiny::validate(shiny::need( is_computed(), "Please select target class and run 'Compute'"))
+        shiny::req(res)
         par(mfrow = c(1, 1), mar = c(1, 0, 2, 0))
         is.surv <- grepl("Surv", res$rf$call)[2]
         is.surv
@@ -71,8 +67,15 @@ biomarker_plot_decisiontree_server <- function(id,
           rf <- partykit::as.party(res$rf)
           partykit::plot.party(rf)
         } else {
-          rpart.plot::rpart.plot(res$rf)
-          title("Classification tree", cex = 1.2, line = 3, adj = 0.35)
+          ## rpart.plot::rpart.plot(res$rf)
+          rf <- partykit::as.party(res$rf)
+          is.multinomial <- length(table(res$y)) > 2
+          if (is.multinomial) {
+            ## plot(rf, type="extended")
+            plot(rf, type = "simple")
+          } else {
+            plot(rf, type = "simple")
+          }
         }
       }
 
@@ -82,7 +85,7 @@ biomarker_plot_decisiontree_server <- function(id,
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
         csvFunc = plot_data,
-        res = c(72, 120),
+        res = c(60, 100),
         pdf.width = 10, pdf.height = 6,
         add.watermark = watermark
       )

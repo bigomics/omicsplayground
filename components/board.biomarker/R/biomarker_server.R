@@ -127,13 +127,22 @@ BiomarkerBoard <- function(id, pgx) {
       }
     })
 
-    calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
-      ## This code also features a progress indicator.
-      if (is.null(pgx)) {
-        return(NULL)
-      }
-      shiny::req(pgx$X, input$pdx_predicted)
+    is_computed <- reactiveVal(FALSE)
+    observeEvent({
+      list(
+        input$pdx_predicted,
+        input$pdx_samplefilter,
+        input$pdx_filter
+      )
+    }, {
+      is_computed(FALSE)
+    })
+    
+    calcVariableImportance <- shiny::eventReactive( input$pdx_runbutton, {
 
+      ## This code also features a progress indicator.
+      shiny::req(pgx$X, input$pdx_predicted)
+      
       ct <- 2
       ct <- 12
       colnames(pgx$Y)
@@ -161,14 +170,13 @@ BiomarkerBoard <- function(id, pgx) {
       y0 <- y0[names(y0) %in% selected_samples()]
       y <- y0[!is.na(y0)]
 
-      ## augment to at least 100 samples per level
-      ii <- unlist(tapply(1:length(y), y, sample, size = 100, replace = TRUE))
-      y <- y[ii]
+      ## augment to at least 100 samples per level :)
+      ii <- tapply(1:length(y), y, function(ii) sample(c(ii, ii), size = 100, replace = TRUE))
+      y <- y[unlist(ii)]
 
       ## -------------------------------------------
       ## select features
       ## -------------------------------------------
-      ## group prediction
       if (FALSE && shiny::isolate(input$pdx_level) == "geneset") {
         X <- pgx$gsetX[, names(y)]
       } else {
@@ -207,10 +215,11 @@ BiomarkerBoard <- function(id, pgx) {
         X <- X[pp, , drop = FALSE]
       }
 
-      ## ----------- restrict to top 100
+      ## ----------- restrict to top SD -----------
       X <- head(X[order(-apply(X, 1, sd)), , drop = FALSE], 10 * NFEATURES) ## top 100
-      sdx <- mean(apply(X, 1, sd))
-      X <- X + 0.25 * sdx * matrix(rnorm(length(X)), nrow(X), ncol(X)) ## add some noise
+      sdx0 <- matrixStats::rowSds(X, na.rm = TRUE)
+      sdx1 <- 0.5 * sdx0 + 0.5 * mean(sdx0)
+      X <- X + 0.25 * sdx1 * matrix(rnorm(length(X)), nrow(X), ncol(X)) ## add some noise
 
       progress$inc(4 / 10, detail = "computing scores")
 
@@ -226,13 +235,18 @@ BiomarkerBoard <- function(id, pgx) {
           time = time, status = status, methods = methods
         )
       } else {
-        methods <- c("glmnet", "randomforest", "xgboost", "pls")
+        methods <- c("glmnet", "randomforest", "xgboost", "splsda", "correlation", "ftest")
         X1 <- X
         y1 <- y
         names(y1) <- colnames(X1) <- paste0("x", 1:ncol(X))
-        P <- playbase::pgx.multiclassVariableImportance(X1, y1, methods = methods)
+        res <- playbase::pgx.variableImportance(
+          X1, y1,
+          methods = methods, reduce = 1000, resample = 0,
+          scale = FALSE, add.noise = 0
+        )
+        P <- res$importance
       }
-      P <- abs(P)
+      P <- abs(P) ## sometimes negative according to sign
 
       P[is.na(P)] <- 0
       P[is.nan(P)] <- 0
@@ -243,37 +257,6 @@ BiomarkerBoard <- function(id, pgx) {
       if (nrow(R) > 1) {
         R <- (apply(P, 2, rank) / nrow(P))**4
         R <- R[order(-rowSums(R)), , drop = FALSE]
-      }
-
-      if (FALSE && DEV) {
-        is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", rownames(R)))
-        do.multiomics <- (is.multiomics && shiny::isolate(input$pdx_multiomics))
-        if (do.multiomics) {
-          ## EXPERIMENTAL: multi-omics weighting
-          rr <- rowMeans(R)
-          dtype <- pgx$genes[rownames(R), "data_type"]
-          gene <- pgx$genes[rownames(R), "gene_name"]
-          gg <- sort(unique(gene))
-          dtypes <- unique(dtype)
-          dt <- "gx"
-          rho <- c()
-          for (dt in dtypes) {
-            r1 <- rr[which(dtype == dt)]
-            g1 <- gene[which(dtype == dt)]
-            r1 <- r1[match(gg, g1)]
-            rho <- cbind(rho, r1)
-          }
-          rownames(rho) <- gg
-          colnames(rho) <- dtypes
-          rho[is.na(rho)] <- 0
-          rho <- rho[order(-rowSums(rho, na.rm = TRUE)), ]
-          dim(rho)
-          barplot(t(head(rho, 50)), las = 3)
-          jj <- match(gene, rownames(rho))
-          rname <- rownames(R)
-          R <- rho[jj, ]
-          rownames(R) <- rname
-        }
       }
 
       progress$inc(3 / 10, detail = "drawing tree")
@@ -287,6 +270,7 @@ BiomarkerBoard <- function(id, pgx) {
       sel <- intersect(sel, rownames(X))
       sel <- head(rownames(R), NFEATURES) ## top50 features
       tx <- t(X[sel, , drop = FALSE])
+
 
       ## formula wants clean names, so save original names
       colnames(tx) <- gsub("[: +-.,]", "_", colnames(tx))
@@ -327,6 +311,7 @@ BiomarkerBoard <- function(id, pgx) {
       colnames(tx) <- orig.names[colnames(tx)]
       res <- list(R = R, y = y, X = t(tx), rf = rf)
 
+      is_computed(TRUE)
       return(res)
     })
 
@@ -337,6 +322,7 @@ BiomarkerBoard <- function(id, pgx) {
     biomarker_plot_importance_server(
       "pdx_importance",
       calcVariableImportance,
+      is_computed,
       watermark = WATERMARK
     )
 
@@ -345,18 +331,21 @@ BiomarkerBoard <- function(id, pgx) {
       calcVariableImportance,
       pgx,
       reactive(input$pdx_predicted),
+      is_computed,
       watermark = WATERMARK
     )
 
     biomarker_plot_decisiontree_server(
       "pdx_decisiontree",
       calcVariableImportance,
+      is_computed,      
       watermark = WATERMARK
     )
 
     biomarker_plot_boxplots_server(
       "pdx_boxplots",
       calcVariableImportance,
+      is_computed,      
       watermark = WATERMARK
     )
 
