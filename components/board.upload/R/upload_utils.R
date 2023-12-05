@@ -192,3 +192,14 @@ sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmai
     credentials = blastula::creds_file(path_to_creds)
   )
 }
+
+isValidFileName <- function(name) {
+  if (name == "") {
+    return(FALSE)
+  }
+  pattern <- "/"
+  if (grepl(pattern, name)) {
+    return(FALSE)
+  }
+  return(TRUE)
+}
