@@ -75,6 +75,16 @@ app_server <- function(input, output, session) {
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
     )
+  } else if (authentication == "login-code-no-mail") {
+    auth <- LoginCodeAuthenticationModule(
+      id = "auth",
+      mail_creds = file.path(ETC, "gmail_creds"),
+      domain = opt$DOMAIN,
+      credentials_file = credentials_file,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+      allow_new_users = opt$ALLOW_NEW_USERS,
+      redirect_login = TRUE
+    )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
     auth <- NoAuthenticationModule(
