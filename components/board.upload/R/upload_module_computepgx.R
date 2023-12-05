@@ -304,43 +304,40 @@ upload_module_computepgx_server <- function(
       ## ------------------------------------------------------------------
 
       # Define a reactive value to store the process object
-      PROCESS_LIST <- list()      
+      PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
       process_counter <- reactiveVal(0)
-      custom_geneset <- list( gmt = NULL, info = NULL )      
-      processx_error <- list( user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL )      
+      custom_geneset <- list(gmt = NULL, info = NULL)
+      processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
       shiny::observeEvent(input$upload_gmt, {
-
         filePath <- input$upload_gmt$datapath
         fileName <- input$upload_gmt$name
         GSET_CHECK <- FALSE
-        
-        if (endsWith(filePath, ".txt") || endsWith(filePath, ".gmt")) {
 
+        if (endsWith(filePath, ".txt") || endsWith(filePath, ".gmt")) {
           gmt <- playbase::read.gmt(filePath)
 
           # Clean genesets. eventually we can add multiple gmt files, but
-          # for now we only support one 
+          # for now we only support one
           gmt <- list(CUSTOM = gmt)
           gmt <- playbase::clean_gmt(gmt, "CUSTOM")
-          
+
           # compute custom geneset stats
           gmt <- gmt[!duplicated(names(gmt))]
           gset_size <- sapply(gmt, length)
-          gmt <- gmt[ gset_size >= 3 ]  ## how many?
+          gmt <- gmt[gset_size >= 3] ## how many?
 
 
           # an additional check to verify that items in lists are
           # genes
-          if ( length(gmt) > 0 && is.list(gmt) ) {
-
+          if (length(gmt) > 0 && is.list(gmt)) {
             ## put in parent variable
             info <- list(GSET_SIZE = gset_size)
-            custom_geneset <<- list( gmt = gmt, info = info)
+            custom_geneset <<- list(gmt = gmt, info = info)
 
-            # tell user that custom genesets are "ok" 
+            # tell user that custom genesets are "ok"
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
               text = "Your genesets will be incorporated in the analysis.",
@@ -566,18 +563,16 @@ upload_module_computepgx_server <- function(
         )
 
         ## append to process list
-        PROCESS_LIST <<- c(PROCESS_LIST, list(new.job) )
-        
+        PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
       }) ## end observe input$compute
 
       check_process_status <- reactive({
-
         if (process_counter() == 0) {
           return(NULL)
         }
 
         # Re-execute this reactive expression after 30 seconds
-        shiny::invalidateLater(30*1000, session)
+        shiny::invalidateLater(30 * 1000, session)
 
         # When computing PGX, reset inactivity counter
         # to avoid session closure while computing
@@ -656,7 +651,7 @@ upload_module_computepgx_server <- function(
                 pgx_path   = raw_dir
               )
 
-              
+
               # if auth$email is empty, then the user is not logged in
               if (auth$email == "") {
                 error_popup(
@@ -681,8 +676,8 @@ upload_module_computepgx_server <- function(
 
                 sendErrorMessageToUser(
                   user_email = processx_error$user_email,
-                  pgx_name   = processx_error$pgx_name,
-                  error      = paste0(processx_error$error, collapse = ""),
+                  pgx_name = processx_error$pgx_name,
+                  error = paste0(processx_error$error, collapse = ""),
                   path_to_creds = gmail_creds
                 )
               }
@@ -708,7 +703,7 @@ upload_module_computepgx_server <- function(
             dbg("[compute PGX process] : process still running")
           }
         }
-        
+
         # Remove completed processes from the list
         if (length(completed_indices) > 0) {
           PROCESS_LIST <<- PROCESS_LIST[-completed_indices]
@@ -761,7 +756,7 @@ upload_module_computepgx_server <- function(
 
       ## upon every new process check if we need to show the spinner
       ## or not, and if we are allowed to show the compute button.
-      observeEvent( process_counter(), {
+      observeEvent(process_counter(), {
         if (process_counter() > 0) {
           shiny::insertUI(
             selector = "#current_dataset",
@@ -783,7 +778,7 @@ upload_module_computepgx_server <- function(
       })
 
       # observer to listed to click on send_data_to_support button
-      observeEvent( input$send_data_to_support, {
+      observeEvent(input$send_data_to_support, {
         # write a message to console with shinyjs
         shinyjs::runjs("console.log('send_data_to_support button clicked')")
         message("send_data_to_support button clicked")
@@ -792,8 +787,8 @@ upload_module_computepgx_server <- function(
 
         sendErrorMessageToCustomerSuport(
           user_email = processx_error$user_email,
-          pgx_name   = processx_error$pgx_name,
-          pgx_path   = processx_error$pgx_path,
+          pgx_name = processx_error$pgx_name,
+          pgx_path = processx_error$pgx_path,
           error = paste0(processx_error$error, collapse = ""),
           path_to_creds = gmail_creds
         )
