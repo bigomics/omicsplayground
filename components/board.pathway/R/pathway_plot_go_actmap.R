@@ -26,11 +26,19 @@ functional_plot_go_actmap_ui <- function(
     withTooltip(
       shiny::checkboxInput(
         ns("normalize"),
-        "normalize activation matrix",
+        "Normalize columns",
         FALSE
       ),
       "Click to normalize the columns of the activation matrices."
-    )
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("rotate"),
+        "Rotate",
+        FALSE
+      ),
+      "Click to rotate the activation matrix."
+    )    
   )
 
   PlotModuleUI(ns("plot"),
@@ -58,8 +66,9 @@ functional_plot_go_actmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      plotGOactmap <- function(score, go, normalize, maxterm, maxfc,
-                               tl.cex = 0.85) {
+
+      plotGOactmap <- function(score, go, normalize, rotate, maxterm, maxfc,
+                               tl.cex = 0.85, row.nchar = 60) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
 
         ## avoid errors!!!
@@ -96,12 +105,13 @@ functional_plot_go_actmap_server <- function(id,
         }
 
         colnames(score) <- substring(colnames(score), 1, 30)
-        rownames(score) <- substring(rownames(score), 1, 50)
+        rownames(score) <- substring(rownames(score), 1, row.nchar)
         colnames(score) <- paste0(colnames(score), " ")
 
-        bmar <- 0 + pmax((50 - nrow(score)) * 0.25, 0)
         par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
 
+        if(rotate) score <- t(score)
+        
         corrplot::corrplot(
           score,
           is.corr = FALSE,
@@ -110,7 +120,7 @@ functional_plot_go_actmap_server <- function(id,
           tl.cex = tl.cex,
           tl.col = "grey20",
           tl.srt = 90,
-          mar = c(bmar, 0, 0, 0)
+          mar = c(0, 0, 0, 0)
         )
       }
 
@@ -134,9 +144,11 @@ functional_plot_go_actmap_server <- function(id,
           score = pathscore,
           go = graph,
           normalize = input$normalize,
+          rotate = input$rotate,
           maxterm = 50,
           maxfc = 25,
-          tl.cex = 1.1
+          tl.cex = 1.05,
+          row.nchar = 60
         )
       }
 
@@ -146,14 +158,17 @@ functional_plot_go_actmap_server <- function(id,
 
         pathscore <- res$pathscore
         graph <- res$graph
-
+        rotate <- input$rotate
+        
         plotGOactmap(
           score = pathscore,
           go = graph,
           normalize = input$normalize,
+          rotate = rotate,
           maxterm = 50,
           maxfc = 100,
-          tl.cex = 0.85
+          tl.cex = 1.1,
+          row.nchar = ifelse(rotate, 60, 200)          
         )
       }
 
@@ -163,7 +178,7 @@ functional_plot_go_actmap_server <- function(id,
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = 72,
+        res = c(75,105),
         pdf.width = 9,
         remove_margins = FALSE,
         pdf.height = 9,

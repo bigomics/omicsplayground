@@ -29,7 +29,15 @@ functional_plot_reactome_actmap_ui <- function(
         FALSE
       ),
       "Click to normalize the columns of the activation matrices."
-    )
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("rotate"),
+        "Rotate activation matrix.",
+        FALSE
+      ),
+      "Click to rotate the activation matrix."
+    )    
   )
 
   PlotModuleUI(ns("plot"),
@@ -63,7 +71,6 @@ functional_plot_reactome_actmap_server <- function(id,
         df <- getReactomeTable()
         meta <- r_meta()
         shiny::req(df, meta)
-
         res <- list(
           df = df,
           meta = meta
@@ -74,14 +81,15 @@ functional_plot_reactome_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-
+        rotate <- input$rotate        
         plotActivationMatrix(
           meta, df,
           normalize = input$normalize,
+          rotate = rotate,          
           nterms = 50,
           nfc = 20,
-          tl.cex = 0.82,
-          row.nchar = 50
+          tl.cex = 0.9,
+          row.nchar = 60
         )
       }
 
@@ -89,17 +97,18 @@ functional_plot_reactome_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
+        rotate <- input$rotate
         plotActivationMatrix(
           meta, df,
           normalize = input$normalize,
+          rotate = rotate,           
           nterms = 50,
           nfc = 100,
-          tl.cex = 0.95,
-          row.nchar = 200
+          tl.cex = 1.1,
+          row.nchar = ifelse(rotate, 60, 200)
         )
       }
 
@@ -109,7 +118,7 @@ functional_plot_reactome_actmap_server <- function(id,
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = c(100, 100),
+        res = c(90, 100),
         pdf.height = 10,
         pdf.width = 10,
         add.watermark = watermark
