@@ -30,7 +30,8 @@ ExpressionInputs <- function(id) {
         placement = "top"
       )
     ),
-    shiny::br(), br(), br(), br(),
+    shiny::br(), shiny::br(), shiny::br(), shiny::br(),
+    shiny::br(), shiny::br(),
     withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
