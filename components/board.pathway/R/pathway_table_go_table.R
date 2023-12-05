@@ -50,7 +50,7 @@ functional_table_go_table_server <- function(id,
       res <- table_data()
       pgx <- res$pgx
       comparison <- res$fa_contrast
-      filtertable <- input$fa_filtertable()
+      filtertable <- fa_filtertable()
       
       if (is.null(pgx$meta.go)) {
         return(NULL)
@@ -80,6 +80,8 @@ functional_table_go_table_server <- function(id,
       go.term1 <- substring(go.term, 1, 80)
       dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
       dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
+      if(filtertable) dt <- dt[which(dt$meta.q < 0.05),,drop=FALSE]
+
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
       id_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(dt)),
@@ -88,9 +90,6 @@ functional_table_go_table_server <- function(id,
         NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
         SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
       )
-      if(filtertable) {
-        dt <- dt[which(dt$meta.q < 0.05),,drop=FALSE]
-      }
       
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
@@ -124,7 +123,7 @@ functional_table_go_table_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
           background = color_from_middle(
-            dt1[, "score"],
+            dt[, "score"],
             "lightblue",
             "#f5aeae"
           ),
