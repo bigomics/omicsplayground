@@ -659,34 +659,34 @@ PasswordAuthenticationModule <- function(id,
     # Get persistent session cookie (if available)
     decrypted_cookie <- get_and_decrypt_cookie(session)
 
-    if(!is.null(decrypted_cookie)) {
+    if (!is.null(decrypted_cookie)) {
       message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
-        output$login_warning <- shiny::renderText("")
-        shiny::removeModal()
-        sel <- which(CREDENTIALS$email == decrypted_cookie)[1]
-        cred <- CREDENTIALS[sel, ]
+      output$login_warning <- shiny::renderText("")
+      shiny::removeModal()
+      sel <- which(CREDENTIALS$email == decrypted_cookie)[1]
+      cred <- CREDENTIALS[sel, ]
 
-        USER$username <- cred$username
-        USER$level <- cred$level
-        USER$limit <- cred$limit
-        USER$email <- decrypted_cookie
-        USER$logged <- TRUE
+      USER$username <- cred$username
+      USER$level <- cred$level
+      USER$limit <- cred$limit
+      USER$email <- decrypted_cookie
+      USER$logged <- TRUE
 
-        # create user_dir (always), set path, and set options
-        user_dir <- file.path(PGX.DIR, decrypted_cookie)
-        #create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          user_dir <- file.path(PGX.DIR)
-        }
-        USER$user_dir <- user_dir
-        USER$options <- read_user_options(user_dir)
-        ## need for JS hsq tracking
-        session$sendCustomMessage("set-user", list(user = cred$username))
+      # create user_dir (always), set path, and set options
+      user_dir <- file.path(PGX.DIR, decrypted_cookie)
+      # create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      if (!opt$ENABLE_USERDIR) {
+        user_dir <- file.path(PGX.DIR)
+      }
+      USER$user_dir <- user_dir
+      USER$options <- read_user_options(user_dir)
+      ## need for JS hsq tracking
+      session$sendCustomMessage("set-user", list(user = cred$username))
 
-        ## export 'public' functions
-        USER$resetUSER <- resetUSER
+      ## export 'public' functions
+      USER$resetUSER <- resetUSER
 
-       return(USER)
+      return(USER)
     }
 
     output$showLogin <- shiny::renderUI({
@@ -766,7 +766,6 @@ PasswordAuthenticationModule <- function(id,
 
         ## export 'public' functions
         USER$resetUSER <- resetUSER
-
       } else {
         message("[PasswordAuthenticationModule::login] WARNING : login failed ")
         if (!valid.date) {
@@ -870,7 +869,7 @@ LoginCodeAuthenticationModule <- function(id,
 
     decrypted_cookie <- get_and_decrypt_cookie(session)
 
-    if(!is.null(decrypted_cookie)) {
+    if (!is.null(decrypted_cookie)) {
       message("[LoginCodeAuthenticationModule::login] PASSED : login OK! ")
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()
@@ -1107,11 +1106,11 @@ LoginCodeAuthenticationModule <- function(id,
 ## ================================================================================
 
 LoginCodeNoEmailAuthenticationModule <- function(id,
-                                          mail_creds,
-                                          domain = NULL,
-                                          credentials_file = NULL,
-                                          allow_personal = TRUE,
-                                          allow_new_users = TRUE) {
+                                                 mail_creds,
+                                                 domain = NULL,
+                                                 credentials_file = NULL,
+                                                 allow_personal = TRUE,
+                                                 allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 
@@ -1167,7 +1166,7 @@ LoginCodeNoEmailAuthenticationModule <- function(id,
 
     decrypted_cookie <- get_and_decrypt_cookie(session)
 
-    if(!is.null(decrypted_cookie)) {
+    if (!is.null(decrypted_cookie)) {
       message("[LoginCodeNoEmailAuthenticationModule::login] PASSED : login OK! ")
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()

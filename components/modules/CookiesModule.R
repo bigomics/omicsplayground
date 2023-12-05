@@ -1,7 +1,7 @@
 # Get desired cookie from all the available ones
 extract_cookie_value <- function(session, cookie_name) {
   cookie_string <- session$request$HTTP_COOKIE
-  if(is.null(cookie_string)){
+  if (is.null(cookie_string)) {
     return(NULL)
   }
   cookies <- unlist(strsplit(cookie_string, "; "))
@@ -20,23 +20,26 @@ decrypt_cookie <- function(cookie, nonce) {
   email_raw <- sodium::hex2bin(cookie)
   attr(email_raw, "nonce") <- email_nonce_raw
   # Return NULL if not successful decryption
-  email <- tryCatch({
-    unserialize(
-      sodium::data_decrypt(
-        email_raw,
-        key = sodium::sha256(charToRaw(key_base64))
+  email <- tryCatch(
+    {
+      unserialize(
+        sodium::data_decrypt(
+          email_raw,
+          key = sodium::sha256(charToRaw(key_base64))
+        )
       )
-    )
-  }, error = function(w){
-    NULL
-  })
+    },
+    error = function(w) {
+      NULL
+    }
+  )
 }
 
 # Get cookies and decrypt them
 get_and_decrypt_cookie <- function(session) {
   cookie <- extract_cookie_value(session, "persistentOPG")
   nonce <- extract_cookie_value(session, "persistentOPG_nonce")
-  if(!is.null(cookie) & !is.null(nonce)){
+  if (!is.null(cookie) & !is.null(nonce)) {
     decrypted_cookie <- decrypt_cookie(cookie, nonce)
     return(decrypted_cookie)
   } else {
@@ -55,6 +58,6 @@ save_session_cookie <- function(session, cred) {
   email_encrypted_nonce <- paste(as.character(attr(ciphertext, "nonce")), collapse = "")
   email_encrypted_value <- paste(as.character(ciphertext), collapse = "")
 
-  session$sendCustomMessage(type = 'redirect', message = email_encrypted_value)
-  session$sendCustomMessage(type = 'redirect_nonce', message = email_encrypted_nonce)
+  session$sendCustomMessage(type = "redirect", message = email_encrypted_value)
+  session$sendCustomMessage(type = "redirect_nonce", message = email_encrypted_nonce)
 }
