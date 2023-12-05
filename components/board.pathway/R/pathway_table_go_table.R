@@ -38,7 +38,7 @@ functional_table_go_table_server <- function(id,
     }
 
     table_data <- shiny::reactive({
-      comparison  <- fa_contrast()
+      comparison <- fa_contrast()
       if (is.null(pgx$meta.go)) {
         return(NULL)
       }
@@ -64,17 +64,17 @@ functional_table_go_table_server <- function(id,
       fx <- gs.meta$meta.fx
       go.term1 <- substring(go.term, 1, 80)
       dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
-      dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)      
+      dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
       return(dt)
     })
 
     table_RENDER <- function() {
       dt <- table_data()
       filtertable <- fa_filtertable()
-      if(filtertable) {
-        dt <- dt[ which( dt$meta.q <= 0.05 ), ] 
+      if (filtertable) {
+        dt <- dt[which(dt$meta.q <= 0.05), ]
       }
-      
+
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
       id_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(dt)),

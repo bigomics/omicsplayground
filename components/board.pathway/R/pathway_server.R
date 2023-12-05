@@ -63,7 +63,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    
+
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================
     ## ================================================================================
@@ -117,8 +117,8 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       colnames(score2) <- playbase::shortstring(colnames(score2), 30)
       colnames(score2) <- paste0(colnames(score2), " ")
 
-      if(rotate) score2 <- t(score2)
-      
+      if (rotate) score2 <- t(score2)
+
       par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
 
       corrplot::corrplot(

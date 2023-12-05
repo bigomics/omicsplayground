@@ -37,7 +37,7 @@ functional_plot_reactome_actmap_ui <- function(
         FALSE
       ),
       "Click to rotate the activation matrix."
-    )    
+    )
   )
 
   PlotModuleUI(ns("plot"),
@@ -81,11 +81,11 @@ functional_plot_reactome_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-        rotate <- input$rotate        
+        rotate <- input$rotate
         plotActivationMatrix(
           meta, df,
           normalize = input$normalize,
-          rotate = rotate,          
+          rotate = rotate,
           nterms = 50,
           nfc = 20,
           tl.cex = 0.9,
@@ -104,7 +104,7 @@ functional_plot_reactome_actmap_server <- function(id,
         plotActivationMatrix(
           meta, df,
           normalize = input$normalize,
-          rotate = rotate,           
+          rotate = rotate,
           nterms = 50,
           nfc = 100,
           tl.cex = 1.1,

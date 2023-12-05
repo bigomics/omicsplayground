@@ -38,7 +38,7 @@ functional_plot_go_actmap_ui <- function(
         FALSE
       ),
       "Click to rotate the activation matrix."
-    )    
+    )
   )
 
   PlotModuleUI(ns("plot"),
@@ -66,7 +66,6 @@ functional_plot_go_actmap_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       plotGOactmap <- function(score, go, normalize, rotate, maxterm, maxfc,
                                tl.cex = 0.85, row.nchar = 60) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
@@ -110,8 +109,8 @@ functional_plot_go_actmap_server <- function(id,
 
         par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
 
-        if(rotate) score <- t(score)
-        
+        if (rotate) score <- t(score)
+
         corrplot::corrplot(
           score,
           is.corr = FALSE,
@@ -159,7 +158,7 @@ functional_plot_go_actmap_server <- function(id,
         pathscore <- res$pathscore
         graph <- res$graph
         rotate <- input$rotate
-        
+
         plotGOactmap(
           score = pathscore,
           go = graph,
@@ -168,7 +167,7 @@ functional_plot_go_actmap_server <- function(id,
           maxterm = 50,
           maxfc = 100,
           tl.cex = 1.1,
-          row.nchar = ifelse(rotate, 60, 200)          
+          row.nchar = ifelse(rotate, 60, 200)
         )
       }
 
@@ -178,7 +177,7 @@ functional_plot_go_actmap_server <- function(id,
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = c(75,105),
+        res = c(75, 105),
         pdf.width = 9,
         remove_margins = FALSE,
         pdf.height = 9,
