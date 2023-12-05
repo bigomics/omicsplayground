@@ -109,7 +109,7 @@ biomarker_plot_heatmap_server <- function(id,
       plot.RENDER <- function() {
         res <- plot_data()
 
-        shiny::validate(shiny::need( is_computed(), "Please select target class and run 'Compute'"))
+        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(res)
 
         X <- res$X

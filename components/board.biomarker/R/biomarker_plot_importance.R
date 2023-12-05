@@ -80,9 +80,9 @@ biomarker_plot_importance_server <- function(id,
         ##   text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
         ##   return()
         ## }
-        shiny::validate(shiny::need( is_computed(), "Please select target class and run 'Compute'"))
+        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(res)
-        
+
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
         R <- pmax(R, 0.05)

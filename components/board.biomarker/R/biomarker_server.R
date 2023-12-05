@@ -128,21 +128,23 @@ BiomarkerBoard <- function(id, pgx) {
     })
 
     is_computed <- reactiveVal(FALSE)
-    observeEvent({
-      list(
-        input$pdx_predicted,
-        input$pdx_samplefilter,
-        input$pdx_filter
-      )
-    }, {
-      is_computed(FALSE)
-    })
-    
-    calcVariableImportance <- shiny::eventReactive( input$pdx_runbutton, {
+    observeEvent(
+      {
+        list(
+          input$pdx_predicted,
+          input$pdx_samplefilter,
+          input$pdx_filter
+        )
+      },
+      {
+        is_computed(FALSE)
+      }
+    )
 
+    calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
       ## This code also features a progress indicator.
       shiny::req(pgx$X, input$pdx_predicted)
-      
+
       ct <- 2
       ct <- 12
       colnames(pgx$Y)
@@ -338,14 +340,14 @@ BiomarkerBoard <- function(id, pgx) {
     biomarker_plot_decisiontree_server(
       "pdx_decisiontree",
       calcVariableImportance,
-      is_computed,      
+      is_computed,
       watermark = WATERMARK
     )
 
     biomarker_plot_boxplots_server(
       "pdx_boxplots",
       calcVariableImportance,
-      is_computed,      
+      is_computed,
       watermark = WATERMARK
     )
 

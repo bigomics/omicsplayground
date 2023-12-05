@@ -99,7 +99,7 @@ biomarker_plot_boxplots_server <- function(id,
       plot.RENDER <- function() {
         pdata <- plot_data()
 
-        shiny::validate(shiny::need( is_computed(), "Please select target class and run 'Compute'"))
+        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(pdata)
 
         ## vars, X, y
