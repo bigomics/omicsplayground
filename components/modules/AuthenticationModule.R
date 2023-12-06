@@ -918,7 +918,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       shinyalert::shinyalert(
         title = "",
-        text = "Hail frynd! Biscit yaccepted, thou art granted fri passage...",
+        text = "Biscit yaccepted, thou art granted fri passage...",
         size = "xs",
         timer = 1900
       )
@@ -1115,26 +1115,26 @@ LoginCodeAuthenticationModule <- function(id,
       resetUSER()
     })
 
-    first_time <- TRUE
-    observeEvent(USER$logged, {
-      ## no need to show the modal if the user is logged this is due
-      ## to persistence. But if it is the first time of the session
-      ## we force reset/logout to delete sleeping (persistent?) logins.
-      if (USER$logged && !first_time) {
-        # create user_dir (always), set path, and set options
-        USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          USER$user_dir <- file.path(PGX.DIR)
-        }
-        # set options
-        USER$options <- read_user_options(USER$user_dir)
-        return()
-      }
-      first_time <<- FALSE
-      dbg("[LoginCodeAuthenticationModule] first time reset!!!")
-      resetUSER()
-    })
+    ## first_time <- TRUE
+    ## observeEvent(USER$logged, {
+    ##   ## no need to show the modal if the user is logged this is due
+    ##   ## to persistence. But if it is the first time of the session
+    ##   ## we force reset/logout to delete sleeping (persistent?) logins.
+    ##   if (USER$logged && !first_time) {
+    ##     # create user_dir (always), set path, and set options
+    ##     USER$user_dir <- file.path(PGX.DIR, USER$email)
+    ##     create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+    ##     if (!opt$ENABLE_USERDIR) {
+    ##       USER$user_dir <- file.path(PGX.DIR)
+    ##     }
+    ##     # set options
+    ##     USER$options <- read_user_options(USER$user_dir)
+    ##     return()
+    ##   }
+    ##   first_time <<- FALSE
+    ##   dbg("[LoginCodeAuthenticationModule] first time reset!!!")
+    ##   resetUSER()
+    ## })
 
     ## export as 'public' functions
     USER$resetUSER <- resetUSER
