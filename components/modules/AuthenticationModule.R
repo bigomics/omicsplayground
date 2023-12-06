@@ -840,6 +840,7 @@ LoginCodeAuthenticationModule <- function(id,
     email_sent <- FALSE
     login_code <- NULL
 
+    login_modal <- NULL
     if (!redirect_login) {
       login_modal <- splashLoginModal(
         ns = ns,
@@ -868,6 +869,9 @@ LoginCodeAuthenticationModule <- function(id,
     shiny::showModal(login_modal)
 
     resetUSER <- function() {
+
+      dbg("[LoginCodeAuthenticationModule] resetUSER called")
+      
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -879,6 +883,8 @@ LoginCodeAuthenticationModule <- function(id,
       login_code <<- NULL
       updateTextInput(session, "login_email", value = "")
       updateTextInput(session, "login_password", value = "")
+
+      dbg("[LoginCodeAuthenticationModule] show first modal")
       shiny::showModal(login_modal)
     }
 
@@ -977,12 +983,14 @@ LoginCodeAuthenticationModule <- function(id,
     shiny::observeEvent(list(input$login_btn, query_email()),
       {
         if (is.null(query_email())) {
+          dbg("[LoginCodeAuthenticationModule] step 1: reacting on login_btn")
           shiny::req(input$login_email)
           login_email <- input$login_email
         } else {
+          dbg("[LoginCodeAuthenticationModule] setp 1: reacting on query_email (URL)")          
           login_email <- query_email()
         }
-
+        
         if (!email_sent) {
           login_email <- tolower(login_email)
           ## >>> We check here for email validaty and intercept the
@@ -1060,6 +1068,9 @@ LoginCodeAuthenticationModule <- function(id,
     shiny::observeEvent(input$login_btn, {
       ## shiny::observeEvent( entered_code(), {
       ## shiny::req(input$login_password)
+
+      dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn")
+      
       shiny::req(entered_code())
       if (!email_sent) {
         return(NULL)
@@ -1121,6 +1132,7 @@ LoginCodeAuthenticationModule <- function(id,
         return()
       }
       first_time <<- FALSE
+      dbg("[LoginCodeAuthenticationModule] first time reset!!!")
       resetUSER()
     })
 
