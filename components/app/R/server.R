@@ -47,25 +47,25 @@ app_server <- function(input, output, session) {
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       domain = opt$DOMAIN
     )
-  ## } else if (authentication == "firebase") {
-  ##   auth <- FirebaseAuthenticationModule(
-  ##     id = "auth",
-  ##     domain = opt$DOMAIN,
-  ##     firebase.rds = "firebase.rds",
-  ##     credentials_file = credentials_file,
-  ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-  ##     allow_new_users = opt$ALLOW_NEW_USERS
-  ##   )
-  ## } else if (authentication == "email-link") {
-  ##   auth <- EmailLinkAuthenticationModule(
-  ##     id = "auth",
-  ##     pgx_dir = PGX.DIR,
-  ##     domain = opt$DOMAIN,
-  ##     firebase.rds = "firebase.rds",
-  ##     credentials_file = credentials_file,
-  ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-  ##     allow_new_users = opt$ALLOW_NEW_USERS
-  ##   )
+    ## } else if (authentication == "firebase") {
+    ##   auth <- FirebaseAuthenticationModule(
+    ##     id = "auth",
+    ##     domain = opt$DOMAIN,
+    ##     firebase.rds = "firebase.rds",
+    ##     credentials_file = credentials_file,
+    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+    ##     allow_new_users = opt$ALLOW_NEW_USERS
+    ##   )
+    ## } else if (authentication == "email-link") {
+    ##   auth <- EmailLinkAuthenticationModule(
+    ##     id = "auth",
+    ##     pgx_dir = PGX.DIR,
+    ##     domain = opt$DOMAIN,
+    ##     firebase.rds = "firebase.rds",
+    ##     credentials_file = credentials_file,
+    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+    ##     allow_new_users = opt$ALLOW_NEW_USERS
+    ##   )
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
@@ -96,7 +96,7 @@ app_server <- function(input, output, session) {
     )
   } else if (authentication == "none") {
     auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
-  } else if (authentication == "none2") {    
+  } else if (authentication == "none2") {
     ## no authentication but also not showing main modal (enter)
     username <- Sys.getenv("PLAYGROUND_USERNAME")
     auth <- NoAuthenticationModule(
