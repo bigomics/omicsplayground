@@ -620,9 +620,15 @@ PasswordAuthenticationModule <- function(id,
                                          allow_personal = TRUE,
                                          domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
 
+    message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
+
+    iv <- shinyvalidate::InputValidator$new()
+    iv$add_rule("login_email", shinyvalidate::sv_required())
+    iv$add_rule("login_email", shinyvalidate::sv_email())
+    iv$add_rule("login_password", shinyvalidate::sv_required())
+    iv$enable()
 
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
@@ -805,8 +811,14 @@ LoginCodeAuthenticationModule <- function(id,
                                           allow_new_users = TRUE,
                                           redirect_login = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using secret authentication <<<<")
+    message("[AuthenticationModule] >>>> using LoginCode authentication <<<<")
+    ns <- session$ns
 
+    iv <- shinyvalidate::InputValidator$new()
+    iv$add_rule("login_email", shinyvalidate::sv_required())
+    iv$add_rule("login_email", shinyvalidate::sv_email())
+    iv$enable()
+    
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
       ## we continue but email is not working
@@ -853,8 +865,9 @@ LoginCodeAuthenticationModule <- function(id,
       )
     }
 
-    shiny::showModal(login_modal) ## need first time
-
+    ## need first time
+    shiny::showModal(login_modal) 
+    
     resetUSER <- function() {
       USER$logged <- FALSE
       USER$username <- NA

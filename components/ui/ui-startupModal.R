@@ -45,6 +45,7 @@ ui.startupModal <- function(id, messages) {
     ),
     centered = TRUE
   )
+  
   modal <- shiny::tagAppendAttributes(
     modal,
     `data-bs-backdrop` = "false"

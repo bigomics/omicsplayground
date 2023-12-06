@@ -471,11 +471,10 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         ),
-        ui.startupModal(id = "startup_modal", messages = STARTUP_MESSAGES),
+        shiny::tagList(ui.startupModal(id = "startup_modal", messages = STARTUP_MESSAGES)),
         shiny::tagList(footer)
       )
     }
-
 
     info("[ui.R] >>> creating UI")
     ui <- createUI()

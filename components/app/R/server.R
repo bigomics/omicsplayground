@@ -39,7 +39,7 @@ app_server <- function(input, output, session) {
   if (no.credentials && authentication != "password") {
     credentials_file <- NULL
   }
-
+  
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
@@ -74,7 +74,7 @@ app_server <- function(input, output, session) {
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
-      redirect = FALSE
+      redirect_login = FALSE
     )
   } else if (authentication == "login-code-redirect") {
     auth <- LoginCodeAuthenticationModule(
@@ -84,7 +84,7 @@ app_server <- function(input, output, session) {
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
-      redirect = TRUE
+      redirect_login = TRUE
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -515,10 +515,9 @@ app_server <- function(input, output, session) {
   })
 
   ## --------------------------------------------------------------------------
-
+  ## upon change of user OR beta toggle OR new pgx
   ## --------------------------------------------------------------------------
 
-  ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
       auth$logged
@@ -887,7 +886,11 @@ app_server <- function(input, output, session) {
 
   ## Startup Message
   dbg("[MAIN] showing startup modal")
-  bsutils::modal_show("startup_modal")
+  observeEvent( auth$logged, {
+    if(auth$logged) {
+      bsutils::modal_show("startup_modal")
+    }
+  })
 
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
