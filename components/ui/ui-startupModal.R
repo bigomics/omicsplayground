@@ -16,7 +16,7 @@ ui.startupModal <- function(id, messages) {
         class = "d-flex align-items-center justify-content-center",
         HTML(paste0("<div>", messages[[i]], "</div>"))
       ),
-      class = "p-3"
+      class = "p-4"
     )
     carousel_items[[i]] <- tag1
   }
@@ -25,7 +25,7 @@ ui.startupModal <- function(id, messages) {
     id = id,
     size = "lg",
     bsutils::modalHeader(
-      bsutils::modalTitle("     What's new!"),
+      bsutils::modalTitle("What's new on the Playground"),
       style = "background-color: #b6d3E888"
     ),
     bsutils::modalBody(
