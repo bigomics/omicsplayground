@@ -992,7 +992,7 @@ LoginCodeAuthenticationModule <- function(id,
           login_email <- query_email()
         }
         
-        if (!email_sent) {
+        if (email_sent) {
           dbg("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
         } else {
           dbg("[LoginCodeAuthenticationModule] initiating sending code")      
