@@ -158,12 +158,12 @@ AuthenticationModuleApacheCookie <- function(id,
 ## FirebaseAuthenticationModule
 ## ================================================================================
 
-FirebaseAuthenticationModule <- function(id,
-                                         domain = NULL,
-                                         credentials_file = NULL,
-                                         firebase.rds = "firebase.rds",
-                                         allow_personal = TRUE,
-                                         allow_new_users = TRUE) {
+FirebaseAuthenticationModule.DEPRECATED <- function(id,
+                                                    domain = NULL,
+                                                    credentials_file = NULL,
+                                                    firebase.rds = "firebase.rds",
+                                                    allow_personal = TRUE,
+                                                    allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using FireBase authentication <<<<")
 
@@ -437,13 +437,13 @@ FirebaseAuthenticationModule <- function(id,
 ## EmailAuthenticationModule (using Firebase, no stripe!!!)
 ## ================================================================================
 
-EmailLinkAuthenticationModule <- function(id,
-                                          pgx_dir,
-                                          domain = NULL,
-                                          credentials_file = NULL,
-                                          allow_new_users = TRUE,
-                                          allow_personal = TRUE,
-                                          firebase.rds = "firebase.rds") {
+EmailLinkAuthenticationModule.DEPRECATED <- function(id,
+                                                     pgx_dir,
+                                                     domain = NULL,
+                                                     credentials_file = NULL,
+                                                     allow_new_users = TRUE,
+                                                     allow_personal = TRUE,
+                                                     firebase.rds = "firebase.rds") {
   shiny::moduleServer(id, function(input, output, session) {
     message("[EmailLinkAuthenticationModule] >>>> using email link (Firebase) authentication <<<<")
 
@@ -1117,12 +1117,12 @@ LoginCodeAuthenticationModule <- function(id,
 ## PasswordAuthenticationModule link to login
 ## ================================================================================
 
-LoginCodeNoEmailAuthenticationModule <- function(id,
-                                                 mail_creds,
-                                                 domain = NULL,
-                                                 credentials_file = NULL,
-                                                 allow_personal = TRUE,
-                                                 allow_new_users = TRUE) {
+LoginCodeNoEmailAuthenticationModule.DEPRECATED <- function(id,
+                                                            mail_creds,
+                                                            domain = NULL,
+                                                            credentials_file = NULL,
+                                                            allow_personal = TRUE,
+                                                            allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using secret authentication <<<<")
 
@@ -1176,8 +1176,10 @@ LoginCodeNoEmailAuthenticationModule <- function(id,
       shiny::showModal(login_modal)
     }
 
+    ## --------------------------------------
+    ## Step 0: detect cookie and pass
+    ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
-
     if (!is.null(decrypted_cookie)) {
       message("[LoginCodeNoEmailAuthenticationModule::login] PASSED : login OK! ")
       output$login_warning <- shiny::renderText("")
