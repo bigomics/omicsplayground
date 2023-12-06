@@ -116,7 +116,7 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(qv) <- gsub("q.", "", colnames(qv))
       rm(pd)
       # Call volcano plots
-      all_plts <- plotlyVolcano_multi(FC = fc, 
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
                                       Q = qv, 
                                       fdr = fdr, 
                                       lfc = lfc,
@@ -131,18 +131,18 @@ expression_plot_volcanoAll_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50)
-      #suppressMessages(
-#      ds <<- shinyHugePlot::downsampler$new(figure = fig, n_out = 10L, verbose = FALSE)
-      # )
+      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 0.45, yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+      fig <- plotly_plots(yrange = 0.2, n_rows = 3, margin_b = 85) %>%
         plotly::style(
           marker.size = 6
-        )
+        ) %>%
+          playbase::plotly_build_light(.)
+
       return(fig)
     }
     

@@ -103,7 +103,7 @@ expression_plot_volcanoMethods_server <- function(id,
       qv <- mx[, q_cols, drop = FALSE]
       rm(mx, pd)
       # Call volcano plots
-      all_plts <- plotlyVolcano_multi(FC = fc, 
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
                                       Q = qv, 
                                       fdr = fdr, 
                                       lfc = lfc,
@@ -120,7 +120,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50)
+      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 
@@ -128,7 +129,8 @@ expression_plot_volcanoMethods_server <- function(id,
       fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 20, margin_l = 20) %>%
         plotly::style(
           marker.size = 6
-        )
+        ) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 

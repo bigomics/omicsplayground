@@ -54,25 +54,30 @@ enrichment_plot_volcanoall_server <- function(id,
 
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
-      sel.gsets <- NULL
       sel.gsets <- rownames(meta[[1]])
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
       sel.gsets <- gset_collections[[gs_features()]]
 
-      i <- 1
-      mx.list <- list()
-      for (i in 1:length(meta)) {
-        mx.list[[i]] <- calcGsetMeta(i, gsmethod, pgx = pgx)
+      # Calc. meta scores and get Q and FC
+      FC <- vector("list", length(meta))
+      Q <- vector("list", length(meta))
+      names(FC) <- names(meta)
+      names(Q) <- names(meta)
+      for (i in names(meta)) {
+          mx <- calcGsetMeta(i, gsmethod, pgx = pgx)
+          FC[[i]] <- mx[, "fc", drop = FALSE]
+          Q[[i]] <- mx[, "qv", drop = FALSE] 
       }
-      names(mx.list) <- names(meta)
 
-      Q <- lapply(mx.list, function(mx) mx[, "qv"])
-      FC <- lapply(mx.list, function(mx) mx[, "fc"])
-      names(FC) <- names(Q) <- names(mx.list)
+      # Prepare output matrices
+      matF <- do.call(cbind, FC)
+      matQ <- do.call(cbind, Q)
+      colnames(matF) <- names(FC)
+      colnames(matQ) <- names(FC)
 
       pd <- list(
-        FC = FC,
-        Q = Q,
+        FC = matF,
+        Q = matQ,
         sel.gsets = sel.gsets,
         fdr = fdr,
         lfc = lfc
@@ -85,88 +90,40 @@ enrichment_plot_volcanoall_server <- function(id,
       shiny::req(pd)
 
       # Input vars
-      FC <- pd$FC
-      Q <- pd$Q
+      fc <- pd$FC
+      qv <- pd$Q
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
-      ## meta tables
-      nplots <- min(24, length(pd$Q))
-      sub_plots <- vector("list", length = length(nplots))
-      if (nplots <= 5) {
-        n_rows <- n_rows - 1
-        }
-      shiny::withProgress(message = "computing volcano plots ...", value = 0, {
-        for (i in 1:nplots) {
-          # Get plot data
-          fx <- FC[[i]]
-          qval <- Q[[i]]
-          fc.genes <- names(qval)
-          cond_i <- names(pd[["Q"]])[i]
-          is.sig1 <- (qval <= fdr & abs(fx) >= lfc)
-          sig.genes <- names(fx)[which(is.sig1)]
-          qval <- -log(qval + 1e-12)
-          title_y <- max(qval) - max(qval) *(yrange/10) 
-          # Call volcano plot
-          sub_plots[[i]] <- playbase::plotlyVolcano(
-            x = fx,
-            y = qval,
-            names = fc.genes,
-            source = "plot1",
-            marker.type = "scattergl",
-            highlight = sig.genes,
-            group.names = c("group1", "group0"),
-            psig = fdr,
-            lfc = lfc,
-            marker.size = cex,
-            showlegend = FALSE
-            # Add plot title
-          ) %>% plotly::add_annotations(
-              text = paste("<b>", cond_i, "</b>"),
-              font = list(size = 15),
-              showarrow = FALSE,
-              xanchor = "left",
-              yanchor = "bottom",
-              x = 0,
-              y = title_y
-          )  %>%
-            shinyHugePlot::plotly_build_light(.)
-        }
-      })
+      # Call volcano plots
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
+                                      Q = qv, 
+                                      fdr = fdr, 
+                                      lfc = lfc,
+                                      cex = cex,
+                                      title_y =  "significance (-log10q)", 
+                                      title_x = "effect size (log2FC)", 
+                                      share_axis = !input$scale_per_method,
+                                      yrange = yrange,
+                                      n_rows = n_rows,
+                                      margin_l =  margin_l,
+                                      margin_b = margin_b)
 
-      # Pass argument scale_per_plot to subplot
-      shareY <- shareX <- ifelse(input$scale_per_method, TRUE, FALSE)
-
-      # Arrange subplots
-      suppressWarnings(
-      all_plts <- plotly::subplot(sub_plots, nrows = n_rows , margin = 0.01, 
-      titleY = FALSE, titleX = FALSE, shareX = shareX, shareY = shareY) %>%
-      
-      # Add common axis titles
-      plotly::layout(annotations = list(
-                list(x = -0.025, y = 0.5, text = "significance (-log10q)",
-                     font = list(size = 13),
-                     textangle = 270,
-                     showarrow = FALSE, xref='paper', yref='paper'),
-                list(x = 0.5, y = -0.10, text = "effect size (log2FC)",
-                     font = list(size = 13),
-                     showarrow = FALSE, xref='paper', yref='paper')
-                ),
-                  margin = list(l = margin_l, b = margin_b)))
 
       return(all_plts)
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 0.45, yrange = 0.5, n_rows = 2, margin_b = 30)
+      fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
-
-      fig <- plotly_plots(cex = 0.45, yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+      fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 20, margin_l = 20) %>%
         plotly::style(
           marker.size = 6
-        )
+        ) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 

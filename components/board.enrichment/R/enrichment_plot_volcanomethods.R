@@ -79,86 +79,38 @@ enrichment_plot_volcanomethods_server <- function(id,
       fc <- pd$FC
       qv <- pd$Q
       sel.gsets <- pd$sel.gsets
-
-      nplots <- min(24, ncol(qv))
-      methods <- colnames(fc)
-      sub_plots <- vector("list", length = length(methods))
-      names(sub_plots) <- methods
-      if (nplots <= 5) {
-        n_rows <- n_rows - 1
-        }
-      shiny::withProgress(message = "computing volcano plots ...", value = 0, {
-        for (i in 1:nplots) {
-          # Get plot data
-          fx <- fc[, i]
-          qval <- qv[, i]
-          method_i <- methods[i]
-          is.sig <- (qval <= fdr & abs(fx) >= lfc)
-          sig.genes <- names(fx)[which(is.sig)]
-          if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)
-          qval <- -log(qval + 1e-12)
-          title_y <- max(qval) - max(qval) *(yrange/10) 
-          # Call volcano plot
-          sub_plots[[i]] <- playbase::plotlyVolcano(
-            x = fx,
-            y = qval,
-            names = names(fx),
-            source = "plot1",
-            marker.type = "scattergl",
-            highlight = sig.genes,
-            group.names = c("group1", "group0"),
-            psig = fdr,
-            lfc = lfc,
-            marker.size = cex,
-            showlegend = FALSE
-            # Add plot title
-          ) %>% plotly::add_annotations(
-              text = paste("<b>", method_i, "</b>"),
-              font = list(size = 15),
-              showarrow = FALSE,
-              xanchor = "left",
-              yanchor = "bottom",
-              x = 0,
-              y = title_y
-          )  %>%
-            shinyHugePlot::plotly_build_light(.)
-        }
-      })
-
-      # Pass argument scale_per_plot to subplot
-      shareY <- shareX <- ifelse(input$scale_per_method, TRUE, FALSE)
-
-      # Arrange subplots
-      suppressWarnings(
-      all_plts <- plotly::subplot(sub_plots, nrows = n_rows , margin = 0.01, 
-      titleY = FALSE, titleX = FALSE, shareX = shareX, shareY = shareY) %>%
-      
-            # Add common axis titles
-            plotly::layout(annotations = list(
-                list(x = -0.025, y = 0.5, text = "significance (-log10q)",
-                     font = list(size = 13),
-                     textangle = 270,
-                     showarrow = FALSE, xref='paper', yref='paper'),
-                list(x = 0.5, y = -0.10, text = "difference  (log2FC)",
-                     font = list(size = 13),
-                     showarrow = FALSE, xref='paper', yref='paper')
-                ),
-                  margin = list(l = margin_l, b = margin_b)))
+      local_pd <<- pd
+      rm(pd)
+      # Call volcano plots
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
+                                      Q = qv, 
+                                      fdr = fdr, 
+                                      lfc = lfc,
+                                      cex = cex,
+                                      title_y =  "significance (-log10q)", 
+                                      title_x = "effect size (log2FC)", 
+                                      share_axis = !input$scale_per_method,
+                                      yrange = yrange,
+                                      n_rows = n_rows,
+                                      margin_l =  margin_l,
+                                      margin_b = margin_b)
 
       return(all_plts)
     }
 
     # Render functions
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 0.45, yrange = 0.5, n_rows = 2, margin_b = 30)
+      fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 0.45, yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+      fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 20, margin_l = 20) %>%
         plotly::style(
           marker.size = 6
-        )
+        ) %>%
+        playbase::plotly_build_light(.)
       return(fig)
     }
 
