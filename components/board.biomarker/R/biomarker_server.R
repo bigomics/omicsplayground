@@ -85,11 +85,14 @@ BiomarkerBoard <- function(id, pgx) {
     })
 
     ## get selected samples after sample filtering
-    selected_samples <- shiny::reactive({
-      shiny::req(pgx$X)
-      samples <- colnames(pgx$X)
-      if (!is.null(input$pdx_samplefilter)) {
-        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$pdx_samplefilter)
+    selected_samples <- shiny::eventReactive(
+      list(pgx$Y,input$pdx_samplefilter),
+    {
+      shiny::req(pgx$Y)
+      samples <- rownames(pgx$Y)
+      sel <- input$pdx_samplefilter
+      if (!is.null(sel) && sel !=  "") {
+        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, sel)
       }
       samples
     })
@@ -112,20 +115,23 @@ BiomarkerBoard <- function(id, pgx) {
 
     # Enable or disable the run button in the UI
     # if the pdx_predicted overlaps with the pdx_samplefilter variable
-    shiny::observeEvent(input$pdx_samplefilter, {
-      shiny::req(pgx$Y)
-
-      # check how many levels pgx_predicted has
-      # if it has more than 1 level, then enable the run button
-      # if it has 1 level, then disable the run button
-
-      levels_filtered <- unique(pgx$Y[selected_samples(), input$pdx_predicted])
-
-      if (length(levels_filtered) > 1) {
-        shinyjs::enable("pdx_runbutton")
-      } else {
-        shinyjs::disable("pdx_runbutton")
-      }
+    shiny::observeEvent(
+      list(
+        pgx$Y,
+        input$pdx_samplefilter,
+        input$pdx_predicted
+      ), {
+        shiny::req(pgx$Y, input$pdx_predicted)
+        # check how many levels pgx_predicted has if it has more than
+        # 1 level, then enable the run button if it has 1 level, then
+        # disable the run button
+        kk <- selected_samples()
+        levels_filtered <- unique(pgx$Y[ kk, input$pdx_predicted])        
+        if (length(levels_filtered) > 1) {
+          shinyjs::enable("pdx_runbutton")
+        } else {
+          shinyjs::disable("pdx_runbutton")
+        }
     })
 
     is_computed <- reactiveVal(FALSE)
