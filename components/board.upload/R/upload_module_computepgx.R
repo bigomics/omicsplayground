@@ -182,7 +182,15 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("gset_methods"),
-                  shiny::HTML("<h4>Enrichment methods:</h4><br/>"),
+                  shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Enrichment methods:</h4>
+                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='flex-button'>
+                        <i class='fas fa-info-circle'></i>
+                      </a>
+                    </div>
+                  "),
+                  # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
                   GENESET.METHODS,
                   selected = GENESET.SELECTED
                 ),
@@ -226,7 +234,27 @@ upload_module_computepgx_server <- function(
                   selected = DEV.SELECTED
                 )
               )
-            ) ## end of fillRow
+            ), ## end of fillRow
+            tags$style(HTML("#upload-compute-gset_methods-label { width: -webkit-fill-available; }")),
+            tags$style(HTML("
+            .flex-button {
+              display:block;
+              width:25px;
+              height:25px;
+              line-height:25px;
+              border-radius: 50%;
+              color:#fff;
+              text-align:center;
+              background: #555777;
+              box-shadow: 0 0 3px gray;
+              font-size:20px;
+              font-weight:bold;
+            }
+            .flex-button:hover {
+              color:#fff;
+              background: black;
+            }
+            "))
           ) ## end of conditional panel
         ) ## end of fill Col
       })
