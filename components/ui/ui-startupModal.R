@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ui.startupModal <- function(id, messages) {
+ui.startupModal <- function(id, messages, title) {
   if (length(messages) == 0) {
     return(NULL)
   }
@@ -25,7 +25,7 @@ ui.startupModal <- function(id, messages) {
     id = id,
     size = "lg",
     bsutils::modalHeader(
-      bsutils::modalTitle("What's new on the Playground"),
+      bsutils::modalTitle(title),
       style = "background-color: #b6d3E888"
     ),
     bsutils::modalBody(

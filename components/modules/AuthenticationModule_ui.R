@@ -16,18 +16,18 @@ splashLoginModal <- function(ns = NULL,
                              with.link = FALSE,
                              link = NULL,
                              hide.password = TRUE,
-                             ## button.id = "login_btn",
+                             id = "login",
                              button.text = "Log in",
                              cancel.text = "Cancel",
                              add.cancel = FALSE,
                              title = "Log in",
                              subtitle = "") {
   if (is.null(ns)) {
-    ns <- function(e) {
-      return(e)
-    }
+    ns2 <- function(e) return(e)
   }
+  ns2 <- function(e) ns(paste0(id,'_',e))
 
+  
   slogan <- list()
   slogan[[1]] <- c("Big Omics Data", "Isn't big anymore with BigOmics Playground")
   slogan[[2]] <- c("Great Discoveries", "Start on BigOmics Playground")
@@ -79,30 +79,30 @@ splashLoginModal <- function(ns = NULL,
       id = "splash-email",
       ## tags$input(
       ##   type = "email",
-      ##   id = ns("login_email"),
+      ##   id = ns2("login_email"),
       ##   placeholder = "your email",
       ##   autocomplete = "email",
       ##   class = "form-control shiny-bound-input shinyjs-resettable"
       ## )
-      textInput(ns("login_email"), NULL, placeholder = "your email")
+      textInput(ns2("email"), NULL, placeholder = "your email")
     )
   }
   if (with.username) {
     div.username <- div(
       id = "splash-username",
-      textInput(ns("login_username"), NULL, placeholder = "your username")
+      textInput(ns2("username"), NULL, placeholder = "your username")
     )
   }
   if (with.password) {
     if (hide.password) {
       div.password <- div(
         id = "splash-password",
-        passwordInput(ns("login_password"), NULL, placeholder = "your password")
+        passwordInput(ns2("password"), NULL, placeholder = "your password")
       )
     } else {
       div.password <- div(
         id = "splash-password",
-        textInput(ns("login_password"), NULL, placeholder = "your password")
+        textInput(ns2("password"), NULL, placeholder = "your password")
       )
     }
   }
@@ -119,13 +119,13 @@ splashLoginModal <- function(ns = NULL,
           subtitle
         ),
         textInput(
-          ns("emailInput"),
+          ns2("emailInput"),
           "",
           placeholder = "Your email",
           width = "100%"
         ),
         actionButton(
-          ns("emailSubmit"),
+          ns2("emailSubmit"),
           "Send link",
           class = "btn-warning"
         ),
@@ -141,7 +141,7 @@ splashLoginModal <- function(ns = NULL,
         div(
           class = "social-button google-button",
           actionLink(
-            ns("launchGoogle"),
+            ns2("launchGoogle"),
             HTML("&nbsp; Sign in with Google"),
             icon = shiny::icon("google", style = "font-size:18px;")
           )
@@ -149,7 +149,7 @@ splashLoginModal <- function(ns = NULL,
         div(
           class = "social-button facebook-button",
           actionLink(
-            ns("launchFacebook"),
+            ns2("launchFacebook"),
             HTML("&nbsp; Sign in with Facebook"),
             icon = shiny::icon("facebook", style = "font-size:18px;")
           )
@@ -157,7 +157,7 @@ splashLoginModal <- function(ns = NULL,
         ## div(
         ##   class = "social-button apple-button",
         ##   actionLink(
-        ##     ns("launchApple"),
+        ##     ns2("launchApple"),
         ##     HTML("&nbsp; Sign in with Apple"),
         ##     icon = shiny::icon("apple", style="font-size:18px;")
         ##   )
@@ -165,7 +165,7 @@ splashLoginModal <- function(ns = NULL,
         div(
           class = "social-button twitter-button",
           actionLink(
-            ns("launchTwitter"),
+            ns2("launchTwitter"),
             HTML("&nbsp; Sign in with Twitter"),
             icon = shiny::icon("twitter", style = "font-size:18px;")
           )
@@ -186,13 +186,13 @@ splashLoginModal <- function(ns = NULL,
           subtitle
         ),
         textInput(
-          ns("emailInput"),
+          ns2("emailInput"),
           "",
           placeholder = "Your email",
           width = "100%"
         ),
         actionButton(
-          ns("emailSubmit"),
+          ns2("emailSubmit"),
           "Send link",
           class = "btn-warning"
         ),
@@ -205,7 +205,7 @@ splashLoginModal <- function(ns = NULL,
 
   if (!is.null(title) && title != "") {
     div.title <- div(
-      id = "splash-login-title",
+      id = ns2("splash-login-title"),
       class = "pb-3",
       h1(title, style = "color:black;line-height:1em;")
     )
@@ -213,7 +213,7 @@ splashLoginModal <- function(ns = NULL,
 
   if (!is.null(subtitle) && subtitle != "") {
     div.subtitle <- div(
-      id = "splash-login-subtitle",
+      id = ns2("splash-login-subtitle"),
       class = "pt-0 pb-2",
       h6(subtitle, style = "color:black;font-weight:400;")
     )
@@ -221,17 +221,17 @@ splashLoginModal <- function(ns = NULL,
 
   if (add.cancel) {
     div.button <- div(
-      id = "splash-buttons",
+      id = ns2("splash-buttons"),
       class = "pt-2",
       shiny::fillRow(
         flex = c(1, NA, NA, 1),
         br(),
-        actionButton(ns("cancel_btn"), cancel.text,
-          class = "btn-light btn-xl",
+        actionButton(ns2("cancel_btn"), cancel.text,
+          class = "btn-light btn-lg",
           style = "margin: 4px;"
         ),
-        actionButton(ns("login_btn"), button.text,
-          class = "btn-warning btn-xl",
+        actionButton(ns2("submit_btn"), button.text,
+          class = "btn-warning btn-lg",
           style = "margin: 4px;"
         ),
         br()
@@ -241,16 +241,16 @@ splashLoginModal <- function(ns = NULL,
     div.button <- div(
       id = "splash-buttons",
       class = "pt-2",
-      actionButton(ns("login_btn"), button.text, class = "btn-warning btn-xl")
+      actionButton(ns2("submit_btn"), button.text, class = "btn-warning btn-xl")
     )
   }
 
   if (with.link) {
     div.link <- div(
-      id = "link",
+      id = ns2("link"),
       class = "pt-2",
       tags$a(
-        id = ns("link_btn"),
+        id = ns2("link_btn"),
         href = link,
         button.text,
         class = "btn btn-warning btn-xl",
@@ -268,7 +268,7 @@ splashLoginModal <- function(ns = NULL,
     splash.content <- shiny::wellPanel(
       ## style = "padding: 40px 20px; background-color: #ffffff22;",
       style = "padding: 35px 25px; background-color:white; color:black;",
-      id = "splash-login",
+      id = ns2("splash-login"),
       div.title,
       div.subtitle,
       div.username,
@@ -280,7 +280,7 @@ splashLoginModal <- function(ns = NULL,
   }
 
   body <- div(
-    id = "splash-content",
+    id = ns2("splash-content"),
     splash.content
   )
 
@@ -288,7 +288,7 @@ splashLoginModal <- function(ns = NULL,
   num_sessions <- paste0(length(ACTIVE_SESSIONS), "/", MAX_SESSIONS)
 
   footer <- div(
-    id = "splash-footer",
+    id = ns2("splash-footer"),
     style = "position: absolute; bottom:5px; left:10px; color:#ffffff88; font-size:0.85em;",
     getAppVersion(add.auth = TRUE),
     div(num_sessions, style = "padding-left:1em; display: inline;")
@@ -298,11 +298,12 @@ splashLoginModal <- function(ns = NULL,
   return(m)
 }
 
-splashscreen.buttons <- function() {
+splashscreen.buttons <- function(ns) {
   tagList(
     shiny::tags$a(
       shiny::img(
-        id = "splash-logo2",
+        id = ns("splash-logo2"),
+        class = "splash-logo2",
         src = "static/bigomics-logo.png"
       ),
       href = "https://www.bigomics.ch",
@@ -356,7 +357,7 @@ splashscreen.buttons <- function() {
         role = "group",
         tags$button(
           "I'm a developer",
-          id = "splash-toggle-dev",
+          id = ns("splash-toggle-dev"),
           type = "button",
           class = "btn btn-outline-primary dropdown-toggle",
           `data-bs-toggle` = "dropdown",
@@ -405,12 +406,12 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
 
   div.buttons <- shiny::modalButton("Dismiss")
   if (buttons) {
-    div.buttons <- splashscreen.buttons()
+    div.buttons <- splashscreen.buttons(ns=ns)
   }
 
   ## return modalDialog
   m <- modalDialog2(
-    id = "splash-fullscreen",
+    id = ns("splash-fullscreen"),
     class = "bg-primary",
     header = div.buttons,
     shiny::div(
