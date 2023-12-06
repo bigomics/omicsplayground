@@ -43,7 +43,7 @@ app_ui <- function(x) {
     STARTUP_MESSAGES <- readLines(file.path(ETC, "MESSAGES"))
     STARTUP_MESSAGES <- STARTUP_MESSAGES[STARTUP_MESSAGES != ""]
     if (length(STARTUP_MESSAGES) > 5) {
-      sel <- c(1, sample(c(2, sample(3:length(STARTUP_MESSAGES), 3))))
+      sel <- c(1:2, sample(3:length(STARTUP_MESSAGES), 3))
       STARTUP_MESSAGES <- STARTUP_MESSAGES[sel]
     }
 
