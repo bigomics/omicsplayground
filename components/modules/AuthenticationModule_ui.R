@@ -23,11 +23,13 @@ splashLoginModal <- function(ns = NULL,
                              title = "Log in",
                              subtitle = "") {
   if (is.null(ns)) {
-    ns2 <- function(e) return(e)
+    ns2 <- function(e) {
+      return(e)
+    }
   }
-  ns2 <- function(e) ns(paste0(id,'_',e))
+  ns2 <- function(e) ns(paste0(id, "_", e))
 
-  
+
   slogan <- list()
   slogan[[1]] <- c("Big Omics Data", "Isn't big anymore with BigOmics Playground")
   slogan[[2]] <- c("Great Discoveries", "Start on BigOmics Playground")
@@ -406,7 +408,7 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
 
   div.buttons <- shiny::modalButton("Dismiss")
   if (buttons) {
-    div.buttons <- splashscreen.buttons(ns=ns)
+    div.buttons <- splashscreen.buttons(ns = ns)
   }
 
   ## return modalDialog
