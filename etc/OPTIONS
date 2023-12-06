@@ -1,10 +1,8 @@
 TITLE                = 'Omics Playground'
-#AUTHENTICATION       = none2
+AUTHENTICATION       = none
 #AUTHENTICATION      = password
-#AUTHENTICATION      = email-link
-#AUTHENTICATION      = firebase
 #AUTHENTICATION      = login-code-redirect
-AUTHENTICATION       = login-code
+#AUTHENTICATION       = login-code
 ALLOW_NEW_USERS      = TRUE
 ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE
@@ -27,8 +25,6 @@ MAX_GENES            = 20000
 MAX_GENESETS         = 5000
 MAX_SHARED_QUEUE     = 3
 MAX_SESSIONS         = 2
-STARTUP_TITLE        = "Welcome to Version 3!"
-STARTUP_MESSAGE      = "This is our new version of <a href="https://bigomics.ch/omics-playground" target="_blank">Omics Playground</a>. We have completely redesigned the looks and added some new nifty features. We hope you like it! <br><br></small>&copy; 2023 <a href="https://bigomics.ch" target="_blank">BigOmics Analytics</a></small>"
 #TIMEOUT              = 3600
 TIMEOUT              = 0
 WATERMARK            = TRUE

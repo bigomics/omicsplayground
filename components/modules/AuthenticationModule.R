@@ -26,16 +26,18 @@ NoAuthenticationModule <- function(id,
         user_dir = PGX.DIR ## global
       )
 
-      m <- splashLoginModal(
-        ns = ns,
-        with.username = FALSE,
-        with.email = FALSE,
-        with.password = FALSE,
-        title = "Sign in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Sure I am!"
-      )
-      shiny::showModal(m)
+      if(show_modal) {
+        m <- splashLoginModal(
+          ns = ns,
+          with.username = FALSE,
+          with.email = FALSE,
+          with.password = FALSE,
+          title = "Sign in",
+          subtitle = "Ready to explore your data?",
+          button.text = "Sure I am!"
+        )
+        shiny::showModal(m)
+      }
 
       resetUSER <- function() {
         USER$logged <- FALSE
@@ -106,17 +108,19 @@ AuthenticationModuleApacheCookie <- function(id,
         user_dir = PGX.DIR ## global
       )
 
-      m <- splashLoginModal(
-        ns = ns,
-        with.username = FALSE,
-        with.email = FALSE,
-        with.password = FALSE,
-        title = "Sign in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Sure I am!"
-      )
-      shiny::showModal(m)
-
+      if(show_modal) {
+        m <- splashLoginModal(
+          ns = ns,
+          with.username = FALSE,
+          with.email = FALSE,
+          with.password = FALSE,
+          title = "Sign in",
+          subtitle = "Ready to explore your data?",
+          button.text = "Sure I am!"
+        )
+        shiny::showModal(m)
+      }
+        
       resetUSER <- function() {
         USER$logged <- FALSE
         USER$username <- ""

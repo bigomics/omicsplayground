@@ -95,7 +95,10 @@ app_server <- function(input, output, session) {
       email = username
     )
   } else if (authentication == "none") {
-    auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
+    auth <- NoAuthenticationModule(
+      id = "auth",
+      show_modal = TRUE
+    )
   } else if (authentication == "none2") {
     ## no authentication but also not showing main modal (enter)
     username <- Sys.getenv("PLAYGROUND_USERNAME")
@@ -106,7 +109,10 @@ app_server <- function(input, output, session) {
       email = username
     )
   } else if (authentication == "apache-cookie") {
-    auth <- AuthenticationModuleApacheCookie(id = "auth", show_modal = FALSE)
+    auth <- AuthenticationModuleApacheCookie(
+      id = "auth",
+      show_modal = FALSE
+    )
   } else {
     ## stop everything
     stop("unsupported authorization method", authentication)
@@ -880,15 +886,7 @@ app_server <- function(input, output, session) {
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   ## Startup Message
-  if (0 && !is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE[1] != "") {
-    shinyalert::shinyalert(
-      title = HTML(opt$STARTUP_TITLE),
-      text = HTML(opt$STARTUP_MESSAGE),
-      html = TRUE
-    )
-  }
-
-  dbg("[MAIN] show startup modal")
+  dbg("[MAIN] showing startup modal")
   bsutils::modal_show("startup_modal")
 
 
