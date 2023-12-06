@@ -974,7 +974,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     query_email <- shiny::reactive(shiny::getQueryString()$email)
 
-    shiny::observeEvent(c(input$login_btn, query_email()),
+    shiny::observeEvent( list( input$login_btn, query_email() ),
       {
         if (is.null(query_email())) {
           shiny::req(input$login_email)
@@ -1056,7 +1056,8 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 2: react on submit CODE button
     ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
+    ##shiny::observeEvent(input$login_btn, {
+    shiny::observeEvent( entered_code(), {    
       ## shiny::req(input$login_password)
       shiny::req(entered_code())
 
@@ -1102,7 +1103,7 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     first_time <- TRUE
-    observeEvent(USER$logged, {
+    observeEvent( USER$logged, {
       ## no need to show the modal if the user is logged this is due
       ## to persistence. But if it is the first time of the session
       ## we force reset/logout to delete sleeping (persistent?) logins.
