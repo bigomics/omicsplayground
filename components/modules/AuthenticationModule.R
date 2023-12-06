@@ -1057,7 +1057,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## Step 2: react on submit CODE button
     ## --------------------------------------
     shiny::observeEvent(input$login_btn, {
-    ##shiny::observeEvent( entered_code(), {    
+      ## shiny::observeEvent( entered_code(), {
       ## shiny::req(input$login_password)
       shiny::req(entered_code())
       if (!email_sent) {
@@ -1067,7 +1067,7 @@ LoginCodeAuthenticationModule <- function(id,
       ## input_code <- input$login_password
       input_code <- entered_code()
       login.OK <- (input_code == login_code)
-      
+
       if (!login.OK) {
         output$login_warning <- shiny::renderText("invalid code")
         shinyjs::delay(4000, {
@@ -1076,10 +1076,10 @@ LoginCodeAuthenticationModule <- function(id,
         updateTextInput(session, "login_password", value = "")
         return(NULL)
       }
-      
+
       if (login.OK) {
         output$login_warning <- shiny::renderText("")
-        
+
         ## create user_dir (always), set path, and set options
         USER$user_dir <- file.path(PGX.DIR, USER$email)
         create_user_dir_if_needed(USER$user_dir, PGX.DIR)
@@ -1087,13 +1087,13 @@ LoginCodeAuthenticationModule <- function(id,
           USER$user_dir <- file.path(PGX.DIR)
         }
         USER$options <- read_user_options(USER$user_dir)
-        
+
         session$sendCustomMessage("set-user", list(user = USER$email))
         entered_code("") ## important for next user
         shiny::removeModal()
-        
+
         USER$logged <- TRUE
-        
+
         ## Save session as cookie
         save_session_cookie(session, USER)
       }
