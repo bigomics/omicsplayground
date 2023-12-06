@@ -981,7 +981,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     query_email <- shiny::reactive(shiny::getQueryString()$email)
 
-    shiny::observeEvent(list(input$login_btn, query_email()),
+    shiny::observeEvent( c(input$login_btn, query_email()),
       {
         if (is.null(query_email())) {
           dbg("[LoginCodeAuthenticationModule] step 1: reacting on login_btn")
@@ -993,6 +993,8 @@ LoginCodeAuthenticationModule <- function(id,
         }
         
         if (!email_sent) {
+          dbg("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
+        } else {
           dbg("[LoginCodeAuthenticationModule] initiating sending code")      
           
           login_email <- tolower(login_email)
