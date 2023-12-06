@@ -885,7 +885,7 @@ app_server <- function(input, output, session) {
 
   dbg("[MAIN] show startup modal")
   bsutils::modal_show("startup_modal")
-  
+
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Resest inactivity counter when there is user activity (a click on the UI)
