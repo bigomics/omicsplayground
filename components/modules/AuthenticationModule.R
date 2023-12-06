@@ -1076,6 +1076,9 @@ LoginCodeAuthenticationModule <- function(id,
       ## shiny::req(input$login_password)
 
       dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn. checking login code.")
+      dbg("[LoginCodeAuthenticationModule] entered code =", entered_code())
+      dbg("[LoginCodeAuthenticationModule] login_password =", input$login_password)
+      dbg("[LoginCodeAuthenticationModule] login_code =", login_code)
       
       shiny::req(entered_code())
       if (!email_sent) {
