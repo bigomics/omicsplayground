@@ -4,44 +4,50 @@
 ##
 
 ui.startupModal <- function(id, messages) {
+  if (length(messages) == 0) {
+    return(NULL)
+  }
 
-  if(length(messages)==0) return(NULL)
-  
   carousel_items <- list()
-  for(i in 1:length(messages)) {
+  for (i in 1:length(messages)) {
     tag1 <- bsutils::carouselItem(
-      div(style = "height: 360px;",
-        class="d-flex align-items-center justify-content-center",
-        HTML(paste0('<div>',messages[[i]],'</div>'))
+      div(
+        style = "height: 360px;",
+        class = "d-flex align-items-center justify-content-center",
+        HTML(paste0("<div>", messages[[i]], "</div>"))
       ),
       class = "p-3"
     )
-  carousel_items[[i]] <- tag1
+    carousel_items[[i]] <- tag1
   }
-  
+
   modal <- bsutils::modal(
     id = id,
     size = "lg",
     bsutils::modalHeader(
       bsutils::modalTitle("     What's new!"),
-      style = 'background-color: #b6d3E888'      
+      style = "background-color: #b6d3E888"
     ),
     bsutils::modalBody(
       shiny::tagAppendAttributes(
         do.call(
-          function(...) bsutils::carousel(
-            ... , indicators = TRUE, controls = TRUE),
-          carousel_items          
+          function(...) {
+            bsutils::carousel(
+              ...,
+              indicators = TRUE, controls = TRUE
+            )
+          },
+          carousel_items
         ),
         `data-bs-interval` = "12000"
       ),
-      style = 'background-color: #b6d3E822'
+      style = "background-color: #b6d3E822"
     ),
     centered = TRUE
   )
   modal <- shiny::tagAppendAttributes(
     modal,
-    `data-bs-backdrop` = "false"        
+    `data-bs-backdrop` = "false"
   )
 
   return(modal)
