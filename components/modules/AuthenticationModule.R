@@ -620,7 +620,6 @@ PasswordAuthenticationModule <- function(id,
                                          allow_personal = TRUE,
                                          domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-
     message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
 
@@ -818,7 +817,7 @@ LoginCodeAuthenticationModule <- function(id,
     iv$add_rule("login_email", shinyvalidate::sv_required())
     iv$add_rule("login_email", shinyvalidate::sv_email())
     iv$enable()
-    
+
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
       ## we continue but email is not working
@@ -866,8 +865,8 @@ LoginCodeAuthenticationModule <- function(id,
     }
 
     ## need first time
-    shiny::showModal(login_modal) 
-    
+    shiny::showModal(login_modal)
+
     resetUSER <- function() {
       USER$logged <- FALSE
       USER$username <- NA
