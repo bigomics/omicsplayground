@@ -114,13 +114,14 @@ BiomarkerBoard <- function(id, pgx) {
     # if the pdx_predicted overlaps with the pdx_samplefilter variable
     shiny::observeEvent(input$pdx_samplefilter, {
       shiny::req(pgx$Y)
-      if (!is.null(input$pdx_samplefilter)) {
-        # Get the variable name for each pdx_samplefilter
-        col_filter <- data.table::tstrsplit(input$pdx_samplefilter, "=", keep = 1)[[1]]
-      } else {
-        col_filter <- 1
-      }
-      if (!input$pdx_predicted %in% col_filter) {
+
+      # check how many levels pgx_predicted has
+      # if it has more than 1 level, then enable the run button
+      # if it has 1 level, then disable the run button
+
+      levels_filtered <- unique(pgx$Y[selected_samples(),input$pdx_predicted])
+
+      if(length(levels_filtered) > 1) {
         shinyjs::enable("pdx_runbutton")
       } else {
         shinyjs::disable("pdx_runbutton")
