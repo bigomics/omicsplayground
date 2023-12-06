@@ -876,7 +876,7 @@ LoginCodeAuthenticationModule <- function(id,
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()
 
-      user_email<- decrypted_cookie
+      user_email <- decrypted_cookie
       USER$email <- user_email
 
       # create user_dir (always), set path, and set options
@@ -894,7 +894,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       ## export as 'public' functions
       USER$resetUSER <- resetUSER
-      
+
       shinyalert::shinyalert(
         title = "",
         text = "Hail frynd! Thy biscuit is yaccepted, and thou art granted fri passage...",
