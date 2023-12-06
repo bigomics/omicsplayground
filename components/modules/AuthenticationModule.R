@@ -1363,7 +1363,7 @@ LoginCodeNoEmailAuthenticationModule.DEPRECATED <- function(id,
       shiny::req(entered_code())
 
       dbg("[] code submitted")
-      
+
       if (email_sent) {
         # input_code <- input$login_password
         input_code <- entered_code()
