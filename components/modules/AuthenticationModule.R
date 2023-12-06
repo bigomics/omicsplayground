@@ -1063,18 +1063,19 @@ LoginCodeAuthenticationModule <- function(id,
     ## not sure why but using input$login_password directly does not
     ## work as the value does not reset for the next user (IK 8jul23)
     entered_code <- shiny::reactiveVal("")
-    observeEvent(input$login_password, {
+    observeEvent(input$login_btn, {
+      shiny::req(input$login_password)
       entered_code(input$login_password)
     })
 
     ## --------------------------------------
     ## Step 2: react on submit CODE button
     ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
-      ## shiny::observeEvent( entered_code(), {
+    ##shiny::observeEvent(input$login_btn, {
+    shiny::observeEvent( entered_code(), {
       ## shiny::req(input$login_password)
 
-      dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn")
+      dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn. checking login code.")
       
       shiny::req(entered_code())
       if (!email_sent) {
