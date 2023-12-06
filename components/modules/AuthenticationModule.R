@@ -819,7 +819,7 @@ LoginCodeAuthenticationModule <- function(id,
     iv$enable()
 
     dbg("[LoginCodeAuthenticationModule] 1: ")
-    
+
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
       ## we continue but email is not working
@@ -828,7 +828,7 @@ LoginCodeAuthenticationModule <- function(id,
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     dbg("[LoginCodeAuthenticationModule] 2: ")
-    
+
     USER <- shiny::reactiveValues(
       method = "login-code",
       logged = FALSE,
@@ -841,7 +841,7 @@ LoginCodeAuthenticationModule <- function(id,
     )
 
     dbg("[LoginCodeAuthenticationModule] 3: ")
-    
+
     email_sent <- FALSE
     login_code <- NULL
 
@@ -871,16 +871,15 @@ LoginCodeAuthenticationModule <- function(id,
     }
 
     dbg("[LoginCodeAuthenticationModule] 4: ")
-    
+
     ## need first time??
     shiny::showModal(login_modal)
 
     dbg("[LoginCodeAuthenticationModule] 5: ")
-    
-    resetUSER <- function() {
 
+    resetUSER <- function() {
       dbg("[LoginCodeAuthenticationModule] resetUSER called")
-      
+
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -902,7 +901,6 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
     if (!is.null(decrypted_cookie)) {
-
       dbg("[LoginCodeAuthenticationModule] cookies found : login OK! ")
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()
@@ -970,7 +968,7 @@ LoginCodeAuthenticationModule <- function(id,
     }
 
     output$showLogin <- shiny::renderUI({
-      dbg("[LoginCodeAuthenticationModule] output$showLogin reacted")      
+      dbg("[LoginCodeAuthenticationModule] output$showLogin reacted")
       email_sent <<- FALSE
       login_code <<- NULL
       shiny::showModal(login_modal)
@@ -990,24 +988,23 @@ LoginCodeAuthenticationModule <- function(id,
     ## Step 1: react on send email button
     ## --------------------------------------
     observeEvent(shiny::getQueryString(), {
-      dbg("[LoginCodeAuth:observe.getQueryString] names.query = ",names(shiny::getQueryString()))      
-      dbg("[LoginCodeAuth:observe.getQueryString] query = ",shiny::getQueryString())
+      dbg("[LoginCodeAuth:observe.getQueryString] names.query = ", names(shiny::getQueryString()))
+      dbg("[LoginCodeAuth:observe.getQueryString] query = ", shiny::getQueryString())
     })
-    observeEvent( input$login_submit_btn, {
-      dbg("[LoginCodeAuth:observe.getQueryString] login_submit_btn = ",input$login_submit_btn)
+    observeEvent(input$login_submit_btn, {
+      dbg("[LoginCodeAuth:observe.getQueryString] login_submit_btn = ", input$login_submit_btn)
     })
 
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
-      dbg("[LoginCodeAuth:getQueryString] query$email = ",query_email)
+      dbg("[LoginCodeAuth:getQueryString] query$email = ", query_email)
       query_email
     })
 
-    shiny::observeEvent( list(input$login_submit_btn, query_email()),
-    {
-      
+    shiny::observeEvent(
+      list(input$login_submit_btn, query_email()), {
         dbg("[LoginCodeAuthenticationModule:observe] step 1: login_btn & query")
-      
+
         if (is.null(query_email())) {
           dbg("[LoginCodeAuthenticationModule] step 1: reacting on login_btn")
           shiny::req(input$login_email)
@@ -1017,12 +1014,12 @@ LoginCodeAuthenticationModule <- function(id,
           dbg("[LoginCodeAuthenticationModule] step 1: query_email() = ", query_email())
           login_email <- query_email()
         }
-        
+
         if (email_sent) {
           dbg("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
         } else {
-          dbg("[LoginCodeAuthenticationModule] initiating sending code")      
-          
+          dbg("[LoginCodeAuthenticationModule] initiating sending code")
+
           login_email <- tolower(login_email)
           ## >>> We check here for email validaty and intercept the
           ## login process for not authorized people with wrong domain
@@ -1046,7 +1043,8 @@ LoginCodeAuthenticationModule <- function(id,
           ## login_code <- "hello123"
           ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
           login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")),
-            collapse = "-")
+            collapse = "-"
+          )
 
           info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
           email_waiter$show()
@@ -1084,7 +1082,7 @@ LoginCodeAuthenticationModule <- function(id,
           )
         }
       }
-    ## ignoreNULL = TRUE, ignoreInit = TRUE
+      ## ignoreNULL = TRUE, ignoreInit = TRUE
     )
 
     ## not sure why but using input$login_password directly does not
@@ -1098,15 +1096,15 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 2: react on submit CODE button
     ## --------------------------------------
-    ##shiny::observeEvent(input$login_btn, {
-    shiny::observeEvent( entered_code(), {
+    ## shiny::observeEvent(input$login_btn, {
+    shiny::observeEvent(entered_code(), {
       ## shiny::req(input$login_password)
 
       dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn. checking login code.")
       dbg("[LoginCodeAuthenticationModule] entered code =", entered_code())
       dbg("[LoginCodeAuthenticationModule] login2_password =", input$login2_password)
       dbg("[LoginCodeAuthenticationModule] login_code =", login_code)
-      
+
       shiny::req(entered_code())
       if (!email_sent) {
         return(NULL)
@@ -1148,11 +1146,11 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     shiny::observeEvent(input$login_cancel_btn, {
-      dbg("[LoginCodeAuthenticationModule] reacted on login_cancel_btn")      
+      dbg("[LoginCodeAuthenticationModule] reacted on login_cancel_btn")
       resetUSER()
     })
     shiny::observeEvent(input$login2_cancel_btn, {
-      dbg("[LoginCodeAuthenticationModule] reacted on login2_cancel_btn")      
+      dbg("[LoginCodeAuthenticationModule] reacted on login2_cancel_btn")
       resetUSER()
     })
 

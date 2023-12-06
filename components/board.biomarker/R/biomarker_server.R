@@ -119,9 +119,9 @@ BiomarkerBoard <- function(id, pgx) {
       # if it has more than 1 level, then enable the run button
       # if it has 1 level, then disable the run button
 
-      levels_filtered <- unique(pgx$Y[selected_samples(),input$pdx_predicted])
+      levels_filtered <- unique(pgx$Y[selected_samples(), input$pdx_predicted])
 
-      if(length(levels_filtered) > 1) {
+      if (length(levels_filtered) > 1) {
         shinyjs::enable("pdx_runbutton")
       } else {
         shinyjs::disable("pdx_runbutton")

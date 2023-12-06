@@ -648,7 +648,7 @@ app_server <- function(input, output, session) {
   }
 
   #' Track which users are online by repeatedly writing every delta
-  #seconds a small ID file ' in the ONLINE_DIR folder.
+  # seconds a small ID file ' in the ONLINE_DIR folder.
   if (isTRUE(opt$ENABLE_HEARTBEAT)) {
     ONLINE_DIR <- file.path(ETC, "online")
     heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
