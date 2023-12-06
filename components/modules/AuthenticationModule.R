@@ -704,7 +704,6 @@ PasswordAuthenticationModule <- function(id,
       login_email <- input$login_email
       login_password <- input$login_password
 
-
       ## >>> We check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       check <- checkEmail(
@@ -897,7 +896,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       shinyalert::shinyalert(
         title = "",
-        text = "Hail frynd! Thy biscuit is yaccepted, and thou art granted fri passage...",
+        text = "Hail frynd! Thy biscuit is yaccepted, thou art granted fri passage...",
         size = "xs",
         timer = 1900
       )
