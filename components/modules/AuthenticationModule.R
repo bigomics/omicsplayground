@@ -26,7 +26,7 @@ NoAuthenticationModule <- function(id,
         user_dir = PGX.DIR ## global
       )
 
-      if(show_modal) {
+      if (show_modal) {
         m <- splashLoginModal(
           ns = ns,
           with.username = FALSE,
@@ -108,7 +108,7 @@ AuthenticationModuleApacheCookie <- function(id,
         user_dir = PGX.DIR ## global
       )
 
-      if(show_modal) {
+      if (show_modal) {
         m <- splashLoginModal(
           ns = ns,
           with.username = FALSE,
@@ -120,7 +120,7 @@ AuthenticationModuleApacheCookie <- function(id,
         )
         shiny::showModal(m)
       }
-        
+
       resetUSER <- function() {
         USER$logged <- FALSE
         USER$username <- ""
