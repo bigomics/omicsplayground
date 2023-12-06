@@ -1031,6 +1031,7 @@ LoginCodeAuthenticationModule <- function(id,
             add.cancel = TRUE,
             cancel.text = "Cancel"
           )
+          shiny::removeModal()
           shiny::showModal(login_modal2)
           updateTextInput(session, "login_email", value = "")
           updateTextInput(session, "login_password", value = "", placeholder = "enter code")
@@ -1355,12 +1356,14 @@ LoginCodeNoEmailAuthenticationModule.DEPRECATED <- function(id,
     })
 
     ## --------------------------------------
-    ## Step 2: react on submit CODE button
+    ## Step 2: react on submit code button
     ## --------------------------------------
     shiny::observeEvent(input$login_btn, {
       ## shiny::req(input$login_password)
       shiny::req(entered_code())
 
+      dbg("[] code submitted")
+      
       if (email_sent) {
         # input_code <- input$login_password
         input_code <- entered_code()
