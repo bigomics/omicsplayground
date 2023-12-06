@@ -818,6 +818,8 @@ LoginCodeAuthenticationModule <- function(id,
     iv$add_rule("login_email", shinyvalidate::sv_email())
     iv$enable()
 
+    dbg("[LoginCodeAuthenticationModule] 1: ")
+    
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
       ## we continue but email is not working
@@ -825,7 +827,8 @@ LoginCodeAuthenticationModule <- function(id,
     }
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
-    ns <- session$ns
+    dbg("[LoginCodeAuthenticationModule] 2: ")
+    
     USER <- shiny::reactiveValues(
       method = "login-code",
       logged = FALSE,
@@ -837,6 +840,8 @@ LoginCodeAuthenticationModule <- function(id,
       user_dir = PGX.DIR ## global
     )
 
+    dbg("[LoginCodeAuthenticationModule] 3: ")
+    
     email_sent <- FALSE
     login_code <- NULL
 
@@ -865,9 +870,13 @@ LoginCodeAuthenticationModule <- function(id,
       )
     }
 
-    ## need first time
+    dbg("[LoginCodeAuthenticationModule] 4: ")
+    
+    ## need first time??
     shiny::showModal(login_modal)
 
+    dbg("[LoginCodeAuthenticationModule] 5: ")
+    
     resetUSER <- function() {
 
       dbg("[LoginCodeAuthenticationModule] resetUSER called")
@@ -893,6 +902,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
     if (!is.null(decrypted_cookie)) {
+
       dbg("[LoginCodeAuthenticationModule] cookies found : login OK! ")
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()
@@ -979,13 +989,21 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
+    observeEvent(shiny::getQueryString(), {
+      dbg("[LoginCodeAuth:observe.getQueryString] names.query = ",names(shiny::getQueryString()))      
+      dbg("[LoginCodeAuth:observe.getQueryString] query = ",shiny::getQueryString())
+    })
+    observeEvent( input$login_submit_btn, {
+      dbg("[LoginCodeAuth:observe.getQueryString] login_submit_btn = ",input$login_submit_btn)
+    })
+
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
-      dbg("[LoginCodeAuthenticationModule:getQueryString] query_email = ",query_email)
+      dbg("[LoginCodeAuth:getQueryString] query$email = ",query_email)
       query_email
     })
 
-    shiny::observeEvent( list(input$login_btn, query_email()),
+    shiny::observeEvent( list(input$login_submit_btn, query_email()),
     {
       
         dbg("[LoginCodeAuthenticationModule:observe] step 1: login_btn & query")
@@ -995,7 +1013,8 @@ LoginCodeAuthenticationModule <- function(id,
           shiny::req(input$login_email)
           login_email <- input$login_email
         } else {
-          dbg("[LoginCodeAuthenticationModule] step 1: reacting on query_email (URL)")          
+          dbg("[LoginCodeAuthenticationModule] step 1: reacting on query_email (URL)")
+          dbg("[LoginCodeAuthenticationModule] step 1: query_email() = ", query_email())
           login_email <- query_email()
         }
         
@@ -1026,7 +1045,8 @@ LoginCodeAuthenticationModule <- function(id,
           ## MAIL CODE TO USER
           ## login_code <- "hello123"
           ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
-          login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
+          login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")),
+            collapse = "-")
 
           info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
           email_waiter$show()
@@ -1041,6 +1061,7 @@ LoginCodeAuthenticationModule <- function(id,
           ## change buttons and field
           login_modal2 <- splashLoginModal(
             ns = ns,
+            id = "login2",
             with.email = FALSE,
             with.username = FALSE,
             with.password = TRUE,
@@ -1069,9 +1090,9 @@ LoginCodeAuthenticationModule <- function(id,
     ## not sure why but using input$login_password directly does not
     ## work as the value does not reset for the next user (IK 8jul23)
     entered_code <- shiny::reactiveVal("")
-    observeEvent(input$login_btn, {
-      shiny::req(input$login_password)
-      entered_code(input$login_password)
+    observeEvent(input$login2_submit_btn, {
+      shiny::req(input$login2_password)
+      entered_code(input$login2_password)
     })
 
     ## --------------------------------------
@@ -1083,7 +1104,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn. checking login code.")
       dbg("[LoginCodeAuthenticationModule] entered code =", entered_code())
-      dbg("[LoginCodeAuthenticationModule] login_password =", input$login_password)
+      dbg("[LoginCodeAuthenticationModule] login2_password =", input$login2_password)
       dbg("[LoginCodeAuthenticationModule] login_code =", login_code)
       
       shiny::req(entered_code())
@@ -1126,8 +1147,12 @@ LoginCodeAuthenticationModule <- function(id,
       }
     })
 
-    shiny::observeEvent(input$cancel_btn, {
-      dbg("[LoginCodeAuthenticationModule] reacted on cancel_btn")      
+    shiny::observeEvent(input$login_cancel_btn, {
+      dbg("[LoginCodeAuthenticationModule] reacted on login_cancel_btn")      
+      resetUSER()
+    })
+    shiny::observeEvent(input$login2_cancel_btn, {
+      dbg("[LoginCodeAuthenticationModule] reacted on login2_cancel_btn")      
       resetUSER()
     })
 
