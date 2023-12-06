@@ -39,7 +39,7 @@ app_server <- function(input, output, session) {
   if (no.credentials && authentication != "password") {
     credentials_file <- NULL
   }
-  
+
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
@@ -886,8 +886,8 @@ app_server <- function(input, output, session) {
 
   ## Startup Message
   dbg("[MAIN] showing startup modal")
-  observeEvent( auth$logged, {
-    if(auth$logged) {
+  observeEvent(auth$logged, {
+    if (auth$logged) {
       bsutils::modal_show("startup_modal")
     }
   })

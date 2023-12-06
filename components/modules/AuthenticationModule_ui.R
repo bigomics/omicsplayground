@@ -83,7 +83,7 @@ splashLoginModal <- function(ns = NULL,
       ##   autocomplete = "email",
       ##   class = "form-control shiny-bound-input shinyjs-resettable"
       ## )
-      textInput(ns("login_email"), NULL, placeholder = "your email")      
+      textInput(ns("login_email"), NULL, placeholder = "your email")
     )
   }
   if (with.username) {
