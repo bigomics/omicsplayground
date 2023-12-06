@@ -40,6 +40,13 @@ app_ui <- function(x) {
 
     VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
+    STARTUP_MESSAGES <- readLines(file.path(ETC,"MESSAGES"))
+    STARTUP_MESSAGES <- STARTUP_MESSAGES[STARTUP_MESSAGES != ""]
+    if(length(STARTUP_MESSAGES)>5) {
+      sel <- c(1,sample(c(2,sample(3:length(STARTUP_MESSAGES),3))))
+      STARTUP_MESSAGES <- STARTUP_MESSAGES[sel]
+    }
+    
     upgrade.tab <- NULL
     if (opt$AUTHENTICATION == "firebase") {
       upgrade.tab <- bigdash::navbarDropdownItem(
@@ -464,10 +471,12 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         ),
-        tagList(footer)
+        ui.startupModal(id = "startup_modal", messages = STARTUP_MESSAGES),
+        shiny::tagList(footer)
       )
     }
 
+  
     info("[ui.R] >>> creating UI")
     ui <- createUI()
     info("[ui.R] <<< finished UI!")

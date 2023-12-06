@@ -875,13 +875,17 @@ app_server <- function(input, output, session) {
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   ## Startup Message
-  if (!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE[1] != "") {
+  if (0 && !is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE[1] != "") {
     shinyalert::shinyalert(
       title = HTML(opt$STARTUP_TITLE),
       text = HTML(opt$STARTUP_MESSAGE),
       html = TRUE
     )
   }
+
+  dbg("[MAIN] show startup modal")
+  bsutils::modal_show("startup_modal")
+  
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Resest inactivity counter when there is user activity (a click on the UI)
