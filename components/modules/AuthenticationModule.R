@@ -893,7 +893,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
     if (!is.null(decrypted_cookie)) {
-      message("[LoginCodeAuthenticationModule] cookies found : login OK! ")
+      dbg("[LoginCodeAuthenticationModule] cookies found : login OK! ")
       output$login_warning <- shiny::renderText("")
       shiny::removeModal()
 
@@ -960,6 +960,7 @@ LoginCodeAuthenticationModule <- function(id,
     }
 
     output$showLogin <- shiny::renderUI({
+      dbg("[LoginCodeAuthenticationModule] output$showLogin reacted")      
       email_sent <<- FALSE
       login_code <<- NULL
       shiny::showModal(login_modal)
@@ -992,6 +993,8 @@ LoginCodeAuthenticationModule <- function(id,
         }
         
         if (!email_sent) {
+          dbg("[LoginCodeAuthenticationModule] initiating sending code")      
+          
           login_email <- tolower(login_email)
           ## >>> We check here for email validaty and intercept the
           ## login process for not authorized people with wrong domain
@@ -1112,6 +1115,7 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     shiny::observeEvent(input$cancel_btn, {
+      dbg("[LoginCodeAuthenticationModule] reacted on cancel_btn")      
       resetUSER()
     })
 
