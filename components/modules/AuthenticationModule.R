@@ -848,8 +848,8 @@ LoginCodeAuthenticationModule <- function(id,
         with.link = TRUE,
         link = "https://auth.bigomics.ch/#!/login",
         title = "Welcome!",
-        subtitle = "To register or sign in, click the Log in! button.",
-        button.text = "Log in!"
+        subtitle = "To register or sign in, click the Log in button.",
+        button.text = "Log in"
       )
     }
 
@@ -900,7 +900,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       shinyalert::shinyalert(
         title = "",
-        text = "Hail frynd! Thy biscuit is yaccepted, thou art granted fri passage...",
+        text = "Hail frynd! Biscit yaccepted, thou art granted fri passage...",
         size = "xs",
         timer = 1900
       )
