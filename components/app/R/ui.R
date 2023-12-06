@@ -471,7 +471,11 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         ),
-        shiny::tagList(ui.startupModal(id = "startup_modal", messages = STARTUP_MESSAGES)),
+        shiny::tagList(ui.startupModal(
+          id = "startup_modal",
+          messages = STARTUP_MESSAGES,
+          title = "BigOmics Highlights"
+        )),
         shiny::tagList(footer)
       )
     }

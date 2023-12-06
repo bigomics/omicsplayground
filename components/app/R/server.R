@@ -639,16 +639,16 @@ app_server <- function(input, output, session) {
     # Initialize the reactiveTimer to update every 30 seconds. Set max
     # idle time to 2 minutes.
     lock <- FolderLock$new(
-      poll_secs = 15,
-      max_idle = 60,
+      poll_secs = 30,
+      max_idle = 120,
       show_success = FALSE,
       show_details = FALSE
     )
     lock$start_shiny_observer(auth, session = session)
   }
 
-  #' Track which users are online by repeatedly writing small ID file
-  #' in the ONLINE_DIR folder.
+  #' Track which users are online by repeatedly writing every delta
+  #seconds a small ID file ' in the ONLINE_DIR folder.
   if (isTRUE(opt$ENABLE_HEARTBEAT)) {
     ONLINE_DIR <- file.path(ETC, "online")
     heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
