@@ -979,16 +979,23 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
-    query_email <- shiny::reactive(shiny::getQueryString()$email)
+    query_email <- shiny::reactive({
+      query_email <- shiny::getQueryString()$email
+      dbg("[LoginCodeAuthenticationModule:getQueryString] query_email = ",query_email)
+      query_email
+    })
 
-    shiny::observeEvent( c(input$login_btn, query_email()),
-      {
+    shiny::observeEvent( list(input$login_btn, query_email()),
+    {
+      
+        dbg("[LoginCodeAuthenticationModule:observe] step 1: login_btn & query")
+      
         if (is.null(query_email())) {
           dbg("[LoginCodeAuthenticationModule] step 1: reacting on login_btn")
           shiny::req(input$login_email)
           login_email <- input$login_email
         } else {
-          dbg("[LoginCodeAuthenticationModule] setp 1: reacting on query_email (URL)")          
+          dbg("[LoginCodeAuthenticationModule] step 1: reacting on query_email (URL)")          
           login_email <- query_email()
         }
         
@@ -1055,9 +1062,8 @@ LoginCodeAuthenticationModule <- function(id,
             size = "xs"
           )
         }
-      },
-      ignoreNULL = TRUE,
-      ignoreInit = TRUE
+      }
+    ## ignoreNULL = TRUE, ignoreInit = TRUE
     )
 
     ## not sure why but using input$login_password directly does not
