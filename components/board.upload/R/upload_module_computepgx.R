@@ -135,6 +135,7 @@ upload_module_computepgx_server <- function(
             )
           ),
           shiny::br(),
+          shiny::br(),
           shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,

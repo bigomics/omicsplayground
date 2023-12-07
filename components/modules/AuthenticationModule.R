@@ -62,7 +62,7 @@ NoAuthenticationModule <- function(id,
 
       shiny::observeEvent(
         {
-          input$login_btn
+          input$login_submit_btn
         },
         {
           shiny::removeModal()
@@ -142,7 +142,7 @@ AuthenticationModuleApacheCookie <- function(id,
 
       output$login_warning <- shiny::renderText("")
 
-      shiny::observeEvent(input$login_btn, {
+      shiny::observeEvent(input$login_submit_btn, {
         shiny::removeModal()
         USER$logged <- TRUE
 
@@ -704,7 +704,7 @@ PasswordAuthenticationModule <- function(id,
 
     output$login_warning <- shiny::renderText("")
 
-    shiny::observeEvent(input$login_btn, {
+    shiny::observeEvent(input$login_submit_btn, {
       login.OK <- FALSE
       valid.date <- FALSE
       valid.user <- FALSE
@@ -977,7 +977,7 @@ LoginCodeAuthenticationModule <- function(id,
     output$login_warning <- shiny::renderText("")
 
     email_waiter <- waiter::Waiter$new(
-      id = ns("login_btn"),
+      id = ns("login_submit_btn"),
       html = div(waiter::spin_3(),
         style = "transform: scale(0.6);"
       ),
@@ -1100,7 +1100,7 @@ LoginCodeAuthenticationModule <- function(id,
     shiny::observeEvent(entered_code(), {
       ## shiny::req(input$login_password)
 
-      dbg("[LoginCodeAuthenticationModule] step2: reacting on login_btn. checking login code.")
+      dbg("[LoginCodeAuthenticationModule] step2: checking login code.")
       dbg("[LoginCodeAuthenticationModule] entered code =", entered_code())
       dbg("[LoginCodeAuthenticationModule] login2_password =", input$login2_password)
       dbg("[LoginCodeAuthenticationModule] login_code =", login_code)
