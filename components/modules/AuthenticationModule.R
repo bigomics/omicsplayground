@@ -1002,7 +1002,8 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     shiny::observeEvent(
-      list(input$login_submit_btn, query_email()), {
+      list(input$login_submit_btn, query_email()),
+      {
         dbg("[LoginCodeAuthenticationModule:observe] step 1: login_btn & query")
 
         if (is.null(query_email())) {
