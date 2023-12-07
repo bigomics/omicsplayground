@@ -42,13 +42,13 @@ app_ui <- function(x) {
 
     ## read startup messages
     msg <- readLines(file.path(ETC, "MESSAGES"))
-    msg <- msg[msg != "" & substr(msg,1,1) != "#"]    
+    msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
     if (0 && length(msg) > 5) {
       sel <- c(1:2, sample(3:length(msg), 3))
       msg <- msg[sel]
     }
     STARTUP_MESSAGES <- msg
-    
+
     upgrade.tab <- NULL
     if (opt$AUTHENTICATION == "firebase") {
       upgrade.tab <- bigdash::navbarDropdownItem(
