@@ -15,12 +15,10 @@ sass: FORCE
 	Rscript dev/create_source_all.R
 
 clean:
-	find . -name '.#*' -o -name '#*' -o -name '*~'
-	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
-	rm `find . -name '.#*' -o -name '#*' -o -name '*~'`
+	rm `find . -name '.#*' -o -name '*~' -o -name 'LOCK*'`
 
-clean.force:
-	rm `find . -name '.#*' -o -name '#*' -o -name '*~'`
+rm.locks:
+	rm `find . -name 'LOCK*'`
 
 show.branch:
 	@echo $(BRANCH)
