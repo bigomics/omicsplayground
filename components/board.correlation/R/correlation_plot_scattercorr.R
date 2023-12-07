@@ -109,7 +109,8 @@ correlation_plot_scattercorr_server <- function(id,
       return(dt)
     })
 
-    plotly_scatter <- function(n_row, n_cols, markersize = 10, axis_title_pos = c(-0.1, -0.1), margin_l = 50, margin_b = 10, interplot_margin = 0.02) {
+    plotly_scatter <- function(n_row, n_cols, markersize = 10, axis_title_pos = c(-0.1, -0.1), 
+                               margin_l = 50, margin_b = 10, interplot_margin = 0.02) {
       
       # Load input data
       dt <- cor_scatter.DATA()
@@ -175,7 +176,7 @@ correlation_plot_scattercorr_server <- function(id,
               yanchor = "bottom",
               x = 0,
               y = title_loc
-          )
+          ) %>% playbase::plotly_build_light(.)
           sub_plots[[i]] <- plt
           }
 
@@ -211,7 +212,7 @@ correlation_plot_scattercorr_server <- function(id,
       } else {
         nrow <- ncol <- 5
       }
-      plotly_scatter(nrow, ncol, margin_l = 50) 
+      plotly_scatter(nrow, ncol, markersize = 5, margin_l = 50) 
     }
 
     cor_scatter.PLOTFUN2 <- function() {
@@ -225,7 +226,7 @@ correlation_plot_scattercorr_server <- function(id,
         nrow <- 5
         ncol <- 7
       }
-      plotly_scatter(nrow, ncol, markersize = 13, axis_title_pos = c(-0.05, -0.1)) 
+      plotly_scatter(nrow, ncol, markersize = 10, axis_title_pos = c(-0.05, -0.1)) 
     }
 
     PlotModuleServer(

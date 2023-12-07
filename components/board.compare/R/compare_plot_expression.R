@@ -135,7 +135,7 @@ compare_plot_expression_server <- function(id,
         plt <- plotly::plot_ly()
         for (i in seq_len(ncol(mm))) {
           col_i <- mm[, i, drop = FALSE]
-          name_i <- gsub(pattern = "_vs_", replacement = "\nvs ", x = colnames(col_i))
+          name_i <- gsub(pattern = "_vs_", replacement = " vs\n", x = colnames(col_i))
           show_legend1 <- (i == 1 && gene_i == genes[1])
           plt <- plotly::add_trace(plt, 
                                   x = name_i, 
@@ -147,12 +147,12 @@ compare_plot_expression_server <- function(id,
                                   showlegend = show_legend1) %>%
                 plotly::layout(xaxis = list(titlefont = list(size = 5), 
                                             tickangle = 45),
-                                bargap = 0,
-                                bargroupgap = 0)
+                                legend = list(orientation = 'h', bgcolor = "transparent", y = 1.2),
+                                barmode = 'group')
           }
       plt <- plotly::add_annotations(plt,
         text = paste("<b>", gene_i, "</b>"),
-        font = list(size = 10),
+        font = list(size = 9),
         showarrow = FALSE,
         xanchor = "left",
         yanchor = "bottom",
@@ -164,9 +164,10 @@ compare_plot_expression_server <- function(id,
       
       # Put plots together
       suppressWarnings(
-        all_plt <- plotly::subplot(sub_plots, nrows = 2,# margin = 0.04,
+        all_plt <- plotly::subplot(sub_plots, nrows = 2, margin = 0.025,
                 titleX = TRUE, titleY = TRUE, shareX = TRUE
-      ))
+      )) %>%
+      plotly::layout(margin = list(l = 0, b = margin_b, r = 0)) 
 
       return(all_plt)
     })
