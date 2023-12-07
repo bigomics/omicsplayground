@@ -5,11 +5,16 @@ html {
         margin: auto;
     }
 
+    .modal-header {
+//	height: 45px;
+    }
+
     .modal-title{
 	margin-right: auto;
 	margin-left: auto;
 	margin-top: -5px;
 	font-size: 1.2em;
+//	padding-left: 100px;
     }
     
     .modal-content .well {
