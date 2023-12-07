@@ -75,7 +75,6 @@ NoAuthenticationModule <- function(id,
           if (!is.null(username) && username != "") {
             USER$username <- username
             USER$email <- email
-            ## dbg("[NoAuthenticationModule] setting username=",username)
           }
         }
       )
@@ -818,16 +817,12 @@ LoginCodeAuthenticationModule <- function(id,
     iv$add_rule("login_email", shinyvalidate::sv_email())
     iv$enable()
 
-    dbg("[LoginCodeAuthenticationModule] 1: ")
-
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
       ## we continue but email is not working
       warning("[LoginCodeAuthenticationModule] ERROR : missing mail_creds file!!!")
     }
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
-
-    dbg("[LoginCodeAuthenticationModule] 2: ")
 
     USER <- shiny::reactiveValues(
       method = "login-code",
@@ -839,8 +834,6 @@ LoginCodeAuthenticationModule <- function(id,
       options = opt, ## global
       user_dir = PGX.DIR ## global
     )
-
-    dbg("[LoginCodeAuthenticationModule] 3: ")
 
     email_sent <- FALSE
     login_code <- NULL
@@ -870,16 +863,11 @@ LoginCodeAuthenticationModule <- function(id,
       )
     }
 
-    dbg("[LoginCodeAuthenticationModule] 4: ")
-
     ## need first time??
     shiny::showModal(login_modal)
 
-    dbg("[LoginCodeAuthenticationModule] 5: ")
-
     resetUSER <- function() {
       dbg("[LoginCodeAuthenticationModule] resetUSER called")
-
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -892,7 +880,6 @@ LoginCodeAuthenticationModule <- function(id,
       updateTextInput(session, "login_email", value = "")
       updateTextInput(session, "login_password", value = "")
 
-      dbg("[LoginCodeAuthenticationModule] show first modal")
       shiny::showModal(login_modal)
     }
 
@@ -968,7 +955,6 @@ LoginCodeAuthenticationModule <- function(id,
     }
 
     output$showLogin <- shiny::renderUI({
-      dbg("[LoginCodeAuthenticationModule] output$showLogin reacted")
       email_sent <<- FALSE
       login_code <<- NULL
       shiny::showModal(login_modal)
@@ -987,36 +973,31 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
-    observeEvent(shiny::getQueryString(), {
-      dbg("[LoginCodeAuth:observe.getQueryString] names.query = ", names(shiny::getQueryString()))
-      dbg("[LoginCodeAuth:observe.getQueryString] query = ", shiny::getQueryString())
-    })
-    observeEvent(input$login_submit_btn, {
-      dbg("[LoginCodeAuth:observe.getQueryString] login_submit_btn = ", input$login_submit_btn)
-    })
+    ## observeEvent(shiny::getQueryString(), {
+    ##   dbg("[LoginCodeAuth:observe.getQueryString] names.query = ", names(shiny::getQueryString()))
+    ##   dbg("[LoginCodeAuth:observe.getQueryString] query = ", shiny::getQueryString())
+    ## })
+    ## observeEvent(input$login_submit_btn, {
+    ##   dbg("[LoginCodeAuth:observe.getQueryString] login_submit_btn = ", input$login_submit_btn)
+    ## })
 
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
-      dbg("[LoginCodeAuth:getQueryString] query$email = ", query_email)
       query_email
     })
 
     shiny::observeEvent(
       list(input$login_submit_btn, query_email()), {
-        dbg("[LoginCodeAuthenticationModule:observe] step 1: login_btn & query")
 
         if (is.null(query_email())) {
-          dbg("[LoginCodeAuthenticationModule] step 1: reacting on login_btn")
           shiny::req(input$login_email)
           login_email <- input$login_email
         } else {
-          dbg("[LoginCodeAuthenticationModule] step 1: reacting on query_email (URL)")
-          dbg("[LoginCodeAuthenticationModule] step 1: query_email() = ", query_email())
           login_email <- query_email()
         }
 
         if (email_sent) {
-          dbg("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
+          info("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
         } else {
           dbg("[LoginCodeAuthenticationModule] initiating sending code")
 
@@ -1072,8 +1053,8 @@ LoginCodeAuthenticationModule <- function(id,
           )
           shiny::removeModal()
           shiny::showModal(login_modal2)
-          updateTextInput(session, "login_email", value = "")
-          updateTextInput(session, "login_password", value = "", placeholder = "enter code")
+          updateTextInput(session, "login2_email", value = "")
+          updateTextInput(session, "login2_password", value = "", placeholder = "enter code")
 
           shinyalert::shinyalert(
             title = "",
@@ -1096,14 +1077,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 2: react on submit CODE button
     ## --------------------------------------
-    ## shiny::observeEvent(input$login_btn, {
     shiny::observeEvent(entered_code(), {
-      ## shiny::req(input$login_password)
-
-      dbg("[LoginCodeAuthenticationModule] step2: checking login code.")
-      dbg("[LoginCodeAuthenticationModule] entered code =", entered_code())
-      dbg("[LoginCodeAuthenticationModule] login2_password =", input$login2_password)
-      dbg("[LoginCodeAuthenticationModule] login_code =", login_code)
 
       shiny::req(entered_code())
       if (!email_sent) {
@@ -1145,36 +1119,14 @@ LoginCodeAuthenticationModule <- function(id,
       }
     })
 
-    shiny::observeEvent(input$login_cancel_btn, {
-      dbg("[LoginCodeAuthenticationModule] reacted on login_cancel_btn")
-      resetUSER()
+    shiny::observeEvent(
+       list(
+         input$login_cancel_btn,
+         input$login2_cancel_btn
+       ), {
+         resetUSER()
     })
-    shiny::observeEvent(input$login2_cancel_btn, {
-      dbg("[LoginCodeAuthenticationModule] reacted on login2_cancel_btn")
-      resetUSER()
-    })
-
-    ## first_time <- TRUE
-    ## observeEvent(USER$logged, {
-    ##   ## no need to show the modal if the user is logged this is due
-    ##   ## to persistence. But if it is the first time of the session
-    ##   ## we force reset/logout to delete sleeping (persistent?) logins.
-    ##   if (USER$logged && !first_time) {
-    ##     # create user_dir (always), set path, and set options
-    ##     USER$user_dir <- file.path(PGX.DIR, USER$email)
-    ##     create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-    ##     if (!opt$ENABLE_USERDIR) {
-    ##       USER$user_dir <- file.path(PGX.DIR)
-    ##     }
-    ##     # set options
-    ##     USER$options <- read_user_options(USER$user_dir)
-    ##     return()
-    ##   }
-    ##   first_time <<- FALSE
-    ##   dbg("[LoginCodeAuthenticationModule] first time reset!!!")
-    ##   resetUSER()
-    ## })
-
+    
     ## export as 'public' functions
     USER$resetUSER <- resetUSER
 
@@ -1182,306 +1134,6 @@ LoginCodeAuthenticationModule <- function(id,
   })
 }
 
-## ================================================================================
-## PasswordAuthenticationModule link to login
-## ================================================================================
-
-LoginCodeNoEmailAuthenticationModule.DEPRECATED <- function(id,
-                                                            mail_creds,
-                                                            domain = NULL,
-                                                            credentials_file = NULL,
-                                                            allow_personal = TRUE,
-                                                            allow_new_users = TRUE) {
-  shiny::moduleServer(id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using secret authentication <<<<")
-
-    ## user mail_creds="" for dry-run
-    if (!file.exists(mail_creds)) {
-      ## we continue but email is not working
-      warning("[LoginCodeNoEmailAuthenticationModule] ERROR : missing mail_creds file!!!")
-    }
-    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
-
-    ns <- session$ns
-    USER <- shiny::reactiveValues(
-      method = "login-code",
-      logged = FALSE,
-      username = NA,
-      email = NA,
-      level = "",
-      limit = "",
-      options = opt, ## global
-      user_dir = PGX.DIR ## global
-    )
-
-    email_sent <- FALSE
-    login_code <- NULL
-
-    login_modal <- splashLoginModal(
-      ns = ns,
-      with.email = FALSE,
-      with.username = FALSE,
-      with.password = FALSE,
-      with.link = TRUE,
-      link = "https://auth.bigomics.ch/#!/login",
-      title = "Welcome!",
-      subtitle = "To register or sign in, click the Log in! button.",
-      button.text = "Log in!"
-    )
-    shiny::showModal(login_modal) ## need first time
-
-    resetUSER <- function() {
-      USER$logged <- FALSE
-      USER$username <- NA
-      USER$email <- NA
-      USER$password <- NA
-      USER$level <- ""
-      USER$limit <- ""
-
-      email_sent <<- FALSE
-      login_code <<- NULL
-      updateTextInput(session, "login_email", value = "")
-      updateTextInput(session, "login_password", value = "")
-      shiny::showModal(login_modal)
-    }
-
-    ## --------------------------------------
-    ## Step 0: detect cookie and pass
-    ## --------------------------------------
-    decrypted_cookie <- get_and_decrypt_cookie(session)
-    if (!is.null(decrypted_cookie)) {
-      message("[LoginCodeNoEmailAuthenticationModule::login] PASSED : login OK! ")
-      output$login_warning <- shiny::renderText("")
-      shiny::removeModal()
-
-      USER$email <- decrypted_cookie
-
-      # create user_dir (always), set path, and set options
-      user_dir <- file.path(PGX.DIR, decrypted_cookie)
-      create_user_dir_if_needed(user_dir, PGX.DIR)
-      if (!opt$ENABLE_USERDIR) {
-        user_dir <- file.path(PGX.DIR)
-      }
-      USER$user_dir <- user_dir
-      USER$options <- read_user_options(user_dir)
-
-      session$sendCustomMessage("set-user", list(user = decrypted_cookie))
-
-      USER$logged <- TRUE
-
-      ## export as 'public' functions
-      USER$resetUSER <- resetUSER
-
-      return(USER)
-    }
-
-    sendLoginCode <- function(user_email, login_code, mail_creds) {
-      if (!file.exists(mail_creds)) {
-        warning("[LoginCodeNoEmailAuthenticationModule:sendLoginCode] WARNING: no mail_creds file")
-        return(NULL)
-      }
-      blastula::smtp_send(
-        blastula::compose_email(
-          body = blastula::md(
-            glue::glue(
-              "Hello,",
-              "<p>We received a request to sign in to Omics Playground using",
-              "this email address. If you want to sign in with your",
-              "{user_email} account, please use this login code:",
-              "<p>{login_code}",
-              "<p>If you did not request this code, you can safely ignore this email.",
-              "<p>Thanks,",
-              "<p>BigOmics Team",
-              .sep = " "
-            )
-          ),
-          footer = blastula::md(
-            "BigOmics - Advanced omics analysis for everyone."
-          )
-        ),
-        from = "support@bigomics.ch",
-        to = user_email,
-        subject = paste("Your login code to Omics Playground"),
-        credentials = blastula::creds_file(mail_creds)
-      )
-    }
-
-    output$showLogin <- shiny::renderUI({
-      email_sent <<- FALSE
-      login_code <<- NULL
-      shiny::showModal(login_modal)
-    })
-
-    output$login_warning <- shiny::renderText("")
-
-    email_waiter <- waiter::Waiter$new(
-      id = ns("login_btn"),
-      html = div(waiter::spin_3(),
-        style = "transform: scale(0.6);"
-      ),
-      color = waiter::transparent(.8)
-    )
-
-    ## --------------------------------------
-    ## Step 1: react on send email button
-    ## --------------------------------------
-    query_email <- shiny::reactive(shiny::getQueryString()$email)
-
-    shiny::observeEvent(c(input$login_btn, query_email()),
-      {
-        if (is.null(query_email())) {
-          shiny::req(input$login_email)
-          login_email <- input$login_email
-        } else {
-          login_email <- query_email()
-        }
-
-        if (!email_sent) {
-          login_email <- tolower(login_email)
-          ## >>> We check here for email validaty and intercept the
-          ## login process for not authorized people with wrong domain
-          check <- checkEmail(
-            email = login_email,
-            domain = domain,
-            credentials_file = credentials_file,
-            check.personal = !allow_personal,
-            check.existing = !allow_new_users
-          )
-
-          if (!check$valid) {
-            output$login_warning <- shiny::renderText(check$msg)
-            shinyjs::delay(4000, {
-              output$login_warning <- shiny::renderText("")
-            })
-            return(NULL)
-          }
-
-          ## MAIL CODE TO USER
-          ## login_code <- "hello123"
-          ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
-          login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
-
-          info("[LoginCodeNoEmailAuthenticationModule] sending login code", login_code, "to", login_email)
-          email_waiter$show()
-          sendLoginCode(login_email, login_code, mail_creds = mail_creds)
-          email_waiter$hide()
-
-          USER$email <- login_email
-          USER$username <- login_email
-          USER$logged <- FALSE
-          email_sent <<- TRUE
-
-          ## change buttons and field
-          login_modal2 <- splashLoginModal(
-            ns = ns,
-            with.email = FALSE,
-            with.username = FALSE,
-            with.password = TRUE,
-            hide.password = FALSE,
-            title = "Enter Code",
-            subtitle = "Enter the login code that we have just sent to you.",
-            button.text = "Submit",
-            add.cancel = TRUE,
-            cancel.text = "Cancel"
-          )
-          shiny::showModal(login_modal2)
-          updateTextInput(session, "login_email", value = "")
-          updateTextInput(session, "login_password", value = "", placeholder = "enter code")
-
-          shinyalert::shinyalert(
-            title = "",
-            text = "We have emailed you a login code. Please check your mailbox.",
-            size = "xs"
-          )
-        }
-      },
-      ignoreNULL = TRUE,
-      ignoreInit = TRUE
-    )
-
-    ## not sure why but using input$login_password directly does not
-    ## work as the value does not reset for the next user (IK 8jul23)
-    entered_code <- shiny::reactiveVal("")
-    observeEvent(input$login_password, {
-      entered_code(input$login_password)
-    })
-
-    ## --------------------------------------
-    ## Step 2: react on submit code button
-    ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
-      ## shiny::req(input$login_password)
-      shiny::req(entered_code())
-
-      dbg("[] code submitted")
-
-      if (email_sent) {
-        # input_code <- input$login_password
-        input_code <- entered_code()
-        login.OK <- (input_code == login_code)
-
-        if (!login.OK) {
-          output$login_warning <- shiny::renderText("invalid code")
-          shinyjs::delay(4000, {
-            output$login_warning <- shiny::renderText("")
-          })
-          updateTextInput(session, "login_password", value = "")
-          return(NULL)
-        }
-
-        if (login.OK) {
-          output$login_warning <- shiny::renderText("")
-
-          # create user_dir (always), set path, and set options
-          USER$user_dir <- file.path(PGX.DIR, USER$email)
-          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-          if (!opt$ENABLE_USERDIR) {
-            USER$user_dir <- file.path(PGX.DIR)
-          }
-          USER$options <- read_user_options(USER$user_dir)
-
-          session$sendCustomMessage("set-user", list(user = USER$email))
-          entered_code("") ## important for next user
-          shiny::removeModal()
-
-          USER$logged <- TRUE
-
-          # Save session as cookie
-          save_session_cookie(session, USER)
-        }
-      }
-    })
-
-    shiny::observeEvent(input$cancel_btn, {
-      resetUSER()
-    })
-
-    first_time <- TRUE
-    observeEvent(USER$logged, {
-      ## no need to show the modal if the user is logged this is due
-      ## to persistence. But if it is the first time of the session
-      ## we force reset/logout to delete sleeping (persistent?) logins.
-      if (USER$logged && !first_time) {
-        # create user_dir (always), set path, and set options
-        USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          USER$user_dir <- file.path(PGX.DIR)
-        }
-        # set options
-        USER$options <- read_user_options(USER$user_dir)
-        return()
-      }
-      first_time <<- FALSE
-      resetUSER()
-    })
-
-    ## export as 'public' functions
-    USER$resetUSER <- resetUSER
-
-    return(USER)
-  })
-}
 
 ## ================================================================================
 ## ================================= END OF FILE ==================================

@@ -296,7 +296,7 @@ splashLoginModal <- function(ns = NULL,
     div(num_sessions, style = "padding-left:1em; display: inline;")
   )
 
-  m <- splashScreen(title = splash.title, body = body, ns = ns, footer2 = footer)
+  m <- splashScreen(title = splash.title, body = body, ns = ns2, footer2 = footer)
   return(m)
 }
 
@@ -430,7 +430,7 @@ splashScreen <- function(title, body, ns = NULL, easyClose = FALSE, fade = FALSE
         shiny::div(
           id = "splash-panel",
           body,
-          div(textOutput(ns("login_warning")), style = "color:white;font-size:1.2em;padding-top:8px;line-height:1.1em;"),
+          div(textOutput(ns("warning")), style = "color:white;font-size:1.2em;padding-top:8px;line-height:1.1em;"),
         ),
       )
     ),
