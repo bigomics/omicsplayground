@@ -79,7 +79,6 @@ enrichment_plot_volcanomethods_server <- function(id,
       fc <- pd$FC
       qv <- pd$Q
       sel.gsets <- pd$sel.gsets
-      local_pd <<- pd
       rm(pd)
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
