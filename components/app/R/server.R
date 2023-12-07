@@ -888,7 +888,7 @@ app_server <- function(input, output, session) {
   dbg("[MAIN] showing startup modal")
   observeEvent(auth$logged, {
     if (auth$logged) {
-      shinyjs::delay(1500, {
+      shinyjs::delay(1200, {
         bsutils::modal_show("startup_modal")
       })
     }
