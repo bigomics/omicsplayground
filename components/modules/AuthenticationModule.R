@@ -987,8 +987,8 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     shiny::observeEvent(
-      list(input$login_submit_btn, query_email()), {
-
+      list(input$login_submit_btn, query_email()),
+      {
         if (is.null(query_email())) {
           shiny::req(input$login_email)
           login_email <- input$login_email
@@ -1078,7 +1078,6 @@ LoginCodeAuthenticationModule <- function(id,
     ## Step 2: react on submit CODE button
     ## --------------------------------------
     shiny::observeEvent(entered_code(), {
-
       shiny::req(entered_code())
       if (!email_sent) {
         return(NULL)
@@ -1120,13 +1119,15 @@ LoginCodeAuthenticationModule <- function(id,
     })
 
     shiny::observeEvent(
-       list(
-         input$login_cancel_btn,
-         input$login2_cancel_btn
-       ), {
-         resetUSER()
-    })
-    
+      list(
+        input$login_cancel_btn,
+        input$login2_cancel_btn
+      ),
+      {
+        resetUSER()
+      }
+    )
+
     ## export as 'public' functions
     USER$resetUSER <- resetUSER
 
