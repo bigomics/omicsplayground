@@ -59,7 +59,7 @@ compare_plot_fc_correlation_server <- function(id,
 
       ncol_pos <- ncol(pos)
       nrow_pos <- nrow(pos)
-      sample_size <- floor(2000000 / ncol_pos)
+      sample_size <- floor(30000 / ncol_pos)
       sample_size <- ifelse(sample_size > nrow_pos, nrow_pos, sample_size)
       sample_size <- sample(rownames(pos), sample_size)
       sample_size  <- c(hilight, sample_size)
