@@ -30,7 +30,7 @@ upload_module_computepgx_server <- function(
     selected_organism,
     auth,
     create_raw_dir,
-    enable_button = TRUE,
+    enable_button = shiny::reactive(TRUE),
     alertready = TRUE,
     height = 720,
     recompute_info,
