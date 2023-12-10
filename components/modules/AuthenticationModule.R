@@ -680,6 +680,25 @@ PasswordAuthenticationModule <- function(id,
       USER$email <- decrypted_cookie
       USER$logged <- TRUE
 
+      ## >>> We check here for email validaty (expiry)
+      check <- checkEmail(
+        email = decrypted_cookie,
+        domain = domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal
+      )
+
+      if (!check$valid) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "Expired user",
+          size = "xs"
+        )
+        shinyjs::runjs("logoutInApp();")
+        shiny::showModal(login_modal)
+        return(USER)
+      }
+
       # create user_dir (always), set path, and set options
       user_dir <- file.path(PGX.DIR, decrypted_cookie)
       # create_user_dir_if_needed(USER$user_dir, PGX.DIR)
@@ -894,6 +913,26 @@ LoginCodeAuthenticationModule <- function(id,
 
       user_email <- decrypted_cookie
       USER$email <- user_email
+
+      ## >>> We check here for email validaty (expiry)
+      check <- checkEmail(
+        email = user_email,
+        domain = domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal,
+        check.existing = !allow_new_users
+      )
+
+      if (!check$valid) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "Expired user",
+          size = "xs"
+        )
+        shinyjs::runjs("logoutInApp();")
+        shiny::showModal(login_modal)
+        return(USER)
+      }
 
       # create user_dir (always), set path, and set options
       user_dir <- file.path(PGX.DIR, user_email)
