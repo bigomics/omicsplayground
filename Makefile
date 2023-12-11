@@ -1,7 +1,7 @@
 BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
-run: sass version
+run: sass version rm.locks
 	Rscript dev/run_app.R
 
 run.headless:
@@ -86,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta8"
+VERSION = "v3.3.0-beta8.9000"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
