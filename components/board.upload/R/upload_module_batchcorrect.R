@@ -5,32 +5,38 @@
 
 
 ## =============================================================================
-## ==================== BATCHCORRECT GADGET UI =================================
+## ==================== BATCHCORRECT UI/SERVER =================================
 ## =============================================================================
 
-BatchCorrectGadget <- function(X, pheno, height = 720) {
-  gadgetize(BatchCorrectUI, BatchCorrectServer,
-    title = "BatchCorrect",
-    X = reactive(X), pheno = reactive(pheno), height = height
-  )
-}
-
-BatchCorrectInputsUI <- function(id) {
-  ns <- shiny::NS(id)
-  shiny::uiOutput(ns("inputsUI"))
-}
-
-BatchCorrectCanvas <- function(id, height = 720) {
-  ns <- shiny::NS(id)
-  shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner()
-}
 
 upload_module_batchcorrect_ui <- function(id, height = 720) {
   ns <- shiny::NS(id)
+
+  bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
+
   shiny::sidebarLayout(
     shiny::sidebarPanel(
-      shiny::uiOutput(ns("inputsUI")),
-      width = 2
+      width = 2,
+      shiny::tagList(
+        shiny::p(bc_info),
+        shiny::br(),
+        shiny::actionButton(ns("bc_compute_button"), "Batch correct", class = "run-button"),
+        shiny::br(),
+        shiny::br(),        
+        ##        shiny::selectInput(ns("view"), "Select view", choices=c("UMAP","heatmap","PC","hist")),
+        shiny::radioButtons( ns("view"), "Select view",
+          choices = c("UMAP", "heatmap", "PC", "hist"), inline=FALSE ),        
+
+        shiny::conditionalPanel(
+          "input.view == 'UMAP'",
+          ns = ns,
+          shiny::selectInput(ns("colorby"), "Color by", choices=NULL)
+        ),
+        shiny::br(),
+        shiny::checkboxInput(ns("technical_correction"), "Technical correction (lib)"),
+        shiny::checkboxInput(ns("cell_correction"), "Cell correction (MT/ribo/CC)"),
+        shiny::checkboxInput(ns("gender_correction"), "Gender correction (M/F)")                
+      )
     ),
     shiny::mainPanel(
       shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner(),
@@ -40,268 +46,127 @@ upload_module_batchcorrect_ui <- function(id, height = 720) {
 }
 
 
-upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, height = 720) {
+upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
+                                              is.count = FALSE, height = 720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
 
-      ## Counts matrix but with genes annotated for correcting
-      ## unwanted biological effects (mito,ribo,gender)
-      geneX <- reactive({
-        shiny::req(X())
-        X0 <- X()
-## <<<<<<<<<<<<<<<<<< PLEASE FIX >>>>>>>>>>>>>>>>>>>>>>
-##        ii <- which(rowSums(X0) > 0) ## bit faster
-##        shiny::withProgress(message = "Batch-correction (converting probes)...",
-##          value = 0, {
-##            gg <- playbase::probe2symbol( rownames(X0)[ii], )   ### <<<<<<<<< DOES NOT WORK!
-##        })
-##        rownames(X0)[ii] <- gg
-        X0
+      observeEvent( r_samples(), {
+        choices <- colnames(r_samples())
+        sel <- choices[1]
+        shiny::updateSelectInput(session, "colorby", choices = choices, selected=sel )
       })
+      
+      logX <- reactive({
+        x <- playbase::counts.mergeDuplicateFeatures(r_X())
+        x <- log2(x + 1e-8)
 
-      max.rho <- 0.5
-      getNotCorrelatedBatchPars <- function(pheno, model.par, max.rho = 0.5) {
-        getModelMatrix <- function(v) {
-          y <- as.character(pheno[, v])
-          y[is.na(y)] <- "NA" ## or impute???
-          m1 <- model.matrix(~y)[, -1, drop = FALSE]
-          colnames(m1) <- sub("^y", paste0(v, "="), colnames(m1))
-          m1
-        }
-
-        model.par <- intersect(model.par, colnames(pheno))
-        mod1 <- do.call(cbind, lapply(model.par, getModelMatrix))
-        rownames(mod1) <- rownames(pheno)
-
-        batch.prm <- setdiff(colnames(pheno), model.par)
-        mod0 <- do.call(cbind, lapply(batch.prm, getModelMatrix))
-        rho <- stats::cor(mod0, mod1)
-        rho
-        rho[is.na(rho)] <- 0
-        max(abs(rho), na.rm = TRUE)
-        if (max(abs(rho), na.rm = TRUE) > max.rho) {
-          idx <- which(abs(rho) > max.rho, arr.ind = TRUE)
-          idx
-          for (i in 1:nrow(idx)) {
-            v0 <- colnames(mod0)[idx[i, 1]]
-            v1 <- colnames(mod1)[idx[i, 2]]
-            cat(paste0(
-              "WARNING:: '", v0, "' is confounded with '", v1, "' ",
-              ": rho= ", round(rho[idx[i, 1], idx[i, 2]], 3), "\n"
-            ))
-          }
-          confounding.pars <- colnames(mod0)[idx[, 1]]
-          confounding.pars <- unique(gsub("=.*", "", confounding.pars))
-          cat("WARNING:: removing confounding batch factors:", confounding.pars, "\n")
-          batch.prm <- setdiff(batch.prm, confounding.pars)
-        }
-        batch.prm
-      }
-
-      ## reset batch parameters choices if modelparamters change.
-      observeEvent(input$bc_modelpar, {
-        px <- pheno()
-        if (is.null(px)) {
-          return(NULL)
-        }
-        sel <- apply(px, 2, function(x) length(unique(x[!is.na(x)])))
-        pheno.par <- sort(colnames(px)[sel > 1])
-        sel.par <- c(grep("^[.<]|batch", pheno.par, invert = TRUE, value = TRUE), pheno.par)[1]
-        batch.par <- c(pheno.par, "<cell_cycle>", "<gender>", "<libsize>", "<mito/ribo>")
-
-        bc <- setdiff(batch.par, input$bc_modelpar)
-        shiny::updateSelectInput(session, "bc_batchpar", choices = bc, selected = bc)
+        x
       })
+      
+      run_all_corrections <- reactive({
+        
+#        samples <- pgx$samples
+#        contrasts <- pgx$contrasts
+#        X1 <- pgx$X
+        
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        X1 <- logX()
+        
+        M <- playbase::contrasts.convertToLabelMatrix( contrasts,  samples)
+        vec <- playbase::createPhenoBatchVectors(
+          labeled_contrasts = M,
+          samples = samples,
+          pmin = 0.2
+        ) 
 
-      uiOK <- reactive({
-        px <- pheno()
-        mp <- input$bc_modelpar
-        ok <- all(mp %in% colnames(px)) && length(mp) > 0
-        ok
-      })
-
-      output$canvas <- shiny::renderPlot({
-        out <- outobj()
-
-        if (is.null(out$X) || length(out$X) == 0) {
-          warning("[BatchCorrect::canvas] WARNING :: X=NULL")
-          return(NULL)
+        params <- c()
+        if(input$technical_correction) {
+          params = c(params, "lib")
         }
-
-        shiny::req(X())
-
-        mp <- shiny::isolate(input$bc_modelpar)
-        if (is.null(mp) || length(mp) == 0) {
-          warning("[BatchCorrect::canvas] WARNING :: mp = ", mp)
+        if(input$gender_correction) {
+          params = c(params, "gender")
         }
-
-        p1 <- NULL
-        if (!is.null(mp)) p1 <- mp[1]
-
-        X0 <- X()
-        if (is.count) {
-          X0 <- log2(1 + X0) ## X0: normalized counts (e.g. CPM)
+        if(input$cell_correction) {
+          params = c(params, "mito","ribo","cellcycle")
         }
-        cX <- out$X
-        rownames(X0) <- sub("[;|,].*", "", rownames(X0))
-        rownames(cX) <- sub("[;|,].*", "", rownames(cX))
-
-        if (ncol(X0) != ncol(cX)) {
-          warning("[BatchCorrect] canvas.renderPlot : ***ERROR*** dimension mismatch!")
-        }
-        req(ncol(X0) == ncol(cX))
-
-        do.pca <- (input$bc_maptype == "PCA")
-        nmax <- as.integer(input$bc_nmax)
-        show_row <- (nmax < 50)
-
-        viz.BatchCorrectionMatrix(
-          X0 = X0, pheno = out$Y, cX = cX, phenotype = p1,
-          pca.heatmap = do.pca, npca = 3,
-          nmax = nmax, cex = 1.8, show_rownames = show_row,
-          title = NULL, subtitle = NULL, caption = NULL
-        )
-      })
-
-      output$inputsUI <- shiny::renderUI({
-        ns <- session$ns
-        bc.options <- c("none", "PCA", "HC", "SVA", "NNM")
-        bc.options <- c("none" = "none", "PCA" = "PCA", "SVA" = "SVA", "NN matching" = "NNM")
-        bc.selected <- "none"
-        bc_info <- NULL
-        bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
-
-        px <- pheno()
-        if (is.null(px)) {
-          return(NULL)
-        }
-        sel <- apply(px, 2, function(x) length(unique(x[!is.na(x)])))
-        pheno.par <- sort(colnames(px)[sel > 1])
-        sel.par <- c(grep("^[.<]|batch", pheno.par, invert = TRUE, value = TRUE), pheno.par)[1]
-        batch.par <- c(pheno.par, "<cell_cycle>", "<gender>", "<libsize>", "<mito/ribo>")
-
-        shiny::tagList(
-          shiny::p(bc_info),
-          shiny::br(),
-          shiny::actionButton(ns("bc_compute_button"), "Batch correct",
-            #
-            class = "run-button"
-          ),
-          shiny::br(),
-          shiny::br(),
-          withTooltip(
-            shiny::selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
-              selected = sel.par, multiple = TRUE
-            ),
-            "Please specify all your model parameters. These are the parameters of interest that will determine your groupings.",
-            placement = "top", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
-              selected = batch.par, multiple = TRUE
-            ),
-            "Specifiy the batch/unwanted parameters that you want to correct for. Bracketed parameters are technical/biological summaries computed from your data. These factors will be subtracted from your data using linear modelling (limma).",
-            placement = "left", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::radioButtons(
-              ns("bc_methods"), "Unsupervised correction:",
-              choices = bc.options,
-              selected = bc.selected,
-              inline = FALSE
-            ),
-            "Unsupervised correction methods. Correction will be performed additional to the (supervised) corrections above. PCA iteratively corrects low rank PC components not correlated to any model parameters; SVA applies surrogate variable analysis (Leek et al.); NNM applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data (unpublished).",
-            placement = "left", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::radioButtons(ns("bc_nmax"), "Nmax:", c(40, 200, 1000),
-              sel = 200, inline = TRUE
-            ),
-            "Maximum number of genes in heatmap",
-            placement = "left", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::radioButtons(ns("bc_maptype"), "Heatmap type:",
-              c("topSD", "PCA"),
-              inline = TRUE
-            ),
-            "Type of heatmap: top SD or PCA.",
-            placement = "left", options = list(container = "body")
+        dbg("[run_all_corrections] params = ",params)
+        
+        if(length(params) > 0) {
+          nv <- ifelse( ncol(X1) > 40, 2, 1)          
+          X1 <- playbase::removeTechnicalEffects(
+            X1,
+            y = vec$pheno,
+            params = params,
+            pmin = 0.20,
+            nmin = 3,
+            nv = nv
           )
-        )
+        }
+
+        ## X1 <- playbase::normalizeCounts(2**X1, method='m4')
+        X1 <- playbase::logCPM(pmax(2**X1 - 1,0))
+        
+        shiny::withProgress(message = "Computing methods. Please wait...", value = 0.33, {
+        
+          xlist <- playbase::runBatchCorrectionMethods(X1, vec$batch, vec$pheno,
+            controls=NULL, combatx = FALSE, remove.failed=TRUE) 
+
+          incProgress( amount = 0.33)
+
+          pos <- lapply(xlist, function(x) {
+            x <- head( x[order(-matrixStats::rowSds(x,na.rm=TRUE)),], 1000)
+            x <- x - rowMeans(x,na.rm=TRUE)
+            irlba::irlba(x)$v[,1:2]
+          })
+
+          incProgress( amount = 0.33)          
+          
+          res <- playbase::bc.evaluateResults(
+            xlist, vec$pheno, lfc=0.2, q=0.05, pos=pos, add.sil=TRUE, plot=FALSE, trend=TRUE) 
+        })
+        
+        list( xlist = xlist, pos = res$pos, stats = res$stats )
       })
+      
+      
+      output$canvas <- shiny::renderPlot({
+
+        shiny::req(input$colorby)
+        
+        res <- run_all_corrections()
+        X0 <- logX()
+        samples <- r_samples()
+        pheno <- samples[,input$colorby]
+        viewtype <- input$view
+        
+        playbase::bc.plotResults(
+          X = X0,
+          xlist = res$xlist,
+          pos = res$pos,
+          pheno = pheno,
+          samples = samples,
+          type = viewtype,
+          nmax = 1000
+        ) 
+
+      })
+
 
       ## ------------------------------------------------------------
       ## Reactive return object
       ## ------------------------------------------------------------
-      outobj <- shiny::eventReactive(
-        {
-          list(input$bc_compute_button, X(), pheno())
-        },
-        {
-          shiny::req(geneX())
-          req(uiOK())
-
-          mp <- ""
-          bp <- "Chemotherapy"
-          mp <- "dlbcl.type"
-          bp <- "*"
-          mp <- input$bc_modelpar
-          bp <- input$bc_batchpar
-          bc <- input$bc_methods
-
-          lib.correct <- FALSE
-          bio.correct <- c()
-          if ("<libsize>" %in% bp) lib.correct <- TRUE
-          if ("<mito/ribo>" %in% bp) bio.correct <- c(bio.correct, c("mito", "ribo"))
-          if ("<cell_cycle>" %in% bp) bio.correct <- c(bio.correct, c("cell_cycle"))
-          if ("<gender>" %in% bp) bio.correct <- c(bio.correct, c("gender"))
-
-          hc.correct <- "HC" %in% bc
-          pca.correct <- "PCA" %in% bc
-          sva.correct <- "SVA" %in% bc
-          mnn.correct <- NULL
-          nnm.correct <- "NNM" %in% bc
-
-          X0 <- geneX()
-          if (is.count) {
-            X0 <- log2(1 + X0) ## X0: normalized counts (e.g. CPM)
-          }
-
-          out <- playbase::pgx.superBatchCorrect(
-            X = X0,
-            pheno = pheno(),
-            model.par = mp,
-            batch.par = bp,
-            #
-            lib.correct = lib.correct,
-            bio.correct = bio.correct,
-            hc.correct = hc.correct,
-            pca.correct = pca.correct,
-            sva.correct = sva.correct,
-            mnn.correct = mnn.correct,
-            nnm.correct = nnm.correct
-          )
-
-          ## restore original feature names
-          rownames(out$X) <- rownames(X())
-
-          out$params <- list(
-            model.par = mp,
-            batch.par = bp,
-            bio.correct = bio.correct,
-            hc.correct = hc.correct,
-            pca.correct = pca.correct,
-            sva.correct = sva.correct,
-            mnn.correct = mnn.correct,
-            nnm.correct = nnm.correct
-          )
-
-          out
-        },
-        ignoreInit = FALSE,
-        ignoreNULL = FALSE
+      outobj <- shiny::eventReactive({
+        list(input$bc_compute_button, r_X(), r_samples())
+      }, {
+        shiny::req( r_X())
+        X0 <- r_X()
+        list(X = X0)
+      },
+      ignoreInit = FALSE,
+      ignoreNULL = FALSE
       )
 
       return(outobj) ## pointing to reactive

@@ -174,11 +174,15 @@ UploadUI <- function(id) {
 
   batch_panel <- shiny::tabPanel(
     "BatchCorrect",
-    bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
-    br(),
-    shiny::fillCol(
-      height = height,
-      upload_module_batchcorrect_ui(ns("batchcorrect"))
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      bslib::layout_columns(
+        col_widths = 12,        
+        heights_equal = "row",
+        bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
+        upload_module_batchcorrect_ui(ns("batchcorrect"))
+      )
     )
   )
 
@@ -210,8 +214,8 @@ UploadUI <- function(id) {
       id = ns("tabs"),
       upload_select_db,
       upload_panel,
-      batch_panel,
       comparisons_panel,
+      batch_panel,
       compute_panel
     )
   )

@@ -150,6 +150,9 @@ UploadBoard <- function(id,
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
+
+      return(NULL)  ### TEMPORARY FOR DEVELOPMENT
+      
       has.counts <- !is.null(checked_counts()$matrix)
       has.samples <- !is.null(checked_samples()$matrix)
       has.contrasts <- !is.null(checked_contrasts()$matrix)
@@ -810,9 +813,10 @@ UploadBoard <- function(id,
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
-      X = shiny::reactive(checked_counts()$matrix),
+      r_X = shiny::reactive(checked_counts()$matrix),
+      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_contrasts = shiny::reactive(modified_ct()$contr),
       is.count = TRUE,
-      pheno = shiny::reactive(checked_samples()$matrix),
       height = height
     )
 
@@ -831,11 +835,12 @@ UploadBoard <- function(id,
       id = "makecontrast",
       phenoRT = reactive(checked_samples()$matrix),
       contrRT = reactive(checked_contrasts()$matrix),
-      countsRT = corrected_counts,
+      ##      countsRT = corrected_counts,
+      countsRT = reactive(checked_counts()$matrix),
       height = height
     )
 
-    shiny::observeEvent(modified_ct(), {
+    shiny::observeEvent( modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
