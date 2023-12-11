@@ -51,7 +51,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
   shiny::moduleServer(
     id,
     function(input, output, session) {
-
+      
       observeEvent( r_samples(), {
         choices <- colnames(r_samples())
         sel <- choices[1]
@@ -61,7 +61,6 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       logX <- reactive({
         x <- playbase::counts.mergeDuplicateFeatures(r_X())
         x <- log2(x + 1e-8)
-
         x
       })
       

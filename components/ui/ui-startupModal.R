@@ -35,8 +35,8 @@ ui.startupModal <- function(id, messages, title) {
             bsutils::carousel(
               ...,
               id = "opg-welcome-carousel",
-              indicators = TRUE,
-              controls = TRUE
+              indicators = TRUE
+              ##              controls = TRUE
             )
           },
           carousel_items

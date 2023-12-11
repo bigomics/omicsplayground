@@ -18,7 +18,7 @@ clean:
 	rm `find . -name '.#*' -o -name '*~' -o -name 'LOCK*'`
 
 rm.locks:
-	rm `find . -name 'LOCK*'`
+	find . -name 'LOCK*' -exec rm {} \;
 
 show.branch:
 	@echo $(BRANCH)
