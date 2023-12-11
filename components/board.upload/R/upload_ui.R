@@ -172,20 +172,6 @@ UploadUI <- function(id) {
     )
   )
 
-  batch_panel <- shiny::tabPanel(
-    "BatchCorrect",
-    bslib::layout_columns(
-      col_widths = 12,
-      height = "calc(100vh - 180px)",
-      bslib::layout_columns(
-        col_widths = 12,        
-        heights_equal = "row",
-        bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
-        upload_module_batchcorrect_ui(ns("batchcorrect"))
-      )
-    )
-  )
-
   comparisons_panel <- shiny::tabPanel(
     "Comparisons",
     bslib::layout_columns(
@@ -197,12 +183,23 @@ UploadUI <- function(id) {
     )
   )
 
+  batch_panel <- shiny::tabPanel(
+    "BatchCorrect",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      heights_equal = "row",
+      bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
+      upload_module_batchcorrect_ui(ns("batchcorrect"), height = "calc(100vh - 200px)")
+    )
+  )
+  
   compute_panel <- shiny::tabPanel(
     "Compute",
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     br(),
     shiny::fillCol(
-      height = height, #
+      height = "100%", 
       upload_module_computepgx_ui(ns("compute"))
     )
   )

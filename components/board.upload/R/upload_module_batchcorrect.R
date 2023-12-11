@@ -25,7 +25,7 @@ upload_module_batchcorrect_ui <- function(id, height = 720) {
         shiny::br(),        
         ##        shiny::selectInput(ns("view"), "Select view", choices=c("UMAP","heatmap","PC","hist")),
         shiny::radioButtons( ns("view"), "Select view",
-          choices = c("UMAP", "heatmap", "PC", "hist"), inline=FALSE ),        
+          choices = c("UMAP", "heatmap", "PC", "PC2", "hist"), inline=FALSE ),        
 
         shiny::conditionalPanel(
           "input.view == 'UMAP'",
