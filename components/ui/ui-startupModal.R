@@ -36,7 +36,7 @@ ui.startupModal <- function(id, messages, title) {
               ...,
               id = "opg-welcome-carousel",
               indicators = TRUE
-##              controls = TRUE
+              ##              controls = TRUE
             )
           },
           carousel_items
