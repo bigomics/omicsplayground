@@ -44,19 +44,18 @@ upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, he
   shiny::moduleServer(
     id,
     function(input, output, session) {
-
       ## Counts matrix but with genes annotated for correcting
       ## unwanted biological effects (mito,ribo,gender)
       geneX <- reactive({
         shiny::req(X())
         X0 <- X()
-## <<<<<<<<<<<<<<<<<< PLEASE FIX >>>>>>>>>>>>>>>>>>>>>>
-##        ii <- which(rowSums(X0) > 0) ## bit faster
-##        shiny::withProgress(message = "Batch-correction (converting probes)...",
-##          value = 0, {
-##            gg <- playbase::probe2symbol( rownames(X0)[ii], )   ### <<<<<<<<< DOES NOT WORK!
-##        })
-##        rownames(X0)[ii] <- gg
+        ## <<<<<<<<<<<<<<<<<< PLEASE FIX >>>>>>>>>>>>>>>>>>>>>>
+        ##        ii <- which(rowSums(X0) > 0) ## bit faster
+        ##        shiny::withProgress(message = "Batch-correction (converting probes)...",
+        ##          value = 0, {
+        ##            gg <- playbase::probe2symbol( rownames(X0)[ii], )   ### <<<<<<<<< DOES NOT WORK!
+        ##        })
+        ##        rownames(X0)[ii] <- gg
         X0
       })
 
