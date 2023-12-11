@@ -81,5 +81,13 @@ html {
     #startup_modal .carousel-item {
 	transition-duration: 1.3s;
     }
+
+    #startup_modal .carousel-indicators {
+	bottom: -20px;
+    }
+
+    #startup_modal .carousel-indicators button {
+	background-color: #b6d3E888;
+    }
     
 }
