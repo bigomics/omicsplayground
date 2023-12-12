@@ -1127,11 +1127,13 @@ LoginCodeAuthenticationModule <- function(id,
       login.OK <- (input_code == login_code)
 
       if (!login.OK) {
-        output$login_warning <- shiny::renderText("invalid code")
+        dbg("[LoginCodeAuthenticationModule] invalid code")
+        output$login2_warning <- shiny::renderText("invalid code")
+        entered_code("")
         shinyjs::delay(4000, {
-          output$login_warning <- shiny::renderText("")
+          output$login2_warning <- shiny::renderText("")
         })
-        updateTextInput(session, "login_password", value = "")
+        updateTextInput(session, "login2_password", value = "")
         return(NULL)
       }
 
