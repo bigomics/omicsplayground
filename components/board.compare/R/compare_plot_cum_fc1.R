@@ -60,10 +60,10 @@ compare_plot_cum_fc1_server <- function(id,
 
       # Prepare input for the plot
       d <- data.frame(
-          x = factor(rownames(F1), levels = rownames(F1)),
-          y = F1
-          )
-      ycols <- colnames(d[,2:ncol(d)])
+        x = factor(rownames(F1), levels = rownames(F1)),
+        y = F1
+      )
+      ycols <- colnames(d[, 2:ncol(d)])
       fillcolor <- c(RColorBrewer::brewer.pal(6, "Set2"), RColorBrewer::brewer.pal(9, "Set1"))
       # Call the plot function
       suppressWarnings(

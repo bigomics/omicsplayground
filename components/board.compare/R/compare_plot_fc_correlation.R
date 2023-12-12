@@ -62,87 +62,91 @@ compare_plot_fc_correlation_server <- function(id,
       sample_size <- floor(30000 / ncol_pos)
       sample_size <- ifelse(sample_size > nrow_pos, nrow_pos, sample_size)
       sample_size <- sample(rownames(pos), sample_size)
-      sample_size  <- c(hilight, sample_size)
-      sample_size  <- unique(sample_size)
+      sample_size <- c(hilight, sample_size)
+      sample_size <- unique(sample_size)
       # Get data ready
       data_1 <- pos[, grep("1:", colnames(pos)), drop = FALSE]
       data_2 <- pos[, grep("2:", colnames(pos)), drop = FALSE]
       ncol_d1 <- ncol(data_1)
       ncol_d2 <- ncol(data_2)
       nplots <- ncol_d1 * ncol_d2
-      
+
       # Prepare collection list
       sub_plots <- vector("list", nplots)
       counter <- 1
-      
-      # Iterate over the cols of both data sets 
+
+      # Iterate over the cols of both data sets
       for (i in seq_len(ncol_d1)) {
         for (j in seq_len(ncol_d2)) {
-
           # Get the data for the current plot
-          
+
           pos_i <- cbind(data_1[sample_size, i, drop = FALSE], data_2[sample_size, j, drop = FALSE])
           xlab <- ifelse(i == ncol_d2, colnames(pos_i)[1], "")
           ylab <- ifelse(j == 1, colnames(pos_i)[2], "")
           text_i <- glue::glue("{rownames(pos_i)}<br> x: {pos_i[, 1]}<br> y: {pos_i[, 2]}")
           # Plot the points
           plot_i <- plotly::plot_ly(
-                          x = ~pos_i[, 1], 
-                          y = ~pos_i[, 2], 
-                          text = ~rownames(pos_i),
-                          type = "scattergl",
-                          mode = "markers",
-                          marker = list(size = marker_size,
-                          opacity = 0.33,
-                          color =  "#22222255",
-                          line = list(
-                            color = "#AAAAAA44",
-                            width = 0.2
-                            )
-                          ),
-                          showlegend = FALSE)
-          
+            x = ~ pos_i[, 1],
+            y = ~ pos_i[, 2],
+            text = ~ rownames(pos_i),
+            type = "scattergl",
+            mode = "markers",
+            marker = list(
+              size = marker_size,
+              opacity = 0.33,
+              color = "#22222255",
+              line = list(
+                color = "#AAAAAA44",
+                width = 0.2
+              )
+            ),
+            showlegend = FALSE
+          )
+
           # Add the text to hilighted points
           if (length(hilight) > 1) {
             hilight1 <- intersect(rownames(pos_i), hilight)
-              plot_i <- plot_i %>% 
-                plotly::add_trace(
-                  x = ~pos_i[hilight1, 1], 
-                  y = ~pos_i[hilight1, 2] + pos_i[hilight1, 2] * .05, 
-                  text = ~hilight1,
-                  key = ~hilight1,
-                  type = "scattergl",
-                  mode = "marker+text",
-                  marker =  list(opacity = 1, size = marker_size, color = 'red'),
-                  textposition = "top center",
-                  textfont = list(color = '#464545'),
-                  showlegend = FALSE)
+            plot_i <- plot_i %>%
+              plotly::add_trace(
+                x = ~ pos_i[hilight1, 1],
+                y = ~ pos_i[hilight1, 2] + pos_i[hilight1, 2] * .05,
+                text = ~hilight1,
+                key = ~hilight1,
+                type = "scattergl",
+                mode = "marker+text",
+                marker = list(opacity = 1, size = marker_size, color = "red"),
+                textposition = "top center",
+                textfont = list(color = "#464545"),
+                showlegend = FALSE
+              )
           }
-          
+
           # Add the plot to the collection list
           suppressMessages(
-          sub_plots[[counter]] <- plot_i %>%
-                  plotly::layout(
-                    xaxis = list(
-                      title = xlab,
-                      titlefont = list(size = cex.axis)
-                    ),
-                    yaxis = list(
-                      title = ylab,
-                      titlefont = list(size = cex.axis)
-                    )
-                  ) %>%
+            sub_plots[[counter]] <- plot_i %>%
+              plotly::layout(
+                xaxis = list(
+                  title = xlab,
+                  titlefont = list(size = cex.axis)
+                ),
+                yaxis = list(
+                  title = ylab,
+                  titlefont = list(size = cex.axis)
+                )
+              ) %>%
               playbase::plotly_build_light()
-            )
-          counter <- counter +1
+          )
+          counter <- counter + 1
         }
       }
 
       # Combine all plots and set plotly configs
       suppressMessages(
-        all_plts <- plotly::subplot(sub_plots, nrows = ncol_d1, 
-                                    titleX = TRUE, titleY = TRUE, 
-                                    shareX = TRUE, shareY = TRUE)  %>%
+        all_plts <- plotly::subplot(sub_plots,
+          nrows = ncol_d1,
+          titleX = TRUE, titleY = TRUE,
+          shareX = TRUE, shareY = TRUE
+        ) %>%
           plotly::config(modeBarButtonsToRemove = setdiff(all.plotly.buttons, "toImage")) %>%
           plotly::config(toImageButtonOptions = list(
             format = "svg",
@@ -166,7 +170,7 @@ compare_plot_fc_correlation_server <- function(id,
         )
       return(p)
     }
-    
+
     PlotModuleServer(
       "plot",
       plotlib = "plotly",

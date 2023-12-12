@@ -60,10 +60,10 @@ compare_plot_cum_fc2_server <- function(id,
 
       # Prepare input for the plot
       d <- data.frame(
-          x = factor(rownames(F2), levels = rownames(F2)),
-          y = F2
-          )
-      ycols <- colnames(d[,2:ncol(d)])
+        x = factor(rownames(F2), levels = rownames(F2)),
+        y = F2
+      )
+      ycols <- colnames(d[, 2:ncol(d)])
       fillcolor <- c(RColorBrewer::brewer.pal(6, "Set2"), RColorBrewer::brewer.pal(9, "Set1"))
       # Call the plot function
       suppressWarnings(
@@ -76,7 +76,7 @@ compare_plot_cum_fc2_server <- function(id,
           xaxistitle = "Genes",
           title = "Dataset 2",
           grouped = FALSE
-          )
+        )
       )
       return(fig)
     })
