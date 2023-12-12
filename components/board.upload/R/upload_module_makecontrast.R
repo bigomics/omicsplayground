@@ -20,7 +20,8 @@ upload_module_makecontrast_ui <- function(id) {
 
   tagList(
     bslib::layout_columns(
-      col_widths = c(8, 4),
+##      col_widths = c(8, 4),
+      col_widths = 12,
       height = "50%",
       bslib::card(
         full_screen = TRUE,
@@ -93,15 +94,15 @@ upload_module_makecontrast_ui <- function(id) {
             )
           )
         )
-      ),
-      upload_plot_pcaplot_ui(
-        ns("pcaplot"),
-        title = "PCA/tSNE plot",
-        info.text = "",
-        caption = "",
-        height = c("100%", 700),
-        width = c("auto", 800)
       )
+      ## upload_plot_pcaplot_ui(
+      ##   ns("pcaplot"),
+      ##   title = "PCA/tSNE plot",
+      ##   info.text = "",
+      ##   caption = "",
+      ##   height = c("100%", 700),
+      ##   width = c("auto", 800)
+      ## )
     ),
     div(
       style = "padding: 10px 20px;",
