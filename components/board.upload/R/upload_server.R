@@ -233,6 +233,10 @@ UploadBoard <- function(id,
       checklist[["samples_counts"]] <- NULL
       checklist[["samples_contrasts"]] <- NULL
 
+
+      dbg("[upload_server:shiny::observe(upload_files)] 1 : names(uploaded) = ", names(uploaded))
+      dbg("[upload_server:shiny::observe(upload_files)] 1 : is.null(uploaded) = ", sapply(uploaded,is.null))      
+      
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", input$upload_files$name))
       matlist <- list()
@@ -243,6 +247,7 @@ UploadBoard <- function(id,
         i <- grep("[.]pgx$", input$upload_files$name)
         pgxfile <- input$upload_files$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
+        return(NULL)
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
@@ -264,7 +269,7 @@ UploadBoard <- function(id,
         if (file.exists(user_ctfile)) unlink(user_ctfile)
 
         ## ERROR_CODES <- playbase::PGX_CHECKS  ##??
-
+        
         ## ---------------------------------------------------------------------
         ## This goes one-by-one over the uploaded matrices and
         ## performs a single matrix check. The cross-checks are done
@@ -321,7 +326,7 @@ UploadBoard <- function(id,
           }
         }
       }
-
+      
       if (is.null(uploaded$counts.csv) && !"counts.csv" %in% names(matlist)) {
         shinyalert::shinyalert(
           title = "Please upload counts.csv matrix first",
@@ -355,7 +360,6 @@ UploadBoard <- function(id,
           last_hash <<- new_hash
         }
       }
-
 
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
@@ -583,7 +587,7 @@ UploadBoard <- function(id,
         ## insanity check
         if (NCOL(df0) == 0) {
           checked <- NULL
-          status <- "ERROR: no contrasts. please check your input file."
+          status <- "ERROR: empty contrasts. please check your input file."
         }
 
         ## --------- Single matrix counts check----------

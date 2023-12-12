@@ -65,10 +65,13 @@ FeatureMapBoard <- function(id, pgx) {
 
     observeEvent(
       {
-        list( pgx$X, input$showvar)
+        list( pgx$samples, pgx$contrasts, input$showvar)
       },
       {
-        shiny::req(pgx$samples, pgx$contrasts, input$showvar)
+        shiny::req(pgx$samples)
+        shiny::req(dim(pgx$contrasts))
+        shiny::req(input$showvar)
+
         if (input$showvar == "phenotype") {
           cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
           cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
