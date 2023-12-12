@@ -856,7 +856,7 @@ LoginCodeAuthenticationModule <- function(id,
 
     email_sent <- FALSE
     login_code <- NULL
-    
+
     login_modal <- NULL
     if (!redirect_login) {
       login_modal <- splashLoginModal(
@@ -1039,7 +1039,7 @@ LoginCodeAuthenticationModule <- function(id,
           info("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
         } else {
           dbg("[LoginCodeAuthenticationModule] initiating sending code")
-          
+
           login_email <- tolower(login_email)
           ## >>> We check here for email validaty and intercept the
           ## login process for not authorized people with wrong domain
@@ -1094,15 +1094,15 @@ LoginCodeAuthenticationModule <- function(id,
           shiny::showModal(login_modal2)
           updateTextInput(session, "login2_email", value = "")
           updateTextInput(session, "login2_password", value = "", placeholder = "enter code")
-          
+
           shinyalert::shinyalert(
             title = "",
             text = "We have emailed you a login code. Please check your mailbox.",
             size = "xs"
           )
         }
-      } ##,
-      ##ignoreNULL = TRUE, ignoreInit = TRUE
+      } ## ,
+      ## ignoreNULL = TRUE, ignoreInit = TRUE
     )
 
     ## not sure why but using input$login_password directly does not
@@ -1121,7 +1121,7 @@ LoginCodeAuthenticationModule <- function(id,
       if (!email_sent) {
         return(NULL)
       }
-      
+
       ## input_code <- input$login_password
       input_code <- entered_code()
       login.OK <- (input_code == login_code)
@@ -1154,7 +1154,7 @@ LoginCodeAuthenticationModule <- function(id,
 
         USER$logged <- TRUE
         email_sent <<- FALSE
-        
+
         ## Save session as cookie
         save_session_cookie(session, USER)
       }
@@ -1165,7 +1165,9 @@ LoginCodeAuthenticationModule <- function(id,
         input$login2_cancel_btn
       ),
       {
-        if(is.null(input$login2_cancel_btn) || input$login2_cancel_btn==0) return(NULL)
+        if (is.null(input$login2_cancel_btn) || input$login2_cancel_btn == 0) {
+          return(NULL)
+        }
         resetUSER()
       }
     )
