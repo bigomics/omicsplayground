@@ -68,7 +68,15 @@ correlation_table_corr_server <- function(id,
       shiny::req(pgx$X)
 
       df <- plot_data()
+      # Table aesthetics
       char_cols <- c("feature", "gene", "symbol", "human_ortholog", "gene_title")
+      if (pgx$organism %in% c("Human", "human")) {
+        char_cols <- c("feature", "gene", "symbol", "human_ortholog", "gene_title")
+      }
+      if (sum(df$feature %in% df$symbol) > nrow(df)*.8) {
+        df$feature <- NULL
+      }
+
       numeric.cols <- which(!colnames(df) %in% char_cols)
 
       DT::datatable(

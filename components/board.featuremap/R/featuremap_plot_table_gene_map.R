@@ -261,13 +261,11 @@ featuremap_plot_gene_map_server <- function(id,
       } else {
         gene_table_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
       }
+
       # Retreive gene table with rownames (symbols)
-      tt <- playbase::shortstring(pgx$genes[rownames(FC), gene_table_cols, drop = FALSE], 60)
-      if (all(is.na(tt))) {
-        # If not collaps, rownames are not symbols, thus use origina feature (gene_name)
-        rowids <- pgx$genes$gene_name[match(rownames(FC), pgx$genes$symbol, nomatch = 0)]
-        tt <- playbase::shortstring(pgx$genes[rowids, gene_table_cols, drop = FALSE], 60)
-      }
+      rowids <- pgx$genes$gene_name[match(rownames(FC), pgx$genes$symbol, nomatch = 0)]
+      tt <- pgx$genes[rowids, gene_table_cols, drop = FALSE]
+      tt <-  apply(tt, MARGIN = 2, playbase::shortstring, n = 60)
 
       FC <- cbind(sd.X = sqrt(rowMeans(FC**2)), FC)
       if (is.fc) colnames(FC)[1] <- "sd.FC"
@@ -276,6 +274,11 @@ featuremap_plot_gene_map_server <- function(id,
       df <- data.frame(tt, FC,
         check.names = FALSE
       )
+
+      # Remove feature column if it is the same as symbol column
+      if (sum(df$feature %in% df$symbol) > nrow(df)*.8) {
+        df$feature <- NULL
+      }
 
       DT::datatable(df,
         rownames = FALSE,
