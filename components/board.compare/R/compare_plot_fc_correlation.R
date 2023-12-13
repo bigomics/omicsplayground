@@ -132,9 +132,10 @@ compare_plot_fc_correlation_server <- function(id,
                 yaxis = list(
                   title = ylab,
                   titlefont = list(size = cex.axis)
-                )
-              ) %>%
-              playbase::plotly_build_light()
+                ))
+              # this function will be added by Santi when interactive plots are merged /Mauro
+              # ) %>%
+              # playbase::plotly_build_light()
           )
           counter <- counter + 1
         }
@@ -154,7 +155,8 @@ compare_plot_fc_correlation_server <- function(id,
           )) %>%
           plotly::config(displaylogo = FALSE) %>%
           plotly::event_register("plotly_selected") %>%
-          playbase::plotly_build_light() %>%
+          # this function will be added by Santi when interactive plots are merged /Mauro
+          # playbase::plotly_build_light() %>%
           plotly::toWebGL()
       )
 
