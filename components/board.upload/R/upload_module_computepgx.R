@@ -741,9 +741,9 @@ upload_module_computepgx_server <- function(
           info("[computePGX:on_process_completed] : ERROR: Result file not found")
         }
         ## remove temp dir only if "user_input/raw_" is present in raw_dir
-        if (grepl("raw_", raw_dir) ) {
+        if (grepl("raw_", raw_dir)) {
           # check if no ERROR_ files exist in raw_dir
-          if(length(list.files(raw_dir, pattern = "ERROR_")) == 0) {
+          if (length(list.files(raw_dir, pattern = "ERROR_")) == 0) {
             unlink(raw_dir, recursive = TRUE)
           }
         }
