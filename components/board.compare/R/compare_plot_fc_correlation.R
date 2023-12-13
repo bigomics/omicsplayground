@@ -123,20 +123,19 @@ compare_plot_fc_correlation_server <- function(id,
 
           # Add the plot to the collection list
           suppressMessages(
-          sub_plots[[counter]] <- plot_i %>%
-                  plotly::layout(
-                    xaxis = list(
-                      title = xlab,
-                      titlefont = list(size = cex.axis)
-                    ),
-                    yaxis = list(
-                      title = ylab,
-                      titlefont = list(size = cex.axis)
-                    )
-                  )
-            )
-          counter <- counter +1
-
+            sub_plots[[counter]] <- plot_i %>%
+              plotly::layout(
+                xaxis = list(
+                  title = xlab,
+                  titlefont = list(size = cex.axis)
+                ),
+                yaxis = list(
+                  title = ylab,
+                  titlefont = list(size = cex.axis)
+                )
+              )
+          )
+          counter <- counter + 1
         }
       }
 
