@@ -131,8 +131,7 @@ compare_plot_fc_correlation_server <- function(id,
                       title = ylab,
                       titlefont = list(size = cex.axis)
                     )
-                  ) %>%
-              playbase::plotly_build_light()
+                  )
             )
           counter <- counter +1
         }
@@ -150,7 +149,6 @@ compare_plot_fc_correlation_server <- function(id,
           )) %>%
           plotly::config(displaylogo = FALSE) %>%
           plotly::event_register("plotly_selected") %>%
-          playbase::plotly_build_light() %>%
           plotly::toWebGL()
       )
 
@@ -159,7 +157,7 @@ compare_plot_fc_correlation_server <- function(id,
 
     fcfcplot.RENDER <- function() {
       higenes <- hilightgenes()
-      p <- plot_interactive_comp_fc(plot_data = plot_data, marker_size = 6, cex.axis = 12, hilight = higenes)$p %>%
+      p <- plot_interactive_comp_fc(plot_data = plot_data, marker_size = 6, cex.axis = 12, hilight = higenes) %>%
         plotly::layout(
           dragmode = "select",
           margin = list(l = 5, r = 5, b = 5, t = 20)
