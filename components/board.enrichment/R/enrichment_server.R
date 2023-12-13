@@ -552,6 +552,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     genetable <- enrichment_table_genes_in_geneset_server(
       "genetable",
+      organism = pgx$organism,
       geneDetails = geneDetails
     )
 

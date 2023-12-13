@@ -458,6 +458,7 @@ ExpressionBoard <- function(id, pgx) {
     genetable <- expression_table_genetable_server(
       id = "genetable",
       res = filteredDiffExprTable,
+      organism = pgx$organism,
       height = c(tabH - 10, 700),
       scrollY = "200px"
     )

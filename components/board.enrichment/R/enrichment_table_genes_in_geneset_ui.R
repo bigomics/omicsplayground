@@ -24,6 +24,7 @@ enrichment_table_genes_in_geneset_ui <- function(
 }
 
 enrichment_table_genes_in_geneset_server <- function(id,
+                                                     organism,
                                                      geneDetails) {
   moduleServer(id, function(input, output, session) {
     genetable.RENDER <- shiny::reactive({
@@ -34,6 +35,13 @@ enrichment_table_genes_in_geneset_server <- function(id,
           "Please select a geneset from the table on the left to view genes."
         ))
         return(NULL)
+      }
+
+      if (organism %in% c("Human", "human")) {
+        rpt$human_ortholog <- NULL 
+      }
+      if (sum(rpt$feature %in% rpt$symbol) > nrow(rpt)*.8) {
+        rpt$feature <- NULL
       }
 
       rpt$gene_title <- NULL
@@ -48,8 +56,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       }
 
       colnames(rpt) <- sub("^GS$", "gene set", colnames(rpt))
-      numeric.cols <- which(sapply(rpt, is.numeric))
-      numeric.cols
+      numeric.cols <- which(sapply(rpt, is.numeric))      
 
       tbl <- DT::datatable(rpt,
         class = "compact cell-border stripe", rownames = FALSE,
