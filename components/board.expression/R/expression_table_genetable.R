@@ -50,7 +50,8 @@ expression_table_genetable_ui <- function(
 #'
 #' @export
 expression_table_genetable_server <- function(id,
-                                              res, # filteredDiffExprTable
+                                              res,
+                                              organism,
                                               height,
                                               scrollY,
                                               watermark = FALSE) {
@@ -78,12 +79,19 @@ expression_table_genetable_server <- function(id,
 
       numeric.cols <- which(sapply(res, is.numeric))
       numeric.cols <- colnames(res)[numeric.cols]
-      show_res <- res
-      show_res$gene_name <- NULL
-      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(show_res)))[1]
-      fx.col
-      fx <- show_res[, fx.col]
-      DT::datatable(show_res,
+      df <- res
+      df$gene_name <- NULL
+      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
+      fx <- df[, fx.col]
+
+      if (organism %in% c("Human", "human")) {
+        df$human_ortholog <- NULL
+      }
+      if (sum(df$feature %in% df$symbol) > nrow(df)*.8) {
+        df$feature <- NULL
+      }
+
+      DT::datatable(df,
         rownames = FALSE,
         class = "compact hover",
         extensions = c("Scroller"),
@@ -105,7 +113,7 @@ expression_table_genetable_server <- function(id,
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle(colnames(show_res)[fx.col],
+        DT::formatStyle(colnames(df)[fx.col],
           background = color_from_middle(fx, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
