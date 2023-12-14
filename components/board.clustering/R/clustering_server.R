@@ -124,6 +124,12 @@ ClusteringBoard <- function(id, pgx) {
           subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
           choices <- names(subset_choices)
         }
+        if (input$hm_splitby == "gene") {
+          find_gene <- function(x) {
+            any(grepl(input$hm_splitvar, x))
+          }
+          choices <- names(pgx$families[sapply(pgx$families, find_gene)])
+        }
         choices <- c("<custom>", "<contrast>", choices)
         choices <- sort(unique(choices))
         shiny::updateSelectInput(session, "hm_features", choices = choices)
