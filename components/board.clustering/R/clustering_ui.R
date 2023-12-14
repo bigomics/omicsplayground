@@ -89,8 +89,7 @@ ClusteringInputs <- function(id) {
       shiny::tagList(
         withTooltip(
           shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
-            c("tsne", "pca", "umap"),
-            inline = TRUE
+            c("tsne", "pca", "umap","pacmap"), inline = TRUE
           ),
           "Choose the layout method for clustering plots.",
         ),

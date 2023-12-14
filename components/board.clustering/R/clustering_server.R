@@ -4,7 +4,6 @@
 ##
 
 
-
 ##' Clustering board server module
 ##'
 ##' .. content for \details{} ..
@@ -55,7 +54,7 @@ ClusteringBoard <- function(id, pgx) {
       ))
     })
 
-    shiny::observe({
+    shiny::observeEvent( pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
       var.types <- colnames(pgx$Y)
@@ -64,32 +63,42 @@ ClusteringBoard <- function(id, pgx) {
       var.types0 <- c("<none>", "<cluster>", var.types)
       var.types0 <- c("<none>", var.types)
       var.types1 <- c("<none>", var.types)
-      grp <- vv[1]
-      if ("group" %in% var.types) grp <- "group"
-      shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = grp)
+      sel <- grep("^[.]", var.types, invert=TRUE, value=TRUE)[1]
+      if ("condition" %in% tolower(var.types)) sel <- grep("condition",var.types,value=TRUE,
+        ignore.case=TRUE)
+      if ("group" %in% tolower(var.types)) sel <- grep("group", var.types, value=TRUE,
+        ignore.case=TRUE)
+      shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
       shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
     })
 
     ## update filter choices upon change of data set
-    shiny::observe({
-      shiny::req(pgx$Y)
+    shiny::observeEvent({
+      list(pgx$X, pgx$Y, pgx$samples)
+    },{
+      shiny::req(pgx$X, pgx$Y, pgx$samples)
       levels <- playbase::getLevels(pgx$Y)
-
       shiny::updateSelectInput(session, "hm_samplefilter", choices = levels)
 
       ## update defaults??
       n1 <- nrow(pgx$samples) - 1
       groupings <- colnames(pgx$samples)
-
       groupings <- sort(groupings)
-
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
+
+      clustmethods <- grep("2d$",names(pgx$cluster$pos),value=TRUE)
+      clustmethods <- sort(unique(sub("2d$","",clustmethods)))
+      selmethod <- ifelse( "umap" %in% clustmethods, "umap", clustmethod[1])
+      shiny::updateRadioButtons(session, "hm_clustmethod", choices = clustmethods,
+        sel=selmethod)
     })
 
     ## update choices upon change of level
-    shiny::observeEvent(c(input$hm_splitvar, input$hm_level), {
+    shiny::observeEvent({
+      c(input$hm_splitvar, input$hm_level)
+    }, {
       shiny::req(pgx$families, pgx$gsetX)
       shiny::req(input$hm_level)
       choices <- names(pgx$families)
@@ -107,8 +116,10 @@ ClusteringBoard <- function(id, pgx) {
 
     # reactive functions ##############
 
-    shiny::observeEvent(input$hm_splitby, {
-      shiny::req(pgx$X, pgx$samples)
+    shiny::observeEvent({
+      list( input$hm_splitby, pgx$X, pgx$samples )
+    }, {
+      shiny::req(pgx$X, pgx$samples, input$hm_splitby)
       if (input$hm_splitby == "none") {
         return()
       }
@@ -129,7 +140,7 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     ## update filter choices upon change of data set
-    shiny::observe({
+    shiny::observeEvent( pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
@@ -672,7 +683,6 @@ ClusteringBoard <- function(id, pgx) {
           pos <- pgx$tsne3d[sel.samples, ]
         }
       } else if (clustmethod0 %in% names(pgx$cluster$pos)) {
-        shiny::showNotification(paste("switching to ", clustmethod0, " layout...\n"))
         pos <- pgx$cluster$pos[[clustmethod0]]
         if (pdim == 2) pos <- pos[sel.samples, 1:2]
         if (pdim == 3) pos <- pos[sel.samples, 1:3]
