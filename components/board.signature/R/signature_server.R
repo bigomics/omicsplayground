@@ -475,6 +475,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     enrichmentGeneTable <- signature_table_genes_in_signature_server(
       "enrichmentGeneTable",
+      organism = pgx$organism,
       getEnrichmentGeneTable = getEnrichmentGeneTable
     )
   })
