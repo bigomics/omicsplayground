@@ -27,8 +27,7 @@ PlotModuleUI <- function(id,
                          pdf.height = 8,
                          cards = FALSE,
                          card_names = NULL,
-                         header_buttons = NULL
-                         ) {
+                         header_buttons = NULL) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -202,12 +201,12 @@ PlotModuleUI <- function(id,
       bigLoaders::useSpinner()
   }
 
-  if(is.null(header_buttons)) {
+  if (is.null(header_buttons)) {
     header_buttons <- div()
   }
-  
+
   header <- shiny::fillRow(
-    flex = c(1, NA,NA, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",

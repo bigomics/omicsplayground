@@ -686,7 +686,7 @@ ClusteringBoard <- function(id, pgx) {
     selected_samples <- reactive({
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
     })
-    
+
     hm_getClusterPositions.DEPRECATED <- shiny::reactive({
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       clustmethod <- "tsne"
@@ -761,7 +761,7 @@ ClusteringBoard <- function(id, pgx) {
 
     clustering_plot_clustpca_server("PCAplot",
       pgx = pgx,
-      selected_samples = selected_samples,      
+      selected_samples = selected_samples,
       hmpca.colvar = shiny::reactive(input$hmpca.colvar),
       hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
       clustmethod = shiny::reactive(input$hm_clustmethod),
