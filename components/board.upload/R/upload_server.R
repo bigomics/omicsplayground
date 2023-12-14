@@ -429,11 +429,10 @@ UploadBoard <- function(id,
     ## trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
-      
       # show tab Upload
-        shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
-        # check on upload tab
-        shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+      shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
+      # check on upload tab
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
 
       if (input$load_example) {
         zipfile <- file.path(FILES, "exampledata.zip")
@@ -461,8 +460,6 @@ UploadBoard <- function(id,
         checklist[["samples_counts"]] <- NULL
         checklist[["samples_contrasts"]] <- NULL
         uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
-
-        
       } else {
         ## clear files
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
@@ -887,7 +884,7 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    
+
 
     # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
     observeEvent(input$proceed_to_upload, {
@@ -895,7 +892,6 @@ UploadBoard <- function(id,
       shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
       # check on upload tab
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-
     })
 
 
