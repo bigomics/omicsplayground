@@ -190,7 +190,7 @@ UploadUI <- function(id) {
       height = "calc(100vh - 180px)",
       heights_equal = "row",
       bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
-      upload_module_batchcorrect_ui(ns("batchcorrect"), height = "calc(100vh - 200px)")
+      upload_module_batchcorrect_ui(ns("batchcorrect"), height = "100%")
     )
   )
   

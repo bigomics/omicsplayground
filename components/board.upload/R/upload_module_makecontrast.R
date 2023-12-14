@@ -8,13 +8,6 @@
 ## =====================================================================================
 
 
-MakeContrastGadget <- function(X, pheno, height = 720) {
-  gadgetize(MakeContrastUI, MakeContrastServer,
-    title = "MakeContrastGadget",
-    pheno = pheno, height = height
-  )
-}
-
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
@@ -22,7 +15,8 @@ upload_module_makecontrast_ui <- function(id) {
     bslib::layout_columns(
 ##      col_widths = c(8, 4),
       col_widths = 12,
-      height = "50%",
+      height = "100%",
+      row_heights = c(3,2),
       bslib::card(
         full_screen = TRUE,
         style = "border-width: 1px;",
@@ -94,7 +88,7 @@ upload_module_makecontrast_ui <- function(id) {
             )
           )
         )
-      )
+      ),
       ## upload_plot_pcaplot_ui(
       ##   ns("pcaplot"),
       ##   title = "PCA/tSNE plot",
@@ -103,10 +97,13 @@ upload_module_makecontrast_ui <- function(id) {
       ##   height = c("100%", 700),
       ##   width = c("auto", 800)
       ## )
-    ),
-    div(
-      style = "padding: 10px 20px;",
-      DT::dataTableOutput(ns("contrastTable"))
+      bslib::card(
+        full_screen = TRUE,
+        bslib::card_body(
+          style = "padding: 10px 20px;",
+          DT::dataTableOutput(ns("contrastTable"))
+        )
+      )
     )
   )
 }

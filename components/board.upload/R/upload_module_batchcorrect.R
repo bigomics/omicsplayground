@@ -20,8 +20,8 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
       shiny::tagList(
         shiny::p(bc_info),
         shiny::br(),
-        shiny::actionButton(ns("bc_compute_button"), "Batch correct", class = "run-button"),
-        shiny::br(),
+        shiny::actionButton(ns("skip_button"), "Skip", class = "btn btn-outline-success me-1", width='100%'),
+        shiny::actionButton(ns("select_button"), "Select", class = "btn btn-outline-warning me-1", width='100%'),
         shiny::br(),        
         shiny::selectInput(ns("method"), "Select method", choices="uncorrected"),
         shiny::conditionalPanel(
@@ -39,13 +39,18 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
         shiny::conditionalPanel(
            "input.adv_options % 2 == 1",
            ns = ns,
-           shiny::checkboxInput(ns("lib_correction"), "Library correction (lib)"),
-           shiny::checkboxInput(ns("cell_correction"), "Cell correction (MT/ribo/CC)"),
-           shiny::checkboxInput(ns("gender_correction"), "Gender correction (M/F)"),
+           shiny::checkboxGroupInput(
+             ns("tech_params"), "Technical correction:",
+             choiceValues = c("lib","cell","gender"),
+             choiceNames = c("Library size (lib)",
+               "Cell state (MT/ribo/CC)",
+               "Gender (M/F)"),
+             selected = c("lib","cell","gender")
+           ),
+           shiny::radioButtons(ns("showtype"), "Show by:", c("method","technical")),
            shiny::hr(),
-           shiny::selectInput(ns("batch_params"), "Batch covariates", choices=NULL),
-           shiny::br(), shiny::br(),
-           shiny::actionButton(ns("compute_button"), "Recompute", class = "run-button")
+           shiny::selectInput(ns("batch_params"), "Batch covariates:", choices=NULL),
+           shiny::actionButton(ns("recompute_button"), "Recompute", width='100%'),
         ),
         shiny::br(), shiny::br()
       )
@@ -109,81 +114,91 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         if(length(sel2)==0) sel2 <- "<none>"
         shiny::updateSelectInput(session, "batch_params", choices = choices2, selected=sel2 )
       })
-      
-      logX <- reactive({
-        x <- playbase::counts.mergeDuplicateFeatures(r_X())
-        x <- log2(x + 1e-8)
-        x
-      })
-      
-      run_all_corrections <- reactive({
-        
-#        samples <- pgx$samples
-#        contrasts <- pgx$contrasts
-#        X1 <- pgx$X
-        
+
+      get_pheno_batch_vectors <- reactive({
         samples <- r_samples()
         contrasts <- r_contrasts()
-        X1 <- logX()
-        
         M <- playbase::contrasts.convertToLabelMatrix( contrasts,  samples)
         vec <- playbase::createPhenoBatchVectors(
           labeled_contrasts = M,
           samples = samples,
           pmin = 0.2
-        ) 
+        )
+        vec
+      })
 
-        ## Technical corrections 
+      
+      logX <- eventReactive({
+        list( input$recompute_button, r_X(), r_samples(), r_contrasts() )
+      } , {
+
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+
+        x <- playbase::counts.mergeDuplicateFeatures(r_X())
+        x <- log2(x + 1e-8)
+
+        ## Perforem technical corrections 
         params <- c()
-        if(input$lib_correction) {
+        if( "lib" %in% input$tech_params) {
           params = c(params, "lib")
         }
-        if(input$gender_correction) {
+        if( "gender" %in% input$tech_params) {
           params = c(params, "gender")
         }
-        if(input$cell_correction) {
+        if( "cell" %in% input$tech_params) {
           params = c(params, "mito","ribo","cellcycle")
         }
-        dbg("[run_all_corrections] params = ",params)
-        
+        vec <- get_pheno_batch_vectors()        
         if(length(params) > 0) {
-          nv <- ifelse( ncol(X1) > 40, 2, 1)          
-          X1 <- playbase::removeTechnicalEffects(
-            X1,
-            y = vec$pheno,
-            params = params,
-            pmin = 0.20,
-            nmin = 3,
-            nv = nv
-          )
+          nv <- ifelse( ncol(x) > 40, 2, 1)          
+
+          shiny::withProgress(message = "Removing technical artifacts...", value = 0.33, {
+            x <- playbase::removeTechnicalEffects(
+              x,
+              y = vec$pheno,
+              params = params,
+              pmin = 0.20,
+              nmin = 3,
+              nv = nv
+            )
+          })
         }
 
         ## Explicit batch corrections
         batch_params <- input$batch_params
-        if(batch_params == '<none>') {
-          vec$batch <- NULL
-        } else if (batch_params == '<all>') {
-          ## batch_params <- colnames(samples)
-        } else if(batch_params %in% colnames(samples)) {
+        if(batch_params %in% colnames(samples)) {
           batch_params <- intersect(batch_params, colnames(samples))
           B <- samples[,batch_params,drop=FALSE]
           B <- playbase::expandPhenoMatrix(B)
-          bb <- apply(B, 1, paste0, collapse='_')
-          bb <- paste0("b",as.integer(factor(bb)))
-          vec$batch <- bb
-        } else {
+          B <- scale(1*B)
+          mod1 <- model.matrix( ~ vec$pheno )
+          shiny::withProgress(message = "Removing primary batch effects...", value = 0.33, {
+            # x <- limma::removeBatchEffect(x, covariates=B, design=mod1)  ## with model
+            x <- limma::removeBatchEffect(x, covariates=B)  ## forced without model
+          })
         }
-
-        dbg("[run_all_corrections] batch_params = ",batch_params)        
         
-        ## X1 <- playbase::normalizeCounts(2**X1, method='m4')
-        X1 <- playbase::logCPM(pmax(2**X1 - 1,0))
+        x <- playbase::logCPM(pmax(2**x - 1,0))
+        x
+      })
+
+      
+      run_corrections <- eventReactive({
+        list( logX(), input$recompute_button )
+      } , {
+        
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        X1 <- logX()
+
+        vec <- get_pheno_batch_vectors()        
 
         pgx.showSmallModal("Computing batch correction methods. Please wait...")
         shiny::withProgress(message = "Computing methods. Please wait...", value = 0.33, {
           
           xlist <- playbase::runBatchCorrectionMethods(X1, vec$batch, vec$pheno,
-            controls=NULL, combatx = FALSE, remove.failed=TRUE) 
+            controls=NULL, combatx = FALSE, ntop=2000, remove.failed=TRUE) 
 
           incProgress( amount = 0.33)
 
@@ -202,7 +217,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         })
         shiny::removeModal()
         
-        ## update selectInput
+        ## update selectInput with methods
         xnames <- sort(setdiff(names(xlist), 'uncorrected'))
         choices = c("uncorrected", xnames)
         shiny::updateSelectInput(session, "method", choices = choices )
@@ -210,13 +225,50 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         list( xlist = xlist, pos = res$pos,
              stats = res$stats, scores = res$results )
       })
-      
 
+      
+      run_tech_corrections <- eventReactive({
+        list( logX(), input$recompute_button )
+      } , {
+        
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        X1 <- logX()
+
+        vec <- get_pheno_batch_vectors()        
+
+        pgx.showSmallModal("Computing tech correction methods. Please wait...")
+        shiny::withProgress(message = "Computing methods. Please wait...", value = 0.33, {
+          
+          xlist <- playbase::runTechCorrectionMethods(X1, vec$pheno,
+            pmin = 0.20, nmin=3, nv=2, ntop=2000, remove.failed=TRUE) 
+
+          incProgress( amount = 0.33)
+
+          ## PCA is faster than UMAP
+          pos <- lapply(xlist, function(x) {
+            x <- head( x[order(-matrixStats::rowSds(x,na.rm=TRUE)),], 1000)
+            x <- x - rowMeans(x,na.rm=TRUE)
+            irlba::irlba(x)$v[,1:2]
+          })
+
+          incProgress( amount = 0.33)          
+          
+          res <- playbase::bc.evaluateResults(
+              xlist, vec$pheno, lfc=0.2, q=0.05, pos=pos, add.sil=TRUE,
+              plot=FALSE, trend=TRUE) 
+        })
+        shiny::removeModal()
+        
+        list( xlist = xlist, pos = res$pos,
+             stats = res$stats, scores = res$results )
+      })
+      
       output_plot1 <- function() {
         shiny::req(input$colorby, input$method)        
-        res <- run_all_corrections()
-        X0 <- logX()
-        samples <- r_samples()
+        res <- run_corrections()
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
         pheno <- samples[,input$colorby]
         xlist <- res$xlist
         if(input$method != 'uncorrected') {
@@ -237,9 +289,9 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       }
       
       output_plot2 <- function() {
-        res <- run_all_corrections()
-        X0 <- logX()
-        samples <- r_samples()
+        res <- run_corrections()
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
         xlist <- res$xlist
         if(input$method != 'uncorrected') {
           kk <- c('uncorrected',input$method)        
@@ -259,9 +311,9 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       }
       
       output_plot3 <- function() {
-        res <- run_all_corrections()
-        X0 <- logX()
-        samples <- r_samples()
+        res <- run_corrections()
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
         xlist <- res$xlist
         if(input$method != 'uncorrected') {
           kk <- c('uncorrected',input$method)        
@@ -281,9 +333,9 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       }
 
       output_plot4 <- function() {
-        res <- run_all_corrections()
-        X0 <- logX()
-        samples <- r_samples()
+        res <- run_corrections()
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
         pheno = NULL
         xlist <- res$xlist
         if(input$method != 'uncorrected') {
