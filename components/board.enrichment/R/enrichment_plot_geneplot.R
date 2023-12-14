@@ -83,7 +83,7 @@ enrichment_plot_geneplot_server <- function(id,
             displayModeBar = FALSE
           ))
       } else {
-        probe <- sel$probe
+        probe <- sel$rn
         gene <- sel$gene
         if (length(probe) > 1) {
           probe <- grep("\\[gx|\\[mrna", probe, value = TRUE)
