@@ -265,7 +265,7 @@ featuremap_plot_gene_map_server <- function(id,
       # Retreive gene table with rownames (symbols)
       rowids <- pgx$genes$gene_name[match(rownames(FC), pgx$genes$symbol, nomatch = 0)]
       tt <- pgx$genes[rowids, gene_table_cols, drop = FALSE]
-      tt <-  apply(tt, MARGIN = 2, playbase::shortstring, n = 60)
+      tt <- apply(tt, MARGIN = 2, playbase::shortstring, n = 60)
 
       FC <- cbind(sd.X = sqrt(rowMeans(FC**2)), FC)
       if (is.fc) colnames(FC)[1] <- "sd.FC"
@@ -276,7 +276,7 @@ featuremap_plot_gene_map_server <- function(id,
       )
 
       # Remove feature column if it is the same as symbol column
-      if (sum(df$feature %in% df$symbol) > nrow(df)*.8) {
+      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
         df$feature <- NULL
       }
 

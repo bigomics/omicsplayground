@@ -73,7 +73,7 @@ correlation_table_corr_server <- function(id,
       if (pgx$organism %in% c("Human", "human")) {
         char_cols <- c("feature", "gene", "symbol", "human_ortholog", "gene_title")
       }
-      if (sum(df$feature %in% df$symbol) > nrow(df)*.8) {
+      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
         df$feature <- NULL
       }
 

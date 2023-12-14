@@ -23,7 +23,7 @@ signature_table_genes_in_signature_ui <- function(
   )
 }
 
-signature_table_genes_in_signature_server <- function(id, 
+signature_table_genes_in_signature_server <- function(id,
                                                       organism,
                                                       getEnrichmentGeneTable) {
   moduleServer(id, function(input, output, session) {
@@ -35,9 +35,9 @@ signature_table_genes_in_signature_server <- function(id,
       }
 
       if (organism %in% c("Human", "human")) {
-        df$human_ortholog <- NULL 
+        df$human_ortholog <- NULL
       }
-      if (sum(df$feature %in% df$symbol) > nrow(df)*.8) {
+      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
         df$feature <- NULL
       }
 

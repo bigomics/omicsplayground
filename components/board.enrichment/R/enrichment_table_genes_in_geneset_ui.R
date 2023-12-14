@@ -38,9 +38,9 @@ enrichment_table_genes_in_geneset_server <- function(id,
       }
 
       if (organism %in% c("Human", "human")) {
-        rpt$human_ortholog <- NULL 
+        rpt$human_ortholog <- NULL
       }
-      if (sum(rpt$feature %in% rpt$symbol) > nrow(rpt)*.8) {
+      if (sum(rpt$feature %in% rpt$symbol) > nrow(rpt) * .8) {
         rpt$feature <- NULL
       }
 
@@ -56,7 +56,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       }
 
       colnames(rpt) <- sub("^GS$", "gene set", colnames(rpt))
-      numeric.cols <- which(sapply(rpt, is.numeric))      
+      numeric.cols <- which(sapply(rpt, is.numeric))
 
       tbl <- DT::datatable(rpt,
         class = "compact cell-border stripe", rownames = FALSE,

@@ -223,7 +223,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           }
 
           ## check if multi-omics (TEMPORARILY FALSE)
-          is.multiomics <- FALSE#any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
+          is.multiomics <- FALSE # any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
           if (is.multiomics) {
             ii <- grep("\\[gx\\]|\\[mrna\\]", names(fc))
             fc <- fc[ii]
