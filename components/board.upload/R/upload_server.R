@@ -790,11 +790,7 @@ UploadBoard <- function(id,
     )
 
     output$upload_info <- shiny::renderUI({
-      upload_info <- glue::glue("<div><h4>Organism: {input$selected_organism}<h4></div><br><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
-
-      # DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
-      # upload_info <- sub("EXAMPLEZIP", upload_info)
-
+      upload_info <- glue::glue("<div><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
         auth$options$MAX_SAMPLES, "samples and",

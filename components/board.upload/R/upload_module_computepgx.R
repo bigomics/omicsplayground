@@ -108,6 +108,12 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::tags$tr(
                   shiny::tags$td(""),
+                  shiny::tags$td("Organism"),
+                  shiny::tags$td(shiny::tags$h6(selected_organism())),
+                  shiny::tags$td("")
+                ),
+                shiny::tags$tr(
+                  shiny::tags$td(""),
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
