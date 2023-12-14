@@ -58,7 +58,8 @@ pgx <- playbase::pgx.computePGX(
   prune.samples = params$prune.samples,  ##
   do.cluster = params$do.cluster,
   pgx.dir = params$pgx.save.folder,
-  libx.dir = params$libx.dir
+  libx.dir = params$libx.dir,
+  user_input_dir = temp_dir
   )
 
 # annotate pgx
