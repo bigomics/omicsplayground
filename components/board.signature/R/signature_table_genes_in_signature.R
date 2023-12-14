@@ -24,6 +24,7 @@ signature_table_genes_in_signature_ui <- function(
 }
 
 signature_table_genes_in_signature_server <- function(id,
+                                                      organism,
                                                       getEnrichmentGeneTable) {
   moduleServer(id, function(input, output, session) {
     enrichmentGeneTable.RENDER <- shiny::reactive({
@@ -31,6 +32,13 @@ signature_table_genes_in_signature_server <- function(id,
       if (is.null(df)) {
         shiny::validate(shiny::need(!is.null(df), "Please select a contrast"))
         return(NULL)
+      }
+
+      if (organism %in% c("Human", "human")) {
+        df$human_ortholog <- NULL
+      }
+      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
+        df$feature <- NULL
       }
 
       num_cols <- sapply(df, is.numeric)
