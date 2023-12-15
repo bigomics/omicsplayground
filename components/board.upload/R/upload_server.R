@@ -147,6 +147,8 @@ UploadBoard <- function(id,
       }
     })
 
+    # hide upload tab at server start
+    shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "none";')
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
@@ -430,6 +432,11 @@ UploadBoard <- function(id,
     ## trigger the computePGX module.
     ## ------------------------------------------------------------------
     shiny::observeEvent(input$load_example, {
+      # show tab Upload
+      shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
+      # check on upload tab
+      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+
       if (input$load_example) {
         zipfile <- file.path(FILES, "exampledata.zip")
         readfromzip1 <- function(file) {
@@ -456,12 +463,6 @@ UploadBoard <- function(id,
         checklist[["samples_counts"]] <- NULL
         checklist[["samples_contrasts"]] <- NULL
         uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
-
-        shiny::showTab("tabs", "Upload")
-        # for some reason, we need to click in another tab to make the upload tab run
-        shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-        shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
-        shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
       } else {
         ## clear files
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
@@ -789,11 +790,7 @@ UploadBoard <- function(id,
     )
 
     output$upload_info <- shiny::renderUI({
-      upload_info <- glue::glue("<div><h4>Organism: {input$selected_organism}<h4></div><br><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
-
-      # DLlink <- shiny::downloadLink(ns("downloadExampleData"), "exampledata.zip")
-      # upload_info <- sub("EXAMPLEZIP", upload_info)
-
+      upload_info <- glue::glue("<div><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
         auth$options$MAX_SAMPLES, "samples and",
@@ -892,13 +889,13 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
+
+
     # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
     observeEvent(input$proceed_to_upload, {
       # show tab Upload
-      shiny::showTab("tabs", "Upload")
-      # for some reason, we need to click in another tab to make the upload tab run
-      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-      shinyjs::runjs('document.querySelector("a[data-value=\'Select Organism\']").click();')
+      shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
+      # check on upload tab
       shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
     })
 

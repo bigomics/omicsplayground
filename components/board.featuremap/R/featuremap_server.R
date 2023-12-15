@@ -77,16 +77,19 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent({
-      list( input$sigvar, pgx$samples )
-    }, {
-      shiny::req(pgx$samples, input$sigvar)
-      if (input$sigvar %in% colnames(pgx$samples)) {
-        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-        y <- c("<average>", sort(unique(y)))
-        shiny::updateSelectInput(session, "ref_group", choices = y)
+    observeEvent(
+      {
+        list(input$sigvar, pgx$samples)
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
       }
-    })
+    )
 
     observeEvent(
       {
@@ -96,7 +99,7 @@ FeatureMapBoard <- function(id, pgx) {
         shiny::req(pgx$samples)
         shiny::req(dim(pgx$contrasts))
         shiny::req(input$showvar)
-        
+
         if (input$showvar == "phenotype") {
           cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
           cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
@@ -130,12 +133,15 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent({
-      list( input$selcomp )
-    }, {
-      ## shiny::req(pgx$samples, input$sigvar, input$showvar)
-      shiny::updateSelectInput(session, "ref_group", choices = " ")
-    })
+    observeEvent(
+      {
+        list(input$selcomp)
+      },
+      {
+        ## shiny::req(pgx$samples, input$sigvar, input$showvar)
+        shiny::updateSelectInput(session, "ref_group", choices = " ")
+      }
+    )
 
 
     ## ================================================================================

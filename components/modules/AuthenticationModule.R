@@ -1101,7 +1101,7 @@ LoginCodeAuthenticationModule <- function(id,
             size = "xs"
           )
         }
-      }
+      } ## ,
       ## ignoreNULL = TRUE, ignoreInit = TRUE
     )
 
@@ -1127,11 +1127,13 @@ LoginCodeAuthenticationModule <- function(id,
       login.OK <- (input_code == login_code)
 
       if (!login.OK) {
-        output$login_warning <- shiny::renderText("invalid code")
+        dbg("[LoginCodeAuthenticationModule] invalid code")
+        output$login2_warning <- shiny::renderText("invalid code")
+        entered_code("")
         shinyjs::delay(4000, {
-          output$login_warning <- shiny::renderText("")
+          output$login2_warning <- shiny::renderText("")
         })
-        updateTextInput(session, "login_password", value = "")
+        updateTextInput(session, "login2_password", value = "")
         return(NULL)
       }
 
@@ -1151,6 +1153,7 @@ LoginCodeAuthenticationModule <- function(id,
         shiny::removeModal()
 
         USER$logged <- TRUE
+        email_sent <<- FALSE
 
         ## Save session as cookie
         save_session_cookie(session, USER)
@@ -1159,10 +1162,12 @@ LoginCodeAuthenticationModule <- function(id,
 
     shiny::observeEvent(
       list(
-        input$login_cancel_btn,
         input$login2_cancel_btn
       ),
       {
+        if (is.null(input$login2_cancel_btn) || input$login2_cancel_btn == 0) {
+          return(NULL)
+        }
         resetUSER()
       }
     )

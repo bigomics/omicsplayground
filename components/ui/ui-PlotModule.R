@@ -26,7 +26,9 @@ PlotModuleUI <- function(id,
                          pdf.width = 8,
                          pdf.height = 8,
                          cards = FALSE,
-                         card_names = NULL) {
+                         card_names = NULL,
+                         header_buttons = NULL
+                         ) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -200,8 +202,12 @@ PlotModuleUI <- function(id,
       bigLoaders::useSpinner()
   }
 
+  if(is.null(header_buttons)) {
+    header_buttons <- div()
+  }
+  
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA, NA),
+    flex = c(1, NA,NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",
@@ -211,8 +217,9 @@ PlotModuleUI <- function(id,
     if (cards) {
       plot_cards$navList
     } else {
-      div()
+      shiny::div()
     },
+    header_buttons,
     DropdownMenu(
       shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
       width = "250px",

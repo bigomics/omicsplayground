@@ -88,10 +88,8 @@ ClusteringInputs <- function(id) {
       ns = ns,
       shiny::tagList(
         withTooltip(
-          shiny::radioButtons(ns("hm_clustmethod"), "Layout:",
-            c("tsne", "pca", "umap"),
-            inline = TRUE
-          ),
+          shiny::selectInput(ns("hm_clustmethod"), "Layout:",
+                             choices = c("tsne", "pca", "umap", "pacmap")),
           "Choose the layout method for clustering plots.",
         ),
         hr(),
@@ -189,7 +187,7 @@ ClusteringUI <- function(id) {
             height = fullH,
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
-              title = "PCA/tSNE plot",
+              title = "Dimensionality reduction",
               info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis (PCA), t-distributed stochastic embedding (tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
               caption = "Clustering plot of the dataset samples.",
               label = "",

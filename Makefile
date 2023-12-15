@@ -86,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta8.9000"
+VERSION = "v3.3.0-beta10"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
@@ -97,7 +97,7 @@ changelog:
 	sh ./dev/create-changelog.sh '.*' 3 >  CHANGELOG.md
 	sh ./dev/create-changelog.sh '.*' 999 >  CHANGELOG-full.md
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
-	sh ./dev/create-changelog-pr.sh 1 7 > CHANGELOG-pr.md 
+	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
 
 
 tags: changelog

@@ -108,6 +108,12 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::tags$tr(
                   shiny::tags$td(""),
+                  shiny::tags$td("Organism"),
+                  shiny::tags$td(shiny::tags$h6(selected_organism())),
+                  shiny::tags$td("")
+                ),
+                shiny::tags$tr(
+                  shiny::tags$td(""),
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
@@ -742,7 +748,10 @@ upload_module_computepgx_server <- function(
         }
         ## remove temp dir only if "user_input/raw_" is present in raw_dir
         if (grepl("raw_", raw_dir)) {
-          unlink(raw_dir, recursive = TRUE)
+          # check if no ERROR_ files exist in raw_dir
+          if (length(list.files(raw_dir, pattern = "ERROR_")) == 0) {
+            unlink(raw_dir, recursive = TRUE)
+          }
         }
       }
 
