@@ -5,7 +5,7 @@
 
 app_ui <- function() {
 
-    board = options()$board
+    board = options$board
     use_example_data = options()$use_example_data
 
     # handle pgx file input

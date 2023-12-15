@@ -8,8 +8,8 @@ app_server <- function(input, output, session) {
 
   # list functions in global
   
-  board = options()$board
-  authentication = options()$authentication
+  board = options$board
+  authentication = options$authentication
 
   server_fn_name <- glue::glue("{board}board")
   board_server <- grep(server_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
