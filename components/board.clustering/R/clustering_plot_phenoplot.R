@@ -28,7 +28,7 @@ clustering_plot_phenoplot_ui <- function(
     info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
-##    download.fmt = c("png", "pdf", "csv"),
+    ##    download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
   )
@@ -49,12 +49,12 @@ clustering_plot_phenoplot_server <- function(id,
       shiny::req(pgx$Y)
 
       ## get t-SNE positions
-      clustmethod1 <- paste0(clustmethod(),'2d')
+      clustmethod1 <- paste0(clustmethod(), "2d")
       pos <- pgx$cluster$pos[[clustmethod1]]
       colnames(pos) <- c("x", "y")
       jj <- selected_samples()
       kk <- selected_phenotypes()
-      pos <- pos[jj,]
+      pos <- pos[jj, ]
       Y <- pgx$Y[jj, kk, drop = FALSE]
       ## complete dataframe for downloading
       df <- data.frame(pos, Y)
