@@ -21,8 +21,6 @@ app_server <- function(input, output, session) {
 
   # authentication
 
-  browser()
-
   if (!is.null(authentication) &&  authentication != "password") {
       credentials_file <- NULL
   }
