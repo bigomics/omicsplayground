@@ -444,7 +444,7 @@ ExpressionBoard <- function(id, pgx) {
       fx <- round(fx[gset], digits = 4)
 
       X <- playbase::rename_by(X, pgx$genes, "symbol")
-      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[gene1,])[, 1]
+      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[gene1, ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 
