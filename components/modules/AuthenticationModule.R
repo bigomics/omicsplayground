@@ -923,7 +923,7 @@ LoginCodeAuthenticationModule <- function(id,
         email = user_email,
         domain = domain,
         blocked_domain = blocked_domain,
-        credentials_file = credentials_file,
+        user_database = user_database,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
       )
@@ -1126,16 +1126,17 @@ LoginCodeAuthenticationModule <- function(id,
       shiny::req(entered_code())
 
       if (email_sent) {
-        # input_code <- input$login_password
         input_code <- entered_code()
         login.OK <- (input_code == login_code)
 
         if (!login.OK) {
-          output$login_warning <- shiny::renderText("invalid code")
+          dbg("[LoginCodeAuthenticationModule] invalid code")
+          output$login2_warning <- shiny::renderText("invalid code")
+          entered_code("")
           shinyjs::delay(4000, {
-            output$login_warning <- shiny::renderText("")
+            output$login2_warning <- shiny::renderText("")
           })
-          updateTextInput(session, "login_password", value = "")
+          updateTextInput(session, "login2_password", value = "")
           return(NULL)
         }
 
@@ -1148,7 +1149,7 @@ LoginCodeAuthenticationModule <- function(id,
           if (!opt$ENABLE_USERDIR) {
             USER$user_dir <- file.path(PGX.DIR)
           }
-          # USER$options <- read_user_options(USER$user_dir)
+          # set options
           USER$options <- read_user_options_db(USER$email, user_database)
 
           session$sendCustomMessage("set-user", list(user = USER$email))
@@ -1156,48 +1157,11 @@ LoginCodeAuthenticationModule <- function(id,
           shiny::removeModal()
 
           USER$logged <- TRUE
+          email_sent <<- FALSE
+
+          ## Save session as cookie
+          save_session_cookie(session, USER)
         }
-      }
-
-      ## input_code <- input$login_password
-      input_code <- entered_code()
-      login.OK <- (input_code == login_code)
-
-      if (!login.OK) {
-        dbg("[LoginCodeAuthenticationModule] invalid code")
-        output$login2_warning <- shiny::renderText("invalid code")
-        entered_code("")
-        shinyjs::delay(4000, {
-          output$login2_warning <- shiny::renderText("")
-        })
-        updateTextInput(session, "login2_password", value = "")
-        return(NULL)
-      }
-
-      if (login.OK) {
-        output$login_warning <- shiny::renderText("")
-
-        ## create user_dir (always), set path, and set options
-        USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          USER$user_dir <- file.path(PGX.DIR)
-        }
-        # set options
-        # USER$options <- read_user_options(USER$user_dir)
-        USER$options <- read_user_options_db(USER$email, user_database)
-        # return()
-        # USER$options <- read_user_options(USER$user_dir)
-
-        session$sendCustomMessage("set-user", list(user = USER$email))
-        entered_code("") ## important for next user
-        shiny::removeModal()
-
-        USER$logged <- TRUE
-        email_sent <<- FALSE
-
-        ## Save session as cookie
-        save_session_cookie(session, USER)
       }
     })
 
