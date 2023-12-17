@@ -92,9 +92,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     calcGsetMeta <- function(comparison, methods, pgx) {
       mx <- pgx$gset.meta$meta[[comparison]]
-      if (is.null(mx)) {
-        return(NULL)
-      }
+      shiny::req(mx)
       mx.methods <- colnames(unclass(mx$fc))
       methods <- intersect(methods, mx.methods)
       if (is.null(methods) || length(methods) == 0) {
@@ -164,6 +162,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
 
       rpt <- NULL
+
       if (is.null(outputs) || length(gsmethod) > 1) {
         ## show meta-statistics table (multiple methods)
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
@@ -200,6 +199,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         s1 <- names(which(pgx$model.parameters$exp.matrix[, comp] > 0))
         s0 <- names(which(pgx$model.parameters$exp.matrix[, comp] < 0))
         jj <- rownames(mx)
+        jj <- intersect(jj, colnames(pgx$GMT))
         rnaX <- pgx$X
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
         gsdiff.method <- "fc" ## OLD default
@@ -210,10 +210,20 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         } else {
           ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(pgx$X)
           ## and rownames(GMT)
-          fc <- pgx$gx.meta$meta[[comp]]$meta.fx ## stable
+          fc <- pgx$gx.meta$meta[[comp]]$meta.fx
+          names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
           pp <- intersect(rownames(pgx$GMT), names(fc))
-          ## check if multi-omics
-          is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
+
+          # if pp is null, use human ortholog.
+          # pp is null when collapse by gene is false, but we dont have a parameter for that.
+          if (length(pp) == 0 || is.null(pp)) {
+            names(fc) <- pgx$genes[names(fc), "symbol"]
+            pp <- intersect(pgx$genes$symbol, names(fc))
+            pp <- intersect(rownames(pgx$GMT), names(fc))
+          }
+
+          ## check if multi-omics (TEMPORARILY FALSE)
+          is.multiomics <- FALSE # any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
           if (is.multiomics) {
             ii <- grep("\\[gx\\]|\\[mrna\\]", names(fc))
             fc <- fc[ii]
@@ -542,6 +552,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     genetable <- enrichment_table_genes_in_geneset_server(
       "genetable",
+      organism = pgx$organism,
       geneDetails = geneDetails
     )
 

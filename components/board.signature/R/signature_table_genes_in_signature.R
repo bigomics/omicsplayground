@@ -24,6 +24,7 @@ signature_table_genes_in_signature_ui <- function(
 }
 
 signature_table_genes_in_signature_server <- function(id,
+                                                      organism,
                                                       getEnrichmentGeneTable) {
   moduleServer(id, function(input, output, session) {
     enrichmentGeneTable.RENDER <- shiny::reactive({
@@ -33,8 +34,15 @@ signature_table_genes_in_signature_server <- function(id,
         return(NULL)
       }
 
-      num_cols <- 4:ncol(df)
-      color_fx <- as.numeric(df[, num_cols])
+      if (organism %in% c("Human", "human")) {
+        df$human_ortholog <- NULL
+      }
+      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
+        df$feature <- NULL
+      }
+
+      num_cols <- sapply(df, is.numeric)
+      color_fx <- df[, num_cols]
       color_fx[is.na(color_fx)] <- 0 ## yikes...
       numeric.cols <- colnames(df)[num_cols]
 

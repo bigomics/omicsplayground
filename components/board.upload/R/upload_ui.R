@@ -29,7 +29,7 @@ UploadInputs <- function(id) {
         withTooltip(
           shiny::checkboxInput(
             ns("fa_filtertable"),
-            "filter signficant (tables)",
+            "filter significant (tables)",
             FALSE
           ),
           "Click to filter the significant entries in the tables."
@@ -73,7 +73,7 @@ UploadUI <- function(id) {
               ns("selected_organism"),
               NULL,
               # restrict to ensembl species, as we are validating them in the first place
-              choices =  playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
+              choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
               selected = NULL,
               multiple = FALSE
             )

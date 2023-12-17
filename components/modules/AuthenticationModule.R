@@ -26,16 +26,18 @@ NoAuthenticationModule <- function(id,
         user_dir = PGX.DIR ## global
       )
 
-      m <- splashLoginModal(
-        ns = ns,
-        with.username = FALSE,
-        with.email = FALSE,
-        with.password = FALSE,
-        title = "Sign in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Sure I am!"
-      )
-      shiny::showModal(m)
+      if (show_modal) {
+        m <- splashLoginModal(
+          ns = ns,
+          with.username = FALSE,
+          with.email = FALSE,
+          with.password = FALSE,
+          title = "Sign in",
+          subtitle = "Ready to explore your data?",
+          button.text = "Sure I am!"
+        )
+        shiny::showModal(m)
+      }
 
       resetUSER <- function() {
         USER$logged <- FALSE
@@ -60,7 +62,7 @@ NoAuthenticationModule <- function(id,
 
       shiny::observeEvent(
         {
-          input$login_btn
+          input$login_submit_btn
         },
         {
           shiny::removeModal()
@@ -73,7 +75,6 @@ NoAuthenticationModule <- function(id,
           if (!is.null(username) && username != "") {
             USER$username <- username
             USER$email <- email
-            ## dbg("[NoAuthenticationModule] setting username=",username)
           }
         }
       )
@@ -106,16 +107,18 @@ AuthenticationModuleApacheCookie <- function(id,
         user_dir = PGX.DIR ## global
       )
 
-      m <- splashLoginModal(
-        ns = ns,
-        with.username = FALSE,
-        with.email = FALSE,
-        with.password = FALSE,
-        title = "Sign in",
-        subtitle = "Ready to explore your data?",
-        button.text = "Sure I am!"
-      )
-      shiny::showModal(m)
+      if (show_modal) {
+        m <- splashLoginModal(
+          ns = ns,
+          with.username = FALSE,
+          with.email = FALSE,
+          with.password = FALSE,
+          title = "Sign in",
+          subtitle = "Ready to explore your data?",
+          button.text = "Sure I am!"
+        )
+        shiny::showModal(m)
+      }
 
       resetUSER <- function() {
         USER$logged <- FALSE
@@ -138,7 +141,7 @@ AuthenticationModuleApacheCookie <- function(id,
 
       output$login_warning <- shiny::renderText("")
 
-      shiny::observeEvent(input$login_btn, {
+      shiny::observeEvent(input$login_submit_btn, {
         shiny::removeModal()
         USER$logged <- TRUE
 
@@ -158,12 +161,12 @@ AuthenticationModuleApacheCookie <- function(id,
 ## FirebaseAuthenticationModule
 ## ================================================================================
 
-FirebaseAuthenticationModule <- function(id,
-                                         domain = NULL,
-                                         credentials_file = NULL,
-                                         firebase.rds = "firebase.rds",
-                                         allow_personal = TRUE,
-                                         allow_new_users = TRUE) {
+FirebaseAuthenticationModule.DEPRECATED <- function(id,
+                                                    domain = NULL,
+                                                    credentials_file = NULL,
+                                                    firebase.rds = "firebase.rds",
+                                                    allow_personal = TRUE,
+                                                    allow_new_users = TRUE) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using FireBase authentication <<<<")
 
@@ -437,13 +440,13 @@ FirebaseAuthenticationModule <- function(id,
 ## EmailAuthenticationModule (using Firebase, no stripe!!!)
 ## ================================================================================
 
-EmailLinkAuthenticationModule <- function(id,
-                                          pgx_dir,
-                                          domain = NULL,
-                                          credentials_file = NULL,
-                                          allow_new_users = TRUE,
-                                          allow_personal = TRUE,
-                                          firebase.rds = "firebase.rds") {
+EmailLinkAuthenticationModule.DEPRECATED <- function(id,
+                                                     pgx_dir,
+                                                     domain = NULL,
+                                                     credentials_file = NULL,
+                                                     allow_new_users = TRUE,
+                                                     allow_personal = TRUE,
+                                                     firebase.rds = "firebase.rds") {
   shiny::moduleServer(id, function(input, output, session) {
     message("[EmailLinkAuthenticationModule] >>>> using email link (Firebase) authentication <<<<")
 
@@ -614,11 +617,18 @@ EmailLinkAuthenticationModule <- function(id,
 PasswordAuthenticationModule <- function(id,
                                          credentials_file,
                                          allow_personal = TRUE,
-                                         domain = NULL) {
+                                         domain = NULL,
+                                         blocked_domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[PasswordAuthenticationModule] >>>> using password authentication <<<<")
-
+    message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
+
+    iv <- shinyvalidate::InputValidator$new()
+    iv$add_rule("login_email", shinyvalidate::sv_required())
+    iv$add_rule("login_email", shinyvalidate::sv_email())
+    iv$add_rule("login_password", shinyvalidate::sv_required())
+    iv$enable()
+
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     USER <- shiny::reactiveValues(
@@ -655,6 +665,58 @@ PasswordAuthenticationModule <- function(id,
     }
 
     CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
+    # Get persistent session cookie (if available)
+    decrypted_cookie <- get_and_decrypt_cookie(session)
+
+    if (!is.null(decrypted_cookie)) {
+      message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
+      output$login_warning <- shiny::renderText("")
+      shiny::removeModal()
+      sel <- which(CREDENTIALS$email == decrypted_cookie)[1]
+      cred <- CREDENTIALS[sel, ]
+
+      USER$username <- cred$username
+      USER$level <- cred$level
+      USER$limit <- cred$limit
+      USER$email <- decrypted_cookie
+      USER$logged <- TRUE
+
+      ## >>> We check here for email validaty (expiry)
+      check <- checkEmail(
+        email = decrypted_cookie,
+        domain = domain,
+        blocked_domain = blocked_domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal
+      )
+
+      if (!check$valid) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "Expired user",
+          size = "xs"
+        )
+        shinyjs::runjs("logoutInApp();")
+        shiny::showModal(login_modal)
+        return(USER)
+      }
+
+      # create user_dir (always), set path, and set options
+      user_dir <- file.path(PGX.DIR, decrypted_cookie)
+      # create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      if (!opt$ENABLE_USERDIR) {
+        user_dir <- file.path(PGX.DIR)
+      }
+      USER$user_dir <- user_dir
+      USER$options <- read_user_options(user_dir)
+      ## need for JS hsq tracking
+      session$sendCustomMessage("set-user", list(user = cred$username))
+
+      ## export 'public' functions
+      USER$resetUSER <- resetUSER
+
+      return(USER)
+    }
 
     output$showLogin <- shiny::renderUI({
       shiny::showModal(login_modal)
@@ -662,7 +724,7 @@ PasswordAuthenticationModule <- function(id,
 
     output$login_warning <- shiny::renderText("")
 
-    shiny::observeEvent(input$login_btn, {
+    shiny::observeEvent(input$login_submit_btn, {
       login.OK <- FALSE
       valid.date <- FALSE
       valid.user <- FALSE
@@ -671,12 +733,12 @@ PasswordAuthenticationModule <- function(id,
       login_email <- input$login_email
       login_password <- input$login_password
 
-
       ## >>> We check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
       check <- checkEmail(
         email = login_email,
         domain = domain,
+        blocked_domain = blocked_domain,
         credentials_file = credentials_file,
         check.personal = !allow_personal,
         check.existing = FALSE
@@ -727,6 +789,12 @@ PasswordAuthenticationModule <- function(id,
 
         ## need for JS hsq tracking
         session$sendCustomMessage("set-user", list(user = USER$username))
+
+        # Save session as cookie
+        save_session_cookie(session, cred)
+
+        ## export 'public' functions
+        USER$resetUSER <- resetUSER
       } else {
         message("[PasswordAuthenticationModule::login] WARNING : login failed ")
         if (!valid.date) {
@@ -758,12 +826,19 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
-                                          # credentials_file = NULL,
                                           user_database = NULL,
+                                          blocked_domain = NULL,
                                           allow_personal = TRUE,
-                                          allow_new_users = TRUE) {
+                                          allow_new_users = TRUE,
+                                          redirect_login = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
-    message("[AuthenticationModule] >>>> using secret authentication <<<<")
+    message("[AuthenticationModule] >>>> using LoginCode authentication <<<<")
+    ns <- session$ns
+
+    iv <- shinyvalidate::InputValidator$new()
+    iv$add_rule("login_email", shinyvalidate::sv_required())
+    iv$add_rule("login_email", shinyvalidate::sv_email())
+    iv$enable()
 
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
@@ -772,7 +847,6 @@ LoginCodeAuthenticationModule <- function(id,
     }
     # if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
-    ns <- session$ns
     USER <- shiny::reactiveValues(
       method = "login-code",
       logged = FALSE,
@@ -787,18 +861,36 @@ LoginCodeAuthenticationModule <- function(id,
     email_sent <- FALSE
     login_code <- NULL
 
-    login_modal <- splashLoginModal(
-      ns = ns,
-      with.email = TRUE,
-      with.username = FALSE,
-      with.password = FALSE,
-      title = "Enter Email",
-      subtitle = "To register or sign in, enter your email and we'll send you a login code.",
-      button.text = "Send code!"
-    )
-    shiny::showModal(login_modal) ## need first time
+    login_modal <- NULL
+    if (!redirect_login) {
+      login_modal <- splashLoginModal(
+        ns = ns,
+        with.email = TRUE,
+        with.username = FALSE,
+        with.password = FALSE,
+        title = "Enter Email",
+        subtitle = "To register or sign in, enter your email and we'll send you a login code.",
+        button.text = "Send code!"
+      )
+    } else {
+      login_modal <- splashLoginModal(
+        ns = ns,
+        with.email = FALSE,
+        with.username = FALSE,
+        with.password = FALSE,
+        with.link = TRUE,
+        link = "https://auth.bigomics.ch/#!/login",
+        title = "Welcome!",
+        subtitle = "To register or sign in, click the Log in button.",
+        button.text = "Log in"
+      )
+    }
+
+    ## need first time??
+    shiny::showModal(login_modal)
 
     resetUSER <- function() {
+      dbg("[LoginCodeAuthenticationModule] resetUSER called")
       USER$logged <- FALSE
       USER$username <- NA
       USER$email <- NA
@@ -810,7 +902,69 @@ LoginCodeAuthenticationModule <- function(id,
       login_code <<- NULL
       updateTextInput(session, "login_email", value = "")
       updateTextInput(session, "login_password", value = "")
+
       shiny::showModal(login_modal)
+    }
+
+    ## --------------------------------------
+    ## Step 0: detect cookie and pass
+    ## --------------------------------------
+    decrypted_cookie <- get_and_decrypt_cookie(session)
+    if (!is.null(decrypted_cookie)) {
+      dbg("[LoginCodeAuthenticationModule] cookies found : login OK! ")
+      output$login_warning <- shiny::renderText("")
+      shiny::removeModal()
+
+      user_email <- decrypted_cookie
+      USER$email <- user_email
+
+      ## >>> We check here for email validaty (expiry)
+      check <- checkEmail(
+        email = user_email,
+        domain = domain,
+        blocked_domain = blocked_domain,
+        credentials_file = credentials_file,
+        check.personal = !allow_personal,
+        check.existing = !allow_new_users
+      )
+
+      if (!check$valid) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "Expired user",
+          size = "xs"
+        )
+        shinyjs::runjs("logoutInApp();")
+        shiny::showModal(login_modal)
+        return(USER)
+      }
+
+      # create user_dir (always), set path, and set options
+      user_dir <- file.path(PGX.DIR, user_email)
+      create_user_dir_if_needed(user_dir, PGX.DIR)
+      if (!opt$ENABLE_USERDIR) {
+        user_dir <- file.path(PGX.DIR)
+      }
+      USER$user_dir <- user_dir
+      USER$options <- read_user_options(user_dir)
+
+      session$sendCustomMessage("set-user", list(user = user_email))
+
+      USER$logged <- TRUE
+
+      ## export as 'public' functions
+      USER$resetUSER <- resetUSER
+
+      shinyalert::shinyalert(
+        title = "",
+        text = "Biscit yaccepted, thou art granted fri passage...",
+        size = "xs",
+        timer = 1900
+      )
+
+      return(USER)
+    } else {
+      dbg("[LoginCodeAuthenticationModule:sendLoginCode] no cookies found")
     }
 
     sendLoginCode <- function(user_email, login_code, mail_creds) {
@@ -853,7 +1007,7 @@ LoginCodeAuthenticationModule <- function(id,
     output$login_warning <- shiny::renderText("")
 
     email_waiter <- waiter::Waiter$new(
-      id = ns("login_btn"),
+      id = ns("login_submit_btn"),
       html = div(waiter::spin_3(),
         style = "transform: scale(0.6);"
       ),
@@ -863,9 +1017,21 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 1: react on send email button
     ## --------------------------------------
-    query_email <- shiny::reactive(shiny::getQueryString()$email)
+    ## observeEvent(shiny::getQueryString(), {
+    ##   dbg("[LoginCodeAuth:observe.getQueryString] names.query = ", names(shiny::getQueryString()))
+    ##   dbg("[LoginCodeAuth:observe.getQueryString] query = ", shiny::getQueryString())
+    ## })
+    ## observeEvent(input$login_submit_btn, {
+    ##   dbg("[LoginCodeAuth:observe.getQueryString] login_submit_btn = ", input$login_submit_btn)
+    ## })
 
-    shiny::observeEvent(c(input$login_btn, query_email()),
+    query_email <- shiny::reactive({
+      query_email <- shiny::getQueryString()$email
+      query_email
+    })
+
+    shiny::observeEvent(
+      list(input$login_submit_btn, query_email()),
       {
         if (is.null(query_email())) {
           shiny::req(input$login_email)
@@ -874,15 +1040,19 @@ LoginCodeAuthenticationModule <- function(id,
           login_email <- query_email()
         }
 
-        if (!email_sent) {
+        if (email_sent) {
+          info("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
+        } else {
+          dbg("[LoginCodeAuthenticationModule] initiating sending code")
+
           login_email <- tolower(login_email)
           ## >>> We check here for email validaty and intercept the
           ## login process for not authorized people with wrong domain
           check <- checkEmail(
             email = login_email,
             domain = domain,
-            # credentials_file = credentials_file,
             user_database = user_database,
+            blocked_domain = blocked_domain,
             check.personal = !allow_personal,
             check.existing = !allow_new_users
           )
@@ -898,7 +1068,9 @@ LoginCodeAuthenticationModule <- function(id,
           ## MAIL CODE TO USER
           ## login_code <- "hello123"
           ## login_code <<- paste0(sample(c(LETTERS), 6), collapse = "")
-          login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")), collapse = "-")
+          login_code <<- paste(sapply(1:3, function(i) paste(sample(LETTERS, 4), collapse = "")),
+            collapse = "-"
+          )
 
           info("[LoginCodeAuthenticationModule] sending login code", login_code, "to", login_email)
           email_waiter$show()
@@ -913,6 +1085,7 @@ LoginCodeAuthenticationModule <- function(id,
           ## change buttons and field
           login_modal2 <- splashLoginModal(
             ns = ns,
+            id = "login2",
             with.email = FALSE,
             with.username = FALSE,
             with.password = TRUE,
@@ -923,9 +1096,10 @@ LoginCodeAuthenticationModule <- function(id,
             add.cancel = TRUE,
             cancel.text = "Cancel"
           )
+          shiny::removeModal()
           shiny::showModal(login_modal2)
-          updateTextInput(session, "login_email", value = "")
-          updateTextInput(session, "login_password", value = "", placeholder = "enter code")
+          updateTextInput(session, "login2_email", value = "")
+          updateTextInput(session, "login2_password", value = "", placeholder = "enter code")
 
           shinyalert::shinyalert(
             title = "",
@@ -933,23 +1107,22 @@ LoginCodeAuthenticationModule <- function(id,
             size = "xs"
           )
         }
-      },
-      ignoreNULL = TRUE,
-      ignoreInit = TRUE
+      } ## ,
+      ## ignoreNULL = TRUE, ignoreInit = TRUE
     )
 
     ## not sure why but using input$login_password directly does not
     ## work as the value does not reset for the next user (IK 8jul23)
     entered_code <- shiny::reactiveVal("")
-    observeEvent(input$login_password, {
-      entered_code(input$login_password)
+    observeEvent(input$login2_submit_btn, {
+      shiny::req(input$login2_password)
+      entered_code(input$login2_password)
     })
 
     ## --------------------------------------
     ## Step 2: react on submit CODE button
     ## --------------------------------------
-    shiny::observeEvent(input$login_btn, {
-      ## shiny::req(input$login_password)
+    shiny::observeEvent(entered_code(), {
       shiny::req(entered_code())
 
       if (email_sent) {
@@ -985,19 +1158,26 @@ LoginCodeAuthenticationModule <- function(id,
           USER$logged <- TRUE
         }
       }
-    })
 
-    shiny::observeEvent(input$cancel_btn, {
-      resetUSER()
-    })
+      ## input_code <- input$login_password
+      input_code <- entered_code()
+      login.OK <- (input_code == login_code)
 
-    first_time <- TRUE
-    observeEvent(USER$logged, {
-      ## no need to show the modal if the user is logged this is due
-      ## to persistence. But if it is the first time of the session
-      ## we force reset/logout to delete sleeping (persistent?) logins.
-      if (USER$logged && !first_time) {
-        # create user_dir (always), set path, and set options
+      if (!login.OK) {
+        dbg("[LoginCodeAuthenticationModule] invalid code")
+        output$login2_warning <- shiny::renderText("invalid code")
+        entered_code("")
+        shinyjs::delay(4000, {
+          output$login2_warning <- shiny::renderText("")
+        })
+        updateTextInput(session, "login2_password", value = "")
+        return(NULL)
+      }
+
+      if (login.OK) {
+        output$login_warning <- shiny::renderText("")
+
+        ## create user_dir (always), set path, and set options
         USER$user_dir <- file.path(PGX.DIR, USER$email)
         create_user_dir_if_needed(USER$user_dir, PGX.DIR)
         if (!opt$ENABLE_USERDIR) {
@@ -1006,11 +1186,32 @@ LoginCodeAuthenticationModule <- function(id,
         # set options
         # USER$options <- read_user_options(USER$user_dir)
         USER$options <- read_user_options_db(USER$email, user_database)
-        return()
+        # return()
+        # USER$options <- read_user_options(USER$user_dir)
+
+        session$sendCustomMessage("set-user", list(user = USER$email))
+        entered_code("") ## important for next user
+        shiny::removeModal()
+
+        USER$logged <- TRUE
+        email_sent <<- FALSE
+
+        ## Save session as cookie
+        save_session_cookie(session, USER)
       }
-      first_time <<- FALSE
-      resetUSER()
     })
+
+    shiny::observeEvent(
+      list(
+        input$login2_cancel_btn
+      ),
+      {
+        if (is.null(input$login2_cancel_btn) || input$login2_cancel_btn == 0) {
+          return(NULL)
+        }
+        resetUSER()
+      }
+    )
 
     ## export as 'public' functions
     USER$resetUSER <- resetUSER
@@ -1018,6 +1219,7 @@ LoginCodeAuthenticationModule <- function(id,
     return(USER)
   })
 }
+
 
 ## ================================================================================
 ## ================================= END OF FILE ==================================

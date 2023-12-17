@@ -1,26 +1,24 @@
 BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
 
-run: sass version 
-	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)"
+run: sass version rm.locks
+	Rscript dev/run_app.R
 
 run.headless:
-	R -e "shiny::runApp('components/app/R',launch=FALSE,port=3838,host='0.0.0.0')"
+	Rscript dev/run_app_headless.R
 
 run.tee: 
-	R -e "shiny::runApp('components/app/R',launch=TRUE,port=3838)" 2>&1 | tee -a run.log
+	Rscript dev/run_app.R 2>&1 | tee -a run.log
 
 sass: FORCE
 	Rscript dev/sass.R
 	Rscript dev/create_source_all.R
 
 clean:
-	find . -name '.#*' -o -name '#*' -o -name '*~'
-	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
-	rm `find . -name '.#*' -o -name '#*' -o -name '*~'`
+	rm `find . -name '.#*' -o -name '*~' -o -name 'LOCK*'`
 
-clean.force:
-	rm `find . -name '.#*' -o -name '#*' -o -name '*~'`
+rm.locks:
+	find . -name 'LOCK*' -exec rm {} \;
 
 show.branch:
 	@echo $(BRANCH)
@@ -88,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta2"
+VERSION = "v3.3.0-beta10.9001"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
@@ -99,6 +97,8 @@ changelog:
 	sh ./dev/create-changelog.sh '.*' 3 >  CHANGELOG.md
 	sh ./dev/create-changelog.sh '.*' 999 >  CHANGELOG-full.md
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
+	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
+
 
 tags: changelog
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
@@ -118,7 +118,7 @@ board.launch:
 board.example:
 	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
-pgx.check.error:
+pgx.check.error: sass
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
 app.test:

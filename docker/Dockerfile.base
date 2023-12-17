@@ -30,7 +30,8 @@ RUN apt update && apt install -y \
     pandoc pandoc-citeproc imagemagick \ 
     libcairo2-dev libxt-dev xvfb \
     libfftw3-dev libglpk-dev librsvg2-dev \
-    libgsl-dev librsvg2-dev libgsl-dev curl
+    libgsl-dev librsvg2-dev libgsl-dev curl \
+    libsodium-dev
 
 # Install Chrome
 RUN apt-get update && apt-get install -y wget gnupg2

@@ -192,9 +192,19 @@ checkAuthorizedDomain <- function(email, domain) {
     return(TRUE)
   }
   domain1 <- strsplit(domain, split = "\\|")[[1]]
-  domain1 <- paste0(paste0("@", domain1, "$"), collapse = "|")
+  domain1 <- paste0(paste0(domain1, "$"), collapse = "|")
   authorized <- grepl(tolower(domain1), tolower(email))
   authorized
+}
+
+checkBlockedDomain <- function(email, domain) {
+  if (is.null(domain) || domain == "" || domain == "*") {
+    return(FALSE)
+  }
+  domain1 <- strsplit(domain, split = "\\|")[[1]]
+  domain1 <- paste0(paste0(domain1, "$"), collapse = "|")
+  blocked <- grepl(tolower(domain1), tolower(email))
+  blocked
 }
 
 checkAuthorizedUser <- function(email, credentials_file = NULL) {
@@ -250,7 +260,7 @@ checkValidEmailFormat <- function(email) {
 }
 
 checkPersonalEmail <- function(email) {
-  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$", tolower(email))
+  grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$|qq.com", tolower(email))
 }
 
 checkMissingEmail <- function(email) {
@@ -263,8 +273,8 @@ checkExistUserFolder <- function(email) {
   tolower(email) %in% tolower(user_dirs)
 }
 
-checkEmail <- function(email, domain = NULL, credentials_file = NULL, user_database = NULL,
-                       check.personal = TRUE, check.existing = FALSE) {
+checkEmail <- function(email, domain = NULL, blocked_domain = NULL, user_database = NULL,
+                       check.personal = TRUE, check.existing = FALSE, credentials_file = NULL) {
   chk <- list()
   if (checkMissingEmail(email)) {
     return(list(valid = FALSE, msg = "missing email"))
@@ -274,6 +284,9 @@ checkEmail <- function(email, domain = NULL, credentials_file = NULL, user_datab
   }
   if (!checkAuthorizedDomain(email, domain)) {
     return(list(valid = FALSE, msg = "domain not authorized"))
+  }
+  if (checkBlockedDomain(email, blocked_domain)) {
+    return(list(valid = FALSE, msg = "domain blocked"))
   }
   if (!checkAuthorizedUser(email, credentials_file)) {
     return(list(valid = FALSE, msg = "user not authorized"))

@@ -51,35 +51,49 @@ app_server <- function(input, output, session) {
       id = "auth",
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      domain = opt$DOMAIN
-    )
-  } else if (authentication == "firebase") {
-    auth <- FirebaseAuthenticationModule(
-      id = "auth",
       domain = opt$DOMAIN,
-      firebase.rds = "firebase.rds",
-      credentials_file = credentials_file,
-      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      allow_new_users = opt$ALLOW_NEW_USERS
+      blocked_domain = opt$BLOCKED_DOMAIN
     )
-  } else if (authentication == "email-link") {
-    auth <- EmailLinkAuthenticationModule(
-      id = "auth",
-      pgx_dir = PGX.DIR,
-      domain = opt$DOMAIN,
-      firebase.rds = "firebase.rds",
-      credentials_file = credentials_file,
-      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      allow_new_users = opt$ALLOW_NEW_USERS
-    )
+    ## } else if (authentication == "firebase") {
+    ##   auth <- FirebaseAuthenticationModule(
+    ##     id = "auth",
+    ##     domain = opt$DOMAIN,
+    ##     firebase.rds = "firebase.rds",
+    ##     credentials_file = credentials_file,
+    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+    ##     allow_new_users = opt$ALLOW_NEW_USERS
+    ##   )
+    ## } else if (authentication == "email-link") {
+    ##   auth <- EmailLinkAuthenticationModule(
+    ##     id = "auth",
+    ##     pgx_dir = PGX.DIR,
+    ##     domain = opt$DOMAIN,
+    ##     firebase.rds = "firebase.rds",
+    ##     credentials_file = credentials_file,
+    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+    ##     allow_new_users = opt$ALLOW_NEW_USERS
+    ##   )
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
       user_database = user_database,
+      blocked_domain = opt$BLOCKED_DOMAIN,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      allow_new_users = opt$ALLOW_NEW_USERS
+      allow_new_users = opt$ALLOW_NEW_USERS,
+      redirect_login = FALSE
+    )
+  } else if (authentication == "login-code-redirect") {
+    auth <- LoginCodeAuthenticationModule(
+      id = "auth",
+      mail_creds = file.path(ETC, "gmail_creds"),
+      domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN,
+      user_database = user_database,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+      allow_new_users = opt$ALLOW_NEW_USERS,
+      redirect_login = TRUE
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -88,6 +102,11 @@ app_server <- function(input, output, session) {
       show_modal = TRUE,
       username = username,
       email = username
+    )
+  } else if (authentication == "none") {
+    auth <- NoAuthenticationModule(
+      id = "auth",
+      show_modal = TRUE
     )
   } else if (authentication == "none2") {
     ## no authentication but also not showing main modal (enter)
@@ -99,9 +118,13 @@ app_server <- function(input, output, session) {
       email = username
     )
   } else if (authentication == "apache-cookie") {
-    auth <- AuthenticationModuleApacheCookie(id = "auth", show_modal = FALSE)
+    auth <- AuthenticationModuleApacheCookie(
+      id = "auth",
+      show_modal = FALSE
+    )
   } else {
-    auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
+    ## stop everything
+    stop("unsupported authorization method", authentication)
   }
 
   ## -------------------------------------------------------------
@@ -501,10 +524,9 @@ app_server <- function(input, output, session) {
   })
 
   ## --------------------------------------------------------------------------
-
+  ## upon change of user OR beta toggle OR new pgx
   ## --------------------------------------------------------------------------
 
-  ## upon change of user OR beta toggle OR new pgx
   shiny::observeEvent(
     {
       auth$logged
@@ -626,16 +648,16 @@ app_server <- function(input, output, session) {
     # Initialize the reactiveTimer to update every 30 seconds. Set max
     # idle time to 2 minutes.
     lock <- FolderLock$new(
-      poll_secs = 15,
-      max_idle = 60,
+      poll_secs = 30,
+      max_idle = 120,
       show_success = FALSE,
       show_details = FALSE
     )
     lock$start_shiny_observer(auth, session = session)
   }
 
-  #' Track which users are online by repeatedly writing small ID file
-  #' in the ONLINE_DIR folder.
+  #' Track which users are online by repeatedly writing every delta
+  # seconds a small ID file ' in the ONLINE_DIR folder.
   if (isTRUE(opt$ENABLE_HEARTBEAT)) {
     ONLINE_DIR <- file.path(ETC, "online")
     heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
@@ -872,13 +894,15 @@ app_server <- function(input, output, session) {
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   ## Startup Message
-  if (!is.null(opt$STARTUP_MESSAGE) && opt$STARTUP_MESSAGE[1] != "") {
-    shinyalert::shinyalert(
-      title = HTML(opt$STARTUP_TITLE),
-      text = HTML(opt$STARTUP_MESSAGE),
-      html = TRUE
-    )
-  }
+  dbg("[MAIN] showing startup modal")
+  observeEvent(auth$logged, {
+    if (auth$logged) {
+      shinyjs::delay(1200, {
+        bsutils::modal_show("startup_modal")
+      })
+    }
+  })
+
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Resest inactivity counter when there is user activity (a click on the UI)

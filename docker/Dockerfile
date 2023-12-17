@@ -22,13 +22,15 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
+RUN apt update && apt install -y libsodium-dev
+
 #------------------------------------------------------------
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
-##RUN R -e "install.packages(c('htmltools'),force=TRUE)"
+RUN R -e "install.packages(c('shinyvalidate','sodium','cookies'),force=TRUE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
@@ -39,6 +41,7 @@ WORKDIR /
 #    https://github.com/bigomics/playdata.git \
 #    && R CMD INSTALL playdata \
 #    && rm -fr playdata
+
 RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
@@ -66,5 +69,4 @@ RUN make sass
 # Expose port and set entry CMD
 #------------------------------------------------------------
 EXPOSE 3838
-##CMD ["R", "-e", "shiny::runApp('components/app/R',port=3838,host='0.0.0.0')"]
-CMD exec R -e "shiny::runApp('components/app/R', port=3838, host='0.0.0.0', launch.browser=0)" 2>&1 | tee -a run.log
+CMD exec Rscript dev/run_app_headless.R 2>&1 | tee -a run.log
