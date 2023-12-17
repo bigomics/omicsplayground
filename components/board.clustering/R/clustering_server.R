@@ -178,7 +178,8 @@ ClusteringBoard <- function(id, pgx) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
-      genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
+      genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
+      genes <- ifelse(genes$human_ortholog == "", genes$gene_name, genes$human_ortholog)
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
