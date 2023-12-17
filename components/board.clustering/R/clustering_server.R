@@ -124,12 +124,6 @@ ClusteringBoard <- function(id, pgx) {
           subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
           choices <- names(subset_choices)
         }
-        if (input$hm_splitby == "gene") {
-          find_gene <- function(x) {
-            any(grepl(input$hm_splitvar, x))
-          }
-          choices <- names(pgx$families[sapply(pgx$families, find_gene)])
-        }
         choices <- c("<custom>", "<contrast>", choices)
         choices <- sort(unique(choices))
         shiny::updateSelectInput(session, "hm_features", choices = choices)
@@ -218,6 +212,11 @@ ClusteringBoard <- function(id, pgx) {
           fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
           n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
+          if (input$hm_splitby == "gene") {
+            if (!(input$hm_splitvar %in% gg)) {
+              gg <- c(input$hm_splitvar, gg)
+            }
+          }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
         } else if (ft == "<custom>" && ft != "") {
@@ -257,6 +256,14 @@ ClusteringBoard <- function(id, pgx) {
         }
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
+        if(length(gg) == 0) {
+          return(NULL)
+        }
+        if (input$hm_splitby == "gene") {
+          if (!(input$hm_splitvar %in% gg)) {
+            gg <- c(input$hm_splitvar, gg)
+          }
+        }
         jj <- match(toupper(gg), toupper(genes))
         pp <- rownames(pgx$X)[jj]
         zx <- pgx$X[pp, , drop = FALSE]
