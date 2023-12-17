@@ -315,6 +315,7 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_samplefilter,
       input$hm_filterXY,
       input$hm_filterMitoRibo,
+      input$hm_contrast,
       pgx$X,
       ## input$hm_group,
       splitmap$hm_ntop()
