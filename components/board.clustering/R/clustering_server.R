@@ -256,7 +256,7 @@ ClusteringBoard <- function(id, pgx) {
         }
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
-        if(length(gg) == 0) {
+        if (length(gg) == 0) {
           return(NULL)
         }
         if (input$hm_splitby == "gene") {
