@@ -832,7 +832,7 @@ UploadBoard <- function(id,
       id = "makecontrast",
       phenoRT = reactive(checked_samples()$matrix),
       contrRT = reactive(checked_contrasts()$matrix),
-      ##      countsRT = corrected_counts,
+      ## countsRT = corrected_counts,
       countsRT = reactive(checked_counts()$matrix),
       height = height
     )

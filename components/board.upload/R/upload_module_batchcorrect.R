@@ -22,11 +22,12 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
         shiny::br(),
         shiny::actionButton(ns("skip_button"), "Skip",
           class = "btn-sm btn-outline-success me-1", width='100%'),
-        shiny::actionButton(ns("select_button"), "Select",
-          class = "btn-sm btn-outline-warning me-1", width='100%'),
-           shiny::selectizeInput(ns("method"), "Correction method:",
-             choices=NULL),
-        shiny::br(), shiny::br(), shiny::br(),
+        br(), br(),
+        shiny::selectizeInput(ns("method"), NULL,
+          choices = c("Select method" = "") ),
+        shiny::actionButton(ns("use_button"), "Use batch correction",
+          class = "btn-sm btn-outline-primary me-1", width='100%'),        
+        shiny::br(), shiny::br(), shiny::br(), shiny::br(),
         withTooltip(shiny::actionLink(ns("adv_options"),
            "Advanced options", icon = icon("cog", lib = "glyphicon")),
            "Toggle advanced options.",
@@ -37,10 +38,10 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
            "input.adv_options % 2 == 1",
            ns = ns,
            shiny::selectizeInput(ns("tech_params"), "Technical covariates:",
-             choices = c("<auto>","lib","cell","gender","<none>"),
-             sel = "<auto>", multiple=TRUE),           
+             choices = c("<lib>","<mito>","<ribo>","<cell>","<gender>"),
+             multiple=TRUE),           
            shiny::selectizeInput(ns("batch_params"), "Batch covariates:",
-             choices = c("<auto>","<none>"), sel=1, multiple=TRUE),
+             choices = NULL, multiple=TRUE),
            shiny::actionButton(ns("recompute_button"), "Recompute",
              class="btn-sm", width='100%'),
         ),
@@ -96,13 +97,10 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
     function(input, output, session) {
       
       observeEvent( r_samples(), {
-
-        choices1 = c("<auto>", "<lib>", "<mito>", "<ribo>", "<cellcycle>", "<gender>","<none>")
-        shiny::updateSelectInput(session, "tech_params", choices = choices1, sel = "<auto>")
-
-        choices2 = c("<auto>", colnames(r_samples()), "<none>")
-        shiny::updateSelectInput(session, "batch_params", choices = choices2, sel = "<auto>")
-        
+        ## choices1 = c("<lib>", "<mito>", "<ribo>", "<cellcycle>", "<gender>","<none>")
+        ## shiny::updateSelectInput(session, "tech_params", choices = choices1 )
+        ## choices2 = c(colnames(r_samples()))
+        ## shiny::updateSelectInput(session, "batch_params", choices = choices2)        
       })
 
       logX <- eventReactive({
@@ -117,12 +115,24 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       })
 
       analyze_batch_effects <- reactive({
-        shiny::req(r_contrasts(), r_samples(), r_X())
 
+        dbg("[batchcorrect_server:analyze_batch_effects] 0 :")
+        dbg("[batchcorrect_server:analyze_batch_effects] 0 : dim.X = ", dim(r_X()))
+        dbg("[batchcorrect_server:analyze_batch_effects] 0 : dim.contrasts = ", dim(r_contrasts()))
+        dbg("[batchcorrect_server:analyze_batch_effects] 0 : dim.samples = ", dim(r_samples()))
+        
+        ##shiny::req(r_contrasts(), r_samples(), r_X())
+        shiny::req( dim(r_contrasts()), dim(r_samples()), dim(r_X()))
+
+        dbg("[batchcorrect_server:analyze_batch_effects] 1 :")        
+        
         samples <- r_samples()
         contrasts <- r_contrasts()
-        X <- r_X()
-
+        ##X <- r_X()
+        X <- logX()
+        
+        dbg("[batchcorrect_server:analyze_batch_effects] 2 :")
+        
         ## M <- contrasts
         ## if( input$model_params == "<auto>") {
         ##   M <- playbase::contrasts.convertToLabelMatrix( contrasts,  samples)
@@ -132,6 +142,8 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         ##   M <- samples[,kk,drop=FALSE]
         ##   pheno <- apply( 1*playbase::expandPhenoMatrix(M), 1, paste, collapse='')
         ## }
+
+        dbg("[batchcorrect_server:analyze_batch_effects] 3 :")
         
         bc <- playbase::detectBatchEffects(
           X = X,
@@ -147,13 +159,22 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           xrank = NULL
         )                
 
-        choices2 = c("<auto>", bc$params$statistical)
-        shiny::updateSelectInput(session, "batch_params", choices = choices2, sel = "<auto>")
+        dbg("[batchcorrect_server:analyze_batch_effects] 4 :")
+        
+        choices2 = c("<none>",sort(bc$params$statistical))
+        shiny::updateSelectInput(session, "batch_params", choices = choices2, sel = choices2[-1])
 
-        cat.tech <- paste0("<",unique(sub("[.].*","",bc$params$technical)),">")
-        choices3 = c("<auto>", cat.tech)
-        shiny::updateSelectInput(session, "tech_params", choices = choices3, sel = "<auto>")
+        tparams <- sort(unique(sub("[.].*","",bc$params$technical)))
+        choices3 <- c("<none>",paste0("<",tparams,">"))
+        shiny::updateSelectInput(session, "tech_params", choices = choices3, sel = choices3[-1])
 
+        dbg("[batchcorrect_server:analyze_batch_effects] 5 :")
+        
+        bc$choices <- list(
+          batch_params = choices2[-1],
+          tech_params  = choices3[-1]          
+        )
+        
         bc
       })
       
@@ -166,6 +187,8 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         samples <- r_samples()
         contrasts <- r_contrasts()
         X1 <- logX()
+
+        dbg("[batchcorrect_server:run_methods] 1 :")
         
         pgx.showSmallModal("Computing batch correction methods. Please wait...")
 
@@ -173,21 +196,31 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
 
           shiny::incProgress( amount = 0.2, "Analyzing for batch effects..." )          
           bc <- analyze_batch_effects()        
-
+          shiny::req(bc)
+          
           tparams <- input$tech_params
           bparams <- input$batch_params
-          if(is.null(tparams)) tparams <- c()
-          if(is.null(bparams)) bparams <- c()          
-          dbg("[batchcorrect_server:run_methods] bparams = ", bparams)
-          dbg("[batchcorrect_server:run_methods] tparams = ", tparams)
+
+          dbg("[batchcorrect_server:run_methods] isnull.bparams = ", is.null(bparams))
+          dbg("[batchcorrect_server:run_methods] isnull.tparams = ", is.null(tparams))
+          dbg("[batchcorrect_server:run_methods] bparams=='' = ", bparams=='')
+          dbg("[batchcorrect_server:run_methods] tparams=='' = ", tparams=='')
+          dbg("[batchcorrect_server:run_methods] len.bparams = ", length(bparams))
+          dbg("[batchcorrect_server:run_methods] len.tparams = ", length(tparams))
+          if(is.null(tparams) || length(tparams)==0) {
+            tparams <- bc$choices$tech_params
+          }
+          if(is.null(bparams) || length(bparams)==0) {
+            bparams <- bc$choices$batch_params
+          }
+          dbg("[batchcorrect_server:run_methods] 2: bparams = ", bparams)
+          dbg("[batchcorrect_server:run_methods] 2: tparams = ", tparams)
 
           batch <- bc$batch          
           M <- bc$covariates
           mparams <- sub("=.*","",colnames(M))
           sel <- c()
-          if('<auto>' %in% tparams) {
-            sel <- grep("^lib|^ribo|^mito|^gender|^cellcyle|^pca",mparams)
-          } else if(length(tparams)==0 || '<none>' %in% tparams) {
+          if(length(tparams)==0 || '<none>' %in% tparams) {
             ##
           } else {
             if("<lib>" %in% tparams) sel <- c(sel, grep("^lib[.]",mparams))
@@ -197,11 +230,8 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
             if("<cellcycle>" %in% tparams) sel <- c(sel, grep("^cellcycle[.]",mparams))
             if("<pca>" %in% tparams) sel <- c(sel, grep("^pca[.]",mparams))
           }
-
-          if('<auto>' %in% bparams) {
-            sel1 <- which(mparams %in% colnames(samples))
-            sel <- c(sel, sel1)
-          } else if(length(bparams)==0 || '<none>' %in% bparams) {
+          
+          if(length(bparams)==0 || '<none>' %in% bparams) {
             ##
           } else {
             sel1 <- which(mparams %in% bparams)
@@ -259,6 +289,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         ## update selectInput with methods
         xnames <- sort(setdiff(names(xlist), 'uncorrected'))
         choices = c("uncorrected", xnames)
+        choices = c("Select method" = "", xnames)
         shiny::updateSelectInput(session, "method", choices = choices )
 
         list(
@@ -270,20 +301,45 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       })
 
 
-      correctedX <- reactive({
-        logX()
+      ##      correctedX <- shiny::eventReactive({
+      ##        input$use_button
+      ##      }, {
+      correctedX <- reactive({      
+        dbg("[upload_module_batchcorrect_server:correctedX] reacted!")
+        X <- logX()
+        this.method <- input$method        
+        dbg("[upload_module_batchcorrect_server:correctedX] this.method = ", this.method)
+        bc <- analyze_batch_effects()        
+        xlist <- playbase::runBatchCorrectionMethods(
+          X = X,
+          batch = bc$batch,
+          y = bc$pheno,
+          controls = NULL,
+          methods = this.method,
+          combatx = FALSE,
+          ntop = Inf,
+          sc = FALSE,
+          remove.failed=TRUE)         
+        xlist[[this.method]]
       })
 
+      ## ------------------------------------------------------------
+      ## Reactive return object
+      ## ------------------------------------------------------------
+      outobj <- shiny::reactive({
+        shiny::req(correctedX())
+        X0 <- correctedX()
+        list(X = X0)
+      })
             
       output_plot1 <- function() {
-        shiny::req(input$method)        
         res <- run_methods()
         shiny::req(res)
         X0 <- isolate(logX())
         samples <- isolate(r_samples())
         pheno <- res$pheno
         xlist <- res$xlist
-        if(input$method %in% names(xlist) &&  input$method != 'uncorrected') {
+        if(input$method %in% names(xlist) && input$method != 'uncorrected') {
           kk <- c('uncorrected',input$method)        
           xlist <- xlist[kk]
         }
@@ -348,7 +404,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
 
       output_plot4 <- function() {
         res <- run_methods()
-        shiny::req(res, input$method)
+        shiny::req(res)
         X0 <- isolate(logX())
         samples <- isolate(r_samples())
         pheno = NULL
@@ -429,17 +485,6 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
       
-      ## ------------------------------------------------------------
-      ## Reactive return object
-      ## ------------------------------------------------------------
-      outobj <- shiny::eventReactive({
-        list(correctedX())
-      }, {
-        shiny::req(correctedX())
-        X0 <- correctedX()
-        dbg("[upload_module_batchcorrect_server:outobj] input$method = ", input$method)
-        list(X = X0)
-      })
 
       return(outobj) ## pointing to reactive
     } ## end-of-server
