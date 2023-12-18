@@ -114,7 +114,7 @@ clustering_plot_splitmap_server <- function(id,
       filt <- getTopMatrix()
       shiny::req(filt)
       zx <- filt$mat
-      annot <- filt$annot
+      annot  <- filt$annot
       zx.idx <- filt$idx
 
       return(list(
@@ -218,7 +218,7 @@ clustering_plot_splitmap_server <- function(id,
       if (input$hm_scale == "BMC") scale <- "row.bmc"
 
       plt <- NULL
-
+      
       ## extract from plot data
       pd <- plot_data()
       filt <- pd[["filt"]]
@@ -229,17 +229,19 @@ clustering_plot_splitmap_server <- function(id,
       ## sample clustering index
       splitx <- NULL
       splitx <- filt$grp
-
+      
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
-
       rownames(annotF) <- rownames(annot)
-      if (length(selected_phenotypes()) == 0) {
+      
+      sel <- selected_phenotypes()
+      sel <- intersect(sel, colnames(annotF))
+      if (length(sel) == 0) {
         annotF <- NULL
       } else {
-        annotF <- annotF[, selected_phenotypes(), drop = FALSE]
+        annotF <- annotF[, sel, drop = FALSE]
       }
-
+      
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
 
@@ -261,7 +263,7 @@ clustering_plot_splitmap_server <- function(id,
         names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
-
+      
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X, annot = annotF, ytips = tooltips,
         idx = splity, splitx = splitx, scale = scale,

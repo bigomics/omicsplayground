@@ -704,6 +704,7 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     hm_getClusterPositions.DEPRECATED <- shiny::reactive({
+
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       clustmethod <- "tsne"
       pdim <- 2
