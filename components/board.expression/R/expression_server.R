@@ -435,9 +435,10 @@ ExpressionBoard <- function(id, pgx) {
         gset <- names(which(pgx$GMT[j, ] != 0))
         gset <- intersect(gset, rownames(pgx$gsetX))
       }
-      if (length(gset) == 0) {
-        return(NULL)
-      }
+      
+      shiny::validate(
+        shiny::need(length(gset) != 0, "No genesets passed filter and/or enrichment cutoffs for this gene.")
+      )
 
       fx <- pgx$gset.meta$meta[[contr]]$meta.fx
       names(fx) <- rownames(pgx$gset.meta$meta[[contr]])
