@@ -98,9 +98,10 @@ ClusteringBoard <- function(id, pgx) {
         contrasts <- playbase::pgx.getContrasts(pgx)
         shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
 
+        ## get clusterings methods
         clustmethods <- grep("2d$", names(pgx$cluster$pos), value = TRUE)
         clustmethods <- sort(unique(sub("2d$", "", clustmethods)))
-        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethod[1])
+        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethods[1])
         shiny::updateSelectInput(session, "hm_clustmethod",
           choices = clustmethods, sel = selmethod
         )
