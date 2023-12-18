@@ -277,6 +277,16 @@ ExpressionBoard <- function(id, pgx) {
       return(res)
     })
 
+     genes_in_sel_geneset <- shiny::reactive({
+      req(pgx$X)
+      sel_gset <- rownames(gx_related_genesets()[gsettable_rows_selected(),])
+
+      sel_genes <- pgx$GMT[,sel_gset]
+      # return sel_genes that are not zero
+      sel_genes <- sel_genes[which(sel_genes >0)]
+      return(names(sel_genes))
+    })
+
     # Plotting ###
 
     # tab differential expression > Plot ####
@@ -291,7 +301,9 @@ ExpressionBoard <- function(id, pgx) {
       df1 = filteredDiffExprTable,
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
+      genes_in_sel_geneset = genes_in_sel_geneset,
       watermark = WATERMARK
+
     )
 
     expression_plot_maplot_server(
