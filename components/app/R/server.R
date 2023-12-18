@@ -45,7 +45,8 @@ app_server <- function(input, output, session) {
       id = "auth",
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      domain = opt$DOMAIN
+      domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN
     )
     ## } else if (authentication == "firebase") {
     ##   auth <- FirebaseAuthenticationModule(
@@ -71,6 +72,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN,      
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
@@ -81,6 +83,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN,            
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
