@@ -278,9 +278,12 @@ ExpressionBoard <- function(id, pgx) {
     })
 
      genes_in_sel_geneset <- shiny::reactive({
-      req(pgx$X)
+      req(pgx$X, pgx$name)
+      if(!is.data.frame(gx_related_genesets()) && gx_related_genesets() == "No geneset for selected gene."){
+        sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
+        return(sel_gene)
+      }
       sel_gset <- rownames(gx_related_genesets()[gsettable_rows_selected(),])
-
       sel_genes <- pgx$GMT[,sel_gset]
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes >0)]
@@ -319,7 +322,8 @@ ExpressionBoard <- function(id, pgx) {
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
       fam.genes = res$gene_name,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      genes_in_sel_geneset = genes_in_sel_geneset
     )
 
     expression_plot_barplot_server(
