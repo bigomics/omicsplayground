@@ -617,7 +617,8 @@ EmailLinkAuthenticationModule.DEPRECATED <- function(id,
 PasswordAuthenticationModule <- function(id,
                                          credentials_file,
                                          allow_personal = TRUE,
-                                         domain = NULL) {
+                                         domain = NULL,
+                                         blocked_domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
@@ -684,6 +685,7 @@ PasswordAuthenticationModule <- function(id,
       check <- checkEmail(
         email = decrypted_cookie,
         domain = domain,
+        blocked_domain = blocked_domain,
         credentials_file = credentials_file,
         check.personal = !allow_personal
       )
@@ -736,6 +738,7 @@ PasswordAuthenticationModule <- function(id,
       check <- checkEmail(
         email = login_email,
         domain = domain,
+        blocked_domain = blocked_domain,
         credentials_file = credentials_file,
         check.personal = !allow_personal,
         check.existing = FALSE
@@ -823,6 +826,7 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
+                                          blocked_domain = NULL,
                                           credentials_file = NULL,
                                           allow_personal = TRUE,
                                           allow_new_users = TRUE,
@@ -918,6 +922,7 @@ LoginCodeAuthenticationModule <- function(id,
       check <- checkEmail(
         email = user_email,
         domain = domain,
+        blocked_domain = blocked_domain,
         credentials_file = credentials_file,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
@@ -1046,6 +1051,7 @@ LoginCodeAuthenticationModule <- function(id,
           check <- checkEmail(
             email = login_email,
             domain = domain,
+            blocked_domain = blocked_domain,
             credentials_file = credentials_file,
             check.personal = !allow_personal,
             check.existing = !allow_new_users

@@ -7,6 +7,7 @@ ALLOW_NEW_USERS      = TRUE
 ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE
 #DOMAIN              = bigomics.ch|demo.com
+BLOCKED_DOMAIN       = bigomics.com|massdynamics.com|pluto.bio|rosalind.bio
 ENABLE_CHIRP         = TRUE
 ENABLE_DELETE        = TRUE
 ENABLE_PGX_DOWNLOAD  = TRUE

@@ -101,9 +101,8 @@ ClusteringBoard <- function(id, pgx) {
         clustmethods <- grep("2d$", names(pgx$cluster$pos), value = TRUE)
         clustmethods <- sort(unique(sub("2d$", "", clustmethods)))
         selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethod[1])
-        shiny::updateRadioButtons(session, "hm_clustmethod",
-          choices = clustmethods,
-          sel = selmethod
+        shiny::updateSelectInput(session, "hm_clustmethod",
+          choices = clustmethods, sel = selmethod
         )
       }
     )
@@ -698,7 +697,12 @@ ClusteringBoard <- function(id, pgx) {
       return(rho)
     })
 
-    hm_getClusterPositions <- shiny::reactive({
+
+    selected_samples <- reactive({
+      playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+    })
+
+    hm_getClusterPositions.DEPRECATED <- shiny::reactive({
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       clustmethod <- "tsne"
       pdim <- 2
@@ -761,7 +765,6 @@ ClusteringBoard <- function(id, pgx) {
 
 
     # plots ##########
-
     splitmap <- clustering_plot_splitmap_server(
       id = "splitmap",
       pgx = pgx,
@@ -773,10 +776,10 @@ ClusteringBoard <- function(id, pgx) {
 
     clustering_plot_clustpca_server("PCAplot",
       pgx = pgx,
-      hm_getClusterPositions = hm_getClusterPositions,
+      selected_samples = selected_samples,
       hmpca.colvar = shiny::reactive(input$hmpca.colvar),
       hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
-      hm_clustmethod = shiny::reactive(input$hm_clustmethod),
+      clustmethod = shiny::reactive(input$hm_clustmethod),
       watermark = WATERMARK,
       parent = ns
     )
@@ -797,7 +800,8 @@ ClusteringBoard <- function(id, pgx) {
       id = "clust_phenoplot",
       pgx = pgx,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
-      hm_getClusterPositions = hm_getClusterPositions,
+      clustmethod = shiny::reactive(input$hm_clustmethod),
+      selected_samples = selected_samples,
       watermark = WATERMARK
     )
 
