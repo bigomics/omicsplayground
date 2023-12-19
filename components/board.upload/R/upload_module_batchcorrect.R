@@ -14,6 +14,10 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
 
   bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
 
+  options.plot1 <- tagList(
+    selectInput( ns('plottype'), "Type;", c("umap","tsne","pca"))
+  )
+  
   shiny::sidebarLayout(
     shiny::sidebarPanel(
       width = 2,
@@ -61,7 +65,7 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
           title = "Clustering",
 #          info.text = info.text,
 #          caption = caption,
-          options = NULL
+          options = options.plot1
         ),
         PlotModuleUI(
           ns("plot3"),
@@ -109,41 +113,19 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         samples <- r_samples()
         contrasts <- r_contrasts()
         dbg("[batchcorrect_server:logX] reacted!")        
-        x <- playbase::counts.mergeDuplicateFeatures(r_X())
-        x <- limma::normalizeQuantiles(playbase::logCPM(x))
-        x
+        X <- playbase::counts.mergeDuplicateFeatures(r_X())
+        X <- limma::normalizeQuantiles(playbase::logCPM(X))  ## standard normalization
+        X
       })
 
       analyze_batch_effects <- reactive({
-
-        dbg("[batchcorrect_server:analyze_batch_effects] 0 :")
-        dbg("[batchcorrect_server:analyze_batch_effects] 0 : dim.X = ", dim(r_X()))
-        dbg("[batchcorrect_server:analyze_batch_effects] 0 : dim.contrasts = ", dim(r_contrasts()))
-        dbg("[batchcorrect_server:analyze_batch_effects] 0 : dim.samples = ", dim(r_samples()))
         
         ##shiny::req(r_contrasts(), r_samples(), r_X())
-        shiny::req( dim(r_contrasts()), dim(r_samples()), dim(r_X()))
-
-        dbg("[batchcorrect_server:analyze_batch_effects] 1 :")        
+        shiny::req( dim(r_contrasts()), dim(r_samples()), dim(logX()))
         
         samples <- r_samples()
         contrasts <- r_contrasts()
-        ##X <- r_X()
         X <- logX()
-        
-        dbg("[batchcorrect_server:analyze_batch_effects] 2 :")
-        
-        ## M <- contrasts
-        ## if( input$model_params == "<auto>") {
-        ##   M <- playbase::contrasts.convertToLabelMatrix( contrasts,  samples)
-        ##   pheno <- playbase::contrasts2pheno(M, samples) 
-        ## } else {
-        ##   kk <- intersect(input$model_params, colnames(samples))
-        ##   M <- samples[,kk,drop=FALSE]
-        ##   pheno <- apply( 1*playbase::expandPhenoMatrix(M), 1, paste, collapse='')
-        ## }
-
-        dbg("[batchcorrect_server:analyze_batch_effects] 3 :")
         
         bc <- playbase::detectBatchEffects(
           X = X,
@@ -158,8 +140,6 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           nv = 2,
           xrank = NULL
         )                
-
-        dbg("[batchcorrect_server:analyze_batch_effects] 4 :")
         
         choices2 = c("<none>",sort(bc$params$statistical))
         shiny::updateSelectInput(session, "batch_params", choices = choices2, sel = choices2[-1])
@@ -167,8 +147,6 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         tparams <- sort(unique(sub("[.].*","",bc$params$technical)))
         choices3 <- c("<none>",paste0("<",tparams,">"))
         shiny::updateSelectInput(session, "tech_params", choices = choices3, sel = choices3[-1])
-
-        dbg("[batchcorrect_server:analyze_batch_effects] 5 :")
         
         bc$choices <- list(
           batch_params = choices2[-1],
@@ -187,8 +165,6 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         samples <- r_samples()
         contrasts <- r_contrasts()
         X1 <- logX()
-
-        dbg("[batchcorrect_server:run_methods] 1 :")
         
         pgx.showSmallModal("Computing batch correction methods. Please wait...")
 
@@ -201,20 +177,12 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           tparams <- input$tech_params
           bparams <- input$batch_params
 
-          dbg("[batchcorrect_server:run_methods] isnull.bparams = ", is.null(bparams))
-          dbg("[batchcorrect_server:run_methods] isnull.tparams = ", is.null(tparams))
-          dbg("[batchcorrect_server:run_methods] bparams=='' = ", bparams=='')
-          dbg("[batchcorrect_server:run_methods] tparams=='' = ", tparams=='')
-          dbg("[batchcorrect_server:run_methods] len.bparams = ", length(bparams))
-          dbg("[batchcorrect_server:run_methods] len.tparams = ", length(tparams))
           if(is.null(tparams) || length(tparams)==0) {
             tparams <- bc$choices$tech_params
           }
           if(is.null(bparams) || length(bparams)==0) {
             bparams <- bc$choices$batch_params
           }
-          dbg("[batchcorrect_server:run_methods] 2: bparams = ", bparams)
-          dbg("[batchcorrect_server:run_methods] 2: tparams = ", tparams)
 
           batch <- bc$batch          
           M <- bc$covariates
@@ -264,10 +232,16 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           incProgress( amount = 0.2, "Computing clustering...")
 
           ## PCA is faster than UMAP
-          pos <- lapply(xlist, function(x) {
-            x <- head( x[order(-matrixStats::rowSds(x,na.rm=TRUE)),], 1000)
-            x <- x - rowMeans(x,na.rm=TRUE)
-            irlba::irlba(x)$v[,1:2]
+          pos <- list()
+          t2 <- function(x) t(scale(t(scale(t(x)))))
+          pos[['pca']] <- lapply(xlist, function(x) {
+            irlba::irlba(t2(x), nu=2, nv=2)$u[,1:2]
+          })
+          pos[['tsne']] <- lapply(xlist, function(x) {
+            Rtsne::Rtsne(t2(x), check_duplicates=FALSE)$Y
+          })
+          pos[['umap']] <- lapply(xlist, function(x) {
+            as.matrix(uwot::umap(t2(x)))
           })
 
           incProgress( amount = 0.2, "Evaluating results...")          
@@ -277,7 +251,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
             pheno = bc$pheno,
             lfc = 0.2,
             q = 0.05,
-            pos = pos,
+            pos = pos[['umap']],
             add.sil = TRUE,
             plot = FALSE,
             trend = TRUE
@@ -294,13 +268,14 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
 
         list(
           xlist = xlist,
-          pos = res$pos,
+          pos = pos,
           scores = res$scores,
           pheno = bc$pheno
         )
       })
 
-
+      
+      
       ##      correctedX <- shiny::eventReactive({
       ##        input$use_button
       ##      }, {
@@ -308,7 +283,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         dbg("[upload_module_batchcorrect_server:correctedX] reacted!")
         X <- logX()
         this.method <- input$method        
-        dbg("[upload_module_batchcorrect_server:correctedX] this.method = ", this.method)
+
         bc <- analyze_batch_effects()        
         xlist <- playbase::runBatchCorrectionMethods(
           X = X,
@@ -343,12 +318,14 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           kk <- c('uncorrected',input$method)        
           xlist <- xlist[kk]
         }
-        dbg("[plot1] table.pheno = ", table(pheno))
+
+        plottype <- input$plottype
+        pos <- res$pos[[plottype]]
         
         playbase::bc.plotResults(
           X = X0,
           xlist = xlist,
-          pos = res$pos,
+          pos = pos,
           pheno = pheno,
           samples = samples,
           type = "umap",
@@ -371,7 +348,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         playbase::bc.plotResults(
           X = X0,
           xlist = xlist,
-          pos = res$pos,
+          pos = NULL,
           pheno = NULL,
           samples = samples,
           type = "heatmap",
@@ -393,7 +370,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         playbase::bc.plotResults(
           X = X0,
           xlist = xlist,
-          pos = res$pos,
+          pos = NULL,
           pheno = NULL,
           samples = samples,
           type = "pc",
@@ -411,22 +388,17 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         xlist <- res$xlist
         sel <- grep("^r[.]g",colnames(res$scores),invert=TRUE)
         scores <- res$scores[,sel]
-        pos = res$pos
-        
-        dbg("[output_plot4] rownames.scores = ",rownames(scores))
-        dbg("[output_plot4] input$method = ",input$method)
         
         if(input$method %in% rownames(scores) && input$method != 'uncorrected') {
           kk <- c('uncorrected',input$method)        
           scores <- scores[kk,]
           xlist <- xlist[kk]
-          pos <- pos[kk]          
         }
         
         playbase::bc.plotResults(
           X = X0,
           xlist = xlist,
-          pos = pos,
+          pos = NULL,
           pheno = pheno,
           samples = samples,
           type = "scores",
