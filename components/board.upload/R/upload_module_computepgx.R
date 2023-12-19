@@ -202,6 +202,12 @@ upload_module_computepgx_server <- function(
                   choiceValues = EXTRA.METHODS,
                   choiceNames = EXTRA.NAMES,
                   selected = EXTRA.SELECTED
+                ),
+                fileInput2(
+                  ns("upload_annot_table"),
+                  "hello",
+                  multiple = FALSE,
+                  accept = c(".txt", ".gmt")
                 )
               ),
               shiny::wellPanel(
@@ -369,6 +375,19 @@ upload_module_computepgx_server <- function(
           custom_geneset <<- list(gmt = NULL, info = NULL)
           return(NULL)
         }
+      })
+
+      # react on upload_annot_table
+      shiny::observeEvent(input$upload_annot_table, {
+        # trigger a popup
+        annot_table <- input$upload_annot_table
+
+        shinyalert::shinyalert(
+          title = "Upload annotation table",
+          text = "Upload annotation table",
+          type = "info",
+          closeOnClickOutside = TRUE
+        )
       })
 
       shiny::observeEvent(input$compute, {
