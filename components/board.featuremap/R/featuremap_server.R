@@ -172,7 +172,10 @@ FeatureMapBoard <- function(id, pgx) {
       }
 
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
-
+      if (length(hilight) == 0) {
+        hilight <- NULL
+        hilight2 <- NULL
+      }
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
