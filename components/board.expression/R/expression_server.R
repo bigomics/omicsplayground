@@ -277,6 +277,19 @@ ExpressionBoard <- function(id, pgx) {
       return(res)
     })
 
+    genes_in_sel_geneset <- shiny::reactive({
+      req(pgx$X, pgx$name)
+      if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == "No geneset for selected gene.") {
+        sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
+        return(sel_gene)
+      }
+      sel_gset <- rownames(gx_related_genesets()[gsettable_rows_selected(), ])
+      sel_genes <- pgx$GMT[, sel_gset]
+      # return sel_genes that are not zero
+      sel_genes <- sel_genes[which(sel_genes > 0)]
+      return(names(sel_genes))
+    })
+
     # Plotting ###
 
     # tab differential expression > Plot ####
@@ -291,6 +304,7 @@ ExpressionBoard <- function(id, pgx) {
       df1 = filteredDiffExprTable,
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
+      genes_in_sel_geneset = genes_in_sel_geneset,
       watermark = WATERMARK
     )
 
@@ -307,7 +321,8 @@ ExpressionBoard <- function(id, pgx) {
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
       fam.genes = res$gene_name,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      genes_in_sel_geneset = genes_in_sel_geneset
     )
 
     expression_plot_barplot_server(
@@ -435,8 +450,9 @@ ExpressionBoard <- function(id, pgx) {
         gset <- names(which(pgx$GMT[j, ] != 0))
         gset <- intersect(gset, rownames(pgx$gsetX))
       }
+
       if (length(gset) == 0) {
-        return(NULL)
+        return("No geneset for selected gene.")
       }
 
       fx <- pgx$gset.meta$meta[[contr]]$meta.fx
@@ -444,7 +460,7 @@ ExpressionBoard <- function(id, pgx) {
       fx <- round(fx[gset], digits = 4)
 
       X <- playbase::rename_by(X, pgx$genes, "symbol")
-      rho <- cor(t(pgx$gsetX[gset, ]), X[gene1, ])[, 1]
+      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[gene1, ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 

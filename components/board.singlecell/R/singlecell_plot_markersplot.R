@@ -120,8 +120,8 @@ singlecell_plot_markersplot_server <- function(id,
 
         # TODO: This should be remove once we rename pgx$families
         total_h_matches <- sum(markers %in% gene_table$human_ortholog, na.rm = TRUE)
-        total_h_matches <- sum(markers %in% gene_table$symbol, na.rm = TRUE)
-        if (total_h_matches > total_h_matches) {
+        total_s_matches <- sum(markers %in% gene_table$symbol, na.rm = TRUE)
+        if (total_h_matches > total_s_matches) {
           markers <- gene_table$symbol[match(markers, gene_table$human_ortholog)]
         }
         markers <- intersect(toupper(markers), toupper(gene_table$symbol))

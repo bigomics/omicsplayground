@@ -28,32 +28,40 @@ clustering_plot_clustpca_ui <- function(
       "Set shapes according to a given phenotype."
     ),
     withTooltip(
-      shiny::radioButtons(
-        ns("hmpca_legend"),
-        label = "Legend:",
-        choiceValues = list("bottom", "group label"),
-        choiceNames = list("Bottom", "Group label"),
-        inline = TRUE
+      shiny::selectInput(
+        ns("pca_label"),
+        label = "Label:",
+        choices = list("group", "bottom", "sample", "<none>")
       ),
-      "Normalize matrix before calculating distances."
+      "Place group labels as legend at the bottom or in plot as group or sample labels."
     ),
     withTooltip(
-      shiny::checkboxGroupInput(ns("hmpca_options"), "Other:",
-        choices = c("sample label", "3D", "normalize"), inline = TRUE
-      ),
-      "Normalize matrix before calculating distances."
+      shiny::checkboxInput(ns("all_clustmethods"), "show all methods"),
+      "Show an overview of all dimensionality reduction methods."
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("plot3d"), "plot 3D"),
+      "Show 3D plot."
     )
+  )
+
+  quick_buttons <- tagList(
+    div(shiny::checkboxInput(ns("plot3d"), "3D"), class = "header-btn")
   )
 
   PlotModuleUI(
     ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "plotly",
+    ##    plotlib = "plotly",
+    plotlib = "generic",
+    outputFunc = function(...) uiOutput(..., fill = TRUE),
     info.text = info.text,
     caption = caption,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    ## download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("csv"),
+    ##    header_buttons = quick_buttons,
     width = width,
     height = height
   )
@@ -61,61 +69,47 @@ clustering_plot_clustpca_ui <- function(
 
 clustering_plot_clustpca_server <- function(id,
                                             pgx,
+                                            selected_samples,
                                             hmpca.colvar,
-                                            hm_getClusterPositions,
                                             hmpca.shapevar,
-                                            hm_clustmethod,
+                                            clustmethod,
                                             watermark = FALSE,
                                             parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     ## Plot ############
-
     plot_data <- shiny::reactive({
-      clust <- hm_getClusterPositions()
-
-      if ("3D" %in% input$hmpca_options) {
-        df <- data.frame(x = clust$pos[, 1], y = clust$pos[, 2], z = clust$pos[, 3])
-      } else {
-        df <- data.frame(x = clust$pos[, 1], y = clust$pos[, 2])
+      samples <- selected_samples()
+      cluster.pos <- pgx$cluster$pos
+      for (m in names(cluster.pos)) {
+        colnames(cluster.pos[[m]]) <- paste0(m, ".", colnames(cluster.pos[[m]]))
       }
-      return(
-        list(
-          df = df,
-          hmpca_options = input$hmpca_options,
-          hmpca.colvar = hmpca.colvar(),
-          hmpca.shapevar = hmpca.shapevar(),
-          hm_clustmethod = hm_clustmethod(),
-          hmpca_legend = input$hmpca_legend
-        )
+      all.pos <- do.call(cbind, cluster.pos)
+      all.pos <- all.pos[samples, ]
+      pd <- list(
+        pos = all.pos
       )
+
+      return(pd)
     })
 
-    plot.RENDER <- function() {
-      pd <- plot_data()
 
-      hmpca_options <- pd[["hmpca_options"]]
-      hmpca.colvar <- pd[["hmpca.colvar"]]
-      hmpca.shapevar <- pd[["hmpca.shapevar"]]
-      pos <- pd[["df"]]
-      hm_clustmethod <- pd[["hm_clustmethod"]]
-      hmpca_legend <- pd[["hmpca_legend"]]
-
-      do3d <- ("3D" %in% hmpca_options)
+    create_plot <- function(pgx, pos, method, colvar, shapevar, label, cex) {
+      do3d <- (ncol(pos) == 3)
       sel <- rownames(pos)
       df <- cbind(pos, pgx$Y[sel, ])
 
-
-      colvar <- shapevar <- linevar <- textvar <- NULL
-      if (hmpca.colvar %in% colnames(df)) colvar <- factor(df[, hmpca.colvar])
-      if (hmpca.shapevar %in% colnames(df)) shapevar <- factor(df[, hmpca.shapevar])
-      mode <- "markers"
+      textvar <- NULL
+      if (colvar %in% colnames(df)) colvar <- factor(df[, colvar])
+      if (shapevar %in% colnames(df)) shapevar <- factor(df[, shapevar])
       ann.text <- rep(" ", nrow(df))
-      if (!do3d && "sample label" %in% hmpca_options) ann.text <- rownames(df)
+
+      label.samples <- (label == "sample")
+
+      if (!do3d && label.samples) ann.text <- rownames(df)
       if (!is.null(colvar)) {
-        colvar <- factor(colvar)
-        textvar <- factor(df[, hmpca.colvar])
+        textvar <- factor(colvar)
       }
       symbols <- c(
         "circle", "square", "star", "triangle-up", "triangle-down", "pentagon",
@@ -130,34 +124,28 @@ clustering_plot_clustpca_server <- function(id,
 
       if (do3d) {
         ## 3D plot
-        j0 <- 1:nrow(df)
-        j1 <- NULL
-        if (!is.null(linevar)) {
-          linevar <- factor(linevar)
-          j0 <- which(linevar == levels(linevar)[1])
-          j1 <- which(linevar != levels(linevar)[1])
-        }
-        plt <- plotly::plot_ly(df, mode = mode) %>%
+        plt <- plotly::plot_ly(df, mode = "markers") %>%
           plotly::add_markers(
-            x = df[j0, 1], y = df[j0, 2], z = df[j0, 3], type = "scatter3d",
-            color = colvar[j0],
-            marker = list(size = 5 * cex1, line = list(color = "grey10", width = 0.1)),
-            symbol = shapevar[j0], symbols = symbols,
-            text = tt.info[j0]
+            x = df[, 1],
+            y = df[, 2],
+            z = df[, 3],
+            type = "scatter3d",
+            color = colvar,
+            marker = list(
+              size = 6 * cex1 * cex,
+              line = list(color = "grey10", width = 0.1)
+            ),
+            symbol = shapevar,
+            symbols = symbols,
+            text = tt.info
           ) %>%
           plotly::add_annotations(
-            x = pos[, 1], y = pos[, 2], z = pos[, 3],
+            x = pos[, 1],
+            y = pos[, 2],
+            z = pos[, 3],
             text = ann.text,
             showarrow = FALSE
           )
-        if (!is.null(j1) & length(j1) > 0) {
-          plt <- plt %>% plotly::add_markers(
-            x = df[j1, 1], y = df[j1, 2], z = df[j1, 3], type = "scatter3d",
-            color = colvar[j1],
-            symbol = shapevar[j1], symbols = symbols,
-            text = tt.info[j1]
-          )
-        }
         ## add cluster annotation labels
         if (0 && length(unique(colvar)) > 1) {
           ## add cluster annotation labels
@@ -166,92 +154,144 @@ clustering_plot_clustpca_server <- function(id,
           plt <- plt %>% plotly::add_annotations(
             x = grp.pos[, 1], y = grp.pos[, 2], z = grp.pos[, 3],
             text = rownames(grp.pos),
-            font = list(size = 24 * cex2, color = "#555"),
+            font = list(size = 24 * cex2 * cex, color = "#555"),
             showarrow = FALSE
           )
         }
+
+        if (label == "<none>") {
+          plt <- plt %>%
+            plotly::layout(showlegend = FALSE)
+        }
       } else {
         ## 2D plot
-        j0 <- 1:nrow(df)
-        j1 <- NULL
-        if (!is.null(linevar)) {
-          linevar <- factor(linevar)
-          j0 <- which(linevar == levels(linevar)[1])
-          j1 <- which(linevar != levels(linevar)[1])
-        }
-        plt <- plotly::plot_ly(df, mode = mode) %>%
+        plt <- plotly::plot_ly(df, mode = "markers") %>%
           plotly::add_markers(
-            x = df[j0, 1], y = df[j0, 2], type = "scatter",
-            color = colvar[j0], ## size = sizevar, sizes=c(80,140),
-            marker = list(size = 16 * cex1, line = list(color = "grey20", width = 0.6)),
-            symbol = shapevar[j0], symbols = symbols,
-            text = tt.info[j0]
+            x = df[, 1],
+            y = df[, 2],
+            type = "scattergl",
+            color = colvar, ## size = sizevar, sizes=c(80,140),
+            marker = list(
+              size = 16 * cex1 * cex,
+              line = list(color = "grey20", width = 0.6)
+            ),
+            symbol = shapevar,
+            symbols = symbols,
+            text = tt.info
           ) %>%
           plotly::add_annotations(
-            x = pos[, 1], y = pos[, 2],
+            x = pos[, 1],
+            y = pos[, 2],
             text = ann.text,
             ## xref = "x", yref = "y",
             showarrow = FALSE
           )
 
-        ## add node labels
-        if (!is.null(j1) & length(j1) > 0) {
-          plt <- plt %>% plotly::add_markers(
-            x = df[j1, 1], y = df[j1, 2], type = "scatter",
-            color = colvar[j1], ## size = sizevar, sizes=c(80,140),
-            marker = list(size = 16 * cex1, line = list(color = "grey20", width = 1.8)),
-            symbol = shapevar[j1], symbols = symbols,
-            text = tt.info[j1]
-          )
-        }
-
         ## add group/cluster annotation labels
-
-        if (hmpca_legend == "inside") {
+        if (label == "inside") {
           plt <- plt %>%
             plotly::layout(legend = list(x = 0.05, y = 0.95))
-        } else if (hmpca_legend == "bottom") {
+        } else if (label == "bottom") {
           plt <- plt %>%
             plotly::layout(legend = list(orientation = "h"))
-        } else {
+        } else if (label == "group") {
           if (!is.null(textvar) && length(unique(textvar)) > 1) {
             grp.pos <- apply(pos, 2, function(x) tapply(x, as.character(textvar), median))
             cex2 <- 1
             if (length(grp.pos) > 20) cex2 <- 0.8
             if (length(grp.pos) > 50) cex2 <- 0.6
             plt <- plt %>% plotly::add_annotations(
-              x = grp.pos[, 1], y = grp.pos[, 2],
+              x = grp.pos[, 1],
+              y = grp.pos[, 2],
               text = paste0("<b>", rownames(grp.pos), "</b>"),
-              font = list(size = 24 * cex2, color = "#555"),
+              font = list(size = 24 * cex2 * cex, color = "#555"),
               showarrow = FALSE
             )
           }
           plt <- plt %>%
             plotly::layout(showlegend = FALSE)
+        } else if (label == "sample") {
+          plt <- plt %>%
+            plotly::layout(showlegend = FALSE)
+        } else if (label == "<none>") {
+          plt <- plt %>%
+            plotly::layout(showlegend = FALSE)
         }
       }
-      title <- paste0("<b>PCA</b>  (", nrow(pos), " samples)")
-      if (hm_clustmethod == "tsne") title <- paste0("<b>tSNE</b>  (", nrow(pos), " samples)")
+
       plt <- plt %>%
-        plotly::config(displayModeBar = TRUE) %>%
-        plotly::config(displaylogo = FALSE) %>%
-        plotly::config(toImageButtonOptions = list(format = "svg", height = 800, width = 800))
+        plotly_default() %>%
+        plotly::layout(
+          plot_bgcolor = "#f8f8f8",
+          title = list(text = toupper(method), font = list(size = 18)),
+          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
+        ) %>%
+        plotly::config(toImageButtonOptions = list(
+          format = "svg", height = 800, width = 800
+        ))
+
       return(plt)
     }
 
-    modal_plot.RENDER <- function() {
-      plot.RENDER() %>%
-        plotly_modal_default()
+    create_plotlist <- function() {
+      samples <- selected_samples()
+      options <- input$hmpca_options
+      colvar <- hmpca.colvar()
+      shapevar <- hmpca.shapevar()
+      clustmethod <- clustmethod()
+      label <- input$pca_label
+
+      shiny::req(samples, colvar, shapevar, clustmethod, legend)
+
+      methods <- clustmethod()
+      if (input$all_clustmethods) {
+        cluster.names <- names(pgx$cluster$pos)
+        methods <- sub("2d", "", grep("2d", cluster.names, value = TRUE))
+      }
+      do3d <- (input$plot3d)
+      multiplot <- length(methods) > 1
+
+      plist <- list()
+      for (i in 1:length(methods)) {
+        m <- methods[i]
+        m1 <- paste0(m, "2d")
+        if (do3d) m1 <- paste0(m, "3d")
+        pos <- pgx$cluster$pos[[m1]]
+        pos <- pos[samples, ]
+        plist[[i]] <- create_plot(
+          pgx = pgx,
+          pos = pos,
+          method = m,
+          colvar = colvar,
+          shapevar = shapevar,
+          label = label,
+          cex = ifelse(length(methods) > 1, 0.6, 1)
+        )
+      }
+      plist
     }
+
+    plot.RENDER <- reactive({
+      plist <- create_plotlist()
+      ## layout with bs
+      nc <- ceiling(sqrt(length(plist)))
+      cw <- 12 / nc
+      page <- bslib::layout_columns(col_widths = cw, !!!plist)
+      return(page)
+    })
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "plotly",
+      ##      plotlib = "plotly",
+      plotlib = "generic",
+      renderFunc = shiny::renderUI,
       func = plot.RENDER,
-      func2 = modal_plot.RENDER,
+      ##      func2 = plot.RENDER,
+      ##      func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
-      pdf.width = 8, pdf.height = 8,
+      pdf.width = 8,
+      pdf.height = 8,
       add.watermark = watermark
     )
   })
