@@ -277,16 +277,16 @@ ExpressionBoard <- function(id, pgx) {
       return(res)
     })
 
-     genes_in_sel_geneset <- shiny::reactive({
+    genes_in_sel_geneset <- shiny::reactive({
       req(pgx$X, pgx$name)
-      if(!is.data.frame(gx_related_genesets()) && gx_related_genesets() == "No geneset for selected gene."){
+      if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == "No geneset for selected gene.") {
         sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
         return(sel_gene)
       }
-      sel_gset <- rownames(gx_related_genesets()[gsettable_rows_selected(),])
-      sel_genes <- pgx$GMT[,sel_gset]
+      sel_gset <- rownames(gx_related_genesets()[gsettable_rows_selected(), ])
+      sel_genes <- pgx$GMT[, sel_gset]
       # return sel_genes that are not zero
-      sel_genes <- sel_genes[which(sel_genes >0)]
+      sel_genes <- sel_genes[which(sel_genes > 0)]
       return(names(sel_genes))
     })
 
@@ -306,7 +306,6 @@ ExpressionBoard <- function(id, pgx) {
       df2 = gx_related_genesets,
       genes_in_sel_geneset = genes_in_sel_geneset,
       watermark = WATERMARK
-
     )
 
     expression_plot_maplot_server(
@@ -451,7 +450,7 @@ ExpressionBoard <- function(id, pgx) {
         gset <- names(which(pgx$GMT[j, ] != 0))
         gset <- intersect(gset, rownames(pgx$gsetX))
       }
-      
+
       if (length(gset) == 0) {
         return("No geneset for selected gene.")
       }

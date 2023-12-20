@@ -189,7 +189,9 @@ TableModuleServer <- function(id,
           # the header scrolls properly, and clickable properties for
           # tables.
           dt <- func()
-          if(is.null(dt)){return(NULL)}
+          if (is.null(dt)) {
+            return(NULL)
+          }
           active_options <- names(dt$x$options)
           if ("scrollX" %in% active_options) {
             dt$x$options$scrollX <- TRUE
