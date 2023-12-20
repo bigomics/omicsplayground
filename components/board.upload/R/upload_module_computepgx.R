@@ -321,7 +321,7 @@ upload_module_computepgx_server <- function(
       computedPGX <- shiny::reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
-      annotation_table <- NULL
+      annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
@@ -382,7 +382,7 @@ upload_module_computepgx_server <- function(
       shiny::observeEvent(input$upload_annot_table, {
         # trigger a popup
         
-        annot_table <<- playbase::read.as_matrix(input$upload_annot_table$datapath)
+        annot_able <<- playbase::read.as_matrix(input$upload_annot_table$datapath)
 
         shinyalert::shinyalert(
           title = "Annotation table uploaded!",
