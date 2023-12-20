@@ -53,6 +53,8 @@ data_shared/*
 trace/*
 logs/*.rds
 /logs/
+USER_INPUT/
+user_input/
 
 # Sensitive files #
 ####################
@@ -68,3 +70,8 @@ Renviron.site
 .Rdata
 inst/doc
 *.csv
+*.RData
+params*
+processx-error.log
+processx-output.log
+raw_*
