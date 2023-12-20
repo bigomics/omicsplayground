@@ -92,7 +92,7 @@ UploadUI <- function(id) {
           shiny::div(
             style = "margin-top: 30px",
             shiny::downloadButton(
-              ns("downloadExampleData"),
+              ns("downloadExampleData2"),
               width = "220px",
               icon = icon("download"),
               label = "Download example data",
@@ -100,7 +100,7 @@ UploadUI <- function(id) {
               style = "margin-right: 10px;"
             ),
             shiny::actionButton(
-              ns("load_example"),
+              ns("load_example2"),
               width = "220px",
               icon = icon("table"),
               label = "Use example data",
@@ -119,29 +119,72 @@ UploadUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
-      bs_alert("In this panel, you can upload your data to the platform. The platform
-               requires 3 data files as explained below: a data file containing
-               counts/expression (counts.csv), a sample information file (samples.csv)
-               and a file specifying the statistical comparisons (comparisons.csv).
-               NB Users can now create comparisons from the platform itself, so the
-               comparisons.csv file is optional."),
+      bslib::card(
       bslib::layout_columns(
-        col_widths = c(4, 8),
-        div(
+        col_widths = c(4, 6, 2),        
+        shiny::div(
           shiny::sidebarPanel(
-            width = "100%",
-            fileInput2(ns("upload_files"),
-              shiny::h4("Choose files"),
-              multiple = TRUE,
-              accept = c(".csv", ".pgx")
+            height = "100%",
+            width = "100%",            
+            shiny::selectInput(
+              ns("selected_organism"),
+              h4("Select organism:", class='mb-0'),
+              # restrict to ensembl species, as we are validating them in the first place
+              choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
+              selected = NULL,
+              multiple = FALSE,
+              width = "90%"            
             ),
-            shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
-            # bslib::input_switch(ns("load_example"), "Load example data"),
-            # bslib::input_switch(ns("advanced_mode"), "Batch correction (beta)")
+            shiny::br(), 
+            div(
+              style = 'display: none',
+              fileInput2(
+                ns("upload_files"),              
+                shiny::h4("Choose files", class='mb-0'),
+                multiple = TRUE,
+                buttonClass = "btn-primary",
+                accept = c(".csv", ".pgx")
+              )
+            ),
+            shiny::h4("Choose data:", class='mb-2'),
+            div(
+              style = "margin-left: auto; margin-right: auto;",
+              shiny::actionButton(
+                ns("upload_files_btn"),
+                width = 'auto',
+                icon = icon("table"),
+                label = "Upload file",
+                class = "btn-primary",
+                style = "margin-left: 0px;"
+              ),
+              shiny::actionButton(
+                ns("load_example"),
+                width = 'auto',                
+                icon = icon("table"),
+                label = "Use example data",
+                class = "btn-info",
+                style = "margin-left: 0px;"
+              )
+            )
           )
         ),
-        shiny::div(shiny::uiOutput(ns("upload_info")))
-      ),
+        shiny::div(
+          shiny::uiOutput(ns("upload_info"), class='mt-3 mb-1'),
+          shiny::div(
+            ##style = "margin-top: 10px; position: absolute; bottom: 47px;",
+            style = "margin-top: 25px;",            
+            shiny::downloadButton(
+              ns("downloadExampleData"),
+              width = "200px",
+              icon = icon("download"),
+              label = "Download example data",
+              class = "btn-outline-primary",
+              style = "margin-right: 20px;"
+            )
+          )
+        ),
+        div()  ## empty
+      )),
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
         upload_plot_countstats_ui(
@@ -168,7 +211,13 @@ UploadUI <- function(id) {
           height = c("75%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
-      )
+      ),
+      bs_alert("In this panel, you can upload your data to the platform. The platform
+               requires 3 data files as explained below: a data file containing
+               counts/expression (counts.csv), a sample information file (samples.csv)
+               and a file specifying the statistical comparisons (comparisons.csv).
+               NB Users can now create comparisons from the platform itself, so the
+               comparisons.csv file is optional.")
     )
   )
 
@@ -178,7 +227,7 @@ UploadUI <- function(id) {
       col_widths = 12,
       height = "calc(100vh - 200px)",
       heights_equal = "row",
-      bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts', 'groups'...). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
+      bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
       upload_module_makecontrast_ui(ns("makecontrast"))
     )
   )
@@ -189,18 +238,26 @@ UploadUI <- function(id) {
       col_widths = 12,
       height = "calc(100vh - 180px)",
       heights_equal = "row",
-      bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
-      upload_module_batchcorrect_ui(ns("batchcorrect"), height = "100%")
+      upload_module_batchcorrect_ui(ns("batchcorrect")),
+      bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
     )
   )
   
   compute_panel <- shiny::tabPanel(
     "Compute",
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
-    br(),
-    shiny::fillCol(
-      height = "100%", 
-      upload_module_computepgx_ui(ns("compute"))
+    shiny::br(), shiny::br(),
+    bslib::layout_columns(
+      col_widths = c(2,10),
+      div(
+        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction (beta)")
+        ##    shinyWidgets::prettySwitch(ns("show_outliercheck"), "Check outliers (beta)"),
+      ),
+      shiny::fillCol(
+        height = "100%"
+      , style = "padding-right: 40px;",
+        upload_module_computepgx_ui(ns("compute"))
+      )
     )
   )
 
@@ -209,7 +266,7 @@ UploadUI <- function(id) {
     board_header,
     shiny::tabsetPanel(
       id = ns("tabs"),
-      upload_select_db,
+##      upload_select_db,
       upload_panel,
       comparisons_panel,
       batch_panel,

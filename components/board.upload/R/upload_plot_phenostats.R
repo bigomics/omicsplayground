@@ -36,10 +36,7 @@ upload_plot_phenostats_server <- function(id, checkTables, samplesRT, watermark 
 
       status.ok <- check["samples.csv", "status"]
       status.ds <- tolower(check["samples.csv", "description"])
-      error.msg <- paste(
-        toupper(status.ok), "\nPlease upload 'samples.csv' (Required):",
-        status.ds
-      )
+      error.msg <- paste(toupper(status.ok), "\n(Required):", status.ds)
       shiny::validate(
         shiny::need(
           status.ok == "OK" && has.pheno,

@@ -347,6 +347,7 @@ upload_table_preview_counts_server <- function(id,
           deferRender = TRUE
         )
       ) %>%
+        DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 

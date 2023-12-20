@@ -83,14 +83,14 @@ upload_module_computepgx_server <- function(
               shiny::tags$table(
                 style = "width:100%;vertical-align:top;padding:4px;",
                 shiny::tags$tr(
-                  shiny::tags$td("", width = "300"),
-                  shiny::tags$td("Name", width = "100"),
+                  shiny::tags$td("", width = "120"),
+                  shiny::tags$td("Name", width = "120"),
                   shiny::tags$td(
                     shiny::textInput(
                       ns("upload_name"), NULL, ## "Dataset:",
                       placeholder = "Name of your dataset"
                     ),
-                    width = "600"
+                    width = "700"
                   ),
                   shiny::tags$td("", width = "120")
                 ),
@@ -136,7 +136,7 @@ upload_module_computepgx_server <- function(
                 shiny::actionLink(ns("options"), "Computation options",
                   icon = icon("cog", lib = "glyphicon")
                 ),
-                style = "padding-right: 80px;"
+                style = "padding-right: 430px;"
               )
             )
           ),
@@ -208,9 +208,9 @@ upload_module_computepgx_server <- function(
                 fileInput2(
                   ns("upload_gmt"),
                   shiny::tagList(
-                    shiny::tags$h4("Custom genesets (.gmt) file:"),
-                    shiny::tags$h6(
-                      "A GMT file as described",
+                    shiny::tags$h4("Custom genesets:"),
+                    shiny::p(
+                      "Upload a custom GMT file (.gmt) as described",
                       tags$a(
                         "here.",
                         href = readthedocs_url,
@@ -237,10 +237,11 @@ upload_module_computepgx_server <- function(
           ) ## end of conditional panel
         ) ## end of fill Col
       })
-      shiny::outputOptions(output,
-        "UI",
-        suspendWhenHidden = FALSE
-      ) ## important!!!
+      
+#      shiny::outputOptions(output,
+#        "UI",
+#        suspendWhenHidden = FALSE
+#      ) ## important!!!
 
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
@@ -286,9 +287,7 @@ upload_module_computepgx_server <- function(
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = stringr::str_squish("There are cases where there is only one samples
-                    in a group. Some of the gene tests and enrichment
-                    methods are disabled."),
+            text = stringr::str_squish("There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled. Please note: a good experiment should have at least 3 replicates per condition."),
             type = "warning"
           )
           shiny::updateCheckboxGroupInput(

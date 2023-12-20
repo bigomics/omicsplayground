@@ -37,10 +37,7 @@ upload_plot_countstats_server <- function(id, checkTables, countsRT, watermark =
 
       status.ok <- check["counts.csv", "status"]
       status.ds <- tolower(check["counts.csv", "description"])
-      error.msg <- paste(
-        toupper(status.ok), "\nPlease upload 'counts.csv' (Required):",
-        status.ds
-      )
+      error.msg <- paste(toupper(status.ok), "\n(Required):", status.ds )
       shiny::validate(
         shiny::need(
           status.ok == "OK" && has.counts,

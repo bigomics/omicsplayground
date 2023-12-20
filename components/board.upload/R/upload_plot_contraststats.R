@@ -37,7 +37,7 @@ upload_plot_contraststats_server <- function(id, checkTables, contrastsRT, sampl
       status.ok <- check["contrasts.csv", "status"]
       status.ds <- tolower(check["contrasts.csv", "description"])
       error.msg <- paste(
-        toupper(status.ok), "\nPlease upload 'contrasts.csv' (Optional):",
+        toupper(status.ok), "\n(Optional):",
         status.ds
       )
 

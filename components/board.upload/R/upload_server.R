@@ -71,6 +71,11 @@ UploadBoard <- function(id,
     ## RETHINK: is this robust to multiple users on same R process?
     uploaded_method <- NA
 
+    shiny::observeEvent( input$upload_files_btn, {
+      shinyjs::click(id = "upload_files")
+    }, ignoreNULL = TRUE)
+
+    
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
@@ -148,7 +153,7 @@ UploadBoard <- function(id,
     })
 
     # hide upload tab at server start
-    shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "none";')
+##    shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "none";')
 
     ## Hide/show tabpanels upon available data like a wizard dialog
     shiny::observe({
@@ -168,13 +173,13 @@ UploadBoard <- function(id,
         # show compute if contrast is done
         shiny::showTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
-        if (input$advanced_mode) {
+        if (input$show_batchcorrection) {
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else if (need2) {
         shiny::hideTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
-        if (input$advanced_mode) {
+        if (input$show_batchcorrection) {
           shiny::showTab("tabs", "BatchCorrect")
         }
       } else {
@@ -188,8 +193,8 @@ UploadBoard <- function(id,
     ## ======================= UI OBSERVERS ================================
     ## =====================================================================
 
-    shiny::observeEvent(input$advanced_mode, {
-      if (input$advanced_mode) {
+    shiny::observeEvent(input$show_batchcorrection, {
+      if (input$show_batchcorrection) {
         shiny::showTab("tabs", "BatchCorrect")
       } else {
         shiny::hideTab("tabs", "BatchCorrect")
@@ -223,7 +228,7 @@ UploadBoard <- function(id,
       raw_dir
     }
 
-    shiny::observeEvent(input$upload_files, {
+    shiny::observeEvent( input$upload_files, {
       if (is.null(raw_dir())) {
         raw_dir(create_raw_dir(auth))
       }
@@ -262,6 +267,7 @@ UploadBoard <- function(id,
         i <- grep("[.]pgx$", upload_table$name)
         pgxfile <- upload_table$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
+        return(NULL) ## done
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
@@ -463,6 +469,14 @@ UploadBoard <- function(id,
         checklist[["samples_counts"]] <- NULL
         checklist[["samples_contrasts"]] <- NULL
         uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
+
+        shinyalert::shinyalert(
+          title = "Example dataset",
+          text = 'This example dataset is a time course experiment measuring the protein abundances in T cells upon activation. Proteomics profiles were acquired at 0h, 12h, 24h, 48h and 72h. <br><br><p>Reference: "Proteome profiles of activated vs resting human naive T cells at different times", Geiger et al., Cell 2016.',
+          html = TRUE,
+        )
+
+        
       } else {
         ## clear files
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
@@ -790,13 +804,13 @@ UploadBoard <- function(id,
     )
 
     output$upload_info <- shiny::renderUI({
-      upload_info <- glue::glue("<div><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format as shown in the example data. The file format must be comma-separated-values (.CSV). Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of <u>LIMITS</u>. <a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>Click here to read more about data preparation.</a>.</p>")
+      upload_info <- "<div><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format with the names 'counts.csv', 'samples.csv' and 'contrasts.csv'. Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of _LIMITS_. Click <u><a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>here</a></u> to read more about data preparation.</p>"
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
         auth$options$MAX_SAMPLES, "samples and",
         auth$options$MAX_COMPARISONS, "comparisons)"
       )
-      upload_info <- sub("LIMITS", limits.text, upload_info)
+      upload_info <- sub("_LIMITS_", limits.text, upload_info, fixed=TRUE)
       shiny::HTML(upload_info)
     })
 
@@ -819,9 +833,8 @@ UploadBoard <- function(id,
 
     corrected_counts <- shiny::reactive({
       counts <- NULL
-      if (input$advanced_mode) {
-        out <- correctedX()
-        counts <- pmax(2**out$X - 1, 0)
+      if (input$show_batchcorrection) {
+        counts <- correctedX()
       } else {
         counts <- checked_counts()$matrix
       }
@@ -892,13 +905,12 @@ UploadBoard <- function(id,
 
 
     # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
-    observeEvent(input$proceed_to_upload, {
-      # show tab Upload
-      shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
-      # check on upload tab
-      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-    })
-
+    ## observeEvent(input$proceed_to_upload, {
+    ##   # show tab Upload
+    ##   shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
+    ##   # check on upload tab
+    ##   shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
+    ## })
 
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================

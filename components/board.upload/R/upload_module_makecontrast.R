@@ -13,90 +13,101 @@ upload_module_makecontrast_ui <- function(id) {
 
   tagList(
     bslib::layout_columns(
-##      col_widths = c(8, 4),
       col_widths = 12,
       height = "100%",
       row_heights = c(3,2),
       bslib::card(
         full_screen = TRUE,
-        style = "border-width: 1px;",
         bslib::card_body(
-          shiny::fillRow(
-            style = "gap: 10px; height: 75px !important;",
-            flex = c(NA, NA, NA, NA, 1),
+          bslib::layout_columns(
+            col_widths = c(3,9),
             shiny::div(
-              shiny::HTML("<b>Phenotype:</b>"),
+              shiny::HTML("<b>1. Choose phenotype:</b>"),
               withTooltip(
                 shiny::selectInput(
                   ns("param"),
                   NULL,
-                  width = "250px",
+                  width = "100%",
                   choices = NULL,
                   selected = NULL,
                   multiple = TRUE
                 ),
                 "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
                 placement = "left", options = list(container = "body")
-              )
-            ),
-            shiny::div(
-              shiny::HTML("<b>Comparison name:</b>"),
-              withTooltip(
-                shiny::textInput(ns("newname"),
-                  NULL,
-                  width = "250px",
-                  placeholder = "e.g. MAIN_vs_CONTROL"
-                ),
-                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                placement = "left", options = list(container = "body")
-              )
-            ),
-            shiny::div(
-              style = "padding-top: 20px; height: 35px;",
-              withTooltip(
-                shiny::actionButton(ns("addcontrast"),
-                  "add comparison",
-                  icon = icon("plus"),
-                  class = "btn-outline-primary"
-                ),
-                "Add this comparison to the table.",
-                placement = "top", options = list(container = "body")
-              )
-            ),
-            shiny::div(
-              style = "padding-top: 20px; height: 35px;",
-              withTooltip(
-                shiny::actionButton(ns("autocontrast"),
-                  "auto-contrasts",
-                  icon = icon("plus"),
-                  class = "small-button btn-outline-secondary"
-                ),
-                "If you are feeling lucky, try this to automatically create comparisons.",
-                placement = "top", options = list(container = "body")
-              )
-            ),
-            br() ## spacer
-          ),
-          shiny::div(
-            style = "overflow: auto;",
-            withTooltip(
-              shiny::uiOutput(ns("createcomparison"),
-                style = "font-size:13px;"
               ),
-              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
-              placement = "top", options = list(container = "body")
-            )
+              br(),
+              shiny::div(
+                shiny::HTML("<b>3. Comparison name:</b>"),
+                withTooltip(
+                  shiny::textInput(
+                    ns("newname"),
+                    NULL,
+                    width = "100%",
+                    placeholder = "e.g. MAIN_vs_CONTROL"
+                  ),
+                  "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                  placement = "left", options = list(container = "body")
+                )
+              ),
+              br(),
+              shiny::HTML("<b>4. Add to list:</b>"),
+              shiny::div(
+                style = "padding-top: 5px;",
+                withTooltip(
+                  shiny::actionButton(
+                    ns("addcontrast"),
+                    "add comparison",
+                    icon = icon("plus"),
+                    class = "btn btn-outline-primary",
+                    width = "60%"
+                  ),
+                  "Add this comparison to the table.",
+                  placement = "top", options = list(container = "body")
+                )
+              ),
+              shiny::div(
+                style = "padding-top: 5px",
+                withTooltip(
+                  shiny::actionButton(
+                    ns("autocontrast"),
+                    "auto-comparisons",
+                    icon = icon("plus"),
+                    class = "btn btn-outline-secondary",
+                    width = "60%"
+                  ),
+                  "If you are feeling lucky, try this to automatically create comparisons.",
+                  placement = "top", options = list(container = "body")
+                )
+              )
+            ),
+#            bslib::card(
+#              style = "border-width: 1px;",
+#              bslib::card_body(
+#                style = "width: 100%; gap: 10px; height: 75px !important;",
+                shiny::div(
+                  style = "overflow: auto; margin-left: 30px;",
+                  shiny::HTML("<b>2. Create comparisons:</b>"),
+                  withTooltip(
+                    shiny::uiOutput(ns("createcomparison"),
+                      style = "font-size:13px;"
+                    ),
+                    "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
+                    placement = "top", options = list(container = "body")
+                  )
+#                )
+#              )
+            )  ## end of card col-10
           )
-        )
+        )  ## end of card-body
+        ## upload_plot_pcaplot_ui(
+        ##   ns("pcaplot"),
+        ##   title = "PCA/tSNE plot",
+        ##   info.text = "",
+        ##   caption = "",
+        ##   height = c("100%", 700),
+        ##   width = c("auto", 800)
+        ## )
       ),
-      ## upload_plot_pcaplot_ui(
-      ##   ns("pcaplot"),
-      ##   title = "PCA/tSNE plot",
-      ##   info.text = "",
-      ##   caption = "",
-      ##   height = c("100%", 700),
-      ##   width = c("auto", 800)
-      ## )
       bslib::card(
         full_screen = TRUE,
         bslib::card_body(
@@ -221,6 +232,16 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         tt <- paste0(prm.name, ":", g1, "_vs_", g2)
         if (g1 == "" && g2 == "") tt <- ""
         shiny::updateTextInput(session, "newname", value = tt)
+      })
+      
+      shiny::observeEvent(c(input$group1, input$group2), {
+        if( length(input$group1) && length(input$group2)) {
+          shinyjs::removeClass( id="addcontrast", class = "btn-outline-primary")
+          shinyjs::addClass( id="addcontrast", class = "btn-primary")          
+        } else {
+          shinyjs::addClass( id="addcontrast", class = "btn-outline-primary")
+          shinyjs::removeClass( id="addcontrast", class = "btn-primary")          
+        }
       })
 
       shiny::observeEvent(input$contrast_delete, {
