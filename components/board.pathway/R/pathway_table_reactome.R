@@ -45,6 +45,9 @@ functional_table_reactome_server <- function(id,
     table_RENDER <- function() {
       res <- table_data()
       df <- res$df
+      if(nrow(df) == 0) {
+        return(NULL)
+      }
       comparison <- res$fa_contrast
 
       ## add hyperlink
