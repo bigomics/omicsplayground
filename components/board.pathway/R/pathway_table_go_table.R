@@ -71,6 +71,7 @@ functional_table_go_table_server <- function(id,
 
     table_RENDER <- function() {
       dt <- table_data()
+      shiny::req(dt)
       filtertable <- fa_filtertable()
       if (filtertable) {
         filter_value <- as.numeric(fa_filtertable_value())

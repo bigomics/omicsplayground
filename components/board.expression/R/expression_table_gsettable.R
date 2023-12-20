@@ -48,6 +48,12 @@ expression_table_gsettable_server <- function(id,
 
     gsettable.RENDER <- shiny::reactive({
       df <- gx_related_genesets()
+      shiny::validate(
+        shiny::need(!is.null(df), "Please select a gene in the table.")
+      )
+      shiny::validate(
+        shiny::need(df != "No geneset for selected gene.", "No genesets passed filter and/or enrichment cutoffs for this gene.")
+      )
 
       shiny::validate(shiny::need(
         !is.null(df),

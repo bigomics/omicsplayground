@@ -232,12 +232,14 @@ clustering_plot_splitmap_server <- function(id,
 
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
-
       rownames(annotF) <- rownames(annot)
-      if (length(selected_phenotypes()) == 0) {
+
+      sel <- selected_phenotypes()
+      sel <- intersect(sel, colnames(annotF))
+      if (length(sel) == 0) {
         annotF <- NULL
       } else {
-        annotF <- annotF[, selected_phenotypes(), drop = FALSE]
+        annotF <- annotF[, sel, drop = FALSE]
       }
 
       colcex <- as.numeric(input$hm_cexCol)

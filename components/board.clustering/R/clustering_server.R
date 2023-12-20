@@ -98,12 +98,12 @@ ClusteringBoard <- function(id, pgx) {
         contrasts <- playbase::pgx.getContrasts(pgx)
         shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
 
+        ## get clusterings methods
         clustmethods <- grep("2d$", names(pgx$cluster$pos), value = TRUE)
         clustmethods <- sort(unique(sub("2d$", "", clustmethods)))
-        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethod[1])
-        shiny::updateRadioButtons(session, "hm_clustmethod",
-          choices = clustmethods,
-          sel = selmethod
+        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethods[1])
+        shiny::updateSelectInput(session, "hm_clustmethod",
+          choices = clustmethods, sel = selmethod
         )
       }
     )
@@ -178,7 +178,8 @@ ClusteringBoard <- function(id, pgx) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
-      genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
+      genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
+      genes <- ifelse(genes$human_ortholog == "", genes$gene_name, genes$human_ortholog)
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
@@ -212,6 +213,11 @@ ClusteringBoard <- function(id, pgx) {
           fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
           n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
+          if (input$hm_splitby == "gene") {
+            if (!(input$hm_splitvar %in% gg)) {
+              gg <- c(input$hm_splitvar, gg)
+            }
+          }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
         } else if (ft == "<custom>" && ft != "") {
@@ -251,6 +257,14 @@ ClusteringBoard <- function(id, pgx) {
         }
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
+        if (length(gg) == 0) {
+          return(NULL)
+        }
+        if (input$hm_splitby == "gene") {
+          if (!(input$hm_splitvar %in% gg)) {
+            gg <- c(input$hm_splitvar, gg)
+          }
+        }
         jj <- match(toupper(gg), toupper(genes))
         pp <- rownames(pgx$X)[jj]
         zx <- pgx$X[pp, , drop = FALSE]
@@ -301,6 +315,7 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_samplefilter,
       input$hm_filterXY,
       input$hm_filterMitoRibo,
+      input$hm_contrast,
       pgx$X,
       ## input$hm_group,
       splitmap$hm_ntop()
@@ -683,7 +698,12 @@ ClusteringBoard <- function(id, pgx) {
       return(rho)
     })
 
-    hm_getClusterPositions <- shiny::reactive({
+
+    selected_samples <- reactive({
+      playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+    })
+
+    hm_getClusterPositions.DEPRECATED <- shiny::reactive({
       sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       clustmethod <- "tsne"
       pdim <- 2
@@ -746,7 +766,6 @@ ClusteringBoard <- function(id, pgx) {
 
 
     # plots ##########
-
     splitmap <- clustering_plot_splitmap_server(
       id = "splitmap",
       pgx = pgx,
@@ -758,10 +777,10 @@ ClusteringBoard <- function(id, pgx) {
 
     clustering_plot_clustpca_server("PCAplot",
       pgx = pgx,
-      hm_getClusterPositions = hm_getClusterPositions,
+      selected_samples = selected_samples,
       hmpca.colvar = shiny::reactive(input$hmpca.colvar),
       hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
-      hm_clustmethod = shiny::reactive(input$hm_clustmethod),
+      clustmethod = shiny::reactive(input$hm_clustmethod),
       watermark = WATERMARK,
       parent = ns
     )
@@ -782,7 +801,8 @@ ClusteringBoard <- function(id, pgx) {
       id = "clust_phenoplot",
       pgx = pgx,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
-      hm_getClusterPositions = hm_getClusterPositions,
+      clustmethod = shiny::reactive(input$hm_clustmethod),
+      selected_samples = selected_samples,
       watermark = WATERMARK
     )
 
