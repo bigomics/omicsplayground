@@ -180,11 +180,14 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
 
         if( length(tparams) == 0 && length(bparams) == 0 ) {
           shinyalert::shinyalert(
+            title = "",                        
             text = "Your data has no significant batch effects. We recommend proceeding without correction."
           )
         }
         if( length(tparams) > 0 || length(bparams) > 0 ) {
           shinyalert::shinyalert(
+            type = "warning",
+            title = "",                                                
             text = "Your data has significant batch effects. We recommend to use one of the correction methods."
           )
         }
@@ -332,28 +335,37 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       },{
         dbg("[batchcorrect_server:correctedX] reacted!")
 
-        this.method <- input$method                
-        bc <- analyze_batch_effects()        
+        this.method <- input$method
 
-        xlist <- playbase::runBatchCorrectionMethods(
-          X = logX(),
-          batch = bc$batch,
-          y = bc$pheno,
-          controls = NULL,
-          methods = this.method,
-          combatx = FALSE,
-          ntop = Inf,
-          sc = FALSE,
-          remove.failed = TRUE)         
-
+        shinyalert::shinyalert(
+          text = paste("Correcting your data using",this.method,"...")
+        )
+        
+        shiny::withProgress(message = "Correcting data...", value = 0.33, {
+            bc <- analyze_batch_effects()        
+            xlist <- playbase::runBatchCorrectionMethods(
+              X = logX(),
+              batch = bc$batch,
+              y = bc$pheno,
+              controls = NULL,
+              methods = this.method,
+              combatx = FALSE,
+              ntop = Inf,
+              sc = FALSE,
+              remove.failed = TRUE
+            )         
+        })
+        
         ## copy to reactive value
         corrX <- xlist[[this.method]]
         corr_counts <- pmax( 2**corrX - 1, 0)
         correctedX( corr_counts )
+        ##shiny::removeModal()
         
         shinyalert::shinyalert(
-          paste("Your data has been batch-corrected using",this.method,
-            ". You can now continue to the Compute tab.")
+          text = paste("Your data has been batch-corrected using",this.method,
+                       ". You can now continue to the Compute tab."),
+          immediate = TRUE
         )
         
       })

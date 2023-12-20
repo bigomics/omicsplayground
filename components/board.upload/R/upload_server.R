@@ -75,10 +75,26 @@ UploadBoard <- function(id,
       shinyjs::click(id = "upload_files")
     }, ignoreNULL = TRUE)
 
+    shiny::observeEvent({
+      list( uploaded, input$tabs )
+    }, {
+      dbg("[upload_server:observeEvent(names.uploaded)] names(uploaded) = ",names(uploaded))
+      dbg("[upload_server:observeEvent(names.uploaded)] input$tabs = ",input$tabs)
+      
+      if( is.null(uploaded$counts.csv) && is.null(uploaded$samples.csv) ) {
+        dbg("[upload_server:observeEvent(names.uploaded)] *** UPLOADED EMPTY *** ")
+      }
+    }, ignoreNULL = TRUE)
+    
     
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
+      dbg("[upload_server:observeEvent(uploaded_pgx()] names(new_pgx) = ", names(new_pgx))      
+      dbg("[upload_server:observeEvent(uploaded_pgx()] dim(new_pgx$X) = ", dim(new_pgx$X))
+      dbg("[upload_server:observeEvent(uploaded_pgx()] new_pgx$name = ", new_pgx$name)
+      dbg("[upload_server:observeEvent(uploaded_pgx()] uploaded_method = ", uploaded_method)
+      
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
@@ -92,13 +108,13 @@ UploadBoard <- function(id,
       pgxfile <- sub("[.]pgx$", "", new_pgx$name)
       pgxfile <- gsub("^[./-]*", "", pgxfile) ## prevent going to parent folder
       pgxfile <- paste0(gsub("[ \\/]", "_", pgxfile), ".pgx")
-      pgxdir <- auth$user_dir
+      pgxdir  <- auth$user_dir
       fn <- file.path(pgxdir, pgxfile)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ## switch 'pgx' as standard name. Actually saving as RDS
       ## would have been better...
-      dbg("[UploadBoard:observe::uploaded_pgx] saving pgx as = ", fn)
+      dbg("[UploadBoard:observe:uploaded_pgx] saving pgx as = ", fn)
       playbase::pgx.save(new_pgx, file = fn)
 
       shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
@@ -176,15 +192,22 @@ UploadBoard <- function(id,
         if (input$show_batchcorrection) {
           shiny::showTab("tabs", "BatchCorrect")
         }
+        if (input$show_checkoutliers) {
+          shiny::showTab("tabs", "CheckOutliers")
+        }
       } else if (need2) {
         shiny::hideTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
         if (input$show_batchcorrection) {
           shiny::showTab("tabs", "BatchCorrect")
         }
+        if (input$show_checkoutliers) {
+          shiny::showTab("tabs", "CheckOutliers")
+        }
       } else {
         shiny::hideTab("tabs", "Compute")
         shiny::hideTab("tabs", "BatchCorrect")
+        shiny::hideTab("tabs", "CheckOutliers")
         shiny::hideTab("tabs", "Comparisons")
       }
     })
@@ -201,7 +224,13 @@ UploadBoard <- function(id,
       }
     })
 
-
+    shiny::observeEvent(input$show_checkoutliers, {
+      if (input$show_checkoutliers) {
+        shiny::showTab("tabs", "CheckOutliers")
+      } else {
+        shiny::hideTab("tabs", "CheckOutliers")
+      }
+    })
 
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
@@ -392,6 +421,7 @@ UploadBoard <- function(id,
           uploaded[["samples.csv"]] <- NULL
           uploaded[["contrasts.csv"]] <- NULL
           uploaded[["last_uploaded"]] <- NULL
+          uploaded[["pgx"]] <- NULL          
           last_hash <<- new_hash
         }
       }
@@ -472,10 +502,9 @@ UploadBoard <- function(id,
 
         shinyalert::shinyalert(
           title = "Example dataset",
-          text = 'This example dataset is a time course experiment measuring the protein abundances in T cells upon activation. Proteomics profiles were acquired at 0h, 12h, 24h, 48h and 72h. <br><br><p>Reference: "Proteome profiles of activated vs resting human naive T cells at different times", Geiger et al., Cell 2016.',
+          text = 'This example dataset is a time course experiment measuring the protein abundances in T cells upon activation at 0h, 12h, 24h, 48h and 72h. <br><br><p>Reference: "Proteome profiles of activated vs resting human naive T cells at different times", Geiger et al., Cell 2016.',
           html = TRUE,
         )
-
         
       } else {
         ## clear files
@@ -824,6 +853,16 @@ UploadBoard <- function(id,
     ## correctedX <- shiny::reactive({
     correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
+      r_X = shiny::reactive(checked_counts()$matrix),
+      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_contrasts = shiny::reactive(modified_ct()$contr),
+      is.count = TRUE,
+      height = height
+    )
+
+    ## correctedX <- shiny::reactive({
+    correctedX2 <- upload_module_outliers_server(
+      id = "checkoutliers",
       r_X = shiny::reactive(checked_counts()$matrix),
       r_samples = shiny::reactive(checked_samples()$matrix),
       r_contrasts = shiny::reactive(modified_ct()$contr),

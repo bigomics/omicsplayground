@@ -227,12 +227,12 @@ UploadUI <- function(id) {
       col_widths = 12,
       height = "calc(100vh - 200px)",
       heights_equal = "row",
-      bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
-      upload_module_makecontrast_ui(ns("makecontrast"))
+      upload_module_makecontrast_ui(ns("makecontrast")),      
+      bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
     )
   )
 
-  batch_panel <- shiny::tabPanel(
+  batchcorrect_panel <- shiny::tabPanel(
     "BatchCorrect",
     bslib::layout_columns(
       col_widths = 12,
@@ -240,6 +240,17 @@ UploadUI <- function(id) {
       heights_equal = "row",
       upload_module_batchcorrect_ui(ns("batchcorrect")),
       bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
+    )
+  )
+
+  outliers_panel <- shiny::tabPanel(
+    "CheckOutliers",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      heights_equal = "row",
+      upload_module_outliers_ui(ns("checkoutliers")),
+      bs_alert("Check for outliers")      
     )
   )
   
@@ -250,8 +261,8 @@ UploadUI <- function(id) {
     bslib::layout_columns(
       col_widths = c(2,10),
       div(
-        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction (beta)")
-        ##    shinyWidgets::prettySwitch(ns("show_outliercheck"), "Check outliers (beta)"),
+        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
       ),
       shiny::fillCol(
         height = "100%"
@@ -269,7 +280,8 @@ UploadUI <- function(id) {
 ##      upload_select_db,
       upload_panel,
       comparisons_panel,
-      batch_panel,
+      outliers_panel,
+      batchcorrect_panel,
       compute_panel
     )
   )
