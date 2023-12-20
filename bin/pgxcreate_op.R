@@ -43,7 +43,8 @@ pgx <- playbase::pgx.createPGX(
   only.hugo = params$only.hugo,
   convert.hugo = params$convert.hugo,
   do.cluster = params$do.cluster,
-  cluster.contrasts = params$cluster.contrasts
+  cluster.contrasts = params$cluster.contrasts,
+  annot_table = params$annot_table
 )
 
 pgx <- playbase::pgx.computePGX(

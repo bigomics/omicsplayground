@@ -205,9 +205,9 @@ upload_module_computepgx_server <- function(
                 ),
                 fileInput2(
                   ns("upload_annot_table"),
-                  "hello",
+                  shiny::tags$h4("Counts annotation table (optional):"),
                   multiple = FALSE,
-                  accept = c(".txt", ".gmt")
+                  accept = c(".csv")
                 )
               ),
               shiny::wellPanel(
@@ -321,6 +321,7 @@ upload_module_computepgx_server <- function(
       computedPGX <- shiny::reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
+      annotation_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
@@ -380,12 +381,13 @@ upload_module_computepgx_server <- function(
       # react on upload_annot_table
       shiny::observeEvent(input$upload_annot_table, {
         # trigger a popup
-        annot_table <- input$upload_annot_table
+        
+        annot_table <<- playbase::read.as_matrix(input$upload_annot_table$datapath)
 
         shinyalert::shinyalert(
-          title = "Upload annotation table",
-          text = "Upload annotation table",
-          type = "info",
+          title = "Annotation table uploaded!",
+          text = "Your annotation table will be incorporated in the analysis.",
+          type = "success",
           closeOnClickOutside = TRUE
         )
       })
@@ -530,6 +532,7 @@ upload_module_computepgx_server <- function(
           max.genes = max.genes,
           max.genesets = max.genesets,
           custom.geneset = custom_geneset,
+          annot_table = annot_table,
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
