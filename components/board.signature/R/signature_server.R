@@ -137,9 +137,9 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         probes <- rownames(pgx$gx.meta$meta[[contr]])
 
-        match_input_genes <- !all(input_genelistUP() %in% probes)
+        match_input_genes <- any(input_genelistUP() %in% probes)
 
-        if (match_input_genes == FALSE) {
+        if (!match_input_genes) {
           # use human ortholog in case no matched found in proves
           probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
         }
