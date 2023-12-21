@@ -618,8 +618,7 @@ PasswordAuthenticationModule <- function(id,
                                          credentials_file,
                                          allow_personal = TRUE,
                                          domain = NULL,
-                                         blocked_domain = NULL
-                                         ) {
+                                         blocked_domain = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
@@ -923,7 +922,7 @@ LoginCodeAuthenticationModule <- function(id,
       check <- checkEmail(
         email = user_email,
         domain = domain,
-        blocked_domain = blocked_domain,        
+        blocked_domain = blocked_domain,
         credentials_file = credentials_file,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
@@ -1052,7 +1051,7 @@ LoginCodeAuthenticationModule <- function(id,
           check <- checkEmail(
             email = login_email,
             domain = domain,
-            blocked_domain = blocked_domain,            
+            blocked_domain = blocked_domain,
             credentials_file = credentials_file,
             check.personal = !allow_personal,
             check.existing = !allow_new_users

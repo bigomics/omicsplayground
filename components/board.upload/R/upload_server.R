@@ -265,10 +265,6 @@ UploadBoard <- function(id,
         )
       }
 
-      message("[upload_files] >>> reading uploaded files")
-      message("[upload_files] upload_files$name=", upload_table$name)
-      message("[upload_files] upload_files$datapath=", upload_table$datapath)
-
       uploaded[["counts.csv"]] <- NULL
       uploaded[["samples.csv"]] <- NULL
       uploaded[["contrasts.csv"]] <- NULL
@@ -277,7 +273,6 @@ UploadBoard <- function(id,
       uploaded[["checklist"]] <- NULL
       checklist[["samples_counts"]] <- NULL
       checklist[["samples_contrasts"]] <- NULL
-
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
@@ -304,7 +299,6 @@ UploadBoard <- function(id,
 
         inputnames <- upload_table$name[ii]
         uploadnames <- upload_table$datapath[ii]
-        message("[upload_files] uploaded files: ", inputnames)
 
         ## remove any old gui_contrasts.csv
         user_ctfile <- file.path(raw_dir(), "user_contrasts.csv")

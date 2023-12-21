@@ -68,6 +68,7 @@ expression_plot_volcano_server <- function(id,
                                            df1,
                                            sel2,
                                            df2,
+                                           genes_in_sel_geneset,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
@@ -124,9 +125,7 @@ expression_plot_volcano_server <- function(id,
         sel.genes <- lab.genes
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
-        gs <- rownames(df2)[sel2]
-        gset <- unlist(playdata::getGSETS(gs))
-        sel.genes <- intersect(sel.genes, gset)
+        sel.genes <- genes_in_sel_geneset()
         lab.genes <- c(
           head(sel.genes[order(impt(sel.genes))], 10),
           head(sel.genes[order(-impt(sel.genes))], 10)

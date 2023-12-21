@@ -98,9 +98,10 @@ ClusteringBoard <- function(id, pgx) {
         contrasts <- playbase::pgx.getContrasts(pgx)
         shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
 
+        ## get clusterings methods
         clustmethods <- grep("2d$", names(pgx$cluster$pos), value = TRUE)
         clustmethods <- sort(unique(sub("2d$", "", clustmethods)))
-        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethod[1])
+        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethods[1])
         shiny::updateSelectInput(session, "hm_clustmethod",
           choices = clustmethods, sel = selmethod
         )
@@ -177,7 +178,8 @@ ClusteringBoard <- function(id, pgx) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
-      genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
+      genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
+      genes <- ifelse(genes$human_ortholog == "", genes$gene_name, genes$human_ortholog)
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
@@ -211,6 +213,11 @@ ClusteringBoard <- function(id, pgx) {
           fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
           n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
+          if (input$hm_splitby == "gene") {
+            if (!(input$hm_splitvar %in% gg)) {
+              gg <- c(input$hm_splitvar, gg)
+            }
+          }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
         } else if (ft == "<custom>" && ft != "") {
@@ -250,6 +257,14 @@ ClusteringBoard <- function(id, pgx) {
         }
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
+        if (length(gg) == 0) {
+          return(NULL)
+        }
+        if (input$hm_splitby == "gene") {
+          if (!(input$hm_splitvar %in% gg)) {
+            gg <- c(input$hm_splitvar, gg)
+          }
+        }
         jj <- match(toupper(gg), toupper(genes))
         pp <- rownames(pgx$X)[jj]
         zx <- pgx$X[pp, , drop = FALSE]
@@ -300,6 +315,7 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_samplefilter,
       input$hm_filterXY,
       input$hm_filterMitoRibo,
+      input$hm_contrast,
       pgx$X,
       ## input$hm_group,
       splitmap$hm_ntop()
