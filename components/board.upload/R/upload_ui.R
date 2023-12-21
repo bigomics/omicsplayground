@@ -128,7 +128,7 @@ UploadUI <- function(id) {
             width = "100%",            
             shiny::selectInput(
               ns("selected_organism"),
-              h4("Select organism:", class='mb-0'),
+              h4("1. Select organism:", class='mb-0'),
               # restrict to ensembl species, as we are validating them in the first place
               choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
               selected = NULL,
@@ -146,7 +146,7 @@ UploadUI <- function(id) {
                 accept = c(".csv", ".pgx")
               )
             ),
-            shiny::h4("Choose data:", class='mb-2'),
+            shiny::h4("2. Choose data:", class='mb-2'),
             div(
               style = "margin-left: auto; margin-right: auto;",
               shiny::actionButton(

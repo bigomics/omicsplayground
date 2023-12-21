@@ -31,6 +31,16 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
         has_counts <- !is.null(uploaded$counts.csv)
         has_samples <- !is.null(uploaded$samples.csv)
         has_contrasts <- !is.null(uploaded$contrasts.csv)
+
+        legend <-  shiny::div(
+           class = "pt-4",
+           style = "margin-top: 150px;",
+           span(style = "color: orange", "Orange"),
+           span("= warning but data will still be uploaded. "),
+           br(),
+           span(style = "color:red", "Red"),
+           span("= error and data will not be uploaded.")
+        )
         
         tabs <- list(id = session$ns("preview_panel"))
         if (has_counts) {
@@ -64,7 +74,8 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                         null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
                       )
-                  )
+                  ),
+                  legend
                 )
               )
             ))
@@ -109,7 +120,8 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                       null_msg = "Samples-contrasts checks not run yet.
                                 Fix any errors with samples or contrasts first."
                     )
-                  )
+                  ),
+                  legend                  
                 )
               )
             ))
@@ -146,7 +158,8 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
                       null_msg = "Samples-contrasts checks not run yet.
                                   Fix any errors with samples or contrasts first."
                     )
-                  )
+                  ),
+                  legend                  
                 )
               )
             ))
@@ -158,16 +171,16 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
             title = "Data Upload Preview",
             label = "Data Upload Preview",
             do.call(tabsetPanel, tabs),
-            fluidRow(
-              column(
-                12,
-                class = "px-4",
-                span(style = "color: orange", "Orange"),
-                span("= warning but data will still be uploaded. "),
-                span(style = "color:red", "Red"),
-                span("= error and data will not be uploaded.")
-              )
-            ),
+            ## fluidRow(
+            ##   column(
+            ##     12,
+            ##     class = "px-4",
+            ##     span(style = "color: orange", "Orange"),
+            ##     span("= warning but data will still be uploaded. "),
+            ##     span(style = "color:red", "Red"),
+            ##     span("= error and data will not be uploaded.")
+            ##   )
+            ## ),
             footer = div(
               style = "float: right",
               shiny::actionButton(
@@ -197,7 +210,7 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
 
       upload_table_preview_counts_server("counts_preview",
         uploaded,
-        scrollY = "calc(35vh - 140px)"
+        scrollY = "calc(50vh - 140px)"
       )
       upload_table_preview_samples_server("samples_preview",
         uploaded,

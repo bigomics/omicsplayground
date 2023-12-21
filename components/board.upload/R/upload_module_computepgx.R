@@ -123,20 +123,25 @@ upload_module_computepgx_server <- function(
                     style = "margin-left: 0px;"
                   )),
                   shiny::tags$td("")
+                ),
+                shiny::tags$tr(
+                  shiny::tags$td(""),
+                  shiny::tags$td(""),
+                  shiny::tags$td(shiny::div(
+                    shiny::actionButton(
+                      ns("compute"), "Compute!",
+                      icon = icon("running"),
+                      class = "btn-outline-primary"
+                    ),
+                    shiny::br(), br(),
+                    shiny::actionLink(ns("options"), "Computation options",
+                       icon = icon("cog", lib = "glyphicon")
+                    ),
+                    style = "margin-left: auto; margin-right: auto;"                    
+                  )),
+                  shiny::tags$td("")                  
                 )
-              ),
-              shiny::br(),
-              shiny::div(
-                shiny::actionButton(ns("compute"), "Compute!",
-                  icon = icon("running"),
-                  class = "btn-outline-primary"
-                ),
-                shiny::br(), br(),
-                shiny::actionLink(ns("options"), "Computation options",
-                  icon = icon("cog", lib = "glyphicon")
-                ),
-                style = "padding-right: 380px;"
-              )
+              ) ## end table
             )
           ),
           shiny::br(),
