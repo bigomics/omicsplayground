@@ -213,7 +213,7 @@ clustering_plot_splitmap_server <- function(id,
       ## iHeatmap based splitted heatmap #########
 
       shiny::req(pgx$genes)
-      
+
       ## -------------- variable to split samples
       scale <- "none"
       if (input$hm_scale == "relative") scale <- "row.center"

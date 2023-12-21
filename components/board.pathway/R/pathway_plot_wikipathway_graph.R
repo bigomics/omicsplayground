@@ -93,7 +93,7 @@ functional_plot_wikipathway_graph_server <- function(id,
         pp <- rownames(pgx$gx.meta$meta[[comparison]])
 
         # Rename to human orthologs for non-human species and sort
-        
+
         if (pgx$organism != "Human") {
           names(fc) <- pgx$genes[pp, "human_ortholog"]
         } else {

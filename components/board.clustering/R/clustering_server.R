@@ -181,13 +181,14 @@ ClusteringBoard <- function(id, pgx) {
       ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
       if (!pgx$organism %in% c("Human", "human")) {
         genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
-        genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog), 
-        genes$gene_name, genes$human_ortholog)
+        genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog),
+          genes$gene_name, genes$human_ortholog
+        )
       } else {
         genes <- pgx$genes$gene_name
       }
       genesets <- rownames(pgx$gsetX)
-      
+
       ft <- input$hm_features
       shiny::req(ft)
 
@@ -226,7 +227,6 @@ ClusteringBoard <- function(id, pgx) {
           }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
-
         } else if (ft == "<custom>" && ft != "") {
           message("[getFilteredMatrix] selecting for <custom> features")
           customfeatures <- "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3"
