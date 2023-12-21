@@ -88,10 +88,7 @@ functional_plot_reactome_graph_server <- function(id,
         fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
         pp <- rownames(pgx$gx.meta$meta[[comparison]])
 
-        if ("human_ortholog" %in% colnames(pgx$genes) && sum(pp %in% pgx$genes$symbol) > 100) {
-          names(fc) <- pgx$genes[pp, "human_ortholog"]
-        } else if ("human_ortholog" %in% colnames(pgx$genes) && sum(pp %in% pgx$genes$feature) > 100) {
-          pp <- pgx$genes[pp, "feature"]
+        if (pgx$organism != "Human") {
           names(fc) <- pgx$genes[pp, "human_ortholog"]
         } else {
           names(fc) <- pgx$genes[pp, "symbol"]
