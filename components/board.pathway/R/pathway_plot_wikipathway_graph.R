@@ -93,10 +93,8 @@ functional_plot_wikipathway_graph_server <- function(id,
         pp <- rownames(pgx$gx.meta$meta[[comparison]])
 
         # Rename to human orthologs for non-human species and sort
-        if ("human_ortholog" %in% colnames(pgx$genes) && sum(pp %in% pgx$genes$symbol) > 100) {
-          names(fc) <- pgx$genes[pp, "human_ortholog"]
-        } else if ("human_ortholog" %in% colnames(pgx$genes) && sum(pp %in% pgx$genes$feature) > 100) {
-          pp <- pgx$genes[pp, "feature"]
+        
+        if (pgx$organism != "Human") {
           names(fc) <- pgx$genes[pp, "human_ortholog"]
         } else {
           names(fc) <- pgx$genes[pp, "symbol"]
@@ -110,7 +108,6 @@ functional_plot_wikipathway_graph_server <- function(id,
           return(NULL.IMG)
         }
         sel.row <- as.integer(sel.row)
-        pathway.id <- "WP179"
         pathway.name <- pw.genes <- "x"
         if (is.null(sel.row) || length(sel.row) == 0) {
           return(NULL.IMG)
