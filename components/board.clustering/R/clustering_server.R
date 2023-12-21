@@ -179,10 +179,12 @@ ClusteringBoard <- function(id, pgx) {
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
       ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
-      if (pgx$organism != "Human") {
+      if (!pgx$organism %in% c("Human", "human")) {
         genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
         genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog), 
-          genes$gene_name, genes$human_ortholog)
+        genes$gene_name, genes$human_ortholog)
+      } else {
+        genes <- pgx$genes$gene_name
       }
       genesets <- rownames(pgx$gsetX)
       
