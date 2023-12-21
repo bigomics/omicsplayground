@@ -178,10 +178,17 @@ ClusteringBoard <- function(id, pgx) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
+      ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
       genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
-      genes <- ifelse(genes$human_ortholog == "", genes$gene_name, genes$human_ortholog)
+      no.ortholog <- all( genes$human_ortholog == "") ||
+        all( is.na(genes$human_ortholog) || is.null(genes$human_ortholog) )
+      if(no.ortholog) {
+        genes <- genes$gene_name
+      } else {
+        genes <- genes$human_ortholog
+      }
       genesets <- rownames(pgx$gsetX)
-
+      
       ft <- input$hm_features
       shiny::req(ft)
 
@@ -202,8 +209,8 @@ ClusteringBoard <- function(id, pgx) {
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
-
         gg <- pgx$families[[1]]
+
         if (ft == "<all>") {
           gg <- rownames(pgx$X)
         } else if (ft == "<contrast>") {
@@ -220,6 +227,7 @@ ClusteringBoard <- function(id, pgx) {
           }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
+
         } else if (ft == "<custom>" && ft != "") {
           message("[getFilteredMatrix] selecting for <custom> features")
           customfeatures <- "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3"
@@ -251,15 +259,17 @@ ClusteringBoard <- function(id, pgx) {
           }
           gg <- gg1
         } else {
-          message("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
+          warning("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
           gg <- NULL
           return(NULL)
         }
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
         if (length(gg) == 0) {
+          warning("[getFilteredMatrix] warning to genes overlap with filter")
           return(NULL)
         }
+
         if (input$hm_splitby == "gene") {
           if (!(input$hm_splitvar %in% gg)) {
             gg <- c(input$hm_splitvar, gg)
@@ -334,6 +344,7 @@ ClusteringBoard <- function(id, pgx) {
       shiny::req(pgx$X, pgx$samples)
 
       flt <- getFilteredMatrix()
+
       zx <- flt$zx
       if (is.null(flt)) {
         return(NULL)
