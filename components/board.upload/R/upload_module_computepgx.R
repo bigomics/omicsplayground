@@ -24,7 +24,6 @@ upload_module_computepgx_server <- function(
     samplesRT,
     contrastsRT,
     raw_dir,
-    batchRT,
     metaRT,
     lib.dir,
     selected_organism,
@@ -136,7 +135,7 @@ upload_module_computepgx_server <- function(
                 shiny::actionLink(ns("options"), "Computation options",
                   icon = icon("cog", lib = "glyphicon")
                 ),
-                style = "padding-right: 430px;"
+                style = "padding-right: 380px;"
               )
             )
           ),
@@ -423,9 +422,6 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
-
-        ## !!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
-        ## batch  <- batchRT()
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters

@@ -75,6 +75,7 @@ UploadBoard <- function(id,
       shinyjs::click(id = "upload_files")
     }, ignoreNULL = TRUE)
 
+    
     shiny::observeEvent({
       list( uploaded, input$tabs )
     }, {
@@ -84,7 +85,7 @@ UploadBoard <- function(id,
       if( is.null(uploaded$counts.csv) && is.null(uploaded$samples.csv) ) {
         dbg("[upload_server:observeEvent(names.uploaded)] *** UPLOADED EMPTY *** ")
       }
-    }, ignoreNULL = TRUE)
+    })
     
     
     shiny::observeEvent(uploaded_pgx(), {
@@ -117,7 +118,8 @@ UploadBoard <- function(id,
       dbg("[UploadBoard:observe:uploaded_pgx] saving pgx as = ", fn)
       playbase::pgx.save(new_pgx, file = fn)
 
-      shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
+      shiny::withProgress(
+        message = "Scanning dataset library...", value = 0.33, {
         playbase::pgxinfo.updateDatasetFolder(
           pgxdir,
           new.pgx = pgxfile,
@@ -180,7 +182,7 @@ UploadBoard <- function(id,
       has.samples <- !is.null(checked_samples()$matrix)
       has.contrasts <- !is.null(checked_contrasts()$matrix)
       # check that modified contrast is not NULL and has col dim >0
-      has.contrasts <- !is.null(modified_ct()$contr) && ncol(modified_ct()$contr) > 0
+      has.contrasts <- !is.null(modified_ct()) && ncol(modified_ct()) > 0
 
       need2 <- has.counts && has.samples
       need3 <- need2 && has.contrasts
@@ -189,19 +191,15 @@ UploadBoard <- function(id,
         # show compute if contrast is done
         shiny::showTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
-        if (input$show_batchcorrection) {
+        if (input$expert_mode) {
           shiny::showTab("tabs", "BatchCorrect")
-        }
-        if (input$show_checkoutliers) {
           shiny::showTab("tabs", "CheckOutliers")
         }
       } else if (need2) {
         shiny::hideTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
-        if (input$show_batchcorrection) {
+        if (input$expert_mode) {
           shiny::showTab("tabs", "BatchCorrect")
-        }
-        if (input$show_checkoutliers) {
           shiny::showTab("tabs", "CheckOutliers")
         }
       } else {
@@ -216,21 +214,16 @@ UploadBoard <- function(id,
     ## ======================= UI OBSERVERS ================================
     ## =====================================================================
 
-    shiny::observeEvent(input$show_batchcorrection, {
-      if (input$show_batchcorrection) {
+    shiny::observeEvent( input$expert_mode, {
+      if (input$expert_mode) {
         shiny::showTab("tabs", "BatchCorrect")
-      } else {
-        shiny::hideTab("tabs", "BatchCorrect")
-      }
-    })
-
-    shiny::observeEvent(input$show_checkoutliers, {
-      if (input$show_checkoutliers) {
         shiny::showTab("tabs", "CheckOutliers")
       } else {
+        shiny::hideTab("tabs", "BatchCorrect")
         shiny::hideTab("tabs", "CheckOutliers")
       }
     })
+
 
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
@@ -455,7 +448,6 @@ UploadBoard <- function(id,
       uploaded$samples.csv <- pgx$samples
       uploaded$contrasts.csv <- pgx$contrast
       uploaded$counts.csv <- pgx$counts
-      ##      corrected_counts <- pgx$counts  ## ?? IK
       recompute_info(list("name" = pgx$name, "description" = pgx$description))
     })
 
@@ -512,7 +504,6 @@ UploadBoard <- function(id,
         lapply(names(checklist), function(i) checklist[[i]] <- NULL)
       }
     })
-
 
 
     ## =====================================================================
@@ -850,41 +841,10 @@ UploadBoard <- function(id,
     ## Preview Server
     upload_module_preview_server("upload_preview", uploaded, checklist, checkTables)
 
-    ## correctedX <- shiny::reactive({
-    correctedX <- upload_module_batchcorrect_server(
-      id = "batchcorrect",
-      r_X = shiny::reactive(checked_counts()$matrix),
-      r_samples = shiny::reactive(checked_samples()$matrix),
-      r_contrasts = shiny::reactive(modified_ct()$contr),
-      is.count = TRUE,
-      height = height
-    )
-
-    ## correctedX <- shiny::reactive({
-    correctedX2 <- upload_module_outliers_server(
-      id = "checkoutliers",
-      r_X = shiny::reactive(checked_counts()$matrix),
-      r_samples = shiny::reactive(checked_samples()$matrix),
-      r_contrasts = shiny::reactive(modified_ct()$contr),
-      is.count = TRUE,
-      height = height
-    )
-
-    corrected_counts <- shiny::reactive({
-      counts <- NULL
-      if (input$show_batchcorrection) {
-        counts <- correctedX()
-      } else {
-        counts <- checked_counts()$matrix
-      }
-      counts
-    })
-
     modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
       phenoRT = reactive(checked_samples()$matrix),
       contrRT = reactive(checked_contrasts()$matrix),
-      ## countsRT = corrected_counts,
       countsRT = reactive(checked_counts()$matrix),
       height = height
     )
@@ -893,11 +853,39 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      ##      checked[["contrasts.csv"]] <- modct$contr
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
-        write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
+        write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
     })
+    
+    corrected1 <- upload_module_outliers_server(
+      id = "checkoutliers",
+      r_X = shiny::reactive(checked_counts()$matrix),
+      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_contrasts = modified_ct,
+      is.count = TRUE,
+      height = height
+    )
+
+    corrected2 <- upload_module_batchcorrect_server(
+      id = "batchcorrect",
+      ##r_X = shiny::reactive(checked_counts()$matrix),
+      r_X = corrected1,
+      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_contrasts = modified_ct,
+      is.count = TRUE,
+      height = height
+    )
+
+    ## corrected_counts <- shiny::reactive({
+    ##   counts <- NULL
+    ##   if (input$show_batchcorrection) {
+    ##     counts <- correctedX()
+    ##   } else {
+    ##     counts <- checked_counts()$matrix
+    ##   }
+    ##   counts
+    ## })
 
     upload_ok <- shiny::reactive({
       check <- checkTables()
@@ -905,19 +893,13 @@ UploadBoard <- function(id,
       all(grepl("ERROR", check[, "status"]) == FALSE)
     })
 
-    batch_vectors <- shiny::reactive({
-      correctedX()$B
-    })
-
-
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = corrected_counts,
+      countsRT = corrected2,
       samplesRT = shiny::reactive(checked_samples()$matrix),
       ## contrastsRT = shiny::reactive(checked_contrasts()$matrix),
-      contrastsRT = shiny::reactive(modified_ct()$contr),
+      contrastsRT = modified_ct,
       raw_dir = raw_dir,
-      batchRT = batch_vectors,
       metaRT = shiny::reactive(uploaded$meta),
       selected_organism = shiny::reactive(input$selected_organism),
       enable_button = upload_ok,

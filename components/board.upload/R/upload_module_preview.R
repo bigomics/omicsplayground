@@ -24,171 +24,175 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
   moduleServer(
     id,
     function(input, output, session) {
+      
       # ever/y time something is uploaded, it can be previewed
-      observeEvent(c(uploaded$last_uploaded),
-        {
-          checkTables()
-          has_counts <- !is.null(uploaded$counts.csv)
-          has_samples <- !is.null(uploaded$samples.csv)
-          has_contrasts <- !is.null(uploaded$contrasts.csv)
-
-          tabs <- list(id = session$ns("preview_panel"))
-          if (has_counts) {
-            tabs <- c(
-              tabs,
-              list(tabPanel(
-                "Counts",
-                fluidRow(
-                  column(
-                    width = 8,
-                    upload_table_preview_counts_ui(session$ns("counts_preview"),
-                      height = c("100%", TABLE_HEIGHT_MODAL),
-                      width = c("auto", "100%"),
-                      title = "Uploaded Counts",
-                      info.text = "This is the uploaded counts data.",
-                      caption = "This is the uploaded counts data."
+      observeEvent( c(uploaded$last_uploaded), {
+        checkTables()
+        has_counts <- !is.null(uploaded$counts.csv)
+        has_samples <- !is.null(uploaded$samples.csv)
+        has_contrasts <- !is.null(uploaded$contrasts.csv)
+        
+        tabs <- list(id = session$ns("preview_panel"))
+        if (has_counts) {
+          tabs <- c(
+            tabs,
+            list(tabPanel(
+              "Counts",
+              fluidRow(
+                column(
+                  width = 9,
+                  upload_table_preview_counts_ui(session$ns("counts_preview"),
+                    height = c("100%", TABLE_HEIGHT_MODAL),
+                    width = c("auto", "100%"),
+                    title = "Uploaded Counts",
+                    info.text = "This is the uploaded counts data.",
+                    caption = "This is the uploaded counts data."
                     )
-                  ),
-                  column(
-                    width = 4,
-                    "Summary:", br(),
-                    check_to_html(checklist$counts.csv$checks,
-                      pass_msg = "All counts checks passed",
-                      null_msg = "Counts checks not run yet.
+                ),
+                column(
+                  width = 3,
+                  class = "px-4",
+                  "Summary:", br(),
+                  check_to_html(checklist$counts.csv$checks,
+                    pass_msg = "All counts checks passed",
+                    null_msg = "Counts checks not run yet.
                                 Fix any errors with counts first."
-                    ),
-                    ifelse(!has_samples, "",
-                      check_to_html(checklist$samples_counts$checks,
+                  ),
+                  ifelse(!has_samples, "",
+                    check_to_html(checklist$samples_counts$checks,
                         pass_msg = "All samples-counts checks passed",
                         null_msg = "Samples-counts checks not run yet.
                                 Fix any errors with samples or counts first."
                       )
-                    )
                   )
                 )
-              ))
-            )
-          }
-          if (has_samples) {
-            tabs <- c(
-              tabs,
-              list(tabPanel(
-                "Samples",
-                fluidRow(
-                  column(
-                    width = 8,
-                    upload_table_preview_samples_ui(session$ns("samples_preview"),
-                      height = c("100%", TABLE_HEIGHT_MODAL),
-                      width = c("auto", "100%"),
-                      title = "Uploaded Samples",
-                      info.text = "This is the uploaded samples data.",
-                      caption = "This is the uploaded samples data."
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    "Summary:", br(),
-                    check_to_html(checklist$samples.csv$checks,
-                      pass_msg = "All samples checks passed",
-                      null_msg = "Samples checks not run. Fix any
-                                errors with samples first."
-                    ),
-                    ifelse(!has_counts, "",
-                      check_to_html(
-                        check = checklist$samples_counts$checks,
-                        pass_msg = "All samples-counts checks passed",
-                        null_msg = "Samples-counts checks not run yet.
-                                  Fix any errors with samples or counts first."
-                      )
-                    ),
-                    ifelse(!has_contrasts, "",
-                      check_to_html(checklist$samples_contrasts$checks,
-                        pass_msg = "All samples-contrasts checks passed",
-                        null_msg = "Samples-contrasts checks not run yet.
-                                Fix any errors with samples or contrasts first."
-                      )
-                    )
-                  )
-                )
-              ))
-            )
-          }
-          if (has_contrasts) {
-            tabs <- c(
-              tabs,
-              list(tabPanel(
-                "Contrasts",
-                fluidRow(
-                  column(
-                    width = 8,
-                    upload_table_preview_contrasts_ui(session$ns("contrasts_preview"),
-                      height = c("100%", TABLE_HEIGHT_MODAL),
-                      width = c("auto", "100%"),
-                      title = "Uploaded Contrasts",
-                      info.text = "This is the uploaded contrasts data.",
-                      caption = "This is the uploaded contrasts data."
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    "Summary:", br(),
-                    check_to_html(checklist$contrasts.csv$checks,
-                      pass_msg = "All contrasts checks passed",
-                      null_msg = "Contrasts checks not run. Fix any errors
-                                with contrasts first."
-                    ),
-                    ifelse(!has_samples, "",
-                      check_to_html(checklist$samples_contrasts$checks,
-                        pass_msg = "All samples-contrasts checks passed",
-                        null_msg = "Samples-contrasts checks not run yet.
-                                  Fix any errors with samples or contrasts first."
-                      )
-                    )
-                  )
-                )
-              ))
-            )
-          }
-
-          shiny::showModal(
-            shiny::modalDialog(
-              title = "Data Upload Preview",
-              label = "Data Upload Preview",
-              do.call(tabsetPanel, tabs),
+              )
+            ))
+          )
+        }
+        if (has_samples) {
+          tabs <- c(
+            tabs,
+            list(tabPanel(
+              "Samples",
               fluidRow(
                 column(
-                  12,
-                  span(style = "color: orange", "Orange"),
-                  span("= warning but data will still be uploaded. "),
-                  span(style = "color:red", "Red"),
-                  span("= error and data will not be uploaded.")
-                )
-              ),
-              footer = div(
-                style = "float: right",
-                shiny::actionButton(
-                  session$ns("cancel_upload"),
-                  label = "Cancel",
-                  style = "display: inline-block; margin-left: 15px;",
-                  class = "btn-danger"
+                  width = 9,
+                  upload_table_preview_samples_ui(session$ns("samples_preview"),
+                    height = c("100%", TABLE_HEIGHT_MODAL),
+                    width = c("auto", "100%"),
+                    title = "Uploaded Samples",
+                    info.text = "This is the uploaded samples data.",
+                    caption = "This is the uploaded samples data."
+                  )
                 ),
-                shiny::actionButton(
-                  session$ns("ok_upload"),
-                  label = "OK",
-                  style = "display: inline-block",
-                  class = "btn-info"
+                column(
+                  width = 3,
+                  class = "px-4",
+                  "Summary:", br(),
+                  check_to_html(checklist$samples.csv$checks,
+                    pass_msg = "All samples checks passed",
+                    null_msg = "Samples checks not run. Fix any
+                                errors with samples first."
+                  ),
+                  ifelse(!has_counts, "",
+                    check_to_html(
+                      check = checklist$samples_counts$checks,
+                      pass_msg = "All samples-counts checks passed",
+                      null_msg = "Samples-counts checks not run yet.
+                                  Fix any errors with samples or counts first."
+                    )
+                  ),
+                  ifelse(!has_contrasts, "",
+                    check_to_html(checklist$samples_contrasts$checks,
+                      pass_msg = "All samples-contrasts checks passed",
+                      null_msg = "Samples-contrasts checks not run yet.
+                                Fix any errors with samples or contrasts first."
+                    )
+                  )
                 )
-              ),
-              easyClose = FALSE,
-              size = "xl"
-            ) %>%
-              tagAppendAttributes(
-                style = "min-height: 90%; min-width: 90%",
-                .cssSelector = ".modal-dialog"
               )
+            ))
           )
-        },
-        ignoreNULL = TRUE
+        }
+        if (has_contrasts) {
+          tabs <- c(
+            tabs,
+            list(tabPanel(
+              "Contrasts",
+              fluidRow(
+                column(
+                  width = 9,
+                  upload_table_preview_contrasts_ui(session$ns("contrasts_preview"),
+                    height = c("100%", TABLE_HEIGHT_MODAL),
+                    width = c("auto", "100%"),
+                    title = "Uploaded Contrasts",
+                    info.text = "This is the uploaded contrasts data.",
+                    caption = "This is the uploaded contrasts data."
+                  )
+                ),
+                column(
+                  width = 3,
+                  class = "px-4",
+                  "Summary:", br(),
+                  check_to_html(checklist$contrasts.csv$checks,
+                    pass_msg = "All contrasts checks passed",
+                    null_msg = "Contrasts checks not run. Fix any errors
+                                with contrasts first."
+                  ),
+                  ifelse(!has_samples, "",
+                    check_to_html(checklist$samples_contrasts$checks,
+                      pass_msg = "All samples-contrasts checks passed",
+                      null_msg = "Samples-contrasts checks not run yet.
+                                  Fix any errors with samples or contrasts first."
+                    )
+                  )
+                )
+              )
+            ))
+          )
+        }
+
+        shiny::showModal(
+          shiny::modalDialog(
+            title = "Data Upload Preview",
+            label = "Data Upload Preview",
+            do.call(tabsetPanel, tabs),
+            fluidRow(
+              column(
+                12,
+                class = "px-4",
+                span(style = "color: orange", "Orange"),
+                span("= warning but data will still be uploaded. "),
+                span(style = "color:red", "Red"),
+                span("= error and data will not be uploaded.")
+              )
+            ),
+            footer = div(
+              style = "float: right",
+              shiny::actionButton(
+                session$ns("cancel_upload"),
+                label = "Cancel",
+                style = "display: inline-block; margin-left: 15px;",
+                class = "btn-danger"
+              ),
+              shiny::actionButton(
+                session$ns("ok_upload"),
+                label = "OK",
+                style = "display: inline-block",
+                class = "btn-info"
+              )
+            ),
+            easyClose = FALSE,
+            size = "xl"
+          ) %>%
+            tagAppendAttributes(
+              style = "min-height: 90%; min-width: 90%",
+              .cssSelector = ".modal-dialog"
+            )
+        )
+      },
+      ignoreNULL = TRUE
       )
 
       upload_table_preview_counts_server("counts_preview",
@@ -205,32 +209,32 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
       )
 
       observeEvent(input$cancel_upload,
-        {
-          shiny::removeModal()
-          has_counts <- "counts.csv" %in% uploaded$last_uploaded
-          has_samples <- "samples.csv" %in% uploaded$last_uploaded
-          has_contrasts <- ("contrasts.csv" %in% uploaded$last_uploaded) &
-            (!is.null(uploaded$contrasts.csv))
-          uploaded[["counts.csv"]] <- NULL
-          uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
-          uploaded[["pgx"]] <- NULL
-          uploaded[["last_uploaded"]] <- NULL
-          uploaded[["checklist"]] <- NULL
-          checklist[["counts.csv"]] <- NULL
-          checklist[["samples.csv"]] <- NULL
-          checklist[["contrasts.csv"]] <- NULL
-          checklist[["samples_counts"]] <- NULL
-          checklist[["samples_contrasts"]] <- NULL
-        },
-        ignoreInit = TRUE
+      {
+        shiny::removeModal()
+        has_counts <- "counts.csv" %in% uploaded$last_uploaded
+        has_samples <- "samples.csv" %in% uploaded$last_uploaded
+        has_contrasts <- ("contrasts.csv" %in% uploaded$last_uploaded) &
+          (!is.null(uploaded$contrasts.csv))
+        uploaded[["counts.csv"]] <- NULL
+        uploaded[["samples.csv"]] <- NULL
+        uploaded[["contrasts.csv"]] <- NULL
+        uploaded[["pgx"]] <- NULL
+        uploaded[["last_uploaded"]] <- NULL
+        uploaded[["checklist"]] <- NULL
+        checklist[["counts.csv"]] <- NULL
+        checklist[["samples.csv"]] <- NULL
+        checklist[["contrasts.csv"]] <- NULL
+        checklist[["samples_counts"]] <- NULL
+        checklist[["samples_contrasts"]] <- NULL
+      },
+      ignoreInit = TRUE
       )
 
       observeEvent(input$ok_upload,
-        {
-          shiny::removeModal()
-        },
-        ignoreInit = TRUE
+      {
+        shiny::removeModal()
+      },
+      ignoreInit = TRUE
       )
     }
   )

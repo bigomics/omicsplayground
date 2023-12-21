@@ -153,7 +153,7 @@ UploadUI <- function(id) {
                 ns("upload_files_btn"),
                 width = 'auto',
                 icon = icon("table"),
-                label = "Upload file",
+                label = "Upload files",
                 class = "btn-primary",
                 style = "margin-left: 0px;"
               ),
@@ -261,8 +261,8 @@ UploadUI <- function(id) {
     bslib::layout_columns(
       col_widths = c(2,10),
       div(
-        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
-        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
+##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
       ),
       shiny::fillCol(
         height = "100%"
@@ -275,9 +275,13 @@ UploadUI <- function(id) {
   div(
     class = "p-0",
     board_header,
+    div(
+      style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
+      shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode"),
+    ),
     shiny::tabsetPanel(
       id = ns("tabs"),
-##      upload_select_db,
+##    upload_select_db,
       upload_panel,
       comparisons_panel,
       outliers_panel,

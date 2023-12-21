@@ -59,7 +59,7 @@ upload_module_makecontrast_ui <- function(id) {
                     "add comparison",
                     icon = icon("plus"),
                     class = "btn btn-outline-primary",
-                    width = "60%"
+                    width = "70%"
                   ),
                   "Add this comparison to the table.",
                   placement = "top", options = list(container = "body")
@@ -73,7 +73,7 @@ upload_module_makecontrast_ui <- function(id) {
                     "auto-comparisons",
                     icon = icon("plus"),
                     class = "btn btn-outline-secondary",
-                    width = "60%"
+                    width = "70%"
                   ),
                   "If you are feeling lucky, try this to automatically create comparisons.",
                   placement = "top", options = list(container = "body")
@@ -124,10 +124,11 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
     id,
     function(input, output, session) {
       ns <- session$ns
-      rv <- shiny::reactiveValues(contr = NULL)
-
+      ##rv <- shiny::reactiveValues(contr = NULL)
+      rv_contr <- shiny::reactiveVal(NULL)
+      
       shiny::observe({
-        rv$contr <- contrRT()
+        rv_contr(contrRT())
       })
 
       shiny::observe({
@@ -250,10 +251,10 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         if (length(id) == 0) {
           return(NULL)
         }
-        if (!is.null(rv$contr) && NCOL(rv$contr) <= 1) {
-          rv$contr <- rv$contr[, 0, drop = FALSE]
+        if (!is.null(rv_contr()) && NCOL(rv_contr()) <= 1) {
+          rv_contr( rv_contr()[, 0, drop = FALSE] )
         } else {
-          rv$contr <- rv$contr[, -id, drop = FALSE]
+          rv_contr( rv_contr()[, -id, drop = FALSE] )
         }
       })
 
@@ -287,7 +288,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
           shinyalert::shinyalert("ERROR", "Invalid comparison name")
           return(NULL)
         }
-        if (!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
+        if (!is.null(rv_contr()) && ct.name %in% colnames(rv_contr())) {
           shinyalert::shinyalert("ERROR", "Comparison name already exists.")
           return(NULL)
         }
@@ -299,10 +300,10 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         ## update reactive value
         samples <- colnames(countsRT())
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
-        if (is.null(rv$contr)) {
-          rv$contr <- ctx1
+        if (is.null(rv_contr())) {
+          rv_contr( ctx1 )
         } else {
-          rv$contr <- cbind(rv$contr, ctx1)
+          rv_contr( cbind(rv$contr, ctx1) )
         }
       })
 
@@ -325,16 +326,16 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         ## update reactive value
         ctx2 <- playbase::contrastAsLabels(ctx)
-        if (!is.null(rv$contr)) {
-          rv$contr <- cbind(rv$contr, ctx2)
+        if (!is.null(rv_contr())) {
+          rv_contr( cbind(rv$contr, ctx2) )
         } else {
-          rv$contr <- ctx2
+          rv_contr( ctx2 )
         }
       })
 
       output$contrastTable <- DT::renderDataTable(
         {
-          ct <- rv$contr
+          ct <- rv_contr()
 
           if (is.null(ct) || NCOL(ct) == 0) {
             df <- data.frame(
@@ -426,14 +427,8 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         watermark = WATERMARK
       )
 
-      return(
-        shiny::reactive({
-          if (is.null(rv$contr)) {
-            return(NULL)
-          }
-          rv
-        })
-      ) ## pointing to reactive
+      ## pointer to reactive
+      return( rv_contr )
     } ## end-of-server
   )
 }

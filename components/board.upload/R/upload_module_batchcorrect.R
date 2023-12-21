@@ -14,10 +14,10 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
 
   bc_info <- HTML("<h4>Batch correction</h4>Batch correction can clean your data from 'unwanted variables'.\n")
 
-  options.plot1 <- tagList(
+  clust.options <- tagList(
     shiny::selectInput( ns('plottype'), "Type;", c("tsne","pca","heatmap"))
   )
-  options.plot1 <- tagList(
+  clust.options <- tagList(
     shiny::radioButtons( ns('plottype'), "Type;", c("tsne","pca","heatmap"))
   )
 
@@ -60,7 +60,7 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
         shiny::selectizeInput(ns("batch_params"), "Batch covariates:",
           choices = "<none>", multiple=TRUE),
         shiny::actionButton(ns("recompute_button"), "Recompute",
-          class="btn-sm btn-primary", width='100%'),
+          class="btn-sm btn-primary mt-3", width='100%'),
         ),
       shiny::br(), shiny::br()
     ),
@@ -77,7 +77,7 @@ upload_module_batchcorrect_ui <- function(id, height = "100%") {
           title = "Clustering",
           info.text = clust.infotext,
           caption = clust.infotext,
-          options = options.plot1,
+          options = clust.options,
           height = c("100%","70vh")          
         ),
         PlotModuleUI(
@@ -158,23 +158,24 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
 
         bparams <- c()
         tparams <- c()        
-        if("statistical" %in% names(bc$params)) {
-          bparams <- sort(bc$params$statistical)
-          choices2 = c("<none>",bparams)
-          shiny::updateSelectInput(session, "batch_params", choices = choices2,
-            sel = choices2[-1])
-        } else {
-          shiny::updateSelectInput(session, "batch_params", choices = "<none>",
-            sel = "<none>")
-        }
 
-        if("technical" %in% names(bc$params)) {
+        if("technical" %in% names(bc$params) && length(bc$params$technical)) {
           tparams <- sort(unique(sub("[.].*","",bc$params$technical)))
           choices3 <- c("<none>",paste0("<",tparams,">"))
           shiny::updateSelectInput(session, "tech_params", choices = choices3,
             sel = choices3[-1])
         } else {
           shiny::updateSelectInput(session, "tech_params", choices = "<none>",
+            sel = "<none>")
+        }
+        
+        if("statistical" %in% names(bc$params) && length(bc$params$statistical)) {
+          bparams <- sort(bc$params$statistical)
+          choices2 = c("<none>",bparams)
+          shiny::updateSelectInput(session, "batch_params", choices = choices2,
+            sel = choices2[-1])
+        } else {
+          shiny::updateSelectInput(session, "batch_params", choices = "<none>",
             sel = "<none>")
         }
 
@@ -188,7 +189,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           shinyalert::shinyalert(
             type = "warning",
             title = "",                                                
-            text = "Your data has significant batch effects. We recommend to use one of the correction methods."
+            text = paste("Your data has batch effects. We recommend to use one of the correction methods.")
           )
         }
         
