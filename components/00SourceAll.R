@@ -176,6 +176,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.upload/R/upload_module_batchcorrect.R',encoding='UTF-8')
   source('board.upload/R/upload_module_computepgx.R',encoding='UTF-8')
   source('board.upload/R/upload_module_makecontrast.R',encoding='UTF-8')
+  source('board.upload/R/upload_module_outliers.R',encoding='UTF-8')
   source('board.upload/R/upload_module_preview.R',encoding='UTF-8')
   source('board.upload/R/upload_plot_contraststats.R',encoding='UTF-8')
   source('board.upload/R/upload_plot_countstats.R',encoding='UTF-8')
