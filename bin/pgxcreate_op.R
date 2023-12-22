@@ -81,7 +81,7 @@ ds_name <- paste0("<b>", params$name, "</b>")
 gmail_creds <- file.path(params$ETC, "gmail_creds")
 
 params$sendSuccessMessageToUser(
-  user_email = "mauro.masiero@bigomics.ch",
+  user_email = params$email,
   pgx_name = ds_name,
   path_to_creds = gmail_creds
 )
