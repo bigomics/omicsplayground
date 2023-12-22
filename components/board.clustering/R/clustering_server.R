@@ -185,7 +185,7 @@ ClusteringBoard <- function(id, pgx) {
           genes$gene_name, genes$human_ortholog
         )
       } else {
-        genes <- as.character(pgx$genes[rownames(pgx$X),"gene_name"])
+        genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
       }
       genesets <- rownames(pgx$gsetX)
 
