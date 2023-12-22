@@ -73,19 +73,18 @@ UploadBoard <- function(id,
 
     shiny::observeEvent( input$upload_files_btn, {
       shinyjs::click(id = "upload_files")
-    }, ignoreNULL = TRUE)
+    }, ignoreNULL = TRUE )
 
     
     shiny::observeEvent({
       list( uploaded, input$tabs )
     }, {
       dbg("[upload_server:observeEvent(names.uploaded)] names(uploaded) = ",names(uploaded))
-      dbg("[upload_server:observeEvent(names.uploaded)] input$tabs = ",input$tabs)
-      
+      dbg("[upload_server:observeEvent(names.uploaded)] input$tabs = ",input$tabs)      
       if( is.null(uploaded$counts.csv) && is.null(uploaded$samples.csv) ) {
         dbg("[upload_server:observeEvent(names.uploaded)] *** UPLOADED EMPTY *** ")
       }
-    })
+    }, ignoreNULL = FALSE)
     
     
     shiny::observeEvent(uploaded_pgx(), {
@@ -191,21 +190,21 @@ UploadBoard <- function(id,
         # show compute if contrast is done
         shiny::showTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
+        shiny::showTab("tabs", "QC")
         if (input$expert_mode) {
           shiny::showTab("tabs", "BatchCorrect")
-          shiny::showTab("tabs", "CheckOutliers")
         }
       } else if (need2) {
         shiny::hideTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
+        shiny::showTab("tabs", "QC")
         if (input$expert_mode) {
           shiny::showTab("tabs", "BatchCorrect")
-          shiny::showTab("tabs", "CheckOutliers")
         }
       } else {
         shiny::hideTab("tabs", "Compute")
         shiny::hideTab("tabs", "BatchCorrect")
-        shiny::hideTab("tabs", "CheckOutliers")
+        shiny::hideTab("tabs", "QC")
         shiny::hideTab("tabs", "Comparisons")
       }
     })
@@ -217,10 +216,8 @@ UploadBoard <- function(id,
     shiny::observeEvent( input$expert_mode, {
       if (input$expert_mode) {
         shiny::showTab("tabs", "BatchCorrect")
-        shiny::showTab("tabs", "CheckOutliers")
       } else {
         shiny::hideTab("tabs", "BatchCorrect")
-        shiny::hideTab("tabs", "CheckOutliers")
       }
     })
 
@@ -488,7 +485,7 @@ UploadBoard <- function(id,
 
         shinyalert::shinyalert(
           title = "Example dataset",
-          text = 'This example dataset is a time course experiment measuring the protein abundances in T cells upon activation at 0h, 12h, 24h, 48h and 72h. <br><br><p>Reference: "Proteome profiles of activated vs resting human naive T cells at different times", Geiger et al., Cell 2016.',
+          text = 'This example dataset is a time course experiment measuring the protein abundances in T cells comparing activated vs. resting cells at different time points (Geiger et al., Cell 2016)',
           html = TRUE,
         )
         
@@ -775,6 +772,12 @@ UploadBoard <- function(id,
         ## "Gene information file with genes on rows, gene info as columns.",
         "Contrast file with conditions on rows, contrasts as columns"
       )
+      description <- c(
+        "genes x samples",
+        "samples x phenotypes",
+        ## "Gene information file with genes on rows, gene info as columns.",
+        "conditions x comparisons"
+      )
       df <- data.frame(
         filename = files.needed,
         description = description,
@@ -853,7 +856,7 @@ UploadBoard <- function(id,
     })
     
     corrected1 <- upload_module_outliers_server(
-      id = "checkoutliers",
+      id = "checkqc",
       r_X = shiny::reactive(checked_counts()$matrix),
       r_samples = shiny::reactive(checked_samples()$matrix),
       r_contrasts = modified_ct,
@@ -863,8 +866,8 @@ UploadBoard <- function(id,
 
     corrected2 <- upload_module_batchcorrect_server(
       id = "batchcorrect",
-      ##r_X = shiny::reactive(checked_counts()$matrix),
-      r_X = corrected1,
+      r_X = shiny::reactive(checked_counts()$matrix),
+      ##r_X = corrected1,
       r_samples = shiny::reactive(checked_samples()$matrix),
       r_contrasts = modified_ct,
       is.count = TRUE,
@@ -889,7 +892,7 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = corrected2,
+      countsRT = corrected1,
       samplesRT = shiny::reactive(checked_samples()$matrix),
       ## contrastsRT = shiny::reactive(checked_contrasts()$matrix),
       contrastsRT = modified_ct,

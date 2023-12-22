@@ -200,7 +200,7 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
             size = "xl"
           ) %>%
             tagAppendAttributes(
-              style = "min-height: 90%; min-width: 90%",
+              style = "min-height: 60%; min-width: 75%",
               .cssSelector = ".modal-dialog"
             )
         )

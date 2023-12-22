@@ -22,7 +22,7 @@ upload_module_makecontrast_ui <- function(id) {
           bslib::layout_columns(
             col_widths = c(3,9),
             shiny::div(
-              shiny::HTML("<b>1. Choose phenotype:</b>"),
+              shiny::HTML("<h4>1. Choose phenotype:</h4>"),
               withTooltip(
                 shiny::selectInput(
                   ns("param"),
@@ -37,7 +37,7 @@ upload_module_makecontrast_ui <- function(id) {
               ),
               br(),
               shiny::div(
-                shiny::HTML("<b>3. Comparison name:</b>"),
+                shiny::HTML("<h4>3. Comparison name:</h4>"),
                 withTooltip(
                   shiny::textInput(
                     ns("newname"),
@@ -50,7 +50,7 @@ upload_module_makecontrast_ui <- function(id) {
                 )
               ),
               br(),
-              shiny::HTML("<b>4. Add to list:</b>"),
+              shiny::HTML("<h4>4. Add to list:</h4>"),
               shiny::div(
                 style = "padding-top: 5px;",
                 withTooltip(
@@ -86,7 +86,7 @@ upload_module_makecontrast_ui <- function(id) {
 #                style = "width: 100%; gap: 10px; height: 75px !important;",
                 shiny::div(
                   style = "overflow: auto; margin-left: 30px;",
-                  shiny::HTML("<b>2. Create comparisons:</b>"),
+                  shiny::HTML("<h4>2. Create comparisons:</h4>"),
                   withTooltip(
                     shiny::uiOutput(ns("createcomparison"),
                       style = "font-size:13px;"
@@ -303,7 +303,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         if (is.null(rv_contr())) {
           rv_contr( ctx1 )
         } else {
-          rv_contr( cbind(rv$contr, ctx1) )
+          rv_contr( cbind(rv_contr(), ctx1) )
         }
       })
 
@@ -327,7 +327,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         ## update reactive value
         ctx2 <- playbase::contrastAsLabels(ctx)
         if (!is.null(rv_contr())) {
-          rv_contr( cbind(rv$contr, ctx2) )
+          rv_contr( cbind(rv_contr(), ctx2) )
         } else {
           rv_contr( ctx2 )
         }

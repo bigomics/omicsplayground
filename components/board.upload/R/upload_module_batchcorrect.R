@@ -121,9 +121,8 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
       logX <- eventReactive({
         list( r_X() )
       } , {
-        dbg("[batchcorrect_server:logX] reacted!")
-        shiny::validate( shiny::need(!is.null(r_X()) && nrow(r_X()),
-          "no data. please upload."))
+        shiny::validate( shiny::need(!is.null(r_X()), "no data. please upload."))
+        shiny::validate( shiny::need(!is.null(nrow(r_X())), "no data. please upload."))
         X <- playbase::counts.mergeDuplicateFeatures(r_X())
         X <- limma::normalizeQuantiles(playbase::logCPM(X))  ## standard normalization
         X
@@ -210,6 +209,8 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         contrasts <- r_contrasts()
         X1 <- logX()
 
+        dbg("[batchcorrect_server::run_methods] 0: dim(X1) = ",dim(X1))
+                
         shiny::validate( shiny::need(!is.null(X1) && nrow(X1),
           "No counts data. Please upload."))
         shiny::validate( shiny::need(!is.null(contrasts) && ncol(contrasts),
@@ -266,7 +267,7 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           }
           
           shiny::incProgress( amount = 0.1, "Running correction methods...")
-
+          
           methods <- c("uncorrected","ComBat", "limma","superBC",
             "PCA","RUV","SVA","NNM")
           methods <- c("uncorrected","ComBat", "limma","RUV","SVA","NNM")
@@ -301,7 +302,11 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           ##   as.matrix(uwot::umap(t2(x), n_neighbors=nb/2))
           ## })
 
+
+          
           incProgress( amount = 0.1, "Evaluating results...")          
+
+          dbg("[run_methods] calling bc.evaluateResults")
           
           res <- playbase::bc.evaluateResults(
             xlist,

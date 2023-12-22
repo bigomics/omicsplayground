@@ -73,7 +73,7 @@ upload_module_computepgx_server <- function(
       output$UI <- shiny::renderUI({
         shiny::fillCol(
           height = height,
-          flex = c(0.2, NA, 0.05, 1.3),
+          flex = c(0.1, NA, 0.05, 1.3),
           shiny::br(),
           shiny::fluidRow(
             shiny::column(
@@ -82,7 +82,7 @@ upload_module_computepgx_server <- function(
               shiny::tags$table(
                 style = "width:100%;vertical-align:top;padding:4px;",
                 shiny::tags$tr(
-                  shiny::tags$td("", width = "120"),
+                  shiny::tags$td("", width = "280"),
                   shiny::tags$td("Name", width = "120"),
                   shiny::tags$td(
                     shiny::textInput(
@@ -127,18 +127,21 @@ upload_module_computepgx_server <- function(
                 shiny::tags$tr(
                   shiny::tags$td(""),
                   shiny::tags$td(""),
-                  shiny::tags$td(shiny::div(
-                    shiny::actionButton(
-                      ns("compute"), "Compute!",
-                      icon = icon("running"),
-                      class = "btn-outline-primary"
-                    ),
-                    shiny::br(), br(),
-                    shiny::actionLink(ns("options"), "Computation options",
-                       icon = icon("cog", lib = "glyphicon")
-                    ),
-                    style = "margin-left: auto; margin-right: auto;"                    
-                  )),
+                  shiny::tags$td(
+                    shiny::div(
+                      shiny::actionButton(
+                        ns("compute"),
+                        "Compute!",
+                        icon = icon("running"),
+                        class = "btn-outline-primary"
+                      ),
+                      shiny::br(), br(),
+                      shiny::actionLink(ns("options"), "Computation options",
+                        icon = icon("cog", lib = "glyphicon")
+                      ),
+                      style = "margin: 15px 0 15px 80px;"
+                    )
+                  ),
                   shiny::tags$td("")                  
                 )
               ) ## end table

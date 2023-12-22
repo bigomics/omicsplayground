@@ -233,7 +233,7 @@ UploadUI <- function(id) {
   )
 
   batchcorrect_panel <- shiny::tabPanel(
-    "BatchCorrect",
+    "BatchEffects",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
@@ -244,13 +244,13 @@ UploadUI <- function(id) {
   )
 
   outliers_panel <- shiny::tabPanel(
-    "CheckOutliers",
+    "QC/BC",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
       heights_equal = "row",
-      upload_module_outliers_ui(ns("checkoutliers")),
-      bs_alert("Check for outliers")      
+      upload_module_outliers_ui(ns("checkqc")),
+      bs_alert("Check for normalization, outliers and batch-effects.")      
     )
   )
   
@@ -259,7 +259,7 @@ UploadUI <- function(id) {
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
     bslib::layout_columns(
-      col_widths = c(2,10),
+      col_widths = c(1,10,1),
       div(
 ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
 ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
