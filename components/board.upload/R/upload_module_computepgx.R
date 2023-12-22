@@ -523,7 +523,10 @@ upload_module_computepgx_server <- function(
           description = input$upload_description,
           creator = creator,
           date = this.date,
-          pgx.save.folder = pgx_save_folder
+          pgx.save.folder = pgx_save_folder,
+          ETC = ETC,
+          email = auth$email,
+          sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
         path_to_params <- file.path(raw_dir(), "params.RData")
@@ -617,11 +620,7 @@ upload_module_computepgx_server <- function(
               ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               if (!auth$email == "") {
                 gmail_creds <- file.path(ETC, "gmail_creds")
-                sendSuccessMessageToUser(
-                  user_email = auth$email,
-                  pgx_name = ds_name,
-                  path_to_creds = gmail_creds
-                )
+                ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               }
               raw_dir(NULL)
             } else {
