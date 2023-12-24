@@ -913,15 +913,6 @@ UploadBoard <- function(id,
       samplesRT = reactive(checked_samples()$matrix)
     )
 
-
-    ## upload_plot_pcaplot_server(
-    ##   "pcaplot",
-    ##   phenoRT = shiny::reactive(uploaded$samples.csv),
-    ##   countsRT = corrected_counts,
-    ##   sel.conditions = sel.conditions,
-    ##   watermark = WATERMARK
-    ## )
-
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
