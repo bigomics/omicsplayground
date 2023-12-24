@@ -45,7 +45,6 @@ upload_plot_pcaplot_server <- function(id,
                                        watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      
       plot_data <- shiny::reactive({
         pheno <- phenoRT()
         counts <- countsRT()
@@ -55,8 +54,8 @@ upload_plot_pcaplot_server <- function(id,
         X <- log2(1 + counts)
         X[is.na(X)] <- median(X, na.rm = TRUE)
 
-        ##clust <- playbase::pgx.clusterMatrix.DEPRECATED(X, dims = 2, method = method)$pos2d
-        clust <- playbase::pgx.clusterBigMatrix(X, dims = 2, method = method[1])        
+        ## clust <- playbase::pgx.clusterMatrix.DEPRECATED(X, dims = 2, method = method)$pos2d
+        clust <- playbase::pgx.clusterBigMatrix(X, dims = 2, method = method[1])
         clust[[1]]
       })
 
