@@ -12,7 +12,7 @@
 upload_module_batchcorrect_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
 
-  bc_info <- HTML("<h4>Batch correction</h4>Batch correction can clean your data from 'unwanted variables'.\n")
+  bc_info <- HTML("<h4>Batch effects</h4>Batch correction can clean your data from 'unwanted variables'.\n")
 
   clust.options <- tagList(
     shiny::selectInput( ns('plottype'), "Type;", c("tsne","pca","heatmap"))
@@ -208,16 +208,11 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
         samples <- r_samples()
         contrasts <- r_contrasts()
         X1 <- logX()
-
-        dbg("[batchcorrect_server::run_methods] 0: dim(X1) = ",dim(X1))
                 
         shiny::validate( shiny::need(!is.null(X1) && nrow(X1),
           "No counts data. Please upload."))
         shiny::validate( shiny::need(!is.null(contrasts) && ncol(contrasts),
           "No contrasts. Please create contrasts."))
-
-        dbg("[run_methods] dim.X = ",dim(X1))
-        dbg("[run_methods] dim.contrasts = ",dim(contrasts))
         
         ##pgx.showSmallModal("Computing batch correction methods. Please wait...")
 
@@ -282,6 +277,8 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
             sc = FALSE,
             remove.failed=TRUE)         
 
+          if(all(c("NNM","NNM2") %in% names(xlist))) xlist[['NNM']] <- NULL
+          
           incProgress( amount = 0.0, "Computing clustering...")
           
           ## PCA is faster than UMAP
@@ -297,16 +294,14 @@ upload_module_batchcorrect_server <- function(id, r_X, r_samples, r_contrasts,
           pos[['tsne']] <- lapply(xlist, function(x) {
             Rtsne::Rtsne(t2(x), perplexity=nb, check_duplicates=FALSE)$Y
           })
+
           ## incProgress( amount = 0.1, "Computing UMAP clustering...")          
           ## pos[['umap']] <- lapply(xlist, function(x) {
           ##   as.matrix(uwot::umap(t2(x), n_neighbors=nb/2))
           ## })
 
-
           
           incProgress( amount = 0.1, "Evaluating results...")          
-
-          dbg("[run_methods] calling bc.evaluateResults")
           
           res <- playbase::bc.evaluateResults(
             xlist,

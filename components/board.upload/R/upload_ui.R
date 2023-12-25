@@ -162,7 +162,7 @@ UploadUI <- function(id) {
                 width = 'auto',                
                 icon = icon("table"),
                 label = "Use example data",
-                class = "btn-info",
+                class = "btn-outline-info",
                 style = "margin-left: 0px;"
               )
             )

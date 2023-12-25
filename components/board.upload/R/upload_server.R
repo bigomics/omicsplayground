@@ -190,21 +190,21 @@ UploadBoard <- function(id,
         # show compute if contrast is done
         shiny::showTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
-        shiny::showTab("tabs", "QC")
+        shiny::showTab("tabs", "QC/BC")
         if (input$expert_mode) {
-          shiny::showTab("tabs", "BatchCorrect")
+          shiny::showTab("tabs", "BatchEffects")
         }
       } else if (need2) {
         shiny::hideTab("tabs", "Compute")
         shiny::showTab("tabs", "Comparisons")
-        shiny::showTab("tabs", "QC")
+        shiny::showTab("tabs", "QC/BC")
         if (input$expert_mode) {
-          shiny::showTab("tabs", "BatchCorrect")
+          shiny::showTab("tabs", "BatchEffects")
         }
       } else {
         shiny::hideTab("tabs", "Compute")
-        shiny::hideTab("tabs", "BatchCorrect")
-        shiny::hideTab("tabs", "QC")
+        shiny::hideTab("tabs", "BatchEffects")
+        shiny::hideTab("tabs", "QC/BC")
         shiny::hideTab("tabs", "Comparisons")
       }
     })
@@ -215,9 +215,9 @@ UploadBoard <- function(id,
 
     shiny::observeEvent( input$expert_mode, {
       if (input$expert_mode) {
-        shiny::showTab("tabs", "BatchCorrect")
+        shiny::showTab("tabs", "BatchEffects")
       } else {
-        shiny::hideTab("tabs", "BatchCorrect")
+        shiny::hideTab("tabs", "BatchEffects")
       }
     })
 
