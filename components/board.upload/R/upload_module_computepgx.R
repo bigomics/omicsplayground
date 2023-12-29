@@ -382,8 +382,7 @@ upload_module_computepgx_server <- function(
       shiny::observeEvent(input$upload_annot_table, {
         # trigger a popup
         
-        annot_able <<- playbase::read.as_matrix(input$upload_annot_table$datapath)
-
+        annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
         shinyalert::shinyalert(
           title = "Annotation table uploaded!",
           text = "Your annotation table will be incorporated in the analysis.",
@@ -515,10 +514,17 @@ upload_module_computepgx_server <- function(
         # Define create_pgx function arguments
 
         params <- list(
+          # Key data
           organism = selected_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
+          
+          # Extra tables
+          annot_table = annot_table,
+          custom.geneset = custom_geneset,
+          
+          # Options
           batch.correct = FALSE,
           normalize = do.normalization,
           prune.samples = TRUE,
@@ -531,8 +537,6 @@ upload_module_computepgx_server <- function(
           cluster.contrasts = FALSE,
           max.genes = max.genes,
           max.genesets = max.genesets,
-          custom.geneset = custom_geneset,
-          annot_table = annot_table,
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
@@ -554,6 +558,10 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
+
+        # Remove global variables
+        try(rm(annot_table))
+        try(rm(custom_geneset))
 
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
