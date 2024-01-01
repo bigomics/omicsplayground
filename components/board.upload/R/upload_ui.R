@@ -119,56 +119,55 @@ UploadUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
-      bslib::card(
       bslib::layout_columns(
-        col_widths = c(4, 6, 2),        
-        shiny::div(
-          shiny::sidebarPanel(
-            height = "100%",
-            width = "100%",            
-            shiny::selectInput(
-              ns("selected_organism"),
-              h4("1. Select organism:", class='mb-0'),
-              # restrict to ensembl species, as we are validating them in the first place
-              choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
-              selected = NULL,
-              multiple = FALSE,
-              width = "90%"            
+        col_widths = c(4, 8),        
+        bslib::card(
+          height = "100%",
+          width = "100%",
+          style = "background-color: #f7fafd;",
+          shiny::selectInput(
+            ns("selected_organism"),
+            h4("1. Select organism:", class='mb-0'),
+            ## restrict to ensembl species, as we are validating them in the first place
+            choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
+            selected = NULL,
+            multiple = FALSE,
+            width = "90%"            
+          ),
+##          shiny::br(), 
+          div(
+            style = 'display: none',
+            fileInput2(
+              ns("upload_files"),              
+              shiny::h4("Choose files", class='mb-0'),
+              multiple = TRUE,
+              buttonClass = "btn-primary",
+              accept = c(".csv", ".pgx")
+            )
+          ),
+          shiny::h4("2. Choose data:", class='mt-2'),
+          div(
+            style = "margin-left: 0px; margin-right: auto;",
+            shiny::actionButton(
+              ns("upload_files_btn"),
+              width = 'auto',
+              icon = icon("table"),
+              label = "Upload files",
+              class = "btn-primary",
+              style = "margin-left: 0px;"
             ),
-            shiny::br(), 
-            div(
-              style = 'display: none',
-              fileInput2(
-                ns("upload_files"),              
-                shiny::h4("Choose files", class='mb-0'),
-                multiple = TRUE,
-                buttonClass = "btn-primary",
-                accept = c(".csv", ".pgx")
-              )
-            ),
-            shiny::h4("2. Choose data:", class='mb-2'),
-            div(
-              style = "margin-left: auto; margin-right: auto;",
-              shiny::actionButton(
-                ns("upload_files_btn"),
-                width = 'auto',
-                icon = icon("table"),
-                label = "Upload files",
-                class = "btn-primary",
-                style = "margin-left: 0px;"
-              ),
-              shiny::actionButton(
-                ns("load_example"),
-                width = 'auto',                
-                icon = icon("table"),
-                label = "Use example data",
-                class = "btn-outline-info",
-                style = "margin-left: 0px;"
-              )
+            shiny::actionButton(
+              ns("load_example"),
+              width = 'auto',                
+              icon = icon("table"),
+              label = "Use example data",
+              class = "btn-outline-info",
+              style = "margin-left: 0px;"
             )
           )
         ),
-        shiny::div(
+        bslib::card(
+          shiny::h4("How to upload your files."),
           shiny::uiOutput(ns("upload_info"), class='mt-3 mb-1'),
           shiny::div(
             ##style = "margin-top: 10px; position: absolute; bottom: 47px;",
@@ -180,11 +179,10 @@ UploadUI <- function(id) {
               label = "Download example data",
               class = "btn-outline-primary",
               style = "margin-right: 20px;"
-            )
+              )
           )
-        ),
-        div()  ## empty
-      )),
+        )
+      ),
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
         upload_plot_countstats_ui(
@@ -218,7 +216,7 @@ UploadUI <- function(id) {
                and a file specifying the statistical comparisons (comparisons.csv).
                NB Users can now create comparisons from the platform itself, so the
                comparisons.csv file is optional.")
-    )
+    )   
   )
 
   comparisons_panel <- shiny::tabPanel(

@@ -119,7 +119,7 @@ upload_module_makecontrast_ui <- function(id) {
   )
 }
 
-upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, height = 720) {
+upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT) {
   shiny::moduleServer(
     id,
     function(input, output, session) {

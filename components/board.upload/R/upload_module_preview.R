@@ -35,6 +35,9 @@ upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
         legend <-  shiny::div(
            class = "pt-4",
            style = "margin-top: 150px;",
+           span(style = "color: green", "Green"),
+           span("= data OK. "),
+           br(),
            span(style = "color: orange", "Orange"),
            span("= warning but data will still be uploaded. "),
            br(),

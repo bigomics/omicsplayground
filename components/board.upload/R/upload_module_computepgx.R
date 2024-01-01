@@ -3,15 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ComputePgxGadget <- function(counts, samples, contrasts, height = 720) {
-  gadgetize(
-    ComputePgxUI, ComputePgxServer,
-    title = "ComputePGX",
-    countsRT = shiny::reactive(counts),
-    samplesRT = shiny::reactive(samples),
-    contrastsRT = shiny::reactive(contrasts)
-  )
-}
 
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)

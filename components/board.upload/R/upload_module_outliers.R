@@ -19,17 +19,17 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
   
   norm.options <- tagList(
-    shiny::radioButtons( ns('norm_plottype'), "Plot type:", c("boxplot"),
+    shiny::radioButtons( ns('norm_plottype'), "Plot type:", c("boxplot","histogram"),
       selected = "boxplot", inline = TRUE),
   )
 
   outlier.options <- tagList(
-    shiny::radioButtons( ns('outlier_plottype'), "Plot type:", c("pca","heatmap"), inline = TRUE),
+##    shiny::radioButtons( ns('outlier_plottype'), "Plot type:", c("pca","heatmap"), inline = TRUE),
     shiny::checkboxInput( ns('outlier_shownames'), "show sample names", FALSE)
   )
 
   bec.options <- tagList(
-    shiny::radioButtons( ns('bec_plottype'), "Plot type:", c("pca","tsne","umap","heatmap"),
+    shiny::radioButtons( ns('bec_plottype'), "Plot type:", c("pca","tsne","heatmap"),
       inline = TRUE)
   )
 
@@ -43,59 +43,55 @@ upload_module_outliers_ui <- function(id, height = "100%") {
         multiple = FALSE,
         style = 'background-color: #F7FAFD99;',
         bslib::accordion_panel(      
-          title = "1. Normalization",
-          div("Normalize data values:\n"),
-          shiny::selectInput( ns("scaling_method"), NULL,
-            choices = c("CPM"="cpm","median.4"="m4","sd.001" = "sd"),
-            selected = "cpm"
-          ),
-          shiny::checkboxInput(ns("clip_zero"), "clip to zero", value=TRUE),
-          shiny::checkboxGroupInput(ns("correct_options"), "Correct for:", ## inline = TRUE,
-            choices = c(
-              "library effects" = "lib",
-              "cell state (mito/ribo/CC)" = "cell",
-              "gender (M/F)" = "gender"
-            ),
-            selected = c("lib","cell","gender")),
-          br()          
-        ),      
-        bslib::accordion_panel(      
-          title = "2. Missing values",
+          title = "1. Missing values",
           shiny::p("Replace missing values using an imputation method:\n"),
           shiny::selectInput( ns("impute_method"), NULL,
             ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
-            choices = c("MinDet","MinProb","NMF","SVD2","zero"),
+            choices = c("MinDet","MinProb","NMF", "SVDimpute"="SVD2", "zero"),
             selected='SVD2'),
-          shiny::checkboxInput( ns("zero_as_na"), label="Treat zero as NA", value=TRUE),
+          shiny::checkboxInput( ns("zero_as_na"), label="Treat zero as NA", value=FALSE),
           br()          
         ),
+        bslib::accordion_panel(      
+          title = "2. Normalization",
+          div("Normalize data values:\n"),
+          shiny::selectInput( ns("scaling_method"), NULL,
+             choices = c("CPM"="cpm", "median3"="m3", "median4"="m4", "median5"="m5",
+                         "z2"="z2", "quantile.001" = "q0.01"),
+            selected = "cpm"
+          ),
+          shiny::checkboxInput(ns("skip_norm"), "skip normalization", value=FALSE),
+          br()          
+        ),      
         bslib::accordion_panel(
           title = "3. Outlier detection",
           p("Analyze and remove outliers (i.e. bad samples) from your dataset.\n"),
-          shiny::sliderInput( ns("outlier_threshold"), "Threshold:", 1, 6, 6, 1),
+          shiny::sliderInput( ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
           br()          
         ),
         bslib::accordion_panel(      
           title = "4. Batch correction",
           shiny::p("Clean up your data from unwanted variation:\n"),
           shiny::selectInput( ns("bec_method"), NULL,
-            choices = c("<none>","ComBat","limma","SVA","RUV3","NNM"),
+            choices = c("<none>","ComBat","SVA","RUV3","NNM"),
             selected = "SVA"
           ),
           shiny::conditionalPanel(
             "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
             ns = ns,
-            shiny::selectInput(ns("bec_param"), "Batch parameter:", choices=NULL)            
+##            shiny::selectInput(ns("bec_param"), "Batch parameter:", choices=NULL),
+            shiny::textOutput(ns("bec_param_text")),
+            shiny::br(), 
           ),
-          shiny::checkboxInput(ns("bec_preview"), "Preview all methods", value = FALSE),          
-          shiny::actionButton(
-            ns("compute_button"),
-            "Compute",
-            class = "btn btn-primary",
-            width ='80%',
-            style = 'margin-left:10%; margin-top: 15px;'
-            ##style = 'margin-left:10%; position: absolute; bottom: 30px;'
-          ),
+          shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = FALSE),
+          ## shiny::actionButton(
+          ##   ns("compute_button"),
+          ##   "Compute",
+          ##   class = "btn btn-primary",
+          ##   width ='80%',
+          ##   style = 'margin-left:10%; margin-top: 15px;'
+          ##   ##style = 'margin-left:10%; position: absolute; bottom: 30px;'
+          ## ),
           br()
         )
       ),
@@ -112,14 +108,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
         heights_equal = "row",
         ##  shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner(),
         PlotModuleUI(
-          ns("plot1"),
-          title = "Normalization",
-#         info.text = info.text,
-#         caption = caption,
-          options = norm.options,
-          height = c("100%","70vh")          
-        ),        
-        PlotModuleUI(
           ns("plot2"),
           title = "Missing values",
           info.text = missing.infotext,
@@ -127,6 +115,14 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           options = NULL,
           height = c("100%","70vh")
         ),
+        PlotModuleUI(
+          ns("plot1"),
+          title = "Normalization",
+#         info.text = info.text,
+#         caption = caption,
+          options = norm.options,
+          height = c("100%","70vh")          
+        ),        
         PlotModuleUI(
           ns("plot3"),
           title = "Outlier detection",
@@ -140,7 +136,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "Batch-effect correction",
 #          info.text = info.text,
 #          caption = caption,
-          options = bec.options,
+##          options = bec.options,
+          options = NULL,          
           height = c("100%","70vh")           
         )
       )
@@ -154,18 +151,14 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
   shiny::moduleServer(
     id,
     function(input, output, session) {
-      
 
-      observeEvent({
-        list( get_batchpars() )
-      }, {       
-        pars <- get_model_parameters()
-        batch.pars <- pars$batch
-        shiny::req( batch.pars )
-        shiny::updateSelectInput( session, "bec_param", choices = batch.pars)
-        
+      output$bec_param_text <- renderText({
+          pars <- get_model_parameters()
+          shiny::req(pars)
+          batch.pars <- pars$batch.pars
+          paste("Batch parameters:", paste(batch.pars, collapse='+'),"\n")
       })
-      
+        
       get_model_parameters <- eventReactive({
         list( r_X(), r_samples(), r_contrasts() )
       }, {
@@ -177,124 +170,85 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         contrasts <- r_contrasts()
         ## contrasts <- contrasts[,1,drop=FALSE]
         
-        dbg("[outliers_server:observeEvent] 1: dim.X = ", dim(X) )
-        dbg("[outliers_server:observeEvent] 1: dim.samples = ", dim(samples) )
-        dbg("[outliers_server:observeEvent] 1: dim.contrasts = ", dim(contrasts) )
-
         shiny::req( ncol(X) == nrow(samples) )
         shiny::req( nrow(contrasts) == ncol(X) )
 
-        dbg("[outliers_server:observeEvent] 2: dim.X = ", dim(X) )
-        dbg("[outliers_server:observeEvent] 2: dim.samples = ", dim(samples) )
-        dbg("[outliers_server:observeEvent] 2: dim.contrasts = ", dim(contrasts) )
+        pars <- playbase::get_model_parameters(X, samples, pheno=NULL, contrasts=contrasts)
         
-        pheno <- playbase::contrasts2pheno( contrasts, samples )        
-        bc <- playbase::detectBatchEffects(X, samples, pheno,  params = "statistical",
-          k.pca=10, p.pca=0.5, p.pheno=0.05, xrank = 10)
-
-        pheno.pars <- names(which(bc$p.values[,'p.pheno'] < 1e-8))
-        pheno.pars
-
-        batch.pars <- NULL
-        if("statistical" %in% names(bc$params)) {
-          batch.pars <- bc$params$statistical
-          batch.pars
-          batch.pars <- setdiff(batch.pars, pheno.pars)
-          batch.pars2 <- grep("batch",colnames(samples),ignore.case=TRUE,value=TRUE)
-          if(length(batch.pars2)) batch.pars <- c(batch.pars, batch.pars2)
-          batch.pars <- sort(batch.pars)
-        }
-
-        batch.vec <- NULL
-        if(length(batch.pars)) {
-          batch.vec <- apply(samples[,batch.pars],1,paste,collapse='_')
-        }
-        pheno.vec <- NULL
-        if(length(pheno.pars)) {
-          pheno.vec <- apply(samples[,pheno.pars],1,paste,collapse='_')
-        }
-        
-        list( batch.pars = batch.pars, pheno.pars = pheno.pars,
-          batch.vec = batch.vec, pheno.vec = pheno.vec)
+        list(
+            batch.pars = pars$batch.pars,
+            pheno.pars = pars$pheno.pars,
+            batch.vec = pars$batch,
+            pheno.vec = pars$pheno
+        )
       })
       
       ##------------------------------------------------------------------
       ## Object reactive chain
       ##------------------------------------------------------------------
-
-      normalizedX <- reactive({
-        X <- r_X()
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        shiny::req(X, samples)
-
-        X <- playbase::pgx.countNormalization(X, methods = "median.center", keep.zero = TRUE)
-        X <- playbase::scale_counts(X, method = input$scaling_method)
-        logX <- log2(1 + X)
-
-        ## technical effects correction
-        opts <- input$correct_options
-        dbg("[normalizedX] cell correction options = ",opts)        
-        if(length(opts)) {
-          pheno <- playbase::contrasts2pheno( contrasts, samples)          
-
-          dbg("[normalizedX] head.pheno = ",head(pheno))
-
-          bc <- playbase::detectBatchEffects( logX, samples, pheno,  params = "technical",
-            k.pca=10, p.pca=0.5, p.pheno=0.05, xrank = 100)
-
-          B <- bc$covariates
-          sel <- c()
-          if("lib" %in% opts) {
-            sel <- c(sel, grep("^lib", colnames(B)))
-          }
-          if("cell" %in% opts) {
-            sel <- c(sel, grep("^mito", colnames(B)))
-            sel <- c(sel, grep("^ribo", colnames(B)))
-            sel <- c(sel, grep("^cellcycle", colnames(B)))
-          }
-          if("gender" %in% opts) {
-            sel <- c(sel, grep("^gender", colnames(B)))
-          }
-          B <- B[,sel,drop=FALSE]
-          dbg("[normalizedX] dim(B) = ",dim(B))
-          mod1 <- model.matrix(~pheno)
-          B <- scale(B)
-          B[is.na(B)] <- 0
-          dbg("[normalizedX] *** correcting for  colnames(B) = ",colnames(B))
-          dbg("[normalizedX] dim(B) = ",dim(B))
-          res <- try(limma::removeBatchEffect(logX, covariates=B, design = mod1))
-          if(!"try-error" %in% class(res)) {
-            logX <- res
-          }
-        }
-
-        ## for quantile normalization we omit the zero value and put back later
-        jj <- which( logX < 0.01 )
-        logX[jj] <- NA
-        logX <- limma::normalizeQuantiles( logX )
-        rownames(logX) <- rownames(X)
-        colnames(logX) <- colnames(X)
-        logX[jj] <- 0
-        logX
-      })
-
+        
+      ## IMPUTE FIRST OR NORMALIZE????
       imputedX <- reactive({
-        shiny::req(normalizedX())
-        offset <- 1e-20
-        X <- normalizedX()
-        if(input$clip_zero) X <- pmax(X, 0)
-        X[playbase::is.xxl(X, z = 10)] <- NA  ## outlier XXL values
+          
+        shiny::req(r_X())
+        counts <- r_X()
+        X <- log2(1 + counts)
+        X[ playbase::is.xxl(X, z = 10) ] <- NA  ## outlier XXL values
         if(input$zero_as_na)  X[which(X==0)] <- NA
         ##which.missing <- which( is.na(X) )
         X <- playbase::imputeMissing(X, method = input$impute_method )
-        X <- pmax(X, 0)
+        ##X <- playbase::imputeMissing(X, method = "zero" )        
+        X <- pmax(X, 0)  ## really?
         X
       })
+
+      normalizedX <- reactive({
+
+        X <- imputedX()  ## log        
+        if( input$skip_norm ) {
+            return(X)  ## log
+        }
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        shiny::req(dim(X), dim(samples), dim(contrasts))
+        
+        shiny::withProgress( message = "Computing technical variation...", value = 0, {
+
+            shiny::incProgress( amount = 0.25, "Global scaling counts..." )          
+            eX <- pmax( 2**X - 1, 0)
+            eX <- playbase::scale_counts(eX, method = input$scaling_method)
+            ## eX <- playbase::scale_counts(eX, method = "cpm")            
+
+            shiny::incProgress( amount = 0.25, "Normalizing counts..." )          
+            eX <- playbase::pgx.countNormalization( eX, methods = "median.center")
+
+            ## technical effects correction
+            shiny::incProgress( amount = 0.25, "Correcting for technical effects..." )
+            pheno <- playbase::contrasts2pheno( contrasts, samples )
+            logX <- log2(1 + eX)
+            logX <- playbase::removeTechnicalEffects(
+                logX, samples, pheno, p.pheno = 0.05, p.pca = 0.5, force = FALSE,
+                params = c("lib","mito","ribo","cellcycle","gender"),          
+                nv = 2, k.pca = 10, xrank = NULL) 
+            
+            ## for quantile normalization we omit the zero value and put back later
+            shiny::incProgress( amount = 0.25, "Quantile normalization..." )
+            jj <- which( logX < 0.01 )
+            logX[jj] <- NA
+            logX <- limma::normalizeQuantiles( logX ) 
+            logX[jj] <- 0
+       })
+
+        rownames(logX) <- rownames(X)
+        colnames(logX) <- colnames(X)
+        logX
+      })
       
+
       cleanX <- reactive({
-        shiny::req(imputedX())        
-        X <- imputedX()
+        shiny::req( dim(normalizedX()) )
+        
+        X <- normalizedX()
         res <- playbase::detectOutlierSamples(X, plot=FALSE, y=NULL)        
         is.outlier <- ( res$z.outlier > input$outlier_threshold )
         if(any(is.outlier) && !all(is.outlier) ) {
@@ -302,72 +256,24 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         }
         pos <- NULL
         if(NCOL(X)>1) {
-          dbg("[cleanX:irlba] dim.X = ", dim(X))
           pos <- irlba::irlba(X, nv=2)$v
           rownames(pos) <- colnames(X)        
         }
+        
         list( X=X, pos=pos )
       })
       
-      correctedX <- shiny::eventReactive({
-        input$compute_button
-      },{
-        ## triggers too often.... need button??
-        shiny::req(cleanX()$X, r_contrasts(), r_samples())                
-        X <- cleanX()$X
-        
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        batch.param <- input$bec_param
-        
-        samples <- samples[colnames(X),]
-        contrasts <- contrasts[colnames(X),,drop=FALSE]        
-        
-        pheno <- playbase::contrasts2pheno( contrasts, samples )
-        pheno <- pheno[colnames(X)]        
-        m <- input$bec_method        
-
-        dbg("[correctedX] length.batch.param = ", length(batch.param))
-        if(length(batch.param)) {
-          dbg("[correctedX] length.batch.param[1] = ", batch.param[1])
-        }
-        has.batchparam <- (length(batch.param)> 0 && batch.param[1]!="")
-        dbg("[correctedX] has.batchparam = ", has.batchparam)
-        if(m %in% c("limma","ComBat") && !has.batchparam) {
-          shinyalert::shinyalert(
-            type = "error",
-            text = "Limma and ComBat need a valid batch parameter. Please try using SVA, RUV3 or NNM instead."
-          )
-        }
-        
-        pgx.showSmallModal("Computing batch correction. Please wait...")
-        shiny::withProgress(
-          message = "Computing batch correction...", value = 0.1, {
-            cX <- X
-            if(m %in% c("limma","ComBat") && has.batchparam) {
-              mod1 <- model.matrix( ~pheno)
-              batch <- samples[,batch.param]
-              batch[is.na(batch)] <- "NA"  ## na not allowed
-              if(m == "ComBat"  ) {
-                res <- try( sva::ComBat(X, batch = batch, mod = mod1) )
-                if(!"try-error" %in% class(res))  cX <- res
-              }
-              if(m == "limma"  ) {
-                res <- try(limma::removeBatchEffect(X, batch = batch, design = mod1))
-                if(!"try-error" %in% class(res))  cX <- res                
-              }
-            }
-            if(m == "SVA")  cX <- playbase::svaCorrect(X, pheno)
-            if(m == "RUV3") cX <- playbase::ruvCorrect(X, pheno)
-            if(m == "NNM")  {
-              dbg("[correctedX:gx.nnncorrect2] sum(is.na(X)) = ", sum(is.na(X)))
-              cX <- playbase::gx.nnmcorrect2(X, pheno)$X
-            }
-          })        
+      correctedX <- shiny::reactive({
+        shiny::req( dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
+        pgx.showSmallModal("Computing batch correction methods. Please wait...")
+        shiny::withProgress( message = "Computing batch correction methods...", value = 0.1, {
+            res <- results_correction_methods()  
+        })        
         shiny::removeModal()
-        
-        cX
-      }, ignoreInit = FALSE, ignoreNULL = FALSE)
+        m <- input$bec_method
+        cx <- res$xlist[[ m ]]          
+        cx
+      })
       
       ## return object
       correctedCounts <- reactive({
@@ -376,42 +282,67 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       })
 
       ##------------------------------------------------------------------
-      ## Event listeners
+      ## Compute reactive 
       ##------------------------------------------------------------------
       
-      run_outlier_methods <- eventReactive({
-        list( imputedX() )
+      results_correction_methods <- reactive({
+        
+        ##shiny::req(cleanX()$X, r_contrasts(), r_samples())
+        shiny::req( dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
+        
+        X0 <- imputedX()
+        X1 <- cleanX()$X        
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        
+        kk <- intersect(colnames(X1), colnames(X0))
+        kk <- intersect(kk, rownames(samples))        
+        kk <- intersect(kk, rownames(contrasts))
+        X1 <- X1[, kk, drop=FALSE]
+        X0 <- X0[, kk, drop=FALSE]        
+        contrasts <- contrasts[kk, , drop=FALSE]
+        samples <- samples[kk, , drop=FALSE]        
+        xlist.init <- list('raw' = X0, 'normalized' = X1)
+
+        shiny::withProgress( message = "Comparing batch-correction methods...", value = 0.3, {
+          res <- playbase::compare_batchcorrection_methods(
+            X1, samples, pheno = NULL, contrasts = contrasts, 
+            methods = c("ComBat","RUV","SVA","NNM"),
+            ntop = 4000, xlist.init = xlist.init 
+          )
+        })
+        
+        return(res)
+      })      
+
+      results_outlier_methods <- eventReactive({
+        list( normalizedX() )
       }, {
-        dbg("[outlier_server:run_outlier_methods] reacted!")       
-        X <- imputedX()
+        X <- normalizedX()
         shiny::validate( shiny::need(!is.null(X), "no data. please upload."))
         shiny::validate( shiny::need(!is.null(nrow(X)), "no data. please upload."))
-
+        
         X <- head(X[order(-matrixStats::rowSds(X)),],1000)
         out <- playbase::detectOutlierSamples(X, plot=FALSE, y=NULL)
         
         nb <- min(30, dim(X)/5)
         scaledX <- t(scale(t(scale(t(X), scale=FALSE))))
         corX <- cor(t(scaledX))
-        
+
         ## standard dim reduction methods
         pos <- list()        
 ##        pos[['tsne']] <- Rtsne::Rtsne(scaledX, check_duplicates=FALSE, perplexity=nb)$Y
-
-        dbg("[run_outlier_methods:irlba] dim.scaledX = ", dim(scaledX))
         pos[['pca']]  <- irlba::irlba(scaledX, nu=2, nv=0)$u
 ##        pos[['umap']] <- uwot::umap(scaledX, n_neighbors = ceiling(nb/2))
         for(i in 1:length(pos)) {
           rownames(pos[[i]]) <- rownames(scaledX)
           colnames(pos[[i]]) <- paste0(names(pos)[i],'_',1:2)
         }
-
+        
         out$pos <- pos
         out$corX <- corX
         out
       })
-
-      
       
       ##------------------------------------------------------------------
       ## Plot functions
@@ -419,10 +350,9 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       plot_normalization <- function() {
 
-##        rX <- playbase::read.as_matrix("/home/kwee/Downloads/raw_allorenteizquierdo@health.ucsd.edu_7505cdba5/raw_counts.csv")
-
+      ## rX <- playbase::read.as_matrix("/home/kwee/Downloads/raw_allorenteizquierdo@health.ucsd.edu_7505cdba5/raw_counts.csv")
         rX <- r_X()
-        X0 <- log2( 1e-10 + rX )
+        X0 <- imputedX()
         X1 <- normalizedX()
 
         if(input$norm_plottype == "boxplot") {
@@ -436,53 +366,78 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
             rX <- rX[ii,jj]
           }
           
-        ymax <- max( max(X0, na.rm=TRUE), max(X1, na.rm=TRUE))
+          ymax <- max( max(X0, na.rm=TRUE), max(X1, na.rm=TRUE))
           ymin <- quantile( X0[which(rX>0)], probs=0.001, na.rm = TRUE)
-          
+          if( ymin > 0 ) ymin <- 0
           dy <- 0.1*(ymax - ymin)
           ylim <- c( ymin - dy , ymax + dy )
           
           par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
-          boxplot( X0, main = "raw",
-            ylim = ylim,
-            ylab = 'expression (log2)', xlab = "samples")
-          boxplot( X1, main = "normalized",
-            ylim = ylim,
-            ylab = '', xlab = "samples")
+          boxplot( X0, main = "raw", ylim = ylim,
+                  ylab = 'expression (log2)', xlab = "samples")
+          boxplot( X1, main = "normalized",  ylim = ylim,
+                  ylab = '', xlab = "samples")
         }
-        
+          
+        if(input$norm_plottype == "histogram") {
+          
+          xmax0 <- quantile( X0[which(rX>0)], probs=0.999, na.rm = TRUE)
+          xmax1 <- quantile( X1[which(rX>0)], probs=0.999, na.rm = TRUE)            
+          xmin0 <- quantile( X1[which(rX>0)], probs=0.001, na.rm = TRUE)
+          xmin1 <- quantile( X1[which(rX>0)], probs=0.001, na.rm = TRUE)            
+          xmin0 <- min(xmin0,0)
+          xmin1 <- min(xmin1,0)            
+          xlim0 <- c( xmin0, xmax0 )
+          xlim1 <- c( xmin1, xmax1 )            
+          
+          par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
+          playbase::gx.hist( X0, breaks=60, main = "raw", xlim = xlim0,
+                             xlab = 'expression (log2)')
+          playbase::gx.hist( X1, breaks=60, main = "normalized", xlim = xlim1,
+                             xlab = "expression (log2)", ylab='')
+        }
 
       }
-      
 
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_X()
         X1 <- imputedX()
-        jj <- which(is.na(X0))
+        
+        ii <- which(is.na(X0))
         if( isolate(input$zero_as_na) ) {
-          jj <- which( is.na(X0) | X0 == 0 )
+          ii <- which( is.na(X0) | X0 == 0 )
         }
         q999 <- quantile(X1, probs=0.999)[1]
         X1[X1>q999] <- NA
-        h <- hist( X1, breaks=60, plot=FALSE)
+        h <- hist( X1, breaks=80, plot=FALSE)
         hh <- h$breaks
 
-        par(mfrow=c(1,2), mar=c(3.2,3.2,0.8,0.5), mgp=c(2.2,0.85,0) )
+        ## set zero value to 1, NA values to 2
+        X2 <- 1 * is.na(X0)
+        ##X2 <- X2 + 1 * (!is.na(X0) & X0 == 0) 
+        if(input$zero_as_na) X2[X0==0] <- 1
+        ##jj <- head( order(-rowMeans(is.na(X0))), 200)
+        jj <- head( order(-apply(X2,1,sd)), 200 )
+        X2 <- X2[jj,]
 
-        if(length(jj) > 0) {
-          hist( X1[-jj], breaks=hh, main="", xlab="expression (log2CPM)" )
-          hist( X1[jj], breaks=hh, add=TRUE, col='red')
+        par(mfrow=c(1,2), mar=c(3.2,3.2,0.8,0.5), mgp=c(2.2,0.85,0) )
+        
+        if(length(ii) > 0) {
+          hist( X1[-ii], breaks=hh, main="", xlab="expression (log2CPM)" )
+          hist( X1[ii], breaks=hh, add=TRUE, col='red')
         } else {
           hist( X1, breaks=hh, main="", xlab="expression (log2CPM)" )
         }
 
-        ## NA heatmap
-        par(mar=c(1.8, 1.8, 1, 2), mgp=c(2.5,0.85,0) )        
-        X2 <- 1 * is.na(X0)
-        if(input$zero_as_na) X2[X0==0] <- 1
-        X2 <- head(X2[order(-apply(X2,1,sd)),],1000)
-        playbase::gx.imagemap(X2, cex = -1)
+        if(any(X2>0)) {        
+            ## NA heatmap
+            par(mar=c(1.8, 1.8, 1, 2), mgp=c(2.5,0.85,0) )        
+            playbase::gx.imagemap(X2, cex = -1)
+        } else {
+            plot.new()
+        }
+
       }
 
       ## sample outlier PCA plot
@@ -516,23 +471,16 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         }        
       }
       
-      
       ## sample outlier scores
       plot_outliers <- function() {
-
-        res <- run_outlier_methods()
-
+        res <- results_outlier_methods()
         z0 <- as.numeric(input$outlier_threshold)
         zscore <- res$z.outlier
         Z <- res$Z
-
-        res2 <- cleanX()
-        ##  pos <- res2$pos
         pos <- res$pos[['pca']]
-        
-        plottype <- input$outlier_plottype
-        plottype = "score.pca"
-        if(plottype == "score.pca") {
+##        plottype <- input$outlier_plottype
+        plottype = "pca"
+        if(plottype == "pca") {
           par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
           barplot( zscore, main = 'outlier score',
             ylim = c(0,max(7,1.2*max(Z))), ylab = "z-score")
@@ -540,94 +488,66 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)          
         }
         
-        if(plottype == "all.scores") {
-          par(mfrow=c(2,3), mar=c(3,3,2,1))
-          playbase::plotOutlierScores(
-            res.outliers = res,
-            z.threshold = z0, par=TRUE)
+        if(plottype == "heatmap") {
+          par(mfrow=c(1,2), mar=c(0,3,0,1), mgp=c(2.1,0.8,0) )
+          playbase::gx.heatmap( res$corX, sym=TRUE, mar=c(1,12), keysize=0.4,
+                               cexCol=0.0001, scale='none', key=FALSE)    
         }
         
       }      
 
       plot_correction <- function() {
-
-        out.res <- run_outlier_methods()
-        res0 <- cleanX()
-        x0 <- res0$X
-        x1 <- correctedX()
-
-        dbg("[plot_correction:irlba] 1: dim.x0 = ", dim(x0))            
-        dbg("[plot_correction:irlba] 1: dim.x1 = ", dim(x1))            
-
-        ## faster
-        x0 <- head(x0[order(-matrixStats::rowSds(x0,na.rm=TRUE)),],2000)
-        x1 <- head(x1[order(-matrixStats::rowSds(x1,na.rm=TRUE)),],2000)
-
-        kk <- intersect(colnames(x0),colnames(x1))
-        x0 <- x0[,kk,drop = FALSE]
-        x1 <- x1[,kk,drop = FALSE]
-
-        dbg("[plot_correction:irlba] 2: dim.x0 = ", dim(x0))            
-        dbg("[plot_correction:irlba] 2: dim.x1 = ", dim(x1))            
-        
-        plottype <- input$bec_plottype
-        shownames <- input$outlier_shownames
-        ## plottype <- "pca"
-        if(plottype %in% c("pca","tsne","umap") ) {
-
-          ##pos0 <- res0$pos
-          if( plottype == "pca" ) {
-            pos0 <- out.res$pos[['pca']][colnames(x0),]
-            ## pos0 <- irlba::irlba( x0, nv=2 )$v
-            dbg("[plot_correction:irlba] dim.x1 = ", dim(x1))            
-            pos1 <- irlba::irlba( x1, nv=2 )$v            
+          if( input$bec_preview_all == FALSE ) {
+              plot_before_after()
           }
+          if( input$bec_preview_all == TRUE) {
+              plot_all_methods()
+          }
+      }
 
-          if( plottype == "tsne" ) {
-            p <- ceiling(min(30, dim(x0)/4))
-            pos0 <- Rtsne::Rtsne( t(x0), perplexity = p )$Y
-            pos1 <- Rtsne::Rtsne( t(x1), perplexity = p )$Y
-          }
-          
-          if( plottype == "umap" ) {
-            nb <- ceiling(min(15, dim(x0)/4))
-            pos0 <- uwot::umap( t(x0), n_neighbors = nb )
-            pos1 <- uwot::umap( t(x1), n_neighbors = nb )
-          }
-          
-          rownames(pos0) <- colnames(x0)
-          rownames(pos1) <- colnames(x1)            
-          pos0 <- pos0[colnames(x0),]
-          pos1 <- pos1[colnames(x0),]
-          
-          ##pheno <- r_contrasts()[,1]
-          pheno <- playbase::contrasts2pheno( r_contrasts(), r_samples() )
-          pheno <- pheno[rownames(pos0)]
-          col1  <- factor(pheno)
-          cex1 <- cut( nrow(pos1), breaks = c(0,40,100,250,1000,999999),
+      plot_all_methods <- function() {
+          res <- results_correction_methods()
+          pos.list <- res$pos[['tsne']]
+          pheno <- res$pheno
+          xdim <- length(res$pheno)
+          col1 <- factor(pheno)
+          cex1 <- cut( xdim, breaks = c(0,40,100,250,1000,999999),
                       c(1, 0.85, 0.7, 0.55, 0.4))
-          cex1 <- 2.7 * as.numeric(as.character(cex1))
+          cex1 <- 2.5 * as.numeric(as.character(cex1))
           
-          par( mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )          
-          plot( pos0, col=col1, pch=20, cex = 0.9*cex1, main="before",
-               xlab="PC1", ylab="PC2")
-          plot( pos1, col=col1, pch=20, cex = 0.9*cex1, main="after",
-               xlab="PC1", ylab="PC2")          
-        }
-
-        if(plottype == "heatmap") {
-          plot.heatmap <- function(x, main) {
-            x <- head(x[order(-apply(x, 1, sd)), ], 1000)
-            x <- x - rowMeans(x)
-            x <- abs(x)**0.5 * sign(x)
-            playbase::gx.imagemap(x, main = main, cex.main = 1.4, cex = 0)
-            mtext("samples", 1, line = 0.5)
-            mtext("genes", 2, line = 0.5)
+          par(mfrow=c(2,3), mar=c(2,2,2,1))
+          for(i in 1:length(pos.list)) {
+              plot( pos.list[[i]], col=col1, cex=cex1, pch=20 )
+              title( names(pos.list)[i], cex.main=1.5 )
           }
-          par( mfrow=c(1,2), mar=c(2,2,2,1), mgp=c(2.1,0.8,0) )          
-          plot.heatmap( x0, main = "before")
-          plot.heatmap( x1, main = "after" )
-        }
+      }
+        
+      plot_before_after <- function() {
+            
+##        out.res <- results_outlier_methods()
+        res <- results_correction_methods()
+
+        method <- input$bec_method
+        pos0 <- res$pos[['tsne']][[ 'normalized' ]]
+        pos1 <- res$pos[['tsne']][[ method ]]                        
+
+        kk <- intersect(rownames(pos0), rownames(pos1))
+        pos0 <- pos0[kk,]
+        pos1 <- pos1[kk,]
+
+        ##pheno <- r_contrasts()[,1]
+        pheno <- playbase::contrasts2pheno( r_contrasts(), r_samples() )
+        pheno <- pheno[rownames(pos0)]
+        col1  <- factor(pheno)
+        cex1 <- cut( nrow(pos1), breaks = c(0,40,100,250,1000,999999),
+                    c(1, 0.85, 0.7, 0.55, 0.4))
+        cex1 <- 2.7 * as.numeric(as.character(cex1))
+          
+        par( mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )          
+        plot( pos0, col=col1, pch=20, cex = 1.0*cex1, main="before",
+             xlab="PC1", ylab="PC2")
+        plot( pos1, col=col1, pch=20, cex = 1.0*cex1, main="after",
+             xlab="PC1", ylab="PC2")          
         
       }
     
@@ -681,8 +601,13 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
       
+      return(
+        list(
+          correctedCounts = correctedCounts,
+          results = results_correction_methods
+        )
+      ) ## pointing to reactive
 
-      return( correctedCounts ) ## pointing to reactive
     } ## end-of-server
   )
 }

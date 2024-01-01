@@ -821,7 +821,7 @@ UploadBoard <- function(id,
     )
 
     output$upload_info <- shiny::renderUI({
-      upload_info <- "<div><h4>How to upload your files:</h4><p>Please prepare the data files in CSV format with the names 'counts.csv', 'samples.csv' and 'contrasts.csv'. Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of _LIMITS_. Click <u><a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>here</a></u> to read more about data preparation.</p>"
+      upload_info <- "Please prepare the data files in CSV format with the names 'counts.csv', 'samples.csv' and 'contrasts.csv'. Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of _LIMITS_. Click <u><a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>here</a></u> to read more about data preparation.</p>"
       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
         auth$options$MAX_SAMPLES, "samples and",
@@ -834,7 +834,7 @@ UploadBoard <- function(id,
     ## =====================================================================
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
-
+    
     ## Preview Server
     upload_module_preview_server("upload_preview", uploaded, checklist, checkTables)
 
@@ -842,8 +842,7 @@ UploadBoard <- function(id,
       id = "makecontrast",
       phenoRT = reactive(checked_samples()$matrix),
       contrRT = reactive(checked_contrasts()$matrix),
-      countsRT = reactive(checked_counts()$matrix),
-      height = height
+      countsRT = reactive(checked_counts()$matrix)
     )
 
     shiny::observeEvent( modified_ct(), {
@@ -864,14 +863,13 @@ UploadBoard <- function(id,
       height = height
     )
 
-    corrected2 <- upload_module_batchcorrect_server(
+    upload_module_batchcorrect_server(
       id = "batchcorrect",
       r_X = shiny::reactive(checked_counts()$matrix),
-      ##r_X = corrected1,
       r_samples = shiny::reactive(checked_samples()$matrix),
       r_contrasts = modified_ct,
-      is.count = TRUE,
-      height = height
+      r_results = corrected1$results,
+      is.count = TRUE
     )
 
     ## corrected_counts <- shiny::reactive({
@@ -892,7 +890,7 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = corrected1,
+      countsRT = corrected1$correctedCounts,
       samplesRT = shiny::reactive(checked_samples()$matrix),
       ## contrastsRT = shiny::reactive(checked_contrasts()$matrix),
       contrastsRT = modified_ct,
@@ -904,7 +902,7 @@ UploadBoard <- function(id,
       lib.dir = FILES,
       auth = auth,
       create_raw_dir = create_raw_dir,
-      height = height,
+      height = "100%",
       recompute_info = recompute_info,
       inactivityCounter = inactivityCounter
     )
@@ -919,8 +917,6 @@ UploadBoard <- function(id,
       }
       return(pgx)
     })
-
-
 
     # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
     ## observeEvent(input$proceed_to_upload, {
