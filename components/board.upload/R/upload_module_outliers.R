@@ -18,6 +18,11 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   missing.infotext =
   "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
   
+  missing.options <- tagList(
+    shiny::radioButtons( ns('missing_plottype'), "Plot type:", c("heatmap","ratio plot"),
+      selected = "heatmap", inline = TRUE),
+  )
+
   norm.options <- tagList(
     shiny::radioButtons( ns('norm_plottype'), "Plot type:", c("boxplot","histogram"),
       selected = "boxplot", inline = TRUE),
@@ -73,8 +78,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "4. Batch correction",
           shiny::p("Clean up your data from unwanted variation:\n"),
           shiny::selectInput( ns("bec_method"), NULL,
-            choices = c("<none>","ComBat","SVA","RUV3","NNM"),
-            selected = "SVA"
+            choices = c("uncorrected","ComBat","SVA","RUV3","NNM"),
+            selected = "uncorrected"
           ),
           shiny::conditionalPanel(
             "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
@@ -83,7 +88,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             shiny::textOutput(ns("bec_param_text")),
             shiny::br(), 
           ),
-          shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = FALSE),
+          shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
           ## shiny::actionButton(
           ##   ns("compute_button"),
           ##   "Compute",
@@ -112,7 +117,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "Missing values",
           info.text = missing.infotext,
           caption = missing.infotext,
-          options = NULL,
+          options = missing.options,
           height = c("100%","70vh")
         ),
         PlotModuleUI(
@@ -178,8 +183,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         list(
             batch.pars = pars$batch.pars,
             pheno.pars = pars$pheno.pars,
-            batch.vec = pars$batch,
-            pheno.vec = pars$pheno
+            batch = pars$batch,
+            pheno = pars$pheno
         )
       })
       
@@ -197,8 +202,14 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         if(input$zero_as_na)  X[which(X==0)] <- NA
         ##which.missing <- which( is.na(X) )
         X <- playbase::imputeMissing(X, method = input$impute_method )
-        ##X <- playbase::imputeMissing(X, method = "zero" )        
+
+        ## sum up duplicates (in linear intensity scale)
+        X <- log2(rowsum(2**X, rownames(X)))
         X <- pmax(X, 0)  ## really?
+
+        dbg("[outliers_server] dim.counts = ", dim(counts))        
+        dbg("[outliers_server] dim.imputedX = ", dim(X))
+        
         X
       })
 
@@ -237,8 +248,9 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
             logX[jj] <- NA
             logX <- limma::normalizeQuantiles( logX ) 
             logX[jj] <- 0
-       })
+        })
 
+        dbg("[outliers_server] dim.normalizedX = ", dim(logX))
         rownames(logX) <- rownames(X)
         colnames(logX) <- colnames(X)
         logX
@@ -259,25 +271,64 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           pos <- irlba::irlba(X, nv=2)$v
           rownames(pos) <- colnames(X)        
         }
-        
+        dbg("[outliers_server] dim.cleanX = ", dim(X))                
         list( X=X, pos=pos )
       })
       
       correctedX <- shiny::reactive({
         shiny::req( dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
-        pgx.showSmallModal("Computing batch correction methods. Please wait...")
-        shiny::withProgress( message = "Computing batch correction methods...", value = 0.1, {
-            res <- results_correction_methods()  
-        })        
-        shiny::removeModal()
-        m <- input$bec_method
-        cx <- res$xlist[[ m ]]          
+
+        if(0) {
+            pgx.showSmallModal("Computing batch correction methods. Please wait...")
+            shiny::withProgress( message = "Computing batch correction methods...", value = 0.1, {
+                res <- results_correction_methods()  
+            })        
+            shiny::removeModal()
+            m <- input$bec_method
+            cx <- res$xlist[[ m ]]
+        } 
+
+        if(1) {
+            X1 <- cleanX()$X        
+            samples <- r_samples()
+            contrasts <- r_contrasts()        
+            kk <- intersect(colnames(X1), rownames(samples))        
+            kk <- intersect(kk, rownames(contrasts))
+            X1 <- X1[, kk, drop=FALSE]
+            contrasts <- contrasts[kk, , drop=FALSE]
+            samples <- samples[kk, , drop=FALSE]
+            m <- input$bec_method
+            dbg("[outliers_server] methods = ", m)
+            mm <- unique(c("uncorrected", input$bec_method))            
+            
+            ## recompute correction method with full matrix
+            pars <- get_model_parameters()
+            xlist <- playbase::runBatchCorrectionMethods(
+                X = X1,
+                batch = pars$batch,
+                y = pars$pheno,  
+                controls = NULL,
+                methods = mm,
+                combatx = FALSE,
+                ntop = Inf,
+                sc = FALSE,
+                remove.failed=TRUE
+            )         
+            shiny::removeModal()
+
+            dbg("[outliers_server] names.xlist = ", names(xlist))                
+            cx <- xlist[[ m ]]
+            dbg("[outliers_server] dim.correctedX = ", dim(cx))                
+            
+        }
+        
         cx
       })
       
       ## return object
       correctedCounts <- reactive({
         X <- correctedX()
+        dbg("[outliers_server] dim.correctedCounts = ", dim(X))                        
         pmax( 2**X - 1, 0)
       })
 
@@ -293,8 +344,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         X0 <- imputedX()
         X1 <- cleanX()$X        
         samples <- r_samples()
-        contrasts <- r_contrasts()
-        
+        contrasts <- r_contrasts()        
         kk <- intersect(colnames(X1), colnames(X0))
         kk <- intersect(kk, rownames(samples))        
         kk <- intersect(kk, rownames(contrasts))
@@ -358,7 +408,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         if(input$norm_plottype == "boxplot") {
           if(ncol(X0) > 40) {
             jj <- sample(ncol(X0),40)
-            ii <- rownames(X0)
+            ii <- rownames(X0) ## names!
             ## just downsampling for boxplots          
             if(nrow(X0) > 1000) ii <- sample(nrow(X0),1000)  
             X0 <- X0[ii,jj]
@@ -403,6 +453,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       plot_missingvalues <- function() {
         X0 <- r_X()
         X1 <- imputedX()
+        X0 <- X0[rownames(X1),]  ## remove duplicates
         
         ii <- which(is.na(X0))
         if( isolate(input$zero_as_na) ) {
@@ -430,14 +481,35 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           hist( X1, breaks=hh, main="", xlab="expression (log2CPM)" )
         }
 
-        if(any(X2>0)) {        
-            ## NA heatmap
-            par(mar=c(1.8, 1.8, 1, 2), mgp=c(2.5,0.85,0) )        
-            playbase::gx.imagemap(X2, cex = -1)
-        } else {
-            plot.new()
+        if(input$missing_plottype == "heatmap") {
+          if(any(X2>0)) {        
+             ## NA heatmap
+              par(mar=c(3, 3, 2, 2), mgp=c(2.5,0.85,0) )        
+              playbase::gx.imagemap(X2, cex = -1)
+              title("missing values heatmap", cex.main=1.2)
+          } else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")              
+          }
         }
 
+        if(input$missing_plottype == "ratio plot") {        
+          if(any(X2>0)) {        
+             ## NA ratio plot
+              par(mar=c(3, 3, 2, 2), mgp=c(2.0,0.75,0) )        
+              x.avg <- rowMeans(X1, na.rm=TRUE)
+              x.nar <- rowMeans(is.na(X0))
+              x.avg2 <- cut( x.avg, breaks=20 )
+              x.nar2 <- tapply( 1:nrow(X0), x.avg2, function(i) mean(is.na(X0[i,,drop=FALSE])))
+              aa <- sort(unique(as.numeric(gsub(".*,|\\]","",as.character(x.avg2)))))
+              barplot( rbind(x.nar2, 1-x.nar2), beside=FALSE, names.arg = aa, las=1,
+                      xlab = 'average intensity (log2)', ylab="missing value ratio")
+              title("missingness vs. average intensity")
+          } else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")
+          }
+        }
       }
 
       ## sample outlier PCA plot
@@ -528,9 +600,10 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         res <- results_correction_methods()
 
         method <- input$bec_method
+        if( method == 'uncorrected') method <- 'normalized'
         pos0 <- res$pos[['tsne']][[ 'normalized' ]]
         pos1 <- res$pos[['tsne']][[ method ]]                        
-
+          
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk,]
         pos1 <- pos1[kk,]
