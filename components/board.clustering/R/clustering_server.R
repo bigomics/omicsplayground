@@ -78,7 +78,7 @@ ClusteringBoard <- function(id, pgx) {
       }
       shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
-      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
+      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
     })
 
     ## update filter choices upon change of data set
