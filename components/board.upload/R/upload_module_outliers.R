@@ -24,7 +24,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   )
 
   norm.options <- tagList(
-    shiny::radioButtons( ns('norm_plottype'), "Plot type:", c("boxplot","histogram"),
+    shiny::radioButtons( ns('norm_plottype'), "Plot type:", c("boxplot","histogram","density"),
       selected = "boxplot", inline = TRUE),
   )
 
@@ -61,8 +61,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "2. Normalization",
           div("Normalize data values:\n"),
           shiny::selectInput( ns("scaling_method"), NULL,
-             choices = c("CPM"="cpm", "median3"="m3", "median4"="m4", "median5"="m5",
-                         "z2"="z2", "quantile.001" = "q0.01"),
+             choices = c("CPM"="cpm", "median.3"="m3", "median.4"="m4", 
+                         "zdist.2"="z2", "quantile.001" = "q0.01"),
             selected = "cpm"
           ),
           shiny::checkboxInput(ns("skip_norm"), "skip normalization", value=FALSE),
@@ -278,49 +278,36 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       correctedX <- shiny::reactive({
         shiny::req( dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        if(0) {
-            pgx.showSmallModal("Computing batch correction methods. Please wait...")
-            shiny::withProgress( message = "Computing batch correction methods...", value = 0.1, {
-                res <- results_correction_methods()  
-            })        
-            shiny::removeModal()
-            m <- input$bec_method
-            cx <- res$xlist[[ m ]]
-        } 
-
-        if(1) {
-            X1 <- cleanX()$X        
-            samples <- r_samples()
-            contrasts <- r_contrasts()        
-            kk <- intersect(colnames(X1), rownames(samples))        
-            kk <- intersect(kk, rownames(contrasts))
-            X1 <- X1[, kk, drop=FALSE]
-            contrasts <- contrasts[kk, , drop=FALSE]
-            samples <- samples[kk, , drop=FALSE]
-            m <- input$bec_method
-            dbg("[outliers_server] methods = ", m)
-            mm <- unique(c("uncorrected", input$bec_method))            
-            
-            ## recompute correction method with full matrix
-            pars <- get_model_parameters()
-            xlist <- playbase::runBatchCorrectionMethods(
-                X = X1,
-                batch = pars$batch,
-                y = pars$pheno,  
-                controls = NULL,
-                methods = mm,
-                combatx = FALSE,
-                ntop = Inf,
-                sc = FALSE,
-                remove.failed=TRUE
+        ## recompute chosed correction method with full
+        ## matrix. previous was done on shortened matrix.
+        X1 <- cleanX()$X        
+        samples <- r_samples()
+        contrasts <- r_contrasts()        
+        kk <- intersect(colnames(X1), rownames(samples))        
+        kk <- intersect(kk, rownames(contrasts))
+        X1 <- X1[, kk, drop=FALSE]
+        contrasts <- contrasts[kk, , drop=FALSE]
+        samples <- samples[kk, , drop=FALSE]
+        m <- input$bec_method
+        dbg("[outliers_server] methods = ", m)
+        mm <- unique(c("uncorrected", input$bec_method))            
+        pars <- get_model_parameters()
+        xlist <- playbase::runBatchCorrectionMethods(
+            X = X1,
+            batch = pars$batch,
+            y = pars$pheno,  
+            controls = NULL,
+            methods = mm,
+            combatx = FALSE,
+            ntop = Inf,
+            sc = FALSE,
+            remove.failed=TRUE
             )         
-            shiny::removeModal()
-
-            dbg("[outliers_server] names.xlist = ", names(xlist))                
-            cx <- xlist[[ m ]]
-            dbg("[outliers_server] dim.correctedX = ", dim(cx))                
-            
-        }
+        shiny::removeModal()
+        
+        dbg("[outliers_server] names.xlist = ", names(xlist))                
+        cx <- xlist[[ m ]]
+        dbg("[outliers_server] dim.correctedX = ", dim(cx))                
         
         cx
       })
@@ -361,6 +348,9 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
             ntop = 4000, xlist.init = xlist.init 
           )
         })
+
+        selected <- res$best.method
+        shiny::updateSelectInput(session, "bec_method", selected = selected)
         
         return(res)
       })      
@@ -438,6 +428,23 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           xmin0 <- min(xmin0,0)
           xmin1 <- min(xmin1,0)            
           xlim0 <- c( xmin0, xmax0 )
+          xlim1 <- c( xmin1, xmax1 )          
+          par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
+          hist( X0, breaks=60, main = "raw", xlim = xlim0,
+               xlab = 'expression (log2)')
+          hist( X1, breaks=60, main = "normalized", xlim = xlim1,
+               xlab = "expression (log2)", ylab='')
+        }
+          
+        if(input$norm_plottype == "density") {
+          
+          xmax0 <- quantile( X0[which(rX>0)], probs=0.999, na.rm = TRUE)
+          xmax1 <- quantile( X1[which(rX>0)], probs=0.999, na.rm = TRUE)            
+          xmin0 <- quantile( X1[which(rX>0)], probs=0.001, na.rm = TRUE)
+          xmin1 <- quantile( X1[which(rX>0)], probs=0.001, na.rm = TRUE)            
+          xmin0 <- min(xmin0,0)
+          xmin1 <- min(xmin1,0)            
+          xlim0 <- c( xmin0, xmax0 )
           xlim1 <- c( xmin1, xmax1 )            
           
           par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
@@ -486,7 +493,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
              ## NA heatmap
               par(mar=c(3, 3, 2, 2), mgp=c(2.5,0.85,0) )        
               playbase::gx.imagemap(X2, cex = -1)
-              title("missing values heatmap", cex.main=1.2)
+              title("missing values patterns", cex.main=1.2)
           } else {
               plot.new()
               text(0.5, 0.5, "no missing values")              

@@ -330,17 +330,31 @@ UploadBoard <- function(id,
                 df0 <- playbase::read.as_matrix(fn2)
               }
 
-              # save input as raw file in raw_dir
-              file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
+              ## save input as raw file in raw_dir
+              if( IS_COUNT )  file.copy(fn2, file.path(raw_dir(), "raw_counts.csv"))
+              if( IS_EXPRESSION )  file.copy(fn2, file.path(raw_dir(), "raw_expression.csv"))                
 
-              if (IS_COUNT) {
+
+              if (IS_COUNT) {                
+                check.log <- ( all( df0 < 60) || min(df0, na.rm=TRUE) < 0 )
+                if(check.log) {
+                  message("[UploadModule::upload_files] WARNING:: count matrix provided but log-values detected.")
+                  shinyalert::shinyalert(
+                    title = "",
+                    text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
+                    type = "warning"
+                    )
+                  df0 <- 2**df0 - 1
+                  if(min(df0, na.rm=TRUE) > 0) df0 <- df0 - 1
+                }
                 df <- df0
                 matname <- "counts.csv"
               }
 
               if (IS_EXPRESSION) {
                 message("[UploadModule::upload_files] converting expression to counts...")
-                df <- 2**df0 - 1
+                df <- 2**df0 
+                if(min(df0,na.rm=TRUE) > 0) df <- df - 1                
                 matname <- "counts.csv"
               }
             }

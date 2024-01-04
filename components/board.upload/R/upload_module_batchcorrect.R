@@ -163,20 +163,20 @@ upload_module_batchcorrect_server <- function(
           tparams <- sort(unique(sub("[.].*","",bc$params$technical)))
           choices3 <- c("<none>",paste0("<",tparams,">"))
           shiny::updateSelectInput(session, "tech_params", choices = choices3,
-            sel = choices3[-1])
+            selected = choices3[-1])
         } else {
           shiny::updateSelectInput(session, "tech_params", choices = "<none>",
-            sel = "<none>")
+            selected = "<none>")
         }
         
         if("statistical" %in% names(bc$params) && length(bc$params$statistical)) {
           bparams <- sort(bc$params$statistical)
           choices2 = c("<none>",bparams)
           shiny::updateSelectInput(session, "batch_params", choices = choices2,
-            sel = choices2[-1])
+            selected = choices2[-1])
         } else {
           shiny::updateSelectInput(session, "batch_params", choices = "<none>",
-            sel = "<none>")
+            selected = "<none>")
         }
 
         
