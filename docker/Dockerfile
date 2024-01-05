@@ -31,7 +31,7 @@ WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
 RUN R -e "install.packages(c('shinyvalidate','sodium','cookies'),force=TRUE)"
-##RUN R -e "remotes::install_github('renozao/xbioc',dependencies=TRUE)"
+RUN R -e "remotes::install_github('renozao/xbioc',dependencies=TRUE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
