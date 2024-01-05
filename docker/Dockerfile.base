@@ -47,31 +47,26 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 RUN apt install -y r-base r-base-dev r-recommended
 
 #------------------------------------------------------------
-# Set GitHub PAT??
-#------------------------------------------------------------
-WORKDIR /
-#COPY .Renviron .Renviron
-#RUN R -e "usethis::git_sitrep()"
-
-#------------------------------------------------------------
 # Install R packages that are required
 #------------------------------------------------------------
-
 FROM os-base AS r-base1
 WORKDIR /
-
-## playbase -------------------------------
-RUN git clone -b main --single-branch --depth 1 \
-    https://github.com/bigomics/playdata.git \
-    && R CMD INSTALL playdata \
-    && rm -fr playdata
 
 ## playbase -------------------------------
 RUN echo Downloading Playbase
 RUN R -e "install.packages('remotes')"
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 
-## omicsplayground ------------------------------
+## playdata: perhaps not needed because playbase already states
+## playdata as dependency in DESCRIPTION file.
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
+
+## Omicsplayground (partial install): this installs only the needed
+## packages. The complete installation of OPG is done in the final
+## Dockerfile.
 RUN rm -fr /omicsplayground && mkdir -p /omicsplayground
 WORKDIR /omicsplayground
 COPY components /omicsplayground/components
@@ -79,6 +74,7 @@ COPY dev /omicsplayground/dev
 RUN Rscript dev/requirements.R
 
 ## add any missing packages manually------------------------
+FROM r-base1 AS r-base2
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 #RUN R -e "install.packages(c('RSpectra'))"
 RUN R -e "install.packages(c('shinyvalidate','sodium','cookies'),force=TRUE)"
