@@ -225,35 +225,32 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         
         shiny::withProgress( message = "Computing technical variation...", value = 0, {
 
-            shiny::incProgress( amount = 0.25, "Global scaling counts..." )          
-            eX <- pmax( 2**X - 1, 0)
-            eX <- playbase::scale_counts(eX, method = input$scaling_method)
-            ## eX <- playbase::scale_counts(eX, method = "cpm")            
-
-            shiny::incProgress( amount = 0.25, "Normalizing counts..." )          
-            eX <- playbase::pgx.countNormalization( eX, methods = "median.center")
-
+            shiny::incProgress( amount = 0.25, "Global scaling..." )          
+            X <- playbase::global_scaling(X, method = input$scaling_method)
+            
+            shiny::incProgress( amount = 0.25, "Median centering..." )          
+            ## eX <- playbase::pgx.countNormalization( eX, methods = "median.center")
+            mx <- apply(X, 2, median, na.rm = TRUE)
+            X <- t(t(X) - mx ) + mean(mx)
+            
             ## technical effects correction
             shiny::incProgress( amount = 0.25, "Correcting for technical effects..." )
             pheno <- playbase::contrasts2pheno( contrasts, samples )
-            logX <- log2(1 + eX)
-            logX <- playbase::removeTechnicalEffects(
-                logX, samples, pheno, p.pheno = 0.05, p.pca = 0.5, force = FALSE,
+            X <- playbase::removeTechnicalEffects(
+                X, samples, pheno, p.pheno = 0.05, p.pca = 0.5, force = FALSE,
                 params = c("lib","mito","ribo","cellcycle","gender"),          
                 nv = 2, k.pca = 10, xrank = NULL) 
             
             ## for quantile normalization we omit the zero value and put back later
             shiny::incProgress( amount = 0.25, "Quantile normalization..." )
-            jj <- which( logX < 0.01 )
-            logX[jj] <- NA
-            logX <- limma::normalizeQuantiles( logX ) 
-            logX[jj] <- 0
+            jj <- which( X < 0.01 )
+            X[jj] <- NA
+            X <- limma::normalizeQuantiles( X ) 
+            X[jj] <- 0
         })
-
-        dbg("[outliers_server] dim.normalizedX = ", dim(logX))
-        rownames(logX) <- rownames(X)
-        colnames(logX) <- colnames(X)
-        logX
+        dbg("[outliers_server:normalizedX] dim.normalizedX = ", dim(X))
+        dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()))
+        X
       })
       
 
