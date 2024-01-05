@@ -30,7 +30,7 @@ RUN apt update && apt install -y libsodium-dev
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
-RUN R -e "install.packages(c('shinyvalidate'),force=TRUE)"
+RUN R -e "install.packages(c('shinyvalidate','sodium','cookies'),force=TRUE)"
 ##RUN R -e "remotes::install_github('renozao/xbioc',dependencies=TRUE)"
 
 #------------------------------------------------------------
