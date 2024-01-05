@@ -149,16 +149,14 @@ upload_module_computepgx_server <- function(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
                   shiny::HTML("<h4>Feature filtering:</h4><br/>"),
-                  choiceValues =
-                    c(
+                  choiceValues = c(
                       "only.hugo",
                       "only.proteincoding",
                       "remove.unknown",
                       "remove.notexpressed",
                       "skip.normalization"
                     ),
-                  choiceNames =
-                    c(
+                  choiceNames = c(
                       "Transform features to gene symbols",
                       "protein-coding only",
                       "remove Rik/ORF/LOC genes",
@@ -236,11 +234,6 @@ upload_module_computepgx_server <- function(
         ) ## end of fill Col
       })
       
-#      shiny::outputOptions(output,
-#        "UI",
-#        suspendWhenHidden = FALSE
-#      ) ## important!!!
-
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
           shinyjs::disable(ns("compute"))
