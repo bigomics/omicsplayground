@@ -219,6 +219,7 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 ## Install a clean reticulate and miniconda 
 install.packages('reticulate', force=TRUE)
 unlink("~/.local/share/r-miniconda", recursive=TRUE)
+unlink("~/.virtualenvs", recursive=TRUE)
 reticulate::install_miniconda()
 reticulate::conda_install('r-reticulate', 'python-kaleido')
 reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
