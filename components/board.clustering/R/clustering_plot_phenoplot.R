@@ -39,7 +39,6 @@ clustering_plot_phenoplot_server <- function(id,
                                              selected_phenotypes,
                                              clustmethod,
                                              selected_samples,
-                                             hm_getClusterPositions,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns

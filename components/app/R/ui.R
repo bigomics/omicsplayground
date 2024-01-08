@@ -73,7 +73,7 @@ app_ui <- function(x) {
       id <- "maintabs"
       header <- shiny::tagList(
         # shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
-        shiny::tags$head(shiny::tags$script("hubspot-embed.js")),
+        shiny::tags$head(shiny::tags$script(src = "custom/hubspot-embed.js")),
         ##    gtag2, ## Google Tag Manager???
         shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),

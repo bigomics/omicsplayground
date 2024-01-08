@@ -235,10 +235,6 @@ UploadBoard <- function(id,
         )
       }
 
-      message("[upload_files] >>> reading uploaded files")
-      message("[upload_files] upload_files$name=", upload_table$name)
-      message("[upload_files] upload_files$datapath=", upload_table$datapath)
-
       uploaded[["counts.csv"]] <- NULL
       uploaded[["samples.csv"]] <- NULL
       uploaded[["contrasts.csv"]] <- NULL
@@ -247,7 +243,6 @@ UploadBoard <- function(id,
       uploaded[["checklist"]] <- NULL
       checklist[["samples_counts"]] <- NULL
       checklist[["samples_contrasts"]] <- NULL
-
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
@@ -259,6 +254,7 @@ UploadBoard <- function(id,
         i <- grep("[.]pgx$", upload_table$name)
         pgxfile <- upload_table$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
+        return(NULL)
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
@@ -273,7 +269,6 @@ UploadBoard <- function(id,
 
         inputnames <- upload_table$name[ii]
         uploadnames <- upload_table$datapath[ii]
-        message("[upload_files] uploaded files: ", inputnames)
 
         ## remove any old gui_contrasts.csv
         user_ctfile <- file.path(raw_dir(), "user_contrasts.csv")
@@ -857,7 +852,6 @@ UploadBoard <- function(id,
       id = "compute",
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(checked_samples()$matrix),
-      ## contrastsRT = shiny::reactive(checked_contrasts()$matrix),
       contrastsRT = shiny::reactive(modified_ct()$contr),
       raw_dir = raw_dir,
       batchRT = batch_vectors,
@@ -917,15 +911,6 @@ UploadBoard <- function(id,
       contrastsRT = reactive(checked_contrasts()$matrix),
       samplesRT = reactive(checked_samples()$matrix)
     )
-
-
-    ## upload_plot_pcaplot_server(
-    ##   "pcaplot",
-    ##   phenoRT = shiny::reactive(uploaded$samples.csv),
-    ##   countsRT = corrected_counts,
-    ##   sel.conditions = sel.conditions,
-    ##   watermark = WATERMARK
-    ## )
 
     ## ------------------------------------------------
     ## Board return object

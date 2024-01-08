@@ -65,7 +65,6 @@ clustering_plot_genemodule_server <- function(id,
       res <- getTopMatrix()
       shiny::req(res)
 
-      dbg("[clustering_plot_genemodule.R::plot_data] names(res) = ", names(res))
       mat <- res$mat
       idx <- res$idx
       modx <- sapply(1:ncol(mat), function(i) tapply(mat[, i], idx, mean))
@@ -81,11 +80,7 @@ clustering_plot_genemodule_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      dbg("[clustering_plot_genemodule.R::render_plotly] names(pd) = ", names(pd))
       mat <- pd$mat
-      dbg("[clustering_plot_genemodule.R::render_plotly] dim(mat) = ", dim(mat))
-
-
       plotly.colors <- c(
         "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
         "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
