@@ -13,7 +13,6 @@ enrichment_plot_volcanoall_ui <- function(
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
-    shinyjs::useShinyjs(),
     withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
@@ -25,7 +24,6 @@ enrichment_plot_volcanoall_ui <- function(
       ),
       "Number of top genesets to consider for counting the gene frequency."
     ),
-    shinyjs::extendShinyjs(text = "shinyjs.resetClick = function() { Shiny.onInputChange('.plotly_click-enrich_volcanoall', 'null'); }")
 
   )
 
@@ -125,16 +123,12 @@ enrichment_plot_volcanoall_server <- function(id,
 
     modal_plotly.RENDER <- function() {
       fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = 2, margin_b = 20, margin_l = 50) %>%
-        plotly::event_register('plotly_click') %>%
-        plotly::event_register('plotly_doubleclick') %>%
         playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
       fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 20, margin_l = 20) %>%
-      plotly::event_register('plotly_click') %>%
-      plotly::event_register('plotly_doubleclick') %>%
         plotly::style(
           marker.size = 6
         ) %>%
@@ -142,29 +136,6 @@ enrichment_plot_volcanoall_server <- function(id,
       return(fig)
     }
 
-    run <- shiny::reactiveVal(TRUE)
-    shiny::observe({
-      shiny::invalidateLater(5000)
-      run <- run()
-      click <- plotly::event_data("plotly_click", source = "enrich_volcanoall")
-      if (!is.null(click)) {
-        run <- !run
-        shinyjs::js$resetClick()
-      }
-
-      fig <- plotly_plots()
-      n_traces <- length(fig$x$data)
-      max_n <- 100
-      n_out <- max_n/n_traces 
-      if (run & input$enrch_volcanoall_subs == "Yes") {
-        ds <- shinyHugePlot::downsampler$new(figure = fig, n_out = n_out, 
-                                            aggregator = playbase::gaussian_aggregator$new(), verbose = FALSE)
-        ns <- session$ns
-          shinyHugePlot::updatePlotlyH(session, ns("plot-renderfigure"), 
-            list(NULL), ds,
-            reset = FALSE, reload = TRUE)
-      }
-    }) 
 
     PlotModuleServer(
       "plot",
