@@ -46,6 +46,18 @@ envcat <- function(var) {
   message(var, " = ", Sys.getenv(var))
 }
 
+mem.vmrss <- function(digits = 0) {
+  mem <- "[? MB]"
+  if (Sys.info()["sysname"] %in% c("Linux")) {
+    proc <- paste("/proc", Sys.getpid(), "status", sep = "/")
+    rss <- system(paste("grep -i vmrss",proc), intern=TRUE)
+    rss <- gsub("VmRSS:[\t ]+| kB","",rss)
+    rss <- as.numeric(rss) / (1024) ## MB
+    mem <- paste0(round(rss, digits), "MB")
+  }
+  mem
+}
+
 mem.proc <- function(digits = 0) {
   mem <- "[? MB]"
   if (Sys.info()["sysname"] %in% c("Linux")) {
@@ -64,7 +76,7 @@ info <- function(..., type = "INFO") {
   msg <- "some message"
   msg <- sapply(list(...), paste, collapse = " ")
   dd <- paste0("[", dd, "]")
-  mm <- paste0("[", mem.proc(), "]")
+  mm <- paste0("[", mem.proc(),"/",mem.vmrss(),"]")  
   type <- paste0("[", type, "]")
   message(paste0(type, dd, mm, " --- ", sub("\n$", "", paste(msg, collapse = " "))))
 }
