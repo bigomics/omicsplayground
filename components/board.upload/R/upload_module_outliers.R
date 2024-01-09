@@ -25,7 +25,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
 
   norm.options <- tagList(
     shiny::radioButtons( ns('norm_plottype'), "Plot type:", c("boxplot","histogram","density"),
-      selected = "boxplot", inline = TRUE),
+                        selected = "boxplot", inline = TRUE),
+    shiny::checkboxInput( ns('norm_zero_na'), "zero as NA", FALSE)    
   )
 
   outlier.options <- tagList(
@@ -392,12 +393,18 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         X0 <- imputedX()
         X1 <- normalizedX()
 
+        if(input$norm_zero_na) {
+            which.zero <- which(rX == 0)
+            X0[X0==0] <- NA
+            X1[X1==0] <- NA            
+        }
+          
         if(input$norm_plottype == "boxplot") {
           if(ncol(X0) > 40) {
             jj <- sample(ncol(X0),40)
             ii <- rownames(X0) ## names!
             ## just downsampling for boxplots          
-            if(nrow(X0) > 1000) ii <- sample(nrow(X0),1000)  
+            if(length(ii) > 2000) ii <- sample(ii,2000)  
             X0 <- X0[ii,jj]
             X1 <- X1[ii,jj]
             rX <- rX[ii,jj]
@@ -427,7 +434,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           xlim0 <- c( xmin0, xmax0 )
           xlim1 <- c( xmin1, xmax1 )          
           par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
-          hist( X0, breaks=60, main = "raw", xlim = xlim0,
+          hist( X0, breaks=70, main = "raw", xlim = xlim0,
                xlab = 'expression (log2)')
           hist( X1, breaks=60, main = "normalized", xlim = xlim1,
                xlab = "expression (log2)", ylab='')
@@ -445,7 +452,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           xlim1 <- c( xmin1, xmax1 )            
           
           par(mfrow=c(1,2), mar=c(3.2,3,2,0.5), mgp=c(2.1,0.8,0) )
-          playbase::gx.hist( X0, breaks=60, main = "raw", xlim = xlim0,
+          playbase::gx.hist( X0, breaks=70, main = "raw", xlim = xlim0,
                              xlab = 'expression (log2)')
           playbase::gx.hist( X1, breaks=60, main = "normalized", xlim = xlim1,
                              xlab = "expression (log2)", ylab='')
