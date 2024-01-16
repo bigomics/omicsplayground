@@ -112,6 +112,8 @@ push.version:
 	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
+auth=none
+
 board.launch:
 	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
@@ -122,7 +124,7 @@ pgx.check.error: sass
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
 app.test:
-	R -e "shiny::runTests()"
+	R -e  "options(authentication='$(auth)'); shiny::runTests()"
 
 app.test.review:
 	R -e "testthat::use snapshot_review('snapshot/')""

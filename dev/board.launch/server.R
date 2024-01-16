@@ -81,7 +81,7 @@ app_server <- function(input, output, session) {
       ## no authentication but also not showing main modal (enter)
       auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
   } else {
-      auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
+      auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
   }
 
   trigger_server <- reactive({
