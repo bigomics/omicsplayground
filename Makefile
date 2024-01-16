@@ -124,7 +124,7 @@ pgx.check.error: sass
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
 app.test:
-	R -e "shiny::runTests()"
+	R -e  "options(authentication='$(auth)'); shiny::runTests()"
 
 app.test.review:
 	R -e "testthat::use snapshot_review('snapshot/')""
