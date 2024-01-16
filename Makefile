@@ -112,6 +112,8 @@ push.version:
 	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
+auth=none
+
 board.launch:
 	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
