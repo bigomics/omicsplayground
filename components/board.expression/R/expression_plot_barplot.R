@@ -32,7 +32,7 @@ expression_plot_barplot_ui <- function(
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", TRUE),
+    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
       "Show the 'others' class (if any)",
       placement = "right", options = list(container = "body")
     )
