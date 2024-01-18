@@ -32,7 +32,7 @@ expression_plot_topgenes_ui <- function(
       "Group samples by phenotype",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("gx_showothers"), "show others", TRUE),
+    withTooltip(shiny::checkboxInput(ns("gx_showothers"), "show others", FALSE),
       "Show the 'others' class (if any)",
       placement = "right", options = list(container = "body")
     )
