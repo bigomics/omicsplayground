@@ -55,18 +55,20 @@ compare_plot_fc_correlation_server <- function(id,
 
     plot_interactive_comp_fc <- function(plot_data, hilight = NULL, marker_size = 6, label_size = 6, cex.axis = 12) {
       shiny::req(plot_data())
-      pos <- plot_data()
+      FC <- plot_data()
 
-      ncol_pos <- ncol(pos)
-      nrow_pos <- nrow(pos)
-      sample_size <- floor(30000 / ncol_pos)
-      sample_size <- ifelse(sample_size > nrow_pos, nrow_pos, sample_size)
-      sample_size <- sample(rownames(pos), sample_size)
-      sample_size <- c(hilight, sample_size)
-      sample_size <- unique(sample_size)
-      # Get data ready
-      data_1 <- pos[, grep("1:", colnames(pos)), drop = FALSE]
-      data_2 <- pos[, grep("2:", colnames(pos)), drop = FALSE]
+      ncol_FC <- ncol(FC)
+      nrow_FC <- nrow(FC)
+      sample_size <- floor(30000 / ncol_FC)
+      sample_size <- ifelse(sample_size > nrow_FC, nrow_FC, sample_size)
+
+      genes <- sample(rownames(FC), sample_size)
+      genes <- c(hilight, genes)
+      genes <- unique(genes)
+
+      ## Get data ready
+      data_1 <- FC[, grep("^1:", colnames(FC)), drop = FALSE]
+      data_2 <- FC[, grep("^2:", colnames(FC)), drop = FALSE]
       ncol_d1 <- ncol(data_1)
       ncol_d2 <- ncol(data_2)
       nplots <- ncol_d1 * ncol_d2
@@ -76,19 +78,19 @@ compare_plot_fc_correlation_server <- function(id,
       counter <- 1
 
       # Iterate over the cols of both data sets
-      for (i in seq_len(ncol_d1)) {
-        for (j in seq_len(ncol_d2)) {
-          # Get the data for the current plot
+      for (j in ncol_d2:1) {
+        for (i in seq_len(ncol_d1)) {
 
-          pos_i <- cbind(data_1[sample_size, i, drop = FALSE], data_2[sample_size, j, drop = FALSE])
-          xlab <- ifelse(i == ncol_d2, colnames(pos_i)[1], "")
-          ylab <- ifelse(j == 1, colnames(pos_i)[2], "")
-          text_i <- glue::glue("{rownames(pos_i)}<br> x: {pos_i[, 1]}<br> y: {pos_i[, 2]}")
-          # Plot the points
+          ## Get the data for the current plot
+          FC_i <- cbind(data_1[genes, i, drop = FALSE], data_2[genes, j, drop = FALSE])
+          xlab <- ifelse(j == 1, colnames(data_1)[i], "")
+          ylab <- ifelse(i == 1, colnames(data_2)[j], "")
+          
+          ## Plot the points
           plot_i <- plotly::plot_ly(
-            x = ~ pos_i[, 1],
-            y = ~ pos_i[, 2],
-            text = ~ rownames(pos_i),
+            x = FC_i[, 1],
+            y = FC_i[, 2],
+            text = rownames(FC_i),
             type = "scattergl",
             mode = "markers",
             marker = list(
@@ -105,13 +107,13 @@ compare_plot_fc_correlation_server <- function(id,
 
           # Add the text to hilighted points
           if (length(hilight) > 1) {
-            hilight1 <- intersect(rownames(pos_i), hilight)
+            hilight1 <- intersect(rownames(FC_i), hilight)
             plot_i <- plot_i %>%
               plotly::add_trace(
-                x = ~ pos_i[hilight1, 1],
-                y = ~ pos_i[hilight1, 2] + pos_i[hilight1, 2] * .05,
-                text = ~hilight1,
-                key = ~hilight1,
+                x = FC_i[hilight1, 1],
+                y = FC_i[hilight1, 2],
+                text = hilight1,
+                key = hilight1,
                 type = "scattergl",
                 mode = "marker+text",
                 marker = list(opacity = 1, size = marker_size, color = "red"),
@@ -122,7 +124,7 @@ compare_plot_fc_correlation_server <- function(id,
           }
 
           # Add the plot to the collection list
-          suppressMessages(
+          ##suppressMessages(
             sub_plots[[counter]] <- plot_i %>%
               plotly::layout(
                 xaxis = list(
@@ -134,7 +136,7 @@ compare_plot_fc_correlation_server <- function(id,
                   titlefont = list(size = cex.axis)
                 )
               )
-          )
+          ##)
           counter <- counter + 1
         }
       }
@@ -142,7 +144,7 @@ compare_plot_fc_correlation_server <- function(id,
       # Combine all plots and set plotly configs
       suppressMessages(
         all_plts <- plotly::subplot(sub_plots,
-          nrows = ncol_d1,
+          nrows = ncol_d2,
           titleX = TRUE, titleY = TRUE,
           shareX = TRUE, shareY = TRUE
         ) %>%
@@ -161,7 +163,8 @@ compare_plot_fc_correlation_server <- function(id,
 
     fcfcplot.RENDER <- function() {
       higenes <- hilightgenes()
-      p <- plot_interactive_comp_fc(plot_data = plot_data, marker_size = 6, cex.axis = 12, hilight = higenes) %>%
+      p <- plot_interactive_comp_fc(plot_data = plot_data, marker_size = 6, cex.axis = 12,
+                                    hilight = higenes) %>%
         plotly::layout(
           dragmode = "select",
           margin = list(l = 5, r = 5, b = 5, t = 20)

@@ -20,7 +20,7 @@ compare_plot_cum_fc1_ui <- function(id,
   info_text <- "Barplot showing the cumulative fold changes on dataset 1"
 
   PlotModuleUI(ns("plot"),
-    title = "Cumulative foldchange",
+    title = "Foldchange (Dataset 1)",
     plotlib = "plotly",
     label = label,
     info.text = info_text,
@@ -75,9 +75,9 @@ compare_plot_cum_fc1_server <- function(id,
           x = "x",
           y = ycols,
           fillcolor = fillcolor,
-          yaxistitle = "Cumulative foldchange",
-          xaxistitle = "Genes",
-          title = "Dataset 1",
+          yaxistitle = "Foldchange  (log2FC)",
+          xaxistitle = "",
+          title = "",
           grouped = FALSE
         )
       )
