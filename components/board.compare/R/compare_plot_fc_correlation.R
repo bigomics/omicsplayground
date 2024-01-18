@@ -80,12 +80,11 @@ compare_plot_fc_correlation_server <- function(id,
       # Iterate over the cols of both data sets
       for (j in ncol_d2:1) {
         for (i in seq_len(ncol_d1)) {
-
           ## Get the data for the current plot
           FC_i <- cbind(data_1[genes, i, drop = FALSE], data_2[genes, j, drop = FALSE])
           xlab <- ifelse(j == 1, colnames(data_1)[i], "")
           ylab <- ifelse(i == 1, colnames(data_2)[j], "")
-          
+
           ## Plot the points
           plot_i <- plotly::plot_ly(
             x = FC_i[, 1],
@@ -124,19 +123,19 @@ compare_plot_fc_correlation_server <- function(id,
           }
 
           # Add the plot to the collection list
-          ##suppressMessages(
-            sub_plots[[counter]] <- plot_i %>%
-              plotly::layout(
-                xaxis = list(
-                  title = xlab,
-                  titlefont = list(size = cex.axis)
-                ),
-                yaxis = list(
-                  title = ylab,
-                  titlefont = list(size = cex.axis)
-                )
+          ## suppressMessages(
+          sub_plots[[counter]] <- plot_i %>%
+            plotly::layout(
+              xaxis = list(
+                title = xlab,
+                titlefont = list(size = cex.axis)
+              ),
+              yaxis = list(
+                title = ylab,
+                titlefont = list(size = cex.axis)
               )
-          ##)
+            )
+          ## )
           counter <- counter + 1
         }
       }
@@ -163,8 +162,10 @@ compare_plot_fc_correlation_server <- function(id,
 
     fcfcplot.RENDER <- function() {
       higenes <- hilightgenes()
-      p <- plot_interactive_comp_fc(plot_data = plot_data, marker_size = 6, cex.axis = 12,
-                                    hilight = higenes) %>%
+      p <- plot_interactive_comp_fc(
+        plot_data = plot_data, marker_size = 6, cex.axis = 12,
+        hilight = higenes
+      ) %>%
         plotly::layout(
           dragmode = "select",
           margin = list(l = 5, r = 5, b = 5, t = 20)
