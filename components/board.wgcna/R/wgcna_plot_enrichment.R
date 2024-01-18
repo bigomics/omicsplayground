@@ -30,7 +30,7 @@ wgcna_plot_enrichment_server <- function(id,
                                          enrichTable_module,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    enrichPlot.RENDER <- function(){
+    enrichPlot.RENDER <- function() {
       df <- enrich_table()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)

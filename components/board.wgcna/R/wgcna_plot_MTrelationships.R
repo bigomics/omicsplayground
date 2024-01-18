@@ -35,7 +35,7 @@ wgcna_plot_MTrelationships_server <- function(id,
                                               labels2rainbow,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    moduleTrait.RENDER <- function(){
+    moduleTrait.RENDER <- function() {
       out <- wgcna.compute()
       net <- out$net
       datExpr <- out$datExpr
