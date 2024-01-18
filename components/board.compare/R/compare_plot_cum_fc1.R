@@ -75,7 +75,7 @@ compare_plot_cum_fc1_server <- function(id,
           x = "x",
           y = ycols,
           fillcolor = fillcolor,
-          yaxistitle = "Foldchange  (log2FC)",
+          yaxistitle = "log2FC",
           xaxistitle = "",
           title = "",
           grouped = FALSE
@@ -90,7 +90,7 @@ compare_plot_cum_fc1_server <- function(id,
       func = cumfcplot.RENDER,
       csvFunc = cum_fc,
       res = c(80, 98), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      pdf.width = 10, pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer
