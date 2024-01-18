@@ -17,10 +17,10 @@ compare_plot_cum_fc2_ui <- function(id,
                                     width,
                                     label) {
   ns <- shiny::NS(id)
-  info_text <- "Barplot showing the cumulative fold changes on dataset 2"
+  info_text <- "Barplot showing the fold changes on dataset 2"
 
   PlotModuleUI(ns("plot"),
-    title = "Cumulative foldchange",
+    title = "Foldchange (Dataset 2)",
     plotlib = "plotly",
     label = label,
     info.text = info_text,
@@ -72,9 +72,9 @@ compare_plot_cum_fc2_server <- function(id,
           x = "x",
           y = ycols,
           fillcolor = fillcolor,
-          yaxistitle = "Cumulative foldchange",
-          xaxistitle = "Genes",
-          title = "Dataset 2",
+          yaxistitle = "log2FC",
+          xaxistitle = "",
+          title = "",
           grouped = FALSE
         )
       )
@@ -87,7 +87,7 @@ compare_plot_cum_fc2_server <- function(id,
       func = cumfcplot.RENDER,
       csvFunc = cum_fc,
       res = c(80, 98), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      pdf.width = 10, pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer
