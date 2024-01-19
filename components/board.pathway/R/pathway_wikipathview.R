@@ -70,7 +70,7 @@ wikipathview <- function(wp, val) {
   } else {
     rect_nodes <- xml_find_first(a_nodes, ".//rect")
   }
-  
+
   if (all(is.na(rect_nodes))) {
     val <- NULL
   }
@@ -89,10 +89,9 @@ wikipathview <- function(wp, val) {
     if (isClassic) {
       current_style <- xml_attr(rect_nodes, "style")
       new_style <- paste0(current_style, " fill:", colors, ";")
-      lapply(seq_along(new_style), function(x){
+      lapply(seq_along(new_style), function(x) {
         xml_set_attr(rect_nodes[x], "style", new_style[x])
       })
-      
     } else {
       xml_attr(rect_nodes, "fill") <- colors
     }
