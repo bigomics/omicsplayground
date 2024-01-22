@@ -81,14 +81,15 @@ functional_plot_go_actmap_server <- function(id,
           session,
           "selected_contrasts",
           choices = ct,
-          selected = selected_ct)
+          selected = selected_ct
+        )
       })
-      
-      
+
+
       plotGOactmap <- function(score, go, normalize, rotate, maxterm, maxfc,
                                tl.cex = 0.85, row.nchar = 60) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
-        
+
         ## avoid errors!!!
         score[is.na(score) | is.infinite(score)] <- 0
         score[is.na(score)] <- 0
@@ -99,7 +100,7 @@ functional_plot_go_actmap_server <- function(id,
             "Please select at least one comparison."
           )
         )
-        score <- score[,input$selected_contrasts, drop = FALSE]
+        score <- score[, input$selected_contrasts, drop = FALSE]
 
         ## reduce score matrix
         score <- score[head(order(-rowSums(score**2, na.rm = TRUE)), maxterm), , drop = FALSE] ## max number terms

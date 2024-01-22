@@ -74,7 +74,6 @@ functional_plot_reactome_actmap_server <- function(id,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       shiny::observe({
         shiny::req(pgx$X)
         ct <- colnames(pgx$model.parameters$contr.matrix)
@@ -84,7 +83,8 @@ functional_plot_reactome_actmap_server <- function(id,
           session,
           "selected_contrasts",
           choices = ct,
-          selected = selected_ct)
+          selected = selected_ct
+        )
       })
       plot_data <- shiny::reactive({
         df <- getReactomeTable()

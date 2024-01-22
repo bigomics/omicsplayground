@@ -83,22 +83,23 @@ functional_plot_wikipathway_actmap_server <- function(id,
           session,
           "selected_contrasts",
           choices = ct,
-          selected = selected_ct)
+          selected = selected_ct
+        )
       })
       plot_data <- shiny::reactive({
         df <- getWikiPathwayTable()
         meta <- pgx$gset.meta$meta
         shiny::req(df, pgx$X, meta)
-        
+
         shiny::validate(
           need(
             !is.null(input$selected_contrasts),
             "Please select a comparison in plot options."
           )
         )
-        
+
         meta <- meta[input$selected_contrasts]
-        
+
         res <- list(
           df = df,
           meta = meta
