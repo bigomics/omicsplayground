@@ -37,6 +37,12 @@ functional_plot_wikipathway_actmap_ui <- function(
         FALSE
       ),
       "Click to rotate the activation matrix."
+    ),
+    shiny::selectInput(
+      ns("selected_contrasts"),
+      "Select comparisons:",
+      choices = NULL,
+      multiple = TRUE
     )
   )
 
@@ -68,10 +74,31 @@ functional_plot_wikipathway_actmap_server <- function(id,
                                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+      shiny::observe({
+        shiny::req(pgx$X)
+        ct <- colnames(pgx$model.parameters$contr.matrix)
+        ct <- sort(ct)
+        selected_ct <- head(ct, 7)
+        shiny::updateSelectInput(
+          session,
+          "selected_contrasts",
+          choices = ct,
+          selected = selected_ct)
+      })
       plot_data <- shiny::reactive({
         df <- getWikiPathwayTable()
         meta <- pgx$gset.meta$meta
         shiny::req(df, pgx$X, meta)
+        
+        shiny::validate(
+          need(
+            !is.null(input$selected_contrasts),
+            "Please select a comparison in plot options."
+          )
+        )
+        
+        meta <- meta[input$selected_contrasts]
+        
         res <- list(
           df = df,
           meta = meta

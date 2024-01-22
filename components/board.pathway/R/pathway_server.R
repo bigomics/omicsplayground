@@ -214,6 +214,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       "reactome_actmap",
       reactive(pgx$gset.meta$meta),
       getReactomeTable,
+      pgx = pgx,
       plotActivationMatrix,
       WATERMARK
     )
