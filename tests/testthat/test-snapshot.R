@@ -14,6 +14,8 @@ test_that("example data loads with no error",{
   # remove problematic boards
   boards <- boards[!boards %in% c("tcga")]
 
+  authentication = options()$authentication
+
   AppLog <- lapply(boards, function(board){
     # get error from App and save it as error_log
     message(board)
@@ -28,6 +30,7 @@ test_that("example data loads with no error",{
       variant = shinytest2::platform_variant(),
       options = list(
         board = board,
+        authentication = authentication,
         use_example_data = FALSE
       ),
       shiny_args = list(port = 8080)
