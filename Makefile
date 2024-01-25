@@ -32,7 +32,7 @@ docker.run:
 docker.run2:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -it -p 4000:3838 \
-		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
+		-v ~/Playground/pgx:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
 		-v /aws/pgx-share:/omicsplayground/data_shared \
 		-v /aws/pgx-public:/omicsplayground/data_public \
@@ -86,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta14"
+VERSION = "v3.3.0-beta14.9001"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
