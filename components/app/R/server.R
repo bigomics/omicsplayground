@@ -45,7 +45,8 @@ app_server <- function(input, output, session) {
       id = "auth",
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      domain = opt$DOMAIN
+      domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN
     )
     ## } else if (authentication == "firebase") {
     ##   auth <- FirebaseAuthenticationModule(
@@ -71,6 +72,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN,
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
@@ -81,6 +83,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
+      blocked_domain = opt$BLOCKED_DOMAIN,
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
@@ -559,17 +562,17 @@ app_server <- function(input, output, session) {
       ## Dynamically show upon availability in pgx object
       info("[SERVER] disabling extra features")
       tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
-      ##      tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)
       tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
       tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
       tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
+      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
+      for (tab_i in gset_tabs) {
+        tabRequire(PGX, session, tab_i, "gsetX", TRUE)
+        tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
+      }
 
       ## DEVELOPER only tabs (still too alpha)
       info("[SERVER] disabling alpha features")
-      #      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
-      #      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
-      #      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
-
       info("[SERVER] trigger on change dataset done!")
     }
   )
@@ -639,16 +642,16 @@ app_server <- function(input, output, session) {
     # Initialize the reactiveTimer to update every 30 seconds. Set max
     # idle time to 2 minutes.
     lock <- FolderLock$new(
-      poll_secs = 15,
-      max_idle = 60,
+      poll_secs = 30,
+      max_idle = 120,
       show_success = FALSE,
       show_details = FALSE
     )
     lock$start_shiny_observer(auth, session = session)
   }
 
-  #' Track which users are online by repeatedly writing small ID file
-  #' in the ONLINE_DIR folder.
+  #' Track which users are online by repeatedly writing every delta
+  # seconds a small ID file ' in the ONLINE_DIR folder.
   if (isTRUE(opt$ENABLE_HEARTBEAT)) {
     ONLINE_DIR <- file.path(ETC, "online")
     heartbeat <- pgx.start_heartbeat(auth, session, delta = 300, online_dir = ONLINE_DIR)
@@ -888,7 +891,9 @@ app_server <- function(input, output, session) {
   dbg("[MAIN] showing startup modal")
   observeEvent(auth$logged, {
     if (auth$logged) {
-      bsutils::modal_show("startup_modal")
+      shinyjs::delay(1200, {
+        bsutils::modal_show("startup_modal")
+      })
     }
   })
 

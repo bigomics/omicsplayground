@@ -82,12 +82,6 @@ Next, install all necessary R packages and dependencies by running from the omic
     cd omicsplayground
     Rscript dev/requirements.R
     
-As option, you can run the following command in the ``build/`` folder to build the datasets::
-
-    Rscript build-datasets.R
-
-   Note: Building the datasets can vary from minutes to a couple of hours depending on their sizes.
-
 Finally, you can run the omicsplayground platform. You can do this with the Makefile located in the root omicsplayground folder::
 
     make run

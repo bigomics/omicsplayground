@@ -93,6 +93,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     input_genelistUP <- shiny::reactive({
       shiny::req(input$genelistUP)
+
       gg <- input$genelistUP
       gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
@@ -106,7 +107,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
       ## Get current selection of markers/genes
       type <- input$type
-
       level <- "gene"
       features <- toupper(pgx$genes$gene_name)
       xfeatures <- toupper(pgx$genes[rownames(pgx$X), "gene_name"])
@@ -137,9 +137,9 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         probes <- rownames(pgx$gx.meta$meta[[contr]])
 
-        match_input_genes <- all(input_genelistUP() %in% probes)
+        match_input_genes <- any(input_genelistUP() %in% probes)
 
-        if (match_input_genes == FALSE) {
+        if (!match_input_genes) {
           # use human ortholog in case no matched found in proves
           probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
         }
@@ -475,6 +475,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     enrichmentGeneTable <- signature_table_genes_in_signature_server(
       "enrichmentGeneTable",
+      organism = pgx$organism,
       getEnrichmentGeneTable = getEnrichmentGeneTable
     )
   })

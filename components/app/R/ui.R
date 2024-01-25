@@ -40,12 +40,14 @@ app_ui <- function(x) {
 
     VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
-    STARTUP_MESSAGES <- readLines(file.path(ETC, "MESSAGES"))
-    STARTUP_MESSAGES <- STARTUP_MESSAGES[STARTUP_MESSAGES != ""]
-    if (length(STARTUP_MESSAGES) > 5) {
-      sel <- c(1:2, sample(3:length(STARTUP_MESSAGES), 3))
-      STARTUP_MESSAGES <- STARTUP_MESSAGES[sel]
+    ## read startup messages
+    msg <- readLines(file.path(ETC, "MESSAGES"))
+    msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+    if (0 && length(msg) > 5) {
+      sel <- c(1:2, sample(3:length(msg), 3))
+      msg <- msg[sel]
     }
+    STARTUP_MESSAGES <- msg
 
     upgrade.tab <- NULL
     if (opt$AUTHENTICATION == "firebase") {
@@ -70,8 +72,7 @@ app_ui <- function(x) {
       version <- scan(file.path(OPG, "VERSION"), character())[1]
       id <- "maintabs"
       header <- shiny::tagList(
-        # shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.js")),
-        shiny::tags$head(shiny::tags$script("hubspot-embed.js")),
+        shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
         ##    gtag2, ## Google Tag Manager???
         shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
@@ -471,7 +472,11 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         ),
-        shiny::tagList(ui.startupModal(id = "startup_modal", messages = STARTUP_MESSAGES)),
+        shiny::tagList(ui.startupModal(
+          id = "startup_modal",
+          messages = STARTUP_MESSAGES,
+          title = "BigOmics Highlights"
+        )),
         shiny::tagList(footer)
       )
     }

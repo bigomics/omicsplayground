@@ -30,7 +30,7 @@ upload_module_computepgx_server <- function(
     selected_organism,
     auth,
     create_raw_dir,
-    enable_button = TRUE,
+    enable_button = shiny::reactive(TRUE),
     alertready = TRUE,
     height = 720,
     recompute_info,
@@ -108,6 +108,12 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::tags$tr(
                   shiny::tags$td(""),
+                  shiny::tags$td("Organism"),
+                  shiny::tags$td(shiny::tags$h6(selected_organism())),
+                  shiny::tags$td("")
+                ),
+                shiny::tags$tr(
+                  shiny::tags$td(""),
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
@@ -134,6 +140,7 @@ upload_module_computepgx_server <- function(
               )
             )
           ),
+          shiny::br(),
           shiny::br(),
           shiny::conditionalPanel(
             "input.options%2 == 1",
@@ -203,6 +210,12 @@ upload_module_computepgx_server <- function(
                   choiceValues = EXTRA.METHODS,
                   choiceNames = EXTRA.NAMES,
                   selected = EXTRA.SELECTED
+                ),
+                fileInput2(
+                  ns("upload_annot_table"),
+                  shiny::tags$h4("Counts annotation table (optional):"),
+                  multiple = FALSE,
+                  accept = c(".csv")
                 )
               ),
               shiny::wellPanel(
@@ -336,6 +349,7 @@ upload_module_computepgx_server <- function(
       computedPGX <- shiny::reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
+      annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
@@ -390,6 +404,19 @@ upload_module_computepgx_server <- function(
           custom_geneset <<- list(gmt = NULL, info = NULL)
           return(NULL)
         }
+      })
+
+      # react on upload_annot_table
+      shiny::observeEvent(input$upload_annot_table, {
+        # trigger a popup
+
+        annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
+        shinyalert::shinyalert(
+          title = "Annotation table uploaded!",
+          text = "Your annotation table will be incorporated in the analysis.",
+          type = "success",
+          closeOnClickOutside = TRUE
+        )
       })
 
       shiny::observeEvent(input$compute, {
@@ -515,10 +542,17 @@ upload_module_computepgx_server <- function(
         # Define create_pgx function arguments
 
         params <- list(
+          # Key data
           organism = selected_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
+
+          # Extra tables
+          annot_table = annot_table,
+          custom.geneset = custom_geneset,
+
+          # Options
           batch.correct = FALSE,
           normalize = do.normalization,
           prune.samples = TRUE,
@@ -531,7 +565,6 @@ upload_module_computepgx_server <- function(
           cluster.contrasts = FALSE,
           max.genes = max.genes,
           max.genesets = max.genesets,
-          custom.geneset = custom_geneset,
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
@@ -544,7 +577,10 @@ upload_module_computepgx_server <- function(
           description = input$upload_description,
           creator = creator,
           date = this.date,
-          pgx.save.folder = pgx_save_folder
+          pgx.save.folder = pgx_save_folder,
+          ETC = ETC,
+          email = auth$email,
+          sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
         path_to_params <- file.path(raw_dir(), "params.RData")
@@ -553,6 +589,10 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
+
+        # Remove global variables
+        try(rm(annot_table))
+        try(rm(custom_geneset))
 
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
@@ -638,11 +678,7 @@ upload_module_computepgx_server <- function(
               ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               if (!auth$email == "") {
                 gmail_creds <- file.path(ETC, "gmail_creds")
-                sendSuccessMessageToUser(
-                  user_email = auth$email,
-                  pgx_name = ds_name,
-                  path_to_creds = gmail_creds
-                )
+                ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               }
               raw_dir(NULL)
             } else {
@@ -769,7 +805,10 @@ upload_module_computepgx_server <- function(
         }
         ## remove temp dir only if "user_input/raw_" is present in raw_dir
         if (grepl("raw_", raw_dir)) {
-          unlink(raw_dir, recursive = TRUE)
+          # check if no ERROR_ files exist in raw_dir
+          if (length(list.files(raw_dir, pattern = "ERROR_")) == 0) {
+            unlink(raw_dir, recursive = TRUE)
+          }
         }
       }
 

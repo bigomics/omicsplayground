@@ -30,7 +30,7 @@ wgcna_plot_enrichment_server <- function(id,
                                          enrichTable_module,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    enrichPlot.RENDER <- shiny::reactive({
+    enrichPlot.RENDER <- function() {
       df <- enrich_table()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
@@ -48,7 +48,7 @@ wgcna_plot_enrichment_server <- function(id,
         border = NA, col = rev(col1), xlab = "score  (odd.ratio * -log10p)"
       )
       text(0, (nrow(df):1) - 0.48, gs.top, adj = 0, pos = 4, cex = 0.8)
-    })
+    }
 
     PlotModuleServer(
       "plot",

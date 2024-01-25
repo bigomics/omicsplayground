@@ -20,7 +20,7 @@ compare_plot_cum_fc1_ui <- function(id,
   info_text <- "Barplot showing the cumulative fold changes on dataset 1"
 
   PlotModuleUI(ns("plot"),
-    title = "Cumulative foldchange",
+    title = "Foldchange (Dataset 1)",
     plotlib = "plotly",
     label = label,
     info.text = info_text,
@@ -49,31 +49,39 @@ compare_plot_cum_fc1_server <- function(id,
       shiny::req(pgx$X)
       shiny::req(dataset2)
       shiny::req(cum_fc)
-      F <- cum_fc()
-      indexes <- substr(colnames(F), 1, 1)
-      F1 <- F[, indexes == 1, drop = FALSE]
-      F2 <- F[, indexes == 2, drop = FALSE]
 
-      ii <- head(order(-rowMeans(F**2)), 40)
-      ii <- ii[order(rowMeans(F[ii, ]))]
-      F <- F[ii, , drop = FALSE]
+      # Get the cumulative fold changes for dataset 1
+      FC <- cum_fc()
+      indexes <- substr(colnames(FC), 1, 1)
+      F1 <- FC[, indexes == 1, drop = FALSE]
+      ii <- head(order(-rowMeans(FC**2)), 40)
+      ii <- ii[order(rowMeans(FC[ii, ]))]
       F1 <- F1[ii, , drop = FALSE]
-      F2 <- F2[ii, , drop = FALSE]
 
-      fig <- playbase::pgx.barplot.PLOTLY(
-        data = data.frame(
-          x = factor(rownames(F1), levels = rownames(F1)),
-          y = as.numeric(F1)
-        ),
-        x = "x",
-        y = "y",
-        yaxistitle = "Cumulative foldchange",
-        xaxistitle = "Genes",
-        title = "Dataset 1",
-        grouped = FALSE
+      # Prepare input for the plot
+      d <- data.frame(
+        x = factor(rownames(F1), levels = rownames(F1)),
+        y = F1
       )
-
-      fig
+      ycols <- colnames(d[, 2:ncol(d)])
+      fillcolor <- c(RColorBrewer::brewer.pal(6, "Set2"), RColorBrewer::brewer.pal(9, "Set1"))
+      # Call the plot function
+      suppressWarnings(
+        fig <- playbase::pgx.barplot.PLOTLY(
+          data = data.frame(
+            x = factor(rownames(F1), levels = rownames(F1)),
+            y = F1
+          ),
+          x = "x",
+          y = ycols,
+          fillcolor = fillcolor,
+          yaxistitle = "log2FC",
+          xaxistitle = "",
+          title = "",
+          grouped = FALSE
+        )
+      )
+      return(fig)
     })
 
     PlotModuleServer(
@@ -82,7 +90,7 @@ compare_plot_cum_fc1_server <- function(id,
       func = cumfcplot.RENDER,
       csvFunc = cum_fc,
       res = c(80, 98), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
+      pdf.width = 10, pdf.height = 6,
       add.watermark = watermark
     )
   }) ## end of moduleServer

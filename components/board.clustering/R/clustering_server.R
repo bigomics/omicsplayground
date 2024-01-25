@@ -4,7 +4,6 @@
 ##
 
 
-
 ##' Clustering board server module
 ##'
 ##' .. content for \details{} ..
@@ -55,7 +54,7 @@ ClusteringBoard <- function(id, pgx) {
       ))
     })
 
-    shiny::observe({
+    shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
       var.types <- colnames(pgx$Y)
@@ -64,72 +63,103 @@ ClusteringBoard <- function(id, pgx) {
       var.types0 <- c("<none>", "<cluster>", var.types)
       var.types0 <- c("<none>", var.types)
       var.types1 <- c("<none>", var.types)
-      grp <- vv[1]
-      if ("group" %in% var.types) grp <- "group"
-      shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = grp)
+      sel <- grep("^[.]", var.types, invert = TRUE, value = TRUE)[1]
+      if ("condition" %in% tolower(var.types)) {
+        sel <- grep("condition", var.types,
+          value = TRUE,
+          ignore.case = TRUE
+        )
+      }
+      if ("group" %in% tolower(var.types)) {
+        sel <- grep("group", var.types,
+          value = TRUE,
+          ignore.case = TRUE
+        )
+      }
+      shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
-      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
+      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
     })
 
     ## update filter choices upon change of data set
-    shiny::observe({
-      shiny::req(pgx$Y)
-      levels <- playbase::getLevels(pgx$Y)
+    shiny::observeEvent(
+      {
+        list(pgx$X, pgx$Y, pgx$samples)
+      },
+      {
+        shiny::req(pgx$X, pgx$Y, pgx$samples)
+        levels <- playbase::getLevels(pgx$Y)
+        shiny::updateSelectInput(session, "hm_samplefilter", choices = levels)
 
-      shiny::updateSelectInput(session, "hm_samplefilter", choices = levels)
+        ## update defaults??
+        n1 <- nrow(pgx$samples) - 1
+        groupings <- colnames(pgx$samples)
+        groupings <- sort(groupings)
+        contrasts <- playbase::pgx.getContrasts(pgx)
+        shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
 
-      ## update defaults??
-      n1 <- nrow(pgx$samples) - 1
-      groupings <- colnames(pgx$samples)
-
-      groupings <- sort(groupings)
-
-      contrasts <- playbase::pgx.getContrasts(pgx)
-      shiny::updateSelectInput(session, "hm_contrast", choices = contrasts)
-    })
+        ## get clusterings methods
+        clustmethods <- grep("2d$", names(pgx$cluster$pos), value = TRUE)
+        clustmethods <- sort(unique(sub("2d$", "", clustmethods)))
+        selmethod <- ifelse("umap" %in% clustmethods, "umap", clustmethods[1])
+        shiny::updateSelectInput(session, "hm_clustmethod",
+          choices = clustmethods, sel = selmethod
+        )
+      }
+    )
 
     ## update choices upon change of level
-    shiny::observeEvent(c(input$hm_splitvar, input$hm_level), {
-      shiny::req(pgx$families, pgx$gsetX)
-      shiny::req(input$hm_level)
-      choices <- names(pgx$families)
-      if (input$hm_level == "geneset") {
-        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
-        nk <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
-        choices <- names(gset_collections)[nk >= 5]
-        subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
-        choices <- names(subset_choices)
+    shiny::observeEvent(
+      {
+        c(input$hm_splitvar, input$hm_level)
+      },
+      {
+        shiny::req(pgx$families, pgx$gsetX)
+        shiny::req(input$hm_level)
+        choices <- names(pgx$families)
+        if (input$hm_level == "geneset") {
+          gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+          nk <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
+          choices <- names(gset_collections)[nk >= 5]
+          subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
+          choices <- names(subset_choices)
+        }
+        choices <- c("<custom>", "<contrast>", choices)
+        choices <- sort(unique(choices))
+        shiny::updateSelectInput(session, "hm_features", choices = choices)
       }
-      choices <- c("<custom>", "<contrast>", choices)
-      choices <- sort(unique(choices))
-      shiny::updateSelectInput(session, "hm_features", choices = choices)
-    })
+    )
 
     # reactive functions ##############
 
-    shiny::observeEvent(input$hm_splitby, {
-      shiny::req(pgx$X, pgx$samples)
-      if (input$hm_splitby == "none") {
-        return()
+    shiny::observeEvent(
+      {
+        list(input$hm_splitby, pgx$X, pgx$samples)
+      },
+      {
+        shiny::req(pgx$X, pgx$samples, input$hm_splitby)
+        if (input$hm_splitby == "none") {
+          return()
+        }
+        if (input$hm_splitby == "gene") {
+          xgenes <- sort(rownames(pgx$X))
+          shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
+        }
+        if (input$hm_splitby == "phenotype") {
+          cvar <- sort(playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
+          sel <- cvar[1]
+          cvar0 <- grep("^[.]", cvar, value = TRUE, invert = TRUE) ## no estimated vars
+          sel <- head(c(
+            grep("type|family|class|stat", cvar0, ignore.case = TRUE, value = TRUE),
+            cvar0, cvar
+          ), 1)
+          shiny::updateSelectInput(session, "hm_splitvar", choices = cvar, selected = sel)
+        }
       }
-      if (input$hm_splitby == "gene") {
-        xgenes <- sort(rownames(pgx$X))
-        shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
-      }
-      if (input$hm_splitby == "phenotype") {
-        cvar <- sort(playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
-        sel <- cvar[1]
-        cvar0 <- grep("^[.]", cvar, value = TRUE, invert = TRUE) ## no estimated vars
-        sel <- head(c(
-          grep("type|family|class|stat", cvar0, ignore.case = TRUE, value = TRUE),
-          cvar0, cvar
-        ), 1)
-        shiny::updateSelectInput(session, "hm_splitvar", choices = cvar, selected = sel)
-      }
-    })
+    )
 
     ## update filter choices upon change of data set
-    shiny::observe({
+    shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
@@ -148,7 +178,15 @@ ClusteringBoard <- function(id, pgx) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
-      genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
+      ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
+      if (!pgx$organism %in% c("Human", "human")) {
+        genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
+        genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog),
+          genes$gene_name, genes$human_ortholog
+        )
+      } else {
+        genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
+      }
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
@@ -171,8 +209,8 @@ ClusteringBoard <- function(id, pgx) {
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
-
         gg <- pgx$families[[1]]
+
         if (ft == "<all>") {
           gg <- rownames(pgx$X)
         } else if (ft == "<contrast>") {
@@ -182,6 +220,11 @@ ClusteringBoard <- function(id, pgx) {
           fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
           n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
+          if (input$hm_splitby == "gene") {
+            if (!(input$hm_splitvar %in% gg)) {
+              gg <- c(input$hm_splitvar, gg)
+            }
+          }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
         } else if (ft == "<custom>" && ft != "") {
@@ -215,12 +258,22 @@ ClusteringBoard <- function(id, pgx) {
           }
           gg <- gg1
         } else {
-          message("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
+          warning("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
           gg <- NULL
           return(NULL)
         }
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
+        if (length(gg) == 0) {
+          warning("[getFilteredMatrix] warning to genes overlap with filter")
+          return(NULL)
+        }
+
+        if (input$hm_splitby == "gene") {
+          if (!(input$hm_splitvar %in% gg)) {
+            gg <- c(input$hm_splitvar, gg)
+          }
+        }
         jj <- match(toupper(gg), toupper(genes))
         pp <- rownames(pgx$X)[jj]
         zx <- pgx$X[pp, , drop = FALSE]
@@ -271,6 +324,7 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_samplefilter,
       input$hm_filterXY,
       input$hm_filterMitoRibo,
+      input$hm_contrast,
       pgx$X,
       ## input$hm_group,
       splitmap$hm_ntop()
@@ -289,6 +343,7 @@ ClusteringBoard <- function(id, pgx) {
       shiny::req(pgx$X, pgx$samples)
 
       flt <- getFilteredMatrix()
+
       zx <- flt$zx
       if (is.null(flt)) {
         return(NULL)
@@ -653,71 +708,12 @@ ClusteringBoard <- function(id, pgx) {
       return(rho)
     })
 
-    hm_getClusterPositions <- shiny::reactive({
-      sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
-      clustmethod <- "tsne"
-      pdim <- 2
-      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!!
-      pdim <- c(2, 3)[1 + 1 * do3d]
 
-      pos <- NULL
-      force.compute <- FALSE
-      clustmethod <- input$hm_clustmethod
-      clustmethod0 <- paste0(clustmethod, pdim, "d")
-
-      if (clustmethod == "default" && !force.compute) {
-        if (pdim == 2 && !is.null(pgx$tsne2d)) {
-          pos <- pgx$tsne2d[sel.samples, ]
-        } else if (pdim == 3 && !is.null(pgx$tsne3d)) {
-          pos <- pgx$tsne3d[sel.samples, ]
-        }
-      } else if (clustmethod0 %in% names(pgx$cluster$pos)) {
-        shiny::showNotification(paste("switching to ", clustmethod0, " layout...\n"))
-        pos <- pgx$cluster$pos[[clustmethod0]]
-        if (pdim == 2) pos <- pos[sel.samples, 1:2]
-        if (pdim == 3) pos <- pos[sel.samples, 1:3]
-      } else {
-        ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## This should not be necessary anymore as we prefer to
-        ## precompute all clusterings.
-        shiny::showNotification(paste("computing ", clustmethod, "...\n"))
-
-        ntop <- 1000
-        zx <- pgx$X
-        zx <- zx[order(-apply(zx, 1, sd)), , drop = FALSE]
-        if (nrow(zx) > ntop) {
-          zx <- zx[1:ntop, , drop = FALSE]
-        }
-        if ("normalize" %in% input$`PCAplot-hmpca_options`) {
-          zx <- scale(t(scale(t(zx))))
-        }
-        perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
-        perplexity
-        res <- playbase::pgx.clusterMatrix(
-          zx,
-          dims = pdim, perplexity = perplexity,
-          ntop = 999999, prefix = "C",
-          find.clusters = FALSE, kclust = 1,
-          row.center = TRUE, row.scale = FALSE,
-          method = clustmethod
-        )
-        if (pdim == 2) pos <- res$pos2d
-        if (pdim == 3) pos <- res$pos3d
-      }
-
-      pos <- pos[sel.samples, ]
-      pos <- scale(pos) ## scale
-      idx <- NULL
-
-      clust <- list(pos = pos, clust = idx)
-
-      return(clust)
+    selected_samples <- reactive({
+      playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
     })
 
-
-
     # plots ##########
-
     splitmap <- clustering_plot_splitmap_server(
       id = "splitmap",
       pgx = pgx,
@@ -729,10 +725,10 @@ ClusteringBoard <- function(id, pgx) {
 
     clustering_plot_clustpca_server("PCAplot",
       pgx = pgx,
-      hm_getClusterPositions = hm_getClusterPositions,
+      selected_samples = selected_samples,
       hmpca.colvar = shiny::reactive(input$hmpca.colvar),
       hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
-      hm_clustmethod = shiny::reactive(input$hm_clustmethod),
+      clustmethod = shiny::reactive(input$hm_clustmethod),
       watermark = WATERMARK,
       parent = ns
     )
@@ -753,7 +749,8 @@ ClusteringBoard <- function(id, pgx) {
       id = "clust_phenoplot",
       pgx = pgx,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
-      hm_getClusterPositions = hm_getClusterPositions,
+      clustmethod = shiny::reactive(input$hm_clustmethod),
+      selected_samples = selected_samples,
       watermark = WATERMARK
     )
 

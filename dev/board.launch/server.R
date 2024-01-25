@@ -60,7 +60,7 @@ app_server <- function(input, output, session) {
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
       )
-  } else if (authentication == "login-code-no-mail") {
+  } else if (!is.null(authentication) && authentication == "login-code-no-mail") {
       auth <- LoginCodeNoEmailAuthenticationModule(
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
@@ -77,11 +77,11 @@ app_server <- function(input, output, session) {
       username = username,
       email = username
       )
-  } else if (!is.null(authentication) && authentication == "none2") {
+  } else if (!is.null(authentication) && authentication %in% c("none2","none")) {
       ## no authentication but also not showing main modal (enter)
       auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
-  } else if(!is.null(authentication) && authentication == "none") {
-      auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
+  } else {
+      auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
   }
 
   trigger_server <- reactive({

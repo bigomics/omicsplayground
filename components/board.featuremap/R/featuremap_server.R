@@ -77,21 +77,29 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent(input$sigvar, {
-      shiny::req(pgx$samples, input$sigvar)
-      if (input$sigvar %in% colnames(pgx$samples)) {
-        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-        y <- c("<average>", sort(unique(y)))
-        shiny::updateSelectInput(session, "ref_group", choices = y)
+    observeEvent(
+      {
+        list(input$sigvar, pgx$samples)
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
       }
-    })
+    )
 
     observeEvent(
       {
-        list(pgx$X, input$showvar)
+        list(pgx$samples, pgx$contrasts, input$showvar)
       },
       {
-        shiny::req(pgx$samples, pgx$contrasts, input$showvar)
+        shiny::req(pgx$samples)
+        shiny::req(dim(pgx$contrasts))
+        shiny::req(input$showvar)
+
         if (input$showvar == "phenotype") {
           cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
           cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
@@ -125,10 +133,15 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent(input$selcomp, {
-      shiny::req(pgx$samples, input$sigvar, input$showvar)
-      shiny::updateSelectInput(session, "ref_group", choices = " ")
-    })
+    observeEvent(
+      {
+        list(input$selcomp)
+      },
+      {
+        ## shiny::req(pgx$samples, input$sigvar, input$showvar)
+        shiny::updateSelectInput(session, "ref_group", choices = " ")
+      }
+    )
 
 
     ## ================================================================================
@@ -159,7 +172,10 @@ FeatureMapBoard <- function(id, pgx) {
       }
 
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
-
+      if (length(hilight) == 0) {
+        hilight <- NULL
+        hilight2 <- NULL
+      }
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
@@ -273,7 +289,6 @@ FeatureMapBoard <- function(id, pgx) {
         return(input$selcomp)
       }
     })
-
 
     # Gene Map
     featuremap_plot_gene_map_server(

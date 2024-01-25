@@ -52,26 +52,5 @@ html {
 	line-height: 1.4em;	
     }
 	
-
-    #startup_modal {
-	font-size: 1.1em;
-	display: block;
-	padding-left: 0px;
-	height: auto;
-	transform: translateY(25%);
-	padding: 50px;
-    }
-    
-    #startup_modal .modal-dialog {
-	width: 720px;
-    }
-    
-    #startup_modal .carousel {
-	interval: 10s;
-    }
-
-    #startup_modal .carousel-item {
-	transition-duration: 2s;
-    }
     
 }
