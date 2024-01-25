@@ -81,4 +81,13 @@ if (dir.exists(params$pgx.save.folder)) {
 }
 save(pgx, file = pgx_name)
 
+ds_name <- paste0("<b>", params$name, "</b>")
+gmail_creds <- file.path(params$ETC, "gmail_creds")
+
+params$sendSuccessMessageToUser(
+  user_email = params$email,
+  pgx_name = ds_name,
+  path_to_creds = gmail_creds
+)
+
 message("[compute PGX process] : process finished, pgx is saved as", pgx_name,"\n")
