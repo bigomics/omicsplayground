@@ -852,7 +852,6 @@ UploadBoard <- function(id,
       id = "compute",
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(checked_samples()$matrix),
-      ## contrastsRT = shiny::reactive(checked_contrasts()$matrix),
       contrastsRT = shiny::reactive(modified_ct()$contr),
       raw_dir = raw_dir,
       batchRT = batch_vectors,
@@ -912,15 +911,6 @@ UploadBoard <- function(id,
       contrastsRT = reactive(checked_contrasts()$matrix),
       samplesRT = reactive(checked_samples()$matrix)
     )
-
-
-    ## upload_plot_pcaplot_server(
-    ##   "pcaplot",
-    ##   phenoRT = shiny::reactive(uploaded$samples.csv),
-    ##   countsRT = corrected_counts,
-    ##   sel.conditions = sel.conditions,
-    ##   watermark = WATERMARK
-    ## )
 
     ## ------------------------------------------------
     ## Board return object

@@ -78,7 +78,7 @@ ClusteringBoard <- function(id, pgx) {
       }
       shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
-      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 8))
+      shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
     })
 
     ## update filter choices upon change of data set
@@ -185,7 +185,7 @@ ClusteringBoard <- function(id, pgx) {
           genes$gene_name, genes$human_ortholog
         )
       } else {
-        genes <- pgx$genes$gene_name
+        genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
       }
       genesets <- rownames(pgx$gsetX)
 
@@ -712,68 +712,6 @@ ClusteringBoard <- function(id, pgx) {
     selected_samples <- reactive({
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
     })
-
-    hm_getClusterPositions.DEPRECATED <- shiny::reactive({
-      sel.samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
-      clustmethod <- "tsne"
-      pdim <- 2
-      do3d <- ("3D" %in% input$`PCAplot-hmpca_options`) ## HACK WARNING!!
-      pdim <- c(2, 3)[1 + 1 * do3d]
-
-      pos <- NULL
-      force.compute <- FALSE
-      clustmethod <- input$hm_clustmethod
-      clustmethod0 <- paste0(clustmethod, pdim, "d")
-
-      if (clustmethod == "default" && !force.compute) {
-        if (pdim == 2 && !is.null(pgx$tsne2d)) {
-          pos <- pgx$tsne2d[sel.samples, ]
-        } else if (pdim == 3 && !is.null(pgx$tsne3d)) {
-          pos <- pgx$tsne3d[sel.samples, ]
-        }
-      } else if (clustmethod0 %in% names(pgx$cluster$pos)) {
-        pos <- pgx$cluster$pos[[clustmethod0]]
-        if (pdim == 2) pos <- pos[sel.samples, 1:2]
-        if (pdim == 3) pos <- pos[sel.samples, 1:3]
-      } else {
-        ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## This should not be necessary anymore as we prefer to
-        ## precompute all clusterings.
-        shiny::showNotification(paste("computing ", clustmethod, "...\n"))
-
-        ntop <- 1000
-        zx <- pgx$X
-        zx <- zx[order(-apply(zx, 1, sd)), , drop = FALSE]
-        if (nrow(zx) > ntop) {
-          zx <- zx[1:ntop, , drop = FALSE]
-        }
-        if ("normalize" %in% input$`PCAplot-hmpca_options`) {
-          zx <- scale(t(scale(t(zx))))
-        }
-        perplexity <- max(1, min((ncol(zx) - 1) / 3, 30))
-        perplexity
-        res <- playbase::pgx.clusterMatrix(
-          zx,
-          dims = pdim, perplexity = perplexity,
-          ntop = 999999, prefix = "C",
-          find.clusters = FALSE, kclust = 1,
-          row.center = TRUE, row.scale = FALSE,
-          method = clustmethod
-        )
-        if (pdim == 2) pos <- res$pos2d
-        if (pdim == 3) pos <- res$pos3d
-      }
-
-      pos <- pos[sel.samples, ]
-      pos <- scale(pos) ## scale
-      idx <- NULL
-
-      clust <- list(pos = pos, clust = idx)
-
-      return(clust)
-    })
-
-
 
     # plots ##########
     splitmap <- clustering_plot_splitmap_server(

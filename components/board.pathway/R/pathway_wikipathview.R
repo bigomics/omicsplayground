@@ -3,6 +3,7 @@
 wikipathview <- function(wp, val) {
   require(xml2)
 
+  isClassic <- FALSE
   url <- paste0("https://www.wikipathways.org/wikipathways-assets/pathways/", wp, "/", wp, ".svg")
   destfile <- tempfile(fileext = ".svg")
   down <- tryCatch(
@@ -10,7 +11,16 @@ wikipathview <- function(wp, val) {
       download.file(url, destfile)
     },
     error = function(w) {
-      return(NULL)
+      tryCatch(
+        {
+          isClassic <<- TRUE
+          url <- paste0("https://classic.wikipathways.org//wpi/wpi.php?action=downloadFile&type=svg&pwTitle=Pathway:", wp)
+          download.file(url, destfile)
+        },
+        error = function(w) {
+          return(NULL)
+        }
+      )
     }
   ) |> is.null()
 
@@ -39,26 +49,52 @@ wikipathview <- function(wp, val) {
   labels <- xml2::xml_text(label_nodes)
 
   # Find the 'a' parent nodes of the label nodes
+  parent_nodes <- lapply(label_nodes, xml_parent)
+  parent_paths <- lapply(parent_nodes, xml_path)
+  duplicated_parents <- duplicated(parent_paths) | duplicated(parent_paths, fromLast = TRUE)
+  if (any(duplicated_parents)) {
+    duplicated_label_nodes_indices <- which(duplicated_parents)
+  } else {
+    duplicated_label_nodes_indices <- NULL
+  }
+  # Remove duplicated parents
+  if (!is.null(duplicated_label_nodes_indices)) {
+    label_nodes <- label_nodes[-duplicated_label_nodes_indices]
+    labels <- labels[-duplicated_label_nodes_indices]
+  }
   a_nodes <- xml_parent(label_nodes)
 
   # Find the 'rect' children of the 'a' nodes
-  rect_nodes <- xml_find_first(a_nodes, ".//rect")
+  if (isClassic) {
+    rect_nodes <- xml_find_first(a_nodes, ".//path")
+  } else {
+    rect_nodes <- xml_find_first(a_nodes, ".//rect")
+  }
+
   if (all(is.na(rect_nodes))) {
     val <- NULL
   }
 
   if (!is.null(val)) {
-    if (sum(names(val) %in% labels) == 0) {
+    if (sum(names(val) %in% toupper(labels)) == 0) {
       return(NULL)
     }
-    found_indexes <- which(labels %in% names(val))
+    found_indexes <- which(toupper(labels) %in% names(val))
     labels <- labels[found_indexes]
     rect_nodes <- rect_nodes[found_indexes]
-    val <- val[labels]
+    val <- val[toupper(labels)]
     rr <- as.character(round(66 * pmin(1, abs(val / 2.0))**0.5))
     rr <- stringr::str_pad(rr, width = 2, pad = "0")
     colors <- ifelse(val > 0, paste0("#ff0000", rr), paste0("#0055ff", rr))
-    xml_attr(rect_nodes, "fill") <- colors
+    if (isClassic) {
+      current_style <- xml_attr(rect_nodes, "style")
+      new_style <- paste0(current_style, " fill:", colors, ";")
+      lapply(seq_along(new_style), function(x) {
+        xml_set_attr(rect_nodes[x], "style", new_style[x])
+      })
+    } else {
+      xml_attr(rect_nodes, "fill") <- colors
+    }
   }
 
   write_xml(doc, destfile)
