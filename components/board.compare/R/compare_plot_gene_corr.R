@@ -53,9 +53,6 @@ compare_plot_gene_corr_server <- function(id,
 
       pgx1 <- pgx
       pgx2 <- dataset2()
-
-      ct1 <- head(names(pgx1$gx.meta$meta), 2)
-      ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- input.contrast1()
       ct2 <- input.contrast2()
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
@@ -72,9 +69,6 @@ compare_plot_gene_corr_server <- function(id,
       X2 <- pgx2$X[gg, kk]
       Y1 <- pgx1$samples[kk, ]
       Y2 <- pgx2$samples[kk, ]
-
-      dset1 <- paste0("[dataset1]  expression")
-      dset2 <- paste0("[dataset2]  expression")
       dset1 <- paste0("1: expression")
       dset2 <- paste0("2: expression")
 
@@ -91,12 +85,8 @@ compare_plot_gene_corr_server <- function(id,
       ))
 
       ## Set color for points
-      klrpal <- rep(1:7, 99)
       klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
-
       colorby <- input$colorby
-
-
       grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = TRUE)
       grp <- grp[colnames(X1)]
       klr1 <- klrpal[as.integer(grp)]
