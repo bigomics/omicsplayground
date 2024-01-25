@@ -381,7 +381,7 @@ upload_module_computepgx_server <- function(
       # react on upload_annot_table
       shiny::observeEvent(input$upload_annot_table, {
         # trigger a popup
-        
+
         annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
         shinyalert::shinyalert(
           title = "Annotation table uploaded!",
@@ -519,11 +519,11 @@ upload_module_computepgx_server <- function(
           samples = samples,
           counts = counts,
           contrasts = contrasts,
-          
+
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
-          
+
           # Options
           batch.correct = FALSE,
           normalize = do.normalization,
