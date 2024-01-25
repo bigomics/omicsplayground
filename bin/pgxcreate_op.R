@@ -42,14 +42,12 @@ pgx <- playbase::pgx.createPGX(
   only.proteincoding = params$only.proteincoding,
   only.hugo = params$only.hugo,
   convert.hugo = params$convert.hugo,
-  do.cluster = params$do.cluster,
-  cluster.contrasts = params$cluster.contrasts
+  max.genesets = params$max.genesets
 )
 
 pgx <- playbase::pgx.computePGX(
   pgx = pgx,
   max.genes = params$max.genes,
-  max.genesets = params$max.genesets,
   gx.methods = params$gx.methods,
   gset.methods = params$gset.methods,
   custom.geneset = params$custom.geneset,
@@ -57,6 +55,7 @@ pgx <- playbase::pgx.computePGX(
   use.design = params$use.design,        ## no.design+prune are combined
   prune.samples = params$prune.samples,  ##
   do.cluster = params$do.cluster,
+  cluster.contrasts = params$cluster.contrasts,  
   pgx.dir = params$pgx.save.folder,
   libx.dir = params$libx.dir,
   user_input_dir = temp_dir
