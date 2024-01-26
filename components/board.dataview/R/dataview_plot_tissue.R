@@ -117,7 +117,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         data = df,
         y = ~tissue,
         x = ~x,
-        type = "bar",
+        type = "stack",
         orientation = "h",
         color = ~color, ## TODO: use variable that encodes grouping
         colors = omics_pal_d()(length(unique(df$color))),
