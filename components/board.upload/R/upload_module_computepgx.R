@@ -261,19 +261,22 @@ upload_module_computepgx_server <- function(
           ) ## end of conditional panel
         ) ## end of fill Col
       })
-      
+
       shiny::outputOptions(output,
         "UI",
         suspendWhenHidden = FALSE
       ) ## important!!!  Really???
 
-      shiny::observeEvent({
-        list(countsRT(),samplesRT(),contrastsRT())
-      }, {
-        ## invalidate any previously computed pgx
-        computedPGX(NULL)  
-      })
-      
+      shiny::observeEvent(
+        {
+          list(countsRT(), samplesRT(), contrastsRT())
+        },
+        {
+          ## invalidate any previously computed pgx
+          computedPGX(NULL)
+        }
+      )
+
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
           shinyjs::disable(ns("compute"))
@@ -281,7 +284,7 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
-      
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()

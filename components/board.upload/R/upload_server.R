@@ -73,7 +73,7 @@ UploadBoard <- function(id,
 
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
-      
+
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
@@ -120,7 +120,7 @@ UploadBoard <- function(id,
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
         lapply(names(checklist), function(i) checklist[[i]] <- NULL)
       })
-      
+
       if (uploaded_method == "computed") {
         shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
