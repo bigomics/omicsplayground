@@ -3,16 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ComputePgxGadget <- function(counts, samples, contrasts, height = 720) {
-  gadgetize(
-    ComputePgxUI, ComputePgxServer,
-    title = "ComputePGX",
-    countsRT = shiny::reactive(counts),
-    samplesRT = shiny::reactive(samples),
-    contrastsRT = shiny::reactive(contrasts)
-  )
-}
-
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("UI"))
@@ -271,11 +261,19 @@ upload_module_computepgx_server <- function(
           ) ## end of conditional panel
         ) ## end of fill Col
       })
+      
       shiny::outputOptions(output,
         "UI",
         suspendWhenHidden = FALSE
-      ) ## important!!!
+      ) ## important!!!  Really???
 
+      shiny::observeEvent({
+        list(countsRT(),samplesRT(),contrastsRT())
+      }, {
+        ## invalidate any previously computed pgx
+        computedPGX(NULL)  
+      })
+      
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
           shinyjs::disable(ns("compute"))
@@ -283,6 +281,7 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
+      
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -613,7 +612,6 @@ upload_module_computepgx_server <- function(
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
         dbg("[compute PGX process] : process tmpdir = ", tmpdir)
         dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
-
 
         new.job <- list(
           process = processx::process$new(
