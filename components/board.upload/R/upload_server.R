@@ -557,7 +557,7 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
         
         # write date and hour and no error in cross_check samples counts
-        date_hour <- paste0(Sys.Date(), Sys.time())
+        date_hour <- paste0(Sys.time())
         #replece : by _
         date_hour <- gsub(":","_",date_hour)
         if(length(res$checks) == 0){
@@ -602,7 +602,7 @@ UploadBoard <- function(id,
             COUNTS = cc$matrix
           )
          # write date and hour and no error in cross_check samples counts
-          date_hour <- paste0(Sys.Date(), Sys.time())
+          date_hour <- paste0(Sys.time())
           #replece : by _
           date_hour <- gsub(":","_",date_hour)
           if(length(cross_check$checks) == 0){
@@ -661,7 +661,7 @@ UploadBoard <- function(id,
         # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
         # write date and hour and no error in cross_check samples counts
-        date_hour <- paste0(Sys.Date(), Sys.time())
+        date_hour <- paste0(Sys.time())
         #replece : by _
         date_hour <- gsub(":","_",date_hour)
         if(length(res$checks) == 0){
@@ -720,7 +720,7 @@ UploadBoard <- function(id,
           )
 
          # write date and hour and no error in cross_check samples counts
-          date_hour <- paste0(Sys.Date(), Sys.time())
+          date_hour <- paste0(Sys.time())
           #replece : by _
           date_hour <- gsub(":","_",date_hour)
           if(length(cross_check$checks) == 0){
