@@ -493,7 +493,7 @@ UploadBoard <- function(id,
           } else {
             # Convert each element in the list to a line in the text file
             lines <- sapply(names(res$checks), function(name) {
-              paste(name, res$checks[[name]], sep = ": ")
+              paste(name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], res$checks[[name]], sep = ": ")
             })
             writeLines(lines, file.path(raw_dir(), paste(date_hour, "check_counts_FAILED.txt")))
           }
@@ -565,7 +565,7 @@ UploadBoard <- function(id,
         } else {
           # Convert each element in the list to a line in the text file
           lines <- sapply(names(res$checks), function(name) {
-            paste(name, res$checks[[name]], sep = ": ")
+           paste(name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], res$checks[[name]], sep = ": ")
           })
           writeLines(lines, file.path(raw_dir(), paste(date_hour, "check_samples_FAILED.txt")))
         }
@@ -610,7 +610,8 @@ UploadBoard <- function(id,
           } else {
             # Convert each element in the list to a line in the text file
             lines <- sapply(names(cross_check$checks), function(name) {
-              paste(name, cross_check$checks[[name]], sep = ": ")
+              paste(name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], cross_check$checks[[name]], sep = ": ")
+
             })
             writeLines(lines, file.path(raw_dir(), paste(date_hour, "cross_check_samples_counts_FAILED.txt")))
           }
@@ -669,7 +670,7 @@ UploadBoard <- function(id,
         } else {
           # Convert each element in the list to a line in the text file
           lines <- sapply(names(res$checks), function(name) {
-            paste(name, res$checks[[name]], sep = ": ")
+            paste(name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], res$checks[[name]], sep = ": ")
           })
           writeLines(lines, file.path(raw_dir(), paste(date_hour, "check_counts_FAILED.txt")))
         }
@@ -728,7 +729,7 @@ UploadBoard <- function(id,
           } else {
             # Convert each element in the list to a line in the text file
             lines <- sapply(names(cross_check$checks), function(name) {
-              paste(name, cross_check$checks[[name]], sep = ": ")
+              paste(name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], cross_check$checks[[name]], sep = ": ")
             })
             writeLines(lines, file.path(raw_dir(), paste(date_hour, "cross_check_samples_contrasts_FAILED.txt")))
           }
