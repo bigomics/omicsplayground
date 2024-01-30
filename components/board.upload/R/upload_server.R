@@ -484,6 +484,20 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        # write date and hour and no error in cross_check samples counts
+          date_hour <- paste0(Sys.Date(), Sys.time())
+          #replece : by _
+          date_hour <- gsub(":","_",date_hour)
+          if(length(res$checks) == 0){
+            writeLines("", file.path(raw_dir(), paste(date_hour, "check_counts_PASSED.txt")))
+          } else {
+            # Convert each element in the list to a line in the text file
+            lines <- sapply(names(res$checks), function(name) {
+              paste(name, res$checks[[name]], sep = ": ")
+            })
+            writeLines(lines, file.path(raw_dir(), paste(date_hour, "check_counts_FAILED.txt")))
+          }
+        
         # store check and data regardless of it errors
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -541,6 +555,20 @@ UploadBoard <- function(id,
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
+        
+        # write date and hour and no error in cross_check samples counts
+        date_hour <- paste0(Sys.Date(), Sys.time())
+        #replece : by _
+        date_hour <- gsub(":","_",date_hour)
+        if(length(res$checks) == 0){
+          writeLines("", file.path(raw_dir(), paste(date_hour, "check_samples_PASSED.txt")))
+        } else {
+          # Convert each element in the list to a line in the text file
+          lines <- sapply(names(res$checks), function(name) {
+            paste(name, res$checks[[name]], sep = ": ")
+          })
+          writeLines(lines, file.path(raw_dir(), paste(date_hour, "check_samples_FAILED.txt")))
+        }
         # store check and data regardless of it errors
         checklist[["samples.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -573,6 +601,19 @@ UploadBoard <- function(id,
             SAMPLES = checked,
             COUNTS = cc$matrix
           )
+         # write date and hour and no error in cross_check samples counts
+          date_hour <- paste0(Sys.Date(), Sys.time())
+          #replece : by _
+          date_hour <- gsub(":","_",date_hour)
+          if(length(cross_check$checks) == 0){
+            writeLines("", file.path(raw_dir(), paste(date_hour, "cross_check_samples_counts_PASSED.txt")))
+          } else {
+            # Convert each element in the list to a line in the text file
+            lines <- sapply(names(cross_check$checks), function(name) {
+              paste(name, cross_check$checks[[name]], sep = ": ")
+            })
+            writeLines(lines, file.path(raw_dir(), paste(date_hour, "cross_check_samples_counts_FAILED.txt")))
+          }
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
           if (cross_check$PASS) {
@@ -619,6 +660,20 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
         # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
+        # write date and hour and no error in cross_check samples counts
+        date_hour <- paste0(Sys.Date(), Sys.time())
+        #replece : by _
+        date_hour <- gsub(":","_",date_hour)
+        if(length(res$checks) == 0){
+          writeLines("", file.path(raw_dir(), paste(date_hour, "check_counts_PASSED.txt")))
+        } else {
+          # Convert each element in the list to a line in the text file
+          lines <- sapply(names(res$checks), function(name) {
+            paste(name, res$checks[[name]], sep = ": ")
+          })
+          writeLines(lines, file.path(raw_dir(), paste(date_hour, "check_counts_FAILED.txt")))
+        }
+        
         if (res$PASS) {
           checked <- res$df
           status <- "OK"
@@ -663,6 +718,20 @@ UploadBoard <- function(id,
             SAMPLES = cc$matrix,
             CONTRASTS = checked
           )
+
+         # write date and hour and no error in cross_check samples counts
+          date_hour <- paste0(Sys.Date(), Sys.time())
+          #replece : by _
+          date_hour <- gsub(":","_",date_hour)
+          if(length(cross_check$checks) == 0){
+            writeLines("", file.path(raw_dir(), paste(date_hour, "cross_check_samples_contrasts_PASSED.txt")))
+          } else {
+            # Convert each element in the list to a line in the text file
+            lines <- sapply(names(cross_check$checks), function(name) {
+              paste(name, cross_check$checks[[name]], sep = ": ")
+            })
+            writeLines(lines, file.path(raw_dir(), paste(date_hour, "cross_check_samples_contrasts_FAILED.txt")))
+          }
           checklist[["samples_contrasts"]]$checks <- cross_check$checks
           if (cross_check$PASS) {
             checked <- res$df
