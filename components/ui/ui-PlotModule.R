@@ -435,7 +435,7 @@ PlotModuleServer <- function(id,
         cd <- session$clientData
         sprintf(
           "%s/?plotURL=%s//%s:%s%s%s",
-          "editor/index.html",
+          "custom/editor/index.html",
           cd$url_protocol,
           cd$url_hostname,
           cd$url_port,
