@@ -214,13 +214,14 @@ write_check_output <- function(
   date_hour <- paste0(Sys.time())
   #replece : by _
   date_hour <- gsub(":","_",date_hour)
+  browser()
   if(length(checks_list) == 0){
     write(paste(date_hour, file_type,"PASS",sep=":  "), file.path(raw_dir, "CHECKS_OUTPUT"), append = TRUE)
   } else {
     # Convert each element in the list to a line in the text file
     lines <- sapply(names(checks_list), function(name) {
-      paste(date_hour, file_type,"FAILED", name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], checks_list[[name]], sep = ": ")
+      paste(date_hour, file_type,"FAILED", name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error==name,"checks"], paste(checks_list[[name]], collapse = "__"), sep = ": ")
     })
-    write(lines, file.path(raw_dir,"CHECKS_OUTPUT"), append = TRUE)
+    write(unlist(lines), file.path(raw_dir,"CHECKS_OUTPUT"), append = TRUE)
   }
 }
