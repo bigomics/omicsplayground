@@ -2,7 +2,7 @@
 
 # Run tests
 # run target sass in makefile
-make sass
+
 R -e "options(authentication='none'); x <- shiny::runTests(assert = FALSE); writeLines(as.character(all(x[[2]])), 'test_result.txt')"
 
 # Read test results from file
