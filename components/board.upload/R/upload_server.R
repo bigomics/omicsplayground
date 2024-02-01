@@ -484,12 +484,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-        # write date and hour and no error in cross_check samples counts
-          date_hour <- paste0(Sys.Date(), Sys.time())
-          #replece : by _
-          date_hour <- gsub(":","_",date_hour)
           write_check_output(res$checks, "COUNTS", raw_dir())
-        
         # store check and data regardless of it errors
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
