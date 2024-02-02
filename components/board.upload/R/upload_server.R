@@ -484,6 +484,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+          write_check_output(res$checks, "COUNTS", raw_dir())
         # store check and data regardless of it errors
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -541,6 +542,8 @@ UploadBoard <- function(id,
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
+        
+        write_check_output(res$checks, "SAMPLES", raw_dir())
         # store check and data regardless of it errors
         checklist[["samples.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -573,6 +576,8 @@ UploadBoard <- function(id,
             SAMPLES = checked,
             COUNTS = cc$matrix
           )
+          write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
+
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
           if (cross_check$PASS) {
@@ -619,6 +624,8 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
         # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
+        write_check_output(res$checks, "CONTRASTS", raw_dir())
+        
         if (res$PASS) {
           checked <- res$df
           status <- "OK"
@@ -663,6 +670,8 @@ UploadBoard <- function(id,
             SAMPLES = cc$matrix,
             CONTRASTS = checked
           )
+
+          write_check_output(cross_check$checks, "SAMPLES_CONTRASTS", raw_dir())
           checklist[["samples_contrasts"]]$checks <- cross_check$checks
           if (cross_check$PASS) {
             checked <- res$df
