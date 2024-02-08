@@ -12,5 +12,5 @@ record_plot_download <- function(plotName) {
   }
   # Convert the log to a string format
   PLOT_DOWNLOAD_LOGGERStr <- paste(names(PLOT_DOWNLOAD_LOGGER$log), PLOT_DOWNLOAD_LOGGER$log, sep = " = ", collapse = "; ")
-  PLOT_DOWNLOAD_LOGGER$str <- PLOT_DOWNLOAD_LOGGERStr  # Update the log with the string representation
+  PLOT_DOWNLOAD_LOGGER$str <- PLOT_DOWNLOAD_LOGGERStr # Update the log with the string representation
 }
