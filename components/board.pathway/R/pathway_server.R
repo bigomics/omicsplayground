@@ -53,13 +53,24 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "WikiPathways" = list(disable = NULL),
+      "Reactome" = list(disable = NULL),
+      "GO graph" = list(disable = NULL),
+      "Enrichment Map (beta)" = list(disable = NULL)
+    )
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
 
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================
     ## ================================================================================
 
-    plotActivationMatrix <- function(meta, df, normalize = 1, nterms = 40,
-                                     nfc = 10, tl.cex = 1.0, row.nchar = 60) {
+    plotActivationMatrix <- function(meta, df, normalize = 1, nterms = 40, rotate = 0,
+                                     nfc = 10, tl.cex = 1.0, row.nchar = 50) {
       fx <- sapply(meta, function(x) x$meta.fx)
       qv <- sapply(meta, function(x) x$meta.q)
       rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
@@ -103,12 +114,12 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
         ignore.case = TRUE
       ))
       rownames(score2) <- gsub("(_.*$)", "", rownames(score2))
-      #
       rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)
       colnames(score2) <- playbase::shortstring(colnames(score2), 30)
       colnames(score2) <- paste0(colnames(score2), " ")
 
-      bmar <- 0 + pmax(50 - nrow(score2), 0) * 0.3
+      if (rotate) score2 <- t(score2)
+
       par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
 
       corrplot::corrplot(
@@ -123,10 +134,6 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       )
     }
 
-
-    ## =========================================================================
-    ## KEGG pathways
-    ## =========================================================================
 
     ## =========================================================================
     ## Get Reactome table
@@ -146,16 +153,6 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       reactome.available <- gsub("^.*reactome_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
       reactome.gsets <- grep("R-HSA", rownames(pgx$gsetX), value = TRUE)
       reactome.ids <- gsub(".*R-HSA", "R-HSA", reactome.gsets)
-      ## sometimes no REACTOME in genesets...
-      if (length(reactome.ids) == 0) {
-        shinyalert::shinyalert(
-          title = "No REACTOME terms in enrichment results",
-          text = "",
-          type = "warning"
-        )
-        df <- data.frame()
-        return(df)
-      }
 
       ## select those of which we have SGBN files
       jj <- which(!is.na(reactome.ids) &
@@ -180,6 +177,16 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       )
       df <- df[!duplicated(df$reactome.id), ]
       df <- df[order(-abs(df$logFC)), ]
+      ## sometimes no REACTOME in genesets...
+      if (nrow(df) == 0) {
+        shinyalert::shinyalert(
+          title = "No REACTOME terms in enrichment results",
+          text = "",
+          type = "warning"
+        )
+        df <- data.frame()
+        return(df)
+      }
       return(df)
     })
 
@@ -187,7 +194,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       df <- getReactomeTable()
       do.filter <- FALSE
       do.filter <- input$fa_filtertable
-      if (do.filter) df <- df[which(df$meta.q < 0.999), ]
+      if (do.filter) {
+        filter_value <- as.numeric(input$fa_filtertable_value)
+        df <- df[which(df$meta.q < filter_value), ]
+      }
       return(df)
     })
 
@@ -204,6 +214,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       "reactome_actmap",
       reactive(pgx$gset.meta$meta),
       getReactomeTable,
+      pgx = pgx,
       plotActivationMatrix,
       WATERMARK
     )
@@ -243,7 +254,8 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       "GO_table",
       pgx = pgx,
       fa_contrast = reactive(input$fa_contrast),
-      scrollY = 180,
+      fa_filtertable = reactive(input$fa_filtertable),
+      fa_filtertable_value = reactive(input$fa_filtertable_value),
       selected_gsetmethods = selected_gsetmethods
     )
 
@@ -304,7 +316,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       df <- getWikiPathwayTable()
       do.filter <- FALSE
       do.filter <- input$fa_filtertable
-      if (do.filter) df <- df[which(df$meta.q < 0.999), ]
+      if (do.filter) {
+        filter_value <- as.numeric(input$fa_filtertable_value)
+        df <- df[which(df$meta.q < filter_value), ]
+      }
       return(df)
     })
 

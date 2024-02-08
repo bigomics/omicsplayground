@@ -45,7 +45,7 @@ SignatureInputs <- function(id) {
         withTooltip(
           shiny::selectInput(ns("type"),
             label = "Signature type:",
-            choices = c("<custom>", "contrast", "hallmark", "KEGG")
+            choices = c("contrast", "<custom>", "hallmark", "KEGG")
           ),
           "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.",
           placement = "top", options = list(container = "body")

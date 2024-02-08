@@ -67,10 +67,11 @@ remove.pkgs <- function(pkgs, force=FALSE) {
         INSTALLED.PKGS <<- setdiff(INSTALLED.PKGS, pkg)
     }
 }
-install.github <- function(repo, force=FALSE) {
+install.github <- function(repo, force=FALSE, dependencies=NA) {
     pkg <- sub(".*/","",repo)
     if(!require(pkg, character.only=TRUE) || force) {
-      devtools::install_github(repo, upgrade="never", build_vignettes=FALSE, force=force)
+      devtools::install_github(repo, upgrade="never", build_vignettes=FALSE,
+                               force=force, dependencies=dependencies)
     } else {
         cat("package",repo,"already installed\n")
     }
@@ -115,7 +116,7 @@ pkg.extra <- c(
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
-  'blastula','shinytest2'
+  'blastula','shinytest2','sodium','cookies'
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -127,7 +128,7 @@ pkg.later <- c(
     "gputools","Seurat","EPIC","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
-    "infercnv","pathview",
+    "infercnv","pathview","reticulate",
     "mygene","diptest","edgeR","DESeq2"
   )
 
@@ -173,10 +174,15 @@ install.github('JohnCoene/bsutils')
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
 install.github('bigomics/PCSF', force=TRUE)
-install.github('bigomics/shinyChatR')
+install.github('bigomics/shinyChatR', force=TRUE)
 install.github('bigomics/fgsea')
 install.github('ropensci/iheatmapr')
-
+install.github('rstudio/bslib@v0.5.1',dependencies=FALSE)
+install.github('rstudio/htmltools',dependencies=FALSE)
+install.github('bigomics/biomaRt',dependencies=FALSE)
+install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
+install.github('renozao/xbioc',dependencies=TRUE)
+ 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
 ##---------------------------------------------------------------------
@@ -192,14 +198,11 @@ if(1) {
 ## proteus
 devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
 
-#install rliger and dependencies (riverplot)
+# add some more
 devtools::install_github("cran/riverplot")
 BiocManager::install("rliger")
-
-# install maptools
 devtools::install_github("cran/maptools")
-
-INSTALLED.PKGS <- c(INSTALLED.PKGS, "Proteus")
+INSTALLED.PKGS <- c(INSTALLED.PKGS, "Proteus", "riverplot", "rliger")
 
 ##---------------------------------------------------------------------
 ## make sure LOCAL ones are preferred and overwriting previously
@@ -214,8 +217,10 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 ## Install Kaleido for plotly
 ##---------------------------------------------------------------------
 
-install.pkg('reticulate')
-reticulate::install_miniconda(force=TRUE)
+## Install a clean reticulate and miniconda 
+install.packages('reticulate', force=TRUE)
+unlink("~/.local/share/r-miniconda", recursive=TRUE)
+reticulate::install_miniconda()
 reticulate::conda_install('r-reticulate', 'python-kaleido')
 reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
 reticulate::use_miniconda('r-reticulate')

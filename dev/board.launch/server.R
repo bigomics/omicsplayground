@@ -60,6 +60,15 @@ app_server <- function(input, output, session) {
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
       )
+  } else if (!is.null(authentication) && authentication == "login-code-no-mail") {
+      auth <- LoginCodeNoEmailAuthenticationModule(
+      id = "auth",
+      mail_creds = file.path(ETC, "gmail_creds"),
+      domain = opt$DOMAIN,
+      credentials_file = credentials_file,
+      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+      allow_new_users = opt$ALLOW_NEW_USERS
+      )
   } else if (!is.null(authentication) && authentication == "shinyproxy") {
       username <- Sys.getenv("SHINYPROXY_USERNAME")
       auth <- NoAuthenticationModule(
@@ -68,16 +77,17 @@ app_server <- function(input, output, session) {
       username = username,
       email = username
       )
-  } else if (!is.null(authentication) && authentication == "none2") {
+  } else if (!is.null(authentication) && authentication %in% c("none2","none")) {
       ## no authentication but also not showing main modal (enter)
       auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
-  } else if(!is.null(authentication) && authentication == "none") {
-      auth <- NoAuthenticationModule(id = "auth", show_modal = TRUE)
+  } else {
+      auth <- NoAuthenticationModule(id = "auth", show_modal = FALSE)
   }
 
   trigger_server <- reactive({
         req(input$pgx_path)
         pgx <- playbase::pgx.load(input$pgx_path)
+        pgx <- playbase::pgx.initialize(pgx)
         server <- board_server_fn(board, pgx = pgx)
 
   })

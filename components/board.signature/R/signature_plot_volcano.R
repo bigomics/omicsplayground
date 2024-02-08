@@ -49,6 +49,7 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       shiny::req(sigCalculateGSEA())
 
@@ -66,12 +67,29 @@ signature_plot_volcano_server <- function(id,
       meta <- playbase::pgx.getMetaMatrix(pgx, methods = mm)
       fc <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
-      sel <- enrichmentGeneTable$rows_selected()
 
+      score <- abs(F) * -log(qv)
+      gset <- data.table::chmatch(toupper(gsea$gset), toupper(pgx$genes[, "gene_name"]))
+      gset <- pgx$genes[gset, "gene_name"]
+      gset <- intersect(gset, rownames(F))
+
+      sel <- enrichmentGeneTable$rows_selected()
       # Get gene selected labels
       if (length(sel)) {
         df <- getEnrichmentGeneTable()
         sel.gene <- df$gene[sel]
+        ## sel.gene <- df$symbol[sel]
+        ## # Use symbol/feature if in gset
+        ## if (sel.gene %in% gset) {
+        ##   gset <- sel.gene
+        ## } else {
+        ##   sel.gene <- df$feature[sel]
+        ## }
+      }
+
+      if (ncol(F) == 1) {
+        cex.main <- 1.2
+>>>>>>> master
       } else {
         score <- abs(fc) * -log(qv)
         top_n <- function(x, n = 30) {

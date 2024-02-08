@@ -13,6 +13,9 @@ message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \
 message("                                          |___/ |___/                              ")
 message("\n\n\n")
 
+shiny::addResourcePath("custom", "www")
+
+
 
 message("[GLOBAL] reading global.R ...")
 
@@ -142,6 +145,7 @@ message("************************************************")
 
 ## MAIN SOURCING FUNCTION. SOURCES ALL R/SHINY CODE. ONLY SOURCE IF
 ## RUN IN SAME FOLDER.
+
 if (file.exists("global.R")) {
   source(file.path(OPG, "components/00SourceAll.R"), chdir = TRUE)
 }
@@ -159,6 +163,11 @@ if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
   auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
   message("[GLOBAL] overriding PLAYGROUND_AUTHENTICATION = ", auth)
   opt$AUTHENTICATION <- auth
+}
+if (Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH") != "") {
+  apache_cookie_path <- Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH")
+  message("[GLOBAL] overriding PLAYGROUND_APACHE_COOKIE_PATH = ", apache_cookie_path)
+  opt$APACHE_COOKIE_PATH <- apache_cookie_path
 }
 
 ## copy to global.R environment
@@ -205,3 +214,6 @@ main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
 
 shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
+
+## Initialize plot download logger
+PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")

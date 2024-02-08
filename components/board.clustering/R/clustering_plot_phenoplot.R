@@ -28,7 +28,7 @@ clustering_plot_phenoplot_ui <- function(
     info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    ##    download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
   )
@@ -37,7 +37,8 @@ clustering_plot_phenoplot_ui <- function(
 clustering_plot_phenoplot_server <- function(id,
                                              pgx,
                                              selected_phenotypes,
-                                             hm_getClusterPositions,
+                                             clustmethod,
+                                             selected_samples,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -47,43 +48,24 @@ clustering_plot_phenoplot_server <- function(id,
       shiny::req(pgx$Y)
 
       ## get t-SNE positions
-      clust <- hm_getClusterPositions()
-      pos <- clust$pos
-
-      if (ncol(pos) == 3) {
-        colnames(pos) <- c("x", "y", "z")
-      } else if (ncol(pos) == 2) {
-        colnames(pos) <- c("x", "y")
-      }
-
-      Y <- pgx$Y[rownames(pos), , drop = FALSE]
-      pheno <- selected_phenotypes()
-
-      # ## don't show these...
-      # removed the code below because it was removing the batch and sample, overwritting user wishes
-      # on selected_phenotypes
-      # pheno <- grep("batch|sample|donor|repl|surv", pheno,
-      #   invert = TRUE, ignore.case = TRUE, value = TRUE
-      # )
-      Y <- Y[, pheno, drop = FALSE]
-
+      clustmethod1 <- paste0(clustmethod(), "2d")
+      pos <- pgx$cluster$pos[[clustmethod1]]
+      colnames(pos) <- c("x", "y")
+      jj <- selected_samples()
+      kk <- selected_phenotypes()
+      pos <- pos[jj, ]
+      Y <- pgx$Y[jj, kk, drop = FALSE]
       ## complete dataframe for downloading
       df <- data.frame(pos, Y)
-
-      return(
-        list(
-          df = df,
-          pheno = pheno,
-          showlabels = input$showlabels
-        )
-      )
+      return(df)
     })
 
-    render_plotly <- function(pd, pheno, cex = 1) {
-      pheno <- pd[["pheno"]]
-      Y <- pd[["df"]][, pheno, drop = FALSE]
-      showlabels <- pd[["showlabels"]]
-      pos <- pd[["df"]][, c("x", "y")]
+    create_plots <- function(cex = 1) {
+      pd <- plot_data()
+      showlabels <- input$showlabels
+      pheno <- selected_phenotypes()
+      Y <- pd[, pheno, drop = FALSE]
+      pos <- pd[, c("x", "y")]
 
       ## points size depending on how many points we have
       ncex <- cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))
@@ -94,7 +76,6 @@ clustering_plot_phenoplot_server <- function(id,
       plt <- list()
       for (i in 1:min(20, length(pheno))) {
         ## ------- set colors
-        colvar <- factor(Y[, 1])
         colvar <- factor(Y[, pheno[i]])
         colvar[which(colvar %in% c(NA, "", " ", "NA", "na"))] <- NA
         colvar <- factor(as.character(colvar))
@@ -129,32 +110,8 @@ clustering_plot_phenoplot_server <- function(id,
       return(plt)
     }
 
-    plotly.RENDER.save <- function() {
-      pd <- plot_data()
-      pheno <- pd[["pheno"]]
-      plt <- render_plotly(pd, pheno, cex = 0.85)
-
-      nr <- min(3, length(plt))
-      if (length(plt) >= 6) nr <- 4
-      if (length(plt) >= 12) nr <- 5
-
-      fig <- plotly::subplot(
-        plt,
-        nrows = nr,
-        margin = 0.04
-      ) %>%
-        plotly_default() %>%
-        plotly::layout(
-          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-        )
-
-      return(fig)
-    }
-
     plotly.RENDER <- function() {
-      pd <- plot_data()
-      pheno <- pd[["pheno"]]
-      plt <- render_plotly(pd, pheno, cex = 0.85)
+      plt <- create_plots(cex = 0.85)
       nc <- floor(sqrt(length(plt)))
       cw <- 12 / nc
       page <- bslib::layout_columns(col_widths = cw, !!!plt)
@@ -162,9 +119,7 @@ clustering_plot_phenoplot_server <- function(id,
     }
 
     plotly_modal.RENDER <- function() {
-      pd <- plot_data()
-      pheno <- pd[["pheno"]]
-      plt <- render_plotly(pd, pheno, cex = 1.3)
+      plt <- create_plots(cex = 1.3)
       nc <- ceiling(sqrt(length(plt)))
       cw <- 12 / nc
       page <- bslib::layout_columns(col_widths = cw, !!!plt)
@@ -180,7 +135,8 @@ clustering_plot_phenoplot_server <- function(id,
       func2 = plotly_modal.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(85), ## resolution of plots
-      pdf.width = 6, pdf.height = 9,
+      pdf.width = 6,
+      pdf.height = 9,
       add.watermark = watermark
     )
   })

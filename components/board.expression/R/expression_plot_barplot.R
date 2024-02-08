@@ -32,7 +32,7 @@ expression_plot_barplot_ui <- function(
       "Show logarithmic (log2CPM) expression values.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", TRUE),
+    withTooltip(shiny::checkboxInput(ns("barplot_showothers"), "show others", FALSE),
       "Show the 'others' class (if any)",
       placement = "right", options = list(container = "body")
     )
@@ -75,14 +75,13 @@ expression_plot_barplot_server <- function(id,
     # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      comp <- comp() # input$gx_contrast
+      comp <- comp()
       grouped <- input$barplot_grouped
       logscale <- input$barplot_logscale
       showothers <- input$barplot_showothers
       sel <- sel()
       res <- res()
 
-      #
       shiny::validate(shiny::need(!is.null(sel()), "Please select gene in the table."))
 
       psel <- rownames(res)[sel]
@@ -118,8 +117,8 @@ expression_plot_barplot_server <- function(id,
       }
 
       fig <- playbase::pgx.plotExpression(
-        pd[["pgx"]],
-        pd[["gene"]],
+        pgx = pd[["pgx"]],
+        probe = pd[["gene"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
         showothers = pd[["showothers"]],

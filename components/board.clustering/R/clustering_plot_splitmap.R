@@ -113,6 +113,7 @@ clustering_plot_splitmap_server <- function(id,
 
       filt <- getTopMatrix()
       shiny::req(filt)
+
       zx <- filt$mat
       annot <- filt$annot
       zx.idx <- filt$idx
@@ -212,6 +213,7 @@ clustering_plot_splitmap_server <- function(id,
       ## iHeatmap based splitted heatmap #########
 
       shiny::req(pgx$genes)
+
       ## -------------- variable to split samples
       scale <- "none"
       if (input$hm_scale == "relative") scale <- "row.center"
@@ -221,6 +223,7 @@ clustering_plot_splitmap_server <- function(id,
 
       ## extract from plot data
       pd <- plot_data()
+
       filt <- pd[["filt"]]
       X <- pd[["zx"]]
       annot <- pd[["annot"]]
@@ -232,12 +235,14 @@ clustering_plot_splitmap_server <- function(id,
 
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
-
       rownames(annotF) <- rownames(annot)
-      if (length(selected_phenotypes()) == 0) {
+
+      sel <- selected_phenotypes()
+      sel <- intersect(sel, colnames(annotF))
+      if (length(sel) == 0) {
         annotF <- NULL
       } else {
-        annotF <- annotF[, selected_phenotypes(), drop = FALSE]
+        annotF <- annotF[, sel, drop = FALSE]
       }
 
       colcex <- as.numeric(input$hm_cexCol)
@@ -290,7 +295,8 @@ clustering_plot_splitmap_server <- function(id,
         func = x$func,
         csvFunc = plot_data,
         res = c(80, 95), # resolution of plots
-        pdf.width = 10, pdf.height = 8,
+        pdf.width = 10,
+        pdf.height = 8,
         add.watermark = watermark,
         card = x$card
       )

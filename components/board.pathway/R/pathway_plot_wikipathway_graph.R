@@ -77,7 +77,6 @@ functional_plot_wikipathway_graph_server <- function(id,
         if (is.null(pgx)) {
           return(NULL.IMG)
         }
-
         if (is.null(comparison) || length(comparison) == 0) {
           return(NULL.IMG)
         }
@@ -85,34 +84,34 @@ functional_plot_wikipathway_graph_server <- function(id,
           return(NULL.IMG)
         }
 
-        ## get fold-change vector
-        fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
-        pp <- rownames(pgx$gx.meta$meta[[comparison]])
-
-        if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-          names(fc) <- pgx$genes[pp, "hgnc_symbol"]
-        } else {
-          names(fc) <- toupper(pgx$genes[pp, "gene_name"])
-        }
-        fc <- fc[order(-abs(fc))]
-        fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
-
         if (is.null(df)) {
           return(NULL.IMG)
         }
 
+        ## get fold-change vector
+        fc <- pgx$gx.meta$meta[[comparison]]$meta.fx
+        pp <- rownames(pgx$gx.meta$meta[[comparison]])
+
+        # Rename to human orthologs for non-human species and sort
+
+        if (pgx$organism != "Human") {
+          names(fc) <- pgx$genes[pp, "human_ortholog"]
+        } else {
+          names(fc) <- pgx$genes[pp, "symbol"]
+        }
+        fc <- fc[order(-abs(fc))]
+        fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
+
+        # Get selected row and path id
         sel.row <- wikipathway_table$rows_selected()
         if (is.null(sel.row) || length(sel.row) == 0) {
           return(NULL.IMG)
         }
         sel.row <- as.integer(sel.row)
-
-        pathway.id <- "WP179"
         pathway.name <- pw.genes <- "x"
         if (is.null(sel.row) || length(sel.row) == 0) {
           return(NULL.IMG)
         }
-
         if (!is.null(sel.row) && length(sel.row) > 0) {
           pathway.id <- df[sel.row, "pathway.id"]
           pathway.name <- df[sel.row, "pathway"]
@@ -125,6 +124,7 @@ functional_plot_wikipathway_graph_server <- function(id,
           progress$set(message = "Rendering pathway...", value = 0.33)
         }
 
+        # Get pathway image using WPID and fc values
         svg <- wikipathview(wp = pathway.id, val = fc)
         if (is.null(svg)) {
           return(NULL)

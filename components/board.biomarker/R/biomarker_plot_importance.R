@@ -45,6 +45,7 @@ biomarker_plot_importance_ui <- function(
 #' @export
 biomarker_plot_importance_server <- function(id,
                                              calcVariableImportance,
+                                             is_computed,
                                              watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -53,7 +54,7 @@ biomarker_plot_importance_server <- function(id,
         # placing a shiny::req ; that way we can handle
         # the case on the plotting function and display a
         # help message.
-        res <- tryCatch(
+        out <- tryCatch(
           {
             calcVariableImportance()
           },
@@ -62,12 +63,11 @@ biomarker_plot_importance_server <- function(id,
           }
         )
 
-        if (is.null(res)) {
+        if (is.null(out)) {
           return(NULL)
         }
-
         res <- list(
-          R = res$R
+          R = out$R
         )
         return(res)
       })
@@ -75,11 +75,13 @@ biomarker_plot_importance_server <- function(id,
       plot.RENDER <- function() {
         res <- plot_data()
 
-        if (is.null(res) || length(res) == 0) {
-          frame()
-          text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
-          return()
-        }
+        ## if (is.null(res) || length(res) == 0) {
+        ##   frame()
+        ##   text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
+        ##   return()
+        ## }
+        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
+        shiny::req(res)
 
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]

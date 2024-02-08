@@ -73,6 +73,15 @@ IntersectionBoard <- function(
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Pairwise scatter" = list(disable = NULL),
+      "Signature clustering" = list(disable = c("comparisons"))
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
 
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
@@ -86,7 +95,6 @@ IntersectionBoard <- function(
       shiny::req(pgx$X)
 
       sel <- names(pgx$gset.meta$meta)
-
       if (input$level == "geneset") {
         gsetmethods <- c("gsva", "camera", "fgsea")
         gsetmethods <- selected_gsetmethods()
@@ -133,8 +141,6 @@ IntersectionBoard <- function(
           apply(unclass(x$q)[, gxmethods, drop = FALSE], 1, max)
         })
         rownames(qv0) <- rownames(pgx$gx.meta$meta[[1]])
-        dim(fc0)
-        dim(qv0)
 
         ## filter with active filter
         sel.probes <- rownames(fc0) ## default to all probes

@@ -61,10 +61,6 @@ expression_table_fctable_server <- function(id,
         return(NULL)
       }
 
-      #
-      #
-      #
-      #
       F <- metaFC()
       Q <- metaQ()
 
@@ -95,7 +91,6 @@ expression_table_fctable_server <- function(id,
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
       qv.cols <- grep("^q", colnames(df))
       fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
-      #
 
       dt <- DT::datatable(df,
         rownames = FALSE,

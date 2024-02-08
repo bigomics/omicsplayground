@@ -3,16 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ComputePgxGadget <- function(counts, samples, contrasts, height = 720) {
-  gadgetize(
-    ComputePgxUI, ComputePgxServer,
-    title = "ComputePGX",
-    countsRT = shiny::reactive(counts),
-    samplesRT = shiny::reactive(samples),
-    contrastsRT = shiny::reactive(contrasts)
-  )
-}
-
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("UI"))
@@ -27,9 +17,10 @@ upload_module_computepgx_server <- function(
     batchRT,
     metaRT,
     lib.dir,
+    selected_organism,
     auth,
     create_raw_dir,
-    enable_button = TRUE,
+    enable_button = shiny::reactive(TRUE),
     alertready = TRUE,
     height = 720,
     recompute_info,
@@ -73,7 +64,7 @@ upload_module_computepgx_server <- function(
       output$UI <- shiny::renderUI({
         shiny::fillCol(
           height = height,
-          flex = c(0.2, NA, 0.05, 1.3),
+          flex = c(0.2, NA, 0.05, 1.5),
           shiny::br(),
           shiny::fluidRow(
             shiny::column(
@@ -107,6 +98,12 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::tags$tr(
                   shiny::tags$td(""),
+                  shiny::tags$td("Organism"),
+                  shiny::tags$td(shiny::tags$h6(selected_organism())),
+                  shiny::tags$td("")
+                ),
+                shiny::tags$tr(
+                  shiny::tags$td(""),
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
@@ -129,10 +126,11 @@ upload_module_computepgx_server <- function(
                 shiny::actionLink(ns("options"), "Computation options",
                   icon = icon("cog", lib = "glyphicon")
                 ),
-                style = "padding-right: 80px;"
+                style = "padding-right: 150px;"
               )
             )
           ),
+          shiny::br(),
           shiny::br(),
           shiny::conditionalPanel(
             "input.options%2 == 1",
@@ -142,7 +140,7 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  shiny::HTML("<h4>Feature filtering:</h4><br/>"),
+                  shiny::HTML("<h4>Probe filtering:</h4>"),
                   choiceValues =
                     c(
                       "only.hugo",
@@ -153,11 +151,11 @@ upload_module_computepgx_server <- function(
                     ),
                   choiceNames =
                     c(
-                      "convert to HUGO",
-                      "protein-coding only",
-                      "remove Rik/ORF/LOC genes",
-                      "remove not-expressed",
-                      "skip normalization"
+                      "Transform probes to gene symbols",
+                      "Protein-coding only",
+                      "Remove Rik/ORF/LOC genes",
+                      "Remove not-expressed",
+                      "Skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -172,7 +170,7 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
-                  shiny::HTML("<h4>Gene tests:</h4><br/>"),
+                  shiny::HTML("<h4>Gene tests:</h4>"),
                   GENETEST.METHODS,
                   selected = GENETEST.SELECTED
                 )
@@ -181,7 +179,15 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("gset_methods"),
-                  shiny::HTML("<h4>Enrichment methods:</h4><br/>"),
+                  shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Enrichment methods:</h4>
+                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='flex-button'>
+                        <i class='fas fa-info-circle'></i>
+                      </a>
+                    </div>
+                  "),
+                  # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
                   GENESET.METHODS,
                   selected = GENESET.SELECTED
                 ),
@@ -190,15 +196,22 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("extra_methods"),
-                  shiny::HTML("<h4>Extra analysis:</h4><br/>"),
+                  shiny::HTML("<h4>Extra analysis:</h4>"),
                   choiceValues = EXTRA.METHODS,
                   choiceNames = EXTRA.NAMES,
                   selected = EXTRA.SELECTED
+                ),
+                shiny::checkboxGroupInput(
+                  ns("dev_options"),
+                  shiny::HTML("<br><h4>Developer options:</h4>"),
+                  choiceValues = DEV.METHODS,
+                  choiceNames = DEV.NAMES,
+                  selected = DEV.SELECTED
                 )
               ),
               shiny::wellPanel(
                 fileInput2(
-                  ns("upload_custom_genesets"),
+                  ns("upload_gmt"),
                   shiny::tagList(
                     shiny::tags$h4("Custom genesets (.gmt) file:"),
                     shiny::tags$h6(
@@ -217,22 +230,52 @@ upload_module_computepgx_server <- function(
                   multiple = FALSE,
                   accept = c(".txt", ".gmt")
                 ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  shiny::HTML("<h4>Developer options:</h4><br/>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
+                fileInput2(
+                  ns("upload_annot_table"),
+                  shiny::tags$h4("Probe annotation (optional):"),
+                  multiple = FALSE,
+                  accept = c(".csv")
                 )
               )
-            ) ## end of fillRow
+            ), ## end of fillRow
+            tags$style(HTML("#upload-compute-gset_methods-label { width: -webkit-fill-available; }")),
+            tags$style(HTML("
+            .flex-button {
+              display:block;
+              width:25px;
+              height:25px;
+              line-height:25px;
+              border-radius: 50%;
+              color:#fff;
+              text-align:center;
+              background: #555777;
+              box-shadow: 0 0 3px gray;
+              font-size:20px;
+              font-weight:bold;
+            }
+            .flex-button:hover {
+              color:#fff;
+              background: black;
+            }
+            "))
           ) ## end of conditional panel
         ) ## end of fill Col
       })
+
       shiny::outputOptions(output,
         "UI",
         suspendWhenHidden = FALSE
-      ) ## important!!!
+      ) ## important!!!  Really???
+
+      shiny::observeEvent(
+        {
+          list(countsRT(), samplesRT(), contrastsRT())
+        },
+        {
+          ## invalidate any previously computed pgx
+          computedPGX(NULL)
+        }
+      )
 
       shiny::observeEvent(enable_button(), {
         if (!enable_button()) {
@@ -241,6 +284,7 @@ upload_module_computepgx_server <- function(
           shinyjs::enable(ns("compute"))
         }
       })
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -303,54 +347,55 @@ upload_module_computepgx_server <- function(
       ## ------------------------------------------------------------------
 
       # Define a reactive value to store the process object
-      process_obj <- reactiveVal(NULL)
+      PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
       process_counter <- reactiveVal(0)
-      reactive_timer <- reactiveTimer(20000) # Triggers every 10000 milliseconds (20 second)
-      custom.geneset <- reactiveValues(gmt = NULL, info = NULL)
-      store_error_from_process <- reactiveValues(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
+      custom_geneset <- list(gmt = NULL, info = NULL)
+      annot_table <- NULL
+      processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
-      shiny::observeEvent(input$upload_custom_genesets, {
-        filePath <- input$upload_custom_genesets$datapath
-
-        fileName <- input$upload_custom_genesets$name
+      ## react on custom GMT upload
+      shiny::observeEvent(input$upload_gmt, {
+        filePath <- input$upload_gmt$datapath
+        fileName <- input$upload_gmt$name
+        GSET_CHECK <- FALSE
 
         if (endsWith(filePath, ".txt") || endsWith(filePath, ".gmt")) {
-          custom.geneset$gmt <- playbase::read.gmt(filePath)
-          # perform some basic checks
-          gmt.length <- length(custom.geneset$gmt)
-          gmt.is.list <- is.list(custom.geneset$gmt)
+          gmt <- playbase::read.gmt(filePath)
 
-          # clean genesets
-
-          # eventually we can add multiple files, but for now we only support one
-          # just add more gmts to the list below
-          custom.geneset$gmt <- list(CUSTOM = custom.geneset$gmt)
-
-          # convert gmt to OPG standard
-          custom.geneset$gmt <- playbase::clean_gmt(custom.geneset$gmt, "CUSTOM")
+          # Clean genesets. eventually we can add multiple gmt files, but
+          # for now we only support one
+          gmt <- list(CUSTOM = gmt)
+          gmt <- playbase::clean_gmt(gmt, "CUSTOM")
 
           # compute custom geneset stats
-          custom.geneset$gmt <- custom.geneset$gmt[!duplicated(names(custom.geneset$gmt))]
-          custom.geneset$info$GSET_SIZE <- sapply(custom.geneset$gmt, length)
+          gmt <- gmt[!duplicated(names(gmt))]
+          gset_size <- sapply(gmt, length)
+          gmt <- gmt[gset_size >= 3] ## how many?
 
-          GSET_CHECK <- any(as.logical(unlist(custom.geneset$info$GSET_SIZE)))
 
-          # tell user that custom genesets are "ok"
-          # we could perform an additional check to verify that items in lists are genes
-          if (gmt.length > 0 && gmt.is.list && GSET_CHECK) {
+          # an additional check to verify that items in lists are
+          # genes
+          if (length(gmt) > 0 && is.list(gmt)) {
+            ## put in parent variable
+            info <- list(GSET_SIZE = gset_size)
+            custom_geneset <<- list(gmt = gmt, info = info)
+
+            # tell user that custom genesets are "ok"
             shinyalert::shinyalert(
               title = "Custom genesets uploaded!",
               text = "Your genesets will be incorporated in the analysis.",
               type = "success",
               closeOnClickOutside = TRUE
             )
+            GSET_CHECK <- TRUE
           }
         }
 
-        # error message if custom genesets not detected or GSET_CHECK is FALSE
-        # add https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html to guidelins, target blank as html
-        if (is.null(custom.geneset$gmt) || !GSET_CHECK) {
+        # error message if custom genesets not detected or GSET_CHECK is FALSE add
+        # https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html
+        # to guidelins, target blank as html
+        if (is.null(custom_geneset$gmt) || !GSET_CHECK) {
           shinyalert::shinyalert(
             title = "Invalid custom genesets",
             text = "Please update a tsv file. See guidelines <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html' target='_blank'>here</a>.",
@@ -358,9 +403,22 @@ upload_module_computepgx_server <- function(
             html = TRUE,
             closeOnClickOutside = TRUE
           )
-          custom.geneset <- list(gmt = NULL, info = NULL)
+          custom_geneset <<- list(gmt = NULL, info = NULL)
           return(NULL)
         }
+      })
+
+      # react on upload_annot_table
+      shiny::observeEvent(input$upload_annot_table, {
+        # trigger a popup
+
+        annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
+        shinyalert::shinyalert(
+          title = "Annotation table uploaded!",
+          text = "Your annotation table will be incorporated in the analysis.",
+          type = "success",
+          closeOnClickOutside = TRUE
+        )
       })
 
       shiny::observeEvent(input$compute, {
@@ -372,6 +430,15 @@ upload_module_computepgx_server <- function(
           shinyalert::shinyalert(
             title = "ERROR",
             text = "Compute is disabled",
+            type = "error"
+          )
+          return(NULL)
+        }
+        if (!isValidFileName(input$upload_name)) {
+          message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
+          shinyalert::shinyalert(
+            title = "Invalid name",
+            text = "Please remove any slashes (/) from the name",
             type = "error"
           )
           return(NULL)
@@ -466,7 +533,6 @@ upload_module_computepgx_server <- function(
         # button), or user click compute a second time
         if (is.null(raw_dir())) {
           raw_dir(create_raw_dir(auth))
-          dbg("[compute PGX process] : tempFile", raw_dir())
         }
 
         dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
@@ -475,13 +541,20 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
-        # get rid of reactive container
-        custom.geneset <- list(gmt = custom.geneset$gmt, info = custom.geneset$info)
         # Define create_pgx function arguments
+
         params <- list(
+          # Key data
+          organism = selected_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
+
+          # Extra tables
+          annot_table = annot_table,
+          custom.geneset = custom_geneset,
+
+          # Options
           batch.correct = FALSE,
           normalize = do.normalization,
           prune.samples = TRUE,
@@ -494,7 +567,6 @@ upload_module_computepgx_server <- function(
           cluster.contrasts = FALSE,
           max.genes = max.genes,
           max.genesets = max.genesets,
-          custom.geneset = custom.geneset,
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
@@ -507,7 +579,10 @@ upload_module_computepgx_server <- function(
           description = input$upload_description,
           creator = creator,
           date = this.date,
-          pgx.save.folder = pgx_save_folder
+          pgx.save.folder = pgx_save_folder,
+          ETC = ETC,
+          email = auth$email,
+          sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
         path_to_params <- file.path(raw_dir(), "params.RData")
@@ -516,6 +591,10 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
+
+        # Remove global variables
+        try(rm(annot_table))
+        try(rm(custom_geneset))
 
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
@@ -536,48 +615,43 @@ upload_module_computepgx_server <- function(
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
         dbg("[compute PGX process] : process tmpdir = ", tmpdir)
         dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
-        ## append to process list
-        process_obj(
-          append(
-            process_obj(),
-            list(
-              ## new background computation job
-              list(
-                process = processx::process$new(
-                  "Rscript",
-                  args = c(script_path, tmpdir),
-                  supervise = TRUE,
-                  stderr = "|",
-                  stdout = "|"
-                ),
-                number = process_counter(),
-                dataset_name = gsub("[ ]", "_", input$upload_name),
-                raw_dir = raw_dir(),
-                stderr = c(),
-                stdout = c()
-              )
-            )
-          )
+
+        new.job <- list(
+          process = processx::process$new(
+            "Rscript",
+            args = c(script_path, tmpdir),
+            supervise = TRUE,
+            stderr = "|",
+            stdout = "|"
+          ),
+          number = process_counter(),
+          dataset_name = gsub("[ ]", "_", input$upload_name),
+          raw_dir = raw_dir(),
+          stderr = c(),
+          stdout = c()
         )
-      })
+
+        ## append to process list
+        PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
+      }) ## end observe input$compute
 
       check_process_status <- reactive({
         if (process_counter() == 0) {
           return(NULL)
         }
 
+        # Re-execute this reactive expression after 30 seconds
+        shiny::invalidateLater(30 * 1000, session)
+
         # When computing PGX, reset inactivity counter
         # to avoid session closure while computing
         inactivityCounter(0)
 
-        reactive_timer()
-        active_processes <- process_obj()
         completed_indices <- c()
-
-        for (i in seq_along(active_processes)) {
-          active_obj <- active_processes[[i]]
-          current_process <- active_processes[[i]]$process
-          raw_dir <- active_processes[[i]]$raw_dir
+        for (i in seq_along(PROCESS_LIST)) {
+          active_obj <- PROCESS_LIST[[i]]
+          current_process <- PROCESS_LIST[[i]]$process
+          raw_dir <- PROCESS_LIST[[i]]$raw_dir
 
           process_status <- current_process$get_exit_status()
           process_alive <- current_process$is_alive()
@@ -602,76 +676,73 @@ upload_module_computepgx_server <- function(
               # Process completed successfully
               dbg("[compute PGX process] : process completed")
               on_process_completed(raw_dir = raw_dir, nr = nr)
-              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
-
+              ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               if (!auth$email == "") {
                 gmail_creds <- file.path(ETC, "gmail_creds")
-                sendSuccessMessageToUser(
-                  user_email = auth$email,
-                  pgx_name = ds_name_bold,
-                  path_to_creds = gmail_creds
-                )
+                ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               }
               raw_dir(NULL)
             } else {
               on_process_error(nr = nr)
 
-              log_pgx_compute <- ""
-
+              errors <- ""
               if (length(active_obj$stderr) > 0) {
                 ## Copy the error to the stderr of main app
                 message("Standard error from processx:")
                 err <- paste0("[processx.", nr, ":stderr] ", active_obj$stderr)
-                # save err to log_pgx_compute, separated by new lines
-                log_pgx_compute <- paste0(log_pgx_compute, "Error:", "<br>")
-                # append err to log_pgx_compute
+                # save err to errors, separated by new lines
+                errors <- paste0(errors, "Error:", "<br>")
+                # append err to errors
                 err <- paste0(err, cat = "<br>")
-                log_pgx_compute <- c(log_pgx_compute, err, "<br>")
+                errors <- c(errors, err, "<br>")
               }
               if (length(active_obj$stdout) > 0) {
                 ## Copy the error to the stderr of main app
                 cat("Standard output from processx:")
                 out <- paste0("[processx.", nr, ":stdout] ", active_obj$stdout)
                 out <- paste0(out, "<br>")
-                log_pgx_compute <- c(log_pgx_compute, "Output:", "<br>")
-                log_pgx_compute <- c(log_pgx_compute, out, "<br>")
+                errors <- c(errors, "Output:", "<br>")
+                errors <- c(errors, out, "<br>")
               }
 
-              ds_name_bold <- paste0("<b>", active_processes[[i]]$dataset_name, "</b>")
-              title <- shiny::HTML(paste("The dataset", ds_name_bold, "could not be computed."))
+              ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
+              title <- shiny::HTML(paste("The dataset", ds_name, "could not be computed."))
 
-              # pass error data to reactive
-              store_error_from_process$error <- log_pgx_compute
-              store_error_from_process$pgx_name <- ds_name_bold
-              store_error_from_process$user_email <- auth$email
-              store_error_from_process$pgx_path <- raw_dir
+              # pass error data to parent variable
+              processx_error <<- list(
+                error      = errors,
+                pgx_name   = ds_name,
+                user_email = auth$email,
+                pgx_path   = raw_dir
+              )
+
 
               # if auth$email is empty, then the user is not logged in
               if (auth$email == "") {
                 error_popup(
-                  title = "Error:",
-                  header = title,
+                  title   = "Error:",
+                  header  = title,
                   message = "No email detected! Contact CS not possible!",
-                  error = shiny::HTML(log_pgx_compute),
-                  btn_id = "send_data_to_support__",
+                  error   = shiny::HTML(errors),
+                  btn_id  = "send_data_to_support__",
                   onclick = NULL
                 )
               } else {
                 error_popup(
-                  title = "Error:",
-                  header = title,
+                  title   = "Error:",
+                  header  = title,
                   message = "Would you like to get support from our customer service?",
-                  error = shiny::HTML(log_pgx_compute),
-                  btn_id = "send_data_to_support__",
+                  error   = shiny::HTML(errors),
+                  btn_id  = "send_data_to_support__",
                   onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
                 )
                 # send error message to user
                 gmail_creds <- file.path(ETC, "gmail_creds")
 
                 sendErrorMessageToUser(
-                  user_email = store_error_from_process$user_email,
-                  pgx_name = store_error_from_process$pgx_name,
-                  error = paste0(store_error_from_process$error, collapse = ""),
+                  user_email = processx_error$user_email,
+                  pgx_name = processx_error$pgx_name,
+                  error = paste0(processx_error$error, collapse = ""),
                   path_to_creds = gmail_creds
                 )
               }
@@ -700,8 +771,7 @@ upload_module_computepgx_server <- function(
 
         # Remove completed processes from the list
         if (length(completed_indices) > 0) {
-          active_processes <- active_processes[-completed_indices]
-          process_obj(active_processes)
+          PROCESS_LIST <<- PROCESS_LIST[-completed_indices]
         }
         return(NULL)
       })
@@ -726,7 +796,7 @@ upload_module_computepgx_server <- function(
         ## dataset_name <- paste0(gsub("[ ]", "_", input$upload_name),".pgx")
         dataset_name <- paste0(params$name, ".pgx")
         result_pgx <- file.path(pgx_save_folder_px, dataset_name)
-        dbg("[computePGX:on_process_completed] : result_pgx = ", result_pgx)
+        dbg("[computePGX:on_process_completed] : saved result_pgx in ", result_pgx)
 
         if (file.exists(result_pgx)) {
           pgx <- playbase::pgx.load(result_pgx) ## always pgx
@@ -736,7 +806,10 @@ upload_module_computepgx_server <- function(
         }
         ## remove temp dir only if "user_input/raw_" is present in raw_dir
         if (grepl("raw_", raw_dir)) {
-          unlink(raw_dir, recursive = TRUE)
+          # check if no ERROR_ files exist in raw_dir
+          if (length(list.files(raw_dir, pattern = "ERROR_")) == 0) {
+            unlink(raw_dir, recursive = TRUE)
+          }
         }
       }
 
@@ -745,10 +818,13 @@ upload_module_computepgx_server <- function(
         process_counter(process_counter() - 1) # stop the timer
       }
 
-      ## what does this do???
+      ## This starts the check_process_status() reactive that gets
+      ## invalidated/run every some minutes..
       observe(check_process_status())
 
-      observe({
+      ## upon every new process check if we need to show the spinner
+      ## or not, and if we are allowed to show the compute button.
+      observeEvent(process_counter(), {
         if (process_counter() > 0) {
           shiny::insertUI(
             selector = "#current_dataset",
@@ -778,19 +854,17 @@ upload_module_computepgx_server <- function(
         gmail_creds <- file.path(ETC, "gmail_creds")
 
         sendErrorMessageToCustomerSuport(
-          user_email = store_error_from_process$user_email,
-          pgx_name = store_error_from_process$pgx_name,
-          pgx_path = store_error_from_process$pgx_path,
-          error = paste0(store_error_from_process$error, collapse = ""),
+          user_email = processx_error$user_email,
+          pgx_name = processx_error$pgx_name,
+          pgx_path = processx_error$pgx_path,
+          error = paste0(processx_error$error, collapse = ""),
           path_to_creds = gmail_creds
         )
 
         # close modal
-
         shinyjs::runjs("document.getElementById('sendLogModal').style.display = 'none';")
 
         # alert user that a message was sent to CS
-
         shinyalert::shinyalert(
           title = "Message sent",
           text = "We are sorry you had a problem. We will get back to you as soon as possible.",

@@ -3,6 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+#' Enrichment Scatter Plot UI
+#'
+#' @description
+#' Creates the UI for the enrichment scatter plot module.
+#'
+#' @param id Module ID string
+#' @param title Plot title
+#' @param label Plot label
+#' @param info.text Info text to be displayed
+#' @param caption Caption text
+#' @param height Plot height
+#' @param width Plot width
+#'
+#' @return
+#' A Shiny Module UI definition
 enrichment_plot_scatter_ui <- function(
     id,
     title,
@@ -25,6 +41,20 @@ enrichment_plot_scatter_ui <- function(
   )
 }
 
+
+#' Enrichment Scatter Plot Server Function
+#'
+#' @description Server function for generating an enrichment analysis
+#' scatter plot in a Shiny app.
+#'
+#' @param id Shiny module id
+#' @param pgx PGX object
+#' @param getGSEAReactive Reactive expression for getting GSEA results
+#' @param getGeneSelected Reactive expression for selected gene
+#' @param getGsetSelected Reactive expression for selected gene set
+#' @param watermark Add watermark to plot? Logical
+#'
+#' @return None. Generates scatter plot.
 enrichment_plot_scatter_server <- function(id,
                                            pgx,
                                            gene_selected,
@@ -44,28 +74,23 @@ enrichment_plot_scatter_server <- function(id,
       grp.name <- c(grp.name, "other")
       xsign <- sign(exp.matrix[, comp0])
       xgroup <- grp.name[1 * (xsign > 0) + 2 * (xsign < 0) + 1 * (xsign == 0)]
-      table(xgroup)
 
       names(xgroup) <- rownames(pgx$Y)
-      table(xgroup)
       samples <- names(which(exp.matrix[, comp0] != 0))
 
       xgroup1 <- xgroup[samples]
-      table(xgroup1)
       ngrp <- length(unique(xgroup1))
       grp.klr <- c("grey90", rep(RColorBrewer::brewer.pal(12, "Paired"), 99)[1:ngrp])
       names(grp.klr) <- c("other", as.character(sort(unique(xgroup1))))
-      grp.klr
 
       xgroup2 <- as.character(xgroup)
       xgroup2[which(!(xgroup %in% xgroup1))] <- "other"
       sample.klr <- grp.klr[xgroup2]
       names(sample.klr) <- rownames(pgx$samples)
-      table(sample.klr)
       list(samples = sample.klr, group = grp.klr)
     }
 
-    basesubplot_scatter.RENDER <- shiny::reactive({
+    basesubplot_scatter.RENDER <- function(){
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
       shiny::req(pgx$X)
@@ -99,9 +124,7 @@ enrichment_plot_scatter_server <- function(id,
         cex.lab = 1, pch = 19, cex = 1.0 * cex1, cex.main = 0.85
       )
       abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")
-    p <- grDevices::recordPlot()
-    p
-    })
+    }
 
     plotlysubplot_scatter <- function(){
       shiny::req(pgx$X)

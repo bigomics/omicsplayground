@@ -69,7 +69,7 @@ error_popup <- function(title, header, message, error, btn_id, onclick) {
 
 sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
-    info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    message("[sendErrorMessageToCustomerSuport] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
 
@@ -111,13 +111,13 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
 
 sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
-    info("[sendShareMessage] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    message("[sendErrorMessageToUser] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
 
   user_email <- trimws(user_email)
   if (is.null(user_email) || user_email == "") {
-    info("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
+    message("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
     return(NULL)
   }
 
@@ -156,14 +156,14 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
 
 sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmail_creds") {
   if (!file.exists(path_to_creds)) {
-    info("[sendSuccessMessageToUser] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    message("[sendSuccessMessageToUser] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
     return(NULL)
   }
 
   user_email <- trimws(user_email)
 
   if (is.null(user_email) || user_email == "") {
-    info("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
+    message("[sendSuccessMessageToUser] WARNING : mail not sent. invalid or empty email")
     return(NULL)
   }
 
@@ -191,4 +191,15 @@ sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmai
     subject = paste("Omics Playground: Dataset computed successfully!"),
     credentials = blastula::creds_file(path_to_creds)
   )
+}
+
+isValidFileName <- function(name) {
+  if (name == "") {
+    return(FALSE)
+  }
+  pattern <- "/"
+  if (grepl(pattern, name)) {
+    return(FALSE)
+  }
+  return(TRUE)
 }

@@ -24,7 +24,7 @@ FeatureMapBoard <- function(id, pgx) {
       dbg("[FeatureMapBoard] input$tabs = ", input$tabs)
     })
 
-
+    # Observer (1):
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Feature Map Analysis</strong>"),
@@ -33,12 +33,25 @@ FeatureMapBoard <- function(id, pgx) {
       ))
     })
 
-    ## observe 1
+    # Observer (2): tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Gene" = list(
+        enable = c("filter_genes"),
+        disable = c("filter_gsets")
+      ),
+      "Geneset" = list(
+        enable = c("filter_gsets"),
+        disable = c("filter_genes")
+      )
+    )
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
+    # Observer (3):
     shiny::observeEvent(
       {
-        pgx$name
-        pgx$X
-        pgx$gsetX
+        list(pgx$name, pgx$X, pgx$gsetX)
       },
       {
         shiny::req(pgx$X, pgx$gsetX)
@@ -56,6 +69,7 @@ FeatureMapBoard <- function(id, pgx) {
         gsetcats <- c("<all>", gsetcats)
         sel0 <- grep("^H$|hallmark", gsetcats, ignore.case = TRUE, value = TRUE)
         sel0 <- "<all>"
+
         if (length(sel0) == 0) sel0 <- 1
         shiny::updateSelectInput(session, "filter_gsets",
           choices = gsetcats, selected = sel0
@@ -65,11 +79,27 @@ FeatureMapBoard <- function(id, pgx) {
 
     observeEvent(
       {
-        pgx$X
-        input$showvar
+        list(input$sigvar, pgx$samples)
       },
       {
-        shiny::req(pgx$samples, pgx$contrasts)
+        shiny::req(pgx$samples, input$sigvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
+      }
+    )
+
+    observeEvent(
+      {
+        list(pgx$samples, pgx$contrasts, input$showvar)
+      },
+      {
+        shiny::req(pgx$samples)
+        shiny::req(dim(pgx$contrasts))
+        shiny::req(input$showvar)
+
         if (input$showvar == "phenotype") {
           cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
           cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
@@ -91,8 +121,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     observeEvent(
       {
-        input$showvar
-        input$sigvar
+        list(pgx$samples, input$showvar, input$sigvar)
       },
       {
         shiny::req(pgx$samples, input$sigvar, input$showvar)
@@ -104,10 +133,15 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent(input$selcomp, {
-      shiny::req(pgx$samples, input$sigvar, input$showvar)
-      shiny::updateSelectInput(session, "ref_group", choices = " ")
-    })
+    observeEvent(
+      {
+        list(input$selcomp)
+      },
+      {
+        ## shiny::req(pgx$samples, input$sigvar, input$showvar)
+        shiny::updateSelectInput(session, "ref_group", choices = " ")
+      }
+    )
 
 
     ## ================================================================================
@@ -138,7 +172,10 @@ FeatureMapBoard <- function(id, pgx) {
       }
 
       if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
-
+      if (length(hilight) == 0) {
+        hilight <- NULL
+        hilight2 <- NULL
+      }
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
@@ -159,7 +196,7 @@ FeatureMapBoard <- function(id, pgx) {
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
-        opc.low = opc.low,
+        # opc.low = opc.low,
         title = title,
         source = source,
         key = rownames(pos)
@@ -226,7 +263,6 @@ FeatureMapBoard <- function(id, pgx) {
           hilight2 = NULL,
           hilight.col = NULL,
           opacity = opacity,
-          ## xlab = xlab, ylab = ylab,
           xlab = "", ylab = "",
           xaxs = xaxs,
           yaxs = yaxs,
@@ -253,7 +289,6 @@ FeatureMapBoard <- function(id, pgx) {
         return(input$selcomp)
       }
     })
-
 
     # Gene Map
     featuremap_plot_gene_map_server(

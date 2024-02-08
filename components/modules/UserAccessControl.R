@@ -9,7 +9,9 @@
 pgx.record_access <- function(user,
                               action,
                               comment = "",
+                              comment2 = "",
                               session = session,
+                              num_datasets = "",
                               time = Sys.time(),
                               access.file = ACCESS_LOGFILE) {
   if (is.null(user) || is.null(action)) {
@@ -49,7 +51,9 @@ pgx.record_access <- function(user,
     session = session_id,
     hostname = hostname,
     client.ip = remote_addr,
-    comment = comment
+    comment = comment,
+    comment2 = comment2,
+    num_datasets = num_datasets
   )
   do.append <- file.exists(access.file)
   data.table::fwrite(login_data, file = access.file, quote = TRUE, append = do.append)
@@ -179,10 +183,11 @@ FolderLock <- R6::R6Class("FolderLock",
 
       shinyalert::shinyalert(
         title = "SUCCESS!",
-        text = msg.text,
+        text = HTML(msg.text),
         ## closeOnEsc = FALSE, showConfirmButton = FALSE,
         animation = FALSE,
-        html = TRUE, immediate = TRUE
+        html = TRUE,
+        immediate = TRUE
       )
     },
     #' Show shinyalert popup message that the folder is locked by
@@ -209,14 +214,29 @@ FolderLock <- R6::R6Class("FolderLock",
 
       shinyalert::shinyalert(
         title = "LOCKED!",
-        text = msg.text,
-        confirmButtonText = "Close window",
-        callbackR = function(x) {
-          if (x) session$close()
-        },
+        text = HTML(msg.text),
         animation = FALSE,
         html = TRUE,
-        immediate = TRUE
+        immediate = TRUE,
+        confirmButtonText = "Close window",
+        callbackR = function(x) {
+          ## if (x) session$close()
+          shinyalert::shinyalert(
+            title = "Close this session?",
+            text = "Please log out from any other browser or browser tab. Please try again later.",
+            confirmButtonText = "Close session",
+            callbackR = function(x) {
+              dbg("[FolderLock] call closing session. x= ", x)
+              if (x) {
+                dbg("[FolderLock] closing session")
+                session$close()
+              }
+            },
+            animation = FALSE,
+            html = TRUE,
+            immediate = TRUE
+          )
+        }
       )
     },
     start_shiny_observer = function(auth, session) {
@@ -241,7 +261,7 @@ FolderLock <- R6::R6Class("FolderLock",
             cur <- list(user = self$user, is_locked = TRUE)
           }
 
-          is_mylock <- cur$user == self$user
+          is_mylock <- (cur$user == self$user)
           if (is_mylock) {
             self$write_lock()
             if (private$show_success) {
@@ -301,7 +321,7 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
       }
     }
 
-    ## remove old files
+    ## remove old ONLINE files
     online_tags <- dir(online_dir, pattern = "^ONLINE", full.name = FALSE)
     files <- file.path(online_dir, online_tags)
     if (length(files) > 0) {
