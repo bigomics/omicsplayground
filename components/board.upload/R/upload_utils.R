@@ -203,3 +203,23 @@ isValidFileName <- function(name) {
   }
   return(TRUE)
 }
+
+write_check_output <- function(
+    checks_list,
+    file_type = c("SAMPLES", "COUNTS", "CONTRASTS", "SAMPLES_COUNTS", "SAMPLES_CONTRASTS"),
+    raw_dir = raw_dir()) {
+  file_type <- match.arg(file_type)
+  # write date and hour and no error in cross_check samples counts
+  date_hour <- paste0(Sys.time())
+  # replece : by _
+  date_hour <- gsub(":", "_", date_hour)
+  if (length(checks_list) == 0 && !is.null(raw_dir)) {
+    write(paste(date_hour, file_type, "PASS", sep = ":  "), file.path(raw_dir, "CHECKS_OUTPUT"), append = TRUE)
+  } else if (length(checks_list) > 0 && !is.null(raw_dir)) {
+    # Convert each element in the list to a line in the text file
+    lines <- sapply(names(checks_list), function(name) {
+      paste(date_hour, file_type, "FAILED", name, playbase::PGX_CHECKS[playbase::PGX_CHECKS$error == name, "checks"], paste(checks_list[[name]], collapse = "__"), sep = ": ")
+    })
+    write(unlist(lines), file.path(raw_dir, "CHECKS_OUTPUT"), append = TRUE)
+  }
+}
