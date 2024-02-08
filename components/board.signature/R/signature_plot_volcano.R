@@ -48,7 +48,6 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     volcanoPlots.RENDER <- function() {
       alertDataLoaded(session, pgx)
       shiny::req(pgx)
@@ -106,8 +105,8 @@ signature_plot_volcano_server <- function(id,
       for (i in 1:min(16, length(ct))) {
         gset2 <- head(gset[order(-score[gset, i])], 30)
         cex2 <- 0.8
-        cex2 <- ifelse( length(ct) < 4, 1.0, 0.8)
-        cex2 <- ifelse( length(ct) == 1, 1.2, cex2)        
+        cex2 <- ifelse(length(ct) < 4, 1.0, 0.8)
+        cex2 <- ifelse(length(ct) == 1, 1.2, cex2)
         if (!is.null(sel.gene)) {
           gset2 <- sel.gene
           cex2 <- 1.4
