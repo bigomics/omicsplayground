@@ -48,7 +48,7 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ##    volcanoPlots.RENDER <- shiny::reactive({
+
     volcanoPlots.RENDER <- function() {
       alertDataLoaded(session, pgx)
       shiny::req(pgx)
@@ -90,7 +90,7 @@ signature_plot_volcano_server <- function(id,
       }
 
       if (ncol(F) == 1) {
-        cex.main <- 1.2
+        cex.main <- 1.3
       } else {
         cex.main <- 1.2
         par(mfrow = c(2, 2), mar = c(2, 4, 3, 1), mgp = c(2.2, 0.8, 0))
@@ -106,9 +106,11 @@ signature_plot_volcano_server <- function(id,
       for (i in 1:min(16, length(ct))) {
         gset2 <- head(gset[order(-score[gset, i])], 30)
         cex2 <- 0.8
+        cex2 <- ifelse( length(ct) < 4, 1.0, 0.8)
+        cex2 <- ifelse( length(ct) == 1, 1.2, cex2)        
         if (!is.null(sel.gene)) {
           gset2 <- sel.gene
-          cex2 <- 1.3
+          cex2 <- 1.4
         }
         xy <- cbind(fc = F[, i, drop = FALSE], z = -log10(qv[, i, drop = FALSE]))
         playbase::pgx.scatterPlotXY.BASE(
@@ -123,14 +125,12 @@ signature_plot_volcano_server <- function(id,
         )
         title(ct[i], cex.main = cex.main, line = 0.3)
       }
-
-      #      p
-    } # )
+    }
 
     PlotModuleServer(
       "plot",
       func = volcanoPlots.RENDER,
-      res = c(90, 130), ## resolution of plots
+      res = c(90, 125), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
       add.watermark = watermark
