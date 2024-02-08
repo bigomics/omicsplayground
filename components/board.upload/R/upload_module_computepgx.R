@@ -64,7 +64,7 @@ upload_module_computepgx_server <- function(
       output$UI <- shiny::renderUI({
         shiny::fillCol(
           height = height,
-          flex = c(0.2, NA, 0.05, 1.3),
+          flex = c(0.2, NA, 0.05, 1.5),
           shiny::br(),
           shiny::fluidRow(
             shiny::column(
@@ -126,7 +126,7 @@ upload_module_computepgx_server <- function(
                 shiny::actionLink(ns("options"), "Computation options",
                   icon = icon("cog", lib = "glyphicon")
                 ),
-                style = "padding-right: 80px;"
+                style = "padding-right: 150px;"
               )
             )
           ),
@@ -140,7 +140,7 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  shiny::HTML("<h4>Feature filtering:</h4><br/>"),
+                  shiny::HTML("<h4>Probe filtering:</h4>"),
                   choiceValues =
                     c(
                       "only.hugo",
@@ -151,11 +151,11 @@ upload_module_computepgx_server <- function(
                     ),
                   choiceNames =
                     c(
-                      "Transform features to gene symbols",
-                      "protein-coding only",
-                      "remove Rik/ORF/LOC genes",
-                      "remove not-expressed",
-                      "skip normalization"
+                      "Transform probes to gene symbols",
+                      "Protein-coding only",
+                      "Remove Rik/ORF/LOC genes",
+                      "Remove not-expressed",
+                      "Skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -170,7 +170,7 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
-                  shiny::HTML("<h4>Gene tests:</h4><br/>"),
+                  shiny::HTML("<h4>Gene tests:</h4>"),
                   GENETEST.METHODS,
                   selected = GENETEST.SELECTED
                 )
@@ -196,16 +196,17 @@ upload_module_computepgx_server <- function(
                 style = "width: 95%;",
                 shiny::checkboxGroupInput(
                   ns("extra_methods"),
-                  shiny::HTML("<h4>Extra analysis:</h4><br/>"),
+                  shiny::HTML("<h4>Extra analysis:</h4>"),
                   choiceValues = EXTRA.METHODS,
                   choiceNames = EXTRA.NAMES,
                   selected = EXTRA.SELECTED
                 ),
-                fileInput2(
-                  ns("upload_annot_table"),
-                  shiny::tags$h4("Counts annotation table (optional):"),
-                  multiple = FALSE,
-                  accept = c(".csv")
+                shiny::checkboxGroupInput(
+                  ns("dev_options"),
+                  shiny::HTML("<br><h4>Developer options:</h4>"),
+                  choiceValues = DEV.METHODS,
+                  choiceNames = DEV.NAMES,
+                  selected = DEV.SELECTED
                 )
               ),
               shiny::wellPanel(
@@ -229,12 +230,11 @@ upload_module_computepgx_server <- function(
                   multiple = FALSE,
                   accept = c(".txt", ".gmt")
                 ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  shiny::HTML("<h4>Developer options:</h4><br/>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
+                fileInput2(
+                  ns("upload_annot_table"),
+                  shiny::tags$h4("Probe annotation (optional):"),
+                  multiple = FALSE,
+                  accept = c(".csv")
                 )
               )
             ), ## end of fillRow
