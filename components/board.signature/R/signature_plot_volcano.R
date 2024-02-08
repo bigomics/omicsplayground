@@ -85,11 +85,6 @@ signature_plot_volcano_server <- function(id,
         ## } else {
         ##   sel.gene <- df$feature[sel]
         ## }
-      }
-
-      if (ncol(F) == 1) {
-        cex.main <- 1.2
->>>>>>> master
       } else {
         score <- abs(fc) * -log(qv)
         top_n <- function(x, n = 30) {
