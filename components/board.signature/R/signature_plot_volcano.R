@@ -26,6 +26,7 @@ signature_plot_volcano_ui <- function(
     info.text = info.text,
     caption = caption,
     download.fmt = c("png", "pdf"),
+    plotlib = "plotly",
     height = height,
     width = width
   )
@@ -48,15 +49,9 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ##    volcanoPlots.RENDER <- shiny::reactive({
-    volcanoPlots.RENDER <- function() {
-      alertDataLoaded(session, pgx)
-      shiny::req(pgx)
-      shiny::req(sigCalculateGSEA())
 
-      # Input vars
-      gsea <- sigCalculateGSEA()
-      mm <- selected_gxmethods()
+    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
+      shiny::req(sigCalculateGSEA())
 
       ## filter with table selection/search
       ii <- enrichmentContrastTable$rows_selected()
@@ -65,71 +60,82 @@ signature_plot_volcano_server <- function(id,
       }
       shiny::req(ii)
 
-      ct <- colnames(pgx$model.parameters$contr.matrix)
+      # Input vars
+      gsea <- sigCalculateGSEA()
       ct <- rownames(gsea$output)[ii]
+      mm <- selected_gxmethods()
       meta <- playbase::pgx.getMetaMatrix(pgx, methods = mm)
-      F <- meta$fc[, ct, drop = FALSE]
+      fc <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
+
       score <- abs(F) * -log(qv)
       gset <- data.table::chmatch(toupper(gsea$gset), toupper(pgx$genes[, "gene_name"]))
       gset <- pgx$genes[gset, "gene_name"]
       gset <- intersect(gset, rownames(F))
 
       sel <- enrichmentGeneTable$rows_selected()
-      sel.gene <- NULL
+      # Get gene selected labels
       if (length(sel)) {
         df <- getEnrichmentGeneTable()
-        sel.gene <- df$symbol[sel]
-
-        # Use symbol/feature if in gset
-        if (sel.gene %in% gset) {
-          gset <- sel.gene
-        } else {
-          sel.gene <- df$feature[sel]
-        }
-      }
-
-      if (ncol(F) == 1) {
-        cex.main <- 1.2
+        sel.gene <- df$gene[sel]
+        ## sel.gene <- df$symbol[sel]
+        ## # Use symbol/feature if in gset
+        ## if (sel.gene %in% gset) {
+        ##   gset <- sel.gene
+        ## } else {
+        ##   sel.gene <- df$feature[sel]
+        ## }
       } else {
-        cex.main <- 1.2
-        par(mfrow = c(2, 2), mar = c(2, 4, 3, 1), mgp = c(2.2, 0.8, 0))
-      }
-      if (ncol(F) > 4) {
-        par(mfrow = c(3, 3), mar = c(1, 4, 3, 1), mgp = c(2.2, 0.8, 0))
-        cex.main <- 1
-      }
-      if (ncol(F) > 9) {
-        par(mfrow = c(4, 4), mar = c(0.2, 2, 3, 0.6))
-        cex.main <- 0.9
-      }
-      for (i in 1:min(16, length(ct))) {
-        gset2 <- head(gset[order(-score[gset, i])], 30)
-        cex2 <- 0.8
-        if (!is.null(sel.gene)) {
-          gset2 <- sel.gene
-          cex2 <- 1.3
+        score <- abs(fc) * -log(qv)
+        top_n <- function(x, n = 30) {
+          names(sort(x, decreasing = TRUE))[1:n]
         }
-        xy <- cbind(fc = F[, i, drop = FALSE], z = -log10(qv[, i, drop = FALSE]))
-        playbase::pgx.scatterPlotXY.BASE(
-          xy,
-          var = NULL, type = "factor", title = "",
-          xlab = "differential expression (log2FC)",
-          ylab = "significance (-log10q)",
-          hilight = gset, hilight2 = gset2,
-          cex = 0.9, cex.lab = cex2, cex.title = 1.0,
-          legend = FALSE, col = c("grey80", "grey80"),
-          opacity = 1
-        )
-        title(ct[i], cex.main = cex.main, line = 0.3)
+        sel.gene <- apply(score, 2, top_n)
       }
+  
+      # Call volcano plots
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
+                                      Q = qv, 
+                                      cex = cex,
+                                      by_sig = FALSE,
+                                      gset = gsea$gset,
+                                      label = sel.gene,
+                                      yrange = yrange,
+                                      n_rows = n_rows,
+                                      margin_l =  margin_l,
+                                      margin_b = margin_b,
+                                      # Remove default titles
+                                      title_y =  "", 
+                                      title_x = ""
+                                      ) %>%
+                                        plotly::layout(
+            annotations = list(
+            list(x = -0.09, y = 0.5, text = "significance (-log10q)",
+                  font = list(size = 14),
+                  textangle = 270,
+                  showarrow = FALSE, xref='paper', yref='paper'),
+            list(x = 0.5, y = -0.09, text = "effect size (log2FC)",
+                  font = list(size = 13),
+                  showarrow = FALSE, xref='paper', yref='paper')
+                )
+              )
 
-      #      p
-    } # )
+      return(all_plts)
+    }
+    
+    big_plotly.RENDER <- function() {
+      fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 40, margin_l = 75) %>%
+        plotly::style(
+          marker.size = 6
+        ) %>%
+        playbase::plotly_build_light(.)
+      return(fig)
+    }
 
     PlotModuleServer(
       "plot",
-      func = volcanoPlots.RENDER,
+      plotlib = "plotly",
+      func = big_plotly.RENDER,
       res = c(90, 130), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,

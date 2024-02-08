@@ -32,7 +32,7 @@ expression_plot_volcanoAll_ui <- function(id,
     id = ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "grid",
+    plotlib = "plotly",
     info.text = info.text,
     caption = caption,
     options = plot_options,
@@ -60,29 +60,20 @@ expression_plot_volcanoAll_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
+      shiny::req(pgx$X)
+      shiny::req(features())
 
+      # Input variables
       features <- features()
       ct <- getAllContrasts()
-      F <- ct$F
+      FC <- ct$F
       Q <- ct$Q
-
-      #
-      comp <- names(F)
-      if (length(comp) == 0) {
-        return(NULL)
-      }
-      if (is.null(features)) {
-        return(NULL)
-      }
-
-      fdr <- 1
-      lfc <- 0
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
+      comp <- names(FC)
+      shiny::req(length(comp) > 0)
 
+      # Subset genes if requrired
       sel.genes <- rownames(pgx$X)
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
@@ -90,8 +81,8 @@ expression_plot_volcanoAll_server <- function(id,
       }
 
       ## combined matrix for output
-      matF <- do.call(cbind, F)
-      colnames(matF) <- paste0("fc.", names(F))
+      matF <- do.call(cbind, FC)
+      colnames(matF) <- paste0("fc.", names(FC))
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
@@ -102,112 +93,71 @@ expression_plot_volcanoAll_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         sel.genes = sel.genes,
-        F = F,
+        FC = FC,
         Q = Q
       )
 
       return(pd)
     })
 
-    get_plots <- function(cex = 0.45, base_size = 11, axis = "free") {
+    plotly_plots <- function(cex = 2, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
 
-      ymax <- 15
-      nlq <- -log10(1e-99 + unlist(pd[["Q"]]))
+      # Input vars
+      fdr <- pd[["fdr"]]
+      lfc <- pd[["lfc"]]
+      ## meta tables
+      fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
+      q_cols <- grep("q.*", colnames(pd[["FQ"]]))
+      fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
+      qv <- pd[["FQ"]][, q_cols, drop = FALSE]
+      colnames(fc) <- gsub("fc.", "", colnames(fc))
+      colnames(qv) <- gsub("q.", "", colnames(qv))
+      rm(pd)
+      # Call volcano plots
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
+                                      Q = qv, 
+                                      fdr = fdr, 
+                                      lfc = lfc,
+                                      cex = cex,
+                                      share_axis = input$scale_per_plot,
+                                      yrange = yrange,
+                                      n_rows = n_rows,
+                                      margin_l =  margin_l,
+                                      margin_b = margin_b)
 
-      ## maximum 24!!!
-      nplots <- min(24, length(pd$Q))
-      plt <- list()
-
-      shiny::withProgress(message = "rendering volcano plots ...", value = 0, {
-        i <- 1
-        for (i in 1:nplots) {
-          qval <- pd[["Q"]][[i]]
-          fx <- pd[["F"]][[i]]
-          fc.genes <- names(qval)
-          is.sig <- (qval <= pd[["fdr"]] & abs(fx) >= pd[["lfc"]])
-          sig.genes <- fc.genes[which(is.sig)]
-          genes1 <- sig.genes[which(toupper(sig.genes) %in% toupper(pd[["sel.genes"]]))]
-          genes2 <- head(genes1[order(-abs(fx[genes1]) * (-log10(qval[genes1])))], 10)
-          xy <- data.frame(x = fx, y = -log10(qval))
-          is.sig1 <- factor(is.sig, levels = c(FALSE, TRUE))
-          ymax1 <- ymax
-          xmax <- max(1, 1.2 * quantile(abs(unlist(pd[["F"]])), probs = 0.999, na.rm = TRUE)[1]) ## x-axis
-
-          if (input$scale_per_plot) {
-            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
-          }
-
-
-          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
-            xy,
-            title = pd[["comp"]][i],
-            cex.title = 0.85,
-            var = is.sig1,
-            type = "factor",
-            col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", #
-            hilight = NULL,
-            hilight2 = genes2,
-            xlim = xmax * c(-1, 1),
-            ylim = c(0, ymax1),
-            xlab = "difference  (log2FC)",
-            ylab = "significance  (-log10q)",
-            hilight.lwd = 0,
-            hilight.col = "#1e60bb",
-            hilight.cex = 1.5,
-            cex = cex,
-            cex.lab = 1.8 * cex,
-            base_size = base_size
-          ) + ggplot2::theme_bw(base_size = base_size)
-
-          if (!interactive()) shiny::incProgress(1 / length(pd[["comp"]]))
-        }
-      }) ## progress
-
-      return(plt)
+      return(all_plts)
     }
 
-
-    plot.RENDER <- function() {
-      plt <- get_plots(cex = 0.5, base_size = 11, axis = "free")
-      nplots <- length(plt)
-      nr <- 1
-      nc <- max(4, nplots)
-      if (nplots > 6) {
-        nr <- 2
-        nc <- ceiling(nplots / nr)
-      }
-      if (nplots > 12) {
-        nr <- 3
-        nc <- ceiling(nplots / nr)
-      }
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    modal_plotly.RENDER <- function() {
+      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+        playbase::plotly_build_light(.)
+      return(fig)
     }
 
-    modal_plot.RENDER <- function() {
-      plt <- get_plots(cex = 0.75, base_size = 13)
-      nplots <- length(plt)
-      ## layout
-      nr <- 1
-      nc <- max(2, nplots)
-      if (nplots > 3) {
-        nr <- 2
-        nc <- ceiling(nplots / nr)
-      }
-      if (nplots > 8) {
-        nr <- 3
-        nc <- ceiling(nplots / nr)
-      }
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    big_plotly.RENDER <- function() {
+      fig <- plotly_plots(yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+        plotly::style(
+          marker.size = 6
+        ) %>%
+          playbase::plotly_build_light(.)
+
+      return(fig)
     }
+    
+#    shiny::observeEvent(plotly::event_data("plotly_relayout"),{
+#      shiny::req(modal_plotly.RENDER())
+#      ns <- session$ns
+#      print(ns("test"))
+#      shinyHugePlot::updatePlotlyH(session, "expression-volcanoAll-pltmod-renderfigure", plotly::event_data("plotly_relayout"), ds)
+#    })
 
     PlotModuleServer(
       "pltmod",
-      plotlib = "grid",
-      func = plot.RENDER,
-      func2 = modal_plot.RENDER,
+      plotlib = "plotly",
+      func = modal_plotly.RENDER,
+      func2 = big_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
