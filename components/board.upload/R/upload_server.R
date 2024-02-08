@@ -484,7 +484,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-          write_check_output(res$checks, "COUNTS", raw_dir())
+        write_check_output(res$checks, "COUNTS", raw_dir())
         # store check and data regardless of it errors
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -542,7 +542,7 @@ UploadBoard <- function(id,
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
-        
+
         write_check_output(res$checks, "SAMPLES", raw_dir())
         # store check and data regardless of it errors
         checklist[["samples.csv"]]$checks <- res$checks
@@ -625,7 +625,7 @@ UploadBoard <- function(id,
         # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
         write_check_output(res$checks, "CONTRASTS", raw_dir())
-        
+
         if (res$PASS) {
           checked <- res$df
           status <- "OK"
