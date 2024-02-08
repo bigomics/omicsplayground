@@ -214,3 +214,6 @@ main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
 
 shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
+
+## Initialize plot download logger
+PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")

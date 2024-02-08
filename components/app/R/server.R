@@ -779,11 +779,17 @@ app_server <- function(input, output, session) {
     nav_count.str <- paste(paste0(names(nav.count), "=", nav.count), collapse = ";")
     nav_count.str <- gsub("-tab", "", nav_count.str)
 
+    ## record num datasets
+    pgxdir <- shiny::isolate(auth$user_dir)
+    num_pgxfiles <- length(dir(pgxdir, pattern = ".pgx$"))
+
     pgx.record_access(
       user = isolate(auth$email),
       action = action,
       session = session,
-      comment = nav_count.str
+      comment = nav_count.str,
+      comment2 = isolate(PLOT_DOWNLOAD_LOGGER$str),
+      num_datasets = num_pgxfiles
     )
 
     ## reset (logout) user. This should already have been done with

@@ -226,7 +226,6 @@ UploadBoard <- function(id,
       }
 
       upload_table <- input$upload_files
-
       if (class(upload_table) != "data.frame" && upload_table == "hello_example") {
         upload_table <- data.frame(
           name = c("counts.csv", "samples.csv", "contrasts.csv"),
@@ -381,7 +380,6 @@ UploadBoard <- function(id,
           last_hash <<- new_hash
         }
       }
-
 
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
