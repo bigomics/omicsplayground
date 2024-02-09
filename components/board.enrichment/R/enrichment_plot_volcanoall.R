@@ -24,7 +24,6 @@ enrichment_plot_volcanoall_ui <- function(
       ),
       "Number of top genesets to consider for counting the gene frequency."
     ),
-
   )
 
   PlotModuleUI(
@@ -72,9 +71,9 @@ enrichment_plot_volcanoall_server <- function(id,
       names(FC) <- names(meta)
       names(Q) <- names(meta)
       for (i in names(meta)) {
-          mx <- calcGsetMeta(i, gsmethod, pgx = pgx)
-          FC[[i]] <- mx[, "fc", drop = FALSE]
-          Q[[i]] <- mx[, "qv", drop = FALSE] 
+        mx <- calcGsetMeta(i, gsmethod, pgx = pgx)
+        FC[[i]] <- mx[, "fc", drop = FALSE]
+        Q[[i]] <- mx[, "qv", drop = FALSE]
       }
 
       # Prepare output matrices
@@ -103,19 +102,21 @@ enrichment_plot_volcanoall_server <- function(id,
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       # Call volcano plots
-      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
-                                      Q = qv, 
-                                      fdr = fdr, 
-                                      lfc = lfc,
-                                      cex = cex,
-                                      source = "enrich_volcanoall",
-                                      title_y =  "significance (-log10q)", 
-                                      title_x = "effect size (log2FC)", 
-                                      share_axis = !input$scale_per_method,
-                                      yrange = yrange,
-                                      n_rows = n_rows,
-                                      margin_l =  margin_l,
-                                      margin_b = margin_b) 
+      all_plts <- playbase::plotlyVolcano_multi(
+        FC = fc,
+        Q = qv,
+        fdr = fdr,
+        lfc = lfc,
+        cex = cex,
+        source = "enrich_volcanoall",
+        title_y = "significance (-log10q)",
+        title_x = "effect size (log2FC)",
+        share_axis = !input$scale_per_method,
+        yrange = yrange,
+        n_rows = n_rows,
+        margin_l = margin_l,
+        margin_b = margin_b
+      )
 
 
       return(all_plts)

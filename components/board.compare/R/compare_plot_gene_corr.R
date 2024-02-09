@@ -135,7 +135,6 @@ compare_plot_gene_corr_server <- function(id,
     })
 
     plotly_genecorr.RENDER <- shiny::reactive({
-      
       # Requirements
       shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
@@ -190,41 +189,44 @@ compare_plot_gene_corr_server <- function(id,
         xtitle <- ifelse(gene_i %in% higenes[15], dset1, "")
         ytitle <- ifelse(gene_i %in% higenes[9], dset2, "")
         plt <- plotly::plot_ly() %>%
-            # Axis
-            plotly::layout(
-              xaxis = list(title = xtitle, font = list(size = 5)),
-              yaxis = list(title = ytitle, font = list(size = 5)),
-              legend = list(x = 0.5, y = -0.1, xanchor = "center", orientation = "h", bgcolor = "transparent")
-            ) %>%
-            # Add the points
-            plotly::add_trace(
+          # Axis
+          plotly::layout(
+            xaxis = list(title = xtitle, font = list(size = 5)),
+            yaxis = list(title = ytitle, font = list(size = 5)),
+            legend = list(x = 0.5, y = -0.1, xanchor = "center", orientation = "h", bgcolor = "transparent")
+          ) %>%
+          # Add the points
+          plotly::add_trace(
             x = X1[j, ], y = X2[j, ], name = grp, color = klr1, type = "scatter", mode = "markers",
             marker = list(size = 10),
-            showlegend = show_legend)  %>%
-            plotly::add_annotations(
-              text = paste("<b>", gene_i, "</b>"),
-              font = list(size = 10),
-              showarrow = FALSE,
-              xanchor = "left",
-              yanchor = "bottom",
-              x = 1.5,
-              y = title_y
-              )
+            showlegend = show_legend
+          ) %>%
+          plotly::add_annotations(
+            text = paste("<b>", gene_i, "</b>"),
+            font = list(size = 10),
+            showarrow = FALSE,
+            xanchor = "left",
+            yanchor = "bottom",
+            x = 1.5,
+            y = title_y
+          )
         sub_plots[[gene_i]] <- plt
       }
 
       # Assemble all subplot in to grid
       suppressWarnings(
-      plt <- plotly::subplot(sub_plots, nrows = 4, margin = 0.03,
-        titleX = TRUE, titleY = TRUE
-      )) 
+        plt <- plotly::subplot(sub_plots,
+          nrows = 4, margin = 0.03,
+          titleX = TRUE, titleY = TRUE
+        )
+      )
       return(plt)
     })
 
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
-      func = plotly_genecorr.RENDER, #genecorr.RENDER,
+      func = plotly_genecorr.RENDER, # genecorr.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
       add.watermark = watermark

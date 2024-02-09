@@ -49,7 +49,6 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       shiny::req(sigCalculateGSEA())
 
@@ -92,40 +91,44 @@ signature_plot_volcano_server <- function(id,
         }
         sel.gene <- apply(score, 2, top_n)
       }
-  
+
       # Call volcano plots
-      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
-                                      Q = qv, 
-                                      cex = cex,
-                                      by_sig = FALSE,
-                                      gset = gsea$gset,
-                                      label = sel.gene,
-                                      yrange = yrange,
-                                      n_rows = n_rows,
-                                      margin_l =  margin_l,
-                                      margin_b = margin_b,
-                                      interplot_margin = c(0.02, 0.02, 0.04, 0.04),
-                                      # Remove default titles
-                                      title_y =  "", 
-                                      title_x = ""
-                                      ) %>%
-                                        plotly::layout(
-            annotations = list(
-            list(x = -0.04, y = 0.5, text = "significance (-log10q)",
-                  font = list(size = 16),
-                  textangle = 270,
-                  showarrow = FALSE, xref='paper', yref='paper'),
-            list(x = 0.5, y = -0.06, text = "effect size (log2FC)",
-                  font = list(size = 16),
-                  showarrow = FALSE, xref='paper', yref='paper')
-                )
-              )
+      all_plts <- playbase::plotlyVolcano_multi(
+        FC = fc,
+        Q = qv,
+        cex = cex,
+        by_sig = FALSE,
+        gset = gsea$gset,
+        label = sel.gene,
+        yrange = yrange,
+        n_rows = n_rows,
+        margin_l = margin_l,
+        margin_b = margin_b,
+        interplot_margin = c(0.02, 0.02, 0.04, 0.04),
+        # Remove default titles
+        title_y = "",
+        title_x = ""
+      ) %>%
+        plotly::layout(
+          annotations = list(
+            list(
+              x = -0.04, y = 0.5, text = "significance (-log10q)",
+              font = list(size = 16),
+              textangle = 270,
+              showarrow = FALSE, xref = "paper", yref = "paper"
+            ),
+            list(
+              x = 0.5, y = -0.06, text = "effect size (log2FC)",
+              font = list(size = 16),
+              showarrow = FALSE, xref = "paper", yref = "paper"
+            )
+          )
+        )
 
       return(all_plts)
     }
-    
+
     big_plotly.RENDER <- function() {
-      
       nr <- length(enrichmentContrastTable$rows_all())
       n_rows <- floor(sqrt(nr))
       fig <- plotly_plots(yrange = 0.02, n_rows = n_rows, margin_b = 45, margin_l = 40) %>%

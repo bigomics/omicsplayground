@@ -116,16 +116,18 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(qv) <- gsub("q.", "", colnames(qv))
       rm(pd)
       # Call volcano plots
-      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
-                                      Q = qv, 
-                                      fdr = fdr, 
-                                      lfc = lfc,
-                                      cex = cex,
-                                      share_axis = input$scale_per_plot,
-                                      yrange = yrange,
-                                      n_rows = n_rows,
-                                      margin_l =  margin_l,
-                                      margin_b = margin_b)
+      all_plts <- playbase::plotlyVolcano_multi(
+        FC = fc,
+        Q = qv,
+        fdr = fdr,
+        lfc = lfc,
+        cex = cex,
+        share_axis = input$scale_per_plot,
+        yrange = yrange,
+        n_rows = n_rows,
+        margin_l = margin_l,
+        margin_b = margin_b
+      )
 
       return(all_plts)
     }
@@ -141,17 +143,17 @@ expression_plot_volcanoAll_server <- function(id,
         plotly::style(
           marker.size = 6
         ) %>%
-          playbase::plotly_build_light(.)
+        playbase::plotly_build_light(.)
 
       return(fig)
     }
-    
-#    shiny::observeEvent(plotly::event_data("plotly_relayout"),{
-#      shiny::req(modal_plotly.RENDER())
-#      ns <- session$ns
-#      print(ns("test"))
-#      shinyHugePlot::updatePlotlyH(session, "expression-volcanoAll-pltmod-renderfigure", plotly::event_data("plotly_relayout"), ds)
-#    })
+
+    #    shiny::observeEvent(plotly::event_data("plotly_relayout"),{
+    #      shiny::req(modal_plotly.RENDER())
+    #      ns <- session$ns
+    #      print(ns("test"))
+    #      shinyHugePlot::updatePlotlyH(session, "expression-volcanoAll-pltmod-renderfigure", plotly::event_data("plotly_relayout"), ds)
+    #    })
 
     PlotModuleServer(
       "pltmod",

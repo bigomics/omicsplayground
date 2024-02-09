@@ -90,7 +90,7 @@ enrichment_plot_scatter_server <- function(id,
       list(samples = sample.klr, group = grp.klr)
     }
 
-    basesubplot_scatter.RENDER <- function(){
+    basesubplot_scatter.RENDER <- function() {
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
       shiny::req(pgx$X)
@@ -126,7 +126,7 @@ enrichment_plot_scatter_server <- function(id,
       abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")
     }
 
-    plotlysubplot_scatter <- function(){
+    plotlysubplot_scatter <- function() {
       shiny::req(pgx$X)
       gene <- rownames(pgx$X)[1]
       sel <- gene_selected()
@@ -155,40 +155,46 @@ enrichment_plot_scatter_server <- function(id,
       newdata <- data.frame(gx = range(gx))
       newdata$sx <- predict(fit, newdata)
       plt <- plotly::plot_ly() %>%
-          # Axis
-          plotly::layout(
-            xaxis = list(title = paste(gene, "expression"), titlefont = 5),
-            yaxis = list(title = "gene set enrichment", titlefont = 5),
-            legend = list(x = 0.05, y = 1.1, xanchor = "center",  
-                          orientation = "h", bgcolor = "transparent", 
-                          font = list(size = 7)) 
-          ) %>%
-          # Add the points
-          plotly::add_trace(
-          x = gx, y = sx, name = comp0, color = klr,type = "scatter", mode = "markers",
+        # Axis
+        plotly::layout(
+          xaxis = list(title = paste(gene, "expression"), titlefont = 5),
+          yaxis = list(title = "gene set enrichment", titlefont = 5),
+          legend = list(
+            x = 0.05, y = 1.1, xanchor = "center",
+            orientation = "h", bgcolor = "transparent",
+            font = list(size = 7)
+          )
+        ) %>%
+        # Add the points
+        plotly::add_trace(
+          x = gx, y = sx, name = comp0, color = klr, type = "scatter", mode = "markers",
           marker = list(size = 5),
-          showlegend = TRUE) %>%
-          # Add the regression line
-          plotly::add_trace(data = newdata,
+          showlegend = TRUE
+        ) %>%
+        # Add the regression line
+        plotly::add_trace(
+          data = newdata,
           x = ~gx, y = ~sx, showlegend = FALSE, type = "scatter",
-          line = list(color = 'rgb(22, 96, 167)', dash = 'dot'), mode = "lines", 
+          line = list(color = "rgb(22, 96, 167)", dash = "dot"), mode = "lines",
           inherit = FALSE
-          ) 
+        )
 
       return(plt)
     }
-    
-    subplotly_scatter.RENDER <- list(card = function() {
-      plotlysubplot_scatter() %>% plotly_default()
-    },
+
+    subplotly_scatter.RENDER <- list(
+      card = function() {
+        plotlysubplot_scatter() %>% plotly_default()
+      },
       expand = function() {
         plotlysubplot_scatter() %>% plotly_default()
-      })
+      }
+    )
 
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
-      func = subplotly_scatter.RENDER$card,#basesubplot_scatter.RENDER,
+      func = subplotly_scatter.RENDER$card, # basesubplot_scatter.RENDER,
       func2 = subplotly_scatter.RENDER$expand,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),

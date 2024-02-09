@@ -81,18 +81,20 @@ enrichment_plot_volcanomethods_server <- function(id,
       sel.gsets <- pd$sel.gsets
       rm(pd)
       # Call volcano plots
-      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
-                                      Q = qv, 
-                                      fdr = fdr, 
-                                      lfc = lfc,
-                                      cex = cex,
-                                      title_y =  "significance (-log10q)", 
-                                      title_x = "effect size (log2FC)", 
-                                      share_axis = !input$scale_per_method,
-                                      yrange = yrange,
-                                      n_rows = n_rows,
-                                      margin_l =  margin_l,
-                                      margin_b = margin_b)
+      all_plts <- playbase::plotlyVolcano_multi(
+        FC = fc,
+        Q = qv,
+        fdr = fdr,
+        lfc = lfc,
+        cex = cex,
+        title_y = "significance (-log10q)",
+        title_x = "effect size (log2FC)",
+        share_axis = !input$scale_per_method,
+        yrange = yrange,
+        n_rows = n_rows,
+        margin_l = margin_l,
+        margin_b = margin_b
+      )
 
       return(all_plts)
     }

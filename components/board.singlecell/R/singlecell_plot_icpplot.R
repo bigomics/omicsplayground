@@ -219,7 +219,7 @@ singlecell_plot_icpplot_server <- function(id,
       if (pd[["sortby"]] == "name") {
         sel <- sel[order(colnames(pd[["score"]])[sel])]
       }
-      
+
       plt <- vector("list", length(sel))
       for (i in 1:length(sel)) {
         j <- sel[i]
@@ -265,10 +265,12 @@ singlecell_plot_icpplot_server <- function(id,
         plt,
         nrows = nr,
         margin = 0.01
-      ) %>% plotly::layout(
-        title = list(text = pd$refset, size = 14),
-        margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-      ) %>% plotly::partial_bundle()
+      ) %>%
+        plotly::layout(
+          title = list(text = pd$refset, size = 14),
+          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
+        ) %>%
+        plotly::partial_bundle()
       return(fig)
     }
 
