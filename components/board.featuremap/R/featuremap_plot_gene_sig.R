@@ -54,7 +54,7 @@ featuremap_plot_gene_sig_server <- function(id,
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
         kk <- intersect(pheno, colnames(F))
-        F <- F[, kk]
+        F <- F[, kk, drop = FALSE]
       }
       if (nrow(F) == 0 || NCOL(F) == 0) {
         return(NULL)

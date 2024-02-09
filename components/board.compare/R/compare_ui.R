@@ -111,7 +111,7 @@ CompareUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("Compare signatures by plotting their fold-changes as pairwise scatterplots. Highly correlated logFC signatures suggest similar experiments."),
+        bs_alert("Compare signatures by plotting their fold-changes as pairwise scatterplots. Highly correlated logFC signatures suggest similar experiments. Data comparison between datasets of the same species is done via gene symbol and datasets from diff species is done using the human ortholog"),
         bslib::layout_columns(
           col_widths = c(6, 6),
           height = fullH,

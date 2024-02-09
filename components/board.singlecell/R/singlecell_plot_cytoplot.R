@@ -72,35 +72,18 @@ singlecell_plot_cytoplot_server <- function(id,
     ns <- session$ns
 
     cyto.plotFUNC <- shiny::reactive({
-      ## if(!input$tsne.all) return(NULL)
-
-      ## if(is.null(pgx)) return(NULL)
       shiny::req(pgx$X)
-
+      shiny::req(cytovar1(), cytovar2(), cytovar1() != "", cytovar2() != "")
       cytovar1 <- cytovar1()
       cytovar2 <- cytovar2()
       samplefilter <- samplefilter()
       nbins <- nbins()
-
-      if (is.null(cytovar1)) {
-        return(NULL)
-      }
-      if (is.null(cytovar2)) {
-        return(NULL)
-      }
-      if (cytovar1 == "") {
-        return(NULL)
-      }
-      if (cytovar2 == "") {
-        return(NULL)
-      }
 
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
 
       gene1 <- cytovar1
       gene2 <- cytovar2
 
-      ## if(gene1 == gene2) return(NULL)
       par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
       playbase::plotlyCytoplot(pgx,
         gene1,

@@ -25,10 +25,24 @@ functional_plot_wikipathway_actmap_ui <- function(
     withTooltip(
       shiny::checkboxInput(
         ns("normalize"),
-        "normalize activation matrix",
+        "Normalize activation matrix.",
         FALSE
       ),
       "Click to normalize the columns of the activation matrices."
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("rotate"),
+        "Rotate activation matrix.",
+        FALSE
+      ),
+      "Click to rotate the activation matrix."
+    ),
+    shiny::selectInput(
+      ns("selected_contrasts"),
+      "Select comparisons:",
+      choices = NULL,
+      multiple = TRUE
     )
   )
 
@@ -60,10 +74,31 @@ functional_plot_wikipathway_actmap_server <- function(id,
                                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+      shiny::observe({
+        shiny::req(pgx$X)
+        ct <- colnames(pgx$model.parameters$contr.matrix)
+        ct <- sort(ct)
+        selected_ct <- head(ct, 7)
+        shiny::updateSelectInput(
+          session,
+          "selected_contrasts",
+          choices = ct,
+          selected = selected_ct
+        )
+      })
       plot_data <- shiny::reactive({
         df <- getWikiPathwayTable()
         meta <- pgx$gset.meta$meta
         shiny::req(df, pgx$X, meta)
+
+        shiny::validate(
+          need(
+            !is.null(input$selected_contrasts),
+            "Please select a comparison in plot options."
+          )
+        )
+
+        meta <- meta[input$selected_contrasts]
 
         res <- list(
           df = df,
@@ -75,7 +110,6 @@ functional_plot_wikipathway_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
@@ -83,6 +117,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
           meta,
           df,
           normalize = input$normalize,
+          rotate = input$rotate,
           nterms = 50,
           nfc = 20,
           tl.cex = 0.95,
@@ -94,7 +129,6 @@ functional_plot_wikipathway_actmap_server <- function(id,
         res <- plot_data()
         df <- res$df
         meta <- res$meta
-
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
@@ -102,10 +136,11 @@ functional_plot_wikipathway_actmap_server <- function(id,
           meta,
           df,
           normalize = input$normalize,
+          rotate = input$rotate,
           nterms = 50,
           nfc = 100,
           tl.cex = 1.1,
-          row.nchar = 200
+          row.nchar = ifelse(input$rotate, 60, 200)
         )
       }
 
@@ -115,7 +150,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        res = c(100, 140),
+        res = c(100, 115),
         remove_margins = FALSE,
         pdf.height = 11,
         pdf.width = 6,

@@ -53,7 +53,7 @@ TableModuleUI <- function(id,
         style = "text-align: center;",
         shiny::downloadButton(
           outputId = ns("download"),
-          label = "Download",
+          label = "Download"
         )
       )
     ),
@@ -189,6 +189,9 @@ TableModuleServer <- function(id,
           # the header scrolls properly, and clickable properties for
           # tables.
           dt <- func()
+          if (is.null(dt)) {
+            return(NULL)
+          }
           active_options <- names(dt$x$options)
           if ("scrollX" %in% active_options) {
             dt$x$options$scrollX <- TRUE

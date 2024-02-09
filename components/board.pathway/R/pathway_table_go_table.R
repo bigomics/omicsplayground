@@ -27,7 +27,8 @@ functional_table_go_table_ui <- function(
 functional_table_go_table_server <- function(id,
                                              pgx,
                                              fa_contrast,
-                                             scrollY,
+                                             fa_filtertable,
+                                             fa_filtertable_value,
                                              selected_gsetmethods) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -38,18 +39,7 @@ functional_table_go_table_server <- function(id,
     }
 
     table_data <- shiny::reactive({
-      res <- list(
-        pgx = pgx,
-        fa_contrast = fa_contrast()
-      )
-      return(res)
-    })
-
-    table_RENDER <- function() {
-      res <- table_data()
-      pgx <- res$pgx
-      comparison <- res$fa_contrast
-
+      comparison <- fa_contrast()
       if (is.null(pgx$meta.go)) {
         return(NULL)
       }
@@ -59,7 +49,6 @@ functional_table_go_table_server <- function(id,
 
       go <- pgx$meta.go$graph
       scores <- pgx$meta.go$pathscore[, comparison]
-
       scores <- scores[which(!is.na(scores) & !is.infinite(scores))]
       scores <- round(scores, digits = 3)
       scores <- scores[order(-abs(scores))]
@@ -74,10 +63,21 @@ functional_table_go_table_server <- function(id,
       mm <- intersect(mm, colnames(gs.meta$q))
       qv <- apply(gs.meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE) ## meta-q
       fx <- gs.meta$meta.fx
-
       go.term1 <- substring(go.term, 1, 80)
       dt1 <- round(cbind(score = scores, logFC = fx, meta.q = qv), digits = 4)
       dt <- data.frame(id = names(scores), term = go.term1, dt1, stringsAsFactors = FALSE)
+      return(dt)
+    })
+
+    table_RENDER <- function() {
+      dt <- table_data()
+      shiny::req(dt)
+      filtertable <- fa_filtertable()
+      if (filtertable) {
+        filter_value <- as.numeric(fa_filtertable_value())
+        df <- df[which(df$meta.q < filter_value), ]
+      }
+
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
       id_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(dt)),
@@ -92,7 +92,6 @@ functional_table_go_table_server <- function(id,
       DT::datatable(dt,
         rownames = id_link,
         escape = c(-1, -2),
-        #
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
@@ -100,7 +99,7 @@ functional_table_go_table_server <- function(id,
         options = list(
           dom = "lfrtip",
           scrollX = TRUE,
-          scrollY = scrollY,
+          scrollY = 200,
           scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
@@ -119,7 +118,7 @@ functional_table_go_table_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle("score",
           background = color_from_middle(
-            dt1[, "score"],
+            dt[, "score"],
             "lightblue",
             "#f5aeae"
           ),

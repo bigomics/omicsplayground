@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker base (ub2204_v2)
+name: Build docker base (ub2204_v2)
 
 on:
   workflow_dispatch:

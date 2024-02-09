@@ -26,7 +26,8 @@ PlotModuleUI <- function(id,
                          pdf.width = 8,
                          pdf.height = 8,
                          cards = FALSE,
-                         card_names = NULL) {
+                         card_names = NULL,
+                         header_buttons = NULL) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -200,8 +201,12 @@ PlotModuleUI <- function(id,
       bigLoaders::useSpinner()
   }
 
+  if (is.null(header_buttons)) {
+    header_buttons <- div()
+  }
+
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",
@@ -211,8 +216,9 @@ PlotModuleUI <- function(id,
     if (cards) {
       plot_cards$navList
     } else {
-      div()
+      shiny::div()
     },
+    header_buttons,
     DropdownMenu(
       shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
       width = "250px",
@@ -347,7 +353,7 @@ PlotModuleUI <- function(id,
         shiny::tags$head(shiny::tags$style(modalbody.style)),
         shiny::tags$head(shiny::tags$style(modalcontent.style)),
         shiny::tags$head(shiny::tags$style(modalfooter.none)),
-        shiny::tags$script(src = "dropdown-helper.js")
+        shiny::tags$script(src = "custom/dropdown-helper.js")
       )
     ),
     bslib::card_body(
@@ -429,7 +435,7 @@ PlotModuleServer <- function(id,
         cd <- session$clientData
         sprintf(
           "%s/?plotURL=%s//%s:%s%s%s",
-          "editor/index.html",
+          "custom/editor/index.html",
           cd$url_protocol,
           cd$url_hostname,
           cd$url_port,
@@ -590,6 +596,8 @@ PlotModuleServer <- function(id,
                   markfile <- file.path(FILES, "watermark-logo.png")
                   addWatermark.PNG2(file, mark = markfile, position = add.watermark)
                 }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
               message = "Exporting to PNG",
               value = 0.8
@@ -666,6 +674,8 @@ PlotModuleServer <- function(id,
                   markfile <- file.path(FILES, "watermark-logo.pdf")
                   addWatermark.PDF2(file, w = pdf.width, h = pdf.height, mark = markfile)
                 }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
               message = "Exporting to PDF",
               value = 0.8
@@ -735,6 +745,8 @@ PlotModuleServer <- function(id,
                 } else { ## end base
                   write("<body>HTML export error</body>", file = HTMLFILE)
                 }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
                 ## finally copy to fina lexport file
                 file.copy(HTMLFILE, file, overwrite = TRUE)
               },
@@ -757,6 +769,8 @@ PlotModuleServer <- function(id,
                   b <- plotly::plotly_build(p)$x[c("data", "layout", "config")]
                   b <- plotly::as_widget(b) ## from JSON back to R object
                   saveRDS(b, file = file)
+                  ## Record downloaded plot
+                  record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
                 },
                 message = "saving plot object",
                 value = 0.2
@@ -776,6 +790,8 @@ PlotModuleServer <- function(id,
                 data <- csvFunc()
                 if (is.list(data)) data <- data[[1]]
                 write.csv(data, file = file)
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
               message = "Exporting to CSV",
               value = 0.8

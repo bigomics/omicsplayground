@@ -78,10 +78,11 @@ singlecell_plot_mappingplot_server <- function(id,
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      clust.pos <- pfGetClusterPositions()
-      if (is.null(clust.pos)) {
-        return(NULL)
+      shiny::req(pfGetClusterPositions())
+      if (!("deconv" %in% names(pgx)) || length(pgx$deconv) == 0) {
+        shiny::validate(shiny::need(FALSE, "Cell type profile requires deconvolution"))
       }
+      clust.pos <- pfGetClusterPositions()
       pos <- pgx$tsne2d
       pos <- clust.pos
 

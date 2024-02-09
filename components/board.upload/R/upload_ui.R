@@ -29,7 +29,7 @@ UploadInputs <- function(id) {
         withTooltip(
           shiny::checkboxInput(
             ns("fa_filtertable"),
-            "filter signficant (tables)",
+            "filter significant (tables)",
             FALSE
           ),
           "Click to filter the significant entries in the tables."
@@ -46,7 +46,7 @@ UploadUI <- function(id) {
     flex = c(NA, NA, 1),
     shiny::div(
       id = "navheader-current-section",
-      HTML("Upload New Data &nbsp;"),
+      HTML("Create New Dataset &nbsp;"),
       shiny::actionLink(
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
@@ -54,6 +54,65 @@ UploadUI <- function(id) {
       )
     )
   )
+
+  upload_select_db <- shiny::tabPanel(
+    "Select Organism",
+    bslib::layout_column_wrap(
+      width = 1,
+      heights_equal = "row",
+      height = "calc(100vh - 180px)",
+      # add a drop down selector for organism
+      shiny::div(
+        style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
+        shiny::div(
+          style = "text-align: center;",
+          h3(shiny::HTML("<b>Select the organism:</b>")),
+          div(
+            style = "margin-top: 30px; padding-left: 70px; text-align: center;",
+            shiny::selectInput(
+              ns("selected_organism"),
+              NULL,
+              # restrict to ensembl species, as we are validating them in the first place
+              choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
+              selected = NULL,
+              multiple = FALSE
+            )
+          ),
+          shiny::div(
+            style = "margin-top: 20px;text-align: center;",
+            shiny::actionButton(ns("proceed_to_upload"), "Next",
+              icon = icon("arrow-right"),
+              class = "btn btn-success"
+            )
+          ),
+          div(
+            style = "margin-top: 120px",
+            h3("Need a dataset to try?")
+          ),
+          shiny::div(
+            style = "margin-top: 30px",
+            shiny::downloadButton(
+              ns("downloadExampleData"),
+              width = "220px",
+              icon = icon("download"),
+              label = "Download example data",
+              class = "btn-outline-primary",
+              style = "margin-right: 10px;"
+            ),
+            shiny::actionButton(
+              ns("load_example"),
+              width = "220px",
+              icon = icon("table"),
+              label = "Use example data",
+              class = "btn-outline-primary",
+              style = "margin-left: 10px;"
+            )
+          )
+        )
+      )
+    )
+  )
+
 
   upload_panel <- shiny::tabPanel(
     "Upload",
@@ -76,7 +135,6 @@ UploadUI <- function(id) {
               multiple = TRUE,
               accept = c(".csv", ".pgx")
             ),
-            shinyWidgets::prettySwitch(ns("load_example"), "Load example data"),
             shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
             # bslib::input_switch(ns("load_example"), "Load example data"),
             # bslib::input_switch(ns("advanced_mode"), "Batch correction (beta)")
@@ -150,6 +208,7 @@ UploadUI <- function(id) {
     board_header,
     shiny::tabsetPanel(
       id = ns("tabs"),
+      upload_select_db,
       upload_panel,
       batch_panel,
       comparisons_panel,

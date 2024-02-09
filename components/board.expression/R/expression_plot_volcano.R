@@ -68,10 +68,14 @@ expression_plot_volcano_server <- function(id,
                                            df1,
                                            sel2,
                                            df2,
+                                           genes_in_sel_geneset,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
+      shiny::req(res())
+      shiny::req(length(comp1()) > 0)
+      shiny::req(features())
       # calculate required inputs for plotting
 
       comp1 <- comp1()
@@ -83,30 +87,17 @@ expression_plot_volcano_server <- function(id,
       df1 <- df1()
       sel2 <- sel2()
       df2 <- df2()
-
       ## if no gene selected we should show full volcano plot
 
-
-      fam.genes <- res$gene_name
-
-      if (is.null(res)) {
-        return(NULL)
-      }
-      if (length(comp1) == 0) {
-        return(NULL)
-      }
-      if (is.null(features)) {
-        return(NULL)
-      }
+      fam.genes <- res$symbol
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
 
-      jj <- match(toupper(fam.genes), toupper(res$gene_name))
-      sel.genes <- res$gene_name[setdiff(jj, NA)]
-
-      fc.genes <- as.character(res[, grep("^gene$|gene_name", colnames(res))])
+      jj <- match(fam.genes, res$symbol)
+      sel.genes <- res$symbol[setdiff(jj, NA)]
+      fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
@@ -129,13 +120,12 @@ expression_plot_volcano_server <- function(id,
       gene.selected <- !is.null(sel1) && !is.null(df1)
       gset.selected <- !is.null(sel2) && !is.null(df2)
       if (gene.selected && !gset.selected) {
-        lab.genes <- rownames(df1)[sel1]
+        lab.genes <- df1$symbol[sel1]
+        if (lab.genes == "") lab.genes <- df1$feature[sel1]
         sel.genes <- lab.genes
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
-        gs <- rownames(df2)[sel2]
-        gset <- unlist(playdata::getGSETS(gs))
-        sel.genes <- intersect(sel.genes, gset)
+        sel.genes <- genes_in_sel_geneset()
         lab.genes <- c(
           head(sel.genes[order(impt(sel.genes))], 10),
           head(sel.genes[order(-impt(sel.genes))], 10)
@@ -167,7 +157,6 @@ expression_plot_volcano_server <- function(id,
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
-
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
