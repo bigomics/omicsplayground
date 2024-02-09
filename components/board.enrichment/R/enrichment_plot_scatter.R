@@ -90,7 +90,7 @@ enrichment_plot_scatter_server <- function(id,
       list(samples = sample.klr, group = grp.klr)
     }
 
-    basesubplot_scatter.RENDER <- shiny::reactive({
+    basesubplot_scatter.RENDER <- function(){
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
       shiny::req(pgx$X)
@@ -124,9 +124,7 @@ enrichment_plot_scatter_server <- function(id,
         cex.lab = 1, pch = 19, cex = 1.0 * cex1, cex.main = 0.85
       )
       abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")
-    p <- grDevices::recordPlot()
-    p
-    })
+    }
 
     plotlysubplot_scatter <- function(){
       shiny::req(pgx$X)
