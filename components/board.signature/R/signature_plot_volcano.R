@@ -104,18 +104,19 @@ signature_plot_volcano_server <- function(id,
                                       n_rows = n_rows,
                                       margin_l =  margin_l,
                                       margin_b = margin_b,
+                                      interplot_margin = c(0.02, 0.02, 0.04, 0.04),
                                       # Remove default titles
                                       title_y =  "", 
                                       title_x = ""
                                       ) %>%
                                         plotly::layout(
             annotations = list(
-            list(x = -0.09, y = 0.5, text = "significance (-log10q)",
-                  font = list(size = 14),
+            list(x = -0.04, y = 0.5, text = "significance (-log10q)",
+                  font = list(size = 16),
                   textangle = 270,
                   showarrow = FALSE, xref='paper', yref='paper'),
-            list(x = 0.5, y = -0.09, text = "effect size (log2FC)",
-                  font = list(size = 13),
+            list(x = 0.5, y = -0.06, text = "effect size (log2FC)",
+                  font = list(size = 16),
                   showarrow = FALSE, xref='paper', yref='paper')
                 )
               )
@@ -124,7 +125,10 @@ signature_plot_volcano_server <- function(id,
     }
     
     big_plotly.RENDER <- function() {
-      fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 40, margin_l = 75) %>%
+      
+      nr <- length(enrichmentContrastTable$rows_all())
+      n_rows <- floor(sqrt(nr))
+      fig <- plotly_plots(yrange = 0.02, n_rows = n_rows, margin_b = 45, margin_l = 40) %>%
         plotly::style(
           marker.size = 6
         ) %>%

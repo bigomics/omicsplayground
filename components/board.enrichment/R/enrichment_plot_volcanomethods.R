@@ -99,13 +99,13 @@ enrichment_plot_volcanomethods_server <- function(id,
 
     # Render functions
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+      fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = NULL, margin_b = 20, margin_l = 50) %>%
         playbase::plotly_build_light(.)
       return(fig)
     }
 
-    big_plotly.RENDER <- function() {
-      fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 20, margin_l = 20) %>%
+    plotly.RENDER <- function() {
+      fig <- plotly_plots(yrange = 0.02, n_rows = NULL, margin_b = 20, margin_l = 20) %>%
         plotly::style(
           marker.size = 6
         ) %>%
@@ -117,7 +117,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       "plot",
       plotlib = "plotly",
       func = modal_plotly.RENDER,
-      func2 = big_plotly.RENDER,
+      func2 = plotly.RENDER,
       pdf.width = 10, pdf.height = 5,
       res = c(75, 90),
       add.watermark = watermark

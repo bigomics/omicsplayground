@@ -46,13 +46,13 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ------------------------ observe/reactive function  -----------------------------
 
     shiny::observeEvent(input$example1, {
-      shiny::updateTextAreaInput(session, "genelistUP", value = IMMCHECK.GENES)
+      shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
     })
     shiny::observeEvent(input$example2, {
-      shiny::updateTextAreaInput(session, "genelistUP", value = APOPTOSIS.GENES)
+      shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
     })
     shiny::observeEvent(input$example3, {
-      shiny::updateTextAreaInput(session, "genelistUP", value = CELLCYCLE.GENES)
+      shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
     })
 
     shiny::observe({
@@ -91,10 +91,10 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ======================= REACTIVE FUNCTIONS =====================================
     ## ================================================================================
 
-    input_genelistUP <- shiny::reactive({
-      shiny::req(input$genelistUP)
+    input_genelist <- shiny::reactive({
+      shiny::req(input$genelist)
 
-      gg <- input$genelistUP
+      gg <- input$genelist
       gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
       return(gg)
@@ -103,7 +103,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
     getCurrentMarkers <- shiny::reactive({
       shiny::req(pgx)
-      shiny::req(input$type, input$feature, input_genelistUP())
+      shiny::req(input$type, input$feature, input_genelist())
 
       ## Get current selection of markers/genes
       type <- input$type
@@ -112,7 +112,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       xfeatures <- toupper(pgx$genes[rownames(pgx$X), "gene_name"])
       gset <- NULL
       if (input$feature == "<custom>") {
-        gset <- input_genelistUP()
+        gset <- input_genelist()
         if (is.null(gset) || length(gset) == 0 || gset[1] == "") {
           return(NULL)
         }
@@ -137,11 +137,11 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         probes <- rownames(pgx$gx.meta$meta[[contr]])
 
-        match_input_genes <- any(input_genelistUP() %in% probes)
+        match_input_genes <- any(input_genelist() %in% probes)
 
         if (!match_input_genes) {
           # use human ortholog in case no matched found in proves
-          probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelistUP(), "gene_name"]
+          probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelist(), "gene_name"]
         }
         genes <- pgx$genes[probes, "gene_name"]
 
@@ -154,12 +154,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         top.genes <- fx[order(-abs(fx))]
         top.genes <- head(top.genes, 100)
         top.genes0 <- paste(top.genes, collapse = " ")
-        # shiny::updateTextAreaInput(session, "genelistUP", value = top.genes0)
+        # shiny::updateTextAreaInput(session, "genelist", value = top.genes0)
         gset <- names(top.genes)
       } else if (input$feature %in% names(playdata::iGSETS)) {
         gset <- toupper(unlist(playdata::getGSETS(input$feature)))
         gset0 <- paste(gset, collapse = " ")
-        shiny::updateTextAreaInput(session, "genelistUP", value = gset0)
+        shiny::updateTextAreaInput(session, "genelist", value = gset0)
       } else {
         return(NULL)
       }
