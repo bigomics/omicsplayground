@@ -22,7 +22,7 @@ enrichment_plot_volcanomethods_ui <- function(
 
   PlotModuleUI(
     ns("plot"),
-    plotlib = "grid",
+    plotlib = "plotly",
     title = title,
     caption = caption,
     options = plot_options,
@@ -46,119 +46,78 @@ enrichment_plot_volcanomethods_server <- function(id,
 
       cmp <- gs_contrast()
       mx <- pgx$gset.meta$meta[[cmp]]
-      F <- unclass(mx$fc)
+      FC <- unclass(mx$fc)
       Q <- unclass(mx$q)
-      rownames(Q) <- rownames(F) <- rownames(mx)
-      F[which(is.infinite(F))] <- NA
+      rownames(Q) <- rownames(FC) <- rownames(mx)
+      FC[which(is.infinite(FC))] <- NA
       Q[which(is.na(Q))] <- 1
 
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
       sel.gsets <- gset_collections[[gs_features()]]
-
       nlq <- -log10(1e-99 + unlist(Q))
-      ymax <- max(3, 1.2 * quantile(nlq, probs = 0.999, na.rm = TRUE)[1]) ## y-axis
-      xmax <- quantile(abs(unlist(F)), probs = 0.999, na.rm = TRUE)[1]
 
       pd <- list(
-        F = F,
+        FC = FC,
         Q = Q,
         sel.gsets = sel.gsets,
-        xmax = xmax,
-        ymax = ymax,
         fdr = fdr,
         lfc = lfc
       )
       pd
     })
 
-    get_ggplots <- function(cex = 1, base_size = 12) {
+    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
-      F <- pd$F
-      Q <- pd$Q
-      mx.list <- pd$mx.list
-      ymax <- pd$ymax
-      xmax <- pd$xmax
-      nplots <- ncol(Q)
-      fdr <- pd$fdr
-      lfc <- pd$lfc
+
+      # Input vars
+      fdr <- pd[["fdr"]]
+      lfc <- pd[["lfc"]]
+      ## meta tables
+      fc <- pd$FC
+      qv <- pd$Q
       sel.gsets <- pd$sel.gsets
+      rm(pd)
+      # Call volcano plots
+      all_plts <- playbase::plotlyVolcano_multi(FC = fc, 
+                                      Q = qv, 
+                                      fdr = fdr, 
+                                      lfc = lfc,
+                                      cex = cex,
+                                      title_y =  "significance (-log10q)", 
+                                      title_x = "effect size (log2FC)", 
+                                      share_axis = !input$scale_per_method,
+                                      yrange = yrange,
+                                      n_rows = n_rows,
+                                      margin_l =  margin_l,
+                                      margin_b = margin_b)
 
-      shiny::withProgress(message = "Computing volcano plots ...", value = 0, {
-        plt <- list()
-        i <- 1
-        for (i in 1:nplots) {
-          fc <- F[, i]
-          qv <- Q[, i]
-          is.sig <- (qv <= fdr & abs(fc) >= lfc)
-          table(is.sig)
-          sig.genes <- names(fc)[which(is.sig)]
-          if (!is.null(sel.gsets)) sig.genes <- intersect(sel.gsets, sig.genes)
-
-          xy <- cbind(x = fc, y = -log10(qv))
-          tt <- colnames(Q)[i]
-          ymax1 <- ymax
-          if (input$scale_per_method) {
-            ymax1 <- 1.2 * quantile(xy[, 2], probs = 0.999, na.rm = TRUE)[1] ## y-axis
-          }
-
-          plt[[i]] <- playbase::pgx.scatterPlotXY.GGPLOT(
-            xy,
-            title = tt,
-            cex.title = 0.75,
-            var = is.sig,
-            type = "factor",
-            col = c("#bbbbbb", "#1e60bb"),
-            legend.pos = "none", #
-
-
-            hilight2 = NULL,
-            xlim = xmax * c(-1, 1),
-            ylim = c(0, ymax1),
-            xlab = "difference  (log2FC)",
-            ylab = "significance  (-log10q)",
-            hilight.lwd = 0,
-            hilight.col = "#1e60bb",
-            hilight.cex = 1.5,
-            cex = cex,
-            cex.lab = 1.8 * cex,
-            base_size = base_size
-          ) + ggplot2::theme_bw(base_size = base_size)
-
-          shiny::incProgress(1 / nplots)
-        }
-      })
-      return(plt)
+      return(all_plts)
     }
 
-    volcano.RENDER <- function() {
-      plt <- get_ggplots(cex = 0.4, base_size = 12)
-      shiny::req(plt)
-      nplots <- length(plt)
-      nr <- ifelse(nplots <= 6, 1, 2)
-      nc <- max(ceiling(nplots / nr), 4)
-      #
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    # Render functions
+    modal_plotly.RENDER <- function() {
+      fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = NULL, margin_b = 20, margin_l = 50) %>%
+        playbase::plotly_build_light(.)
+      return(fig)
     }
 
-    volcano.RENDER2 <- function() {
-      plt <- get_ggplots(cex = 0.8, base_size = 18)
-      shiny::req(plt)
-      nplots <- length(plt)
-      nr <- ifelse(nplots <= 5, 1, 2)
-      nc <- max(ceiling(nplots / nr), 3)
-      #
-      gridExtra::grid.arrange(grobs = plt, nrow = nr, ncol = nc)
+    plotly.RENDER <- function() {
+      fig <- plotly_plots(yrange = 0.02, n_rows = NULL, margin_b = 20, margin_l = 20) %>%
+        plotly::style(
+          marker.size = 6
+        ) %>%
+        playbase::plotly_build_light(.)
+      return(fig)
     }
-
 
     PlotModuleServer(
       "plot",
-      plotlib = "grid",
-      func = volcano.RENDER,
-      func2 = volcano.RENDER2,
+      plotlib = "plotly",
+      func = modal_plotly.RENDER,
+      func2 = plotly.RENDER,
       pdf.width = 10, pdf.height = 5,
       res = c(75, 90),
       add.watermark = watermark

@@ -30,6 +30,7 @@ enrichment_plot_scatter_ui <- function(
 
   PlotModuleUI(
     ns("plot"),
+    plotlib = "plotly",
     title = title,
     label = "d",
     caption = caption,
@@ -89,58 +90,106 @@ enrichment_plot_scatter_server <- function(id,
       list(samples = sample.klr, group = grp.klr)
     }
 
-    subplot_scatter.RENDER <- shiny::reactive({
+    basesubplot_scatter.RENDER <- function(){
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
+      shiny::req(pgx$X)
       gene <- rownames(pgx$X)[1]
       sel <- gene_selected()
       gset <- gset_selected()
-      shiny::req(pgx$X)
-      shiny::req(sel$gene, sel$probe)
-      shiny::req(gset)
+      shiny::req(sel, gset)
 
-      if (is.null(sel) || length(sel) == 0) {
+      gene <- sel$gene
+      gset <- gset[1]
+      gx <- pgx$X[sel$probe, ]
+      sx <- pgx$gsetX[gset, ]
+      if (length(gx) == 0 || length(sx) == 0 ||
+        length(gx) != length(sx)) {
         frame()
-      } else {
-        gene <- sel$rn
-        gset <- gset[1]
-        selected_symbol <- pgx$genes[gene, "symbol"]
-        if (selected_symbol == "") selected_symbol <- gene
-        if (gene %in% rownames(pgx$X)) {
-          gx <- pgx$X[gene, ]
-        } else {
-          gx <- pgx$X[selected_symbol, ]
-        }
-        sx <- pgx$gsetX[gset, ]
-        if (length(gx) == 0 || length(sx) == 0 ||
-          length(gx) != length(sx)) {
-          frame()
-          return(NULL)
-        }
-        ## get colors
-        comp0 <- gs_contrast()
-        klrs <- getcolors(pgx, comp0)
-        klr <- klrs$samples[names(sx)]
-        klr <- paste0(gplots::col2hex(klr), "99")
-
-        cex1 <- c(1.4, 0.8, 0.3)[cut(length(gx), c(0, 100, 500, 99999))]
-        gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)
-        tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", selected_symbol)
-        base::plot(gx, sx,
-          col = klr, main = tt,
-          ylab = "gene set enrichment",
-          xlab = paste(selected_symbol, "expression"),
-          cex.lab = 1, pch = 19, cex = 1.0 * cex1, cex.main = 0.85
-        )
-        abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")
+        return(NULL)
       }
-      p <- grDevices::recordPlot()
-      return(p)
-    })
+      ## get colors
+      comp0 <- gs_contrast()
+      klrs <- getcolors(pgx, comp0)
+      klr <- klrs$samples[names(sx)]
+      klr <- paste0(gplots::col2hex(klr), "99")
+
+      cex1 <- c(1.4, 0.8, 0.3)[cut(length(gx), c(0, 100, 500, 99999))]
+      gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)
+      tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", gene)
+      base::plot(gx, sx,
+        col = klr, main = tt,
+        ylab = "gene set enrichment",
+        xlab = paste(gene, "expression"),
+        cex.lab = 1, pch = 19, cex = 1.0 * cex1, cex.main = 0.85
+      )
+      abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")
+    }
+
+    plotlysubplot_scatter <- function(){
+      shiny::req(pgx$X)
+      gene <- rownames(pgx$X)[1]
+      sel <- gene_selected()
+      gset <- gset_selected()
+      shiny::req(sel, gset)
+      gene <- sel$gene
+      gset <- gset[1]
+      gx <- pgx$X[sel$probe, ]
+      sx <- pgx$gsetX[gset, ]
+      if (length(gx) == 0 || length(sx) == 0 ||
+        length(gx) != length(sx)) {
+        frame()
+        return(NULL)
+      }
+      ## get colors
+      comp0 <- gs_contrast()
+      klrs <- getcolors(pgx, comp0)
+      klr <- klrs$samples[names(sx)]
+      klr <- paste0(gplots::col2hex(klr), "99")
+      gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)
+      comp0 <- playbase::breakstring(substring(comp0, 1, 80), 10)
+      tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", gene)
+
+      # Assemble Plot
+      fit <- lm(sx ~ gx)
+      newdata <- data.frame(gx = range(gx))
+      newdata$sx <- predict(fit, newdata)
+      plt <- plotly::plot_ly() %>%
+          # Axis
+          plotly::layout(
+            xaxis = list(title = paste(gene, "expression"), titlefont = 5),
+            yaxis = list(title = "gene set enrichment", titlefont = 5),
+            legend = list(x = 0.05, y = 1.1, xanchor = "center",  
+                          orientation = "h", bgcolor = "transparent", 
+                          font = list(size = 7)) 
+          ) %>%
+          # Add the points
+          plotly::add_trace(
+          x = gx, y = sx, name = comp0, color = klr,type = "scatter", mode = "markers",
+          marker = list(size = 5),
+          showlegend = TRUE) %>%
+          # Add the regression line
+          plotly::add_trace(data = newdata,
+          x = ~gx, y = ~sx, showlegend = FALSE, type = "scatter",
+          line = list(color = 'rgb(22, 96, 167)', dash = 'dot'), mode = "lines", 
+          inherit = FALSE
+          ) 
+
+      return(plt)
+    }
+    
+    subplotly_scatter.RENDER <- list(card = function() {
+      plotlysubplot_scatter() %>% plotly_default()
+    },
+      expand = function() {
+        plotlysubplot_scatter() %>% plotly_default()
+      })
 
     PlotModuleServer(
       "plot",
-      func = subplot_scatter.RENDER,
+      plotlib = "plotly",
+      func = subplotly_scatter.RENDER$card,#basesubplot_scatter.RENDER,
+      func2 = subplotly_scatter.RENDER$expand,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
       add.watermark = watermark
