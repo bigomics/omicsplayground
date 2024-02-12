@@ -33,23 +33,27 @@ singlecell_plot_cytoplot_ui <- function(
       "Choose your prefered gene on the y-axis.",
       placement = "top", options = list(container = "body")
     ),
-    withTooltip(shiny::sliderInput(parent("nbins"), label = "nbins:", min = 0, max = 50, value = 5, step = 5),
+    withTooltip(shiny::sliderInput(parent("nbins"), label = "nbins:", min = 0, max = 30, value = 10, step = 5),
       "Select the maximum number of bins for histogram distribution.",
       placement = "top", options = list(container = "body")
     ),
   )
 
-  PlotModuleUI(
-    id = ns("plotmodule"),
-    plotlib = "plotly",
-    info.text = info.text,
-    title = title,
-    caption = caption,
-    options = cyto.opts,
-    download.fmt = c("png", "pdf"),
-    height = height,
-    width = width
-  )
+  ## PlotModuleUI(
+  ##   id = ns("plotmodule"),
+  ##   ##    plotlib = "plotly",
+  ##   plotlib = "generic",
+  ##   outputFunc = plotly::plotlyOutput,
+  ##   info.text = info.text,
+  ##   title = title,
+  ##   caption = caption,
+  ##   options = cyto.opts,
+  ##   download.fmt = c("png", "pdf"),
+  ##   height = height,
+  ##   width = width
+  ## )
+
+  plotly::renderPlotly(ns("cytoplot"))
 }
 
 #' Single cell plot Server function
@@ -71,49 +75,50 @@ singlecell_plot_cytoplot_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    cyto.plotFUNC <- shiny::reactive({
+    plot_data <- shiny::reactive({
+    })
+
+    
+    ##    cyto.plotFUNC <- shiny::reactive({
+    cyto.plotFUNC <- function() {
       shiny::req(pgx$X)
       shiny::req(cytovar1(), cytovar2(), cytovar1() != "", cytovar2() != "")
       cytovar1 <- cytovar1()
       cytovar2 <- cytovar2()
       samplefilter <- samplefilter()
       nbins <- nbins()
-
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
 
-      gene1 <- cytovar1
-      gene2 <- cytovar2
-
-      par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
+      ##par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
       playbase::plotlyCytoplot(pgx,
-        gene1,
-        gene2,
+        gene1 = cytovar1,
+        gene2 = cytovar2,
         nbinsx = nbins,
         nbinsy = nbins,
-        marker.size = 7,
+        marker.size = 8,
         samples = kk,
         lab.unit = "(log2CPM)",
-        contour.coloring = "none"
+        contour.coloring = "heatmap"
+        ##        contour.coloring = "none"
       )
+    }##)
+
+    output$cytoplot <- plotly::renderPlotly({
+      cyto.plotFUNC()      
     })
-
-    plotly.RENDER <- function() {
-      cyto.plotFUNC()
-    }
-
-    plotly_modal.RENDER <- function() {
-      cyto.plotFUNC()
-    }
-
-    PlotModuleServer(
-      "plotmodule",
-      func = plotly.RENDER,
-      func2 = plotly_modal.RENDER,
-      plotlib = "plotly",
-      res = c(90, 130), ## resolution of plots
-      pdf.width = 9,
-      pdf.height = 7,
-      add.watermark = watermark
-    )
+    
+##     PlotModuleServer(
+##       "plotmodule",
+##       func = cyto.plotFUNC,
+## ##      func2 = plotly_modal.RENDER,
+##       ##plotlib = "plotly",
+##       plotlib = "generic",
+##       renderFunc = plotly::renderPlotly,
+##       res = c(90, 130), ## resolution of plots
+##       pdf.width = 8,
+##       pdf.height = 8,
+##       add.watermark = watermark
+##     )
+    
   }) ## end of moduleServer
 }
