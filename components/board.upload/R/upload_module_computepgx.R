@@ -415,15 +415,15 @@ upload_module_computepgx_server <- function(
         annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
 
         # check that we have at 100 matches between
-        MATCH_COUNTS <- sum(rownames(countsRT()) %in% annot_table$featire) > 100
+        MATCH_COUNTS <- sum(rownames(countsRT()) %in% annot_table$feature) >= 1
 
         if (!MATCH_COUNTS) {
           # reset annot_table
           annot_table <<- NULL
 
           shinyalert::shinyalert(
-            title = "Not enough custom probe features matching counts.",
-            text = "Need at least 100 feature matches between annotation table and counts!",
+            title = "No matches between counts and custom probe features.",
+            text = "Please check your custom probe annotation table!",
             type = "error",
             closeOnClickOutside = TRUE
           )
