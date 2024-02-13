@@ -54,6 +54,7 @@ singlecell_plot_icpplot_ui <- function(
   PlotModuleUI(
     id = ns("plot"),
     plotlib = "plotly",
+    ## plotlib = "ggplot",
     label = label,
     info.text = info.text,
     title = title,
@@ -134,7 +135,7 @@ singlecell_plot_icpplot_server <- function(id,
       return(pd)
     })
 
-    get_ggplots.NOTUSED <- function(cex = 1) {
+    get_ggplots <- function(cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -258,9 +259,11 @@ singlecell_plot_icpplot_server <- function(id,
     plotly.RENDER <- function() {
       pd <- plot_data()
       plt <- get_plotly()
-      nr <- 5
+      nr <- 2
       if (pd[["layout"]] == "4x4") nr <- 4
       if (pd[["layout"]] == "6x6") nr <- 6
+      plt <- head( plt, nr*nr )
+
       fig <- plotly::subplot(
         plt,
         nrows = nr,
@@ -269,8 +272,7 @@ singlecell_plot_icpplot_server <- function(id,
         plotly::layout(
           title = list(text = pd$refset, size = 14),
           margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-        ) %>%
-        plotly::partial_bundle()
+      )
       return(fig)
     }
 
@@ -279,16 +281,34 @@ singlecell_plot_icpplot_server <- function(id,
         plotly::layout(
           margin = list(l = 0, r = 0, b = 0, t = 50) # lfbt
         ) %>%
-        plotly_modal_default() %>%
-        plotly::partial_bundle()
+        plotly_modal_default()
       return(fig)
     }
 
+
+    ggplot.RENDER <- function() {
+      pd <- plot_data()
+      plt <- get_ggplots()
+      shiny::req(plt)
+      nr <- ceiling(sqrt(length(plt)))
+      title <- pd$refset
+      fig <- gridExtra::grid.arrange(
+        grobs = plt,
+        nrow = nr,
+        ncol = nr,
+        padding = unit(0.01, "line"),
+        top = textGrob(title, gp = gpar(fontsize = 15))
+      )
+      return(fig)
+    }
+    
     PlotModuleServer(
       id = "plot",
-      func = plotly_modal.RENDER,
-      func2 = plotly.RENDER,
+      func = plotly.RENDER,
+      func2 = plotly_modal.RENDER,
       plotlib = "plotly",
+##      func = ggplot.RENDER,
+##      plotlib = "ggplot",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
       add.watermark = watermark
