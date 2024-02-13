@@ -52,7 +52,6 @@ singlecell_plot_cytoplot_ui <- function(
     height = height,
     width = width
   )
-
 }
 
 #' Single cell plot Server function
@@ -96,17 +95,16 @@ singlecell_plot_cytoplot_server <- function(id,
         samples = kk,
         lab.unit = "  (log2CPM)",
         contour.coloring = "none"
-      ) 
-      
-##      plotly::plot_ly(z = ~volcano, type = "contour")
-      
-    }##)
-    
+      )
+
+      ##      plotly::plot_ly(z = ~volcano, type = "contour")
+    } ## )
+
     PlotModuleServer(
       "plotmodule",
       func = cyto.plotFUNC,
-##      func2 = plotly_modal.RENDER,
-      ##plotlib = "plotly",
+      ##      func2 = plotly_modal.RENDER,
+      ## plotlib = "plotly",
       plotlib = "generic",
       renderFunc = plotly::renderPlotly,
       res = c(90, 130), ## resolution of plots
@@ -114,6 +112,5 @@ singlecell_plot_cytoplot_server <- function(id,
       pdf.height = 8,
       add.watermark = watermark
     )
-    
   }) ## end of moduleServer
 }

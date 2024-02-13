@@ -262,7 +262,7 @@ singlecell_plot_icpplot_server <- function(id,
       nr <- 2
       if (pd[["layout"]] == "4x4") nr <- 4
       if (pd[["layout"]] == "6x6") nr <- 6
-      plt <- head( plt, nr*nr )
+      plt <- head(plt, nr * nr)
 
       fig <- plotly::subplot(
         plt,
@@ -272,7 +272,7 @@ singlecell_plot_icpplot_server <- function(id,
         plotly::layout(
           title = list(text = pd$refset, size = 14),
           margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-      )
+        )
       return(fig)
     }
 
@@ -301,14 +301,14 @@ singlecell_plot_icpplot_server <- function(id,
       )
       return(fig)
     }
-    
+
     PlotModuleServer(
       id = "plot",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       plotlib = "plotly",
-##      func = ggplot.RENDER,
-##      plotlib = "ggplot",
+      ##      func = ggplot.RENDER,
+      ##      plotlib = "ggplot",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
       add.watermark = watermark
