@@ -39,21 +39,20 @@ singlecell_plot_cytoplot_ui <- function(
     ),
   )
 
-  ## PlotModuleUI(
-  ##   id = ns("plotmodule"),
-  ##   ##    plotlib = "plotly",
-  ##   plotlib = "generic",
-  ##   outputFunc = plotly::plotlyOutput,
-  ##   info.text = info.text,
-  ##   title = title,
-  ##   caption = caption,
-  ##   options = cyto.opts,
-  ##   download.fmt = c("png", "pdf"),
-  ##   height = height,
-  ##   width = width
-  ## )
+  PlotModuleUI(
+    id = ns("plotmodule"),
+    ##    plotlib = "plotly",
+    plotlib = "generic",
+    outputFunc = plotly::plotlyOutput,
+    info.text = info.text,
+    title = title,
+    caption = caption,
+    options = cyto.opts,
+    download.fmt = c("png", "pdf"),
+    height = height,
+    width = width
+  )
 
-  plotly::renderPlotly(ns("cytoplot"))
 }
 
 #' Single cell plot Server function
@@ -78,7 +77,6 @@ singlecell_plot_cytoplot_server <- function(id,
     plot_data <- shiny::reactive({
     })
 
-    
     ##    cyto.plotFUNC <- shiny::reactive({
     cyto.plotFUNC <- function() {
       shiny::req(pgx$X)
@@ -89,7 +87,6 @@ singlecell_plot_cytoplot_server <- function(id,
       nbins <- nbins()
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter)
 
-      ##par(mfrow = c(1, 1), mar = c(10, 5, 4, 1))
       playbase::plotlyCytoplot(pgx,
         gene1 = cytovar1,
         gene2 = cytovar2,
@@ -97,28 +94,26 @@ singlecell_plot_cytoplot_server <- function(id,
         nbinsy = nbins,
         marker.size = 8,
         samples = kk,
-        lab.unit = "(log2CPM)",
-        contour.coloring = "heatmap"
-        ##        contour.coloring = "none"
-      )
+        lab.unit = "  (log2CPM)",
+        contour.coloring = "none"
+      ) 
+      
+##      plotly::plot_ly(z = ~volcano, type = "contour")
+      
     }##)
-
-    output$cytoplot <- plotly::renderPlotly({
-      cyto.plotFUNC()      
-    })
     
-##     PlotModuleServer(
-##       "plotmodule",
-##       func = cyto.plotFUNC,
-## ##      func2 = plotly_modal.RENDER,
-##       ##plotlib = "plotly",
-##       plotlib = "generic",
-##       renderFunc = plotly::renderPlotly,
-##       res = c(90, 130), ## resolution of plots
-##       pdf.width = 8,
-##       pdf.height = 8,
-##       add.watermark = watermark
-##     )
+    PlotModuleServer(
+      "plotmodule",
+      func = cyto.plotFUNC,
+##      func2 = plotly_modal.RENDER,
+      ##plotlib = "plotly",
+      plotlib = "generic",
+      renderFunc = plotly::renderPlotly,
+      res = c(90, 130), ## resolution of plots
+      pdf.width = 8,
+      pdf.height = 8,
+      add.watermark = watermark
+    )
     
   }) ## end of moduleServer
 }
