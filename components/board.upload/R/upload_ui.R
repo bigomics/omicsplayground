@@ -55,8 +55,8 @@ UploadUI <- function(id) {
     )
   )
 
-  upload_select_db <- shiny::tabPanel(
-    "Select Organism",
+  upload_select_db <- wizardR::wizard_step(
+    step_title = "Select Organism",
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",
@@ -114,8 +114,8 @@ UploadUI <- function(id) {
   )
 
 
-  upload_panel <- shiny::tabPanel(
-    "Upload",
+  upload_panel <- wizardR::wizard_step(
+    step_title = "Upload",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
@@ -216,11 +216,11 @@ UploadUI <- function(id) {
                and a file specifying the statistical comparisons (comparisons.csv).
                NB Users can now create comparisons from the platform itself, so the
                comparisons.csv file is optional.")
-    )   
+    )
   )
 
-  comparisons_panel <- shiny::tabPanel(
-    "Comparisons",
+  comparisons_panel <- wizardR::wizard_step(
+    step_title = "Comparisons",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 200px)",
@@ -230,7 +230,7 @@ UploadUI <- function(id) {
     )
   )
 
-  batchcorrect_panel <- shiny::tabPanel(
+  batchcorrect_panel <- wizardR::wizard_step(
     "BatchEffects",
     bslib::layout_columns(
       col_widths = 12,
@@ -241,7 +241,7 @@ UploadUI <- function(id) {
     )
   )
 
-  outliers_panel <- shiny::tabPanel(
+  outliers_panel <- wizardR::wizard_step(
     "QC/BC",
     bslib::layout_columns(
       col_widths = 12,
@@ -252,7 +252,7 @@ UploadUI <- function(id) {
     )
   )
   
-  compute_panel <- shiny::tabPanel(
+  compute_panel <- wizardR::wizard_step(
     "Compute",
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
@@ -277,7 +277,7 @@ UploadUI <- function(id) {
       style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
       shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode"),
     ),
-    shiny::tabsetPanel(
+    wizardR::wizard(
       id = ns("tabs"),
 ##    upload_select_db,
       upload_panel,
