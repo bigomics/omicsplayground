@@ -51,6 +51,13 @@ UploadUI <- function(id) {
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
         style = "color: #ccc;"
+      ),
+      # action button to trigger modal
+      shiny::actionButton(
+        ns("show_modal"),
+        icon = shiny::icon("info"),
+        style = "color: #ccc;",
+        label = "Show Modal"
       )
     )
   )
@@ -231,7 +238,7 @@ UploadUI <- function(id) {
   )
 
   batchcorrect_panel <- wizardR::wizard_step(
-    "BatchEffects",
+    step_title = "BatchEffects",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
@@ -242,7 +249,7 @@ UploadUI <- function(id) {
   )
 
   outliers_panel <- wizardR::wizard_step(
-    "QC/BC",
+    step_title = "QC/BC",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
@@ -253,7 +260,7 @@ UploadUI <- function(id) {
   )
   
   compute_panel <- wizardR::wizard_step(
-    "Compute",
+    step_title = "Compute",
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
     bslib::layout_columns(
@@ -277,14 +284,17 @@ UploadUI <- function(id) {
       style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
       shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode"),
     ),
+    div(
     wizardR::wizard(
-      id = ns("tabs"),
+      id = ns("upload-wizard"),
+      modal = TRUE,
 ##    upload_select_db,
       upload_panel,
       comparisons_panel,
       outliers_panel,
       batchcorrect_panel,
       compute_panel
+    )
     )
   )
 }

@@ -962,6 +962,12 @@ UploadBoard <- function(id,
       samplesRT = reactive(checked_samples()$matrix)
     )
 
+    # observe show_modal and start modal
+    shiny::observeEvent(input$show_modal, {
+      print("show_modal clicked")
+      wizardR::wizard_show(ns("upload-wizard"))
+    })
+
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
