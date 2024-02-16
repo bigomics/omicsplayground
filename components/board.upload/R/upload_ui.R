@@ -3,17 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-library(shiny)
-library(wizardR)
-library(bslib)
-library(shiny)
-library(htmltools)
-library(plotly)
-plotly_widget <- plotly::plot_ly(x = diamonds$cut) %>%
-  config(displayModeBar = FALSE) %>%
-  layout(margin = list(t = 0, b = 0, l = 0, r = 0))
-
-
 UploadInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
@@ -136,6 +125,7 @@ UploadUI <- function(id) {
     step_title = "Upload",
     bslib::layout_columns(
       col_widths = 12,
+      height = "calc(100vh - 340px)", #TODO this is a hack, should be fixed
       bslib::layout_columns(
         col_widths = c(4, 8),
         bslib::card(
@@ -224,22 +214,21 @@ UploadUI <- function(id) {
           height = c("auto", "100%"),
           width = c("auto", "100%")
         )
+        ),
+        bs_alert("In this panel, you can upload your data to the platform. The platform
+                 requires 3 data files as explained below: a data file containing
+                 counts/expression (counts.csv), a sample information file (samples.csv)
+                 and a file specifying the statistical comparisons (comparisons.csv).
+                 NB Users can now create comparisons from the platform itself, so the
+                 comparisons.csv file is optional.")
       )
-      # ,
-      # bs_alert("In this panel, you can upload your data to the platform. The platform
-      #          requires 3 data files as explained below: a data file containing
-      #          counts/expression (counts.csv), a sample information file (samples.csv)
-      #          and a file specifying the statistical comparisons (comparisons.csv).
-      #          NB Users can now create comparisons from the platform itself, so the
-      #          comparisons.csv file is optional.")
-    )
   )
 
   comparisons_panel <- wizardR::wizard_step(
     step_title = "Comparisons",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 200px)",
+      height = "calc(100vh - 340px)",
       heights_equal = "row",
       upload_module_makecontrast_ui(ns("makecontrast")),      
       bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
@@ -250,7 +239,7 @@ UploadUI <- function(id) {
     step_title = "BatchEffects",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 340px)",
       heights_equal = "row",
       upload_module_batchcorrect_ui(ns("batchcorrect")),
       bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
@@ -261,7 +250,7 @@ UploadUI <- function(id) {
     step_title = "QC/BC",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 340px)",
       heights_equal = "row",
       upload_module_outliers_ui(ns("checkqc")),
       bs_alert("Check for normalization, outliers and batch-effects.")      
