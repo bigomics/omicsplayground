@@ -205,7 +205,7 @@ UploadUI <- function(id) {
           title = "Count Stats",
           info.text = "Information about the uploaded counts.",
           caption = "Information about the uploaded counts.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
+          height = c("auto", "100%"),
           width = c("auto", "100%")
         ),
         upload_plot_phenostats_ui(
@@ -213,26 +213,25 @@ UploadUI <- function(id) {
           title = "Pheno Stats",
           info.text = "Information about the uploaded samples",
           caption = "Information about the uploaded samples.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
+          height = c("auto", "100%"),
           width = c("auto", "100%")
         ),
         upload_plot_contraststats_ui(
           id = ns("contrastStats"),
           title = "Comparison Stats",
-          info.text = "Information about the uploaded comparisons",
+          info.text = "Informyation about the uploaded comparisons",
           caption = "Information about the uploaded comparisons.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
+          height = c("auto", "100%"),
           width = c("auto", "100%")
         )
       )
       # ,
-    #   bs_alert("In this panel, you can upload your data to the platform. The platform
-    #            requires 3 data files as explained below: a data file containing
-    #            counts/expression (counts.csv), a sample information file (samples.csv)
-    #            and a file specifying the statistical comparisons (comparisons.csv).
-    #            NB Users can now create comparisons from the platform itself, so the
-    #            comparisons.csv file is optional.")
-    # )
+      # bs_alert("In this panel, you can upload your data to the platform. The platform
+      #          requires 3 data files as explained below: a data file containing
+      #          counts/expression (counts.csv), a sample information file (samples.csv)
+      #          and a file specifying the statistical comparisons (comparisons.csv).
+      #          NB Users can now create comparisons from the platform itself, so the
+      #          comparisons.csv file is optional.")
     )
   )
 
@@ -298,30 +297,8 @@ UploadUI <- function(id) {
     wizardR::wizard(
       id = ns("upload-wizard"),
       width = 80,
+      height = 75,
       modal = TRUE,
-##    upload_select_db,
-      wizard_step(
-              # make 4 base plots in bslib::cards within bslib::layout_columns()
-              bslib::layout_columns(
-                bslib::card(
-                full_screen = TRUE,
-                card_header("A filling plot"),
-                card_body(plotly_widget)
-              ),card(
-                full_screen = TRUE,
-                card_header("A filling plot"),
-                card_body(plotly_widget)
-              ),card(
-                full_screen = TRUE,
-                card_header("A filling plot"),
-                card_body(plotly_widget)
-              ),card(
-                full_screen = TRUE,
-                card_header("A filling plot"),
-                card_body(plotly_widget)
-              )
-              )
-            ),
       upload_panel,
       comparisons_panel,
       outliers_panel,

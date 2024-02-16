@@ -964,7 +964,6 @@ UploadBoard <- function(id,
 
     # observe show_modal and start modal
     shiny::observeEvent(input$show_modal, {
-      print("show_modal clicked")
       wizardR::wizard_show(ns("upload-wizard"))
     })
 
