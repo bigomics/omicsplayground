@@ -3,6 +3,17 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+library(shiny)
+library(wizardR)
+library(bslib)
+library(shiny)
+library(htmltools)
+library(plotly)
+plotly_widget <- plotly::plot_ly(x = diamonds$cut) %>%
+  config(displayModeBar = FALSE) %>%
+  layout(margin = list(t = 0, b = 0, l = 0, r = 0))
+
+
 UploadInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
@@ -125,12 +136,9 @@ UploadUI <- function(id) {
     step_title = "Upload",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
       bslib::layout_columns(
-        col_widths = c(4, 8),        
+        col_widths = c(4, 8),
         bslib::card(
-          height = "100%",
-          width = "100%",
           style = "background-color: #f7fafd;",
           shiny::selectInput(
             ns("selected_organism"),
@@ -139,7 +147,7 @@ UploadUI <- function(id) {
             choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
             selected = NULL,
             multiple = FALSE,
-            width = "90%"            
+            width = "90%"
           ),
 ##          shiny::br(), 
           div(
@@ -216,13 +224,15 @@ UploadUI <- function(id) {
           height = c("75%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
-      ),
-      bs_alert("In this panel, you can upload your data to the platform. The platform
-               requires 3 data files as explained below: a data file containing
-               counts/expression (counts.csv), a sample information file (samples.csv)
-               and a file specifying the statistical comparisons (comparisons.csv).
-               NB Users can now create comparisons from the platform itself, so the
-               comparisons.csv file is optional.")
+      )
+      # ,
+    #   bs_alert("In this panel, you can upload your data to the platform. The platform
+    #            requires 3 data files as explained below: a data file containing
+    #            counts/expression (counts.csv), a sample information file (samples.csv)
+    #            and a file specifying the statistical comparisons (comparisons.csv).
+    #            NB Users can now create comparisons from the platform itself, so the
+    #            comparisons.csv file is optional.")
+    # )
     )
   )
 
@@ -287,8 +297,31 @@ UploadUI <- function(id) {
     div(
     wizardR::wizard(
       id = ns("upload-wizard"),
+      width = 80,
       modal = TRUE,
 ##    upload_select_db,
+      wizard_step(
+              # make 4 base plots in bslib::cards within bslib::layout_columns()
+              bslib::layout_columns(
+                bslib::card(
+                full_screen = TRUE,
+                card_header("A filling plot"),
+                card_body(plotly_widget)
+              ),card(
+                full_screen = TRUE,
+                card_header("A filling plot"),
+                card_body(plotly_widget)
+              ),card(
+                full_screen = TRUE,
+                card_header("A filling plot"),
+                card_body(plotly_widget)
+              ),card(
+                full_screen = TRUE,
+                card_header("A filling plot"),
+                card_body(plotly_widget)
+              )
+              )
+            ),
       upload_panel,
       comparisons_panel,
       outliers_panel,
