@@ -11,7 +11,8 @@ UploadBoard <- function(id,
                         load_uploaded_data,
                         recompute_pgx,
                         recompute_info,
-                        inactivityCounter) {
+                        inactivityCounter,
+                        new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -963,7 +964,21 @@ UploadBoard <- function(id,
     )
 
     # observe show_modal and start modal
-    shiny::observeEvent(input$show_modal, {
+    shiny::observeEvent(new_upload(), {
+        shiny::req(auth$options)
+        enable_upload <- auth$options$ENABLE_UPLOAD
+        if (enable_upload) {
+          bigdash.openSidebar()
+          bigdash.selectTab(session, "upload-tab")
+        } else {
+          shinyalert::shinyalert(
+            title = "Upload disabled",
+            text = "Sorry, upload of new data is disabled for this account.",
+            type = "warning",
+            #
+            closeOnClickOutside = FALSE
+          )
+        }
       wizardR::wizard_show(ns("upload-wizard"))
     })
 

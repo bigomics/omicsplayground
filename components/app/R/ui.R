@@ -252,6 +252,13 @@ app_ui <- function(x) {
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
+          # create button to start new data_upload with green color
+          shiny::actionButton(
+            "new_upload",
+            "Upload new data",
+            class = "btn btn-primary btn-sm",
+            style = "margin-left: 10px; margin-right: 10px;"
+          ),
           div.chirpbutton,
           bigdash::navbarDropdown(
             "Help",

@@ -189,7 +189,8 @@ app_server <- function(input, output, session) {
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
       recompute_info = recompute_info,
-      inactivityCounter = inactivityCounter
+      inactivityCounter = inactivityCounter,
+      new_upload = reactive(input$new_upload)
     )
   }
 
