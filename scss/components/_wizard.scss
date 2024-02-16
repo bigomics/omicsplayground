@@ -1,7 +1,14 @@
-.wizard .wizard-nav.progress .wizard-step{
-  background-color: #3181DE !important; 
+.wizard .wizard-nav.progress .wizard-step.active~.wizard-step {
+  background-color: #ffffff !important; 
+}
+
+.wizard .wizard-nav.progress .wizard-step {
+  background-color: #009C9F !important; 
+
 }
 
 .wizard .wizard-buttons {
   justify-content: space-between !important
 }
+
+
