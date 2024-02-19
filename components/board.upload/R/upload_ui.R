@@ -288,6 +288,7 @@ UploadUI <- function(id) {
       width = 80,
       height = 75,
       modal = TRUE,
+      style = "progress",
       upload_panel,
       comparisons_panel,
       outliers_panel,
