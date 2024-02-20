@@ -963,13 +963,13 @@ UploadBoard <- function(id,
       samplesRT = reactive(checked_samples()$matrix)
     )
 
+
     # observe show_modal and start modal
     shiny::observeEvent(new_upload(), {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
         if (enable_upload) {
-          bigdash.openSidebar()
-          bigdash.selectTab(session, "upload-tab")
+          wizardR::wizard_show(ns("upload-wizard"))
         } else {
           shinyalert::shinyalert(
             title = "Upload disabled",
@@ -979,12 +979,11 @@ UploadBoard <- function(id,
             closeOnClickOutside = FALSE
           )
         }
-      wizardR::wizard_show(ns("upload-wizard"))
     })
+
 
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
-    # board does not return anything
   })
 }

@@ -3,64 +3,64 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UploadInputs <- function(id) {
-  ns <- shiny::NS(id) ## namespace
-  bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-    withTooltip(
-      shiny::selectInput(ns("fa_contrast"), "Comparison:",
-        choices = NULL
-      ),
-      "Select the comparison of interest.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::actionLink(ns("fa_options"), "Options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      "Show/hide advanced options",
-      placement = "top"
-    ),
-    shiny::br(),
-    shiny::conditionalPanel(
-      "input.fa_options % 2 == 1",
-      ns = ns,
-      shiny::tagList(
-        withTooltip(
-          shiny::checkboxInput(
-            ns("fa_filtertable"),
-            "filter significant (tables)",
-            FALSE
-          ),
-          "Click to filter the significant entries in the tables."
-        )
-      )
-    )
-  )
-}
+# UploadInputs <- function(id) {
+#   ns <- shiny::NS(id) ## namespace
+#   bigdash::tabSettings(
+#     shiny::hr(), shiny::br(),
+#     withTooltip(
+#       shiny::selectInput(ns("fa_contrast"), "Comparison:",
+#         choices = NULL
+#       ),
+#       "Select the comparison of interest.",
+#       placement = "top"
+#     ),
+#     withTooltip(
+#       shiny::actionLink(ns("fa_options"), "Options",
+#         icon = icon("cog", lib = "glyphicon")
+#       ),
+#       "Show/hide advanced options",
+#       placement = "top"
+#     ),
+#     shiny::br(),
+#     shiny::conditionalPanel(
+#       "input.fa_options % 2 == 1",
+#       ns = ns,
+#       shiny::tagList(
+#         withTooltip(
+#           shiny::checkboxInput(
+#             ns("fa_filtertable"),
+#             "filter significant (tables)",
+#             FALSE
+#           ),
+#           "Click to filter the significant entries in the tables."
+#         )
+#       )
+#     )
+#   )
+# }
 
 UploadUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  board_header <- fillRow(
-    flex = c(NA, NA, 1),
-    shiny::div(
-      id = "navheader-current-section",
-      HTML("Create New Dataset &nbsp;"),
-      shiny::actionLink(
-        ns("module_info"), "",
-        icon = shiny::icon("youtube"),
-        style = "color: #ccc;"
-      ),
-      # action button to trigger modal
-      shiny::actionButton(
-        ns("show_modal"),
-        icon = shiny::icon("info"),
-        style = "color: #ccc;",
-        label = "Show Modal"
-      )
-    )
-  )
+  # board_header <- fillRow(
+  #   flex = c(NA, NA, 1),
+  #   shiny::div(
+  #     id = "navheader-current-section",
+  #     HTML("Create New Dataset &nbsp;"),
+  #     shiny::actionLink(
+  #       ns("module_info"), "",
+  #       icon = shiny::icon("youtube"),
+  #       style = "color: #ccc;"
+  #     ),
+  #     # action button to trigger modal
+  #     shiny::actionButton(
+  #       ns("show_modal"),
+  #       icon = shiny::icon("info"),
+  #       style = "color: #ccc;",
+  #       label = "Show Modal"
+  #     )
+  #   )
+  # )
 
   upload_select_db <- wizardR::wizard_step(
     step_title = "Select Organism",
@@ -275,9 +275,9 @@ UploadUI <- function(id) {
     )
   )
 
-  div(
+    div(
     class = "p-0",
-    board_header,
+    # board_header,
     div(
       style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
       shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode"),
