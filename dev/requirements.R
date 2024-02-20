@@ -128,7 +128,7 @@ pkg.later <- c(
     "gputools","Seurat","EPIC","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
-    "infercnv","pathview",
+    "infercnv","pathview","reticulate",
     "mygene","diptest","edgeR","DESeq2"
   )
 
@@ -181,7 +181,8 @@ install.github('rstudio/bslib@v0.5.1',dependencies=FALSE)
 install.github('rstudio/htmltools',dependencies=FALSE)
 install.github('bigomics/biomaRt',dependencies=FALSE)
 install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
-
+install.github('renozao/xbioc',dependencies=TRUE)
+ 
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
 ##---------------------------------------------------------------------

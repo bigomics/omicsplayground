@@ -223,7 +223,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
-          pos <- pgx$cluster.genes$pos[["umap2d"]]
+          pos <- pgx1$cluster.genes$pos[["umap2d"]]
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
         }

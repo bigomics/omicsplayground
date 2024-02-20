@@ -226,7 +226,6 @@ UploadBoard <- function(id,
       }
 
       upload_table <- input$upload_files
-
       if (class(upload_table) != "data.frame" && upload_table == "hello_example") {
         upload_table <- data.frame(
           name = c("counts.csv", "samples.csv", "contrasts.csv"),
@@ -234,10 +233,6 @@ UploadBoard <- function(id,
           datapath = c("examplecounts", "examplesamples", "examplecontrasts")
         )
       }
-
-      message("[upload_files] >>> reading uploaded files")
-      message("[upload_files] upload_files$name=", upload_table$name)
-      message("[upload_files] upload_files$datapath=", upload_table$datapath)
 
       uploaded[["counts.csv"]] <- NULL
       uploaded[["samples.csv"]] <- NULL
@@ -247,7 +242,6 @@ UploadBoard <- function(id,
       uploaded[["checklist"]] <- NULL
       checklist[["samples_counts"]] <- NULL
       checklist[["samples_contrasts"]] <- NULL
-
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
@@ -259,6 +253,7 @@ UploadBoard <- function(id,
         i <- grep("[.]pgx$", upload_table$name)
         pgxfile <- upload_table$datapath[i]
         uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
+        return(NULL)
       } else {
         ## If the user uploaded CSV files, we read in the data
         ## from the files.
@@ -273,7 +268,6 @@ UploadBoard <- function(id,
 
         inputnames <- upload_table$name[ii]
         uploadnames <- upload_table$datapath[ii]
-        message("[upload_files] uploaded files: ", inputnames)
 
         ## remove any old gui_contrasts.csv
         user_ctfile <- file.path(raw_dir(), "user_contrasts.csv")
@@ -387,7 +381,6 @@ UploadBoard <- function(id,
         }
       }
 
-
       ## put the matrices in the reactive values 'uploaded'
       files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
       if (length(matlist) > 0) {
@@ -491,6 +484,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        write_check_output(res$checks, "COUNTS", raw_dir())
         # store check and data regardless of it errors
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -548,6 +542,8 @@ UploadBoard <- function(id,
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
+
+        write_check_output(res$checks, "SAMPLES", raw_dir())
         # store check and data regardless of it errors
         checklist[["samples.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -580,6 +576,8 @@ UploadBoard <- function(id,
             SAMPLES = checked,
             COUNTS = cc$matrix
           )
+          write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
+
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
           if (cross_check$PASS) {
@@ -626,6 +624,8 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
         # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
+        write_check_output(res$checks, "CONTRASTS", raw_dir())
+
         if (res$PASS) {
           checked <- res$df
           status <- "OK"
@@ -670,6 +670,8 @@ UploadBoard <- function(id,
             SAMPLES = cc$matrix,
             CONTRASTS = checked
           )
+
+          write_check_output(cross_check$checks, "SAMPLES_CONTRASTS", raw_dir())
           checklist[["samples_contrasts"]]$checks <- cross_check$checks
           if (cross_check$PASS) {
             checked <- res$df
@@ -857,7 +859,6 @@ UploadBoard <- function(id,
       id = "compute",
       countsRT = corrected_counts,
       samplesRT = shiny::reactive(checked_samples()$matrix),
-      ## contrastsRT = shiny::reactive(checked_contrasts()$matrix),
       contrastsRT = shiny::reactive(modified_ct()$contr),
       raw_dir = raw_dir,
       batchRT = batch_vectors,
@@ -917,15 +918,6 @@ UploadBoard <- function(id,
       contrastsRT = reactive(checked_contrasts()$matrix),
       samplesRT = reactive(checked_samples()$matrix)
     )
-
-
-    ## upload_plot_pcaplot_server(
-    ##   "pcaplot",
-    ##   phenoRT = shiny::reactive(uploaded$samples.csv),
-    ##   countsRT = corrected_counts,
-    ##   sel.conditions = sel.conditions,
-    ##   watermark = WATERMARK
-    ## )
 
     ## ------------------------------------------------
     ## Board return object

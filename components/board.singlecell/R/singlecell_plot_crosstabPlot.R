@@ -107,16 +107,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
       topsel <- head(order(-colSums(scores)), 25)
       scores <- scores[, topsel]
 
-      message(
-        "[SingleCellBoard::crosstab.plotFUNC] 2 : dim(scores) = ",
-        paste(dim(scores), collapse = "x"), "\n"
-      )
-
-      message(
-        "[SingleCellBoard::crosstab.plotFUNC] 2 : length(kk) = ",
-        length(kk), "\n"
-      )
-
       ## expected counts per stat level
       kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE]) ## approximate counts from log2X
       grp.counts <- (t(scores / rowSums(scores)) %*% matrix(kk.counts, ncol = 1))[, 1]

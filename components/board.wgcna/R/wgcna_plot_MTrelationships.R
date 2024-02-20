@@ -35,7 +35,7 @@ wgcna_plot_MTrelationships_server <- function(id,
                                               labels2rainbow,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    moduleTrait.RENDER <- shiny::reactive({
+    moduleTrait.RENDER <- function() {
       out <- wgcna.compute()
       net <- out$net
       datExpr <- out$datExpr
@@ -88,7 +88,7 @@ wgcna_plot_MTrelationships_server <- function(id,
         zlim = c(-1, 1),
         main = NULL
       )
-    })
+    }
 
     PlotModuleServer(
       "plot",

@@ -69,6 +69,7 @@ expression_plot_maplot_server <- function(id,
                                           sel2,
                                           df2,
                                           fam.genes,
+                                          genes_in_sel_geneset,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
@@ -130,9 +131,7 @@ expression_plot_maplot_server <- function(id,
         sel.genes <- lab.genes
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
-        gs <- rownames(df2)[sel2]
-        gset <- unlist(playdata::getGSETS(gs))
-        sel.genes <- intersect(sel.genes, gset)
+        sel.genes <- genes_in_sel_geneset()
         lab.genes <- c(
           head(sel.genes[order(impt(sel.genes))], 10),
           head(sel.genes[order(-impt(sel.genes))], 10)

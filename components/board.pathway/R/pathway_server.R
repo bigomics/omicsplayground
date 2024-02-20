@@ -57,7 +57,8 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     tab_elements <- list(
       "WikiPathways" = list(disable = NULL),
       "Reactome" = list(disable = NULL),
-      "GO graph" = list(disable = NULL)
+      "GO graph" = list(disable = NULL),
+      "Enrichment Map (beta)" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -152,16 +153,6 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       reactome.available <- gsub("^.*reactome_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
       reactome.gsets <- grep("R-HSA", rownames(pgx$gsetX), value = TRUE)
       reactome.ids <- gsub(".*R-HSA", "R-HSA", reactome.gsets)
-      ## sometimes no REACTOME in genesets...
-      if (length(reactome.ids) == 0) {
-        shinyalert::shinyalert(
-          title = "No REACTOME terms in enrichment results",
-          text = "",
-          type = "warning"
-        )
-        df <- data.frame()
-        return(df)
-      }
 
       ## select those of which we have SGBN files
       jj <- which(!is.na(reactome.ids) &
@@ -186,6 +177,16 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       )
       df <- df[!duplicated(df$reactome.id), ]
       df <- df[order(-abs(df$logFC)), ]
+      ## sometimes no REACTOME in genesets...
+      if (nrow(df) == 0) {
+        shinyalert::shinyalert(
+          title = "No REACTOME terms in enrichment results",
+          text = "",
+          type = "warning"
+        )
+        df <- data.frame()
+        return(df)
+      }
       return(df)
     })
 
@@ -213,6 +214,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       "reactome_actmap",
       reactive(pgx$gset.meta$meta),
       getReactomeTable,
+      pgx = pgx,
       plotActivationMatrix,
       WATERMARK
     )

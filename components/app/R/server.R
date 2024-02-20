@@ -568,17 +568,17 @@ app_server <- function(input, output, session) {
       ## Dynamically show upon availability in pgx object
       info("[SERVER] disabling extra features")
       tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
-      ##      tabRequire(PGX, session, "cmap-tab", "connectivity", has.libx)
       tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
       tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
       tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
+      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
+      for (tab_i in gset_tabs) {
+        tabRequire(PGX, session, tab_i, "gsetX", TRUE)
+        tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
+      }
 
       ## DEVELOPER only tabs (still too alpha)
       info("[SERVER] disabling alpha features")
-      #      toggleTab("cell-tabs", "iTALK", DEV) ## DEV only
-      #      toggleTab("cell-tabs", "CNV", DEV) ## DEV only
-      #      toggleTab("cell-tabs", "Monocle", DEV) ## DEV only
-
       info("[SERVER] trigger on change dataset done!")
     }
   )
@@ -785,11 +785,17 @@ app_server <- function(input, output, session) {
     nav_count.str <- paste(paste0(names(nav.count), "=", nav.count), collapse = ";")
     nav_count.str <- gsub("-tab", "", nav_count.str)
 
+    ## record num datasets
+    pgxdir <- shiny::isolate(auth$user_dir)
+    num_pgxfiles <- length(dir(pgxdir, pattern = ".pgx$"))
+
     pgx.record_access(
       user = isolate(auth$email),
       action = action,
       session = session,
-      comment = nav_count.str
+      comment = nav_count.str,
+      comment2 = isolate(PLOT_DOWNLOAD_LOGGER$str),
+      num_datasets = num_pgxfiles
     )
 
     ## reset (logout) user. This should already have been done with

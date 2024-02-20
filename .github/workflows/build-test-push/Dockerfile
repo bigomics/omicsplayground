@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204_v2
+FROM bigomics/omicsplayground:latest
 
 #------------------------------------------------------------
 # Set env variables 
@@ -23,14 +23,6 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
-#------------------------------------------------------------
-# Install de-novo bigomics stuff (as R packages)
-#------------------------------------------------------------
-
-RUN R -e "remotes::install_github('bigomics/PCSF',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/bigLoaders',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/fgsea')"
 
 # check if playbase@{$GITHUB_HEAD_REF} exists, if it does, install.. other wise install main
 

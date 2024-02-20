@@ -9,7 +9,9 @@
 pgx.record_access <- function(user,
                               action,
                               comment = "",
+                              comment2 = "",
                               session = session,
+                              num_datasets = "",
                               time = Sys.time(),
                               access.file = ACCESS_LOGFILE) {
   if (is.null(user) || is.null(action)) {
@@ -49,7 +51,9 @@ pgx.record_access <- function(user,
     session = session_id,
     hostname = hostname,
     client.ip = remote_addr,
-    comment = comment
+    comment = comment,
+    comment2 = comment2,
+    num_datasets = num_datasets
   )
   do.append <- file.exists(access.file)
   data.table::fwrite(login_data, file = access.file, quote = TRUE, append = do.append)
