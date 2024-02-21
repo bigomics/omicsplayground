@@ -428,7 +428,7 @@ app_server <- function(input, output, session) {
           PcsfBoard("pcsf", pgx = PGX)
         }
 
-        if (ENABLED["comp"]) {
+        if (ENABLED["comp"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling CompareBoard module")
           CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
         }
@@ -569,7 +569,7 @@ app_server <- function(input, output, session) {
       
       # this will remove tabs if user has no gmt
       # such cases can happen when organism == No Organism or when no gene annotation table is provided or when a gene annotation table without human_ortholog is provided.
-      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab", "clusterfeatures-tab", "cmap-tab") #TODO part of cluter feature map can be used without gmt, but it is not implemented yet
+      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab", "clusterfeatures-tab", "cmap-tab", "comp-tab") #TODO part of cluter feature map can be used without gmt, but it is not implemented yet
       for (tab_i in gset_tabs) {
         tabRequire(PGX, session, tab_i, "gsetX", TRUE)
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
