@@ -7,6 +7,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
+    req(pgx$GMT) # Hacky fix to avoid crash in cae a pgx with genesets was loaded and afterwards a pgx of No organism and/orcustom annotation file without human ortholog
+
     fullH <- 800
     rowH <- 420 ## row height of panels
     imgH <- 340 ## height of images
