@@ -67,7 +67,7 @@ UploadUI <- function(id) {
     bslib::layout_column_wrap(
       width = 1,
       heights_equal = "row",
-      height = "calc(100vh - 180px)",
+      # height = "calc(100vh - 180px)",
       # add a drop down selector for organism
       shiny::div(
         style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
@@ -125,7 +125,7 @@ UploadUI <- function(id) {
     step_title = "Upload",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 340px)", #TODO this is a hack, should be fixed
+      # height = "calc(100vh - 340px)", #TODO this is a hack, should be fixed
       bslib::layout_columns(
         col_widths = c(4, 8),
         bslib::card(
@@ -228,7 +228,7 @@ UploadUI <- function(id) {
     step_title = "Comparisons",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 340px)",
+      # height = "calc(100vh - 340px)",
       heights_equal = "row",
       upload_module_makecontrast_ui(ns("makecontrast")),      
       bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
@@ -239,7 +239,7 @@ UploadUI <- function(id) {
     step_title = "BatchEffects",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 340px)",
+      ?
       heights_equal = "row",
       upload_module_batchcorrect_ui(ns("batchcorrect")),
       bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
@@ -250,7 +250,7 @@ UploadUI <- function(id) {
     step_title = "QC/BC",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 340px)",
+      # height = "calc(100vh - 340px)",
       heights_equal = "row",
       upload_module_outliers_ui(ns("checkqc")),
       bs_alert("Check for normalization, outliers and batch-effects.")
@@ -285,8 +285,8 @@ UploadUI <- function(id) {
     div(
     wizardR::wizard(
       id = ns("upload-wizard"),
-      width = 80,
-      height = 75,
+      width = 90,
+      height = 80,
       modal = TRUE,
       style = "progress",
       upload_panel,
