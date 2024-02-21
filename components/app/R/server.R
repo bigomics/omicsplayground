@@ -565,10 +565,13 @@ app_server <- function(input, output, session) {
       tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
       tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
       tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
-      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
+      
+      # this will remove tabs if user has no gmt 
+      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab", "clusterfeatures-tab") #TODO part of cluter feature map can be used without gmt, but it is not implemented yet
       for (tab_i in gset_tabs) {
         tabRequire(PGX, session, tab_i, "gsetX", TRUE)
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
+        tabRequire(PGX, session, tab_i, "GMT", TRUE)
       }
 
       ## DEVELOPER only tabs (still too alpha)
