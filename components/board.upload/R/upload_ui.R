@@ -239,7 +239,6 @@ UploadUI <- function(id) {
     step_title = "BatchEffects",
     bslib::layout_columns(
       col_widths = 12,
-      ?
       heights_equal = "row",
       upload_module_batchcorrect_ui(ns("batchcorrect")),
       bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
