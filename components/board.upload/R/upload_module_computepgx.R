@@ -412,6 +412,18 @@ upload_module_computepgx_server <- function(
       shiny::observeEvent(input$upload_annot_table, {
         # trigger a popup
 
+
+        # if ENABLE_ANNOT is false, tell user this is udner development
+        if (auth$options$ENABLE_ANNOT == FALSE) {
+          shinyalert::shinyalert(
+            title = "Under development",
+            text = "Custom probe annotation is under development.",
+            type = "info",
+            closeOnClickOutside = TRUE
+          )
+          return(NULL)
+        }
+
         annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
 
         # check that we have at 100 matches between
