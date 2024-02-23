@@ -96,7 +96,7 @@ clustering_plot_phenoplot_server <- function(id,
           cex.title = cex * 1.2,
           cex.clust = cex * 1.1,
           label.clusters = showlabels
-        ) 
+        )
         plt[[i]] <- p
       }
       return(plt)
@@ -111,7 +111,8 @@ clustering_plot_phenoplot_server <- function(id,
         margin = 0.04
       )
       combined_plots <- plotly::layout(combined_plots,
-                        margin = list(t = 40))
+        margin = list(t = 40)
+      )
       return(combined_plots)
     }
 
@@ -124,7 +125,8 @@ clustering_plot_phenoplot_server <- function(id,
         margin = 0.04
       )
       combined_plots <- plotly::layout(combined_plots,
-                        margin = list(t = 40))
+        margin = list(t = 40)
+      )
       return(combined_plots)
     }
 
