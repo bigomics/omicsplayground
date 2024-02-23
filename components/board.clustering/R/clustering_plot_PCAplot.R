@@ -53,15 +53,11 @@ clustering_plot_clustpca_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    ##    plotlib = "plotly",
-    plotlib = "generic",
-    outputFunc = function(...) uiOutput(..., fill = TRUE),
+    plotlib = "plotly",
     info.text = info.text,
     caption = caption,
     options = plot_opts,
-    ## download.fmt = c("png", "pdf", "csv"),
-    download.fmt = c("csv"),
-    ##    header_buttons = quick_buttons,
+    download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
   )
@@ -218,18 +214,6 @@ clustering_plot_clustpca_server <- function(id,
             plotly::layout(showlegend = FALSE)
         }
       }
-
-      plt <- plt %>%
-        plotly_default() %>%
-        plotly::layout(
-          plot_bgcolor = "#f8f8f8",
-          title = list(text = toupper(method), font = list(size = 18)),
-          margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
-        ) %>%
-        plotly::config(toImageButtonOptions = list(
-          format = "svg", height = 800, width = 800
-        ))
-
       return(plt)
     }
 
@@ -273,21 +257,18 @@ clustering_plot_clustpca_server <- function(id,
 
     plot.RENDER <- reactive({
       plist <- create_plotlist()
-      ## layout with bs
       nc <- ceiling(sqrt(length(plist)))
-      cw <- 12 / nc
-      page <- bslib::layout_columns(col_widths = cw, !!!plist)
-      return(page)
+      plotly::subplot(
+        plist,
+        nrows = nc,
+        margin = 0.04
+      )
     })
 
     PlotModuleServer(
       "pltmod",
-      ##      plotlib = "plotly",
-      plotlib = "generic",
-      renderFunc = shiny::renderUI,
+      plotlib = "plotly",
       func = plot.RENDER,
-      ##      func2 = plot.RENDER,
-      ##      func2 = modal_plot.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8,

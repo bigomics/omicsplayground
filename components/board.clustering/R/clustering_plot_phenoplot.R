@@ -22,13 +22,11 @@ clustering_plot_phenoplot_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    ##    plotlib = "plotly",
-    plotlib = "generic",
-    outputFunc = function(...) uiOutput(..., fill = TRUE),
+    plotlib = "plotly",
     info.text = info.text,
     caption = caption,
     options = phenoplot.opts,
-    ##    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
   )
@@ -98,13 +96,7 @@ clustering_plot_phenoplot_server <- function(id,
           cex.title = cex * 1.2,
           cex.clust = cex * 1.1,
           label.clusters = showlabels
-        ) %>%
-          plotly_default() %>%
-          plotly::layout(
-            plot_bgcolor = "#f8f8f8",
-            margin = list(l = 0, r = 0, b = 0, t = 20) # lrbt
-          )
-
+        ) 
         plt[[i]] <- p
       }
       return(plt)
@@ -113,24 +105,32 @@ clustering_plot_phenoplot_server <- function(id,
     plotly.RENDER <- function() {
       plt <- create_plots(cex = 0.85)
       nc <- floor(sqrt(length(plt)))
-      cw <- 12 / nc
-      page <- bslib::layout_columns(col_widths = cw, !!!plt)
-      return(page)
+      combined_plots <- plotly::subplot(
+        plt,
+        nrows = nc,
+        margin = 0.04
+      )
+      combined_plots <- plotly::layout(combined_plots,
+                        margin = list(t = 40))
+      return(combined_plots)
     }
 
     plotly_modal.RENDER <- function() {
       plt <- create_plots(cex = 1.3)
       nc <- ceiling(sqrt(length(plt)))
-      cw <- 12 / nc
-      page <- bslib::layout_columns(col_widths = cw, !!!plt)
-      return(page)
+      combined_plots <- plotly::subplot(
+        plt,
+        nrows = nc,
+        margin = 0.04
+      )
+      combined_plots <- plotly::layout(combined_plots,
+                        margin = list(t = 40))
+      return(combined_plots)
     }
 
     PlotModuleServer(
       "pltmod",
-      #      plotlib = "plotly",
-      plotlib = "generic",
-      renderFunc = shiny::renderUI,
+      plotlib = "plotly",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
