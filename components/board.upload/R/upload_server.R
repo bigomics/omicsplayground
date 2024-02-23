@@ -634,7 +634,6 @@ UploadBoard <- function(id,
           status <- "ERROR: invalid contrast. please check your input file."
         }
 
-
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples()
         if (!is.null(checked) && is.null(cc$matrix)) {
@@ -838,7 +837,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      ##      checked[["contrasts.csv"]] <- modct$contr
+      uploaded[["contrasts.csv"]] <- modct$contr   ## trigger check
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
