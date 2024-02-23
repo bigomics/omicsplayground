@@ -837,7 +837,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      uploaded[["contrasts.csv"]] <- modct$contr   ## trigger check
+      uploaded[["contrasts.csv"]] <- modct$contr ## trigger check
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
