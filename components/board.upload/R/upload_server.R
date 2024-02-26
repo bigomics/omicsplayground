@@ -968,6 +968,7 @@ UploadBoard <- function(id,
     shiny::observeEvent(new_upload(), {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
+        
         if (enable_upload) {
           wizardR::wizard_show(ns("upload-wizard"))
         } else {

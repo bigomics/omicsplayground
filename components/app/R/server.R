@@ -135,6 +135,7 @@ app_server <- function(input, output, session) {
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
+  new_upload <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
@@ -175,7 +176,8 @@ app_server <- function(input, output, session) {
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
     load_uploaded_data = load_uploaded_data,
-    recompute_pgx = recompute_pgx
+    recompute_pgx = recompute_pgx,
+    new_upload = new_upload
   )
 
   ## Modules needed from the start
@@ -190,7 +192,7 @@ app_server <- function(input, output, session) {
       recompute_pgx = recompute_pgx,
       recompute_info = recompute_info,
       inactivityCounter = inactivityCounter,
-      new_upload = reactive(input$new_upload)
+      new_upload = new_upload
     )
   }
 

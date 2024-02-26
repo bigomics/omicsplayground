@@ -18,6 +18,22 @@ loading_table_datasets_ui <- function(
   )
 
   tagList(
+    div(
+      shiny::actionButton(
+        ns("loadbutton"),
+        label = "Load dataset",
+        icon = icon("file-import"),
+        class = "btn btn-primary",
+        width = NULL
+      ),
+      shiny::actionButton(
+        ns("newuploadbutton"),
+        label = "Upload dataset",
+        icon = icon("file-import"),
+        class = "btn btn-info",
+        width = NULL
+      ),
+    ),
     TableModuleUI(
       ns("datasets"),
       info.text = info.text,
@@ -48,13 +64,6 @@ loading_table_datasets_ui <- function(
         label = "",
         icon = NULL,
         width = "0%"
-      ),
-      shiny::actionButton(
-        ns("loadbutton"),
-        label = "Load dataset",
-        icon = icon("file-import"),
-        class = "btn btn-primary",
-        width = NULL
       )
     ) ## end of buttons div
   )
@@ -70,7 +79,8 @@ loading_table_datasets_server <- function(id,
                                           refresh_shared,
                                           reload_pgxdir_public,
                                           reload_pgxdir,
-                                          recompute_pgx) {
+                                          recompute_pgx,
+                                          new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -379,6 +389,12 @@ loading_table_datasets_server <- function(id,
         },
         ignoreInit = TRUE
       )
+
+      # if newuploadbutton is clicked, add 1 to new_upload
+      observeEvent(input$newuploadbutton, {
+        new_upload(new_upload() + 1)
+      })
+
 
 
       DT::datatable(
