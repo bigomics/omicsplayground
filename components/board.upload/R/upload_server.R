@@ -966,6 +966,18 @@ UploadBoard <- function(id,
       scrollY = "calc(50vh - 140px)"
     )
 
+    upload_table_preview_samples_server(
+      "samples_preview",
+      uploaded,
+      scrollY = "calc(50vh - 140px)"
+    )
+
+    upload_table_preview_contrasts_server(
+      "contrasts_preview",
+      uploaded,
+      scrollY = "calc(50vh - 140px)"
+    )
+
 
 
     # observe show_modal and start modal

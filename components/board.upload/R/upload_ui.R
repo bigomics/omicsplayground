@@ -288,17 +288,37 @@ UploadUI <- function(id) {
       height = 80,
       modal = TRUE,
       style = "progress",
+      upload_panel,
       wizardR::wizard_step(
-        upload_table_preview_counts_ui(
-          ns("counts_preview"),
+          upload_table_preview_counts_ui(
+            ns("counts_preview"),
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%"),
+            title = "Uploaded Counts",
+            info.text = "This is the uploaded counts data.",
+            caption = "This is the uploaded counts data."
+          )
+      ),
+      wizardR::wizard_step(
+        upload_table_preview_samples_ui(
+          ns("samples_preview"),
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%"),
-          title = "Uploaded Counts",
-          info.text = "This is the uploaded counts data.",
-          caption = "This is the uploaded counts data."
-          )
-        ),
-      upload_panel,
+          title = "Uploaded Samples",
+          info.text = "This is the uploaded samples data.",
+          caption = "This is the uploaded samples data."
+        )
+      ),
+      wizardR::wizard_step(
+        upload_table_preview_contrasts_ui(
+          ns("contrasts_preview"),
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%"),
+          title = "Uploaded Contrasts",
+          info.text = "This is the uploaded comparison data.",
+          caption = "This is the uploaded comparison data."
+        )
+      ),
       comparisons_panel,
       outliers_panel,
       batchcorrect_panel,
