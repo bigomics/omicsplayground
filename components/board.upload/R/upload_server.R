@@ -968,6 +968,11 @@ UploadBoard <- function(id,
     shiny::observeEvent(new_upload(), {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
+
+        # skip upload trigger at first startup
+        if (new_upload() == 0) {
+          return(NULL)
+        }
         
         if (enable_upload) {
           wizardR::wizard_show(ns("upload-wizard"))
