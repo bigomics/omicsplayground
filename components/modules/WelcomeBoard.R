@@ -166,8 +166,7 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
       shiny::req(auth$options)
       enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {
-        bigdash.openSidebar()
-        bigdash.selectTab(session, "upload-tab")
+        new_upload(new_upload() + 1)
       } else {
         shinyalert::shinyalert(
           title = "Upload disabled",
