@@ -849,9 +849,6 @@ UploadBoard <- function(id,
     ## =====================================================================
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
-    
-    ## Preview Server
-    upload_module_preview_server("upload_preview", uploaded, checklist, checkTables)
 
     modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
@@ -962,6 +959,13 @@ UploadBoard <- function(id,
       contrastsRT = reactive(checked_contrasts()$matrix),
       samplesRT = reactive(checked_samples()$matrix)
     )
+
+    upload_table_preview_counts_server(
+      "counts_preview",
+      uploaded,
+      scrollY = "calc(50vh - 140px)"
+    )
+
 
 
     # observe show_modal and start modal
