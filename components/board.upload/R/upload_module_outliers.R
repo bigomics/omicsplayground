@@ -259,7 +259,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         shiny::req( dim(normalizedX()) )
         
         X <- normalizedX()
-        res <- playbase::detectOutlierSamples(X, plot=FALSE, y=NULL)        
+        res <- playbase::detectOutlierSamples(X, plot=FALSE)        
         is.outlier <- ( res$z.outlier > input$outlier_threshold )
         if(any(is.outlier) && !all(is.outlier) ) {
           X <- X[, which(!is.outlier), drop = FALSE]
@@ -361,7 +361,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         shiny::validate( shiny::need(!is.null(nrow(X)), "no data. please upload."))
         
         X <- head(X[order(-matrixStats::rowSds(X)),],1000)
-        out <- playbase::detectOutlierSamples(X, plot=FALSE, y=NULL)
+        out <- playbase::detectOutlierSamples(X, plot=FALSE)
         
         nb <- min(30, dim(X)/5)
         scaledX <- t(scale(t(scale(t(X), scale=FALSE))))
