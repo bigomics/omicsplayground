@@ -26,10 +26,11 @@ loading_table_datasets_ui <- function(
         class = "btn btn-primary",
         width = NULL
       ),
+      # create button to trigger new_upload modal in server
       shiny::actionButton(
         ns("newuploadbutton"),
         label = "Upload dataset",
-        icon = icon("file-import"),
+        icon = icon("upload"),
         class = "btn btn-info",
         width = NULL
       ),
