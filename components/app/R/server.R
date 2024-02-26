@@ -140,7 +140,8 @@ app_server <- function(input, output, session) {
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
     auth = auth,
-    load_example = load_example
+    load_example = load_example,
+    new_upload = new_upload
   )
 
   env$user_profile <- UserProfileBoard(
