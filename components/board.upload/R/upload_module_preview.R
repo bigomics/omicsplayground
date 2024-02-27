@@ -67,23 +67,19 @@ upload_table_preview_counts_ui <- function(
     caption) {
   ns <- shiny::NS(id)
 
-  fluidRow(
-    column(
-      width = 9,
-      TableModuleUI(
-        ns("datasets"),
-        width = width,
-        height = height,
-        title = title,
-        info.text = info.text,
-        caption = caption,
-        label = "",
-        show.maximize = FALSE
-      )
+  bslib::layout_columns(
+    col_widths = c(9, 3),
+    TableModuleUI(
+      ns("datasets"),
+      width = width,
+      height = height,
+      title = title,
+      info.text = info.text,
+      caption = caption,
+      label = "",
+      show.maximize = FALSE
     ),
-    column(
-      width = 3,
-      # render any text output
+    bslib::card(
       uiOutput(ns("checklist"))
     )
   )
