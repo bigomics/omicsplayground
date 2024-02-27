@@ -977,6 +977,7 @@ UploadBoard <- function(id,
     upload_table_preview_contrasts_server(
       "contrasts_preview",
       uploaded,
+      checklist,
       scrollY = "calc(50vh - 140px)"
     )
 

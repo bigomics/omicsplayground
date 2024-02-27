@@ -265,20 +265,28 @@ upload_table_preview_contrasts_ui <- function(
     caption) {
   ns <- shiny::NS(id)
 
-  TableModuleUI(
-    ns("datasets"),
-    width = width,
-    height = height,
-    title = title,
-    info.text = info.text,
-    caption = caption,
-    label = "",
-    show.maximize = FALSE
+
+  bslib::layout_columns(
+    col_widths = c(9, 3),
+    TableModuleUI(
+      ns("datasets"),
+      width = width,
+      height = height,
+      title = title,
+      info.text = info.text,
+      caption = caption,
+      label = "",
+      show.maximize = FALSE
+    ),
+    bslib::card(
+      uiOutput(ns("checklist"))
+    )
   )
 }
 
 upload_table_preview_contrasts_server <- function(id,
                                                   uploaded,
+                                                  checklist,
                                                   scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
@@ -308,6 +316,26 @@ upload_table_preview_contrasts_server <- function(id,
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+
+
+    output$checklist <- renderUI({
+      div(
+        "Summary:",
+        br(),
+        check_to_html(
+          checklist$contrasts.csv$checks,
+            pass_msg = "All contrasts checks passed",
+            null_msg = "Contrasts checks not run yet.
+                        Fix any errors with contrasts first."
+          ),
+          check_to_html(checklist$samples_contrasts$checks,
+              pass_msg = "All samples-contrasts checks passed",
+              null_msg = "Samples-contrasts checks not run yet.
+                      Fix any errors with samples or contrasts first."
+          ),
+          legend
+        )
+    })
 
     TableModuleServer(
       "datasets",

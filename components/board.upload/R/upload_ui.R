@@ -42,26 +42,6 @@
 UploadUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  # board_header <- fillRow(
-  #   flex = c(NA, NA, 1),
-  #   shiny::div(
-  #     id = "navheader-current-section",
-  #     HTML("Create New Dataset &nbsp;"),
-  #     shiny::actionLink(
-  #       ns("module_info"), "",
-  #       icon = shiny::icon("youtube"),
-  #       style = "color: #ccc;"
-  #     ),
-  #     # action button to trigger modal
-  #     shiny::actionButton(
-  #       ns("show_modal"),
-  #       icon = shiny::icon("info"),
-  #       style = "color: #ccc;",
-  #       label = "Show Modal"
-  #     )
-  #   )
-  # )
-
   upload_select_db <- wizardR::wizard_step(
     step_title = "Select Organism",
     bslib::layout_column_wrap(
@@ -225,7 +205,7 @@ UploadUI <- function(id) {
   )
 
   counts_ui <- wizardR::wizard_step(
-    step_title = "Counts upload",
+    step_title = "Counts",
     upload_table_preview_counts_ui(
       ns("counts_preview"),
       height = c("100%", TABLE_HEIGHT_MODAL),
@@ -237,7 +217,7 @@ UploadUI <- function(id) {
   )
   
   samples_ui <- wizardR::wizard_step(
-    step_title = "Samples upload",
+    step_title = "Samples",
     upload_table_preview_samples_ui(
       ns("samples_preview"),
       height = c("100%", TABLE_HEIGHT_MODAL),
@@ -249,7 +229,7 @@ UploadUI <- function(id) {
   )
 
   contrasts_ui <- wizardR::wizard_step(
-    step_title = "Contrasts upload",
+    step_title = "Contrasts",
     upload_table_preview_contrasts_ui(
       ns("contrasts_preview"),
       height = c("100%", TABLE_HEIGHT_MODAL),
