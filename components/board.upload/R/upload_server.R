@@ -963,6 +963,7 @@ UploadBoard <- function(id,
     upload_table_preview_counts_server(
       "counts_preview",
       uploaded,
+      checklist = checklist,
       scrollY = "calc(50vh - 140px)"
     )
 

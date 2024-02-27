@@ -44,6 +44,20 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
 }
 
 
+legend <-  shiny::div(
+           class = "pt-4",
+           style = "margin-top: 150px;",
+           span(style = "color: green", "Green"),
+           span("= data OK. "),
+           br(),
+           span(style = "color: orange", "Orange"),
+           span("= warning but data will still be uploaded. "),
+           br(),
+           span(style = "color:red", "Red"),
+           span("= error and data will not be uploaded.")
+        )
+
+
 upload_table_preview_counts_ui <- function(
     id,
     width,
@@ -53,20 +67,31 @@ upload_table_preview_counts_ui <- function(
     caption) {
   ns <- shiny::NS(id)
 
-  TableModuleUI(
-    ns("datasets"),
-    width = width,
-    height = height,
-    title = title,
-    info.text = info.text,
-    caption = caption,
-    label = "",
-    show.maximize = FALSE
+  fluidRow(
+    column(
+      width = 9,
+      TableModuleUI(
+        ns("datasets"),
+        width = width,
+        height = height,
+        title = title,
+        info.text = info.text,
+        caption = caption,
+        label = "",
+        show.maximize = FALSE
+      )
+    ),
+    column(
+      width = 3,
+      # render any text output
+      uiOutput(ns("checklist"))
+    )
   )
 }
 
 upload_table_preview_counts_server <- function(id,
                                                uploaded,
+                                               checklist,
                                                scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
@@ -112,6 +137,25 @@ upload_table_preview_counts_server <- function(id,
         DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+
+    output$checklist <- renderUI({
+      div(
+        "Summary:",
+        br(),
+        check_to_html(
+          checklist$counts.csv$checks,
+            pass_msg = "All counts checks passed",
+            null_msg = "Counts checks not run yet.
+                        Fix any errors with counts first."
+          ),
+          check_to_html(checklist$samples_counts$checks,
+              pass_msg = "All samples-counts checks passed",
+              null_msg = "Samples-counts checks not run yet.
+                      Fix any errors with samples or counts first."
+          ),
+          legend
+        )
+    })
 
     TableModuleServer(
       "datasets",
