@@ -170,20 +170,27 @@ upload_table_preview_samples_ui <- function(
     caption) {
   ns <- shiny::NS(id)
 
-  TableModuleUI(
-    ns("datasets"),
-    width = width,
-    height = height,
-    title = title,
-    info.text = info.text,
-    caption = caption,
-    label = "",
-    show.maximize = FALSE
+  bslib::layout_columns(
+    col_widths = c(9, 3),
+    TableModuleUI(
+      ns("datasets"),
+      width = width,
+      height = height,
+      title = title,
+      info.text = info.text,
+      caption = caption,
+      label = "",
+      show.maximize = FALSE
+    ),
+    bslib::card(
+      uiOutput(ns("checklist"))
+    )
   )
 }
 
 upload_table_preview_samples_server <- function(id,
                                                 uploaded,
+                                                checklist,
                                                 scrollY) {
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
@@ -221,6 +228,25 @@ upload_table_preview_samples_server <- function(id,
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+
+    output$checklist <- renderUI({
+      div(
+        "Summary:",
+        br(),
+        check_to_html(
+          checklist$samples.csv$checks,
+            pass_msg = "All samples checks passed",
+            null_msg = "Samples checks not run yet.
+                        Fix any errors with samples first."
+          ),
+          check_to_html(checklist$samples_counts$checks,
+              pass_msg = "All samples-counts checks passed",
+              null_msg = "Samples-counts checks not run yet.
+                      Fix any errors with samples or counts first."
+          ),
+          legend
+        )
+    })
 
     TableModuleServer(
       "datasets",
