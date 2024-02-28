@@ -125,8 +125,20 @@ upload_table_preview_counts_server <- function(
     }
 
     output$table_counts <- shiny::renderUI(
-      
-      bslib::layout_columns(
+      if(is.null(input$counts_csv)){
+        bslib::layout_columns(
+          bslib::card(
+            fileInput2(
+              ns("counts_csv"),
+              shiny::h4("Choose counts.csv", class='mb-0'),
+              multiple = FALSE,
+              buttonClass = "btn-primary",
+              accept = c(".csv")
+            )
+          )
+        )
+      }else{
+         bslib::layout_columns(
         col_widths = c(9, 3),
         TableModuleUI(
           ns("counts_datasets"),
@@ -158,12 +170,14 @@ upload_table_preview_counts_server <- function(
             )
           )
       )
+      }
     )
 
-    output$checklist <- renderUI({
-      
+    # pass counts to uploaded when uploaded
+    observeEvent(input$counts_csv, {
+      uploaded$counts.csv <- read.csv(input$counts_csv$datapath)
     })
-
+   
     TableModuleServer(
       "counts_datasets",
       func = table.RENDER,

@@ -248,7 +248,8 @@ UploadBoard <- function(id,
       raw_dir
     }
 
-    shiny::observeEvent( input$upload_files, {
+    shiny::observeEvent(
+      list(uploaded$counts.csv, {
       if (is.null(raw_dir())) {
         raw_dir(create_raw_dir(auth))
       }
@@ -965,11 +966,11 @@ UploadBoard <- function(id,
       uploaded,
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
-      width = "auto",
-      height = "auto",
-      title = "test",
-      info.text = "test",
-      caption = "test"
+      width =  c("auto", "100%"),
+      height = c("100%", TABLE_HEIGHT_MODAL),
+      title = "Uploaded Counts",
+      info.text = "This is the uploaded counts data.",
+      caption = "This is the uploaded counts data."
     )
 
     upload_table_preview_samples_server(
