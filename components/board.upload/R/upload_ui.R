@@ -3,43 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-# UploadInputs <- function(id) {
-#   ns <- shiny::NS(id) ## namespace
-#   bigdash::tabSettings(
-#     shiny::hr(), shiny::br(),
-#     withTooltip(
-#       shiny::selectInput(ns("fa_contrast"), "Comparison:",
-#         choices = NULL
-#       ),
-#       "Select the comparison of interest.",
-#       placement = "top"
-#     ),
-#     withTooltip(
-#       shiny::actionLink(ns("fa_options"), "Options",
-#         icon = icon("cog", lib = "glyphicon")
-#       ),
-#       "Show/hide advanced options",
-#       placement = "top"
-#     ),
-#     shiny::br(),
-#     shiny::conditionalPanel(
-#       "input.fa_options % 2 == 1",
-#       ns = ns,
-#       shiny::tagList(
-#         withTooltip(
-#           shiny::checkboxInput(
-#             ns("fa_filtertable"),
-#             "filter significant (tables)",
-#             FALSE
-#           ),
-#           "Click to filter the significant entries in the tables."
-#         )
-#       )
-#     )
-#   )
-# }
 
-
+UploadUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+  
   upload_panel <- wizardR::wizard_step(
     step_title = "Upload",
     bslib::layout_columns(
