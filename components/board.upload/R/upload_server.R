@@ -964,7 +964,12 @@ UploadBoard <- function(id,
       "counts_preview",
       uploaded,
       checklist = checklist,
-      scrollY = "calc(50vh - 140px)"
+      scrollY = "calc(50vh - 140px)",
+      width = "auto",
+      height = "auto",
+      title = "test",
+      info.text = "test",
+      caption = "test"
     )
 
     upload_table_preview_samples_server(

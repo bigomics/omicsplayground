@@ -207,12 +207,13 @@ UploadUI <- function(id) {
   counts_ui <- wizardR::wizard_step(
     step_title = "Counts",
     upload_table_preview_counts_ui(
-      ns("counts_preview"),
-      height = c("100%", TABLE_HEIGHT_MODAL),
-      width = c("auto", "100%"),
-      title = "Uploaded Counts",
-      info.text = "This is the uploaded counts data.",
-      caption = "This is the uploaded counts data."
+      ns("counts_preview")
+      # ,
+      # height = c("100%", TABLE_HEIGHT_MODAL),
+      # width = c("auto", "100%"),
+      # title = "Uploaded Counts",
+      # info.text = "This is the uploaded counts data.",
+      # caption = "This is the uploaded counts data."
       )
   )
   

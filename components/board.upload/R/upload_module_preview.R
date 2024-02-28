@@ -58,38 +58,35 @@ legend <-  shiny::div(
         )
 
 
-upload_table_preview_counts_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
+upload_table_preview_counts_ui <- function(id) {
+  
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
     col_widths = c(9, 3),
-    TableModuleUI(
-      ns("datasets"),
-      width = width,
-      height = height,
-      title = title,
-      info.text = info.text,
-      caption = caption,
-      label = "",
-      show.maximize = FALSE
-    ),
+    uiOutput(ns("table_counts")),
     bslib::card(
       uiOutput(ns("checklist"))
     )
   )
 }
 
-upload_table_preview_counts_server <- function(id,
-                                               uploaded,
-                                               checklist,
-                                               scrollY) {
+upload_table_preview_counts_server <- function(
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption
+  ) 
+  {
   moduleServer(id, function(input, output, session) {
+
+    ns <- shiny::NS(id)
+
     table_data <- shiny::reactive({
       shiny::req(uploaded$counts.csv)
       dt <- uploaded$counts.csv
@@ -114,6 +111,7 @@ upload_table_preview_counts_server <- function(id,
     table.RENDER <- function() {
       dt <- table_data()
       req(dt)
+      browser()
 
       DT::datatable(dt,
         class = "compact hover",
@@ -133,6 +131,19 @@ upload_table_preview_counts_server <- function(id,
         DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+
+    output$table_counts <- renderUI(
+      TableModuleUI(
+        ns("counts_datasets"),
+        width = width,
+        height = height,
+        title = title,
+        info.text = info.text,
+        caption = caption,
+        label = "",
+        show.maximize = FALSE
+      )
+    )
 
     output$checklist <- renderUI({
       div(
@@ -154,7 +165,7 @@ upload_table_preview_counts_server <- function(id,
     })
 
     TableModuleServer(
-      "datasets",
+      ns("counts_datasets"),
       func = table.RENDER,
       selector = "none"
     )
