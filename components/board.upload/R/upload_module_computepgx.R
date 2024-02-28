@@ -418,7 +418,7 @@ upload_module_computepgx_server <- function(
         # trigger a popup
 
         # if ENABLE_ANNOT is false, tell user this is alpha (under development)
-        if (auth$options$ENABLE_ANNOT == FALSE) {
+        if (!auth$options$ENABLE_ANNOT) {
           shinyalert::shinyalert(
             title = "Under development (alpha)",
             text = "Custom probe annotation is under development.",
