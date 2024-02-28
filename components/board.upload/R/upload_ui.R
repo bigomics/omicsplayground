@@ -39,67 +39,6 @@
 #   )
 # }
 
-UploadUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
-
-  upload_select_db <- wizardR::wizard_step(
-    step_title = "Select Organism",
-    bslib::layout_column_wrap(
-      width = 1,
-      heights_equal = "row",
-      # height = "calc(100vh - 180px)",
-      # add a drop down selector for organism
-      shiny::div(
-        style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
-        shiny::div(
-          style = "text-align: center;",
-          h3(shiny::HTML("<b>Select the organism:</b>")),
-          div(
-            style = "margin-top: 30px; padding-left: 70px; text-align: center;",
-            shiny::selectInput(
-              ns("selected_organism"),
-              NULL,
-              # restrict to ensembl species, as we are validating them in the first place
-              choices = playbase::SPECIES_TABLE$species_name[which(playbase::SPECIES_TABLE$mart == "ensembl")],
-              selected = NULL,
-              multiple = FALSE
-            )
-          ),
-          shiny::div(
-            style = "margin-top: 20px;text-align: center;",
-            shiny::actionButton(ns("proceed_to_upload"), "Next",
-              icon = icon("arrow-right"),
-              class = "btn btn-success"
-            )
-          ),
-          div(
-            style = "margin-top: 120px",
-            h3("Need a dataset to try?")
-          ),
-          shiny::div(
-            style = "margin-top: 30px",
-            shiny::downloadButton(
-              ns("downloadExampleData2"),
-              width = "220px",
-              icon = icon("download"),
-              label = "Download example data",
-              class = "btn-outline-primary",
-              style = "margin-right: 10px;"
-            ),
-            shiny::actionButton(
-              ns("load_example2"),
-              width = "220px",
-              icon = icon("table"),
-              label = "Use example data",
-              class = "btn-outline-primary",
-              style = "margin-left: 10px;"
-            )
-          )
-        )
-      )
-    )
-  )
-
 
   upload_panel <- wizardR::wizard_step(
     step_title = "Upload",
