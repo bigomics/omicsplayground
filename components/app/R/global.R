@@ -155,34 +155,34 @@ message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
 opt.default <- list(
-  TITLE                = 'Omics Playground',
-  AUTHENTICATION       = 'none',  ## none, password, login-code, login-code-redirect
-  ALLOW_NEW_USERS      = TRUE,
+  TITLE = "Omics Playground",
+  AUTHENTICATION = "none", ## none, password, login-code, login-code-redirect
+  ALLOW_NEW_USERS = TRUE,
   ALLOW_PERSONAL_EMAIL = FALSE,
-  USE_CREDENTIALS      = FALSE,
-  DOMAIN               = NULL,
-  BLOCKED_DOMAIN       = 'bigomics.com|massdynamics.com|pluto.bio|rosalind.bio',
-##  ENABLE_CHIRP         = TRUE,
-  ENABLE_DELETE        = TRUE,
-  ENABLE_PGX_DOWNLOAD  = TRUE,
-  ENABLE_PUBLIC_SHARE  = TRUE,
-  ENABLE_UPLOAD        = TRUE,
-  ENABLE_USERDIR       = TRUE,
-  ENABLE_USER_SHARE    = TRUE,
-  ENABLE_USER_LOCK     = TRUE,
-  ENABLE_HEARTBEAT     = TRUE,
-  ENABLE_INACTIVITY    = TRUE,
-  ENABLE_ANNOT         = FALSE,
-  MAX_DATASETS         = 25,
-  MAX_SAMPLES          = 1000,
-  MAX_COMPARISONS      = 20,
-  MAX_GENES            = 20000,
-  MAX_GENESETS         = 5000,
-  MAX_SHARED_QUEUE     = 3,
-  MAX_SESSIONS         = 2,
-  TIMEOUT              = 0,
-  WATERMARK            = TRUE,
-  APACHE_COOKIE_PATH   = OPG
+  USE_CREDENTIALS = FALSE,
+  DOMAIN = NULL,
+  BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
+  ##  ENABLE_CHIRP         = TRUE,
+  ENABLE_DELETE = TRUE,
+  ENABLE_PGX_DOWNLOAD = TRUE,
+  ENABLE_PUBLIC_SHARE = TRUE,
+  ENABLE_UPLOAD = TRUE,
+  ENABLE_USERDIR = TRUE,
+  ENABLE_USER_SHARE = TRUE,
+  ENABLE_USER_LOCK = TRUE,
+  ENABLE_HEARTBEAT = TRUE,
+  ENABLE_INACTIVITY = TRUE,
+  ENABLE_ANNOT = FALSE,
+  MAX_DATASETS = 25,
+  MAX_SAMPLES = 1000,
+  MAX_COMPARISONS = 20,
+  MAX_GENES = 20000,
+  MAX_GENESETS = 5000,
+  MAX_SHARED_QUEUE = 3,
+  MAX_SESSIONS = 2,
+  TIMEOUT = 0,
+  WATERMARK = TRUE,
+  APACHE_COOKIE_PATH = OPG
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
@@ -202,8 +202,8 @@ if (Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH") != "") {
 }
 
 ## copy to global.R environment
-WATERMARK     <<- opt$WATERMARK
-TIMEOUT       <<- as.integer(opt$TIMEOUT) ## in seconds
+WATERMARK <<- opt$WATERMARK
+TIMEOUT <<- as.integer(opt$TIMEOUT) ## in seconds
 PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
 
 ## show options
