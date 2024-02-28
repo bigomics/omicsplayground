@@ -61,14 +61,7 @@ legend <-  shiny::div(
 upload_table_preview_counts_ui <- function(id) {
   
   ns <- shiny::NS(id)
-
-  bslib::layout_columns(
-    col_widths = c(9, 3),
-    uiOutput(ns("table_counts")),
-    bslib::card(
-      uiOutput(ns("checklist"))
-    )
-  )
+  uiOutput(ns("table_counts"))
 }
 
 upload_table_preview_counts_server <- function(
@@ -85,7 +78,7 @@ upload_table_preview_counts_server <- function(
   {
   moduleServer(id, function(input, output, session) {
 
-    ns <- shiny::NS(id)
+    ns <- session$ns
 
     table_data <- shiny::reactive({
       shiny::req(uploaded$counts.csv)
@@ -111,7 +104,6 @@ upload_table_preview_counts_server <- function(
     table.RENDER <- function() {
       dt <- table_data()
       req(dt)
-      browser()
 
       DT::datatable(dt,
         class = "compact hover",
@@ -132,40 +124,48 @@ upload_table_preview_counts_server <- function(
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    output$table_counts <- renderUI(
-      TableModuleUI(
-        ns("counts_datasets"),
-        width = width,
-        height = height,
-        title = title,
-        info.text = info.text,
-        caption = caption,
-        label = "",
-        show.maximize = FALSE
+    output$table_counts <- shiny::renderUI(
+      
+      bslib::layout_columns(
+        col_widths = c(9, 3),
+        TableModuleUI(
+          ns("counts_datasets"),
+          width = width,
+          height = height,
+          title = title,
+          info.text = info.text,
+          caption = caption,
+          label = "",
+          show.maximize = FALSE
+        ),
+        bslib::card(
+          div(
+            "Summary:",
+            br(),
+            check_to_html(
+              checklist$counts.csv$checks,
+                pass_msg = "All counts checks passed",
+                null_msg = "Counts checks not run yet.
+                            Fix any errors with counts first."
+              ),
+            check_to_html(
+              checklist$samples_counts$checks,
+              pass_msg = "All samples-counts checks passed",
+              null_msg = "Samples-counts checks not run yet.
+              Fix any errors with samples or counts first."
+              ),
+            legend
+            )
+          )
       )
     )
 
     output$checklist <- renderUI({
-      div(
-        "Summary:",
-        br(),
-        check_to_html(
-          checklist$counts.csv$checks,
-            pass_msg = "All counts checks passed",
-            null_msg = "Counts checks not run yet.
-                        Fix any errors with counts first."
-          ),
-          check_to_html(checklist$samples_counts$checks,
-              pass_msg = "All samples-counts checks passed",
-              null_msg = "Samples-counts checks not run yet.
-                      Fix any errors with samples or counts first."
-          ),
-          legend
-        )
+      
     })
 
     TableModuleServer(
-      ns("counts_datasets"),
+      "counts_datasets",
       func = table.RENDER,
       selector = "none"
     )
