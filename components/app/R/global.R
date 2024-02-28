@@ -162,7 +162,7 @@ opt.default <- list(
   USE_CREDENTIALS      = FALSE,
   DOMAIN               = NULL,
   BLOCKED_DOMAIN       = 'bigomics.com|massdynamics.com|pluto.bio|rosalind.bio',
-##  ENABLE_CHIRP         = TRUE,
+  ENABLE_CHIRP         = TRUE,
   ENABLE_DELETE        = TRUE,
   ENABLE_PGX_DOWNLOAD  = TRUE,
   ENABLE_PUBLIC_SHARE  = TRUE,
@@ -180,7 +180,7 @@ opt.default <- list(
   MAX_GENESETS         = 5000,
   MAX_SHARED_QUEUE     = 3,
   MAX_SESSIONS         = 2,
-  TIMEOUT              = 0,
+  TIMEOUT              = 3600,
   WATERMARK            = TRUE,
   APACHE_COOKIE_PATH   = OPG
 )
