@@ -175,7 +175,38 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-      uploaded$counts.csv <- read.csv(input$counts_csv$datapath)
+      
+      
+      df0 <- playbase::read.as_matrix(input$counts_csv$datapath)
+      df <- df0
+      # file.copy(df0, file.path(raw_dir(), "raw_counts.csv"))
+
+      IS_EXPRESSION <- grepl("expression", input$counts_csv$datapath, ignore.case = TRUE)
+      IS_COUNT <- grepl("count", input$counts_csv$datapath, ignore.case = TRUE)
+
+      
+      
+      #TODO this needs review!
+      if(IS_EXPRESSION){
+        df <- 2**df0 
+        if(min(df0,na.rm=TRUE) > 0) df <- df - 1
+      }
+
+      #TODO this needs review!
+      if (IS_COUNT){
+        check.log <- ( all( df0 < 60) || min(df0, na.rm=TRUE) < 0 )
+        if(check.log) {
+          shinyalert::shinyalert(
+            title = "",
+            text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
+            type = "warning"
+            )
+          df <- 2**df0 - 1
+          if(min(df0, na.rm=TRUE) > 0) df <- df - 1
+        }
+      }
+      uploaded$counts.csv <- df
+
     })
    
     TableModuleServer(
