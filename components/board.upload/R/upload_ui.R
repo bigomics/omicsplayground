@@ -24,12 +24,7 @@ UploadUI <- function(id) {
   contrasts_ui <- wizardR::wizard_step(
     step_title = "Contrasts",
     upload_table_preview_contrasts_ui(
-      ns("contrasts_preview"),
-      height = c("100%", TABLE_HEIGHT_MODAL),
-      width = c("auto", "100%"),
-      title = "Uploaded Contrasts",
-      info.text = "This is the uploaded comparison data.",
-      caption = "This is the uploaded comparison data."
+      ns("contrasts_preview")
         )
     )
 

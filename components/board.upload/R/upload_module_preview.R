@@ -345,49 +345,53 @@ upload_table_preview_samples_server <- function(
   })
 }
 
-upload_table_preview_contrasts_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
+upload_table_preview_contrasts_ui <- function(id) {
+  
   ns <- shiny::NS(id)
-
-
-  bslib::layout_columns(
-    col_widths = c(9, 3),
-    TableModuleUI(
-      ns("datasets"),
-      width = width,
-      height = height,
-      title = title,
-      info.text = info.text,
-      caption = caption,
-      label = "",
-      show.maximize = FALSE
-    ),
-    bslib::card(
-      uiOutput(ns("checklist"))
-    )
-  )
+  uiOutput(ns("table_contrasts"))
 }
 
-upload_table_preview_contrasts_server <- function(id,
-                                                  uploaded,
-                                                  checklist,
-                                                  scrollY) {
+upload_table_preview_contrasts_server <- function(
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption
+  ) 
+  {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
-      dt <- uploaded$contrasts.csv |> data.frame(check.names = FALSE)
-      if (NCOL(dt) == 0) dt <- cbind(dt, " " = NA)
+      dt <- uploaded$contrasts.csv
+      nrow0 <- nrow(dt)
+      ncol0 <- ncol(dt)
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
+        dt <- head(dt, MAXSHOW)
+        dt <- rbind(dt, rep(NA, ncol(dt)))
+        n1 <- nrow0 - MAXSHOW
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+      }
+      if (ncol(dt) > MAXSHOW) {
+        dt <- dt[, 1:MAXSHOW]
+        dt <- cbind(dt, rep(NA, nrow(dt)))
+        n1 <- ncol0 - MAXSHOW
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+      }
       dt
     })
 
     table.RENDER <- function() {
       dt <- table_data()
       req(dt)
+
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -403,37 +407,104 @@ upload_table_preview_contrasts_server <- function(id,
           deferRender = TRUE
         )
       ) %>%
+        DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-
-    output$checklist <- renderUI({
+    output$table_contrasts <- shiny::renderUI(
       div(
-        "Summary:",
-        br(),
-        check_to_html(
-          checklist$contrasts.csv$checks,
-            pass_msg = "All contrasts checks passed",
-            null_msg = "Contrasts checks not run yet.
-                        Fix any errors with contrasts first."
-          ),
-          check_to_html(checklist$samples_contrasts$checks,
-              pass_msg = "All samples-contrasts checks passed",
-              null_msg = "Samples-contrasts checks not run yet.
-                      Fix any errors with samples or contrasts first."
-          ),
-          legend
+        div(
+          style = "display: flex; justify-content: space-between;",
+          div(
+            if(!is.null(uploaded$contrasts.csv)){
+              shiny::actionButton(
+                ns("remove_contrasts"),
+                "Remove input",
+                icon = icon("trash-can"),
+                class = "btn btn-outline-danger"
+              )
+            }
+        ),
+        div(
+          actionButton(
+            ns("load_example"), "Load Example",
+            class = "btn btn-outline-info"
+            ),
+          actionButton(
+            ns("check_documentation"),
+            "Check Documentation",
+            class = "btn btn-outline-primary"
+            )
         )
+        ),
+        if(is.null(uploaded$contrasts.csv)){
+        bslib::layout_columns(
+          bslib::card(
+            fileInputArea(
+              ns("contrasts_csv"),
+              shiny::h4("Choose contrasts.csv", class='mb-0'),
+              multiple = FALSE,
+              accept = c(".csv")
+            )
+          )
+        )
+      }else{
+         bslib::layout_columns(
+        col_widths = c(9, 3),
+        TableModuleUI(
+          ns("contrasts_datasets"),
+          width = width,
+          height = height,
+          title = title,
+          info.text = info.text,
+          caption = caption,
+          label = "",
+          show.maximize = FALSE
+        ),
+        bslib::card(
+          div(
+            "Summary:",
+            br(),
+            check_to_html(
+              checklist$contrasts.csv$checks,
+                pass_msg = "All contrasts checks passed",
+                null_msg = "Contrasts checks not run yet.
+                            Fix any errors with contrasts first."
+              ),
+            check_to_html(checklist$samples_contrasts$checks,
+                pass_msg = "All contrasts-samples checks passed",
+                null_msg = "Contrasts-samples checks not run yet.
+                        Fix any errors with contrasts or samples first."
+              ),
+            legend
+            )
+          )
+      )
+      }
+      )
+    )
+
+    # pass counts to uploaded when uploaded
+    observeEvent(input$contrasts_csv, {
+      uploaded$contrasts.csv <- playbase::read.as_matrix(input$contrasts_csv$datapath)
+
+    })
+
+    observeEvent(input$remove_contrasts, {
+      uploaded$samples.csv <- NULL
+    })
+
+    observeEvent(input$load_example, {
+      uploaded$contrasts.csv <- playbase::CONTRASTS
     })
 
     TableModuleServer(
-      "datasets",
+      "contrasts_datasets",
       func = table.RENDER,
       selector = "none"
     )
-  }) ## end of moduleServer
-} ## end of server
-
+  })
+}
 
 # convert list of checks to html tags for display in the data preview modal
 check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {

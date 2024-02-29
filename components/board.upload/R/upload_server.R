@@ -796,7 +796,12 @@ UploadBoard <- function(id,
       "contrasts_preview",
       uploaded,
       checklist,
-      scrollY = "calc(50vh - 140px)"
+      scrollY = "calc(50vh - 140px)",
+      height = c("100%", TABLE_HEIGHT_MODAL),
+      width = c("auto", "100%"),
+      title = "Uploaded Contrasts",
+      info.text = "This is the uploaded comparison data.",
+      caption = "This is the uploaded comparison data."
     )
 
     # observe show_modal and start modal
