@@ -160,12 +160,6 @@ upload_table_preview_counts_server <- function(
                 null_msg = "Counts checks not run yet.
                             Fix any errors with counts first."
               ),
-            check_to_html(
-              checklist$samples_counts$checks,
-              pass_msg = "All samples-counts checks passed",
-              null_msg = "Samples-counts checks not run yet.
-              Fix any errors with samples or counts first."
-              ),
             legend
             )
           )

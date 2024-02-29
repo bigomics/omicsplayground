@@ -684,17 +684,7 @@ UploadBoard <- function(id,
       r_results = corrected1$results,
       is.count = TRUE
     )
-
-    ## corrected_counts <- shiny::reactive({
-    ##   counts <- NULL
-    ##   if (input$show_batchcorrection) {
-    ##     counts <- correctedX()
-    ##   } else {
-    ##     counts <- checked_counts()$matrix
-    ##   }
-    ##   counts
-    ## })
-
+    
     upload_ok <- shiny::reactive({
       check <- checkTables()
       all(check[, "status"] == "OK")
