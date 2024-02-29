@@ -108,6 +108,7 @@ UploadUI <- function(id) {
       height = 80,
       modal = TRUE,
       style = "progress",
+      lock_start = TRUE,
       counts_ui,
       samples_ui,
       contrasts_ui,

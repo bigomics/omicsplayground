@@ -342,6 +342,7 @@ UploadBoard <- function(id,
         } else {
           checked <- NULL
           status <- "ERROR: incorrect counts matrix"
+          uploaded$counts.csv <- NULL
         }
 
         ## --------------------------------------------------------
@@ -729,14 +730,17 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    # create an observer that will hide tabs Upload if selected organism if null and show if the button proceed_to_upload is clicked
-    ## observeEvent(input$proceed_to_upload, {
-    ##   # show tab Upload
-    ##   shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
-    ##   # check on upload tab
-    ##   shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-    ## })
+    # wizard lock/unlock logic
 
+    observeEvent(
+      list(uploaded$counts.csv, checked_counts), {
+        if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
+          wizardR::lock("upload-wizard")
+        } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
+          wizardR::unlock("upload-wizard")
+        }
+    })
+    
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
@@ -810,8 +814,6 @@ UploadBoard <- function(id,
           )
         }
     })
-
-
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
