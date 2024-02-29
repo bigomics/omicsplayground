@@ -71,8 +71,9 @@ upload_table_preview_counts_server <- function(
           div(
             shiny::actionButton(
               ns("remove_counts"),
-              "Remove input",
-              icon = icon("trash-can")
+              "Remove input", 
+              icon = icon("trash-can"),
+              class = "btn btn-outline-danger"
               )
         ),
         div(
@@ -80,7 +81,7 @@ upload_table_preview_counts_server <- function(
           actionButton(ns("check_documentation"), "Check Documentation")
         )
         ),
-        if(is.null(input$counts_csv)){
+        if(is.null(uploaded$counts.csv)){
         bslib::layout_columns(
           bslib::card(
             fileInput2(
