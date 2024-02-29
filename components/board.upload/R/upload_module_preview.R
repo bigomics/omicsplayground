@@ -184,38 +184,28 @@ upload_table_preview_counts_server <- function(
   }) ## end of moduleServer
 } ## end of server
 
-upload_table_preview_samples_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
+upload_table_preview_samples_ui <- function(id) {
+  
   ns <- shiny::NS(id)
-
-  bslib::layout_columns(
-    col_widths = c(9, 3),
-    TableModuleUI(
-      ns("datasets"),
-      width = width,
-      height = height,
-      title = title,
-      info.text = info.text,
-      caption = caption,
-      label = "",
-      show.maximize = FALSE
-    ),
-    bslib::card(
-      uiOutput(ns("checklist"))
-    )
-  )
+  uiOutput(ns("table_samples"))
 }
 
-upload_table_preview_samples_server <- function(id,
-                                                uploaded,
-                                                checklist,
-                                                scrollY) {
+upload_table_preview_samples_server <- function(
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption
+  ) 
+  {
   moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
     table_data <- shiny::reactive({
       shiny::req(uploaded$samples.csv)
       dt <- uploaded$samples.csv
@@ -228,12 +218,19 @@ upload_table_preview_samples_server <- function(id,
         n1 <- nrow0 - MAXSHOW
         rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
       }
+      if (ncol(dt) > MAXSHOW) {
+        dt <- dt[, 1:MAXSHOW]
+        dt <- cbind(dt, rep(NA, nrow(dt)))
+        n1 <- ncol0 - MAXSHOW
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+      }
       dt
     })
 
     table.RENDER <- function() {
       dt <- table_data()
       req(dt)
+
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -249,35 +246,104 @@ upload_table_preview_samples_server <- function(id,
           deferRender = TRUE
         )
       ) %>%
+        DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    output$checklist <- renderUI({
+    output$table_samples <- shiny::renderUI(
       div(
-        "Summary:",
-        br(),
-        check_to_html(
-          checklist$samples.csv$checks,
-            pass_msg = "All samples checks passed",
-            null_msg = "Samples checks not run yet.
-                        Fix any errors with samples first."
-          ),
-          check_to_html(checklist$samples_counts$checks,
-              pass_msg = "All samples-counts checks passed",
-              null_msg = "Samples-counts checks not run yet.
-                      Fix any errors with samples or counts first."
-          ),
-          legend
+        div(
+          style = "display: flex; justify-content: space-between;",
+          div(
+            if(!is.null(uploaded$samples.csv)){
+              shiny::actionButton(
+                ns("remove_samples"),
+                "Remove input",
+                icon = icon("trash-can"),
+                class = "btn btn-outline-danger"
+              )
+            }
+        ),
+        div(
+          actionButton(
+            ns("load_example"), "Load Example",
+            class = "btn btn-outline-info"
+            ),
+          actionButton(
+            ns("check_documentation"),
+            "Check Documentation",
+            class = "btn btn-outline-primary"
+            )
         )
+        ),
+        if(is.null(uploaded$samples.csv)){
+        bslib::layout_columns(
+          bslib::card(
+            fileInputArea(
+              ns("samples_csv"),
+              shiny::h4("Choose samples.csv", class='mb-0'),
+              multiple = FALSE,
+              accept = c(".csv")
+            )
+          )
+        )
+      }else{
+         bslib::layout_columns(
+        col_widths = c(9, 3),
+        TableModuleUI(
+          ns("samples_datasets"),
+          width = width,
+          height = height,
+          title = title,
+          info.text = info.text,
+          caption = caption,
+          label = "",
+          show.maximize = FALSE
+        ),
+        bslib::card(
+          div(
+            "Summary:",
+            br(),
+            check_to_html(
+              checklist$samples.csv$checks,
+                pass_msg = "All samples checks passed",
+                null_msg = "Samples checks not run yet.
+                            Fix any errors with samples first."
+              ),
+            check_to_html(checklist$samples_counts$checks,
+                pass_msg = "All samples-counts checks passed",
+                null_msg = "Samples-counts checks not run yet.
+                        Fix any errors with samples or counts first."
+              ),
+            legend
+            )
+          )
+      )
+      }
+      )
+    )
+
+    # pass counts to uploaded when uploaded
+    observeEvent(input$samples_csv, {
+      uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
+
+    })
+
+    observeEvent(input$remove_samples, {
+      uploaded$samples.csv <- NULL
+    })
+
+    observeEvent(input$load_example, {
+      uploaded$samples.csv <- playbase::SAMPLES
     })
 
     TableModuleServer(
-      "datasets",
+      "samples_datasets",
       func = table.RENDER,
       selector = "none"
     )
-  }) ## end of moduleServer
-} ## end of server
+  })
+}
 
 upload_table_preview_contrasts_ui <- function(
     id,

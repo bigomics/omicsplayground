@@ -722,6 +722,8 @@ UploadBoard <- function(id,
 
     # wizard lock/unlock logic
 
+    
+    # lock/unlock wizard for samples.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts), {
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
@@ -730,6 +732,18 @@ UploadBoard <- function(id,
           wizardR::unlock("upload-wizard")
         }
     })
+
+    # lock/unlock wizard for samples.csv
+    observeEvent(
+      list(uploaded$samples.csv, checked_samples), {
+        if (is.null(checked_samples()$status) || checked_samples()$status != "OK"){
+          wizardR::lock("upload-wizard")
+        } else if (!is.null(checked_samples()$status) && checked_samples()$status == "OK"){
+          wizardR::unlock("upload-wizard")
+        }
+    })
+
+    
     
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
@@ -770,7 +784,12 @@ UploadBoard <- function(id,
       "samples_preview",
       uploaded,
       checklist = checklist,
-      scrollY = "calc(50vh - 140px)"
+      scrollY = "calc(50vh - 140px)",
+      width =  c("auto", "100%"),
+      height = c("100%", TABLE_HEIGHT_MODAL),
+      title = "Uploaded Samples",
+      info.text = "This is the uploaded samples data.",
+      caption = "This is the uploaded samples data."
     )
 
     upload_table_preview_contrasts_server(
