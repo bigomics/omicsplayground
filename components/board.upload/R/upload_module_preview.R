@@ -69,12 +69,14 @@ upload_table_preview_counts_server <- function(
         div(
           style = "display: flex; justify-content: space-between;",
           div(
-            shiny::actionButton(
-              ns("remove_counts"),
-              "Remove input", 
-              icon = icon("trash-can"),
-              class = "btn btn-outline-danger"
+            if(!is.null(uploaded$counts.csv)){
+              shiny::actionButton(
+                ns("remove_counts"),
+                "Remove input", 
+                icon = icon("trash-can"),
+                class = "btn btn-outline-danger"
               )
+            }
         ),
         div(
           actionButton(
