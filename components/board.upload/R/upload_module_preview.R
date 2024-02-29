@@ -1,63 +1,3 @@
-# convert list of checks to html tags for display in the data preview modal
-check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
-  error_list <- playbase::PGX_CHECKS
-  if (is.null(check)) {
-    tagList(
-      span(null_msg, style = "color: red"), br()
-    )
-  } else if (isFALSE(check)) {
-    tagList(
-      span(false_msg, style = "color: orange"), br()
-    )
-  } else {
-    if (length(check) > 0) {
-      tagList(
-        lapply(1:length(check), function(idx) {
-          error_id <- names(check)[idx]
-          error_log <- check[[idx]]
-          error_detail <- error_list[error_list$error == error_id, ]
-          error_length <- length(error_log)
-          ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-          if (error_detail$warning_type == "warning") {
-            title_color <- "orange"
-          } else if (error_detail$warning_type == "error") {
-            title_color <- "red"
-          }
-          div(
-            hr(style = "border-top: 1px solid black;"),
-            span(error_detail$title, style = paste("color:", title_color)),
-            br(),
-            paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-            br()
-          )
-        }),
-        hr(style = "border-top: 1px solid black;")
-      )
-    } else {
-      if (pass_msg != "") {
-        tagList(
-          span(pass_msg, style = "color: green"), br()
-        )
-      }
-    }
-  }
-}
-
-
-legend <-  shiny::div(
-           class = "pt-4",
-           style = "margin-top: 150px;",
-           span(style = "color: green", "Green"),
-           span("= data OK. "),
-           br(),
-           span(style = "color: orange", "Orange"),
-           span("= warning but data will still be uploaded. "),
-           br(),
-           span(style = "color:red", "Red"),
-           span("= error and data will not be uploaded.")
-        )
-
-
 upload_table_preview_counts_ui <- function(id) {
   
   ns <- shiny::NS(id)
@@ -394,3 +334,64 @@ upload_table_preview_contrasts_server <- function(id,
     )
   }) ## end of moduleServer
 } ## end of server
+
+
+# convert list of checks to html tags for display in the data preview modal
+check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
+  error_list <- playbase::PGX_CHECKS
+  if (is.null(check)) {
+    tagList(
+      span(null_msg, style = "color: red"), br()
+    )
+  } else if (isFALSE(check)) {
+    tagList(
+      span(false_msg, style = "color: orange"), br()
+    )
+  } else {
+    if (length(check) > 0) {
+      tagList(
+        lapply(1:length(check), function(idx) {
+          error_id <- names(check)[idx]
+          error_log <- check[[idx]]
+          error_detail <- error_list[error_list$error == error_id, ]
+          error_length <- length(error_log)
+          ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+          if (error_detail$warning_type == "warning") {
+            title_color <- "orange"
+          } else if (error_detail$warning_type == "error") {
+            title_color <- "red"
+          }
+          div(
+            hr(style = "border-top: 1px solid black;"),
+            span(error_detail$title, style = paste("color:", title_color)),
+            br(),
+            paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
+            br()
+          )
+        }),
+        hr(style = "border-top: 1px solid black;")
+      )
+    } else {
+      if (pass_msg != "") {
+        tagList(
+          span(pass_msg, style = "color: green"), br()
+        )
+      }
+    }
+  }
+}
+
+
+legend <-  shiny::div(
+           class = "pt-4",
+           style = "margin-top: 150px;",
+           span(style = "color: green", "Green"),
+           span("= data OK. "),
+           br(),
+           span(style = "color: orange", "Orange"),
+           span("= warning but data will still be uploaded. "),
+           br(),
+           span(style = "color:red", "Red"),
+           span("= error and data will not be uploaded.")
+        )
+
