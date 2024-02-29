@@ -77,8 +77,15 @@ upload_table_preview_counts_server <- function(
               )
         ),
         div(
-          actionButton(ns(""), "Download Example"),
-          actionButton(ns("check_documentation"), "Check Documentation")
+          actionButton(
+            ns("load_example"), "Load Example",
+            class = "btn btn-outline-info"
+            ),
+          actionButton(
+            ns("check_documentation"),
+            "Check Documentation",
+            class = "btn btn-outline-primary"
+            )
         )
         ),
         if(is.null(uploaded$counts.csv)){
@@ -162,6 +169,10 @@ upload_table_preview_counts_server <- function(
 
     observeEvent(input$remove_counts, {
       uploaded$counts.csv <- NULL
+    })
+
+    observeEvent(input$load_example, {
+      uploaded$counts.csv <- playbase::COUNTS
     })
    
     TableModuleServer(
