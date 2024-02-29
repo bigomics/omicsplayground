@@ -684,7 +684,7 @@ UploadBoard <- function(id,
       r_results = corrected1$results,
       is.count = TRUE
     )
-    
+
     upload_ok <- shiny::reactive({
       check <- checkTables()
       all(check[, "status"] == "OK")
@@ -779,8 +779,6 @@ UploadBoard <- function(id,
       checklist,
       scrollY = "calc(50vh - 140px)"
     )
-
-
 
     # observe show_modal and start modal
     shiny::observeEvent(new_upload(), {

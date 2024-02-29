@@ -1,7 +1,7 @@
 upload_table_preview_counts_ui <- function(id) {
   
   ns <- shiny::NS(id)
-  uiOutput(ns("table_counts"))
+    uiOutput(ns("table_counts"))
 }
 
 upload_table_preview_counts_server <- function(
@@ -65,7 +65,22 @@ upload_table_preview_counts_server <- function(
     }
 
     output$table_counts <- shiny::renderUI(
-      if(is.null(input$counts_csv)){
+      div(
+        div(
+          style = "display: flex; justify-content: space-between;",
+          div(
+            shiny::actionButton(
+              ns("remove_counts"),
+              "Remove input",
+              icon = icon("trash-can")
+              )
+        ),
+        div(
+          actionButton(ns(""), "Download Example"),
+          actionButton(ns("check_documentation"), "Check Documentation")
+        )
+        ),
+        if(is.null(input$counts_csv)){
         bslib::layout_columns(
           bslib::card(
             fileInput2(
@@ -105,6 +120,7 @@ upload_table_preview_counts_server <- function(
           )
       )
       }
+      )
     )
 
     # pass counts to uploaded when uploaded
@@ -141,6 +157,10 @@ upload_table_preview_counts_server <- function(
       }
       uploaded$counts.csv <- df
 
+    })
+
+    observeEvent(input$remove_counts, {
+      uploaded$counts.csv <- NULL
     })
    
     TableModuleServer(
