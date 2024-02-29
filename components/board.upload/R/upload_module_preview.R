@@ -67,7 +67,7 @@ upload_table_preview_counts_server <- function(
     output$table_counts <- shiny::renderUI(
       div(
         div(
-          style = "display: flex; justify-content: space-between;",
+          style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
             if(!is.null(uploaded$counts.csv)){
               shiny::actionButton(
@@ -97,7 +97,8 @@ upload_table_preview_counts_server <- function(
               ns("counts_csv"),
               shiny::h4("Choose counts.csv", class='mb-0'),
               multiple = FALSE,
-              accept = c(".csv")
+              accept = c(".csv"),
+              width = "800px" #TODO this is a hack to make the file input area wider
             )
           )
         )
@@ -253,7 +254,7 @@ upload_table_preview_samples_server <- function(
     output$table_samples <- shiny::renderUI(
       div(
         div(
-          style = "display: flex; justify-content: space-between;",
+          style = "display: flex; justify-content: space-between;width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
             if(!is.null(uploaded$samples.csv)){
               shiny::actionButton(
@@ -283,7 +284,8 @@ upload_table_preview_samples_server <- function(
               ns("samples_csv"),
               shiny::h4("Choose samples.csv", class='mb-0'),
               multiple = FALSE,
-              accept = c(".csv")
+              accept = c(".csv"),
+              width = "800px" #TODO this is a hack to make the file input area wider
             )
           )
         )
@@ -414,7 +416,7 @@ upload_table_preview_contrasts_server <- function(
     output$table_contrasts <- shiny::renderUI(
       div(
         div(
-          style = "display: flex; justify-content: space-between;",
+          style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
             if(!is.null(uploaded$contrasts.csv)){
               shiny::actionButton(
@@ -444,7 +446,8 @@ upload_table_preview_contrasts_server <- function(
               ns("contrasts_csv"),
               shiny::h4("Choose contrasts.csv", class='mb-0'),
               multiple = FALSE,
-              accept = c(".csv")
+              accept = c(".csv"),
+              width = "800px" #TODO this is a hack to make the file input area wider
             )
           )
         )
