@@ -361,7 +361,8 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      shiny::observeEvent(input$compute, {
+      
+      shiny::observeEvent(input$`upload-upload-wizard`, {
         ## -----------------------------------------------------------
         ## Check validity
         ## -----------------------------------------------------------

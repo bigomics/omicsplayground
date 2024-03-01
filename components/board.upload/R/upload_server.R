@@ -826,6 +826,10 @@ UploadBoard <- function(id,
           )
         }
     })
+
+    shiny::observeEvent(input$`upload-upload-wizard`,{
+      print("upload-wizard fired")
+    })
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
