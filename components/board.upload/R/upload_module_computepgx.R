@@ -20,7 +20,6 @@ upload_module_computepgx_server <- function(
     selected_organism,
     auth,
     create_raw_dir,
-    enable_button = shiny::reactive(TRUE),
     alertready = TRUE,
     height = 720,
     recompute_info,
@@ -120,20 +119,13 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td(""),
                   shiny::tags$td(
                     shiny::div(
-                      shiny::actionButton(
-                        ns("compute"),
-                        "Compute!",
-                        icon = icon("running"),
-                        class = "btn-outline-primary"
-                      ),
-                      shiny::br(), br(),
                       shiny::actionLink(ns("options"), "Computation options",
                         icon = icon("cog", lib = "glyphicon")
                       ),
                       style = "margin: 15px 0 15px 80px;"
                     )
                   ),
-                  shiny::tags$td("")                  
+                  shiny::tags$td("")
                 )
               ) ## end table
             )
@@ -233,14 +225,7 @@ upload_module_computepgx_server <- function(
           ) ## end of conditional panel
         ) ## end of fill Col
       })
-      
-      shiny::observeEvent(enable_button(), {
-        if (!enable_button()) {
-          shinyjs::disable(ns("compute"))
-        } else {
-          shinyjs::enable(ns("compute"))
-        }
-      })
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -767,12 +752,6 @@ upload_module_computepgx_server <- function(
           shinyjs::runjs("document.querySelector('.current-dataset #spinner-container').remove();")
         }
 
-        MAX_DS_PROCESS <- 1
-        if (process_counter() < MAX_DS_PROCESS) {
-          shinyjs::enable("compute")
-        } else {
-          shinyjs::disable("compute")
-        }
       })
 
       # observer to listed to click on send_data_to_support button
