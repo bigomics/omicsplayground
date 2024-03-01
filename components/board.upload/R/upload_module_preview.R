@@ -192,8 +192,8 @@ upload_table_preview_counts_server <- function(
           showCancelButton = TRUE,
           closeOnEsc = FALSE,
           callbackR = delete_all_files_counts,
-          confirmButtonText = "Yes, remove counts",
-          cancelButtonText = "No, cancel"
+          confirmButtonText = "Yes, remove all files.",
+          cancelButtonText = "No, cancel deletion."
         )} else {
           uploaded$counts.csv <- NULL
         }
@@ -360,7 +360,30 @@ upload_table_preview_samples_server <- function(
     })
 
     observeEvent(input$remove_samples, {
-      uploaded$samples.csv <- NULL
+      
+      delete_all_files_samples <- function(value) {
+        if(input$alert_delete_samples){
+          uploaded$samples.csv <- NULL
+          uploaded$contrasts.csv <- NULL
+        }
+      }
+      
+      # if samples is not null, warn user that it will be deleted
+      if(!is.null(uploaded$contrasts.csv)){
+        # make a pop up and give user option to delete all files or just counts
+        shinyalert::shinyalert(
+          inputId = "alert_delete_samples",
+          title = "Warning",
+          text = "Removing samples will also remove contrasts. Do you want to proceed?",
+          type = "warning",
+          showCancelButton = TRUE,
+          closeOnEsc = FALSE,
+          callbackR = delete_all_files_samples,
+          confirmButtonText = "Yes, remove samples and contrasts.",
+          cancelButtonText = "No, cancel deletion."
+        )} else {
+          uploaded$counts.csv <- NULL
+        }
     })
 
     observeEvent(input$load_example, {

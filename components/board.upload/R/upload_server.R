@@ -481,16 +481,6 @@ UploadBoard <- function(id,
 
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples()
-        if (!is.null(checked) && is.null(cc$matrix)) {
-          status <- "ERROR: please upload samples file first."
-          checked <- NULL
-          # pop up telling the user to upload samples.csv first
-          shinyalert::shinyalert(
-            title = "Samples.csv file missing",
-            text = "Please upload the samples.csv file first.",
-            type = "error"
-          )
-        }
 
         ## -------------- max contrast check ------------------
         MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
