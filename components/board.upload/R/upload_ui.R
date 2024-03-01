@@ -22,14 +22,14 @@ UploadUI <- function(id) {
   )
 
   contrasts_ui <- wizardR::wizard_step(
-    step_title = "Contrasts",
+    step_title = "Comparison",
     upload_table_preview_contrasts_ui(
       ns("contrasts_preview")
         )
     )
 
   comparisons_panel <- wizardR::wizard_step(
-    step_title = "Comparisons",
+    step_title = "Comparison Builder",
     bslib::layout_columns(
       col_widths = 12,
       # height = "calc(100vh - 340px)",
