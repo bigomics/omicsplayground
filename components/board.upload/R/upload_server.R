@@ -170,46 +170,7 @@ UploadBoard <- function(id,
       }
     })
 
-    # hide upload tab at server start
-##    shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "none";')
-
-    ## Hide/show tabpanels upon available data like a wizard dialog
-    shiny::observe({
-
-      return(NULL)  ### TEMPORARY FOR DEVELOPMENT
-      
-      has.counts <- !is.null(checked_counts()$matrix)
-      has.samples <- !is.null(checked_samples()$matrix)
-      has.contrasts <- !is.null(checked_contrasts()$matrix)
-      # check that modified contrast is not NULL and has col dim >0
-      has.contrasts <- !is.null(modified_ct()) && ncol(modified_ct()) > 0
-
-      need2 <- has.counts && has.samples
-      need3 <- need2 && has.contrasts
-
-      if (need3) {
-        # show compute if contrast is done
-        shiny::showTab("tabs", "Compute")
-        shiny::showTab("tabs", "Comparisons")
-        shiny::showTab("tabs", "QC/BC")
-        if (input$expert_mode) {
-          shiny::showTab("tabs", "BatchEffects")
-        }
-      } else if (need2) {
-        shiny::hideTab("tabs", "Compute")
-        shiny::showTab("tabs", "Comparisons")
-        shiny::showTab("tabs", "QC/BC")
-        if (input$expert_mode) {
-          shiny::showTab("tabs", "BatchEffects")
-        }
-      } else {
-        shiny::hideTab("tabs", "Compute")
-        shiny::hideTab("tabs", "BatchEffects")
-        shiny::hideTab("tabs", "QC/BC")
-        shiny::hideTab("tabs", "Comparisons")
-      }
-    })
-
+    
     ## =====================================================================
     ## ======================= UI OBSERVERS ================================
     ## =====================================================================
