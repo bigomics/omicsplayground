@@ -749,25 +749,6 @@ UploadBoard <- function(id,
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
 
-    upload_plot_countstats_server(
-      "countStats",
-      checkTables,
-      countsRT = reactive(checked_counts()$matrix)
-    )
-
-    upload_plot_phenostats_server(
-      "phenoStats",
-      checkTables,
-      samplesRT = reactive(checked_samples()$matrix)
-    )
-
-    upload_plot_contraststats_server(
-      "contrastStats",
-      checkTables,
-      contrastsRT = reactive(checked_contrasts()$matrix),
-      samplesRT = reactive(checked_samples()$matrix)
-    )
-
     upload_table_preview_counts_server(
       "counts_preview",
       uploaded,
