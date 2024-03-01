@@ -751,7 +751,6 @@ upload_module_computepgx_server <- function(
           # remove UI with JS, had problems with shiny::removeUI
           shinyjs::runjs("document.querySelector('.current-dataset #spinner-container').remove();")
         }
-
       })
 
       # observer to listed to click on send_data_to_support button

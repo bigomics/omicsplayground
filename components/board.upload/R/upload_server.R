@@ -600,7 +600,6 @@ UploadBoard <- function(id,
     # lock/unlock wizard for samples.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts), {
-        browser()
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
           wizardR::lock("upload-wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
@@ -671,6 +670,12 @@ UploadBoard <- function(id,
         }
         
         if (enable_upload) {
+          #TODO lock wizard when one dataset is being computed (see pgxcompute)
+          # if (process_counter() < MAX_DS_PROCESS) {
+          #   shinyjs::enable("compute")
+          # } else {
+          #   shinyjs::disable("compute")
+          # }
           wizardR::wizard_show(ns("upload-wizard"))
         } else {
           shinyalert::shinyalert(
