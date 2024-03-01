@@ -488,76 +488,6 @@ UploadBoard <- function(id,
       }
     )
 
-
-    ## --------------------------------------------------------
-    ## Gather all checks in table
-    ## --------------------------------------------------------
-
-    checkTables <- shiny::reactive({
-      # check if status exists
-      status <- rep("please upload", 3)
-      files.needed <- c("counts.csv", "samples.csv", "contrasts.csv")
-      names(status) <- files.needed
-      files.nrow <- rep(NA, 3)
-      files.ncol <- rep(NA, 3)
-
-      ## check if all files in uploaded
-      for (i in 1:3) {
-        fn <- files.needed[i]
-        upfile <- uploaded[[fn]]
-        if (fn %in% names(uploaded) && !is.null(upfile)) {
-          status[i] <- "OK"
-          files.nrow[i] <- nrow(upfile)
-          files.ncol[i] <- ncol(upfile)
-        }
-      }
-      ##      ERROR_CODES <- playbase::PGX_CHECKS
-      has.pgx <- ("pgx" %in% names(uploaded))
-      has.csv <- any(grepl("csv", names(uploaded)))
-      if (has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
-      if (has.pgx == TRUE) {
-        ## Nothing to check. Always OK.
-        status <- c("counts.csv" = "OK", "samples.csv" = "OK", "contrasts.csv" = "OK")
-      } else if (!has.pgx) {
-        c1 <- checked_counts()
-        c2 <- checked_samples()
-        c3 <- checked_contrasts()
-
-        status <- c(
-          "counts.csv" = c1$status,
-          "samples.csv" = c2$status,
-          "contrasts.csv" = c3$status
-        )
-      }
-
-      ## --------------------------------------------------------
-      ## Build summary table
-      ## --------------------------------------------------------
-      description <- c(
-        "Count/expression file with gene on rows, samples as columns",
-        "Samples file with samples on rows, phenotypes as columns",
-        ## "Gene information file with genes on rows, gene info as columns.",
-        "Contrast file with conditions on rows, contrasts as columns"
-      )
-      description <- c(
-        "genes x samples",
-        "samples x phenotypes",
-        ## "Gene information file with genes on rows, gene info as columns.",
-        "conditions x comparisons"
-      )
-      df <- data.frame(
-        filename = files.needed,
-        description = description,
-        nrow = files.nrow,
-        ncol = files.ncol,
-        status = status
-      )
-      rownames(df) <- files.needed
-
-      ## deselect
-      return(df)
-    })
-
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
       content = function(file) {
@@ -636,12 +566,6 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
-    upload_ok <- shiny::reactive({
-      check <- checkTables()
-      all(check[, "status"] == "OK")
-      all(grepl("ERROR", check[, "status"]) == FALSE)
-    })
-
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = corrected1$correctedCounts,
@@ -650,7 +574,6 @@ UploadBoard <- function(id,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       selected_organism = shiny::reactive(input$selected_organism),
-      enable_button = upload_ok,
       alertready = FALSE,
       lib.dir = FILES,
       auth = auth,
@@ -677,6 +600,7 @@ UploadBoard <- function(id,
     # lock/unlock wizard for samples.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts), {
+        browser()
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
           wizardR::lock("upload-wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
