@@ -83,10 +83,11 @@ upload_table_preview_counts_server <- function(
             ns("load_example"), "Load Example",
             class = "btn btn-outline-info"
             ),
-          actionButton(
-            ns("check_documentation"),
+          shiny::actionButton(
+            ns("check_documentation_counts"),
             "Check Documentation",
-            class = "btn btn-outline-primary"
+            class = "btn btn-outline-primary",
+            onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
             )
         )
         ),
@@ -271,9 +272,10 @@ upload_table_preview_samples_server <- function(
             class = "btn btn-outline-info"
             ),
           actionButton(
-            ns("check_documentation"),
+            ns("check_documentation_samples"),
             "Check Documentation",
-            class = "btn btn-outline-primary"
+            class = "btn btn-outline-primary",
+            onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
             )
         )
         ),
@@ -433,9 +435,10 @@ upload_table_preview_contrasts_server <- function(
             class = "btn btn-outline-info"
             ),
           actionButton(
-            ns("check_documentation"),
+            ns("check_documentation_contrasts"),
             "Check Documentation",
-            class = "btn btn-outline-primary"
+            class = "btn btn-outline-primary",
+            onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
             )
         )
         ),
