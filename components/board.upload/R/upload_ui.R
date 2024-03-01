@@ -99,7 +99,11 @@ UploadUI <- function(id) {
       comparisons_panel,
       outliers_panel,
       batchcorrect_panel,
-      compute_panel
+      compute_panel,
+      options = list(
+        navigation = "buttons",
+        finish = "Compute!"
+      )
     )
     )
   )
