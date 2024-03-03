@@ -788,7 +788,7 @@ PlotModuleServer <- function(id,
             shiny::withProgress(
               {
                 data <- csvFunc()
-                if (is.list(data)) data <- data[[1]]
+                if (is.list(data) && !is.data.frame(data)) data <- data[[1]]
                 write.csv(data, file = file)
                 ## Record downloaded plot
                 record_plot_download(ns("") %>% substr(1, nchar(.) - 1))

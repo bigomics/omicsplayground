@@ -212,13 +212,20 @@ expression_plot_maplot_server <- function(id,
       fig
     }
 
+    plot_data_csv <- function(){
+      dt <- plot_data()
+      df <- data.frame(dt$x, dt$y)
+      colnames(df) <- c("x", "y")
+      return(df)
+    }
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       remove_margins = FALSE,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
