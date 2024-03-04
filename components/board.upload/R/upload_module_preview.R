@@ -13,7 +13,10 @@ upload_table_preview_counts_server <- function(
   height,
   title,
   info.text,
-  caption
+  caption,
+  checked_counts,
+  checked_samples,
+  cjecked
   ) 
   {
   moduleServer(id, function(input, output, session) {
@@ -145,8 +148,6 @@ upload_table_preview_counts_server <- function(
       IS_EXPRESSION <- grepl("expression", input$counts_csv$datapath, ignore.case = TRUE)
       IS_COUNT <- grepl("count", input$counts_csv$datapath, ignore.case = TRUE)
 
-      
-      
       #TODO this needs review!
       if(IS_EXPRESSION){
         df <- 2**df0 
@@ -162,6 +163,7 @@ upload_table_preview_counts_server <- function(
             text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
             type = "warning"
             )
+          #TODO this conversion should be optional ,upon confirmation of user
           df <- 2**df0 - 1
           if(min(df0, na.rm=TRUE) > 0) df <- df - 1
         }
@@ -171,7 +173,6 @@ upload_table_preview_counts_server <- function(
     })
 
     observeEvent(input$remove_counts, {
-
 
       delete_all_files_counts <- function(value) {
         if(input$alert_delete_counts){
@@ -203,6 +204,7 @@ upload_table_preview_counts_server <- function(
     observeEvent(input$load_example, {
       uploaded$counts.csv <- playbase::COUNTS
     })
+
    
     TableModuleServer(
       "counts_datasets",
@@ -413,7 +415,10 @@ upload_table_preview_contrasts_server <- function(
   height,
   title,
   info.text,
-  caption
+  caption,
+  checked_counts,
+  checked_samples,
+  checked_contrasts
   ) 
   {
   moduleServer(id, function(input, output, session) {
@@ -466,6 +471,13 @@ upload_table_preview_contrasts_server <- function(
 
     output$table_contrasts <- shiny::renderUI(
       div(
+        bslib::layout_columns(
+          col_widths = 12,
+          # height = "calc(100vh - 340px)",
+          heights_equal = "row",
+          upload_module_makecontrast_ui(ns("makecontrast")),
+          bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
+        ),
         div(
           style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
@@ -553,11 +565,20 @@ upload_table_preview_contrasts_server <- function(
       uploaded$contrasts.csv <- playbase::CONTRASTS
     })
 
+    modified_ct <- upload_module_makecontrast_server(
+      id = "makecontrast",
+      phenoRT = reactive(checked_samples()$matrix),
+      contrRT = reactive(checked_contrasts()$matrix),
+      countsRT = reactive(checked_counts()$matrix)
+    )
+
     TableModuleServer(
       "contrasts_datasets",
       func = table.RENDER,
       selector = "none"
     )
+
+    return(modified_ct)
   })
 }
 

@@ -532,12 +532,12 @@ UploadBoard <- function(id,
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
 
-    modified_ct <- upload_module_makecontrast_server(
-      id = "makecontrast",
-      phenoRT = reactive(checked_samples()$matrix),
-      contrRT = reactive(checked_contrasts()$matrix),
-      countsRT = reactive(checked_counts()$matrix)
-    )
+    # modified_ct <- upload_module_makecontrast_server(
+    #   id = "makecontrast",
+    #   phenoRT = reactive(checked_samples()$matrix),
+    #   contrRT = reactive(checked_contrasts()$matrix),
+    #   countsRT = reactive(checked_counts()$matrix)
+    # )
 
     shiny::observeEvent( modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
@@ -647,7 +647,7 @@ UploadBoard <- function(id,
       caption = "This is the uploaded samples data."
     )
 
-    upload_table_preview_contrasts_server(
+    modified_ct <- upload_table_preview_contrasts_server(
       "contrasts_preview",
       uploaded,
       checklist,
@@ -656,7 +656,11 @@ UploadBoard <- function(id,
       width = c("auto", "100%"),
       title = "Uploaded Contrasts",
       info.text = "This is the uploaded comparison data.",
-      caption = "This is the uploaded comparison data."
+      caption = "This is the uploaded comparison data.",
+      checked_samples = checked_samples,
+      checked_counts = checked_counts,
+      checked_contrasts = checked_contrasts
+
     )
 
     # observe show_modal and start modal
