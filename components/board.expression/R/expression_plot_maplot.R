@@ -212,7 +212,7 @@ expression_plot_maplot_server <- function(id,
       fig
     }
 
-    plot_data_csv <- function(){
+    plot_data_csv <- function() {
       dt <- plot_data()
       df <- data.frame(dt$x, dt$y)
       colnames(df) <- c("x", "y")
