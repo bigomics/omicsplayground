@@ -426,6 +426,8 @@ upload_table_preview_contrasts_server <- function(
 
     ns <- session$ns
 
+    show_comparison_builder <- shiny::reactiveVal(FALSE)
+
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
       dt <- uploaded$contrasts.csv
@@ -473,92 +475,100 @@ upload_table_preview_contrasts_server <- function(
     output$table_contrasts <- shiny::renderUI(
       div(
         # if run_build_comparisons is clicked, then show the contrasts
-        if(FALSE){
+        if(show_comparison_builder()){
           bslib::layout_columns(
           col_widths = 12,
-          # height = "calc(100vh - 340px)",
+          height = "calc(100vh - 340px)",
           heights_equal = "row",
           upload_module_makecontrast_ui(ns("makecontrast")),
           bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")
           ))
         } else {
-          
-      div(
-          style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
-            if(!is.null(uploaded$contrasts.csv)){
-              shiny::actionButton(
-                ns("remove_contrasts"),
-                "Remove input",
-                icon = icon("trash-can"),
-                class = "btn btn-outline-danger"
+            style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+            bslib::layout_columns(
+            col_widths = 12,
+            # height = "calc(100vh - 340px)",
+            heights_equal = "row",
+            div(
+              if(!is.null(uploaded$contrasts.csv)){
+                shiny::actionButton(
+                  ns("remove_contrasts"),
+                  "Remove input",
+                  icon = icon("trash-can"),
+                  class = "btn btn-outline-danger"
+                )
+              }
+          ),
+          div(
+            actionButton(
+              ns("load_example"), "Load Example",
+              class = "btn btn-outline-info"
+              ),
+            actionButton(
+              ns("run_build_comparisons"), "Run Comparison builder",
+              class = "btn btn-outline-info"
+              ),
+            actionButton(
+              ns("check_documentation_contrasts"),
+              "Check Documentation",
+              class = "btn btn-outline-primary",
+              onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
               )
-            }
-        ),
-        div(
-          actionButton(
-            ns("load_example"), "Load Example",
-            class = "btn btn-outline-info"
-            ),
-          actionButton(
-            ns("run_build_comparisons"), "Run Comparison builder",
-            class = "btn btn-outline-info"
-            ),
-          actionButton(
-            ns("check_documentation_contrasts"),
-            "Check Documentation",
-            class = "btn btn-outline-primary",
-            onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
+          ),
+          if(is.null(uploaded$contrasts.csv)){
+          bslib::layout_columns(
+            bslib::card(
+              fileInputArea(
+                ns("contrasts_csv"),
+                shiny::h4("Choose contrasts.csv", class='mb-0'),
+                multiple = FALSE,
+                accept = c(".csv"),
+                width = "800px" #TODO this is a hack to make the file input area wider
+              )
             )
-        ),
-        if(is.null(uploaded$contrasts.csv)){
-        bslib::layout_columns(
+          )
+        }else{
+          bslib::layout_columns(
+          col_widths = c(9, 3),
+          TableModuleUI(
+            ns("contrasts_datasets"),
+            width = width,
+            height = height,
+            title = title,
+            info.text = info.text,
+            caption = caption,
+            label = "",
+            show.maximize = FALSE
+          ),
           bslib::card(
-            fileInputArea(
-              ns("contrasts_csv"),
-              shiny::h4("Choose contrasts.csv", class='mb-0'),
-              multiple = FALSE,
-              accept = c(".csv"),
-              width = "800px" #TODO this is a hack to make the file input area wider
+            div(
+              "Summary:",
+              br(),
+              check_to_html(
+                checklist$contrasts.csv$checks,
+                  pass_msg = "All contrasts checks passed",
+                  null_msg = "Contrasts checks not run yet.
+                              Fix any errors with contrasts first."
+                ),
+              check_to_html(checklist$samples_contrasts$checks,
+                  pass_msg = "All contrasts-samples checks passed",
+                  null_msg = "Contrasts-samples checks not run yet.
+                          Fix any errors with contrasts or samples first."
+                ),
+              legend
+              )
             )
-          )
         )
-      }else{
-         bslib::layout_columns(
-        col_widths = c(9, 3),
-        TableModuleUI(
-          ns("contrasts_datasets"),
-          width = width,
-          height = height,
-          title = title,
-          info.text = info.text,
-          caption = caption,
-          label = "",
-          show.maximize = FALSE
-        ),
-        bslib::card(
-          div(
-            "Summary:",
-            br(),
-            check_to_html(
-              checklist$contrasts.csv$checks,
-                pass_msg = "All contrasts checks passed",
-                null_msg = "Contrasts checks not run yet.
-                            Fix any errors with contrasts first."
-              ),
-            check_to_html(checklist$samples_contrasts$checks,
-                pass_msg = "All contrasts-samples checks passed",
-                null_msg = "Contrasts-samples checks not run yet.
-                        Fix any errors with contrasts or samples first."
-              ),
-            legend
-            )
-          )
-      )
-      }
-      )
+        })
+        )
         }
     ))
+
+    # control state of comparison builder
+    observeEvent(input$run_build_comparisons, {
+      show_comparison_builder(TRUE)
+    })
 
     # pass counts to uploaded when uploaded
     observeEvent(input$contrasts_csv, {
