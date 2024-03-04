@@ -783,6 +783,8 @@ app_server <- function(input, output, session) {
     pgxdir <- shiny::isolate(auth$user_dir)
     num_pgxfiles <- length(dir(pgxdir, pattern = ".pgx$"))
 
+    dbg(paste0("IP: ", session$request$HTTP_X_REAL_IP))
+
     pgx.record_access(
       user = isolate(auth$email),
       action = action,
