@@ -27,6 +27,9 @@ pgx.record_access <- function(user,
   if (user == "" || action == "") {
     return(NULL)
   }
+  if (is.null(ip)) {
+    ip <- ""
+  }
 
   user <- sub("__.*", "", user) ## strip postfix
   time <- as.POSIXct(time)
