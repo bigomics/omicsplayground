@@ -69,6 +69,7 @@ upload_table_preview_counts_server <- function(
 
     output$table_counts <- shiny::renderUI(
       div(
+        
         div(
           style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
@@ -471,14 +472,18 @@ upload_table_preview_contrasts_server <- function(
 
     output$table_contrasts <- shiny::renderUI(
       div(
-        bslib::layout_columns(
+        # if run_build_comparisons is clicked, then show the contrasts
+        if(FALSE){
+          bslib::layout_columns(
           col_widths = 12,
           # height = "calc(100vh - 340px)",
           heights_equal = "row",
           upload_module_makecontrast_ui(ns("makecontrast")),
-          bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
-        ),
-        div(
+          bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")
+          ))
+        } else {
+          
+      div(
           style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
             if(!is.null(uploaded$contrasts.csv)){
@@ -496,12 +501,15 @@ upload_table_preview_contrasts_server <- function(
             class = "btn btn-outline-info"
             ),
           actionButton(
+            ns("run_build_comparisons"), "Run Comparison builder",
+            class = "btn btn-outline-info"
+            ),
+          actionButton(
             ns("check_documentation_contrasts"),
             "Check Documentation",
             class = "btn btn-outline-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
             )
-        )
         ),
         if(is.null(uploaded$contrasts.csv)){
         bslib::layout_columns(
@@ -549,7 +557,8 @@ upload_table_preview_contrasts_server <- function(
       )
       }
       )
-    )
+        }
+    ))
 
     # pass counts to uploaded when uploaded
     observeEvent(input$contrasts_csv, {
