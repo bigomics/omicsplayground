@@ -609,9 +609,9 @@ UploadBoard <- function(id,
     observeEvent(
       list(uploaded$counts.csv, checked_counts), {
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
-          wizardR::lock("upload-wizard")
+          wizardR::lock("upload_wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
-          wizardR::unlock("upload-wizard")
+          wizardR::unlock("upload_wizard")
         }
     })
 
@@ -619,9 +619,9 @@ UploadBoard <- function(id,
     observeEvent(
       list(uploaded$samples.csv, checked_samples), {
         if (is.null(checked_samples()$status) || checked_samples()$status != "OK"){
-          wizardR::lock("upload-wizard")
+          wizardR::lock("upload_wizard")
         } else if (!is.null(checked_samples()$status) && checked_samples()$status == "OK"){
-          wizardR::unlock("upload-wizard")
+          wizardR::unlock("upload_wizard")
         }
     })
 
@@ -707,7 +707,7 @@ UploadBoard <- function(id,
           # } else {
           #   shinyjs::disable("compute")
           # }
-          wizardR::wizard_show(ns("upload-wizard"))
+          wizardR::wizard_show(ns("upload_wizard"))
         } else {
           shinyalert::shinyalert(
             title = "Upload disabled",
@@ -720,7 +720,14 @@ UploadBoard <- function(id,
     })
 
     shiny::observeEvent(input$upload_upload_wizard,{
+      print("upload-upload-wizard fired")
+      print(input$upload_upload_wizard)
+      
+    })
+
+    shiny::observeEvent(input$upload_wizard,{
       print("upload-wizard fired")
+      print(input$upload_wizard)
     })
     ## ------------------------------------------------
     ## Board return object

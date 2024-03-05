@@ -87,7 +87,7 @@ UploadUI <- function(id) {
     ),
     div(
     wizardR::wizard(
-      id = ns("upload-wizard"),
+      id = ns("upload_wizard"),
       width = 90,
       height = 80,
       modal = TRUE,
