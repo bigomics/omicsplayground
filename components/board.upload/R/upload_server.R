@@ -588,7 +588,8 @@ UploadBoard <- function(id,
       create_raw_dir = create_raw_dir,
       height = "100%",
       recompute_info = recompute_info,
-      inactivityCounter = inactivityCounter
+      inactivityCounter = inactivityCounter,
+      upload_wizard = reactive(input$upload_wizard)
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -719,16 +720,6 @@ UploadBoard <- function(id,
         }
     })
 
-    shiny::observeEvent(input$upload_upload_wizard,{
-      print("upload-upload-wizard fired")
-      print(input$upload_upload_wizard)
-      
-    })
-
-    shiny::observeEvent(input$upload_wizard,{
-      print("upload-wizard fired")
-      print(input$upload_wizard)
-    })
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------

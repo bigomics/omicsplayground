@@ -23,7 +23,8 @@ upload_module_computepgx_server <- function(
     alertready = TRUE,
     height = 720,
     recompute_info,
-    inactivityCounter) {
+    inactivityCounter,
+    upload_wizard) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -347,19 +348,27 @@ upload_module_computepgx_server <- function(
       })
 
       
-      shiny::observeEvent(input$`upload-upload-wizard`, {
+      shiny::observeEvent(upload_wizard(), {
+
+        if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
+          return(NULL)
+        }
+        
         ## -----------------------------------------------------------
         ## Check validity
         ## -----------------------------------------------------------
-        if (!enable_button()) {
-          message("[ComputePgxServer:input$compute] WARNING:: *** DISABLED ***")
-          shinyalert::shinyalert(
-            title = "ERROR",
-            text = "Compute is disabled",
-            type = "error"
-          )
-          return(NULL)
-        }
+        
+        
+        #TODO this button needs to be fixed (conditions are not met)
+        # if (!enable_button()) {
+        #   message("[ComputePgxServer:input$compute] WARNING:: *** DISABLED ***")
+        #   shinyalert::shinyalert(
+        #     title = "ERROR",
+        #     text = "Compute is disabled",
+        #     type = "error"
+        #   )
+        #   return(NULL)
+        # }
         if (!isValidFileName(input$upload_name)) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
