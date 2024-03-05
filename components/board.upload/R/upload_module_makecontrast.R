@@ -17,7 +17,7 @@ upload_module_makecontrast_ui <- function(id) {
       height = "100%",
       row_heights = c(3,2),
       bslib::card(
-        full_screen = TRUE,
+        full_screen = FALSE,
         bslib::card_body(
           bslib::layout_columns(
             col_widths = c(3,9),
@@ -109,7 +109,7 @@ upload_module_makecontrast_ui <- function(id) {
         ## )
       ),
       bslib::card(
-        full_screen = TRUE,
+        full_screen = FALSE,
         bslib::card_body(
           style = "padding: 10px 20px;",
           DT::dataTableOutput(ns("contrastTable"))

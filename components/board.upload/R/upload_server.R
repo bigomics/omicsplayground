@@ -692,7 +692,7 @@ UploadBoard <- function(id,
         }
     })
 
-    shiny::observeEvent(input$`upload-upload-wizard`,{
+    shiny::observeEvent(input$upload_upload_wizard,{
       print("upload-wizard fired")
     })
     ## ------------------------------------------------
