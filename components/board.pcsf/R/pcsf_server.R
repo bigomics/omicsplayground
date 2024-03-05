@@ -91,8 +91,8 @@ PcsfBoard <- function(id, pgx) {
         # Rename cor matrix according to human orthologs
         if (!pgx$organism %in% c("Human", "human")) {
           human_gnames <- pgx$genes[rownames(rho), "human_ortholog"]
-          rownames(rho) <- human_gnames
-          colnames(rho) <- human_gnames
+          rownames(rho) <- toupper(human_gnames)
+          colnames(rho) <- toupper(human_gnames)
           rho <- rho[!rownames(rho) == "", !colnames(rho) == ""]
         }
         rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 0.001)

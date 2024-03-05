@@ -211,6 +211,7 @@ if(!file.exists('00SourceAll.R')) {
   source('modules/CookiesModule.R',encoding='UTF-8')
   source('modules/InfoModals.R',encoding='UTF-8')
   source('modules/NormalizeCountsModule.R',encoding='UTF-8')
+  source('modules/PlotDownloadLogger.R',encoding='UTF-8')
   source('modules/QuestionModule.R',encoding='UTF-8')
   source('modules/SendReferralModule.R',encoding='UTF-8')
   source('modules/SocialMediaModule.R',encoding='UTF-8')

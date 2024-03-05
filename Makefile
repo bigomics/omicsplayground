@@ -32,7 +32,7 @@ docker.run:
 docker.run2:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -it -p 4000:3838 \
-		-v ~/Playground/omicsplayground/data:/omicsplayground/data \
+		-v ~/Playground/pgx:/omicsplayground/data \
 		-v ~/Playground/libx:/omicsplayground/libx \
 		-v /aws/pgx-share:/omicsplayground/data_shared \
 		-v /aws/pgx-public:/omicsplayground/data_public \
@@ -86,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta13"
+VERSION = "v3.3.0-beta18"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
@@ -112,6 +112,8 @@ push.version:
 	docker tag bigomics/omicsplayground:$(BRANCH) bigomics/omicsplayground:$(VERSION)
 	docker push bigomics/omicsplayground:$(VERSION)
 
+auth=none
+
 board.launch:
 	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
@@ -121,11 +123,11 @@ board.example:
 pgx.check.error: sass
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
-app.test:
-	R -e "shiny::runTests()"
+app.test: sass
+	R -e  "options(authentication='$(auth)'); shiny::runTests()"
 
 app.test.review:
-	R -e "testthat::use snapshot_review('snapshot/')""
+	R -e "testthat::snapshot_review('snapshot/')"
 
 update:
 	Rscript dev/update.R

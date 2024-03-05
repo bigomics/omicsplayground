@@ -435,7 +435,7 @@ PlotModuleServer <- function(id,
         cd <- session$clientData
         sprintf(
           "%s/?plotURL=%s//%s:%s%s%s",
-          "editor/index.html",
+          "custom/editor/index.html",
           cd$url_protocol,
           cd$url_hostname,
           cd$url_port,
@@ -596,6 +596,8 @@ PlotModuleServer <- function(id,
                   markfile <- file.path(FILES, "watermark-logo.png")
                   addWatermark.PNG2(file, mark = markfile, position = add.watermark)
                 }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
               message = "Exporting to PNG",
               value = 0.8
@@ -672,6 +674,8 @@ PlotModuleServer <- function(id,
                   markfile <- file.path(FILES, "watermark-logo.pdf")
                   addWatermark.PDF2(file, w = pdf.width, h = pdf.height, mark = markfile)
                 }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
               message = "Exporting to PDF",
               value = 0.8
@@ -741,6 +745,8 @@ PlotModuleServer <- function(id,
                 } else { ## end base
                   write("<body>HTML export error</body>", file = HTMLFILE)
                 }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
                 ## finally copy to fina lexport file
                 file.copy(HTMLFILE, file, overwrite = TRUE)
               },
@@ -763,6 +769,8 @@ PlotModuleServer <- function(id,
                   b <- plotly::plotly_build(p)$x[c("data", "layout", "config")]
                   b <- plotly::as_widget(b) ## from JSON back to R object
                   saveRDS(b, file = file)
+                  ## Record downloaded plot
+                  record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
                 },
                 message = "saving plot object",
                 value = 0.2
@@ -780,8 +788,10 @@ PlotModuleServer <- function(id,
             shiny::withProgress(
               {
                 data <- csvFunc()
-                if (is.list(data)) data <- data[[1]]
+                if (is.list(data) && !is.data.frame(data)) data <- data[[1]]
                 write.csv(data, file = file)
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
               message = "Exporting to CSV",
               value = 0.8

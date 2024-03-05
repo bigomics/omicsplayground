@@ -65,7 +65,7 @@ UploadUI <- function(id) {
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
     bslib::layout_columns(
-      col_widths = c(1,10,1),
+      col_widths = c(1,10,1),x
       div(
 ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
 ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")

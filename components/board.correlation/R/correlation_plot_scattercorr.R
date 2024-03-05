@@ -44,7 +44,7 @@ correlation_plot_scattercorr_ui <- function(
 
   PlotModuleUI(ns("plot"),
     title = title,
-    plotlib = "base",
+    plotlib = "plotly",
     label = "c",
     info.text = info.text,
     caption = caption,
@@ -109,10 +109,13 @@ correlation_plot_scattercorr_server <- function(id,
       return(dt)
     })
 
-    plot_scatter <- function(nrow, ncol) {
+    plotly_scatter <- function(n_row, n_cols, markersize = 10, axis_title_pos = c(-0.1, -0.1),
+                               margin_l = 50, margin_b = 10, interplot_margin = 0.02) {
+      # Load input data
       dt <- cor_scatter.DATA()
-      shiny::req(dt)
 
+      shiny::req(dt)
+      swapaxis <- input$swapaxis
       rho <- dt$rho
       X <- dt$X
       pheno <- dt$pheno
@@ -120,66 +123,92 @@ correlation_plot_scattercorr_server <- function(id,
       this.gene <- dt$this.gene
       COL <- rep(dt$COL, 99)
 
-      if (length(rho) == 0) {
-        return(NULL)
-      }
-
+      shiny::req(length(rho) > 0)
       klr <- COL[as.integer(pheno)]
-      ndim <- length(pheno)
 
-      cex_levels <- c(1.2, 0.8, 0.5, 0.2) * 1.2
-      dim_cuts <- c(0, 40, 100, 200, Inf)
-      cex <- cex_levels[findInterval(ndim, dim_cuts)]
-
-      nplots <- nrow * ncol
+      nplots <- n_row * n_cols
       rho <- head(rho, nplots)
-
-      swapaxis <- input$swapaxis
-
-      par(
-        mfrow = c(nrow, ncol), mar = c(3, 3.5, 0.5, 0),
-        mgp = c(1.7, 0.6, 0), oma = c(0, 0, 0.5, 0.5)
-      )
-
-      i <- 1
-      for (i in 1:length(rho)) {
+      # Aseemble subplots
+      sub_plots <- vector("list", length(rho))
+      for (i in 1:nplots) {
         gene2 <- names(rho)[i]
         if (swapaxis) {
           x <- X[gene2, ]
           y <- X[this.gene, ]
-          xlab <- gene2
+          xlab <- "Y"
           ylab <- this.gene
         } else {
           y <- X[gene2, ]
           x <- X[this.gene, ]
-          ylab <- gene2
           xlab <- this.gene
+          ylab <- "Y"
         }
-        base::plot(x, y,
-          pch = 19, cex = cex, col = klr,
-          ylab = ylab, xlab = xlab
-        )
-
-        y <- y + 1e-3 * rnorm(length(y))
-        x <- x + 1e-3 * rnorm(length(x))
-        abline(lm(y ~ x), col = "black", lty = 2)
-
-        if (i %% 5 == 1) {
-          tt <- c("   ", levels(pheno))
-          legend("topleft",
-            legend = tt,
-            fill = c(NA, COL), inset = c(0.02, 0.02),
-            border = c(NA, rep("black", 99)),
-            cex = 0.95, box.lwd = 0, pt.lwd = 0,
-            x.intersp = 0.5, y.intersp = 0.8
-          )
-          legend("topleft", colorby,
-            x.intersp = -0.2,
-            cex = 0.95, y.intersp = 0.45, bty = "n"
-          )
-        }
+        title_i <- gene2
+        title_loc <- max(y) + 0.05 * max(y)
+        # Make regression line
+        fit <- lm(y ~ x)
+        newdata <- data.frame(x = range(x))
+        newdata$y <- predict(fit, newdata)
+        plt <- plotly::plot_ly() %>%
+          # Add the points
+          plotly::add_trace(
+            x = x, y = y, name = pheno, color = klr, type = "scatter", mode = "markers",
+            marker = list(size = markersize),
+            showlegend = i == 14
+          ) %>%
+          # Add the regression line
+          plotly::add_trace(
+            data = newdata,
+            x = ~x, y = ~y, showlegend = FALSE, type = "scatter",
+            line = list(color = "rgb(22, 96, 167)", dash = "dot"), mode = "lines",
+            inherit = FALSE
+          ) %>%
+          # Legend
+          plotly::layout(
+            legend = list(orientation = "h", bgcolor = "transparent")
+          ) %>%
+          # Plot title
+          plotly::add_annotations(
+            text = paste("<b>", title_i, "</b>"),
+            font = list(size = 10),
+            showarrow = FALSE,
+            xanchor = "left",
+            yanchor = "bottom",
+            x = 0,
+            y = title_loc
+          ) %>% playbase::plotly_build_light(.)
+        sub_plots[[i]] <- plt
       }
+
+
+      # Assemble all subplot in to grid
+      suppressWarnings(
+        all_plt <- plotly::subplot(sub_plots,
+          nrows = n_row, margin = interplot_margin,
+          titleY = FALSE, titleX = FALSE
+        ) %>%
+          # Add common axis titles
+          plotly::layout(
+            annotations = list(
+              list(
+                x = axis_title_pos[1], y = 0.5, text = glue::glue("<b> Gene {ylab} Expression </b>"),
+                font = list(size = 13),
+                textangle = 270,
+                showarrow = FALSE, xref = "paper", yref = "paper"
+              ),
+              list(
+                x = 0.5, y = axis_title_pos[2], text = glue::glue("<b> Gene {xlab} expression </b>"),
+                font = list(size = 13),
+                showarrow = FALSE, xref = "paper", yref = "paper"
+              )
+            ),
+            margin = list(l = margin_l, b = margin_b)
+          )
+      )
+
+      return(all_plt)
     }
+
 
     cor_scatter.PLOTFUN <- function() {
       if (input$layout == "3x3") {
@@ -189,7 +218,7 @@ correlation_plot_scattercorr_server <- function(id,
       } else {
         nrow <- ncol <- 5
       }
-      plot_scatter(nrow, ncol)
+      plotly_scatter(nrow, ncol, markersize = 5, margin_l = 50)
     }
 
     cor_scatter.PLOTFUN2 <- function() {
@@ -203,12 +232,12 @@ correlation_plot_scattercorr_server <- function(id,
         nrow <- 5
         ncol <- 7
       }
-      plot_scatter(nrow, ncol)
+      plotly_scatter(nrow, ncol, markersize = 10, axis_title_pos = c(-0.05, -0.1))
     }
 
     PlotModuleServer(
       "plot",
-      plotlib = "base",
+      plotlib = "plotly",
       func = cor_scatter.PLOTFUN,
       func2 = cor_scatter.PLOTFUN2,
       csvFunc = cor_scatter.DATA, ##  NOTE: Not sure what should be the plot data!
