@@ -104,8 +104,13 @@ signature_plot_markers_server <- function(id,
         gset <- names(y)[which(y != 0)]
         gmt <- list("gmt" = gset)
 
-        ## res.gsva <- GSVA::gsva(X, gmt, method = "gsva", parallel.sz = 1) ## old style...
-        res.gsva <- GSVA::gsva(GSVA::gsvaParam(X, gmt, maxDiff = TRUE)) ## new style :(
+        ## check versions of GSVA
+        new.gsva <- exists("gsvaParam", where = asNamespace("GSVA"), mode = "function")
+        if (new.gsva) {
+          res.gsva <- GSVA::gsva(GSVA::gsvaParam(X, gmt, maxDiff = TRUE)) ## new style :(
+        } else {
+          res.gsva <- GSVA::gsva(X, gmt, method = "gsva", parallel.sz = 1) ## old style...
+        }
 
         res.colnames <- colnames(res.gsva)
         fc <- as.vector(res.gsva[1, ])

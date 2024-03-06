@@ -62,6 +62,16 @@ upload_module_computepgx_server <- function(
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
+        upload_annot_table_ui <- NULL
+        if (auth$options$ENABLE_ANNOT) {
+          upload_annot_table_ui <- fileInput2(
+            ns("upload_annot_table"),
+            shiny::tags$h4("Probe annotation (alpha):"),
+            multiple = FALSE,
+            accept = c(".csv")
+          )
+        }
+
         shiny::fillCol(
           height = height,
           flex = c(0.2, NA, 0.05, 1.5),
@@ -230,12 +240,7 @@ upload_module_computepgx_server <- function(
                   multiple = FALSE,
                   accept = c(".txt", ".gmt")
                 ),
-                fileInput2(
-                  ns("upload_annot_table"),
-                  shiny::tags$h4("Probe annotation (optional):"),
-                  multiple = FALSE,
-                  accept = c(".csv")
-                )
+                upload_annot_table_ui
               )
             ), ## end of fillRow
             tags$style(HTML("#upload-compute-gset_methods-label { width: -webkit-fill-available; }")),
@@ -412,12 +417,22 @@ upload_module_computepgx_server <- function(
       shiny::observeEvent(input$upload_annot_table, {
         # trigger a popup
 
+        # if ENABLE_ANNOT is false, tell user this is alpha (under development)
+        if (!auth$options$ENABLE_ANNOT) {
+          shinyalert::shinyalert(
+            title = "Under development (alpha)",
+            text = "Custom probe annotation is under development.",
+            type = "info",
+            closeOnClickOutside = TRUE
+          )
+          return(NULL)
+        }
+
         annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
 
         # check that we have at 100 matches between
-        MATCH_COUNTS <- sum(rownames(countsRT()) %in% annot_table$feature) >= 1
-
-        if (!MATCH_COUNTS) {
+        features_matched <- sum(rownames(countsRT()) %in% annot_table$feature) >= 1
+        if (!features_matched) {
           # reset annot_table
           annot_table <<- NULL
 
