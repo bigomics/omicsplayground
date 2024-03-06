@@ -608,7 +608,8 @@ UploadBoard <- function(id,
     
     # lock/unlock wizard for samples.csv
     observeEvent(
-      list(uploaded$counts.csv, checked_counts), {
+      list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
+        req(input$upload_wizard == "Counts")
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
@@ -618,7 +619,8 @@ UploadBoard <- function(id,
 
     # lock/unlock wizard for samples.csv
     observeEvent(
-      list(uploaded$samples.csv, checked_samples), {
+      list(uploaded$samples.csv, checked_samples, input$upload_wizard), {
+        req(input$upload_wizard == "Samples")
         if (is.null(checked_samples()$status) || checked_samples()$status != "OK"){
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_samples()$status) && checked_samples()$status == "OK"){

@@ -76,7 +76,7 @@ upload_table_preview_counts_server <- function(
             if(!is.null(uploaded$counts.csv)){
               shiny::actionButton(
                 ns("remove_counts"),
-                "Remove input", 
+                "Remove input",
                 icon = icon("trash-can"),
                 class = "btn btn-outline-danger"
               )
