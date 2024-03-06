@@ -370,7 +370,7 @@ upload_table_preview_samples_server <- function(
           uploaded$contrasts.csv <- NULL
         }
       }
-      
+
       # if samples is not null, warn user that it will be deleted
       if(!is.null(uploaded$contrasts.csv)){
         # make a pop up and give user option to delete all files or just counts
@@ -385,7 +385,7 @@ upload_table_preview_samples_server <- function(
           confirmButtonText = "Yes, remove samples and contrasts.",
           cancelButtonText = "No, cancel deletion."
         )} else {
-          uploaded$counts.csv <- NULL
+          uploaded$samples.csv <- NULL
         }
     })
 
@@ -577,7 +577,7 @@ upload_table_preview_contrasts_server <- function(
     })
 
     observeEvent(input$remove_contrasts, {
-      uploaded$samples.csv <- NULL
+      uploaded$contrasts.csv <- NULL
     })
 
     observeEvent(input$load_example, {
