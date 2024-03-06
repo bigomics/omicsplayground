@@ -10,6 +10,8 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     rowH <- 660 ## row height of panel
     tabH <- "70vh" ## row height of panel
 
+    req(pgx$GMT) # Hacky fix to avoid crash in cae a pgx with genesets was loaded and afterwards a pgx of No organism and/orcustom annotation file without human ortholog
+
     fa_infotext <- paste("This module performs specialized pathway analysis.
     <br><br>Reactome and WikiPathways are collections of manually curated pathways
     representing the current knowledge of molecular interactions, reactions and

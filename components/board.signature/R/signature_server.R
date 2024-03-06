@@ -10,6 +10,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     fullH <- 800 ## full height of page
     tabH <- "70vh"
 
+    req(pgx$GMT) # Hacky fix to avoid crash in cae a pgx with genesets was loaded and afterwards a pgx of No organism and/orcustom annotation file without human ortholog
+
     infotext <-
       "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
 

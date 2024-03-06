@@ -9,6 +9,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     fullH <- 770 # row height of panel
     tabH <- "70vh"
 
+    req(pgx$GMT) # Hacky fix to avoid crash in cae a pgx with genesets was loaded and afterwards a pgx of No organism and/orcustom annotation file without human ortholog
+
     infotext <-
       "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
          This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots.
