@@ -86,6 +86,19 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::tags$tr(
                   shiny::tags$td(""),
+                  shiny::tags$td("Organism"),
+                  shiny::tags$td(
+                    shiny::selectInput(
+                      inputId = ns("upload_organism"),
+                      NULL,
+                      choices = "Human",
+                      selected = "Human",
+                      multiple=FALSE
+                      )),
+                  shiny::tags$td("")
+                ),
+                shiny::tags$tr(
+                  shiny::tags$td(""),
                   shiny::tags$td("Datatype"),
                   shiny::tags$td(shiny::selectInput(
                     ns("upload_datatype"), NULL,
@@ -94,15 +107,6 @@ upload_module_computepgx_server <- function(
                       "mRNA microarray", "other"
                     )
                   )),
-                  shiny::tags$td("")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Organism"),
-                  shiny::tags$td(shiny::selectInput(
-                    ns("upload_organism"),
-                    NULL, choices = NULL,
-                    multiple=FALSE)),
                   shiny::tags$td("")
                 ),
                 shiny::tags$tr(
@@ -380,26 +384,42 @@ upload_module_computepgx_server <- function(
       
       shiny::observeEvent(upload_wizard(), {
 
-        if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
+        if (!is.null(upload_wizard()) && upload_wizard() != "Compute") {
           return(NULL)
         }
         
         ## -----------------------------------------------------------
         ## Check validity
         ## -----------------------------------------------------------
+                
+        # lock wizard if no organism is selected
+        if (is.null(input$upload_organism)) {
+          wizardR::lock("upload_wizard")
+        }
+
+        # lock wizard id no upload_name
+        if (is.null(input$upload_name)) {
+          wizardR::lock("upload_wizard")
+        }
+
+        # lock wizard if no upload_description
+        if (is.null(input$upload_description)) {
+          wizardR::lock("upload_wizard")
+        }
+
+        # lock wizard if no upload_datatype
+        if (is.null(input$upload_datatype)) {
+          wizardR::lock("upload_wizard")
+        }
+      })
+
+      shiny::observeEvent(upload_wizard(), {
+
+        if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
+          return(NULL)
+        }
         
-        
-        #TODO this button needs to be fixed (conditions are not met)
-        # if (!enable_button()) {
-        #   message("[ComputePgxServer:input$compute] WARNING:: *** DISABLED ***")
-        #   shinyalert::shinyalert(
-        #     title = "ERROR",
-        #     text = "Compute is disabled",
-        #     type = "error"
-        #   )
-        #   return(NULL)
-        # }
-        if (!isValidFileName(input$upload_name)) {
+        if (!is.null(input$upload_name) && !isValidFileName(input$upload_name)) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
             title = "Invalid name",
