@@ -116,7 +116,7 @@ pkg.extra <- c(
   'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
-  'blastula','shinytest2','sodium','cookies'
+  'blastula','shinytest2','sodium','cookies',"shinyvalidate"
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -129,7 +129,7 @@ pkg.later <- c(
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
     "infercnv","pathview","reticulate",
-    "mygene","diptest","edgeR","DESeq2"
+    "mygene","diptest","edgeR","DESeq2","GSVA", "ruv"
   )
 
 
@@ -182,6 +182,11 @@ install.github('rstudio/htmltools',dependencies=FALSE)
 install.github('bigomics/biomaRt',dependencies=FALSE)
 install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
 install.github('renozao/xbioc',dependencies=TRUE)
+
+# INSTALL packages that require specific versions
+RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+
+
  
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
