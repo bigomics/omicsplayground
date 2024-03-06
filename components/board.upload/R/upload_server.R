@@ -198,6 +198,7 @@ UploadBoard <- function(id,
 
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <- reactiveVal(NULL)
+    selected_organism <- reactiveVal(NULL)
     last_hash <- 1234
 
     create_raw_dir <- function(auth) {
@@ -581,7 +582,7 @@ UploadBoard <- function(id,
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
-      selected_organism = shiny::reactive(input$selected_organism),
+      selected_organism = selected_organism,
       alertready = FALSE,
       lib.dir = FILES,
       auth = auth,
@@ -631,26 +632,6 @@ UploadBoard <- function(id,
           print("wizard unlocked in samples")
           wizardR::unlock("upload_wizard")
         }
-    })
-
-    observeEvent(auth$options$ENABLE_ANNOT, {
-      species_table <- playbase::SPECIES_TABLE
-
-      # keep only ensembl
-      species_table <- species_table[species_table$mart == "ensembl", ]
-
-      # remove no organism
-      if (!auth$options$ENABLE_ANNOT) {
-        species_table <- species_table[species_table$species_name != "No organism", ]
-      }
-
-      # Fill the selectInput with species_table
-      shiny::updateSelectInput(
-        session,
-        "selected_organism",
-        choices = species_table$species_name,
-        selected = species_table$species_name[1]
-      )
     })
 
 

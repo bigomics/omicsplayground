@@ -99,7 +99,10 @@ upload_module_computepgx_server <- function(
                 shiny::tags$tr(
                   shiny::tags$td(""),
                   shiny::tags$td("Organism"),
-                  shiny::tags$td(shiny::tags$h6(selected_organism())),
+                  shiny::tags$td(shiny::selectInput(
+                    ns("upload_organism"),
+                    NULL, choices = NULL,
+                    multiple=FALSE)),
                   shiny::tags$td("")
                 ),
                 shiny::tags$tr(
@@ -292,6 +295,33 @@ upload_module_computepgx_server <- function(
       process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
+
+      observeEvent(upload_wizard(), {
+
+        req(!is.null(input$upload_organism))
+        species_table <- playbase::SPECIES_TABLE
+
+        # keep only ensembl
+        species_table <- species_table[species_table$mart == "ensembl", ]
+
+        # remove no organism
+        if (!auth$options$ENABLE_ANNOT) {
+          species_table <- species_table[species_table$species_name != "No organism", ]
+        }
+
+        # Fill the selectInput with species_table
+        shiny::updateSelectInput(
+          session,
+          "upload_organism",
+          choices = species_table$species_name,
+          selected = species_table$species_name[1]
+        )
+      })
+
+      ## update selected_species
+      shiny::observeEvent(input$upload_organism, {
+        selected_organism(input$upload_organism)
+      })
 
       ## react on custom GMT upload
       shiny::observeEvent(input$upload_gmt, {
