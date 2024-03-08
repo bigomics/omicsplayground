@@ -184,7 +184,7 @@ install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
 install.github('renozao/xbioc',dependencies=TRUE)
 
 # INSTALL packages that require specific versions
-RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+remotes::install_version('matrixStats',version='1.1.0',force=TRUE)
 
 
  
