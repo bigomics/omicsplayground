@@ -242,7 +242,6 @@ upload_module_computepgx_server <- function(
       
       observeEvent(input$selected_datatype, {
         req(input$selected_datatype)
-        browser()
         upload_datatype(input$selected_datatype)
       })
 
