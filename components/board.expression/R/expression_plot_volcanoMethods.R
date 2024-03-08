@@ -97,8 +97,8 @@ expression_plot_volcanoMethods_server <- function(id,
       ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
-      fc <- mx[, "fc", drop = FALSE]
-      qv <- mx[, "q", drop = FALSE]
+      fc <- mx[which(rownames(mx) %in% sel.genes), "fc", drop = FALSE]
+      qv <- mx[which(rownames(mx) %in% sel.genes), "q", drop = FALSE]
       rm(mx, pd)
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
