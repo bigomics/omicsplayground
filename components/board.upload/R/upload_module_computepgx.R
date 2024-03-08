@@ -238,6 +238,25 @@ upload_module_computepgx_server <- function(
         ) ## end of fill Col
       })
 
+      # change upload_datatype to selected_datatype
+      
+      observeEvent(input$selected_datatype, {
+        req(input$selected_datatype)
+        browser()
+        upload_datatype(input$selected_datatype)
+      })
+
+      # change upload_organism to selected_organism
+      observeEvent(input$upload_organism, {
+        req(input$upload_organism)
+        upload_organism(input$upload_organism)
+      })
+      # change upload_name to selected_name
+      observeEvent(input$upload_name, {
+        req(input$upload_name)
+        upload_name(input$upload_name)
+      })
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -323,11 +342,6 @@ upload_module_computepgx_server <- function(
           choices = species_table$species_name,
           selected = species_table$species_name[1]
         )
-      })
-
-      ## update selected_species
-      shiny::observeEvent(input$upload_organism, {
-        upload_organism(input$upload_organism)
       })
 
       ## react on custom GMT upload
@@ -521,9 +535,9 @@ upload_module_computepgx_server <- function(
           prune.samples = prune.samples,
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
-          name = dataset_name,
-          datatype = input$upload_datatype,
-          description = input$upload_description,
+          upload_name = dataset_name,
+          upload_datatype = upload_datatype,
+          upload_description = upload_description,
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder

@@ -643,11 +643,11 @@ UploadBoard <- function(id,
 
     # lock wizard it compute step
     observeEvent(
-      list(input$upload_wizard), {
+      list(input$upload_wizard, upload_datatype, upload_description, input$upload_organism), {
         req(input$upload_wizard == "Dataset description")
         # check if options are filled, if so, unlock wizard
         browser()
-        if (is.null(input$dataset_name) || is.null(input$dataset_description)  || is.null(upload_organism)){
+        if (is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
           print("wizard locked in compute")
           wizardR::lock("upload_wizard")
         } else {
