@@ -300,9 +300,8 @@ upload_module_computepgx_server <- function(
       custom_geneset <- list(gmt = NULL, info = NULL)
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
-      observeEvent(upload_wizard(), {
+      observeEvent(auth$options$ENABLE_ANNOT, {
 
-        req(!is.null(input$upload_organism))
         species_table <- playbase::SPECIES_TABLE
 
         # keep only ensembl
@@ -394,6 +393,7 @@ upload_module_computepgx_server <- function(
                 
         # lock wizard if no organism is selected
         if (is.null(input$upload_organism)) {
+          print("lock upload_wizard at upload_organism")
           wizardR::lock("upload_wizard")
         }
 

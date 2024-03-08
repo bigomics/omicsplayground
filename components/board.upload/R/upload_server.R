@@ -634,6 +634,13 @@ UploadBoard <- function(id,
         }
     })
 
+    # lock wizard it compute step
+    observeEvent(
+      list(input$upload_wizard), {
+        req(input$upload_wizard == "Compute")
+        wizardR::unlock("upload_wizard")
+    })
+
 
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
