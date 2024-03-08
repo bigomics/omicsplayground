@@ -198,7 +198,11 @@ UploadBoard <- function(id,
 
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <- reactiveVal(NULL)
-    selected_organism <- reactiveVal(NULL)
+    upload_organism <- reactiveVal(NULL)
+    upload_name <- reactiveVal(NULL)
+    upload_description <- reactiveVal(NULL)
+    upload_datatype <- reactiveVal(NULL)
+
     last_hash <- 1234
 
     create_raw_dir <- function(auth) {
@@ -582,7 +586,7 @@ UploadBoard <- function(id,
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
-      selected_organism = selected_organism,
+      upload_organism = upload_organism,
       alertready = FALSE,
       lib.dir = FILES,
       auth = auth,
@@ -590,7 +594,10 @@ UploadBoard <- function(id,
       height = "100%",
       recompute_info = recompute_info,
       inactivityCounter = inactivityCounter,
-      upload_wizard = reactive(input$upload_wizard)
+      upload_wizard = reactive(input$upload_wizard),
+      upload_datatype = upload_datatype,
+      upload_name = upload_name,
+      upload_description = upload_description
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -638,8 +645,15 @@ UploadBoard <- function(id,
     observeEvent(
       list(input$upload_wizard), {
         req(input$upload_wizard == "Dataset description")
-        print("wizard locked in compute")
-        wizardR::lock("upload_wizard")
+        # check if options are filled, if so, unlock wizard
+        browser()
+        if (is.null(input$dataset_name) || is.null(input$dataset_description)  || is.null(upload_organism)){
+          print("wizard locked in compute")
+          wizardR::lock("upload_wizard")
+        } else {
+          print("wizard unlocked in compute")
+          wizardR::unlock("upload_wizard")
+        }
     })
 
 

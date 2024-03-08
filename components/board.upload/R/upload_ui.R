@@ -85,9 +85,11 @@ UploadUI <- function(id) {
     bslib::layout_columns(
       # display a hello message
       col_widths = c(1,10,1),
+      #TODO display variables selected by user (input$dataset_name)
       div(
-        "Review your settings and hit 'Compute' to start the computation. This can take a while depending on the size of your data and the number of comparisons."
-      )
+        h5("test")
+      ),
+
     )
     )
 

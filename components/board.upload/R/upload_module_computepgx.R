@@ -17,14 +17,18 @@ upload_module_computepgx_server <- function(
     raw_dir,
     metaRT,
     lib.dir,
-    selected_organism,
     auth,
     create_raw_dir,
     alertready = TRUE,
     height = 720,
     recompute_info,
     inactivityCounter,
-    upload_wizard) {
+    upload_wizard,
+    upload_name,
+    upload_description,
+    upload_datatype,
+    upload_organism
+    ) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -101,7 +105,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td(""),
                   shiny::tags$td("Datatype"),
                   shiny::tags$td(shiny::selectInput(
-                    ns("upload_datatype"), NULL,
+                    ns("selected_datatype"), NULL,
                     choices = c(
                       "RNA-seq", "scRNA-seq", "proteomics",
                       "mRNA microarray", "other"
@@ -323,7 +327,7 @@ upload_module_computepgx_server <- function(
 
       ## update selected_species
       shiny::observeEvent(input$upload_organism, {
-        selected_organism(input$upload_organism)
+        upload_organism(input$upload_organism)
       })
 
       ## react on custom GMT upload
@@ -377,39 +381,6 @@ upload_module_computepgx_server <- function(
           )
           custom_geneset <<- list(gmt = NULL, info = NULL)
           return(NULL)
-        }
-      })
-
-      
-      shiny::observeEvent(upload_wizard(), {
-
-        if (!is.null(upload_wizard()) && upload_wizard() != "Compute") {
-          return(NULL)
-        }
-        
-        ## -----------------------------------------------------------
-        ## Check validity
-        ## -----------------------------------------------------------
-                
-        # lock wizard if no organism is selected
-        if (is.null(input$upload_organism)) {
-          print("lock upload_wizard at upload_organism")
-          wizardR::lock("upload_wizard")
-        }
-
-        # lock wizard id no upload_name
-        if (is.null(input$upload_name)) {
-          wizardR::lock("upload_wizard")
-        }
-
-        # lock wizard if no upload_description
-        if (is.null(input$upload_description)) {
-          wizardR::lock("upload_wizard")
-        }
-
-        # lock wizard if no upload_datatype
-        if (is.null(input$upload_datatype)) {
-          wizardR::lock("upload_wizard")
         }
       })
 
@@ -526,7 +497,7 @@ upload_module_computepgx_server <- function(
         # Define create_pgx function arguments
 
         params <- list(
-          organism = selected_organism(),
+          organism = upload_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
