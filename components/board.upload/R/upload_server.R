@@ -637,8 +637,9 @@ UploadBoard <- function(id,
     # lock wizard it compute step
     observeEvent(
       list(input$upload_wizard), {
-        req(input$upload_wizard == "Compute")
-        wizardR::unlock("upload_wizard")
+        req(input$upload_wizard == "Dataset description")
+        print("wizard locked in compute")
+        wizardR::lock("upload_wizard")
     })
 
 

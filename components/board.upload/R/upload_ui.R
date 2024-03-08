@@ -61,7 +61,7 @@ UploadUI <- function(id) {
   )
   
   compute_panel <- wizardR::wizard_step(
-    step_title = "Compute",
+    step_title = "Dataset description",
     bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
     bslib::layout_columns(
@@ -77,6 +77,20 @@ UploadUI <- function(id) {
       )
     )
   )
+
+    review_panel <- wizardR::wizard_step(
+    step_title = "Review and compute",
+    bs_alert("Please review your settings and hit 'Compute' to start the computation. This can take a while depending on the size of your data and the number of comparisons."),
+    shiny::br(), shiny::br(),
+    bslib::layout_columns(
+      # display a hello message
+      col_widths = c(1,10,1),
+      div(
+        "Review your settings and hit 'Compute' to start the computation. This can take a while depending on the size of your data and the number of comparisons."
+      )
+    )
+    )
+
 
     div(
     class = "p-0",
@@ -100,6 +114,7 @@ UploadUI <- function(id) {
       # outliers_panel,
       # batchcorrect_panel,
       compute_panel,
+      review_panel,
       options = list(
         navigation = "buttons",
         finish = "Compute!"
