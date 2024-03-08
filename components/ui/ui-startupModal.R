@@ -21,37 +21,22 @@ ui.startupModal <- function(id, messages, title) {
     carousel_items[[i]] <- tag1
   }
 
-  modal <- bsutils::modal(
-    id = id,
-    size = "lg",
-    bsutils::modalHeader(
-      bsutils::modalTitle(title),
-      style = "background-color: #b6d3E888"
+  modal <- shiny::modalDialog(
+    size = "l",
+    title = title,
+    footer = NULL,
+    do.call(
+      function(...) {
+        bsutils::carousel(
+          ...,
+          id = "opg-welcome-carousel",
+          indicators = TRUE,
+          controls = TRUE
+        )
+      },
+      carousel_items
     ),
-    bsutils::modalBody(
-      shiny::tagAppendAttributes(
-        do.call(
-          function(...) {
-            bsutils::carousel(
-              ...,
-              id = "opg-welcome-carousel",
-              indicators = TRUE,
-              controls = TRUE
-            )
-          },
-          carousel_items
-        ),
-        `data-bs-interval` = "12000"
-      ),
-      style = "background-color: #b6d3E822"
-    ),
-    centered = TRUE
+    easyClose = TRUE
   )
-
-  modal <- shiny::tagAppendAttributes(
-    modal,
-    `data-bs-backdrop` = "false"
-  )
-
   return(modal)
 }
