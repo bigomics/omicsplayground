@@ -209,7 +209,7 @@ clustering_plot_splitmap_server <- function(id,
       # plt
     }
 
-    plotly_splitmap.RENDER <- function() {
+    plotly_splitmap.RENDER_get <- function() {
       ## iHeatmap based splitted heatmap #########
 
       shiny::req(pgx$genes)
@@ -271,15 +271,19 @@ clustering_plot_splitmap_server <- function(id,
         X = X, annot = annotF, ytips = tooltips,
         idx = splity, splitx = splitx, scale = scale,
         row_annot_width = 0.025, rowcex = rowcex,
-        colcex = colcex, show_legend = input$hm_legend
+        colcex = colcex, show_legend = input$hm_legend,
+        return_x_matrix = TRUE
       )
+      return(plt)
+    }
 
+    plotly_splitmap.RENDER <- function() {
+      plt <- plotly_splitmap.RENDER_get()$plt
       obj2 <- plt %>% iheatmapr::to_plotly_list()
       plt <- plotly::as_widget(obj2) %>%
         plotly::layout(
           margin = list(l = 10, r = 5, t = 5, b = 5)
         )
-
       return(plt)
     }
 
@@ -288,12 +292,16 @@ clustering_plot_splitmap_server <- function(id,
       list(plotlib = "base", func = base_splitmap.RENDER, card = 2)
     )
 
+    plot_data_csv <- function() {
+      plotly_splitmap.RENDER_get()$X
+    }
+
     lapply(plot_grid, function(x) {
       PlotModuleServer(
         "pltmod",
         plotlib = x$plotlib,
         func = x$func,
-        csvFunc = plot_data,
+        csvFunc = plot_data_csv,
         res = c(80, 95), # resolution of plots
         pdf.width = 10,
         pdf.height = 8,
