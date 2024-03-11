@@ -650,7 +650,7 @@ UploadBoard <- function(id,
 
     # lock wizard it compute step
     observeEvent(
-      list(input$upload_wizard, upload_datatype(), upload_description(), upload_organism()), {
+      list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
         req(input$upload_wizard == "Dataset description")
         #TODO understand why this observer is not working
         browser()
