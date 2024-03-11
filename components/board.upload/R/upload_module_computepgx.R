@@ -81,7 +81,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td("Name", width = "120"),
                   shiny::tags$td(
                     shiny::textInput(
-                      ns("upload_name"), NULL, ## "Dataset:",
+                      ns("selected_name"), NULL, ## "Dataset:",
                       placeholder = "Name of your dataset"
                     ),
                     width = "700"
@@ -93,7 +93,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td("Organism"),
                   shiny::tags$td(
                     shiny::selectInput(
-                      inputId = ns("upload_organism"),
+                      inputId = ns("selected_organism"),
                       NULL,
                       choices = "Human",
                       selected = "Human",
@@ -118,7 +118,7 @@ upload_module_computepgx_server <- function(
                   shiny::tags$td("Description"),
                   shiny::tags$td(shiny::div(
                     shiny::textAreaInput(
-                      ns("upload_description"), NULL,
+                      ns("selected_description"), NULL,
                       placeholder = "Give a short description of your dataset",
                       height = 100, resize = "none"
                     ),
@@ -246,14 +246,19 @@ upload_module_computepgx_server <- function(
       })
 
       # change upload_organism to selected_organism
-      observeEvent(input$upload_organism, {
-        req(input$upload_organism)
-        upload_organism(input$upload_organism)
+      observeEvent(input$selected_organism, {
+        req(input$selected_organism)
+        upload_organism(input$selected_organism)
       })
       # change upload_name to selected_name
-      observeEvent(input$upload_name, {
-        req(input$upload_name)
-        upload_name(input$upload_name)
+      observeEvent(input$selected_name, {
+        req(input$selected_name)
+        upload_name(input$selected_name)
+      })
+
+      observeEvent(input$selected_description, {
+        req(input$selected_description)
+        upload_description(input$selected_description)
       })
 
       # Input name and description
@@ -264,23 +269,23 @@ upload_module_computepgx_server <- function(
         if (is.null(pgx_info)) {
           if (!is.null(meta[["name"]])) {
             shiny::updateTextInput(session,
-              "upload_name",
+              "selected_name",
               value = meta[["name"]]
             )
           }
           if (!is.null(meta[["description"]])) {
             shiny::updateTextAreaInput(session,
-              "upload_description",
+              "selected_description",
               value = meta[["description"]]
             )
           }
         } else {
           shiny::updateTextInput(session,
-            "upload_name",
+            "selected_name",
             value = gsub(".pgx$", "", pgx_info[["name"]])
           )
           shiny::updateTextAreaInput(session,
-            "upload_description",
+            "selected_description",
             value = pgx_info[["description"]]
           )
         }
@@ -403,15 +408,16 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
         
-        if (!is.null(input$upload_name) && !isValidFileName(input$upload_name)) {
-          message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
-          shinyalert::shinyalert(
-            title = "Invalid name",
-            text = "Please remove any slashes (/) from the name",
-            type = "error"
-          )
-          return(NULL)
-        }
+        # TODO MOVE THIS TO THE WIZARD MODULE OR in selected_upload listener
+        # if (!is.null(input$selected_name) && !isValidFileName(input$selected_name)) {
+        #   message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
+        #   shinyalert::shinyalert(
+        #     title = "Invalid name",
+        #     text = "Please remove any slashes (/) from the name",
+        #     type = "error"
+        #   )
+        #   return(NULL)
+        # }
 
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
@@ -425,8 +431,8 @@ upload_module_computepgx_server <- function(
         }
 
         ## check for name and description
-        has.name <- input$upload_name != ""
-        has.description <- input$upload_description != ""
+        has.name <- input$selected_name != ""
+        has.description <- input$selected_description != ""
         if (!has.name || !has.description) {
           shinyalert::shinyalert(
             title = "ERROR",
@@ -579,7 +585,7 @@ upload_module_computepgx_server <- function(
             stdout = "|"
           ),
           number = process_counter(),
-          dataset_name = gsub("[ ]", "_", input$upload_name),
+          dataset_name = gsub("[ ]", "_", input$selected_name),
           raw_dir = raw_dir(),
           stderr = c(),
           stdout = c()

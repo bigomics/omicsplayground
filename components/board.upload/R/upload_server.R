@@ -654,7 +654,7 @@ UploadBoard <- function(id,
         req(input$upload_wizard == "Dataset description")
         #TODO understand why this observer is not working
         browser()
-        if (is.null(upload_name() || upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
+        if (is.null(upload_name()) || is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
           print("wizard locked in dataset description")
           wizardR::lock("upload_wizard")
         } else {
