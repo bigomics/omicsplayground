@@ -545,13 +545,6 @@ UploadBoard <- function(id,
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
 
-    # modified_ct <- upload_module_makecontrast_server(
-    #   id = "makecontrast",
-    #   phenoRT = reactive(checked_samples()$matrix),
-    #   contrRT = reactive(checked_contrasts()$matrix),
-    #   countsRT = reactive(checked_counts()$matrix)
-    # )
-
     shiny::observeEvent( modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
@@ -657,16 +650,17 @@ UploadBoard <- function(id,
 
     # lock wizard it compute step
     observeEvent(
-      list(input$upload_wizard, upload_datatype, upload_description, upload_organism), {
+      list(input$upload_wizard, upload_datatype(), upload_description(), upload_organism()), {
         req(input$upload_wizard == "Dataset description")
         #TODO understand why this observer is not working
-        # if (is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
-        #   print("wizard locked in compute")
-        #   wizardR::lock("upload_wizard")
-        # } else {
-        #   print("wizard unlocked in compute")
-        #   wizardR::unlock("upload_wizard")
-        # }
+        browser()
+        if (is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
+          print("wizard locked in dataset description")
+          wizardR::lock("upload_wizard")
+        } else {
+          print("wizard unlocked in comp")
+          wizardR::unlock("upload_wizard")
+        }
     })
 
 
