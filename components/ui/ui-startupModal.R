@@ -23,8 +23,11 @@ ui.startupModal <- function(id, messages, title) {
 
   modal <- shiny::modalDialog(
     size = "l",
-    title = title,
+    title = NULL,
     footer = NULL,
+    bsutils::modalHeader(
+      bsutils::modalTitle(title),
+      style = "background-color: #b6d3E888"),
     do.call(
       function(...) {
         bsutils::carousel(
@@ -36,7 +39,8 @@ ui.startupModal <- function(id, messages, title) {
       },
       carousel_items
     ),
-    easyClose = TRUE
+    easyClose = TRUE,
+
   )
   return(modal)
 }
