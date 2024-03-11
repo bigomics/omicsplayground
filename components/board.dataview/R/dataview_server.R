@@ -83,7 +83,6 @@ DataViewBoard <- function(id, pgx) {
       if ("group" %in% grps) selgrp <- "group"
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
-      print(selgrp)
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
     })
 
@@ -307,9 +306,6 @@ DataViewBoard <- function(id, pgx) {
         )
       },
       {
-        print(input$data_groupby)
-        print(input$data_samplefilter)
-        print(input$data_type)
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::req(input$data_groupby, input$data_type)
 
