@@ -83,6 +83,7 @@ DataViewBoard <- function(id, pgx) {
       if ("group" %in% grps) selgrp <- "group"
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
+      print(selgrp)
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
     })
 
@@ -155,9 +156,12 @@ DataViewBoard <- function(id, pgx) {
     ## get selected samples after sample filtering
     selected_samples <- reactive({
       samples <- colnames(pgx$X)
+      
       if (!is.null(input$data_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       }
+      # validate samples
+      validate(need(length(samples) > 0, "No samples remaining after filtering."))
       samples
     })
 
@@ -303,8 +307,12 @@ DataViewBoard <- function(id, pgx) {
         )
       },
       {
+        print(input$data_groupby)
+        print(input$data_samplefilter)
+        print(input$data_type)
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::req(input$data_groupby, input$data_type)
+
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
 
         subtt <- NULL
@@ -320,6 +328,8 @@ DataViewBoard <- function(id, pgx) {
         grpvar <- input$data_groupby
         gr <- pgx$Y[samples, grpvar]
         grps <- sort(unique(gr))
+        # check if there are any samples remaining in the group after filtering
+        validate(need(length(grps) > 0, "No samples remaining in the group after filtering."))
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
           mx <- tapply(samples, gr, function(ii) {
             rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
