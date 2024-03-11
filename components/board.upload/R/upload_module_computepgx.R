@@ -241,23 +241,19 @@ upload_module_computepgx_server <- function(
       # change upload_datatype to selected_datatype
       
       observeEvent(input$selected_datatype, {
-        req(input$selected_datatype)
         upload_datatype(input$selected_datatype)
       })
 
       # change upload_organism to selected_organism
       observeEvent(input$selected_organism, {
-        req(input$selected_organism)
         upload_organism(input$selected_organism)
       })
       # change upload_name to selected_name
       observeEvent(input$selected_name, {
-        req(input$selected_name)
         upload_name(input$selected_name)
       })
 
       observeEvent(input$selected_description, {
-        req(input$selected_description)
         upload_description(input$selected_description)
       })
 

@@ -645,7 +645,7 @@ UploadBoard <- function(id,
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
         req(input$upload_wizard == "Dataset description")
-        if (is.null(upload_name()) || is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
+        if (is.null(upload_name()) || upload_name() == "" || upload_description() == "" || is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
