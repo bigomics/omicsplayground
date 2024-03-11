@@ -575,7 +575,7 @@ UploadBoard <- function(id,
       r_X = shiny::reactive(checked_counts()$matrix),
       r_samples = shiny::reactive(checked_samples()$matrix),
       r_contrasts = modified_ct,
-      r_results = corrected1$results,
+      r_results = modified_ct,
       is.count = TRUE
     )
 
@@ -640,6 +640,20 @@ UploadBoard <- function(id,
           wizardR::unlock("upload_wizard")
         }
     })
+
+
+    # lock wizard at Comparison step
+    observeEvent(
+      list(input$upload_wizard, modified_ct ),{
+        req(input$upload_wizard == "Contrasts")
+        if (is.null(modified_ct()) || is.null(checked_contrasts()) || is.null(checked_samples()) || is.null(checked_counts())){
+          print("wizard locked in contrasts")
+          wizardR::lock("upload_wizard")
+        } else {
+          print("wizard unlocked in contrasts")
+          wizardR::unlock("upload_wizard")
+        }
+      })
 
     # lock wizard it compute step
     observeEvent(
