@@ -612,12 +612,9 @@ UploadBoard <- function(id,
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
         req(input$upload_wizard == "Counts")
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
-          # TODO fix condition where wizard is not locking
-          print("wizard locked in counts")
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
           wizardR::unlock("upload_wizard")
-          print("wizard unlocked in counts")
         }
     })
 
@@ -626,10 +623,8 @@ UploadBoard <- function(id,
       list(uploaded$samples.csv, checked_samples, input$upload_wizard), {
         req(input$upload_wizard == "Samples")
         if (is.null(checked_samples()$status) || checked_samples()$status != "OK"){
-          print("wizard locked in samples")
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_samples()$status) && checked_samples()$status == "OK"){
-          print("wizard unlocked in samples")
           wizardR::unlock("upload_wizard")
         }
     })
@@ -640,10 +635,8 @@ UploadBoard <- function(id,
       list(input$upload_wizard, modified_ct()),{
         req(input$upload_wizard == "Comparison")
         if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples()) || is.null(checked_counts())){
-          print("wizard locked in contrasts")
           wizardR::lock("upload_wizard")
         } else {
-          print("wizard unlocked in contrasts")
           wizardR::unlock("upload_wizard")
         }
       })
@@ -652,13 +645,9 @@ UploadBoard <- function(id,
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
         req(input$upload_wizard == "Dataset description")
-        #TODO understand why this observer is not working
-        browser()
         if (is.null(upload_name()) || is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
-          print("wizard locked in dataset description")
           wizardR::lock("upload_wizard")
         } else {
-          print("wizard unlocked in comp")
           wizardR::unlock("upload_wizard")
         }
     })
