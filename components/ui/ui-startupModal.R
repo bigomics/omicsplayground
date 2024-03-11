@@ -21,26 +21,27 @@ ui.startupModal <- function(id, messages, title) {
     carousel_items[[i]] <- tag1
   }
 
-  modal <- shiny::modalDialog(
-    size = "l",
-    title = NULL,
-    footer = NULL,
-    bsutils::modalHeader(
-      bsutils::modalTitle(title),
-      style = "background-color: #b6d3E888"),
-    do.call(
-      function(...) {
-        bsutils::carousel(
-          ...,
-          id = "opg-welcome-carousel",
-          indicators = TRUE,
-          controls = TRUE
-        )
-      },
-      carousel_items
-    ),
-    easyClose = TRUE,
-
-  )
-  return(modal)
-}
+    modal <- shiny::modalDialog(
+      size = "l",
+      title = NULL,
+      footer = NULL,
+      bsutils::modalHeader(
+        bsutils::modalTitle(title),
+        style = "background-color: #b6d3E888"),
+      do.call(
+        function(...) {
+          bsutils::carousel(
+            ...,
+            id = "opg-welcome-carousel",
+            indicators = TRUE,
+            controls = TRUE
+          )
+        },
+        carousel_items
+      ),
+      easyClose = TRUE,
+      # tag$style can be used to change background color
+      tags$style(".modal-content {background-color: #b6d3E888;}")
+    )
+    return(modal)
+  }
