@@ -497,12 +497,9 @@ upload_table_preview_contrasts_server <- function(
           ))
         } else {
           div(
-            style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
-            bslib::layout_columns(
-            col_widths = 12,
-            # height = "calc(100vh - 340px)",
-            heights_equal = "row",
           div(
+            style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+            div(
             if(!is.null(uploaded$contrasts.csv)){
                 shiny::actionButton(
                   ns("remove_contrasts"),
@@ -510,7 +507,7 @@ upload_table_preview_contrasts_server <- function(
                   icon = icon("trash-can"),
                   class = "btn btn-outline-danger"
                 )
-              },
+              }),
             actionButton(
               ns("load_example"), "Load Example",
               class = "btn btn-outline-info"
@@ -570,7 +567,7 @@ upload_table_preview_contrasts_server <- function(
               )
             )
         )
-        })
+        }
         )
         }
     ))
