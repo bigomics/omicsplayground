@@ -493,8 +493,8 @@ upload_table_preview_contrasts_server <- function(
           height = "calc(100vh - 340px)",
           heights_equal = "row",
           upload_module_makecontrast_ui(ns("makecontrast")),
-          #bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")
-          ))
+          #bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
+          )
         } else {
           div(
           div(
