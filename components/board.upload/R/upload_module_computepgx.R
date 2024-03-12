@@ -148,92 +148,93 @@ upload_module_computepgx_server <- function(
             "input.options%2 == 1",
             ns = ns,
             shiny::fillRow(
-              shiny::wellPanel(
-                style = "width: 95%;",
-                shiny::checkboxGroupInput(
-                  ns("filter_methods"),
-                  shiny::HTML("<h4>Feature filtering:</h4><br/>"),
-                  choiceValues = c(
-                      "only.hugo",
-                      "only.proteincoding",
-                      "remove.unknown",
-                      "remove.notexpressed",
-                      "skip.normalization"
-                    ),
-                  choiceNames = c(
-                      "Transform features to gene symbols",
-                      "protein-coding only",
-                      "remove Rik/ORF/LOC genes",
-                      "remove not-expressed",
-                      "skip normalization"
-                      ## "Exclude immunogenes",
-                    ),
-                  selected = c(
-                    "only.hugo",
-                    "only.proteincoding",
-                    "remove.unknown",
-                    "remove.notexpressed"
-                  )
-                )
-              ),
-              shiny::wellPanel(
-                style = "width: 95%;",
-                shiny::checkboxGroupInput(
-                  ns("gene_methods"),
-                  shiny::HTML("<h4>Gene tests:</h4><br/>"),
-                  GENETEST.METHODS,
-                  selected = GENETEST.SELECTED
-                )
-              ),
-              shiny::wellPanel(
-                style = "width: 95%;",
-                shiny::checkboxGroupInput(
-                  ns("gset_methods"),
-                  shiny::HTML("<h4>Enrichment methods:</h4><br/>"),
-                  GENESET.METHODS,
-                  selected = GENESET.SELECTED
+            shiny::wellPanel(
+              class = "col-12",
+              shiny::checkboxGroupInput(
+                ns("filter_methods"),
+                label = shiny::HTML("<h4>Feature filtering:</h4>"),
+                choiceValues = c(
+                  "only.hugo",
+                  "only.proteincoding",
+                  "remove.unknown",
+                  "remove.notexpressed",
+                  "skip.normalization"
                 ),
-              ),
-              shiny::wellPanel(
-                style = "width: 95%;",
-                shiny::checkboxGroupInput(
-                  ns("extra_methods"),
-                  shiny::HTML("<h4>Extra analysis:</h4><br/>"),
-                  choiceValues = EXTRA.METHODS,
-                  choiceNames = EXTRA.NAMES,
-                  selected = EXTRA.SELECTED
-                )
-              ),
-              shiny::wellPanel(
-                fileInput2(
-                  ns("upload_gmt"),
-                  shiny::tagList(
-                    shiny::tags$h4("Custom genesets:"),
-                    shiny::p(
-                      "Upload a custom GMT file (.gmt) as described",
-                      tags$a(
-                        "here.",
-                        href = readthedocs_url,
-                        target = "_blank",
-                        style = "text-decoration: underline;"
-                      ),
-                      "or download an",
-                      downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
-                      " (gene targets of the EGFR transcription factor)."
-                    )
-                  ),
-                  multiple = FALSE,
-                  accept = c(".txt", ".gmt")
+                choiceNames = c(
+                  "Transform features to gene symbols",
+                  "protein-coding only",
+                  "remove Rik/ORF/LOC genes",
+                  "remove not-expressed",
+                  "skip normalization"
                 ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  shiny::HTML("<h4>Developer options:</h4><br/>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
+                selected = c(
+                  "only.hugo",
+                  "only.proteincoding",
+                  "remove.unknown",
+                  "remove.notexpressed"
                 )
               )
-            ) ## end of fillRow
+            ),
+            shiny::wellPanel(
+              class = "col-12",
+              shiny::checkboxGroupInput(
+                ns("gene_methods"),
+                label = shiny::HTML("<h4>Gene tests:</h4>"),
+                GENETEST.METHODS,
+                selected = GENETEST.SELECTED
+              )
+            ),
+            shiny::wellPanel(
+              class = "col-12",
+              shiny::checkboxGroupInput(
+                ns("gset_methods"),
+                label = shiny::HTML("<h4>Enrichment methods:</h4>"),
+                GENESET.METHODS,
+                selected = GENESET.SELECTED
+              ),
+            ),
+            shiny::wellPanel(
+              class = "col-12",
+              shiny::checkboxGroupInput(
+                ns("extra_methods"),
+                label = shiny::HTML("<h4>Extra analysis:</h4>"),
+                choiceValues = EXTRA.METHODS,
+                choiceNames = EXTRA.NAMES,
+                selected = EXTRA.SELECTED
+              )
+            ),
+            shiny::wellPanel(
+              class = "col-12",
+              fileInput2(
+                ns("upload_gmt"),
+                shiny::tagList(
+                  shiny::tags$h4("Custom genesets:"),
+                  shiny::p(
+                    "Upload a custom GMT file (.gmt) as described",
+                    tags$a(
+                      "here.",
+                      href = readthedocs_url,
+                      target = "_blank",
+                      style = "text-decoration: underline;"
+                    ),
+                    "or download an",
+                    downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
+                    " (gene targets of the EGFR transcription factor)."
+                  )
+                ),
+                multiple = FALSE,
+                accept = c(".txt", ".gmt")
+              ),
+              shiny::checkboxGroupInput(
+                ns("dev_options"),
+                label = shiny::HTML("<h4>Developer options:</h4>"),
+                choiceValues = DEV.METHODS,
+                choiceNames = DEV.NAMES,
+                selected = DEV.SELECTED
+              )
+            )
+          ) ## end of fillRow
+            
           ) ## end of conditional panel
         ) ## end of fill Col
       })
