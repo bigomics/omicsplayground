@@ -502,17 +502,15 @@ upload_table_preview_contrasts_server <- function(
             col_widths = 12,
             # height = "calc(100vh - 340px)",
             heights_equal = "row",
-            div(
-              if(!is.null(uploaded$contrasts.csv)){
+          div(
+            if(!is.null(uploaded$contrasts.csv)){
                 shiny::actionButton(
                   ns("remove_contrasts"),
                   "Remove input",
                   icon = icon("trash-can"),
                   class = "btn btn-outline-danger"
                 )
-              }
-          ),
-          div(
+              },
             actionButton(
               ns("load_example"), "Load Example",
               class = "btn btn-outline-info"
