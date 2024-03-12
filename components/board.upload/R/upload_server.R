@@ -574,7 +574,7 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = corrected1$correctedCounts,
+      countsRT = shiny::reactive(checked_counts()$matrix), #TODO add return from new-bc module: corrected1$correctedCounts,
       samplesRT = shiny::reactive(checked_samples()$matrix),
       contrastsRT = modified_ct,
       raw_dir = raw_dir,

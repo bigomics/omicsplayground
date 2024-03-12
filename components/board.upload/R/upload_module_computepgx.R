@@ -406,6 +406,7 @@ upload_module_computepgx_server <- function(
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
+        browser()
         
         # TODO MOVE THIS TO THE WIZARD MODULE OR in selected_upload listener
         # if (!is.null(input$selected_name) && !isValidFileName(input$selected_name)) {
@@ -429,17 +430,17 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        ## check for name and description
-        has.name <- input$selected_name != ""
-        has.description <- input$selected_description != ""
-        if (!has.name || !has.description) {
-          shinyalert::shinyalert(
-            title = "ERROR",
-            text = "You must give a dataset name and description",
-            type = "error"
-          )
-          return(NULL)
-        }
+        # #TODO check for name and description.. remove this code as its not necessary anymore
+        # has.name <- input$selected_name != ""
+        # has.description <- input$selected_description != ""
+        # if (!has.name || !has.description) {
+        #   shinyalert::shinyalert(
+        #     title = "ERROR",
+        #     text = "You must give a dataset name and description",
+        #     type = "error"
+        #   )
+        #   return(NULL)
+        # }
 
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values

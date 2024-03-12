@@ -195,7 +195,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         
       ## IMPUTE FIRST OR NORMALIZE????
       imputedX <- reactive({
-          
         shiny::req(r_X())
         counts <- r_X()
         X <- log2(1 + counts)
