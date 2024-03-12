@@ -508,6 +508,7 @@ upload_table_preview_contrasts_server <- function(
                   class = "btn btn-outline-danger"
                 )
               }),
+            div(
             actionButton(
               ns("load_example"), "Load Example",
               class = "btn btn-outline-info"
@@ -522,7 +523,7 @@ upload_table_preview_contrasts_server <- function(
               class = "btn btn-outline-primary",
               onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
               )
-          ),
+          )),
           if(is.null(uploaded$contrasts.csv)){
           bslib::layout_columns(
             bslib::card(
