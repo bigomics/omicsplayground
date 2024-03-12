@@ -202,6 +202,7 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
+    process_counter <- reactiveVal(0)
 
     last_hash <- 1234
 
@@ -708,21 +709,23 @@ UploadBoard <- function(id,
         }
         
         if (enable_upload) {
-          #TODO lock wizard when one dataset is being computed (see pgxcompute)
-          # if (process_counter() < MAX_DS_PROCESS) {
-          #   shinyjs::enable("compute")
-          # } else {
-          #   shinyjs::disable("compute")
-          # }
-          wizardR::wizard_show(ns("upload_wizard"))
-        } else {
+          MAX_DS_PROCESS <- 1
+          if(MAX_DS_PROCESS == 1){
+            wizardR::wizard_show(ns("upload_wizard"))
+            } else {
+              shinyalert::shinyalert(
+                title = "Upload disabled",
+                text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
+                type = "warning",
+                closeOnClickOutside = FALSE
+              )
+        }} else {
           shinyalert::shinyalert(
-            title = "Upload disabled",
-            text = "Sorry, upload of new data is disabled for this account.",
-            type = "warning",
-            #
-            closeOnClickOutside = FALSE
-          )
+                title = "Upload disabled",
+                text = "Sorry, upload of new data is disabled for this account.",
+                type = "warning",
+                closeOnClickOutside = FALSE
+              )
         }
     })
 
