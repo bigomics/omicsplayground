@@ -45,7 +45,7 @@ UploadUI <- function(id) {
       col_widths = 12,
       heights_equal = "row",
       upload_module_batchcorrect_ui(ns("batchcorrect")),
-      bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
+      #bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
     )
   )
 
@@ -56,13 +56,13 @@ UploadUI <- function(id) {
       # height = "calc(100vh - 340px)",
       heights_equal = "row",
       upload_module_outliers_ui(ns("checkqc")),
-      bs_alert("Check for normalization, outliers and batch-effects.")
+      #bs_alert("Check for normalization, outliers and batch-effects.")
     )
   )
   
   compute_panel <- wizardR::wizard_step(
     step_title = "Dataset description",
-    bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
+    #bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
     
 ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
@@ -72,7 +72,7 @@ UploadUI <- function(id) {
 
   review_panel <- wizardR::wizard_step(
     step_title = "Review and compute",
-    bs_alert("Please review your settings and hit 'Compute' to start the computation. This can take a while depending on the size of your data and the number of comparisons."),
+    #bs_alert("Please review your settings and hit 'Compute' to start the computation. This can take a while depending on the size of your data and the number of comparisons."),
     shiny::br(), shiny::br(),
     bslib::layout_columns(
       # display a hello message
