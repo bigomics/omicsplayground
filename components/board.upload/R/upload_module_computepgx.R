@@ -265,6 +265,7 @@ upload_module_computepgx_server <- function(
             "))
           ) ## end of conditional panel
         ) ## end of fill Col
+        )
       })
 
       shiny::outputOptions(output,
@@ -281,13 +282,7 @@ upload_module_computepgx_server <- function(
           computedPGX(NULL)
         }
       )
-
-        )
-
-
-        
-      })
-
+      
       # change upload_datatype to selected_datatype
       
       observeEvent(input$selected_datatype, {
