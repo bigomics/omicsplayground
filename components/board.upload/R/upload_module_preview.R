@@ -78,19 +78,19 @@ upload_table_preview_counts_server <- function(
                 ns("remove_counts"),
                 "Remove input",
                 icon = icon("trash-can"),
-                class = "btn btn-outline-danger"
+                class = "btn btn-danger"
               )
             }
         ),
         div(
           actionButton(
             ns("load_example"), "Load Example",
-            class = "btn btn-outline-info"
+            class = "btn btn-info"
             ),
           shiny::actionButton(
             ns("check_documentation_counts"),
             "Check Documentation",
-            class = "btn btn-outline-primary",
+            class = "btn btn-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
             )
         )
@@ -297,19 +297,19 @@ upload_table_preview_samples_server <- function(
                 ns("remove_samples"),
                 "Remove input",
                 icon = icon("trash-can"),
-                class = "btn btn-outline-danger"
+                class = "btn btn-danger"
               )
             }
         ),
         div(
           actionButton(
             ns("load_example"), "Load Example",
-            class = "btn btn-outline-info"
+            class = "btn btn-info"
             ),
           actionButton(
             ns("check_documentation_samples"),
             "Check Documentation",
-            class = "btn btn-outline-primary",
+            class = "btn btn-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
             )
         )
@@ -505,22 +505,22 @@ upload_table_preview_contrasts_server <- function(
                   ns("remove_contrasts"),
                   "Remove input",
                   icon = icon("trash-can"),
-                  class = "btn btn-outline-danger"
+                  class = "btn btn-danger"
                 )
               }),
             div(
             actionButton(
               ns("load_example"), "Load Example",
-              class = "btn btn-outline-info"
+              class = "btn btn-primary"
               ),
             actionButton(
               ns("run_build_comparisons"), "Run Comparison builder",
-              class = "btn btn-outline-info"
+              class = "btn btn-info"
               ),
             actionButton(
               ns("check_documentation_contrasts"),
               "Check Documentation",
-              class = "btn btn-outline-primary",
+              class = "btn btn-primary",
               onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
               )
           )),
