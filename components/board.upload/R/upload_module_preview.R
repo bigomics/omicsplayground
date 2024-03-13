@@ -507,12 +507,13 @@ upload_table_preview_contrasts_server <- function(
                   icon = icon("trash-can"),
                   class = "btn btn-danger"
                 )
-              }),
-            div(
-            actionButton(
-              ns("run_build_comparisons"), "Run Comparison builder",
-              class = "btn btn-warning"
+              },
+              actionButton(
+                  ns("run_build_comparisons"), "Run Comparison builder",
+                  class = "btn btn-warning"
+                ),
               ),
+            div(
             actionButton(
               ns("load_example"), "Load Example",
               class = "btn btn-info"
