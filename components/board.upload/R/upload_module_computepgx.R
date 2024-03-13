@@ -3,7 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("UI"))
@@ -154,21 +153,24 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  label = shiny::HTML("<h4>Feature filtering:</h4>"),
-                  choiceValues = c(
-                    "only.hugo",
-                    "only.proteincoding",
-                    "remove.unknown",
-                    "remove.notexpressed",
-                    "skip.normalization"
-                  ),
-                  choiceNames = c(
-                    "Transform features to gene symbols",
-                    "protein-coding only",
-                    "remove Rik/ORF/LOC genes",
-                    "remove not-expressed",
-                    "skip normalization"
-                  ),
+                  shiny::HTML("<h4>Probe filtering:</h4>"),
+                  choiceValues =
+                    c(
+                      "only.hugo",
+                      "only.proteincoding",
+                      "remove.unknown",
+                      "remove.notexpressed",
+                      "skip.normalization"
+                    ),
+                  choiceNames =
+                    c(
+                      "Transform probes to gene symbols",
+                      "Protein-coding only",
+                      "Remove Rik/ORF/LOC genes",
+                      "Remove not-expressed",
+                      "Skip normalization"
+                      ## "Exclude immunogenes",
+                    ),
                   selected = c(
                     "only.hugo",
                     "only.proteincoding",
@@ -180,7 +182,7 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
-                  label = shiny::HTML("<h4>Gene tests:</h4>"),
+                  shiny::HTML("<h4>Gene tests:</h4>"),
                   GENETEST.METHODS,
                   selected = GENETEST.SELECTED
                 )
@@ -188,7 +190,15 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gset_methods"),
-                  label = shiny::HTML("<h4>Enrichment methods:</h4>"),
+                  shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Enrichment methods:</h4>
+                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='flex-button'>
+                        <i class='fas fa-info-circle'></i>
+                      </a>
+                    </div>
+                  "),
+                  # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
                   GENESET.METHODS,
                   selected = GENESET.SELECTED
                 ),
@@ -196,10 +206,17 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("extra_methods"),
-                  label = shiny::HTML("<h4>Extra analysis:</h4>"),
+                  shiny::HTML("<h4>Extra analysis:</h4>"),
                   choiceValues = EXTRA.METHODS,
                   choiceNames = EXTRA.NAMES,
                   selected = EXTRA.SELECTED
+                ),
+                shiny::checkboxGroupInput(
+                  ns("dev_options"),
+                  shiny::HTML("<br><h4>Developer options:</h4>"),
+                  choiceValues = DEV.METHODS,
+                  choiceNames = DEV.NAMES,
+                  selected = DEV.SELECTED
                 )
               ),
               bslib::card(
@@ -223,17 +240,47 @@ upload_module_computepgx_server <- function(
                   multiple = FALSE,
                   accept = c(".txt", ".gmt")
                 ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  label = shiny::HTML("<h4>Developer options:</h4>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
-                )
+                upload_annot_table_ui
               )
-            ) ## end of layoutColumn
+            ), ## end of fillRow
+            tags$style(HTML("#upload-compute-gset_methods-label { width: -webkit-fill-available; }")),
+            tags$style(HTML("
+            .flex-button {
+              display:block;
+              width:25px;
+              height:25px;
+              line-height:25px;
+              border-radius: 50%;
+              color:#fff;
+              text-align:center;
+              background: #555777;
+              box-shadow: 0 0 3px gray;
+              font-size:20px;
+              font-weight:bold;
+            }
+            .flex-button:hover {
+              color:#fff;
+              background: black;
+            }
+            "))
           ) ## end of conditional panel
-        ) ## end of div
+        ) ## end of fill Col
+      })
+
+      shiny::outputOptions(output,
+        "UI",
+        suspendWhenHidden = FALSE
+      ) ## important!!!  Really???
+
+      shiny::observeEvent(
+        {
+          list(countsRT(), samplesRT(), contrastsRT())
+        },
+        {
+          ## invalidate any previously computed pgx
+          computedPGX(NULL)
+        }
+      )
 
         )
 
@@ -324,6 +371,7 @@ upload_module_computepgx_server <- function(
       computedPGX <- shiny::reactiveVal(NULL)
       process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
+      annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       observeEvent(auth$options$ENABLE_ANNOT, {
@@ -519,6 +567,12 @@ upload_module_computepgx_server <- function(
           samples = samples,
           counts = counts,
           contrasts = contrasts,
+
+          # Extra tables
+          annot_table = annot_table,
+          custom.geneset = custom_geneset,
+
+          # Options
           batch.correct = FALSE,
           normalize = do.normalization,
           prune.samples = TRUE,
@@ -531,7 +585,6 @@ upload_module_computepgx_server <- function(
           cluster.contrasts = FALSE,
           max.genes = max.genes,
           max.genesets = max.genesets,
-          custom.geneset = custom_geneset,
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
@@ -544,7 +597,10 @@ upload_module_computepgx_server <- function(
           description = upload_description(),
           creator = creator,
           date = this.date,
-          pgx.save.folder = pgx_save_folder
+          pgx.save.folder = pgx_save_folder,
+          ETC = ETC,
+          email = auth$email,
+          sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
         path_to_params <- file.path(raw_dir(), "params.RData")
@@ -553,6 +609,10 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
+
+        # Remove global variables
+        try(rm(annot_table))
+        try(rm(custom_geneset))
 
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
@@ -573,7 +633,6 @@ upload_module_computepgx_server <- function(
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
         dbg("[compute PGX process] : process tmpdir = ", tmpdir)
         dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
-
 
         new.job <- list(
           process = processx::process$new(
@@ -638,11 +697,7 @@ upload_module_computepgx_server <- function(
               ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               if (!auth$email == "") {
                 gmail_creds <- file.path(ETC, "gmail_creds")
-                sendSuccessMessageToUser(
-                  user_email = auth$email,
-                  pgx_name = ds_name,
-                  path_to_creds = gmail_creds
-                )
+                ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
               }
               raw_dir(NULL)
             } else {
