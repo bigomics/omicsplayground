@@ -65,6 +65,15 @@ upload_module_computepgx_server <- function(
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
+        upload_annot_table_ui <- NULL
+        if (auth$options$ENABLE_ANNOT) {
+          upload_annot_table_ui <- fileInput2(
+            ns("upload_annot_table"),
+            shiny::tags$h4("Probe annotation (alpha):"),
+            multiple = FALSE,
+            accept = c(".csv")
+          )
+        }        
         div(
         shiny::fillCol(
           height = height,
