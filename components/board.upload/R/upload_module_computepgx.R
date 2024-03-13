@@ -514,8 +514,6 @@ upload_module_computepgx_server <- function(
 
         # Define create_pgx function arguments
 
-        browser()
-
         params <- list(
           organism = upload_organism(),
           samples = samples,
@@ -541,9 +539,9 @@ upload_module_computepgx_server <- function(
           prune.samples = prune.samples,
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
-          upload_name = dataset_name,
-          upload_datatype = upload_datatype(),
-          upload_description = upload_description(),
+          name = dataset_name,
+          datatype = upload_datatype(),
+          description = upload_description(),
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder
