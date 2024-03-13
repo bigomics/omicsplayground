@@ -591,7 +591,8 @@ UploadBoard <- function(id,
       upload_wizard = reactive(input$upload_wizard),
       upload_datatype = upload_datatype,
       upload_name = upload_name,
-      upload_description = upload_description
+      upload_description = upload_description,
+      process_counter = process_counter
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -731,7 +732,7 @@ UploadBoard <- function(id,
         
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
-          if(MAX_DS_PROCESS == 1){
+          if(process_counter() < MAX_DS_PROCESS){
             wizardR::wizard_show(ns("upload_wizard"))
             } else {
               shinyalert::shinyalert(

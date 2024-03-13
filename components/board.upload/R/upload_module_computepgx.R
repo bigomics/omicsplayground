@@ -26,7 +26,8 @@ upload_module_computepgx_server <- function(
     upload_name,
     upload_description,
     upload_datatype,
-    upload_organism
+    upload_organism,
+    process_counter
     ) {
   shiny::moduleServer(
     id,
@@ -373,7 +374,6 @@ upload_module_computepgx_server <- function(
       # Define a reactive value to store the process object
       PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
-      process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
       annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
