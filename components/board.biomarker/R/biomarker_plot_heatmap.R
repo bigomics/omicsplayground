@@ -127,13 +127,24 @@ biomarker_plot_heatmap_server <- function(id,
           mar = c(2, 8)
         )
       }
+      plot_data_output <- function() {
+        res <- plot_data()
+        if (is.null(res)) {
+          return(NULL)
+        }
+        # average duplicated columns in the data, keep only one entry for duplicates
+        res$X <-  t(do.call(rbind, by(t(res$X), row.names(t(res$X)), FUN = colMeans)))
+        return(res$X)
+
+      }
+
 
       PlotModuleServer(
         "plot",
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
-        csvFunc = plot_data,
+        csvFunc = plot_data_output,
         res = c(72, 110),
         pdf.width = 10,
         pdf.height = 10,
