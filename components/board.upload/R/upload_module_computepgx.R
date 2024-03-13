@@ -406,7 +406,6 @@ upload_module_computepgx_server <- function(
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
-        browser()
         
         # TODO MOVE THIS TO THE WIZARD MODULE OR in selected_upload listener
         # if (!is.null(input$selected_name) && !isValidFileName(input$selected_name)) {
@@ -507,13 +506,15 @@ upload_module_computepgx_server <- function(
           raw_dir(create_raw_dir(auth))
         }
 
-        dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
+        dataset_name <- gsub("[ ]", "_", trimws(input$selected_name))
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 
         pgx_save_folder <- auth$user_dir
 
         # Define create_pgx function arguments
+
+        browser()
 
         params <- list(
           organism = upload_organism(),
@@ -541,8 +542,8 @@ upload_module_computepgx_server <- function(
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           upload_name = dataset_name,
-          upload_datatype = upload_datatype,
-          upload_description = upload_description,
+          upload_datatype = upload_datatype(),
+          upload_description = upload_description(),
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder
