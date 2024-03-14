@@ -326,7 +326,10 @@ UploadModuleServer <- function(id,
                     ## dimensions from the given PGX/NGS object. Really?
                     ##
                     i <- grep("[.]pgx$",input$upload_files$name)
-                    load(input$upload_files$datapath[i])  ## load NGS/PGX                    
+                    ## load(input$upload_files$datapath[i])  ## load NGS/PGX
+                    file <- input$upload_files$datapath[i]
+                    ngs <- local(get(load(file, verbose = FALSE)))
+
                     ##matlist[["counts.csv"]] <- ngs$counts
                     ##matlist[["samples.csv"]] <- type.convert(ngs$samples)
                     ##matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
