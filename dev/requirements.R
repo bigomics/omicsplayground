@@ -237,53 +237,53 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 
 print(" install reached 9")
 
-## Install a clean reticulate and miniconda 
-install.packages('reticulate', force=TRUE)
-unlink("~/.local/share/r-miniconda", recursive=TRUE)
-reticulate::install_miniconda()
-reticulate::conda_install('r-reticulate', 'python-kaleido')
-reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
-reticulate::use_miniconda('r-reticulate')
+# ## Install a clean reticulate and miniconda 
+# install.packages('reticulate', force=TRUE)
+# unlink("~/.local/share/r-miniconda", recursive=TRUE)
+# reticulate::install_miniconda()
+# reticulate::conda_install('r-reticulate', 'python-kaleido')
+# reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
+# reticulate::use_miniconda('r-reticulate')
 
-print(" install reached 10")
+# print(" install reached 10")
 
-##---------------------------------------------------------------------
-## remove unneccessary big packages??
-##---------------------------------------------------------------------
-BIG.NOTUSED <- c(
-    "reactome.db", ## >2GB!!!
-    "terra",
-    ## "DeMixT", ## purify
-    "RNAseqData.HNRNPC.bam.chr14",
-    ## "RSpectra",  ## ???
-    ##"org.Mm.eg.db",
-    "tximportData"
-    ##"EnsDb.Hsapiens.v86",
-    ##"EnsDb.Mmusculus.v79",
-    ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
-    ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
-)
-remove.pkgs(BIG.NOTUSED)
+# ##---------------------------------------------------------------------
+# ## remove unneccessary big packages??
+# ##---------------------------------------------------------------------
+# BIG.NOTUSED <- c(
+#     "reactome.db", ## >2GB!!!
+#     "terra",
+#     ## "DeMixT", ## purify
+#     "RNAseqData.HNRNPC.bam.chr14",
+#     ## "RSpectra",  ## ???
+#     ##"org.Mm.eg.db",
+#     "tximportData"
+#     ##"EnsDb.Hsapiens.v86",
+#     ##"EnsDb.Mmusculus.v79",
+#     ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
+#     ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
+# )
+# remove.pkgs(BIG.NOTUSED)
 
-## --------------------------------------------------
-## Write license file of the used/installed packages
-## --------------------------------------------------
+# ## --------------------------------------------------
+# ## Write license file of the used/installed packages
+# ## --------------------------------------------------
 
-print(" install reached 11")
-if(1) {
-    ## Write license file of the used/installed packages
-    lisc <- installed.packages(fields = "License")
-    sel <- which(lisc[,"Package"] %in% INSTALLED.PKGS)
-    lisc1 <- lisc
-    lisc1 <- lisc[sel,]    
-    lisc1 <- lisc1[order(lisc1[,"Package"]),]
-    lisc1 <- lisc1[!duplicated(lisc1[,"Package"]),]
-    lisc2 <- lisc1[,c("Package","Version","License")]
-    ##write.table(lisc2, "RPackageLicenses.txt",sep='\t', quote=FALSE, row.names=FALSE)
-    fixstr <- function(s,n=30) {substring(paste0(s,paste(rep(" ",n),collapse='')),1,n) }
-    lisc2 <- rbind( c("PACKAGE","VERSION","LICENSE"), lisc2)
-    lisc2 <- cbind(fixstr(lisc2[,1],36),fixstr(lisc2[,2],15),fixstr(lisc2[,3],30))
-    lisc.text <- apply(lisc2, 1, function(s) paste0(s,collapse=''))
-    write(lisc.text, "RPackageLicenses.txt")
-##  lisc2[grep("LGPL|AGPL|GPL-3",lisc2[,"License"]),]
-}
+# print(" install reached 11")
+# if(1) {
+#     ## Write license file of the used/installed packages
+#     lisc <- installed.packages(fields = "License")
+#     sel <- which(lisc[,"Package"] %in% INSTALLED.PKGS)
+#     lisc1 <- lisc
+#     lisc1 <- lisc[sel,]    
+#     lisc1 <- lisc1[order(lisc1[,"Package"]),]
+#     lisc1 <- lisc1[!duplicated(lisc1[,"Package"]),]
+#     lisc2 <- lisc1[,c("Package","Version","License")]
+#     ##write.table(lisc2, "RPackageLicenses.txt",sep='\t', quote=FALSE, row.names=FALSE)
+#     fixstr <- function(s,n=30) {substring(paste0(s,paste(rep(" ",n),collapse='')),1,n) }
+#     lisc2 <- rbind( c("PACKAGE","VERSION","LICENSE"), lisc2)
+#     lisc2 <- cbind(fixstr(lisc2[,1],36),fixstr(lisc2[,2],15),fixstr(lisc2[,3],30))
+#     lisc.text <- apply(lisc2, 1, function(s) paste0(s,collapse=''))
+#     write(lisc.text, "RPackageLicenses.txt")
+# ##  lisc2[grep("LGPL|AGPL|GPL-3",lisc2[,"License"]),]
+# }
