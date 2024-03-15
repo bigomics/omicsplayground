@@ -573,6 +573,12 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
+    upload_plot_countstats_server(
+      "countStats",
+      checkTables,
+      countsRT = reactive(checked_counts()$matrix)
+    )
+
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = shiny::reactive(checked_counts()$matrix), #TODO add return from new-bc module: corrected1$correctedCounts,
