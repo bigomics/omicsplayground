@@ -74,6 +74,7 @@ UploadUI <- function(id) {
 review_panel <- wizardR::wizard_step(
   step_title = "Review and compute",
   shiny::br(), shiny::br(),
+  shiny::htmlOutput(ns("input_recap")),
   shiny::fluidRow(
     bslib::layout_columns(
       col_widths = c(4,4,4),
@@ -101,10 +102,6 @@ review_panel <- wizardR::wizard_step(
         height = c("auto", "100%"),
         width = c("auto", "100%")
       )
-    ),
-    shiny::column(
-      width = 3,
-      shiny::htmlOutput(ns("input_recap"))
     )
   )
 )
