@@ -504,12 +504,14 @@ UploadBoard <- function(id,
 
     output$input_recap <- renderUI({
     tags$h3(
-      paste(
-        "Organism: ", upload_organism(),
-        "Name: ", upload_name(),
-        "Description: ", upload_description(),
-        "Data type: ", upload_datatype(),
-        sep = "<br>"
+      shiny::HTML(
+        paste(
+          "Organism: ", upload_organism(),
+          "Name: ", upload_name(),
+          "Description: ", upload_description(),
+          "Data type: ", upload_datatype(),
+          sep = "<br>"
+        )
       )
     )
   })
