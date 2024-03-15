@@ -77,7 +77,8 @@ UploadUI <- function(id) {
     bslib::layout_columns(
       # display a hello message
       col_widths = c(12),
-      #TODO display variables selected by user (input$dataset_name)  
+       shiny::verbatimTextOutput(ns("input_recap")),
+      
       upload_plot_countstats_ui(
         id = ns("countStats"),
         title = "Count Stats",
