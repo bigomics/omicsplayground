@@ -83,9 +83,17 @@ UploadUI <- function(id) {
         title = "Count Stats",
         info.text = "Information about the uploaded counts.",
         caption = "Information about the uploaded counts.",
-        height = c("auto", "100%" ),
+        height = c("75%", TABLE_HEIGHT_MODAL),
         width = c("auto", "100%")
-      )
+      ),
+      upload_plot_phenostats_ui(
+        id = ns("phenoStats"),
+        title = "Pheno Stats",
+        info.text = "Information about the uploaded samples",
+        caption = "Information about the uploaded samples.",
+        height = c("75%", TABLE_HEIGHT_MODAL),
+        width = c("auto", "100%")
+      ),
     )
     )
     div(
