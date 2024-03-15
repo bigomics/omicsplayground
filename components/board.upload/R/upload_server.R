@@ -582,6 +582,12 @@ UploadBoard <- function(id,
       "phenoStats",
       samplesRT = reactive(checked_samples()$matrix)
     )
+    
+    upload_plot_contraststats_server(
+      "contrastStats",
+      contrastsRT = reactive(checked_contrasts()$matrix),
+      samplesRT = reactive(checked_samples()$matrix)
+    )
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
