@@ -280,12 +280,9 @@ upload_module_computepgx_server <- function(
 
       # add shinyvalidate when upload_wizard == "Dataset description"
       observeEvent(upload_wizard(), {
-        browser()
         req(upload_wizard() == "Dataset description")
         
         if (upload_wizard() == "Dataset description") {
-          browser()
-          #TODO validate text inputs breaks wizard sequence
           iv <- shinyvalidate::InputValidator$new()
           iv$add_rule("selected_name", shinyvalidate::sv_required())
           iv$add_rule("selected_description", shinyvalidate::sv_required())
