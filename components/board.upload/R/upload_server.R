@@ -502,19 +502,19 @@ UploadBoard <- function(id,
       }
     )
 
-    output$input_recap <- renderUI({
-    tags$h3(
-      shiny::HTML(
-        paste(
-          "Organism: ", upload_organism(),
-          "Name: ", upload_name(),
-          "Description: ", upload_description(),
-          "Data type: ", upload_datatype(),
-          sep = "<br>"
+      output$input_recap <- renderUI({
+      tags$h3(
+        shiny::HTML(
+          paste(
+            "<b>Organism:</b> ", upload_organism(),
+            "<b>Name:</b> ", upload_name(),
+            "<b>Description:</b> ", upload_description(),
+            "<b>Data type:</b> ", upload_datatype(),
+            sep = "<br>"
+          )
         )
       )
-    )
-  })
+    })
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",

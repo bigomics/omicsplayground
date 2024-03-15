@@ -75,8 +75,8 @@ review_panel <- wizardR::wizard_step(
   step_title = "Review and compute",
   shiny::br(), shiny::br(),
   shiny::fluidRow(
-    shiny::column(
-      width = 9,
+    bslib::layout_columns(
+      col_widths = c(4,4,4),
       upload_plot_countstats_ui(
         id = ns("countStats"),
         title = "Count Stats",
