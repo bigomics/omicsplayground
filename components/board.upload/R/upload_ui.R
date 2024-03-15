@@ -70,21 +70,19 @@ UploadUI <- function(id) {
       upload_module_computepgx_ui(ns("compute"))
   )
 
-  review_panel <- wizardR::wizard_step(
-    step_title = "Review and compute",
-    #bs_alert("Please review your settings and hit 'Compute' to start the computation. This can take a while depending on the size of your data and the number of comparisons."),
-    shiny::br(), shiny::br(),
-    bslib::layout_columns(
-      # display a hello message
-      col_widths = c(12),
-       shiny::verbatimTextOutput(ns("input_recap")),
-      
+  
+review_panel <- wizardR::wizard_step(
+  step_title = "Review and compute",
+  shiny::br(), shiny::br(),
+  shiny::fluidRow(
+    shiny::column(
+      width = 9,
       upload_plot_countstats_ui(
         id = ns("countStats"),
         title = "Count Stats",
         info.text = "Information about the uploaded counts.",
         caption = "Information about the uploaded counts.",
-        height = c("75%", TABLE_HEIGHT_MODAL),
+        height = c("auto", "100%"),
         width = c("auto", "100%")
       ),
       upload_plot_phenostats_ui(
@@ -92,19 +90,24 @@ UploadUI <- function(id) {
         title = "Pheno Stats",
         info.text = "Information about the uploaded samples",
         caption = "Information about the uploaded samples.",
-        height = c("75%", TABLE_HEIGHT_MODAL),
+        height = c("auto", "100%"),
         width = c("auto", "100%")
       ),
-       upload_plot_contraststats_ui(
-          id = ns("contrastStats"),
-          title = "Comparison Stats",
-          info.text = "Information about the uploaded comparisons",
-          caption = "Information about the uploaded comparisons.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
+      upload_plot_contraststats_ui(
+        id = ns("contrastStats"),
+        title = "Comparison Stats",
+        info.text = "Information about the uploaded comparisons",
+        caption = "Information about the uploaded comparisons.",
+        height = c("auto", "100%"),
+        width = c("auto", "100%")
+      )
+    ),
+    shiny::column(
+      width = 3,
+      shiny::htmlOutput(ns("input_recap"))
     )
-    )
+  )
+)
     div(
     class = "p-0",
     # board_header,
