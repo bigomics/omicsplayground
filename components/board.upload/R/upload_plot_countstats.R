@@ -20,9 +20,10 @@ upload_plot_countstats_ui <- function(id,
     info.text = info.text,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = NULL,
     width = width,
-    height = height
+    height = height,
+    show.maximize = FALSE
   )
 }
 
@@ -34,7 +35,7 @@ upload_plot_countstats_server <- function(id, countsRT, watermark = FALSE) {
       has.counts <- !is.null(counts) && NCOL(counts) > 0
       
       # removed message as counts should arrive clean at this step
-      
+
       shiny::validate(
         shiny::need(
           has.counts,
@@ -70,7 +71,8 @@ upload_plot_countstats_server <- function(id, countsRT, watermark = FALSE) {
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 90), ## resolution of plots
       pdf.width = 4, pdf.height = 4,
-      add.watermark = watermark
+      add.watermark = watermark,
+      download.fmt = NULL
     )
   }) ## end of moduleServer
 }

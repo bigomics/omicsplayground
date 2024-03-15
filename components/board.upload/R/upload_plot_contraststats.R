@@ -20,9 +20,10 @@ upload_plot_contraststats_ui <- function(id,
     info.text = info.text,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = NULL,
     width = width,
-    height = height
+    height = height,
+    show.maximize = FALSE
   )
 }
 
@@ -87,7 +88,8 @@ upload_plot_contraststats_server <- function(id, contrastsRT, samplesRT, waterma
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 90), ## resolution of plots
       pdf.width = 4, pdf.height = 4,
-      add.watermark = watermark
+      add.watermark = watermark,
+      download.fmt = NULL
     )
   }) ## end of moduleServer
 }
