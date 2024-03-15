@@ -238,7 +238,7 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 print(" install reached 9")
 
 ## Install a clean reticulate and miniconda 
-install.packages('reticulate', force=TRUE)
+# install.packages('reticulate', force=TRUE) # remove reticulate install since its already done.. and we get checksum error for some reason at this step
 unlink("~/.local/share/r-miniconda", recursive=TRUE)
 reticulate::install_miniconda()
 reticulate::conda_install('r-reticulate', 'python-kaleido')
