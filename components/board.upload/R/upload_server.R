@@ -575,7 +575,6 @@ UploadBoard <- function(id,
 
     upload_plot_countstats_server(
       "countStats",
-      checkTables,
       countsRT = reactive(checked_counts()$matrix)
     )
 

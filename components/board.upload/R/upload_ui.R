@@ -76,22 +76,18 @@ UploadUI <- function(id) {
     shiny::br(), shiny::br(),
     bslib::layout_columns(
       # display a hello message
-      col_widths = c(1,10,1),
-      #TODO display variables selected by user (input$dataset_name)
-       bslib::layout_columns(
-        col_widths = c(12),
-        upload_plot_countstats_ui(
-          id = ns("countStats"),
-          title = "Count Stats",
-          info.text = "Information about the uploaded counts.",
-          caption = "Information about the uploaded counts.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ))
+      col_widths = c(12),
+      #TODO display variables selected by user (input$dataset_name)  
+      upload_plot_countstats_ui(
+        id = ns("countStats"),
+        title = "Count Stats",
+        info.text = "Information about the uploaded counts.",
+        caption = "Information about the uploaded counts.",
+        height = c("auto", "100%" ),
+        width = c("auto", "100%")
+      )
     )
     )
-
-
     div(
     class = "p-0",
     # board_header,
