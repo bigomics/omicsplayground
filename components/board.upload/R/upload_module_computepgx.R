@@ -278,6 +278,14 @@ upload_module_computepgx_server <- function(
         )
       })
 
+
+      #TODO validate text inputs breaks wizard sequence
+      # iv <- shinyvalidate::InputValidator$new()
+      # iv$add_rule("selected_name", shinyvalidate::sv_required())
+      # iv$add_rule("selected_description", shinyvalidate::sv_required())
+
+
+
       shiny::outputOptions(output,
         "UI",
         suspendWhenHidden = FALSE
