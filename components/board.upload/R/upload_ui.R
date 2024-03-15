@@ -75,6 +75,7 @@ review_panel <- wizardR::wizard_step(
   step_title = "Review and compute",
   shiny::br(), shiny::br(),
   shiny::htmlOutput(ns("input_recap")),
+  shiny::br(), shiny::br(),
   shiny::fluidRow(
     bslib::layout_columns(
       col_widths = c(4,4,4),
