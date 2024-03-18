@@ -55,13 +55,6 @@ WORKDIR /
 RUN R -e "install.packages('remotes')"
 
 
-## playdata: perhaps not needed because playbase already states
-## playdata as dependency in DESCRIPTION file.
-RUN git clone -b main --single-branch --depth 1 \
-    https://github.com/bigomics/playdata.git \
-    && R CMD INSTALL playdata \
-    && rm -fr playdata
-
 ## Omicsplayground (partial install): this installs only the needed
 ## packages. The complete installation of OPG is done in the final
 ## Dockerfile.
@@ -79,6 +72,14 @@ FROM r-base1 AS r-base2
 ## playbase -------------------------------
 RUN echo Downloading Playbase
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
+
+## playdata: perhaps not needed because playbase already states
+## playdata as dependency in DESCRIPTION file.
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
+
 #------------------------------------------------------------
 # Clean up when done.
 #------------------------------------------------------------
