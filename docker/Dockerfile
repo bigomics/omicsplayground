@@ -30,10 +30,6 @@ RUN apt update && apt install -y libsodium-dev
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
-RUN R -e "install.packages(c('shinyvalidate','sodium','cookies','ruv'),force=TRUE)"
-RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
-RUN R -e "BiocManager::install(c('GSVA'),force=TRUE)"
-RUN R -e "remotes::install_github('renozao/xbioc',dependencies=TRUE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
