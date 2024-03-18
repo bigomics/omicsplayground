@@ -155,7 +155,7 @@ DataViewBoard <- function(id, pgx) {
     ## get selected samples after sample filtering
     selected_samples <- reactive({
       samples <- colnames(pgx$X)
-      
+
       if (!is.null(input$data_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       }

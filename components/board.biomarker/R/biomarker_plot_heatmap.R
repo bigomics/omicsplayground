@@ -133,9 +133,8 @@ biomarker_plot_heatmap_server <- function(id,
           return(NULL)
         }
         # average duplicated columns in the data, keep only one entry for duplicates
-        res$X <-  t(do.call(rbind, by(t(res$X), row.names(t(res$X)), FUN = colMeans)))
+        res$X <- t(do.call(rbind, by(t(res$X), row.names(t(res$X)), FUN = colMeans)))
         return(res$X)
-
       }
 
 
