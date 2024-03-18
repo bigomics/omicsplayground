@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204_v2
+FROM bigomics/omicsplayground-base:ub2204_v3
 
 #------------------------------------------------------------
 # Install any extra (forgotten...) Ubuntu libs
