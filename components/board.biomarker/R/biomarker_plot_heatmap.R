@@ -128,12 +128,18 @@ biomarker_plot_heatmap_server <- function(id,
         )
       }
 
+      plot_data_csv <- function() {
+        res <- plot_data()
+        df <- rbind(res$splitx, res$X)
+        return(df)
+      }
+
       PlotModuleServer(
         "plot",
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
-        csvFunc = plot_data,
+        csvFunc = plot_data_csv,
         res = c(72, 110),
         pdf.width = 10,
         pdf.height = 10,
