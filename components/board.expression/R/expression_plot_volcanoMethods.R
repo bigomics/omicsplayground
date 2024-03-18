@@ -134,11 +134,23 @@ expression_plot_volcanoMethods_server <- function(id,
       return(fig)
     }
 
+    plot_data_csv <- function() {
+      pd <- plot_data()
+      sel.genes <- pd[["sel.genes"]]
+      comp <- pd[["comp"]]
+      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
+      fc <- mx[which(rownames(mx) %in% sel.genes), "fc", drop = FALSE]
+      qv <- mx[which(rownames(mx) %in% sel.genes), "q", drop = FALSE]
+      df <- cbind(fc, qv, mx)
+      return(df)
+    }
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = modal_plotly.RENDER,
       func2 = big_plotly.RENDER,
+      csvFunc = plot_data_csv,
       res = c(80, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
       add.watermark = watermark
