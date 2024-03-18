@@ -52,10 +52,8 @@ RUN apt install -y r-base r-base-dev r-recommended
 FROM os-base AS r-base1
 WORKDIR /
 
-## playbase -------------------------------
-RUN echo Downloading Playbase
 RUN R -e "install.packages('remotes')"
-RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
+
 
 ## playdata: perhaps not needed because playbase already states
 ## playdata as dependency in DESCRIPTION file.
@@ -78,6 +76,9 @@ FROM r-base1 AS r-base2
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 #RUN R -e "install.packages(c('RSpectra'))"
 
+## playbase -------------------------------
+RUN echo Downloading Playbase
+RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 #------------------------------------------------------------
 # Clean up when done.
 #------------------------------------------------------------
