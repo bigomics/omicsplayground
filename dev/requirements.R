@@ -115,7 +115,7 @@ pkg.extra <- c(
   "RcppParallel", "KEGGgraph", "svgPanZoom",
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
-  'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
+  'listviewer','SBGNview','org.Hs.eg.db', "org.Mm.eg.db",'DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
   'blastula','shinytest2','sodium','cookies',"shinyvalidate"
@@ -190,6 +190,7 @@ install.github('rstudio/htmltools',dependencies=FALSE)
 install.github('bigomics/biomaRt',dependencies=FALSE)
 install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
 install.github('renozao/xbioc',dependencies=TRUE)
+install.github("cysouw/qlcMatrix",dependencies=FALSE)
 
 print(" install reached 6")
 
