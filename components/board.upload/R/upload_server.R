@@ -631,9 +631,13 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    # reset wizard when computation is finished
-    observeEvent(input$reset_wizard, {
-      browser()
+    # reset wizard when computation is finished or #TODO when wizard is closed
+    observeEvent(
+      list(process_counter(),new_upload()), {
+      isolate({
+        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+      })
       wizardR::reset("upload_wizard")
     })
 
