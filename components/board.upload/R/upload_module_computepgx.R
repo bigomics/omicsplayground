@@ -283,10 +283,10 @@ upload_module_computepgx_server <- function(
         req(upload_wizard() == "Dataset description")
         
         if (upload_wizard() == "Dataset description") {
-          iv <- shinyvalidate::InputValidator$new()
-          iv$add_rule("selected_name", shinyvalidate::sv_required())
-          iv$add_rule("selected_description", shinyvalidate::sv_required())
-          iv$enable()
+          # iv <- shinyvalidate::InputValidator$new()
+          # iv$add_rule("selected_name", shinyvalidate::sv_required())
+          # iv$add_rule("selected_description", shinyvalidate::sv_required())
+          # iv$enable()
         }
       })
 
@@ -406,7 +406,7 @@ upload_module_computepgx_server <- function(
         # Fill the selectInput with species_table
         shiny::updateSelectInput(
           session,
-          "upload_organism",
+          "selected_organism",
           choices = species_table$species_name,
           selected = species_table$species_name[1]
         )

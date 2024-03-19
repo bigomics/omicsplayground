@@ -631,9 +631,22 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
+    # reset wizard when computation is finished or #TODO when wizard is closed
+    observeEvent(
+      list(process_counter(),new_upload()), {
+      isolate({
+        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+        upload_datatype(NULL)
+        upload_name(NULL)
+        upload_description(NULL)
+        upload_organism(NULL)
+      })
+      wizardR::reset("upload_wizard")
+    })
+
     # wizard lock/unlock logic
 
-    
     # lock/unlock wizard for samples.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
@@ -671,8 +684,9 @@ UploadBoard <- function(id,
     # lock wizard it compute step
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
+        print(input$upload_wizard)
         req(input$upload_wizard == "Dataset description")
-        if (is.null(upload_name()) || upload_name() == "" || upload_description() == "" || is.null(upload_datatype()) || is.null(upload_description())  || is.null(upload_organism())){
+        if (is.null(upload_name()) || upload_name() == "" || upload_description() == "" || is.null(upload_description())){
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
