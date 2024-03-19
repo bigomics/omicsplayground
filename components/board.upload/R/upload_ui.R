@@ -16,6 +16,7 @@ UploadUI <- function(id) {
   
   samples_ui <- wizardR::wizard_step(
     step_title = "Samples",
+    shiny::actionButton(ns("reset_wizard"), "Reset", icon = icon("refresh")),
     upload_table_preview_samples_ui(
       ns("samples_preview")
     )

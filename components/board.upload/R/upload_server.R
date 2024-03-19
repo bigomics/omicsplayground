@@ -631,9 +631,14 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
+    # reset wizard when computation is finished
+    observeEvent(input$reset_wizard, {
+      browser()
+      wizardR::reset("upload_wizard")
+    })
+
     # wizard lock/unlock logic
 
-    
     # lock/unlock wizard for samples.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
