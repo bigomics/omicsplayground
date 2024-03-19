@@ -637,6 +637,10 @@ UploadBoard <- function(id,
       isolate({
         lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
         lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+        upload_datatype(NULL)
+        upload_name(NULL)
+        upload_description(NULL)
+        upload_organism(NULL)
       })
       wizardR::reset("upload_wizard")
     })
