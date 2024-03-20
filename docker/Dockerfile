@@ -22,18 +22,12 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
-RUN apt update && apt install -y libsodium-dev
-
 #------------------------------------------------------------
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
-RUN R -e "install.packages(c('shinyvalidate','sodium','cookies','ruv'),force=TRUE)"
-RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
-RUN R -e "BiocManager::install(c('GSVA'),force=TRUE)"
-RUN R -e "remotes::install_github('renozao/xbioc',dependencies=TRUE)"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)

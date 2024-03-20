@@ -52,17 +52,8 @@ RUN apt install -y r-base r-base-dev r-recommended
 FROM os-base AS r-base1
 WORKDIR /
 
-## playbase -------------------------------
-RUN echo Downloading Playbase
 RUN R -e "install.packages('remotes')"
-RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 
-## playdata: perhaps not needed because playbase already states
-## playdata as dependency in DESCRIPTION file.
-RUN git clone -b main --single-branch --depth 1 \
-    https://github.com/bigomics/playdata.git \
-    && R CMD INSTALL playdata \
-    && rm -fr playdata
 
 ## Omicsplayground (partial install): this installs only the needed
 ## packages. The complete installation of OPG is done in the final
@@ -77,7 +68,17 @@ RUN Rscript dev/requirements.R
 FROM r-base1 AS r-base2
 #RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 #RUN R -e "install.packages(c('RSpectra'))"
-RUN R -e "install.packages(c('shinyvalidate','sodium','cookies'),force=TRUE)"
+
+## playbase -------------------------------
+RUN echo Downloading Playbase
+RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
+
+## playdata: perhaps not needed because playbase already states
+## playdata as dependency in DESCRIPTION file.
+RUN git clone -b main --single-branch --depth 1 \
+    https://github.com/bigomics/playdata.git \
+    && R CMD INSTALL playdata \
+    && rm -fr playdata
 
 #------------------------------------------------------------
 # Clean up when done.
