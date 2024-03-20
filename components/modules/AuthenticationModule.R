@@ -623,11 +623,11 @@ PasswordAuthenticationModule <- function(id,
     message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
 
-    iv <- shinyvalidate::InputValidator$new()
-    iv$add_rule("login_email", shinyvalidate::sv_required())
-    iv$add_rule("login_email", shinyvalidate::sv_email())
-    iv$add_rule("login_password", shinyvalidate::sv_required())
-    iv$enable()
+    # iv <- shinyvalidate::InputValidator$new()
+    # iv$add_rule("login_email", shinyvalidate::sv_required())
+    # iv$add_rule("login_email", shinyvalidate::sv_email())
+    # iv$add_rule("login_password", shinyvalidate::sv_required())
+    # iv$enable()
 
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
@@ -835,10 +835,10 @@ LoginCodeAuthenticationModule <- function(id,
     message("[AuthenticationModule] >>>> using LoginCode authentication <<<<")
     ns <- session$ns
 
-    iv <- shinyvalidate::InputValidator$new()
-    iv$add_rule("login_email", shinyvalidate::sv_required())
-    iv$add_rule("login_email", shinyvalidate::sv_email())
-    iv$enable()
+    # iv <- shinyvalidate::InputValidator$new()
+    # iv$add_rule("login_email", shinyvalidate::sv_required())
+    # iv$add_rule("login_email", shinyvalidate::sv_email())
+    # iv$enable()
 
     ## user mail_creds="" for dry-run
     if (!file.exists(mail_creds)) {
@@ -957,6 +957,7 @@ LoginCodeAuthenticationModule <- function(id,
       ## export as 'public' functions
       USER$resetUSER <- resetUSER
 
+      # TODO shinyalert has conflict with wizard
       shinyalert::shinyalert(
         title = "",
         text = "Biscit yaccepted, thou art granted fri passage...",
