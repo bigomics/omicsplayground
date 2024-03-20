@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204_v2
+FROM bigomics/omicsplayground-base:ub2204_v3
 
 #------------------------------------------------------------
 # Install any extra (forgotten...) Ubuntu libs
@@ -49,7 +49,7 @@ RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ##
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
-RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE)"
+RUN R -e "remotes::install_github('mauromiguelm/wizardR',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
