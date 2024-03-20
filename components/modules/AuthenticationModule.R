@@ -958,12 +958,12 @@ LoginCodeAuthenticationModule <- function(id,
       USER$resetUSER <- resetUSER
 
       # TODO shinyalert has conflict with wizard
-      shinyalert::shinyalert(
-        title = "",
-        text = "Biscit yaccepted, thou art granted fri passage...",
-        size = "xs",
-        timer = 1900
-      )
+      # shinyalert::shinyalert(
+      #   title = "",
+      #   text = "Biscit yaccepted, thou art granted fri passage...",
+      #   size = "xs",
+      #   timer = 1900
+      # )
 
       return(USER)
     } else {
