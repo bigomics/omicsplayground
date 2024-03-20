@@ -43,7 +43,7 @@ RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ##
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"
-RUN R -e "remotes::install_github('mauromiguelm/wizardR',dependencies=FALSE)"
+RUN R -e "remotes::install_github('mauromiguelm/wizardR',dependencies=FALSE, force=TRUE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
