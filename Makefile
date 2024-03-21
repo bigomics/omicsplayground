@@ -69,8 +69,8 @@ docker.test: FORCE
 	  	-t bigomics/omicsplayground:test .
 
 docker.bash:
-	@echo bash into docker $(BRANCH)
-	docker run -it -p 3838:3838 bigomics/omicsplayground:$(BRANCH) /bin/bash
+	@echo bash into docker $(TAG)
+	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
 
 doc: FORCE
@@ -98,7 +98,6 @@ changelog:
 	sh ./dev/create-changelog.sh '.*' 999 >  CHANGELOG-full.md
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
 	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
-
 
 tags: changelog
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
