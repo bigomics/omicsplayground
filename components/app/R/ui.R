@@ -474,11 +474,11 @@ app_ui <- function(x) {
           )
         ),
         UploadUI("upload"),
-        # shiny::tagList(ui.startupModal(
-        #   id = "startup_modal",
-        #   messages = STARTUP_MESSAGES,
-        #   title = "BigOmics Highlights"
-        # )),
+        shiny::tagList(ui.startupModal(
+          id = "startup_modal",
+          messages = STARTUP_MESSAGES,
+          title = "BigOmics Highlights"
+        )),
         shiny::tagList(footer)
       )
     }
