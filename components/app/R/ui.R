@@ -222,9 +222,13 @@ app_ui <- function(x) {
             )
           )
         )
-        div.chirpbutton <- shiny::actionButton("chirp_button", "Chirp!", width = "auto")
+        div.chirpbutton <- shiny::actionButton("chirp_button", "Chirp!",
+                                               width = "auto", class = "quick-button")
       }
 
+      div.invitebutton <- shiny::actionButton("invite_button", "Invite!",
+                                              width = "auto", class = "quick-button")
+      
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
         header,
@@ -242,6 +246,7 @@ app_ui <- function(x) {
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
+          div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
             "Help",

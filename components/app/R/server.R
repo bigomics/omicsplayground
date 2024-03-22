@@ -214,6 +214,19 @@ app_server <- function(input, output, session) {
     )
   }
 
+  shiny::observeEvent(input$invite_button, {
+    ui.inviteModal(id = "invitemodal")
+  })
+
+  shiny::observeEvent(input$invitemodal_button, {  
+    message("sending invite email to", input$invitemodal_email,"\n")
+    
+    ## thank you modal
+    ui.showSmallModal("Thank you!")
+    shinyjs::delay(2000, shiny::removeModal())
+    
+  })
+
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
