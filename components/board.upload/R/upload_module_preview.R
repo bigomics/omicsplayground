@@ -185,18 +185,17 @@ upload_table_preview_counts_server <- function(
       
       # if samples is not null, warn user that it will be deleted
       if(!is.null(uploaded$samples.csv) || !is.null(uploaded$contrasts.csv)){
-        # make a pop up and give user option to delete all files or just counts
-        # shinyalert::shinyalert(
-        #   inputId = "alert_delete_counts",
-        #   title = "Warning",
-        #   text = "Removing counts will also remove samples and contrasts. Do you want to proceed?",
-        #   type = "warning",
-        #   showCancelButton = TRUE,
-        #   closeOnEsc = FALSE,
-        #   callbackR = delete_all_files_counts,
-        #   confirmButtonText = "Yes, remove all files.",
-        #   cancelButtonText = "No, cancel deletion."
-        # )
+        shinyalert::shinyalert(
+          inputId = "alert_delete_counts",
+          title = "Warning",
+          text = "Removing counts will also remove samples and contrasts. Do you want to proceed?",
+          type = "warning",
+          showCancelButton = TRUE,
+          closeOnEsc = FALSE,
+          callbackR = delete_all_files_counts,
+          confirmButtonText = "Yes, remove all files.",
+          cancelButtonText = "No, cancel deletion."
+        )
 
         uploaded$counts.csv <- NULL
         uploaded$samples.csv <- NULL
@@ -377,21 +376,20 @@ upload_table_preview_samples_server <- function(
         }
       }
 
-      # TODO inform user that contrasts will be deleted if samples are deleted, find another solution that is not modal, or change conflicting classes to be unique in wizard/bsutils
       # if samples is not null, warn user that it will be deleted
       if(!is.null(uploaded$contrasts.csv)){
-        # make a pop up and give user option to delete all files or just counts
-        # shinyalert::shinyalert(
-        #   inputId = "alert_delete_samples",
-        #   title = "Warning",
-        #   text = "Removing samples will also remove contrasts. Do you want to proceed?",
-        #   type = "warning",
-        #   showCancelButton = TRUE,
-        #   closeOnEsc = FALSE,
-        #   callbackR = delete_all_files_samples,
-        #   confirmButtonText = "Yes, remove samples and contrasts.",
-        #   cancelButtonText = "No, cancel deletion."
-        # )
+        
+        shinyalert::shinyalert(
+          inputId = "alert_delete_samples",
+          title = "Warning",
+          text = "Removing samples will also remove contrasts. Do you want to proceed?",
+          type = "warning",
+          showCancelButton = TRUE,
+          closeOnEsc = FALSE,
+          callbackR = delete_all_files_samples,
+          confirmButtonText = "Yes, remove samples and contrasts.",
+          cancelButtonText = "No, cancel deletion."
+        )
 
         uploaded$samples.csv <- NULL
         uploaded$contrasts.csv <- NULL
