@@ -69,43 +69,7 @@ UploadUI <- function(id) {
 ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
       upload_module_computepgx_ui(ns("compute"))
   )
-
   
-review_panel <- wizardR::wizard_step(
-  step_title = "Review and compute",
-  shiny::br(), shiny::br(),
-  shiny::htmlOutput(ns("input_recap")),
-  shiny::br(), shiny::br(),
-  shiny::fluidRow(
-    bslib::layout_columns(
-      col_widths = c(4,4,4),
-      upload_plot_countstats_ui(
-        id = ns("countStats"),
-        title = "Count Stats",
-        info.text = "Information about the uploaded counts.",
-        caption = "Information about the uploaded counts.",
-        height = c("auto", "100%"),
-        width = c("auto", "100%")
-      ),
-      upload_plot_phenostats_ui(
-        id = ns("phenoStats"),
-        title = "Pheno Stats",
-        info.text = "Information about the uploaded samples",
-        caption = "Information about the uploaded samples.",
-        height = c("auto", "100%"),
-        width = c("auto", "100%")
-      ),
-      upload_plot_contraststats_ui(
-        id = ns("contrastStats"),
-        title = "Comparison Stats",
-        info.text = "Information about the uploaded comparisons",
-        caption = "Information about the uploaded comparisons.",
-        height = c("auto", "100%"),
-        width = c("auto", "100%")
-      )
-    )
-  )
-)
     div(
     class = "p-0",
     # board_header,
@@ -128,7 +92,7 @@ review_panel <- wizardR::wizard_step(
       # outliers_panel,
       # batchcorrect_panel,
       compute_panel,
-      review_panel,
+      # review_panel,
       options = list(
         navigation = "buttons",
         finish = "Compute!"
