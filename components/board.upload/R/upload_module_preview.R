@@ -391,9 +391,6 @@ upload_table_preview_samples_server <- function(
           cancelButtonText = "No, cancel deletion."
         )
 
-        uploaded$samples.csv <- NULL
-        uploaded$contrasts.csv <- NULL
-
         } else {
           uploaded$samples.csv <- NULL
         }
