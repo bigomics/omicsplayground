@@ -25,11 +25,11 @@ upload_module_makecontrast_ui <- function(id) {
               shiny::HTML("<h4>1. Choose phenotype:</h4>"),
               withTooltip(
                 shiny::selectInput(
-                  ns("param"),
+                  inputId = ns("param"),
                   NULL,
                   width = "100%",
-                  choices = NULL,
-                  selected = NULL,
+                  choices = "<samples>",
+                  selected = "<samples>",
                   multiple = TRUE
                 ),
                 "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
@@ -69,7 +69,7 @@ upload_module_makecontrast_ui <- function(id) {
                 style = "padding-top: 5px",
                 withTooltip(
                   shiny::actionButton(
-                    ns("autocontrast"),
+                    ns("autocontrast"), 
                     "auto-comparisons",
                     icon = icon("plus"),
                     class = "btn btn-outline-secondary",
@@ -131,11 +131,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT) {
         rv_contr(contrRT())
       })
 
-      shiny::observe({
-        shiny::req(phenoRT())
-        px <- colnames(phenoRT())
-        shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
-      })
 
       observeEvent(
         {
@@ -148,7 +143,8 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT) {
             phenotypes,
             value = TRUE, invert = TRUE
           ), phenotypes)[1]
-          updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
+
+          updateSelectInput(session, "param", choices = phenotypes, selected = psel)
         }
       )
 
@@ -417,14 +413,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT) {
             DT::formatStyle(0, target = "row", fontSize = "12px", lineHeight = "99%")
         },
         server = FALSE
-      )
-
-      upload_plot_pcaplot_server(
-        "pcaplot",
-        phenoRT,
-        countsRT,
-        sel.conditions,
-        watermark = WATERMARK
       )
 
       ## pointer to reactive

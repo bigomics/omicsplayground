@@ -173,7 +173,6 @@ if(!file.exists('00SourceAll.R')) {
   source('board.upload/R/upload_module_makecontrast.R',encoding='UTF-8')
   source('board.upload/R/upload_module_outliers.R',encoding='UTF-8')
   source('board.upload/R/upload_module_preview.R',encoding='UTF-8')
-  source('board.upload/R/upload_plot_pcaplot.R',encoding='UTF-8')
   source('board.upload/R/upload_server.R',encoding='UTF-8')
   source('board.upload/R/upload_ui.R',encoding='UTF-8')
   source('board.upload/R/upload_utils.R',encoding='UTF-8')
