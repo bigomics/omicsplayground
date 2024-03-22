@@ -117,7 +117,7 @@ review_panel <- wizardR::wizard_step(
     wizardR::wizard(
       id = ns("upload_wizard"),
       width = 90,
-      height = 80,
+      height = 70,
       modal = TRUE,
       style = "progress",
       lock_start = TRUE,
