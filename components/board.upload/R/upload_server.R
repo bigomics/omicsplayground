@@ -20,6 +20,14 @@ UploadBoard <- function(id,
     uploaded <- shiny::reactiveValues()
     ##    checked   <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
+    # this directory is used to save pgx files, logs, inputs, etc..
+    raw_dir <- reactiveVal(NULL)
+    upload_organism <- reactiveVal(NULL)
+    upload_name <- reactiveVal(NULL)
+    upload_description <- reactiveVal(NULL)
+    upload_datatype <- reactiveVal(NULL)
+    process_counter <- reactiveVal(0)
+    show_comparison_builder <- shiny::reactiveVal(FALSE)
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -196,13 +204,6 @@ UploadBoard <- function(id,
     ## uploaded should trigger the computePGX module.
     ## ------------------------------------------------------------------
 
-    # this directory is used to save pgx files, logs, inputs, etc..
-    raw_dir <- reactiveVal(NULL)
-    upload_organism <- reactiveVal(NULL)
-    upload_name <- reactiveVal(NULL)
-    upload_description <- reactiveVal(NULL)
-    upload_datatype <- reactiveVal(NULL)
-    process_counter <- reactiveVal(0)
 
     last_hash <- 1234
 
@@ -625,6 +626,7 @@ UploadBoard <- function(id,
         upload_name(NULL)
         upload_description(NULL)
         upload_organism(NULL)
+        show_comparison_builder(FALSE)
       })
       wizardR::reset("upload_wizard")
     })
@@ -739,7 +741,8 @@ UploadBoard <- function(id,
       caption = "This is the uploaded comparison data.",
       checked_samples = checked_samples,
       checked_counts = checked_counts,
-      checked_contrasts = checked_contrasts
+      checked_contrasts = checked_contrasts,
+      show_comparison_builder = show_comparison_builder
 
     )
 

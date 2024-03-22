@@ -426,14 +426,13 @@ upload_table_preview_contrasts_server <- function(
   caption,
   checked_counts,
   checked_samples,
-  checked_contrasts
-  ) 
+  checked_contrasts,
+  show_comparison_builder
+  )
   {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
-
-    show_comparison_builder <- shiny::reactiveVal(FALSE)
 
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
