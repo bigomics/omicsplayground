@@ -7,8 +7,10 @@ html {
 
     .modal-title{
 	margin-right: auto;
-	margin-left: auto;
+	//	margin-left: auto;
+	margin-left: 35%;
 	margin-top: -5px;
+	margin-bottom: 10px;
 	font-size: 1.2em;
     }
     
@@ -25,7 +27,7 @@ html {
         }
 
     .modal-dialog.modal-lg {
-        width: 600px;
+        width: 640px;
         justify-content: center;
         align-items: center;
     }
