@@ -54,13 +54,13 @@ docker.base: FORCE
 	@echo building docker BASE
 	docker build  \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v2 .
+	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.base2: FORCE
 	@echo building docker BASE
 	docker build --no-cache \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v2 .
+	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.test: FORCE
 	@echo building test docker 
@@ -69,8 +69,8 @@ docker.test: FORCE
 	  	-t bigomics/omicsplayground:test .
 
 docker.bash:
-	@echo bash into docker $(BRANCH)
-	docker run -it -p 3838:3838 bigomics/omicsplayground:$(BRANCH) /bin/bash
+	@echo bash into docker $(TAG)
+	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
 
 doc: FORCE
@@ -86,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta18"
+VERSION = "v3.3.0-beta19"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
@@ -98,7 +98,6 @@ changelog:
 	sh ./dev/create-changelog.sh '.*' 999 >  CHANGELOG-full.md
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
 	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
-
 
 tags: changelog
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
