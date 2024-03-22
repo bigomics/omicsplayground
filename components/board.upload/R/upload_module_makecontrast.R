@@ -119,7 +119,13 @@ upload_module_makecontrast_ui <- function(id) {
   )
 }
 
-upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT) {
+upload_module_makecontrast_server <- function(
+  id,phenoRT,
+  contrRT,
+  countsRT,
+  upload_wizard,
+  show_comparison_builder
+  ) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -134,9 +140,11 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT) {
 
       observeEvent(
         {
-          phenoRT()
+          list(phenoRT(), upload_wizard(), show_comparison_builder())
         },
         {
+          req(upload_wizard() == "Comparison", show_comparison_builder() == TRUE)
+          browser()
           phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
           phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
           psel <- c(grep("sample|patient|name|id|^[.]",

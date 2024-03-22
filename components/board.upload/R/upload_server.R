@@ -742,7 +742,8 @@ UploadBoard <- function(id,
       checked_samples = checked_samples,
       checked_counts = checked_counts,
       checked_contrasts = checked_contrasts,
-      show_comparison_builder = show_comparison_builder
+      show_comparison_builder = show_comparison_builder,
+      upload_wizard = shiny::reactive(input$upload_wizard)
 
     )
 

@@ -427,7 +427,8 @@ upload_table_preview_contrasts_server <- function(
   checked_counts,
   checked_samples,
   checked_contrasts,
-  show_comparison_builder
+  show_comparison_builder,
+  upload_wizard
   )
   {
   moduleServer(id, function(input, output, session) {
@@ -591,7 +592,9 @@ upload_table_preview_contrasts_server <- function(
       id = "makecontrast",
       phenoRT = reactive(checked_samples()$matrix),
       contrRT = reactive(checked_contrasts()$matrix),
-      countsRT = reactive(checked_counts()$matrix)
+      countsRT = reactive(checked_counts()$matrix),
+      upload_wizard = upload_wizard,
+      show_comparison_builder = show_comparison_builder
     )
 
     TableModuleServer(
