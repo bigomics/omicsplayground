@@ -623,11 +623,11 @@ PasswordAuthenticationModule <- function(id,
     message("[PasswordAuthenticationModule] >>>> using Password authentication <<<<")
     ns <- session$ns
 
-    # iv <- shinyvalidate::InputValidator$new()
-    # iv$add_rule("login_email", shinyvalidate::sv_required())
-    # iv$add_rule("login_email", shinyvalidate::sv_email())
-    # iv$add_rule("login_password", shinyvalidate::sv_required())
-    # iv$enable()
+    iv <- shinyvalidate::InputValidator$new()
+    iv$add_rule("login_email", shinyvalidate::sv_required())
+    iv$add_rule("login_email", shinyvalidate::sv_email())
+    iv$add_rule("login_password", shinyvalidate::sv_required())
+    iv$enable()
 
     if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
@@ -957,13 +957,12 @@ LoginCodeAuthenticationModule <- function(id,
       ## export as 'public' functions
       USER$resetUSER <- resetUSER
 
-      # TODO shinyalert has conflict with wizard
-      # shinyalert::shinyalert(
-      #   title = "",
-      #   text = "Biscit yaccepted, thou art granted fri passage...",
-      #   size = "xs",
-      #   timer = 1900
-      # )
+      shinyalert::shinyalert(
+        title = "",
+        text = "Biscit yaccepted, thou art granted fri passage...",
+        size = "xs",
+        timer = 1900
+      )
 
       return(USER)
     } else {

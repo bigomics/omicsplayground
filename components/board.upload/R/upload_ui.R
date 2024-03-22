@@ -55,7 +55,7 @@ UploadUI <- function(id) {
       col_widths = 12,
       # height = "calc(100vh - 340px)",
       heights_equal = "row",
-      upload_module_outliers_ui(ns("checkqc")),
+      upload_module_outliers_ui(ns("checkqc"))
       #bs_alert("Check for normalization, outliers and batch-effects.")
     )
   )

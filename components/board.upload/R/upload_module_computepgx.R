@@ -283,10 +283,10 @@ upload_module_computepgx_server <- function(
         req(upload_wizard() == "Dataset description")
         
         if (upload_wizard() == "Dataset description") {
-          # iv <- shinyvalidate::InputValidator$new()
-          # iv$add_rule("selected_name", shinyvalidate::sv_required())
-          # iv$add_rule("selected_description", shinyvalidate::sv_required())
-          # iv$enable()
+          iv <- shinyvalidate::InputValidator$new()
+          iv$add_rule("selected_name", shinyvalidate::sv_required())
+          iv$add_rule("selected_description", shinyvalidate::sv_required())
+          iv$enable()
         }
       })
 
