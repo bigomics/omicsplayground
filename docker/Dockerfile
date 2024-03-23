@@ -34,11 +34,6 @@ COPY docker/Rprofile .Rprofile
 #------------------------------------------------------------
 
 WORKDIR /
-#RUN git clone -b main --single-branch --depth 1 \
-#    https://github.com/bigomics/playdata.git \
-#    && R CMD INSTALL playdata \
-#    && rm -fr playdata
-
 RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
