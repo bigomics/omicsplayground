@@ -181,7 +181,8 @@ LoadingBoard <- function(id,
       reload_pgxdir_public = reload_pgxdir_public,
       reload_pgxdir = reload_pgxdir,
       recompute_pgx = recompute_pgx,
-      new_upload = new_upload
+      loadbutton = reactive(input$loadbutton),
+      newuploadbutton = reactive(input$newuploadbutton)
     )
 
     loading_tsne_server(
@@ -356,6 +357,9 @@ LoadingBoard <- function(id,
         is_data_loaded(is_data_loaded() + 1)
       }
     }
+    observeEvent(input$newuploadbutton, {
+        new_upload(new_upload() + 1)
+      })
 
     observeEvent(load_uploaded_data(), {
       upload_pgx <- sub("[.]pgx$", "", load_uploaded_data())

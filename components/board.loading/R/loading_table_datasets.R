@@ -18,23 +18,6 @@ loading_table_datasets_ui <- function(
   )
 
   tagList(
-    div(
-      shiny::actionButton(
-        ns("loadbutton"),
-        label = "Load dataset",
-        icon = icon("file-import"),
-        class = "btn btn-primary",
-        width = NULL
-      ),
-      # create button to trigger new_upload modal in server
-      shiny::actionButton(
-        ns("newuploadbutton"),
-        label = "Upload dataset",
-        icon = icon("upload"),
-        class = "btn btn-info",
-        width = NULL
-      ),
-    ),
     TableModuleUI(
       ns("datasets"),
       info.text = info.text,
@@ -81,7 +64,9 @@ loading_table_datasets_server <- function(id,
                                           reload_pgxdir_public,
                                           reload_pgxdir,
                                           recompute_pgx,
-                                          new_upload) {
+                                          loadbutton,
+                                          newuploadbutton
+                                          ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -243,7 +228,7 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    shiny::observeEvent(input$loadbutton, {
+    shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
       pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
@@ -389,19 +374,6 @@ loading_table_datasets_server <- function(id,
         },
         ignoreInit = TRUE
       )
-
-      newuploadbuttonCounter <- reactiveVal(0)
-      # if newuploadbutton is clicked, add 1 to new_upload
-      observeEvent(input$newuploadbutton, {
-        #TODO fix: when compute if finished, input$newuploadbutton is fired and a new upload is triggered 
-        if(input$newuploadbutton == newuploadbuttonCounter()){
-          return(NULL)
-        }
-        print(paste("newuploadbutton count: ", as.integer(1)))
-        newuploadbuttonCounter(as.integer(input$newuploadbutton))
-        new_upload(new_upload() + 1)
-      })
-
 
 
       DT::datatable(
