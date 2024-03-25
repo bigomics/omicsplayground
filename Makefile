@@ -86,7 +86,7 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.0-beta19"
+VERSION = "v3.3.0"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: 
@@ -99,7 +99,7 @@ changelog:
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
 	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
 
-tags: changelog
+tags: 
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
 	git push && git push --tags
 
