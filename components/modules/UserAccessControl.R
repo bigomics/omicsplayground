@@ -37,8 +37,6 @@ pgx.record_access <- function(user,
   hostname <- opt$HOSTNAME
   remote_addr <- session$request$REMOTE_ADDR
 
-  RCurl::getURL
-
   if (1) {
     dbg("[pgx.record_access] action = ", action)
     dbg("[pgx.record_access] user = ", user)
