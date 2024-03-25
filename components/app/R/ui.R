@@ -109,9 +109,8 @@ app_ui <- function(x) {
       }
 
       menu_tree <- list(
-        "Load" = c(
-          welcome = "Welcome",
-          load    = "Load dataset"
+        "Datasets" = c(
+          load    = "Datasets"
         ),
         "DataView" = c(
           dataview = "DataView"
