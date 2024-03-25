@@ -440,18 +440,13 @@ upload_module_computepgx_server <- function(
             custom_geneset <<- list(gmt = gmt, info = info)
 
             # tell user that custom genesets are "ok"
-            # shinyalert::shinyalert(
-            #   title = "Custom genesets uploaded!",
-            #   text = "Your genesets will be incorporated in the analysis.",
-            #   type = "success",
-            #   closeOnClickOutside = TRUE
-            # )
-
-            shiny::showModal(shiny::modalDialog(
-              title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
-              shiny::HTML(paste0("You have uploaded the file: <strong>", fileName, "</strong>")),
-              easyClose = TRUE, size = "l"
-            ))
+            shinyalert::shinyalert(
+              title = "Custom genesets uploaded!",
+              text = "Your genesets will be incorporated in the analysis.",
+              type = "success",
+              closeOnClickOutside = TRUE
+            )
+            
             GSET_CHECK <- TRUE
           }
         }
