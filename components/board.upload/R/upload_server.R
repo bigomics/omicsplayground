@@ -620,7 +620,7 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    # reset wizard when computation is finished or #TODO when wizard is closed
+    # reset wizard upon initialization
     observeEvent(
       list(process_counter(),new_upload()), {
       isolate({
@@ -675,6 +675,18 @@ UploadBoard <- function(id,
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
         req(input$upload_wizard == "Dataset description")
+        
+        
+        if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
+          message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
+          shinyalert::shinyalert(
+            title = "Invalid name",
+            text = "Please remove any slashes (/) from the name",
+            type = "error"
+          )
+          upload_name(NULL)
+        }
+        
         if (is.null(upload_name()) || upload_name() == "" || upload_description() == "" || is.null(upload_description())){
           wizardR::lock("upload_wizard")
         } else {

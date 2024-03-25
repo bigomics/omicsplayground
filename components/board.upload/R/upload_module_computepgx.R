@@ -477,17 +477,6 @@ upload_module_computepgx_server <- function(
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
-        
-        # TODO MOVE THIS TO THE WIZARD MODULE OR in selected_upload listener
-        # if (!is.null(input$selected_name) && !isValidFileName(input$selected_name)) {
-        #   message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
-        #   shinyalert::shinyalert(
-        #     title = "Invalid name",
-        #     text = "Please remove any slashes (/) from the name",
-        #     type = "error"
-        #   )
-        #   return(NULL)
-        # }
 
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
@@ -577,7 +566,7 @@ upload_module_computepgx_server <- function(
           raw_dir(create_raw_dir(auth))
         }
 
-        dataset_name <- gsub("[ ]", "_", trimws(input$selected_name))
+        dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 
