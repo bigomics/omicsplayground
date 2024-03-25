@@ -152,6 +152,10 @@ UploadBoard <- function(id,
         lapply(names(checklist), function(i) checklist[[i]] <- NULL)
       })
 
+      # reset new_upload to 0, so upload will not trigger when computation is done
+      new_upload(0)
+
+
       if (uploaded_method == "computed") {
         shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),

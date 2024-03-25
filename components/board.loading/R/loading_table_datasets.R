@@ -87,7 +87,6 @@ loading_table_datasets_server <- function(id,
 
     share_pgx <- reactiveVal(NULL)
 
-
     getPGXINFO <- shiny::reactive({
       shiny::req(auth$logged)
       if (is.null(auth$logged) || !auth$logged) {
@@ -391,8 +390,15 @@ loading_table_datasets_server <- function(id,
         ignoreInit = TRUE
       )
 
+      newuploadbuttonCounter <- reactiveVal(0)
       # if newuploadbutton is clicked, add 1 to new_upload
       observeEvent(input$newuploadbutton, {
+        #TODO fix: when compute if finished, input$newuploadbutton is fired and a new upload is triggered 
+        if(input$newuploadbutton == newuploadbuttonCounter()){
+          return(NULL)
+        }
+        print(paste("newuploadbutton count: ", as.integer(1)))
+        newuploadbuttonCounter(as.integer(input$newuploadbutton))
         new_upload(new_upload() + 1)
       })
 
