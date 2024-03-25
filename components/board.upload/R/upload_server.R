@@ -637,7 +637,7 @@ UploadBoard <- function(id,
 
     # wizard lock/unlock logic
 
-    # lock/unlock wizard for samples.csv
+    # lock/unlock wizard for counts.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
         req(input$upload_wizard == "Counts")
