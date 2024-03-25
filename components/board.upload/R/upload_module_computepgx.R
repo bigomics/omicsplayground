@@ -489,18 +489,6 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        # #TODO check for name and description.. remove this code as its not necessary anymore
-        # has.name <- input$selected_name != ""
-        # has.description <- input$selected_description != ""
-        # if (!has.name || !has.description) {
-        #   shinyalert::shinyalert(
-        #     title = "ERROR",
-        #     text = "You must give a dataset name and description",
-        #     type = "error"
-        #   )
-        #   return(NULL)
-        # }
-
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
