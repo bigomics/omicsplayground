@@ -84,7 +84,7 @@ app_ui <- function(x) {
       ## Put some hidden UI in footer
       footer <- shiny::tagList(
         SocialMediaModuleUI("socialmodal"),
-        SendReferralModuleUI("sendreferral")
+        ## SendReferralModuleUI("sendreferral")
       )
 
       logout.tab <- bigdash::navbarDropdownItem(
