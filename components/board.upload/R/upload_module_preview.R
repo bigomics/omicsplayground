@@ -142,7 +142,7 @@ upload_table_preview_counts_server <- function(
     observeEvent(input$counts_csv, {
 
       # if counts not in file name, give warning and return
-      if(!grepl("count", input$counts_csv$name, ignore.case = TRUE) || !grepl("expression", input$counts_csv$name, ignore.case = TRUE)){
+      if(!grepl("count", input$counts_csv$name, ignore.case = TRUE) && !grepl("expression", input$counts_csv$name, ignore.case = TRUE)){
         shinyalert::shinyalert(
           title = "Counts not in filename.",
           text = "Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.",
@@ -159,25 +159,25 @@ upload_table_preview_counts_server <- function(
       IS_COUNT <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
 
       #TODO this needs review!
-      if(IS_EXPRESSION){
-        df <- 2**df0 
-        if(min(df0,na.rm=TRUE) > 0) df <- df - 1
-      }
+      # if(IS_EXPRESSION){
+      #   df <- 2**df0 
+      #   if(min(df0,na.rm=TRUE) > 0) df <- df - 1
+      # }
 
-      #TODO this needs review!
-      if (IS_COUNT){
-        check.log <- ( all( df0 < 60) || min(df0, na.rm=TRUE) < 0 )
-        if(check.log) {
-          shinyalert::shinyalert(
-            title = "",
-            text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
-            type = "warning"
-            )
-          #TODO this conversion should be optional ,upon confirmation of user
-          df <- 2**df0 - 1
-          if(min(df0, na.rm=TRUE) > 0) df <- df - 1
-        }
-      }
+      # #TODO this needs review!
+      # if (IS_COUNT){
+      #   check.log <- ( all( df0 < 60) || min(df0, na.rm=TRUE) < 0 )
+      #   if(check.log) {
+      #     shinyalert::shinyalert(
+      #       title = "",
+      #       text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
+      #       type = "warning"
+      #       )
+      #     #TODO this conversion should be optional ,upon confirmation of user
+      #     df <- 2**df0 - 1
+      #     if(min(df0, na.rm=TRUE) > 0) df <- df - 1
+      #   }
+      # }
       uploaded$counts.csv <- df
 
     })
