@@ -127,16 +127,20 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
       })
 
-      observeEvent({
-        phenoRT()
-      },
-      {
-        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-        phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-        psel <- c(grep("sample|patient|name|id|^[.]",
-          phenotypes, value = TRUE, invert = TRUE), phenotypes)[1]
-        updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
-      })
+      observeEvent(
+        {
+          phenoRT()
+        },
+        {
+          phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
+          phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
+          psel <- c(grep("sample|patient|name|id|^[.]",
+            phenotypes,
+            value = TRUE, invert = TRUE
+          ), phenotypes)[1]
+          updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
+        }
+      )
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
@@ -312,7 +316,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
       output$contrastTable <- DT::renderDataTable(
         {
           ct <- rv$contr
-          
+
           if (is.null(ct) || NCOL(ct) == 0) {
             df <- data.frame(
               delete = 0,
@@ -332,7 +336,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
             ct1 <- playbase::makeContrastsFromLabelMatrix(ct)
             ct1[is.na(ct1)] <- 0
-            
+
             if (NCOL(ct) == 1) {
               ss1 <- names(which(ct1[, 1] > 0))
               ss2 <- names(which(ct1[, 1] < 0))
