@@ -109,8 +109,10 @@ app_ui <- function(x) {
       }
 
       menu_tree <- list(
+        "Welcome" = c(
+          welcome = "Welcome"
+        ),
         "Datasets" = c(
-          welcome = "Welcome",
           load    = "Datasets"
         ),
         "DataView" = c(
@@ -445,7 +447,6 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "load-tab",
-
             # LoadingInputs("load")
             LoadingUI("load")
           ),
