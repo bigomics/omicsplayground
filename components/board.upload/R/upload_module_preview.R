@@ -140,14 +140,23 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-      
-      
+
+      # if counts not in file name, give warning and return
+      if(!grepl("count", input$counts_csv$name, ignore.case = TRUE) || !grepl("expression", input$counts_csv$name, ignore.case = TRUE)){
+        shinyalert::shinyalert(
+          title = "Counts not in filename.",
+          text = "Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.",
+          type = "error"
+        )
+        return()
+      }
+
       df0 <- playbase::read.as_matrix(input$counts_csv$datapath)
       df <- df0
       # file.copy(df0, file.path(raw_dir(), "raw_counts.csv"))
 
-      IS_EXPRESSION <- grepl("expression", input$counts_csv$datapath, ignore.case = TRUE)
-      IS_COUNT <- grepl("count", input$counts_csv$datapath, ignore.case = TRUE)
+      IS_EXPRESSION <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
+      IS_COUNT <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
 
       #TODO this needs review!
       if(IS_EXPRESSION){
