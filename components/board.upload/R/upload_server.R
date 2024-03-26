@@ -229,61 +229,6 @@ UploadBoard <- function(id,
       recompute_info(list("name" = pgx$name, "description" = pgx$description))
     })
 
-
-    ## ------------------------------------------------------------------
-    ## Observer for loading example data
-    ##
-    ## Reads in the data files from zip and puts in the
-    ## reactive values object 'uploaded'. Then uploaded should
-    ## trigger the computePGX module.
-    ## ------------------------------------------------------------------
-    shiny::observeEvent(input$load_example, {
-      # show tab Upload
-      shinyjs::runjs('document.querySelector(\'[data-value="Upload"]\').style.display = "";')
-      # check on upload tab
-      shinyjs::runjs('document.querySelector("a[data-value=\'Upload\']").click();')
-
-      if (input$load_example) {
-        zipfile <- file.path(FILES, "exampledata.zip")
-        readfromzip1 <- function(file) {
-          read.csv(unz(zipfile, file),
-            check.names = FALSE, stringsAsFactors = FALSE,
-            row.names = 1
-          )
-        }
-        readfromzip2 <- function(file) {
-          ## allows for duplicated names
-          df0 <- read.csv(unz(zipfile, file), check.names = FALSE, stringsAsFactors = FALSE)
-          mat <- as.matrix(df0[, -1])
-          rownames(mat) <- as.character(df0[, 1])
-          mat
-        }
-        uploaded$counts.csv <- readfromzip2("exampledata/counts.csv")
-        uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
-        uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
-        # this was re-done in multi-species, it will be much better. Temporary solution for legacy code. MMM
-        checklist[["contrasts.csv"]]$checks <- list()
-        checklist[["samples.csv"]]$checks <- list()
-        checklist[["counts.csv"]]$checks <- list()
-        checklist[["contrasts.csv"]]$PASS <- TRUE
-        checklist[["samples_counts"]] <- NULL
-        checklist[["samples_contrasts"]] <- NULL
-        uploaded[["last_uploaded"]] <- c("counts.csv", "samples.csv", "contrasts.csv")
-
-        shinyalert::shinyalert(
-          title = "Example dataset",
-          text = 'This example dataset is a time course experiment measuring the protein abundances in T cells comparing activated vs. resting cells at different time points (Geiger et al., Cell 2016)',
-          html = TRUE,
-        )
-        
-      } else {
-        ## clear files
-        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-      }
-    })
-
-
     ## =====================================================================
     ## ===================== checkTables ===================================
     ## =====================================================================
