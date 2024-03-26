@@ -253,14 +253,13 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
         # store check and data regardless of it errors
+        checked <- res$df
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
-          checked <- res$df
           status <- "OK"
         } else {
           checked <- NULL
           status <- "ERROR: incorrect counts matrix"
-          uploaded$counts.csv <- NULL
         }
 
         ## --------------------------------------------------------
@@ -314,8 +313,8 @@ UploadBoard <- function(id,
         write_check_output(res$checks, "SAMPLES", raw_dir())
         # store check and data regardless of it errors
         checklist[["samples.csv"]]$checks <- res$checks
+        checked <- res$df
         if (res$PASS) {
-          checked <- res$df
           status <- "OK"
         } else {
           checked <- NULL
@@ -384,7 +383,7 @@ UploadBoard <- function(id,
 
         ## insanity check
         if (NCOL(df0) == 0) {
-          checked <- NULL
+          # checked <- NULL
           status <- "ERROR: no contrasts. please check your input file."
         }
 
@@ -393,9 +392,8 @@ UploadBoard <- function(id,
         # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
         write_check_output(res$checks, "CONTRASTS", raw_dir())
-
+        checked <- res$df
         if (res$PASS) {
-          checked <- res$df
           status <- "OK"
         } else {
           checked <- NULL
@@ -430,8 +428,9 @@ UploadBoard <- function(id,
 
           write_check_output(cross_check$checks, "SAMPLES_CONTRASTS", raw_dir())
           checklist[["samples_contrasts"]]$checks <- cross_check$checks
+          checked <- res$df
           if (cross_check$PASS) {
-            checked <- res$df
+            # checked <- res$df
             status <- "OK"
           } else {
             checked <- NULL
