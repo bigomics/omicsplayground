@@ -7,11 +7,11 @@ html {
 
     .modal-title{
 	margin-right: auto;
-	//	margin-left: auto;
-	margin-left: 35%;
+	margin-left: auto;
 	margin-top: -5px;
-	margin-bottom: 10px;
-	font-size: 1.2em;
+	margin-bottom: 5px;
+	font-size: 2em;
+	font-weight: 600;
     }
     
     .modal-content .well {
@@ -38,12 +38,15 @@ html {
         align-items: center;
     }
     
+    .modal-header .btn-close {
+	margin: 0px;
+    }
+    
     .modal-footer .btn {
 	margin-left: 5px;
 	margin-bottom: 0;
 	font-size: 14px;
     }
-
 
     .img-fluid{
       display: block;

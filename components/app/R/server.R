@@ -214,6 +214,23 @@ app_server <- function(input, output, session) {
     )
   }
 
+  shiny::observeEvent(input$invite_button, {
+    ui.inviteModal(id = "invitemodal")
+  })
+
+  shiny::observeEvent(input$invitemodal_button, {  
+    message("sending invite email to", input$invitemodal_email,"\n")
+    user_name <- auth$username
+    user_email <- auth$email
+    friend_email <- input$invitemodal_email
+    gmail_creds = file.path(ETC, "gmail_creds")
+    sendInviteEmail(user_email, user_name, friend_email, path_to_creds = gmail_creds)
+    ## thank you modal
+    ui.showSmallModal("Your friend has been invited. Thank you!")
+    shinyjs::delay(3000, shiny::removeModal())
+    
+  })
+
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
