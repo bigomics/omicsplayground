@@ -282,7 +282,6 @@ upload_table_preview_samples_server <- function(
           deferRender = TRUE
         )
       ) %>%
-        DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
@@ -475,7 +474,6 @@ upload_table_preview_contrasts_server <- function(
           deferRender = TRUE
         )
       ) %>%
-        DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
