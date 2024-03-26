@@ -7,7 +7,7 @@
 ui.inviteModal <- function(id) {
 
   body <- tagList(
-    HTML("<center><h3><b>and earn some swag!</b></h3><p><p>Invite your friends to Omics Playground and earn some Bigomics swag including cool stickers, a 'Friendly Monster' T-Shirt or one of our awesome sustainable Dopper water bottles. Read more <a href='https://bigomics.ch/swag' target='_blank'><u>here</u></a>."),
+    HTML("<center><h3><b>and earn some swag!</b></h3><p><p>Invite your friends to Omics Playground and earn some Bigomics swag including cool stickers, a 'Friendly Monster' T-Shirt or one of our awesome sustainable Dopper water bottles. Read more <a href='https://bigomics.ch/omics-playground' target='_blank'><u>here</u></a>."),
     HTML("<br><br><p>Enter your friend's email:"),
     div( shiny::textInput(
         inputId = paste0(id,"_email"),
