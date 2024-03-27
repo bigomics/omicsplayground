@@ -134,9 +134,9 @@ upload_module_makecontrast_server <- function(
       rv_contr <- shiny::reactiveVal(NULL)
       
       rv <- reactiveValues(
-        labels_start = NULL,
-        labels_group1 = NULL,
-        labels_group2 = NULL
+        condition_start = NULL,
+        condition_group1 = NULL,
+        condition_group2 = NULL
       )
       
       shiny::observe({
@@ -242,6 +242,10 @@ upload_module_makecontrast_server <- function(
       }
 
       shiny::observeEvent(c(input$group1, input$group2), {
+        
+        # update rv
+        rv$condition_group1 <- input$group1
+        rv$condition_group2 <- input$group2
         g1 <- gsub("[-_.,<> ]", ".", input$group1)
         g2 <- gsub("[-_.,<> ]", ".", input$group2)
         g1 <- gsub("[.]+", ".", g1)
@@ -331,6 +335,9 @@ upload_module_makecontrast_server <- function(
         } else {
           rv_contr( cbind(rv_contr(), ctx1) )
         }
+
+        # bring back condition 1 and 2 to default
+        browser()
       })
 
       shiny::observeEvent(input$autocontrast, {
