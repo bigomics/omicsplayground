@@ -133,9 +133,37 @@ upload_module_makecontrast_server <- function(
       ##rv <- shiny::reactiveValues(contr = NULL)
       rv_contr <- shiny::reactiveVal(NULL)
       
+      rv <- reactiveValues(
+        labels_start = NULL,
+        labels_group1 = NULL,
+        labels_group2 = NULL
+      )
+      
       shiny::observe({
         rv_contr(contrRT())
       })
+
+      observeEvent(
+        {
+          input$param
+        },
+        {
+          # update the rv values when the param changes
+          cond <- sel.conditions()
+          rv$condition_start <- NULL
+          rv$condition_group1 <- NULL
+          rv$condition_group2 <- NULL
+
+          if (length(cond) == 0 || is.null(cond)) {
+          return(NULL)
+        }
+
+        items <- c("<others>", sort(unique(cond)))
+
+        rv$condition_start <- items
+
+        }
+      )
 
 
       observeEvent(
@@ -180,13 +208,6 @@ upload_module_makecontrast_server <- function(
 
       output$createcomparison <- shiny::renderUI({
         shiny::req(input$param)
-        cond <- sel.conditions()
-
-        if (length(cond) == 0 || is.null(cond)) {
-          return(NULL)
-        }
-
-        items <- c("<others>", sort(unique(cond)))
 
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
@@ -195,15 +216,17 @@ upload_module_makecontrast_server <- function(
             header = NULL,
             sortable::add_rank_list(
               text = "Conditions:",
-              labels = items
+              labels = rv$condition_start,
             ),
             sortable::add_rank_list(
               input_id = ns("group1"),
-              text = "Main group:"
+              text = "Main group:",
+              labels = rv$condition_group1,
             ),
             sortable::add_rank_list(
               input_id = ns("group2"),
-              text = "Control group:"
+              text = "Control group:",
+              labels = rv$condition_group2,
             ),
             group_name = "cmpbucket"
           )
