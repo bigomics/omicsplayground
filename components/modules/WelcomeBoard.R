@@ -184,7 +184,6 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
       bigdash.openSettings(lock = TRUE)
       bigdash.openSidebar()
       bigdash.selectTab(session, "load-tab")
-      bigdash.unloadSidebar()
     })
   })
 }
