@@ -187,7 +187,6 @@ upload_module_makecontrast_server <- function(
         shiny::req(phenoRT(), countsRT())
         df <- phenoRT()
 
-        print(1)
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
@@ -199,7 +198,6 @@ upload_module_makecontrast_server <- function(
             df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
           }
         }
-        print(2)
 
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
@@ -210,7 +208,6 @@ upload_module_makecontrast_server <- function(
 
       output$createcomparison <- shiny::renderUI({
         shiny::req(input$param)
-        print(3)
 
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
@@ -250,29 +247,19 @@ upload_module_makecontrast_server <- function(
         # make sure group1 and 2 are not NULL or ""
         req(input$group1, input$group2)
         
-        print(4)
-        
         # update rv
         rv$condition_group1 <- input$group1
         rv$condition_group2 <- input$group2
 
         # remove selected conditions from the start list
         rv$condition_start <- setdiff(rv$condition_start, c(input$group1, input$group2))
-        # if length(rv$condition_start) == 0, then set it to NULL
-        
-        # if (length(rv$condition_start) == 0) {
-        #   rv$condition_start <- NULL
-        # }
 
-        print(5)
 
         # if some input$conditions are not in the start list, add them
         if (length(input$conditions) > 0 && !input$conditions %in% rv$condition_start) {
           rv$condition_start <- c(rv$condition_start, input$conditions)
         }
 
-
-        print(6)
         g1 <- gsub("[-_.,<> ]", ".", input$group1)
         g2 <- gsub("[-_.,<> ]", ".", input$group2)
         g1 <- gsub("[.]+", ".", g1)
@@ -284,15 +271,12 @@ upload_module_makecontrast_server <- function(
         if (is.na(g1)) g1 <- ""
         if (is.na(g2)) g2 <- ""
         g1 <- substring(g1, 1, 20)
-        print(7)
         g2 <- substring(g2, 1, 20)
         prm.name <- paste(input$param, collapse = ".")
         prm.name <- gsub("[-_.,<> ]", "", prm.name)
         tt <- paste0(prm.name, ":", g1, "_vs_", g2)
         if (g1 == "" && g2 == "") tt <- ""
-        print(8)
         shiny::updateTextInput(session, "newname", value = tt)
-        print(9)
       })
       
       shiny::observeEvent(c(input$group1, input$group2), {
