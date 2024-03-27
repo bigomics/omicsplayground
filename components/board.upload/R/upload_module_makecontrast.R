@@ -349,6 +349,8 @@ upload_module_makecontrast_server <- function(
         } else {
           rv_contr( cbind(rv_contr(), ctx1) )
         }
+        # reset text input
+        shiny::updateTextInput(session, "newname", value = "")
       })
 
       shiny::observeEvent(input$autocontrast, {
