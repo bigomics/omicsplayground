@@ -121,6 +121,8 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
+    bigdash.unloadSidebar()
+
     output$welcome <- shiny::renderText({
       shiny::req(auth$logged)
       if (!auth$logged) {
