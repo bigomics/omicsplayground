@@ -209,6 +209,8 @@ upload_module_makecontrast_server <- function(
       output$createcomparison <- shiny::renderUI({
         shiny::req(input$param)
 
+        browser()
+
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
           shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: 0 0 0 -5px;}")),
@@ -244,6 +246,7 @@ upload_module_makecontrast_server <- function(
       shiny::observeEvent(c(input$group1, input$group2), {
         
         # update rv
+        
         rv$condition_group1 <- input$group1
         rv$condition_group2 <- input$group2
         g1 <- gsub("[-_.,<> ]", ".", input$group1)
@@ -336,8 +339,12 @@ upload_module_makecontrast_server <- function(
           rv_contr( cbind(rv_contr(), ctx1) )
         }
 
-        # bring back condition 1 and 2 to default
-        browser()
+        # reset condition start to default
+        rv$condition_start <-  unique(c(rv$condition_start, rv$condition_group1, rv$condition_group2))
+
+        # reset condition 1 and 2
+        rv$condition_group1 <- NULL
+        rv$condition_group2 <- NULL
       })
 
       shiny::observeEvent(input$autocontrast, {
