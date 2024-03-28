@@ -220,7 +220,7 @@ UploadBoard <- function(id,
       lapply(names(uploaded), function(i) uploaded[[i]] <<- NULL)
       lapply(names(checklist), function(i) checklist[[i]] <<- NULL)
     }
-    
+
     shiny::observeEvent(input$upload_files, {
       if (is.null(raw_dir())) {
         raw_dir(create_raw_dir(auth))
@@ -348,7 +348,7 @@ UploadBoard <- function(id,
           }
         }
       }
-      
+
       if (is.null(uploaded$counts.csv) && !"counts.csv" %in% names(matlist)) {
         shinyalert::shinyalert(
           text = "Please upload the counts.csv (or expression.csv) matrix first",
@@ -400,8 +400,8 @@ UploadBoard <- function(id,
         }
         uploaded[["last_uploaded"]] <<- names(matlist)
       }
-      
-      message("[upload_files] done!\n")      
+
+      message("[upload_files] done!\n")
     })
 
 
