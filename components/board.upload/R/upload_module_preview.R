@@ -1,239 +1,617 @@
-# NOTES
-# SAMPLES
-#- all tabs should be the same size
-#- convert column types from numeric to categorical
-#- remove column
-#- convert columns to categorical via binning and cuts
-#
-# CONTRASTS
-#- make contrasts table editable
-#
-#- Save updated files
-#
-#- put the errors in the same tab
-#- make the modal the whole screen and put the errors on the side
-#
-
-# no ui right now because the preview is in a modal dialog
-upload_module_preview_ui <- function(id) {
-  ns <- NS(id)
-  tagList()
+upload_table_preview_counts_ui <- function(id) {
+  
+  ns <- shiny::NS(id)
+  uiOutput(ns("table_counts"))
 }
 
-upload_module_preview_server <- function(id, uploaded, checklist, checkTables) {
-  moduleServer(
-    id,
-    function(input, output, session) {
-      # ever/y time something is uploaded, it can be previewed
-      observeEvent(c(uploaded$last_uploaded),
-        {
-          checkTables()
-          has_counts <- !is.null(uploaded$counts.csv)
-          has_samples <- !is.null(uploaded$samples.csv)
-          has_contrasts <- !is.null(uploaded$contrasts.csv)
+upload_table_preview_counts_server <- function(
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption,
+  checked_counts,
+  checked_samples,
+  cjecked
+  ) 
+  {
+  moduleServer(id, function(input, output, session) {
 
-          tabs <- list(id = session$ns("preview_panel"))
-          if (has_counts) {
-            tabs <- c(
-              tabs,
-              list(tabPanel(
-                "Counts",
-                fluidRow(
-                  column(
-                    width = 8,
-                    upload_table_preview_counts_ui(session$ns("counts_preview"),
-                      height = c("100%", TABLE_HEIGHT_MODAL),
-                      width = c("auto", "100%"),
-                      title = "Uploaded Counts",
-                      info.text = "This is the uploaded counts data.",
-                      caption = "This is the uploaded counts data."
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    "Summary:", br(),
-                    check_to_html(checklist$counts.csv$checks,
-                      pass_msg = "All counts checks passed",
-                      null_msg = "Counts checks not run yet.
-                                Fix any errors with counts first."
-                    ),
-                    ifelse(!has_samples, "",
-                      check_to_html(checklist$samples_counts$checks,
-                        pass_msg = "All samples-counts checks passed",
-                        null_msg = "Samples-counts checks not run yet.
-                                Fix any errors with samples or counts first."
-                      )
-                    )
-                  )
-                )
-              ))
-            )
-          }
-          if (has_samples) {
-            tabs <- c(
-              tabs,
-              list(tabPanel(
-                "Samples",
-                fluidRow(
-                  column(
-                    width = 8,
-                    upload_table_preview_samples_ui(session$ns("samples_preview"),
-                      height = c("100%", TABLE_HEIGHT_MODAL),
-                      width = c("auto", "100%"),
-                      title = "Uploaded Samples",
-                      info.text = "This is the uploaded samples data.",
-                      caption = "This is the uploaded samples data."
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    "Summary:", br(),
-                    check_to_html(checklist$samples.csv$checks,
-                      pass_msg = "All samples checks passed",
-                      null_msg = "Samples checks not run. Fix any
-                                errors with samples first."
-                    ),
-                    ifelse(!has_counts, "",
-                      check_to_html(
-                        check = checklist$samples_counts$checks,
-                        pass_msg = "All samples-counts checks passed",
-                        null_msg = "Samples-counts checks not run yet.
-                                  Fix any errors with samples or counts first."
-                      )
-                    ),
-                    ifelse(!has_contrasts, "",
-                      check_to_html(checklist$samples_contrasts$checks,
-                        pass_msg = "All samples-contrasts checks passed",
-                        null_msg = "Samples-contrasts checks not run yet.
-                                Fix any errors with samples or contrasts first."
-                      )
-                    )
-                  )
-                )
-              ))
-            )
-          }
-          if (has_contrasts) {
-            tabs <- c(
-              tabs,
-              list(tabPanel(
-                "Contrasts",
-                fluidRow(
-                  column(
-                    width = 8,
-                    upload_table_preview_contrasts_ui(session$ns("contrasts_preview"),
-                      height = c("100%", TABLE_HEIGHT_MODAL),
-                      width = c("auto", "100%"),
-                      title = "Uploaded Contrasts",
-                      info.text = "This is the uploaded contrasts data.",
-                      caption = "This is the uploaded contrasts data."
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    "Summary:", br(),
-                    check_to_html(checklist$contrasts.csv$checks,
-                      pass_msg = "All contrasts checks passed",
-                      null_msg = "Contrasts checks not run. Fix any errors
-                                with contrasts first."
-                    ),
-                    ifelse(!has_samples, "",
-                      check_to_html(checklist$samples_contrasts$checks,
-                        pass_msg = "All samples-contrasts checks passed",
-                        null_msg = "Samples-contrasts checks not run yet.
-                                  Fix any errors with samples or contrasts first."
-                      )
-                    )
-                  )
-                )
-              ))
-            )
-          }
+    ns <- session$ns
 
-          shiny::showModal(
-            shiny::modalDialog(
-              title = "Data Upload Preview",
-              label = "Data Upload Preview",
-              do.call(tabsetPanel, tabs),
-              fluidRow(
-                column(
-                  12,
-                  span(style = "color: orange", "Orange"),
-                  span("= warning but data will still be uploaded. "),
-                  span(style = "color:red", "Red"),
-                  span("= error and data will not be uploaded.")
-                )
-              ),
-              footer = div(
-                style = "float: right",
-                shiny::actionButton(
-                  session$ns("cancel_upload"),
-                  label = "Cancel",
-                  style = "display: inline-block; margin-left: 15px;",
-                  class = "btn-danger"
-                ),
-                shiny::actionButton(
-                  session$ns("ok_upload"),
-                  label = "OK",
-                  style = "display: inline-block",
-                  class = "btn-info"
-                )
-              ),
-              easyClose = FALSE,
-              size = "xl"
-            ) %>%
-              tagAppendAttributes(
-                style = "min-height: 90%; min-width: 90%",
-                .cssSelector = ".modal-dialog"
-              )
-          )
-        },
-        ignoreNULL = TRUE
-      )
+    table_data <- shiny::reactive({
+      shiny::req(uploaded$counts.csv)
+      dt <- uploaded$counts.csv
+      nrow0 <- nrow(dt)
+      ncol0 <- ncol(dt)
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
+        dt <- head(dt, MAXSHOW)
+        dt <- rbind(dt, rep(NA, ncol(dt)))
+        n1 <- nrow0 - MAXSHOW
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+      }
+      if (ncol(dt) > MAXSHOW) {
+        dt <- dt[, 1:MAXSHOW]
+        dt <- cbind(dt, rep(NA, nrow(dt)))
+        n1 <- ncol0 - MAXSHOW
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+      }
+      dt
+    })
 
-      upload_table_preview_counts_server("counts_preview",
-        uploaded,
-        scrollY = "calc(35vh - 140px)"
-      )
-      upload_table_preview_samples_server("samples_preview",
-        uploaded,
-        scrollY = "calc(35vh - 140px)"
-      )
-      upload_table_preview_contrasts_server("contrasts_preview",
-        uploaded,
-        scrollY = "calc(35vh - 140px)"
-      )
+    table.RENDER <- function() {
+      dt <- table_data()
+      req(dt)
 
-      observeEvent(input$cancel_upload,
-        {
-          shiny::removeModal()
-          has_counts <- "counts.csv" %in% uploaded$last_uploaded
-          has_samples <- "samples.csv" %in% uploaded$last_uploaded
-          has_contrasts <- ("contrasts.csv" %in% uploaded$last_uploaded) &
-            (!is.null(uploaded$contrasts.csv))
-          uploaded[["counts.csv"]] <- NULL
-          uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
-          uploaded[["pgx"]] <- NULL
-          uploaded[["last_uploaded"]] <- NULL
-          uploaded[["checklist"]] <- NULL
-          checklist[["counts.csv"]] <- NULL
-          checklist[["samples.csv"]] <- NULL
-          checklist[["contrasts.csv"]] <- NULL
-          checklist[["samples_counts"]] <- NULL
-          checklist[["samples_contrasts"]] <- NULL
-        },
-        ignoreInit = TRUE
-      )
-
-      observeEvent(input$ok_upload,
-        {
-          shiny::removeModal()
-        },
-        ignoreInit = TRUE
-      )
+      DT::datatable(dt,
+        class = "compact hover",
+        rownames = TRUE,
+        extensions = c("Buttons", "Scroller"),
+        plugins = "scrollResize",
+        selection = list(mode = "single", target = "row", selected = 1),
+        options = list(
+          dom = "lfrtip",
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = scrollY,
+          scrollResize = TRUE,
+          deferRender = TRUE
+        )
+      ) %>%
+        DT::formatRound( columns = 1:ncol(dt), digits=3) %>%     
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+
+    output$table_counts <- shiny::renderUI(
+      div(
+        
+        div(
+          style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+          div(
+            if(!is.null(uploaded$counts.csv)){
+              shiny::actionButton(
+                ns("remove_counts"),
+                "Remove input",
+                icon = icon("trash-can"),
+                class = "btn btn-danger"
+              )
+            }
+        ),
+        div(
+          actionButton(
+            ns("load_example"), "Load Example",
+            class = "btn btn-info"
+            ),
+          shiny::actionButton(
+            ns("check_documentation_counts"),
+            "Check Documentation",
+            class = "btn btn-primary",
+            onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
+            )
+        )
+        ),
+        if(is.null(uploaded$counts.csv)){
+        bslib::layout_columns(
+          bslib::card(
+            fileInputArea(
+              ns("counts_csv"),
+              shiny::h4("Choose counts.csv", class='mb-0'),
+              multiple = FALSE,
+              accept = c(".csv"),
+              width = "800px" #TODO this is a hack to make the file input area wider
+            )
+          )
+        )
+      }else{
+         bslib::layout_columns(
+        col_widths = c(9, 3),
+        TableModuleUI(
+          ns("counts_datasets"),
+          width = width,
+          height = height,
+          title = title,
+          info.text = info.text,
+          caption = caption,
+          label = "",
+          show.maximize = FALSE
+        ),
+        bslib::card(
+          div(
+            "Summary:",
+            br(),
+            check_to_html(
+              checklist$counts.csv$checks,
+                pass_msg = "All counts checks passed",
+                null_msg = "Counts checks not run yet.
+                            Fix any errors with counts first."
+              ),
+            legend
+            )
+          )
+      )
+      }
+      )
+    )
+
+    # pass counts to uploaded when uploaded
+    observeEvent(input$counts_csv, {
+
+      # if counts not in file name, give warning and return
+      if(!grepl("count", input$counts_csv$name, ignore.case = TRUE) && !grepl("expression", input$counts_csv$name, ignore.case = TRUE)){
+        shinyalert::shinyalert(
+          title = "Counts not in filename.",
+          text = "Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.",
+          type = "error"
+        )
+        return()
+      }
+
+      df0 <- playbase::read.as_matrix(input$counts_csv$datapath)
+      df <- df0
+      # file.copy(df0, file.path(raw_dir(), "raw_counts.csv"))
+
+      IS_EXPRESSION <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
+      IS_COUNT <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
+
+      #TODO this needs review!
+      # if(IS_EXPRESSION){
+      #   df <- 2**df0 
+      #   if(min(df0,na.rm=TRUE) > 0) df <- df - 1
+      # }
+
+      # #TODO this needs review!
+      # if (IS_COUNT){
+      #   check.log <- ( all( df0 < 60) || min(df0, na.rm=TRUE) < 0 )
+      #   if(check.log) {
+      #     shinyalert::shinyalert(
+      #       title = "",
+      #       text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
+      #       type = "warning"
+      #       )
+      #     #TODO this conversion should be optional ,upon confirmation of user
+      #     df <- 2**df0 - 1
+      #     if(min(df0, na.rm=TRUE) > 0) df <- df - 1
+      #   }
+      # }
+      uploaded$counts.csv <- df
+
+    })
+
+    observeEvent(input$remove_counts, {
+
+      delete_all_files_counts <- function(value) {
+        if(input$alert_delete_counts){
+          uploaded$counts.csv <- NULL
+          uploaded$samples.csv <- NULL
+          uploaded$contrasts.csv <- NULL
+        }
+      }
+      
+      # if samples is not null, warn user that it will be deleted
+      if(!is.null(uploaded$samples.csv) || !is.null(uploaded$contrasts.csv)){
+        shinyalert::shinyalert(
+          inputId = "alert_delete_counts",
+          title = "Warning",
+          text = "Removing counts will also remove samples and contrasts. Do you want to proceed?",
+          type = "warning",
+          showCancelButton = TRUE,
+          closeOnEsc = FALSE,
+          callbackR = delete_all_files_counts,
+          confirmButtonText = "Yes, remove all files.",
+          cancelButtonText = "No, cancel deletion."
+        )
+
+        uploaded$counts.csv <- NULL
+        uploaded$samples.csv <- NULL
+        uploaded$contrasts.csv <- NULL
+        
+        } else {
+          uploaded$counts.csv <- NULL
+        }
+
+    })
+
+    observeEvent(input$load_example, {
+      uploaded$counts.csv <- playbase::COUNTS
+    })
+
+   
+    TableModuleServer(
+      "counts_datasets",
+      func = table.RENDER,
+      selector = "none"
+    )
+  }) ## end of moduleServer
+} ## end of server
+
+upload_table_preview_samples_ui <- function(id) {
+  
+  ns <- shiny::NS(id)
+  uiOutput(ns("table_samples"))
+}
+
+upload_table_preview_samples_server <- function(
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption
+  ) 
+  {
+  moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
+    table_data <- shiny::reactive({
+      shiny::req(uploaded$samples.csv)
+      dt <- uploaded$samples.csv
+      nrow0 <- nrow(dt)
+      ncol0 <- ncol(dt)
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
+        dt <- head(dt, MAXSHOW)
+        dt <- rbind(dt, rep(NA, ncol(dt)))
+        n1 <- nrow0 - MAXSHOW
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+      }
+      if (ncol(dt) > MAXSHOW) {
+        dt <- dt[, 1:MAXSHOW]
+        dt <- cbind(dt, rep(NA, nrow(dt)))
+        n1 <- ncol0 - MAXSHOW
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+      }
+      dt
+    })
+
+    table.RENDER <- function() {
+      dt <- table_data()
+      req(dt)
+
+      DT::datatable(dt,
+        class = "compact hover",
+        rownames = TRUE,
+        extensions = c("Buttons", "Scroller"),
+        plugins = "scrollResize",
+        selection = list(mode = "single", target = "row", selected = 1),
+        options = list(
+          dom = "lfrtip",
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = scrollY,
+          scrollResize = TRUE,
+          deferRender = TRUE
+        )
+      ) %>%
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+    }
+
+    output$table_samples <- shiny::renderUI(
+      div(
+        div(
+          style = "display: flex; justify-content: space-between;width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+          div(
+            if(!is.null(uploaded$samples.csv)){
+              shiny::actionButton(
+                ns("remove_samples"),
+                "Remove input",
+                icon = icon("trash-can"),
+                class = "btn btn-danger"
+              )
+            }
+        ),
+        div(
+          actionButton(
+            ns("load_example"), "Load Example",
+            class = "btn btn-info"
+            ),
+          actionButton(
+            ns("check_documentation_samples"),
+            "Check Documentation",
+            class = "btn btn-primary",
+            onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
+            )
+        )
+        ),
+        if(is.null(uploaded$samples.csv)){
+        bslib::layout_columns(
+          bslib::card(
+            fileInputArea(
+              ns("samples_csv"),
+              shiny::h4("Choose samples.csv", class='mb-0'),
+              multiple = FALSE,
+              accept = c(".csv"),
+              width = "800px" #TODO this is a hack to make the file input area wider
+            )
+          )
+        )
+      }else{
+         bslib::layout_columns(
+        col_widths = c(9, 3),
+        TableModuleUI(
+          ns("samples_datasets"),
+          width = width,
+          height = height,
+          title = title,
+          info.text = info.text,
+          caption = caption,
+          label = "",
+          show.maximize = FALSE
+        ),
+        bslib::card(
+          div(
+            "Summary:",
+            br(),
+            check_to_html(
+              checklist$samples.csv$checks,
+                pass_msg = "All samples checks passed",
+                null_msg = "Samples checks not run yet.
+                            Fix any errors with samples first."
+              ),
+            check_to_html(checklist$samples_counts$checks,
+                pass_msg = "All samples-counts checks passed",
+                null_msg = "Samples-counts checks not run yet.
+                        Fix any errors with samples or counts first."
+              ),
+            legend
+            )
+          )
+      )
+      }
+      )
+    )
+
+    # pass counts to uploaded when uploaded
+    observeEvent(input$samples_csv, {
+      uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
+
+    })
+
+    observeEvent(input$remove_samples, {
+      
+      delete_all_files_samples <- function(value) {
+        if(input$alert_delete_samples){
+          uploaded$samples.csv <- NULL
+          uploaded$contrasts.csv <- NULL
+        }
+      }
+
+      # if samples is not null, warn user that it will be deleted
+      if(!is.null(uploaded$contrasts.csv)){
+        
+        shinyalert::shinyalert(
+          inputId = "alert_delete_samples",
+          title = "Warning",
+          text = "Removing samples will also remove contrasts. Do you want to proceed?",
+          type = "warning",
+          showCancelButton = TRUE,
+          closeOnEsc = FALSE,
+          callbackR = delete_all_files_samples,
+          confirmButtonText = "Yes, remove samples and contrasts.",
+          cancelButtonText = "No, cancel deletion."
+        )
+
+        } else {
+          uploaded$samples.csv <- NULL
+        }
+    })
+
+    observeEvent(input$load_example, {
+      uploaded$samples.csv <- playbase::SAMPLES
+    })
+
+    TableModuleServer(
+      "samples_datasets",
+      func = table.RENDER,
+      selector = "none"
+    )
+  })
+}
+
+upload_table_preview_contrasts_ui <- function(id) {
+  
+  ns <- shiny::NS(id)
+  uiOutput(ns("table_contrasts"))
+}
+
+upload_table_preview_contrasts_server <- function(
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption,
+  checked_counts,
+  checked_samples,
+  checked_contrasts,
+  show_comparison_builder,
+  upload_wizard
   )
+  {
+  moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns
+
+    table_data <- shiny::reactive({
+      shiny::req(uploaded$contrasts.csv)
+      dt <- uploaded$contrasts.csv
+      nrow0 <- nrow(dt)
+      ncol0 <- ncol(dt)
+      MAXSHOW <- 100
+      if (nrow(dt) > MAXSHOW) {
+        dt <- head(dt, MAXSHOW)
+        dt <- rbind(dt, rep(NA, ncol(dt)))
+        n1 <- nrow0 - MAXSHOW
+        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+      }
+      if (ncol(dt) > MAXSHOW) {
+        dt <- dt[, 1:MAXSHOW]
+        dt <- cbind(dt, rep(NA, nrow(dt)))
+        n1 <- ncol0 - MAXSHOW
+        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+      }
+      dt
+    })
+
+    table.RENDER <- function() {
+      dt <- table_data()
+      req(dt)
+
+      DT::datatable(dt,
+        class = "compact hover",
+        rownames = TRUE,
+        extensions = c("Buttons", "Scroller"),
+        plugins = "scrollResize",
+        selection = list(mode = "single", target = "row", selected = 1),
+        options = list(
+          dom = "lfrtip",
+          scroller = TRUE,
+          scrollX = TRUE,
+          scrollY = scrollY,
+          scrollResize = TRUE,
+          deferRender = TRUE
+        )
+      ) %>%
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+    }
+
+    output$table_contrasts <- shiny::renderUI(
+      div(
+        # if run_build_comparisons is clicked, then show the contrasts
+        if(show_comparison_builder()){
+          bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 340px)",
+          heights_equal = "row",
+          upload_module_makecontrast_ui(ns("makecontrast")),
+          #bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
+          )
+        } else {
+          div(
+          div(
+            style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+            div(
+            if(!is.null(uploaded$contrasts.csv)){
+                shiny::actionButton(
+                  ns("remove_contrasts"),
+                  "Remove input",
+                  icon = icon("trash-can"),
+                  class = "btn btn-danger"
+                )
+              },
+              actionButton(
+                  ns("run_build_comparisons"), "Run Comparison builder",
+                  class = "btn btn-warning"
+                ),
+              ),
+            div(
+            actionButton(
+              ns("load_example"), "Load Example",
+              class = "btn btn-info"
+              ),
+            actionButton(
+              ns("check_documentation_contrasts"),
+              "Check Documentation",
+              class = "btn btn-primary",
+              onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
+              )
+          )),
+          if(is.null(uploaded$contrasts.csv)){
+          bslib::layout_columns(
+            bslib::card(
+              fileInputArea(
+                ns("contrasts_csv"),
+                shiny::h4("Choose contrasts.csv", class='mb-0'),
+                multiple = FALSE,
+                accept = c(".csv"),
+                width = "800px" #TODO this is a hack to make the file input area wider
+              )
+            )
+          )
+        }else{
+          bslib::layout_columns(
+          col_widths = c(9, 3),
+          TableModuleUI(
+            ns("contrasts_datasets"),
+            width = width,
+            height = height,
+            title = title,
+            info.text = info.text,
+            caption = caption,
+            label = "",
+            show.maximize = FALSE
+          ),
+          bslib::card(
+            div(
+              "Summary:",
+              br(),
+              check_to_html(
+                checklist$contrasts.csv$checks,
+                  pass_msg = "All contrasts checks passed",
+                  null_msg = "Contrasts checks not run yet.
+                              Fix any errors with contrasts first."
+                ),
+              check_to_html(checklist$samples_contrasts$checks,
+                  pass_msg = "All contrasts-samples checks passed",
+                  null_msg = "Contrasts-samples checks not run yet.
+                          Fix any errors with contrasts or samples first."
+                ),
+              legend
+              )
+            )
+        )
+        }
+        )
+        }
+    ))
+
+    # control state of comparison builder
+    observeEvent(input$run_build_comparisons, {
+      show_comparison_builder(TRUE)
+    })
+
+    # pass counts to uploaded when uploaded
+    observeEvent(input$contrasts_csv, {
+      uploaded$contrasts.csv <- playbase::read.as_matrix(input$contrasts_csv$datapath)
+
+    })
+
+    observeEvent(input$remove_contrasts, {
+      uploaded$contrasts.csv <- NULL
+    })
+
+    observeEvent(input$load_example, {
+      uploaded$contrasts.csv <- playbase::CONTRASTS
+    })
+
+    modified_ct <- upload_module_makecontrast_server(
+      id = "makecontrast",
+      phenoRT = reactive(checked_samples()$matrix),
+      contrRT = reactive(checked_contrasts()$matrix),
+      countsRT = reactive(checked_counts()$matrix),
+      upload_wizard = upload_wizard,
+      show_comparison_builder = show_comparison_builder
+    )
+
+    TableModuleServer(
+      "contrasts_datasets",
+      func = table.RENDER,
+      selector = "none"
+    )
+
+    return(modified_ct)
+  })
 }
 
 # convert list of checks to html tags for display in the data preview modal
@@ -282,257 +660,83 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
 }
 
 
-upload_table_preview_counts_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
-  ns <- shiny::NS(id)
-
-  TableModuleUI(
-    ns("datasets"),
-    width = width,
-    height = height,
-    title = title,
-    info.text = info.text,
-    caption = caption,
-    label = "",
-    show.maximize = FALSE
-  )
-}
-
-upload_table_preview_counts_server <- function(id,
-                                               uploaded,
-                                               scrollY) {
-  moduleServer(id, function(input, output, session) {
-    table_data <- shiny::reactive({
-      shiny::req(uploaded$counts.csv)
-      dt <- uploaded$counts.csv
-      nrow0 <- nrow(dt)
-      ncol0 <- ncol(dt)
-      MAXSHOW <- 100
-      if (nrow(dt) > MAXSHOW) {
-        dt <- head(dt, MAXSHOW)
-        dt <- rbind(dt, rep(NA, ncol(dt)))
-        n1 <- nrow0 - MAXSHOW
-        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
-      }
-      if (ncol(dt) > MAXSHOW) {
-        dt <- dt[, 1:MAXSHOW]
-        dt <- cbind(dt, rep(NA, nrow(dt)))
-        n1 <- ncol0 - MAXSHOW
-        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
-      }
-      dt
-    })
-
-    table.RENDER <- function() {
-      dt <- table_data()
-      req(dt)
-
-      DT::datatable(dt,
-        class = "compact hover",
-        rownames = TRUE,
-        extensions = c("Buttons", "Scroller"),
-        plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1),
-        options = list(
-          dom = "lfrtip",
-          scroller = TRUE,
-          scrollX = TRUE,
-          scrollY = scrollY,
-          scrollResize = TRUE,
-          deferRender = TRUE
+legend <-  shiny::div(
+           class = "pt-4",
+           style = "margin-top: 150px;",
+           span(style = "color: green", "Green"),
+           span("= data OK. "),
+           br(),
+           span(style = "color: orange", "Orange"),
+           span("= warning but data will still be uploaded. "),
+           br(),
+           span(style = "color:red", "Red"),
+           span("= error and data will not be uploaded.")
         )
-      ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-    }
 
-    TableModuleServer(
-      "datasets",
-      func = table.RENDER,
-      selector = "none"
-    )
-  }) ## end of moduleServer
-} ## end of server
 
-upload_table_preview_samples_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
-  ns <- shiny::NS(id)
+fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
+                          width = NULL, buttonLabel = "Browse...", placeholder = "No file selected") {
+  restoredValue <- restoreInput(id = inputId, default = NULL)
 
-  TableModuleUI(
-    ns("datasets"),
-    width = width,
-    height = height,
-    title = title,
-    info.text = info.text,
-    caption = caption,
-    label = "",
-    show.maximize = FALSE
+  # Catch potential edge case - ensure that it's either NULL or a data frame.
+  if (!is.null(restoredValue) && !is.data.frame(restoredValue)) {
+    warning("Restored value for ", inputId, " has incorrect format.")
+    restoredValue <- NULL
+  }
+
+  if (!is.null(restoredValue)) {
+    restoredValue <- toJSON(restoredValue, strict_atomic = FALSE)
+  }
+
+  inputTag <- tags$input(
+    id = inputId,
+    name = inputId,
+    type = "file",
+    # Don't use "display: none;" style, which causes keyboard accessibility issue; instead use the following workaround: https://css-tricks.com/places-its-tempting-to-use-display-none-but-dont/
+    style = "position: absolute !important; top: -99999px !important; left: -99999px !important;",
+    `data-restore` = restoredValue
   )
-}
 
-upload_table_preview_samples_server <- function(id,
-                                                uploaded,
-                                                scrollY) {
-  moduleServer(id, function(input, output, session) {
-    table_data <- shiny::reactive({
-      shiny::req(uploaded$samples.csv)
-      dt <- uploaded$samples.csv
-      nrow0 <- nrow(dt)
-      ncol0 <- ncol(dt)
-      MAXSHOW <- 100
-      if (nrow(dt) > MAXSHOW) {
-        dt <- head(dt, MAXSHOW)
-        dt <- rbind(dt, rep(NA, ncol(dt)))
-        n1 <- nrow0 - MAXSHOW
-        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
-      }
-      dt
-    })
+  if (multiple) {
+    inputTag$attribs$multiple <- "multiple"
+  }
+  if (length(accept) > 0) {
+    inputTag$attribs$accept <- paste(accept, collapse = ",")
+  }
 
-    table.RENDER <- function() {
-      dt <- table_data()
-      req(dt)
-      DT::datatable(dt,
-        class = "compact hover",
-        rownames = TRUE,
-        extensions = c("Buttons", "Scroller"),
-        plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1),
-        options = list(
-          dom = "lfrtip",
-          scroller = TRUE,
-          scrollX = TRUE,
-          scrollY = scrollY,
-          scrollResize = TRUE,
-          deferRender = TRUE
+  div(
+    class = "form-group", #shiny-input-container w-100",
+    style = htmltools::css(width = htmltools::validateCssUnit(width)),
+    shiny:::shinyInputLabel(inputId, ""),
+    div(
+      class = "input-group mb-3",
+      # input-group-prepend is for bootstrap 4 compat
+      tags$label(
+        class = "input-group-btn input-group-prepend w-100",
+        span(
+          class = "btn btn-area w-100", inputTag,
+          div(tags$image(src = icon_encoded, width = "80px;"), style = "margin-top: 2rem;"),
+          div(p(label), style = "font-size: 1.2rem; font-weight: 700; padding-top: 2rem;"),
+          div(p(buttonLabel), style = "font-size: 1rem; font-weight: 400; margin-bottom: 2rem;")
         )
-      ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-    }
-
-    TableModuleServer(
-      "datasets",
-      func = table.RENDER,
-      selector = "none"
-    )
-  }) ## end of moduleServer
-} ## end of server
-
-upload_table_preview_contrasts_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
-  ns <- shiny::NS(id)
-
-  TableModuleUI(
-    ns("datasets"),
-    width = width,
-    height = height,
-    title = title,
-    info.text = info.text,
-    caption = caption,
-    label = "",
-    show.maximize = FALSE
-  )
-}
-
-upload_table_preview_contrasts_server <- function(id,
-                                                  uploaded,
-                                                  scrollY) {
-  moduleServer(id, function(input, output, session) {
-    table_data <- shiny::reactive({
-      shiny::req(uploaded$contrasts.csv)
-      dt <- uploaded$contrasts.csv |> data.frame(check.names = FALSE)
-      if (NCOL(dt) == 0) dt <- cbind(dt, " " = NA)
-      dt
-    })
-
-    table.RENDER <- function() {
-      dt <- table_data()
-      req(dt)
-      DT::datatable(dt,
-        class = "compact hover",
-        rownames = TRUE,
-        extensions = c("Buttons", "Scroller"),
-        plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1),
-        options = list(
-          dom = "lfrtip",
-          scroller = TRUE,
-          scrollX = TRUE,
-          scrollY = scrollY,
-          scrollResize = TRUE,
-          deferRender = TRUE
-        )
-      ) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-    }
-
-    TableModuleServer(
-      "datasets",
-      func = table.RENDER,
-      selector = "none"
-    )
-  }) ## end of moduleServer
-} ## end of server
-
-
-# function to format datatable for highlighting and selecting columns instead of rows
-# not currently used
-make_preview_table <- function(tbl) {
-  # callback for highlighting column instead of row
-  js <- c(
-    "table.on('mouseenter', 'td', function () {
-                        // Remove highlight from all columns
-                        table
-                        .columns()
-                        .nodes()
-                        .flatten()  // Reduce to a 1D array
-                        .to$()      // Convert to a jQuery object
-                        .removeClass( 'highlight' );
-
-                                // Add highlight to mouseover column
-                        table
-                        .column( this )
-                        .nodes()
-                        .to$()      // Convert to a jQuery object
-                        .addClass( 'highlight' );
-                    });",
-    "table.on('mouseleave', 'td', function () {
-                        // Remove highlight from all columns
-                        table
-                        .columns()
-                        .nodes()
-                        .flatten()  // Reduce to a 1D array
-                        .to$()      // Convert to a jQuery object
-                        .removeClass( 'highlight' );
-                    });"
-  )
-
-  DT::datatable(tbl,
-    class = "compact",
-    rownames = TRUE,
-    options = list(
-      dom = "rtp",
-      pageLength = 20
+      )
     ),
-    callback = DT::JS(js),
-    selection = list(target = "column", mode = "single")
-  ) %>%
-    DT::formatStyle(0,
-      target = "row",
-      fontSize = "12px", lineHeight = "70%"
+    tags$div(
+      id = paste(inputId, "_progress", sep = ""),
+      class = "progress active shiny-file-input-progress",
+      tags$div(class = "progress-bar")
     )
+  )
 }
+
+# Icon from <https://icons.getbootstrap.com/icons/upload/>
+icon_file <- tempfile(fileext = ".svg")
+writeLines('
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#495057" class="bi bi-upload" viewBox="0 0 16 16">
+  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+  <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+</svg>',
+  con = icon_file
+)
+
+icon_encoded <- xfun::base64_uri(icon_file)

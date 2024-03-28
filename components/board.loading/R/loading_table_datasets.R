@@ -48,13 +48,6 @@ loading_table_datasets_ui <- function(
         label = "",
         icon = NULL,
         width = "0%"
-      ),
-      shiny::actionButton(
-        ns("loadbutton"),
-        label = "Load dataset",
-        icon = icon("file-import"),
-        class = "btn btn-primary",
-        width = NULL
       )
     ) ## end of buttons div
   )
@@ -70,12 +63,14 @@ loading_table_datasets_server <- function(id,
                                           refresh_shared,
                                           reload_pgxdir_public,
                                           reload_pgxdir,
-                                          recompute_pgx) {
+                                          recompute_pgx,
+                                          loadbutton,
+                                          newuploadbutton
+                                          ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     share_pgx <- reactiveVal(NULL)
-
 
     getPGXINFO <- shiny::reactive({
       shiny::req(auth$logged)
@@ -233,7 +228,7 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    shiny::observeEvent(input$loadbutton, {
+    shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
       pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
