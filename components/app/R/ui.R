@@ -204,8 +204,8 @@ app_ui <- function(x) {
       div.chirpbutton <- NULL
       if (opt$ENABLE_CHIRP) {
         div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-           width = "auto", class = "quick-button",
-           onclick ="window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
+          width = "auto", class = "quick-button",
+          onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
         )
       }
 
