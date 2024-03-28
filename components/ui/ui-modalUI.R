@@ -12,6 +12,30 @@ ui.showSmallModal <- function(msg = "Please wait...") {
   ))
 }
 
+
+pgx.showSmallModal <- function(msg = "Please wait...") {
+  shiny::showModal(shiny::modalDialog(
+    title = NULL,
+    shiny::HTML("<br><center><p>", msg, "</p></center>"),
+    footer = NULL,
+    size = "s",
+    easyClose = FALSE,
+    fade = FALSE
+  ))
+}
+
+pgx.showSmallModal2 <- function(msg = "Please wait...", easyClose = TRUE,
+                               footer = modalButton("Dismiss") ) {
+  shiny::showModal(shiny::modalDialog(
+    title = NULL,
+    shiny::HTML("<br><center><p>", msg, "</p></center>"),
+    footer = div(footer, class='text-center'),
+    size = "s",
+    easyClose = easyClose,
+    fade = FALSE
+  ))
+}
+
 modalTrigger <- function(
     id,
     target,

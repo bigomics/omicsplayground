@@ -109,10 +109,11 @@ app_ui <- function(x) {
       }
 
       menu_tree <- list(
-        "Load" = c(
-          welcome = "Welcome",
-          load    = "Load dataset",
-          upload  = "New dataset"
+        "Welcome" = c(
+          welcome = "Welcome"
+        ),
+        "Datasets" = c(
+          load    = "Datasets"
         ),
         "DataView" = c(
           dataview = "DataView"
@@ -311,12 +312,13 @@ app_ui <- function(x) {
                     have been pre-computed and are ready to be used. Select a
                     dataset in the table and load the data set by clicking the 'load' button."
           ),
-          bigdash::sidebarTabHelp(
-            "upload-tab",
-            "Upload new",
-            "Here you can upload your own transcriptomics and proteomics data into
-                    the platform and perform computations for the Playground."
-          ),
+          # ,
+          # bigdash::sidebarTabHelp(
+          #   "upload-tab",
+          #   "Upload new",
+          #   "Here you can upload your own transcriptomics and proteomics data into
+          #           the platform and perform computations for the Playground."
+          # ),
           bigdash::sidebarTabHelp(
             "dataview-tab",
             "DataView",
@@ -438,14 +440,14 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "load-tab",
-
             # LoadingInputs("load")
             LoadingUI("load")
           ),
-          bigdash::bigTabItem(
-            "upload-tab",
-            UploadUI("upload")
-          ),
+          # ,
+          # bigdash::bigTabItem(
+          #   "upload-tab",
+          #   UploadUI("upload")
+          # ),
           bigdash::bigTabItem(
             "userprofile-tab",
             UserProfileUI("user_profile")
@@ -456,6 +458,7 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         ),
+        UploadUI("upload"),
         shiny::tagList(footer)
       )
     }

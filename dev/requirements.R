@@ -241,9 +241,11 @@ print(" installing required packages...  9")
 ## Install a clean reticulate and miniconda 
 # install.packages('reticulate', force=TRUE) # remove reticulate install since its already done.. and we get checksum error for some reason at this step
 unlink("~/.local/share/r-miniconda", recursive=TRUE)
+unlink("~/.virtualenvs", recursive=TRUE)
 reticulate::install_miniconda()
 reticulate::conda_install('r-reticulate', 'python-kaleido')
 reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
+reticulate::conda_install('r-reticulate', 'pacmap')
 reticulate::use_miniconda('r-reticulate')
 
 print(" installing required packages...  10")

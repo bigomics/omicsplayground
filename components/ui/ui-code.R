@@ -102,7 +102,7 @@ inlineSelectInput <- function(inputId, label, value = "") {
 fileInput2 <- function(
     inputId, label, multiple = FALSE, accept = NULL, width = NULL,
     buttonLabel = "Browse...", placeholder = "No file selected",
-    capture = NULL) {
+    capture = NULL, buttonClass = "btn-outline-primary") {
   restoredValue <- restoreInput(id = inputId, default = NULL)
   if (!is.null(restoredValue) && !is.data.frame(restoredValue)) {
     warning("Restored value for ", inputId, " has incorrect format.")
@@ -133,7 +133,7 @@ fileInput2 <- function(
       shiny::tags$label(
         class = "input-group-btn input-group-prepend",
         span(
-          class = "btn btn-default btn-outline-primary", buttonLabel,
+          class = paste("btn btn-default", buttonClass), buttonLabel,
           inputTag
         )
       ), tags$input(
