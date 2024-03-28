@@ -245,6 +245,10 @@ UploadBoard <- function(id,
       ## checklist[["samples_counts"]] <- NULL
       ## checklist[["samples_contrasts"]] <- NULL
 
+
+      dbg("[upload_server:shiny::observe(upload_files)] 1 : names(uploaded) = ", names(uploaded))
+      dbg("[upload_server:shiny::observe(upload_files)] 1 : is.null(uploaded) = ", sapply(uploaded,is.null))      
+      
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
       matlist <- list()
@@ -276,7 +280,7 @@ UploadBoard <- function(id,
         if (file.exists(user_ctfile)) unlink(user_ctfile)
 
         ## ERROR_CODES <- playbase::PGX_CHECKS  ##??
-
+        
         ## ---------------------------------------------------------------------
         ## This goes one-by-one over the uploaded matrices and
         ## performs a single matrix check. The cross-checks are done
@@ -619,7 +623,7 @@ UploadBoard <- function(id,
         ## insanity check
         if (NCOL(df0) == 0) {
           checked <- NULL
-          status <- "ERROR: no contrasts. please check your input file."
+          status <- "ERROR: empty contrasts. please check your input file."
         }
 
         ## --------- Single matrix counts check----------
