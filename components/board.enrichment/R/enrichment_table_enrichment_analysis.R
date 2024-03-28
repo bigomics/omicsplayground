@@ -122,11 +122,17 @@ enrichment_table_enrichment_analysis_server <- function(id,
       dt
     })
 
+    table_data_csv <- function() {
+      df <- table_data()
+      df$stars <- NULL
+      return(df)
+    }
+
     gseatable <- TableModuleServer(
       "datasets",
       func = gseatable.RENDER,
       func2 = gseatable.RENDER_modal,
-      csvFunc = table_data,
+      csvFunc = table_data_csv,
       selector = "single"
     )
 
