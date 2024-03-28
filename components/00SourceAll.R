@@ -212,6 +212,7 @@ if(!file.exists('00SourceAll.R')) {
   source('modules/NormalizeCountsModule.R',encoding='UTF-8')
   source('modules/PlotDownloadLogger.R',encoding='UTF-8')
   source('modules/QuestionModule.R',encoding='UTF-8')
+  source('modules/SendInvite.R',encoding='UTF-8')
   source('modules/SendReferralModule.R',encoding='UTF-8')
   source('modules/SocialMediaModule.R',encoding='UTF-8')
   source('modules/TimerModule.R',encoding='UTF-8')

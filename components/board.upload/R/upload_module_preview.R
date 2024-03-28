@@ -371,6 +371,16 @@ upload_table_preview_samples_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
+      # if samples not in file name, give warning and return
+      if(!grepl("sample", input$samples_csv$name, ignore.case = TRUE)){
+        shinyalert::shinyalert(
+          title = "Samples not in filename.",
+          text = "Please make sure the file name contains 'samples', such as samples_dataset.csv or samples.csv.",
+          type = "error"
+        )
+        return()
+      }
+      
       uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
 
     })
@@ -583,6 +593,17 @@ upload_table_preview_contrasts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$contrasts_csv, {
+      
+      # if contrasts not in file name, give warning and return
+      if(!grepl("contrast", input$contrasts_csv$name, ignore.case = TRUE)){
+        shinyalert::shinyalert(
+          title = "Contrasts not in filename.",
+          text = "Please make sure the file name contains 'contrasts', such as contrasts_dataset.csv or contrasts.csv.",
+          type = "error"
+        )
+        return()
+      }
+      
       uploaded$contrasts.csv <- playbase::read.as_matrix(input$contrasts_csv$datapath)
 
     })
