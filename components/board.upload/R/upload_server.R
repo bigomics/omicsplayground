@@ -148,8 +148,7 @@ UploadBoard <- function(id,
 
       ## clean up reactiveValues
       isolate({
-        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+        reset_upload()
       })
 
       # reset new_upload to 0, so upload will not trigger when computation is done
@@ -195,7 +194,6 @@ UploadBoard <- function(id,
       }
     })
 
-
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
     ## =====================================================================
@@ -216,7 +214,6 @@ UploadBoard <- function(id,
       prefix <- paste0("raw_", auth_id, "_")
       raw_dir <- tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT"))
       dir.create(raw_dir, recursive = TRUE)
-      dbg("[UploadBoard:raw_dir<-eventReactive] creating raw_dir", raw_dir)
       raw_dir
     }
 
@@ -357,9 +354,9 @@ UploadBoard <- function(id,
         }
 
         if (is.null(checked)) {
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")
-          ## uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
+          uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "samples.csv")
+          ## uploaded[["samples.csv"]] <<- NULL
+          uploaded[["contrasts.csv"]] <<- NULL
         }
 
         list(status = status, matrix = checked)
@@ -438,7 +435,7 @@ UploadBoard <- function(id,
           )
         }
         if (is.null(checked)) {
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
+          uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
         }
 
         list(status = status, matrix = checked)

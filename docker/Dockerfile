@@ -34,7 +34,7 @@ COPY docker/Rprofile .Rprofile
 #------------------------------------------------------------
 
 WORKDIR /
-RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
+##RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"

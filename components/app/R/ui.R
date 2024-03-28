@@ -195,7 +195,6 @@ app_ui <- function(x) {
       mm <- HTML(unlist(mm))
       sidebar <- bigdash::sidebar("Menu", mm)
 
-
       big_theme2 <- bigdash::big_theme()
       big_theme2 <- bslib::bs_add_variables(big_theme2,
         "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
@@ -203,28 +202,17 @@ app_ui <- function(x) {
       )
 
       ## offcanvas chatbox
-      div.chirpbox <- NULL
       div.chirpbutton <- NULL
       if (opt$ENABLE_CHIRP) {
-        div.chirpbox <- bsutils::offcanvas(
-          bsutils::offcanvasButton("Chirp!", id = "actual-chirp-button", style = "display:none;"),
-          bsutils::offcanvasContent(
-            .position = "end",
-            bslib::card(
-              full_screen = TRUE,
-              style = "border-width: 0px;",
-              height = "92vh",
-              bslib::card_body(
-                shinyChatR::chat_ui("chatbox",
-                  title = "Chirp with friends on the Playground!",
-                  height = "70vh", width = "100%"
-                )
-              )
-            )
-          )
+        div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
+          width = "auto", class = "quick-button",
+          onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
         )
-        div.chirpbutton <- shiny::actionButton("chirp_button", "Chirp!", width = "auto")
       }
+
+      div.invitebutton <- shiny::actionButton("invite_button", "Invite!",
+        width = "auto", class = "quick-button"
+      )
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
@@ -243,6 +231,7 @@ app_ui <- function(x) {
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
+          div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
             "Help",
@@ -257,8 +246,13 @@ app_ui <- function(x) {
               target = "_blank"
             ),
             bigdash::navbarDropdownItem(
-              "Community Forum",
+              "Google forum",
               link = "https://groups.google.com/d/forum/omicsplayground",
+              target = "_blank"
+            ),
+            bigdash::navbarDropdownItem(
+              "Discuss on Reddit",
+              link = "https://www.reddit.com/r/omicsplayground",
               target = "_blank"
             ),
             bigdash::navbarDropdownItem(
@@ -438,7 +432,6 @@ app_ui <- function(x) {
                     immune cell types, expressed genes and pathway activation."
           )
         ),
-        div.chirpbox,
         bigdash::bigTabs(
           bigdash::bigTabItem(
             "welcome-tab",
