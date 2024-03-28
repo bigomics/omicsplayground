@@ -223,12 +223,14 @@ app_ui <- function(x) {
           )
         )
         div.chirpbutton <- shiny::actionButton("chirp_button", "Chirp!",
-                                               width = "auto", class = "quick-button")
+          width = "auto", class = "quick-button"
+        )
       }
 
       div.invitebutton <- shiny::actionButton("invite_button", "Invite!",
-                                              width = "auto", class = "quick-button")
-      
+        width = "auto", class = "quick-button"
+      )
+
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
         header,
