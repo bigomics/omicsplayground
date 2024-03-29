@@ -5,6 +5,7 @@ if(!file.exists('00SourceAll.R')) {
   message('WARNING: not in source folder. skipping.')
 } else {
   message('Note: sourcing all code...')
+  source('app/R/utils/app-emails.R',encoding='UTF-8')
   source('app/R/utils/auth.R',encoding='UTF-8')
   source('app/R/utils/open_url.R',encoding='UTF-8')
   source('app/R/utils/utils.R',encoding='UTF-8')

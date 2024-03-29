@@ -573,12 +573,12 @@ app_server <- function(input, output, session) {
       session_timer$reset()    
       shinyalert::shinyalert(
         text = "Thanks! We have invited your friend and your session has been extended.",
-        timer = 3000                            
+        timer = 4000                            
       )
     } else {
       shinyalert::shinyalert(
         text = "Thanks! We have invited your friend.",
-        timer = 3000        
+        timer = 4000        
       )
     }
   }
