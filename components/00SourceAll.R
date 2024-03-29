@@ -5,7 +5,6 @@ if(!file.exists('00SourceAll.R')) {
   message('WARNING: not in source folder. skipping.')
 } else {
   message('Note: sourcing all code...')
-  source('app/R/utils/app-emails.R',encoding='UTF-8')
   source('app/R/utils/auth.R',encoding='UTF-8')
   source('app/R/utils/open_url.R',encoding='UTF-8')
   source('app/R/utils/utils.R',encoding='UTF-8')
@@ -222,8 +221,6 @@ if(!file.exists('00SourceAll.R')) {
   source('modules/NormalizeCountsModule.R',encoding='UTF-8')
   source('modules/PlotDownloadLogger.R',encoding='UTF-8')
   source('modules/QuestionModule.R',encoding='UTF-8')
-  source('modules/SendReferralModule.R',encoding='UTF-8')
-  source('modules/SocialMediaModule.R',encoding='UTF-8')
   source('modules/TimerModule.R',encoding='UTF-8')
   source('modules/UserAccessControl.R',encoding='UTF-8')
   source('modules/UserInactivityControl.R',encoding='UTF-8')

@@ -133,10 +133,6 @@ InviteFriendModule <- function(
           timer = 4000
         )
       }
-
-
-
-
       
     })
 
@@ -212,12 +208,18 @@ The BigOmics Team
       if (is.null(user_name) || is.na(user_name) || user_name == "") user_name <- user_email
 
       numref = 1
+      numsuccess = 0
 ##      invite_log = file.path( auth$user_dir, "INVITES.log")""
       invite_file = file.path(ETC, "INVITES.log")
       if (file.exists(invite_file)) {
         all_invites <- read.csv( invite_file, header=FALSE)
         sel <- which( all_invites[,2] == user_email )
-        numref <- length(unique(all_invites[sel,3]))
+        all_refs <- unique(all_invites[sel,3])
+        numref <- length(all_refs)
+
+        all_registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
+        all_registered <- grep("@", all_registered, value=TRUE)
+        numsuccess <- length(intersect(all_refs, all_registered))
       }        
         
       blastula::smtp_send(
@@ -229,7 +231,7 @@ Dear {user_name},
 
 Thank you for referring your friend {friend_email} to join Omics Playground! We appreciate your support and enthusiasm for our platform.
 
-As of now, you've referred {numref} number of colleagues. Once they've successfully registered and their accounts are verified, you'll be one step closer to claiming your exclusive BigOmics swag.
+As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. Once their accounts are verified, you'll be one step closer to claiming your exclusive BigOmics swag.
 
 Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. Thanks for being a part of BigOmics!
 
