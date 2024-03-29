@@ -20,6 +20,8 @@ if(grepl("linux",R.version["os"])) {
   options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/jammy/latest"))
 }
 
+print(" installing required packages...  1")
+
 install.packages("devtools")
 install.packages("BiocManager")
 install.packages("renv")
@@ -84,14 +86,14 @@ install.github <- function(repo, force=FALSE, dependencies=NA) {
 ## Install basic shiny packages
 ##---------------------------------------------------------------------
 
-base.pkg = c("shiny","flexdashboard","shinydashboard", "shinyBS","systemfonts","shinyjs",
-             "shinydashboardPlus",'R.utils','shinythemes',"shinybusy","shinycssloaders",
-             "shinyWidgets")
+base.pkg = c("shiny","flexdashboard","shinydashboard", "shinyBS","systemfonts",
+             "shinyjs","shinydashboardPlus",'R.utils','shinythemes',"shinybusy",
+             "shinycssloaders","shinyWidgets")
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
-
+print(" installing required packages...  2")
 ## We use renv to detect dependencies. Renv is looking for library and
 ## require statements in the r/R source files.
 ##install.packages("renv")
@@ -113,10 +115,11 @@ pkg.extra <- c(
   "RcppParallel", "KEGGgraph", "svgPanZoom",
   'TxDb.Hsapiens.UCSC.hg19.knownGene',
   'TxDb.Mmusculus.UCSC.mm10.knownGene',
-  'listviewer','SBGNview','org.Hs.eg.db','DeMixT',
+  'listviewer','SBGNview','org.Hs.eg.db', "org.Mm.eg.db",'DeMixT',
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
-  'blastula','shinytest2','sodium','cookies'
+  'blastula','shinytest2','sodium','cookies',"shinyvalidate", "sparsesvd",
+  "recount"
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
@@ -129,8 +132,10 @@ pkg.later <- c(
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "FastGGM","monocle3","proteus",
     "infercnv","pathview","reticulate",
-    "mygene","diptest","edgeR","DESeq2"
+    "mygene","diptest","edgeR","DESeq2","GSVA", "ruv"
   )
+
+  print(" installing required packages...  3")
 
 
 ##---------------------------------------------------------------------
@@ -155,11 +160,15 @@ install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
 #file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
 #file.copy("/root/bin/phantomjs","/usr/local/bin") ## inside docker we are root
 
+print(" installing required packages...  4")
+
 devtools::install_version("mnormt", repos="http://cran.us.r-project.org") ## for metap
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
 install.pkgs(c('monocle','Seurat'))
 install.packages("https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz")
 install.packages('https://www.bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz')
+
+print(" installing required packages...  5")
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB (overwriting any other version)
@@ -174,14 +183,22 @@ install.github('JohnCoene/bsutils')
 install.github('bigomics/bigdash', force=TRUE)
 install.github('bigomics/bigLoaders')
 install.github('bigomics/PCSF', force=TRUE)
-install.github('bigomics/shinyChatR', force=TRUE)
 install.github('bigomics/fgsea')
 install.github('ropensci/iheatmapr')
-install.github('rstudio/bslib@v0.5.1',dependencies=FALSE)
+install.github('rstudio/bslib@v0.6.1',dependencies=FALSE)
 install.github('rstudio/htmltools',dependencies=FALSE)
 install.github('bigomics/biomaRt',dependencies=FALSE)
 install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
 install.github('renozao/xbioc',dependencies=TRUE)
+install.github("cysouw/qlcMatrix",dependencies=FALSE)
+
+print(" installing required packages...  6")
+
+# INSTALL packages that require specific versions
+remotes::install_version('matrixStats',version='1.1.0',force=TRUE)
+
+print(" installing required packages...  7")
+
  
 ##---------------------------------------------------------------------
 ## ONLY DEV.MODE (single-cell trajectories)
@@ -204,6 +221,8 @@ BiocManager::install("rliger")
 devtools::install_github("cran/maptools")
 INSTALLED.PKGS <- c(INSTALLED.PKGS, "Proteus", "riverplot", "rliger")
 
+print(" installing required packages...  8")
+
 ##---------------------------------------------------------------------
 ## make sure LOCAL ones are preferred and overwriting previously
 ## installed versions
@@ -217,13 +236,17 @@ install.pkgs(LOCAL.PKGS, force=TRUE)
 ## Install Kaleido for plotly
 ##---------------------------------------------------------------------
 
+print(" installing required packages...  9")
+
 ## Install a clean reticulate and miniconda 
-install.packages('reticulate', force=TRUE)
+# install.packages('reticulate', force=TRUE) # remove reticulate install since its already done.. and we get checksum error for some reason at this step
 unlink("~/.local/share/r-miniconda", recursive=TRUE)
 reticulate::install_miniconda()
 reticulate::conda_install('r-reticulate', 'python-kaleido')
 reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
 reticulate::use_miniconda('r-reticulate')
+
+print(" installing required packages...  10")
 
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages??
@@ -246,6 +269,8 @@ remove.pkgs(BIG.NOTUSED)
 ## --------------------------------------------------
 ## Write license file of the used/installed packages
 ## --------------------------------------------------
+
+print(" installing required packages...  11")
 if(1) {
     ## Write license file of the used/installed packages
     lisc <- installed.packages(fields = "License")

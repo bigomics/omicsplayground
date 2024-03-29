@@ -193,26 +193,22 @@ app_server <- function(input, output, session) {
     )
   }
 
-  ## Chatbox
-  if (opt$ENABLE_CHIRP) {
-    shiny::observeEvent(input$chirp_button, {
-      shinyjs::click(id = "actual-chirp-button")
-    })
-    r_chirp_name <- reactive({
-      name <- auth$username
-      if (is.null(name) || is.na(name) || name == "") name <- auth$email
-      if (is.null(name) || is.na(name) || name == "") {
-        name <- paste0("user", substring(session$token, 1, 3))
-      }
-      name <- getFirstName(name) ## in app/R/utils.R
-    })
-    shinyChatR::chat_server(
-      "chatbox",
-      csv_path = file.path(SHARE.DIR, "chirp_data.csv"),
-      chat_user = r_chirp_name,
-      nlast = 100
-    )
-  }
+  ## invite modal
+  shiny::observeEvent(input$invite_button, {
+    ui.inviteModal(id = "invitemodal")
+  })
+
+  shiny::observeEvent(input$invitemodal_button, {
+    message("sending invite email to", input$invitemodal_email, "\n")
+    user_name <- auth$username
+    user_email <- auth$email
+    friend_email <- input$invitemodal_email
+    gmail_creds <- file.path(ETC, "gmail_creds")
+    sendInviteEmail(user_email, user_name, friend_email, path_to_creds = gmail_creds)
+    ## thank you modal
+    ui.showSmallModal("Your friend has been invited. Thank you!")
+    shinyjs::delay(3000, shiny::removeModal())
+  })
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
@@ -904,7 +900,21 @@ app_server <- function(input, output, session) {
   observeEvent(auth$logged, {
     if (auth$logged) {
       shinyjs::delay(1200, {
-        bsutils::modal_show("startup_modal")
+        ## read startup messages
+        msg <- readLines(file.path(ETC, "MESSAGES"))
+        msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+        if (0 && length(msg) > 5) {
+          sel <- c(1:2, sample(3:length(msg), 3))
+          msg <- msg[sel]
+        }
+        STARTUP_MESSAGES <- msg
+        shiny::showModal(
+          ui.startupModal(
+            id = "startup_modal",
+            messages = STARTUP_MESSAGES,
+            title = "BigOmics Highlights"
+          )
+        )
       })
     }
   })

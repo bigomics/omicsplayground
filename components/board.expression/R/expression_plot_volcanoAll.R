@@ -103,6 +103,7 @@ expression_plot_volcanoAll_server <- function(id,
     plotly_plots <- function(cex = 2, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
+      sel.genes <- pd[["sel.genes"]]
 
       # Input vars
       fdr <- pd[["fdr"]]
@@ -110,8 +111,8 @@ expression_plot_volcanoAll_server <- function(id,
       ## meta tables
       fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
       q_cols <- grep("q.*", colnames(pd[["FQ"]]))
-      fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
-      qv <- pd[["FQ"]][, q_cols, drop = FALSE]
+      fc <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), fc_cols, drop = FALSE]
+      qv <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), q_cols, drop = FALSE]
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
       rm(pd)
