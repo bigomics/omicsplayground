@@ -21,7 +21,8 @@ InviteFriendModule <- function(
   {
 
     ns <- session$ns ## NAMESPACE    
-    
+
+    ## email text input validator
     iv <- shinyvalidate::InputValidator$new()
     iv$add_rule("email", shinyvalidate::sv_required())
     iv$add_rule("email", shinyvalidate::sv_email())
@@ -137,7 +138,7 @@ InviteFriendModule <- function(
 
     randomMotto <- function() {
         motto_list <- c("Omics Playground. Never stop discovering.",
-                        "Omics Playground. Play. See. Discover.",
+                        "Omics Playground. Play.See.Discover.",
                         "Omics Playground. Created with love by BigOmics Analytics.",
                         "Omics Playground. Created in Ticino, the sunny side of Switzerland.",
                         "Omics Playground. Easy but powerful.",
@@ -252,7 +253,7 @@ The BigOmics Team
 
     ## return
     list(
-      click = ext_click ## function!
+      click = ext_click ## exported function!
     )
     
   }) ## end of moduleServer

@@ -203,9 +203,6 @@ app_ui <- function(x) {
         )
       }
 
-##      div.invitebutton <- shiny::actionButton("invite_button", "Invite!",
-##        width = "auto", class = "quick-button"
-##      )
       div.invitebutton <- InviteFriendUI("invite") 
 
       ## ------------------------- bigPage ----------------------------------
