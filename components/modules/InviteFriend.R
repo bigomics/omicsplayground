@@ -111,7 +111,6 @@ InviteFriendModule <- function(
         invite.file2 <- file.path(auth$user_dir, "INVITES.log")      
         do.append <- file.exists(invite.file)
         timestamp <- as.character(Sys.time())
-        invite_data <- list("2024-03-25 14:06:18", "from.me@test.com", "to.friend@test.com")
         invite_data <- list(timestamp, user_email, friend_email)
         data.table::fwrite(invite_data, file = invite.file, quote = TRUE, append = do.append)
         data.table::fwrite(invite_data, file = invite.file2, quote = TRUE, append = do.append)
