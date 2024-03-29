@@ -570,6 +570,16 @@ UploadBoard <- function(id,
       wizardR::reset("upload_wizard")
     })
 
+    # warn user when locked button is clicked (UX)
+    observeEvent(
+      input$upload_wizard_locked, {
+        shinyalert::shinyalert(
+          title = "Upload wizard locked",
+          text = "Please complete the current step before proceeding.",
+          type = "warning"
+        )
+      })
+
     # wizard lock/unlock logic
 
     # lock/unlock wizard for counts.csv
