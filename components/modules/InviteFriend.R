@@ -108,8 +108,7 @@ InviteFriendModule <- function(
       
       message("sending invite email to", friend_email, "\n")
       sendInvitationEmail(user_email, user_name, friend_email,
-                          path_to_creds = gmail_creds
-                          )
+                          path_to_creds = gmail_creds )
       
       ## record the invite
       invite.file <- file.path(ETC, "INVITES.log")
@@ -122,8 +121,7 @@ InviteFriendModule <- function(
       
       ## send confirmation
       sendConfirmationEmail(user_email, user_name, friend_email,
-                            path_to_creds = gmail_creds
-                            )
+                            path_to_creds = gmail_creds )
 
       ## remove modals
       shiny::removeModal()
