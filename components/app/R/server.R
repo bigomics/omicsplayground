@@ -708,8 +708,7 @@ app_server <- function(input, output, session) {
           h2("BigOmics Playground"),
           h5(VERSION),
           h5("Advanced omics analysis for everyone"), br(), br(),
-          p("Created with love and proudly presented to you by BigOmics Analytics from Ticino,
-               the sunny side of Switzerland."),
+          p("Created with love and proudly presented to you by BigOmics Analytics from Ticino, the sunny side of Switzerland."),
           p(tags$a(href = "https://www.bigomics.ch", "www.bigomics.ch")),
           style = "text-align:center; line-height: 1em;"
         ),
