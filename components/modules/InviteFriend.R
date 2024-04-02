@@ -102,14 +102,15 @@ InviteFriendModule <- function(
         shinyalert::shinyalert(
           text = "Error. Cannot connect to mail server",
           timer = 4000
-          )
+        )
         return(NULL)
       }
-      
+
       message("sending invite email to", friend_email, "\n")
       sendInvitationEmail(user_email, user_name, friend_email,
-                          path_to_creds = gmail_creds )
-      
+        path_to_creds = gmail_creds
+      )
+
       ## record the invite
       invite.file <- file.path(ETC, "INVITES.log")
       invite.file2 <- file.path(auth$user_dir, "INVITES.log")
@@ -118,10 +119,11 @@ InviteFriendModule <- function(
       invite_data <- list(timestamp, user_email, friend_email)
       data.table::fwrite(invite_data, file = invite.file, quote = TRUE, append = do.append)
       data.table::fwrite(invite_data, file = invite.file2, quote = TRUE, append = do.append)
-      
+
       ## send confirmation
       sendConfirmationEmail(user_email, user_name, friend_email,
-                            path_to_creds = gmail_creds )
+        path_to_creds = gmail_creds
+      )
 
       ## remove modals
       shiny::removeModal()
@@ -137,8 +139,6 @@ InviteFriendModule <- function(
           timer = 4000
         )
       }
-
-      
     })
 
     randomMotto <- function() {
