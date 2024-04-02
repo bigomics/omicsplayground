@@ -193,7 +193,7 @@ app_server <- function(input, output, session) {
     )
   }
 
-  
+
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
@@ -441,7 +441,7 @@ app_server <- function(input, output, session) {
     bigdash.showTabsGoToDataView(session)
   })
 
-  
+
   ## --------------------------------------------------------------------------
   ## Current navigation
   ## --------------------------------------------------------------------------
@@ -565,20 +565,20 @@ app_server <- function(input, output, session) {
     id = "invite",
     auth = auth,
     callbackR = inviteCallback
-  ) 
+  )
   inviteCallback <- function() {
     ## After succesful invite, we extend the session
     dbg("[MAIN] inviteCB called!")
-    if(isTRUE(TIMEOUT > 0)) {
-      session_timer$reset()    
+    if (isTRUE(TIMEOUT > 0)) {
+      session_timer$reset()
       shinyalert::shinyalert(
         text = "Thanks! We have invited your friend and your session has been extended.",
-        timer = 4000                            
+        timer = 4000
       )
     } else {
       shinyalert::shinyalert(
         text = "Thanks! We have invited your friend.",
-        timer = 4000        
+        timer = 4000
       )
     }
   }
@@ -599,7 +599,9 @@ app_server <- function(input, output, session) {
     )
 
     warn_timeout <- function() {
-      if(!auth$logged) return(NULL)
+      if (!auth$logged) {
+        return(NULL)
+      }
       shinyalert::shinyalert(
         title = "Warning!",
         text = "Your FREE session is expiring soon",
@@ -612,39 +614,40 @@ app_server <- function(input, output, session) {
     ## At the end of the timeout the user can choose type of referral
     ## modal and gain additional analysis time. We reset the timer.
     session_timeout <- function() {
-      if(!auth$logged) return(NULL)      
+      if (!auth$logged) {
+        return(NULL)
+      }
       shinyalert::shinyalert(
         title = "FREE session expired!",
         text = "Sorry. Your free session has expired. To extend your session you can refer Omics Playground to a friend. Do you want to logout or invite a friend?",
         html = TRUE,
         immediate = TRUE,
-        timer = 60*1000,
+        timer = 60 * 1000,
         showCancelButton = TRUE,
         showConfirmButton = TRUE,
         cancelButtonText = "Logout",
         confirmButtonText = "Invite friend",
         confirmButtonCol = "#AEDEF4",
         callbackR = timeout_choice
-      )      
+      )
     }
 
     ## This handles the timeout choice
     timeout_choice <- function(x) {
-      dbg("[MAIN:timeout_response] x = ",x)
-      if(x == FALSE) {
+      dbg("[MAIN:timeout_response] x = ", x)
+      if (x == FALSE) {
         ## run logout sequence
-        userLogoutSequence(auth, action = "user.timeout")      
+        userLogoutSequence(auth, action = "user.timeout")
         sever::sever(sever_ciao(), bg_color = "#004c7d")
         session$close()
         ## session$reload()
       }
-      if(x == TRUE) {
+      if (x == TRUE) {
         invite$click()
       }
     }
-    
   } ## end of if TIMEOUT>0
-  
+
 
   #' Idle timer. Closes session if no one is logged in after a certain
   #' period. This frees up the R process from users that are uselessly
@@ -695,7 +698,8 @@ app_server <- function(input, output, session) {
 
   observeEvent(input$navbar_about, {
     authors <- c(
-      "Ana Nufer, Antonino Zito, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Griffin Seidel, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut")
+      "Ana Nufer, Antonino Zito, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Griffin Seidel, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
+    )
     authors <- paste(sort(authors), collapse = ", ")
 
     shiny::showModal(
