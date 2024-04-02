@@ -81,12 +81,6 @@ app_ui <- function(x) {
         )
       )
 
-      ## Put some hidden UI in footer
-      footer <- shiny::tagList(
-        SocialMediaModuleUI("socialmodal"),
-        ## SendReferralModuleUI("sendreferral")
-      )
-
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
         onClick = "logoutInApp()"
@@ -209,9 +203,7 @@ app_ui <- function(x) {
         )
       }
 
-      div.invitebutton <- shiny::actionButton("invite_button", "Invite!",
-        width = "auto", class = "quick-button"
-      )
+      div.invitebutton <- InviteFriendUI("invite") 
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
@@ -455,8 +447,7 @@ app_ui <- function(x) {
             UserSettingsInputs("user_settings"),
             UserSettingsUI("user_settings")
           )
-        ),
-        shiny::tagList(footer)
+        )
       )
     }
 
