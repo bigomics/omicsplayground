@@ -88,7 +88,7 @@ InviteFriendModule <- function(
       already.registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
       already.registered <- grep("@", already.registered, value = TRUE)
       if (friend_email %in% already.registered) {
-        shinyalert::shinyalert(text = "Oops. This email is already registered")
+        shinyalert::shinyalert(text = "No need to invite! Your friend is already on Omics Playground")
         dbg("[observeInviteFriendButton] error: Already registered")
         return(NULL)
       }
