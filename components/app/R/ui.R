@@ -203,7 +203,7 @@ app_ui <- function(x) {
         )
       }
 
-      div.invitebutton <- InviteFriendUI("invite") 
+      div.invitebutton <- InviteFriendUI("invite")
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
