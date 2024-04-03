@@ -114,7 +114,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12 text-center",
         shiny::tags$b("Proudly presented to you by"),
         shiny::p(
-          "Ana Nufer, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
+          "Ana Nufer, Antonino Zito, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Griffin Seidel, Ivo Kwee, John Coene, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
         )
       )
     )
@@ -126,7 +126,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12 text-center",
         shiny::tags$b("Created with love"), br(),
         "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-        br(), "© 2000-2023 BigOmics Analytics, Inc.", br(),
+        br(), "© 2000-2024 BigOmics Analytics, Inc.", br(),
         shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
       )
     )

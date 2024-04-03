@@ -1,0 +1,38 @@
+html {
+    
+    .carousel {
+	interval: 10s;
+    }
+
+    .carousel-item {
+	transition-duration: 1.3s;
+    }
+
+    .carousel-indicators {
+	bottom: -20px;
+    }
+    
+    .carousel-indicators .active{
+	background-color: #b6d3E888;
+    }
+
+    .carousel-indicators button {
+	background-color: #b6d3E888;
+    }
+
+    .carousel-control-next {
+	width: 5%;
+	right: -20px;
+    }
+
+    .carousel-control-prev {
+	width: 5%;
+	left: -20px;
+    }
+    
+    .carousel-control-prev-icon, .carousel-control-next-icon {
+//	background-color: #b6d3E888;
+	filter: invert(0.3) sepia(1) saturate(1.5) hue-rotate(175deg)	
+    }
+	    
+}

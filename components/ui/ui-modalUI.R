@@ -3,6 +3,17 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+ui.showSmallModal <- function(msg = "Please wait...", timer = 0) {
+  shiny::showModal(shiny::modalDialog(
+    title = NULL,
+    shiny::HTML("<br><center><p>", msg, "</p></center>"),
+    footer = NULL,
+    size = "s", easyClose = TRUE, fade = FALSE
+  ))
+  if (timer > 0) {
+    shinyjs::delay(timer, shiny::removeModal())
+  }
+}
 
 modalTrigger <- function(
     id,

@@ -9,7 +9,9 @@ html {
 	margin-right: auto;
 	margin-left: auto;
 	margin-top: -5px;
-	font-size: 1.2em;
+	margin-bottom: 5px;
+	font-size: 2em;
+	font-weight: 600;
     }
     
     .modal-content .well {
@@ -25,7 +27,7 @@ html {
         }
 
     .modal-dialog.modal-lg {
-        width: 600px;
+        width: 640px;
         justify-content: center;
         align-items: center;
     }
@@ -36,12 +38,15 @@ html {
         align-items: center;
     }
     
+    .modal-header .btn-close {
+	margin: 0px;
+    }
+    
     .modal-footer .btn {
 	margin-left: 5px;
 	margin-bottom: 0;
 	font-size: 14px;
     }
-
 
     .img-fluid{
       display: block;

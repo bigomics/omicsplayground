@@ -93,7 +93,7 @@ UploadBoard <- function(id,
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ## switch 'pgx' as standard name. Actually saving as RDS
       ## would have been better...
-      dbg("[UploadBoard:observe::uploaded_pgx] saving pgx as = ", fn)
+      dbg("[upload_server:observe::uploaded_pgx] saving pgx as = ", fn)
       playbase::pgx.save(new_pgx, file = fn)
 
       shiny::withProgress(message = "Scanning dataset library...", value = 0.33, {
@@ -117,8 +117,7 @@ UploadBoard <- function(id,
 
       ## clean up reactiveValues
       isolate({
-        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+        reset_upload()
       })
 
       if (uploaded_method == "computed") {
@@ -193,8 +192,6 @@ UploadBoard <- function(id,
       }
     })
 
-
-
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
     ## =====================================================================
@@ -216,8 +213,12 @@ UploadBoard <- function(id,
       prefix <- paste0("raw_", auth_id, "_")
       raw_dir <- tempfile(pattern = prefix, tmpdir = file.path(PGX.DIR, "USER_INPUT"))
       dir.create(raw_dir, recursive = TRUE)
-      dbg("[UploadBoard:raw_dir<-eventReactive] creating raw_dir", raw_dir)
       raw_dir
+    }
+
+    reset_upload <- function() {
+      lapply(names(uploaded), function(i) uploaded[[i]] <<- NULL)
+      lapply(names(checklist), function(i) checklist[[i]] <<- NULL)
     }
 
     shiny::observeEvent(input$upload_files, {
@@ -234,14 +235,15 @@ UploadBoard <- function(id,
         )
       }
 
-      uploaded[["counts.csv"]] <- NULL
-      uploaded[["samples.csv"]] <- NULL
-      uploaded[["contrasts.csv"]] <- NULL
-      uploaded[["pgx"]] <- NULL
-      uploaded[["last_uploaded"]] <- NULL
-      uploaded[["checklist"]] <- NULL
-      checklist[["samples_counts"]] <- NULL
-      checklist[["samples_contrasts"]] <- NULL
+      ## this is not good...
+      ## uploaded[["counts.csv"]] <<- NULL
+      ## uploaded[["samples.csv"]] <<- NULL
+      ## uploaded[["contrasts.csv"]] <<- NULL
+      ## uploaded[["pgx"]] <<- NULL
+      ## uploaded[["last_uploaded"]] <<- NULL
+      ## uploaded[["checklist"]] <<- NULL
+      ## checklist[["samples_counts"]] <- NULL
+      ## checklist[["samples_contrasts"]] <- NULL
 
       ## read uploaded files
       pgx.uploaded <- any(grepl("[.]pgx$", upload_table$name))
@@ -252,7 +254,7 @@ UploadBoard <- function(id,
         ## dimensions from the given PGX/NGS object. Really?
         i <- grep("[.]pgx$", upload_table$name)
         pgxfile <- upload_table$datapath[i]
-        uploaded[["pgx"]] <- local(get(load(pgxfile, verbose = 0))) ## override any name
+        uploaded[["pgx"]] <<- local(get(load(pgxfile, verbose = 0))) ## override any name
         return(NULL)
       } else {
         ## If the user uploaded CSV files, we read in the data
@@ -349,9 +351,9 @@ UploadBoard <- function(id,
 
       if (is.null(uploaded$counts.csv) && !"counts.csv" %in% names(matlist)) {
         shinyalert::shinyalert(
-          title = "Please upload counts.csv matrix first",
-          text = NULL,
-          type = "info"
+          text = "Please upload the counts.csv (or expression.csv) matrix first",
+          title = "Missing counts.csv",
+          type = "error"
         )
         ## cancel upload!!
         matlist <- NULL
@@ -362,9 +364,9 @@ UploadBoard <- function(id,
       no.counts <- !("counts.csv" %in% names(matlist) || "counts.csv" %in% names(uploaded))
       if ("contrasts.csv" %in% names(matlist) && (no.samples || no.counts)) {
         shinyalert::shinyalert(
-          title = "Please upload counts.csv and samples.csv matrices first",
-          text = NULL,
-          type = "info"
+          text = "Please upload counts.csv and samples.csv files first",
+          title = "Missing counts.csv and samples.csv",
+          type = "error"
         )
         ## cancel upload!!
         matlist <- NULL
@@ -374,9 +376,8 @@ UploadBoard <- function(id,
       if ("counts.csv" %in% names(matlist)) {
         new_hash <- rlang::hash(matlist[["counts.csv"]])
         if (new_hash != last_hash) {
-          uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
-          uploaded[["last_uploaded"]] <- NULL
+          dbg("[upload_server] new counts file uploaded. hash changed! resetting upload.")
+          reset_upload()
           last_hash <<- new_hash
         }
       }
@@ -395,10 +396,11 @@ UploadBoard <- function(id,
           }
           m1 <- names(matlist)[i]
           message("[upload_files] updating matrix ", m1)
-          uploaded[[m1]] <- matlist[[i]]
+          uploaded[[m1]] <<- matlist[[i]]
         }
-        uploaded[["last_uploaded"]] <- names(matlist)
+        uploaded[["last_uploaded"]] <<- names(matlist)
       }
+
       message("[upload_files] done!\n")
     })
 
@@ -590,9 +592,9 @@ UploadBoard <- function(id,
         }
 
         if (is.null(checked)) {
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "samples.csv")
-          ## uploaded[["samples.csv"]] <- NULL
-          uploaded[["contrasts.csv"]] <- NULL
+          uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "samples.csv")
+          ## uploaded[["samples.csv"]] <<- NULL
+          uploaded[["contrasts.csv"]] <<- NULL
         }
 
         list(status = status, matrix = checked)
@@ -642,7 +644,7 @@ UploadBoard <- function(id,
           # pop up telling the user to upload samples.csv first
           shinyalert::shinyalert(
             title = "Samples.csv file missing",
-            text = "Please upload the samples.csv file first.",
+            text = "Please upload the samples.csv file first",
             type = "error"
           )
         }
@@ -687,7 +689,7 @@ UploadBoard <- function(id,
           )
         }
         if (is.null(checked)) {
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
+          uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
         }
 
         list(status = status, matrix = checked)
@@ -837,7 +839,7 @@ UploadBoard <- function(id,
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
-      uploaded[["contrasts.csv"]] <- modct$contr ## trigger check
+      uploaded[["contrasts.csv"]] <<- modct$contr ## trigger check
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct$contr, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
