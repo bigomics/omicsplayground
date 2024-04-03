@@ -126,12 +126,21 @@ expression_plot_topfoldchange_server <- function(id,
       )
     }
 
+    plot_data_csv <- function() {
+      pd <- plot_data()
+      df <- data.frame(
+        name = names(pd[["fc.top"]]),
+        fc = pd[["fc.top"]]
+      )
+      return(df)
+    }
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
       remove_margins = FALSE,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
