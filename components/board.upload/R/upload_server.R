@@ -217,15 +217,6 @@ UploadBoard <- function(id,
       raw_dir
     }
 
-    # # In case the user is reanalysing the data, get the info from pgx
-    # observeEvent(recompute_pgx(), {
-    #   pgx <- recompute_pgx()
-    #   browser()
-    #   new_upload(new_upload() + 1)
-      
-    # 
-    # })
-
     ## =====================================================================
     ## ===================== checkTables ===================================
     ## =====================================================================
@@ -736,7 +727,6 @@ UploadBoard <- function(id,
           if(process_counter() < MAX_DS_PROCESS){
             wizardR::wizard_show(ns("upload_wizard"))
             if(!is.null(recompute_pgx())){
-              browser()
               pgx <- recompute_pgx()
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
