@@ -217,14 +217,14 @@ UploadBoard <- function(id,
       raw_dir
     }
 
-    # In case the user is reanalysing the data, get the info from pgx
-    observeEvent(recompute_pgx(), {
-      pgx <- recompute_pgx()
-      uploaded$samples.csv <- pgx$samples
-      uploaded$contrasts.csv <- pgx$contrast
-      uploaded$counts.csv <- pgx$counts
-      recompute_info(list("name" = pgx$name, "description" = pgx$description))
-    })
+    # # In case the user is reanalysing the data, get the info from pgx
+    # observeEvent(recompute_pgx(), {
+    #   pgx <- recompute_pgx()
+    #   browser()
+    #   new_upload(new_upload() + 1)
+      
+    # 
+    # })
 
     ## =====================================================================
     ## ===================== checkTables ===================================
@@ -556,19 +556,21 @@ UploadBoard <- function(id,
     })
 
     # reset wizard upon initialization
-    observeEvent(
-      list(process_counter(),new_upload()), {
-      isolate({
-        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-        upload_datatype(NULL)
-        upload_name(NULL)
-        upload_description(NULL)
-        upload_organism(NULL)
-        show_comparison_builder(FALSE)
-      })
-      wizardR::reset("upload_wizard")
-    })
+    # observeEvent(
+    #   list(process_counter(),new_upload()), {
+    #   isolate({
+    #     lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+    #     lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+    #     upload_datatype(NULL)
+    #     upload_name(NULL)
+    #     upload_description(NULL)
+    #     upload_organism(NULL)
+    #     show_comparison_builder(FALSE)
+    #   })
+    #   wizardR::reset("upload_wizard")
+    # })
+
+
 
     # warn user when locked button is clicked (UX)
     observeEvent(
@@ -708,9 +710,21 @@ UploadBoard <- function(id,
     )
 
     # observe show_modal and start modal
-    shiny::observeEvent(new_upload(), {
+    shiny::observeEvent(
+      list(new_upload(), recompute_pgx()), {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
+
+        isolate({
+          lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+          lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+          upload_datatype(NULL)
+          upload_name(NULL)
+          upload_description(NULL)
+          upload_organism(NULL)
+          show_comparison_builder(FALSE)
+        })
+        wizardR::reset("upload_wizard")
 
         # skip upload trigger at first startup
         if (new_upload() == 0) {
@@ -721,6 +735,23 @@ UploadBoard <- function(id,
           MAX_DS_PROCESS <- 1
           if(process_counter() < MAX_DS_PROCESS){
             wizardR::wizard_show(ns("upload_wizard"))
+            if(!is.null(recompute_pgx())){
+              browser()
+              pgx <- recompute_pgx()
+              uploaded$samples.csv <- pgx$samples
+              uploaded$contrasts.csv <- pgx$contrast
+              uploaded$counts.csv <- pgx$counts
+              recompute_info(
+                list(
+                  "name" = pgx$name,
+                  "description" = pgx$description)
+                )
+            }
+
+            # if recomputing pgx, add data to wizard
+
+
+
             } else {
               shinyalert::shinyalert(
                 title = "Upload disabled",
