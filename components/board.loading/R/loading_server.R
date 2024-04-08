@@ -182,7 +182,7 @@ LoadingBoard <- function(id,
       reload_pgxdir = reload_pgxdir,
       recompute_pgx = recompute_pgx,
       loadbutton = reactive(input$loadbutton),
-      newuploadbutton = reactive(input$newuploadbutton)
+      new_upload = new_upload
     )
 
     loading_tsne_server(

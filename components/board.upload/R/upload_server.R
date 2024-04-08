@@ -679,7 +679,7 @@ UploadBoard <- function(id,
 
     # observe show_modal and start modal
     shiny::observeEvent(
-      list(new_upload(), recompute_pgx()), {
+      list(new_upload()), {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
 

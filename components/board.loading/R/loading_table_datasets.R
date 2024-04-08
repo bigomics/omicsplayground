@@ -65,7 +65,8 @@ loading_table_datasets_server <- function(id,
                                           reload_pgxdir,
                                           recompute_pgx,
                                           loadbutton,
-                                          newuploadbutton
+                                          newuploadbutton,
+                                          new_upload
                                           ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -574,9 +575,10 @@ loading_table_datasets_server <- function(id,
             load_uploaded_data <- shiny::reactiveVal(NULL)
             reload_pgxdir <- shiny::reactiveVal(0)
             recompute_pgx(pgx)
+            new_upload(new_upload() + 1)
 
-            bigdash.selectTab(session, "upload-tab")
-            shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
+            # bigdash.selectTab(session, "upload-tab")
+            # shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
 
             return(0)
           } else {
