@@ -146,14 +146,8 @@ UploadBoard <- function(id,
         }
       }
 
-      ## clean up reactiveValues
-      isolate({
-        reset_upload()
-      })
-
       # reset new_upload to 0, so upload will not trigger when computation is done
       new_upload(0)
-
 
       if (uploaded_method == "computed") {
         shinyalert::shinyalert(
@@ -545,23 +539,6 @@ UploadBoard <- function(id,
       }
       return(pgx)
     })
-
-    # reset wizard upon initialization
-    # observeEvent(
-    #   list(process_counter(),new_upload()), {
-    #   isolate({
-    #     lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-    #     lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-    #     upload_datatype(NULL)
-    #     upload_name(NULL)
-    #     upload_description(NULL)
-    #     upload_organism(NULL)
-    #     show_comparison_builder(FALSE)
-    #   })
-    #   wizardR::reset("upload_wizard")
-    # })
-
-
 
     # warn user when locked button is clicked (UX)
     observeEvent(
