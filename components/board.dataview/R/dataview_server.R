@@ -321,7 +321,7 @@ DataViewBoard <- function(id, pgx) {
         }
 
         grpvar <- input$data_groupby
-        if (grpvar != "<ungrouped>") {        
+        if (grpvar != "<ungrouped>") {
           gr <- pgx$Y[samples, grpvar]
           grps <- sort(unique(gr))
           ## check if there are any samples remaining in the group after filtering
