@@ -105,7 +105,7 @@ dataview_plot_genetypes_server <- function(id,
 
       df <- data.frame(family = family, prop = avg.prop, genes = genes)
 
-      if(return_csv) {
+      if (return_csv) {
         return(df)
       }
 

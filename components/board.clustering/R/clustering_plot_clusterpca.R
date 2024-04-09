@@ -164,7 +164,7 @@ clustering_plot_clustpca_server <- function(id,
         plt <- plotly::plot_ly(
           df,
           mode = "markers"
-          ) %>%
+        ) %>%
           plotly::add_markers(
             x = df[, 1],
             y = df[, 2],
@@ -263,7 +263,7 @@ clustering_plot_clustpca_server <- function(id,
     }
 
     plot.RENDER <- reactive({
-      if(length(create_plotlist()) == 1){
+      if (length(create_plotlist()) == 1) {
         # this is necessary to show axis titles (subplot errases them)
         create_plotlist()[[1]]
       } else {
@@ -275,7 +275,6 @@ clustering_plot_clustpca_server <- function(id,
           margin = 0.04
         )
       }
-      
     })
 
     PlotModuleServer(

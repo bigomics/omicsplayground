@@ -51,7 +51,7 @@ dataview_plot_abundance_server <- function(id,
       long.data <- reshape2::melt(head(res$prop.counts, 5))
       colnames(long.data) <- c("gene", "sample", "value")
 
-      if(return_csv) {
+      if (return_csv) {
         return(long.data)
       }
 

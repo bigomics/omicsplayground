@@ -226,7 +226,7 @@ expression_plot_topgenes_server <- function(id,
     plot_data_csv <- function() {
       df <- plot_data()
       df <- df$res
-      df <- df[,c("AveExpr0", "AveExpr1")]
+      df <- df[, c("AveExpr0", "AveExpr1")]
       return(df)
     }
 
