@@ -103,7 +103,7 @@ upload_table_preview_counts_server <- function(
               shiny::h4("Choose counts.csv", class='mb-0'),
               multiple = FALSE,
               accept = c(".csv"),
-              width = "800px" #TODO this is a hack to make the file input area wider
+              width = "800px"
             )
           )
         )
@@ -329,7 +329,7 @@ upload_table_preview_samples_server <- function(
               shiny::h4("Choose samples.csv", class='mb-0'),
               multiple = FALSE,
               accept = c(".csv"),
-              width = "800px" #TODO this is a hack to make the file input area wider
+              width = "800px"
             )
           )
         )
@@ -545,7 +545,7 @@ upload_table_preview_contrasts_server <- function(
                 shiny::h4("Choose contrasts.csv", class='mb-0'),
                 multiple = FALSE,
                 accept = c(".csv"),
-                width = "800px" #TODO this is a hack to make the file input area wider
+                width = "800px"
               )
             )
           )
@@ -727,7 +727,7 @@ fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
 
   div(
     class = "form-group", #shiny-input-container w-100",
-    style = htmltools::css(width = htmltools::validateCssUnit(width)),
+    style = htmltools::css(width = htmltools::validateCssUnit(width), margin = "auto"),
     shiny:::shinyInputLabel(inputId, ""),
     div(
       class = "input-group mb-3",
