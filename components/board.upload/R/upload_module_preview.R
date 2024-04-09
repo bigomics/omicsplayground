@@ -230,9 +230,8 @@ upload_table_preview_counts_server <- function(
 } ## end of server
 
 upload_table_preview_samples_ui <- function(id) {
-  
   ns <- shiny::NS(id)
-  uiOutput(ns("table_samples"))
+  uiOutput(ns("table_samples"), fill=TRUE)
 }
 
 upload_table_preview_samples_server <- function(
@@ -296,6 +295,7 @@ upload_table_preview_samples_server <- function(
 
     output$table_samples <- shiny::renderUI(
       div(
+        bslib::as_fill_carrier(),
         div(
           style = "display: flex; justify-content: space-between;width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
           div(
