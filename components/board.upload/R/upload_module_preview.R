@@ -1,7 +1,7 @@
 upload_table_preview_counts_ui <- function(id) {
   
   ns <- shiny::NS(id)
-  uiOutput(ns("table_counts"))
+  uiOutput(ns("table_counts"), fill = TRUE)
 }
 
 upload_table_preview_counts_server <- function(
@@ -69,9 +69,9 @@ upload_table_preview_counts_server <- function(
 
     output$table_counts <- shiny::renderUI(
       div(
-        
+        bslib::as_fill_carrier(),
         div(
-          style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+          style = "display: flex; justify-content: space-between;",
           div(
             if(!is.null(uploaded$counts.csv)){
               shiny::actionButton(
@@ -297,7 +297,7 @@ upload_table_preview_samples_server <- function(
       div(
         bslib::as_fill_carrier(),
         div(
-          style = "display: flex; justify-content: space-between;width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+          style = "display: flex; justify-content: space-between;", #TODO width is a hack to make the file input area wider
           div(
             if(!is.null(uploaded$samples.csv)){
               shiny::actionButton(
@@ -427,9 +427,8 @@ upload_table_preview_samples_server <- function(
 }
 
 upload_table_preview_contrasts_ui <- function(id) {
-  
   ns <- shiny::NS(id)
-  uiOutput(ns("table_contrasts"))
+  uiOutput(ns("table_contrasts"), fill = TRUE)
 }
 
 upload_table_preview_contrasts_server <- function(
@@ -499,10 +498,11 @@ upload_table_preview_contrasts_server <- function(
     output$table_contrasts <- shiny::renderUI(
       div(
         # if run_build_comparisons is clicked, then show the contrasts
+        bslib::as_fill_carrier(),
         if(show_comparison_builder()){
           bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 340px)",
+          # height = "calc(100vh - 340px)",
           heights_equal = "row",
           upload_module_makecontrast_ui(ns("makecontrast")),
           #bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
@@ -510,7 +510,7 @@ upload_table_preview_contrasts_server <- function(
         } else {
           div(
           div(
-            style = "display: flex; justify-content: space-between; width:'800px'; margin-bottom: 20px;", #TODO width is a hack to make the file input area wider
+            style = "display: flex; justify-content: space-between;", #TODO width is a hack to make the file input area wider
             div(
             if(!is.null(uploaded$contrasts.csv)){
                 shiny::actionButton(
