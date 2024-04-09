@@ -71,7 +71,7 @@ upload_table_preview_counts_server <- function(
       div(
         bslib::as_fill_carrier(),
         div(
-          style = "display: flex; justify-content: space-between;",
+          style = "display: flex; justify-content: space-between; margin-bottom: 20px;",
           div(
             if(!is.null(uploaded$counts.csv)){
               shiny::actionButton(
@@ -297,7 +297,7 @@ upload_table_preview_samples_server <- function(
       div(
         bslib::as_fill_carrier(),
         div(
-          style = "display: flex; justify-content: space-between;", #TODO width is a hack to make the file input area wider
+          style = "display: flex; justify-content: space-between; margin-bottom: 20px;",
           div(
             if(!is.null(uploaded$samples.csv)){
               shiny::actionButton(
@@ -510,7 +510,7 @@ upload_table_preview_contrasts_server <- function(
         } else {
           div(
           div(
-            style = "display: flex; justify-content: space-between;", #TODO width is a hack to make the file input area wider
+            style = "display: flex; justify-content: space-between; margin-bottom: 20px;",
             div(
             if(!is.null(uploaded$contrasts.csv)){
                 shiny::actionButton(
