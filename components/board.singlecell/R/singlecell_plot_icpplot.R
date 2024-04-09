@@ -60,7 +60,7 @@ singlecell_plot_icpplot_ui <- function(
     title = title,
     caption = caption,
     options = icp.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf"),
     height = height,
     width = width
   )

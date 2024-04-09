@@ -88,7 +88,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       )
     })
 
-    topEnrichedFreq.RENDER <- function() {
+    topEnrichedFreq.RENDER <- function(return_csv = FALSE) {
       dt <- plot_data()
       shiny::req(dt)
       pgx <- dt[[1]]
@@ -128,11 +128,20 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
       if (length(sel.zero)) rownames(F)[sel.zero] <- ""
 
+      if(return_csv) {
+        return(F)
+      }
+
       playbase::pgx.stackedBarplot(
         x = F,
         ylab = ifelse(wt, "weighted frequency", "frequency"),
         showlegend = FALSE
       )
+    }
+
+    plot_data_csv <- function() {
+      df <- topEnrichedFreq.RENDER(return_csv = TRUE)
+      return(df)
     }
 
     PlotModuleServer(
@@ -142,7 +151,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       pdf.width = 5,
       pdf.height = 5,
       res = c(68, 100),
-      csvFunc = plot_data,
+      csvFunc = plot_data_csv,
       add.watermark = watermark
     )
   })
