@@ -161,7 +161,10 @@ clustering_plot_clustpca_server <- function(id,
         }
       } else {
         ## 2D plot
-        plt <- plotly::plot_ly(df, mode = "markers") %>%
+        plt <- plotly::plot_ly(
+          df,
+          mode = "markers"
+          ) %>%
           plotly::add_markers(
             x = df[, 1],
             y = df[, 2],
@@ -181,6 +184,10 @@ clustering_plot_clustpca_server <- function(id,
             text = ann.text,
             ## xref = "x", yref = "y",
             showarrow = FALSE
+          ) %>% # add x axis title
+          plotly::layout(
+            xaxis = list(title = paste0(toupper(method), "1")),
+            yaxis = list(title = paste0(toupper(method), "2"))
           )
 
         ## add group/cluster annotation labels
@@ -256,13 +263,19 @@ clustering_plot_clustpca_server <- function(id,
     }
 
     plot.RENDER <- reactive({
-      plist <- create_plotlist()
-      nc <- ceiling(sqrt(length(plist)))
-      plotly::subplot(
-        plist,
-        nrows = nc,
-        margin = 0.04
-      )
+      if(length(create_plotlist()) == 1){
+        # this is necessary to show axis titles (subplot errases them)
+        create_plotlist()[[1]]
+      } else {
+        plist <- create_plotlist()
+        nc <- ceiling(sqrt(length(plist)))
+        plotly::subplot(
+          plist,
+          nrows = nc,
+          margin = 0.04
+        )
+      }
+      
     })
 
     PlotModuleServer(
