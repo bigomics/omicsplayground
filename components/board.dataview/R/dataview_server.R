@@ -69,8 +69,11 @@ DataViewBoard <- function(id, pgx) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-      shiny::req(pgx$Y, pgx$samples)
 
+      dbg("[DataViewBoard] obs1 (req)")      
+      shiny::req(pgx$Y, pgx$samples)
+      dbg("[DataViewBoard] obs1 (run)")
+      
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "data_samplefilter", choices = levels)
@@ -84,6 +87,8 @@ DataViewBoard <- function(id, pgx) {
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
+
+      dbg("[DataViewBoard] obs1 (done)")      
     })
 
     # Observe tabPanel change to update Settings visibility
@@ -99,16 +104,17 @@ DataViewBoard <- function(id, pgx) {
     })
 
 
-    shiny::observeEvent(
-      {
-        list(
-          input$data_type,
-          pgx$X,
-          pgx$counts
-        )
-      },
-      {
+    shiny::observeEvent({
+      list(
+        input$data_type,
+        pgx$X,
+        pgx$counts
+      )
+    }, {
+        dbg("[DataViewBoard] obs2 (req)")      
         shiny::req(input$data_type)
+        dbg("[DataViewBoard] obs2 (run)")
+        
         if (input$data_type %in% c("counts", "CPM")) {
           pp <- rownames(pgx$counts)
         } else {
@@ -133,17 +139,22 @@ DataViewBoard <- function(id, pgx) {
           options = list(maxOptions = 1001),
           server = TRUE
         )
+
+        dbg("[DataViewBoard] obs2 (done)")
+        
       }
     )
 
     last_search_gene <- reactiveVal()
 
     input_search_gene <- reactive({
+      dbg("[DataViewBoard] reactive:input_search_gene")
       if (input$search_gene %in% c("(type SYMBOL for more genes...)", "")) {
         gene1 <- last_search_gene()
         return(gene1)
       }
-      last_search_gene(input$search_gene)
+      last_search_gene(input$search_gene) 
+      dbg("[DataViewBoard] reactive:input_search_gene (done)")     
       return(input$search_gene)
     })
 
@@ -154,13 +165,16 @@ DataViewBoard <- function(id, pgx) {
 
     ## get selected samples after sample filtering
     selected_samples <- reactive({
+      dbg("[DataViewBoard] reactive:selected_samples (react)")
+      
       samples <- colnames(pgx$X)
-
       if (!is.null(input$data_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
       }
       # validate samples
       validate(need(length(samples) > 0, "No samples remaining after filtering."))
+
+      dbg("[DataViewBoard] reactive:selected_samples (done)")      
       samples
     })
 
@@ -296,21 +310,22 @@ DataViewBoard <- function(id, pgx) {
 
     getCountStatistics <- reactiveVal()
 
-    observeEvent(
-      {
+    observeEvent({
         list(
           pgx$X,
           input$data_groupby,
           input$data_samplefilter,
           input$data_type
         )
-      },
-      {
+    }, {
+        dbg("[DataViewBoard] obj3 (req)")
+      
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::req(input$data_groupby, input$data_type)
-
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
 
+        dbg("[DataViewBoard] obs3 (start)")
+        
         subtt <- NULL
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
@@ -321,11 +336,16 @@ DataViewBoard <- function(id, pgx) {
           counts <- pmax(2**pgx$X[, samples, drop = FALSE] - 1, 0)
         }
 
+        dbg("[DataViewBoard] obs3: 1")
+        
         grpvar <- input$data_groupby
         gr <- pgx$Y[samples, grpvar]
         grps <- sort(unique(gr))
-        # check if there are any samples remaining in the group after filtering
+        ## check if there are any samples remaining in the group after filtering
+        dbg("[DataViewBoard] len.groups = ", length(grps))
         validate(need(length(grps) > 0, "No samples remaining in the group after filtering."))
+        dbg("[DataViewBoard] obs3: 2a")
+        
         if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
           mx <- tapply(samples, gr, function(ii) {
             rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
@@ -341,6 +361,8 @@ DataViewBoard <- function(id, pgx) {
         }
         colnames(counts) <- substring(colnames(counts), 1, 24)
 
+        dbg("[DataViewBoard] obs3: 2b")
+        
         gset <- list()
         gg <- pgx$genes[rownames(counts), ]$gene_name
         tt <- pgx$genes[rownames(counts), ]$gene_title
@@ -382,6 +404,8 @@ DataViewBoard <- function(id, pgx) {
           paste(gg, collapse = "<br>")
         })
 
+        dbg("[DataViewBoard] obs3: 3")
+        
         ## align
         ss <- names(total.counts)
         prop.counts <- prop.counts[, ss, drop = FALSE]
@@ -399,6 +423,9 @@ DataViewBoard <- function(id, pgx) {
           prop.counts = prop.counts,
           gset.genes = gset.genes
         )
+
+        dbg("[DataViewBoard] obs3 (done)")
+        
         getCountStatistics(res)
       },
       ignoreNULL = TRUE
