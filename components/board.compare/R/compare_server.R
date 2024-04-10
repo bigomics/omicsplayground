@@ -75,6 +75,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
       higenes <- head(higenes, ntop)
       higenes <- paste(higenes, collapse = " ")
+      if(input$hilighttype == "custom") {
+        higenes <- input$genelist
+      }
       hilightgenes({
         genes <- strsplit(higenes, split = "[\t, \n]")[[1]]
         gsub("[ ]", "", genes)
