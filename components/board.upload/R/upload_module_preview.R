@@ -500,19 +500,20 @@ upload_table_preview_contrasts_server <- function(
       if(selected_contrast_input() == FALSE) {
         # ask user if preferrence is upload contrast or create contrast online
         div(
-          style = "display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;",
+          style = "display: flex; gap: 20px; flex-direction: column; justify-content: center; align-items: center; height: 100%;",
           div(h4("Please choose one of the following options:")),
           div(h5("And no worries, you can always go back!")),
           div(
+            style = "display: flex; justify-content: center; gap: 20px;",
             actionButton(
             ns("goUploadComparison"),
             label = "I want to upload my comparisons",
-            class = "btn btn-info"
+            class = "btn btn-primary"
             ),
           actionButton(
             ns("goOnlineComparison"),
             label = "I want to create my comparisons online",
-            class = "btn btn-info"
+            class = "btn btn-primary"
             )
           )
           
