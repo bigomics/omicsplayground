@@ -27,7 +27,8 @@ upload_module_computepgx_server <- function(
     upload_description,
     upload_datatype,
     upload_organism,
-    process_counter
+    process_counter,
+    reset_upload_text_input
     ) {
   shiny::moduleServer(
     id,
@@ -297,7 +298,13 @@ upload_module_computepgx_server <- function(
           computedPGX(NULL)
         }
       )
-      
+
+      # reset dataset name and description
+      observeEvent(reset_upload_text_input(), {
+        shiny::updateTextInput(session, "selected_name", value = "")
+        shiny::updateTextAreaInput(session, "selected_description", value = "")
+      })
+
       # change upload_datatype to selected_datatype
       
       observeEvent(input$selected_datatype, {

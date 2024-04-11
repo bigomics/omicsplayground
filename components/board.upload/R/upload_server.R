@@ -29,6 +29,7 @@ UploadBoard <- function(id,
     process_counter <- reactiveVal(0)
     show_comparison_builder <- shiny::reactiveVal(FALSE)
     selected_contrast_input <- shiny::reactiveVal(FALSE)
+    reset_upload_text_input <- shiny::reactiveVal(0)
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -527,7 +528,8 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       upload_name = upload_name,
       upload_description = upload_description,
-      process_counter = process_counter
+      process_counter = process_counter,
+      reset_upload_text_input = reset_upload_text_input
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -695,6 +697,9 @@ UploadBoard <- function(id,
           show_comparison_builder(FALSE)
           selected_contrast_input(FALSE)
         })
+
+        reset_upload_text_input(reset_upload_text_input()+1)
+
         wizardR::reset("upload_wizard")
 
         # skip upload trigger at first startup
