@@ -522,7 +522,7 @@ upload_table_preview_contrasts_server <- function(
                 )
               },
               actionButton(
-                  ns("run_build_comparisons"), "Run Comparison builder",
+                  ns("run_build_comparisons"), "Create comparison online",
                   class = "btn btn-warning"
                 ),
               ),
@@ -543,7 +543,7 @@ upload_table_preview_contrasts_server <- function(
             bslib::card(
               fileInputArea(
                 ns("contrasts_csv"),
-                shiny::h4("Choose contrasts.csv", class='mb-0'),
+                shiny::h4("Choose comparisons.csv (optional)", class='mb-0'),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "800px"
