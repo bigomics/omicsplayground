@@ -604,20 +604,14 @@ upload_table_preview_contrasts_server <- function(
 
     # control state of comparison builder
     observeEvent(input$run_build_comparisons, {
-      a=1
-      browser()
       show_comparison_builder(TRUE)
     })
 
     observeEvent(input$goUploadComparison, {
-      a=2
-      browser()
       selected_contrast_input(TRUE)
     })
 
-    observeEvent(input$goUploadComparison, {
-      a=3
-      browser()
+    observeEvent(input$goOnlineComparison, {
       selected_contrast_input(TRUE)
       show_comparison_builder(TRUE)
     })
