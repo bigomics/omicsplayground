@@ -445,6 +445,7 @@ upload_table_preview_contrasts_server <- function(
   checked_samples,
   checked_contrasts,
   show_comparison_builder,
+  selected_contrast_input,
   upload_wizard
   )
   {
@@ -496,12 +497,12 @@ upload_table_preview_contrasts_server <- function(
     }
 
     output$table_contrasts <- shiny::renderUI(
-      if(TRUE) {
+      if(selected_contrast_input() == FALSE) {
         # ask user if preferrence is upload contrast or create contrast online
         div(
-          style = "display: flex; justify-content: center; gap: 20px;",
-          actionButton(inputId = "uploadButton", label = "I want to upload my comparisons"),
-          actionButton(inputId = "createButton", label = "I want to create my comparisons online")
+          style = "display: flex; justify-content: center; align-items: center; gap: 20px; height: 100%;",
+          actionButton(ns("goUploadComparison"), label = "I want to upload my comparisons"),
+          actionButton(ns("goOnlineComparison"), label = "I want to create my comparisons online")
         )
       } else {
         div(
@@ -603,6 +604,21 @@ upload_table_preview_contrasts_server <- function(
 
     # control state of comparison builder
     observeEvent(input$run_build_comparisons, {
+      a=1
+      browser()
+      show_comparison_builder(TRUE)
+    })
+
+    observeEvent(input$goUploadComparison, {
+      a=2
+      browser()
+      selected_contrast_input(TRUE)
+    })
+
+    observeEvent(input$goUploadComparison, {
+      a=3
+      browser()
+      selected_contrast_input(TRUE)
       show_comparison_builder(TRUE)
     })
 

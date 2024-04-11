@@ -28,6 +28,7 @@ UploadBoard <- function(id,
     upload_datatype <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
     show_comparison_builder <- shiny::reactiveVal(FALSE)
+    selected_contrast_input <- shiny::reactiveVal(FALSE)
 
     output$navheader <- shiny::renderUI({
       fillRow(
@@ -673,6 +674,7 @@ UploadBoard <- function(id,
       checked_counts = checked_counts,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
+      selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
 
     )
@@ -691,6 +693,7 @@ UploadBoard <- function(id,
           upload_description(NULL)
           upload_organism(NULL)
           show_comparison_builder(FALSE)
+          selected_contrast_input(FALSE)
         })
         wizardR::reset("upload_wizard")
 
