@@ -8,21 +8,21 @@ UploadUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   counts_ui <- wizardR::wizard_step(
-    step_title = "Counts",
+    step_title = "Step 1: Counts",
     upload_table_preview_counts_ui(
       ns("counts_preview")
       )
   )
   
   samples_ui <- wizardR::wizard_step(
-    step_title = "Samples",
+    step_title = "Step 2: Samples",
     upload_table_preview_samples_ui(
       ns("samples_preview")
     )
   )
 
   contrasts_ui <- wizardR::wizard_step(
-    step_title = "Comparison",
+    step_title = "Step 3: Comparison",
     upload_table_preview_contrasts_ui(
       ns("contrasts_preview")
         )
