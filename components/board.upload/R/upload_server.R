@@ -592,9 +592,21 @@ UploadBoard <- function(id,
     # lock wizard it compute step
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
-        req(input$upload_wizard == "Step 4: Dataset description")
-        
-        
+        req(input$upload_wizard == "Step 4: Dataset description", upload_name())
+
+        pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
+
+        if(upload_name() %in% pgx_files$dataset){
+          shinyalert::shinyalert(
+            title = "Invalid name",
+            text = "This dataset name already exists.",
+            type = "error"
+          )
+          
+          upload_name(NULL)
+          
+        }
+
         if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
