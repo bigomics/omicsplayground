@@ -171,7 +171,7 @@ upload_module_makecontrast_server <- function(
           list(phenoRT(), upload_wizard(), show_comparison_builder())
         },
         {
-          req(upload_wizard() == "Comparison", show_comparison_builder() == TRUE)
+          req(upload_wizard() == "Step 3: Comparison", show_comparison_builder() == TRUE)
           phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
           phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
           psel <- c(grep("sample|patient|name|id|^[.]",
