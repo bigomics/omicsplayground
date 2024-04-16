@@ -44,12 +44,16 @@ dataview_plot_abundance_server <- function(id,
       res
     })
 
-    plotly.RENDER <- function() {
+    plotly.RENDER <- function(return_csv = FALSE) {
       res <- plot_data()
       shiny::req(res)
 
       long.data <- reshape2::melt(head(res$prop.counts, 5))
       colnames(long.data) <- c("gene", "sample", "value")
+
+      if (return_csv) {
+        return(long.data)
+      }
 
       ## stacked barchart
       fig <-
@@ -87,12 +91,17 @@ dataview_plot_abundance_server <- function(id,
       fig
     }
 
+    plot_data_csv <- function() {
+      df <- plotly.RENDER(return_csv = TRUE)
+      return(df)
+    }
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

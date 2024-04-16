@@ -49,7 +49,7 @@ correlation_plot_scattercorr_ui <- function(
     info.text = info.text,
     caption = caption,
     options = cor_scatter.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf"),
     width = width,
     height = height
   )
@@ -240,7 +240,6 @@ correlation_plot_scattercorr_server <- function(id,
       plotlib = "plotly",
       func = cor_scatter.PLOTFUN,
       func2 = cor_scatter.PLOTFUN2,
-      csvFunc = cor_scatter.DATA, ##  NOTE: Not sure what should be the plot data!
       res = c(100, 120), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,

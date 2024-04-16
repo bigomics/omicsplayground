@@ -308,7 +308,6 @@ DataViewBoard <- function(id, pgx) {
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::req(input$data_groupby, input$data_type)
-
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
 
         subtt <- NULL
@@ -322,15 +321,16 @@ DataViewBoard <- function(id, pgx) {
         }
 
         grpvar <- input$data_groupby
-        gr <- pgx$Y[samples, grpvar]
-        grps <- sort(unique(gr))
-        # check if there are any samples remaining in the group after filtering
-        validate(need(length(grps) > 0, "No samples remaining in the group after filtering."))
-        if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-          mx <- tapply(samples, gr, function(ii) {
-            rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
-          })
-          counts <- do.call(cbind, mx)
+        if (grpvar != "<ungrouped>") {
+          gr <- pgx$Y[samples, grpvar]
+          grps <- sort(unique(gr))
+          ## check if there are any samples remaining in the group after filtering
+          if (length(grps) > 1) {
+            mx <- tapply(samples, gr, function(ii) {
+              rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
+            })
+            counts <- do.call(cbind, mx)
+          }
         }
 
         ## if too many samples (like scRNA-seq do subsampling...)

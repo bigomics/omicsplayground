@@ -71,7 +71,7 @@ drugconnectivity_plot_moa_server <- function(id,
         res
       })
 
-      plotTopBarplot <- function(ntop) {
+      plotTopBarplot <- function(ntop, return_csv = FALSE) {
         res <- plot_data()
         shiny::req(res)
 
@@ -85,11 +85,17 @@ drugconnectivity_plot_moa_server <- function(id,
         moa.top <- res$score[jj]
         names(moa.top) <- res$pathway[jj]
 
+        df <- data.frame(
+          x = factor(names(moa.top), levels = names(moa.top)),
+          y = as.numeric(moa.top)
+        )
+
+        if (return_csv) {
+          return(df)
+        }
+
         p <- playbase::pgx.barplot.PLOTLY(
-          data = data.frame(
-            x = factor(names(moa.top), levels = names(moa.top)),
-            y = as.numeric(moa.top)
-          ),
+          data = df,
           x = "x",
           y = "y",
           yaxistitle = yaxistitle,
@@ -113,12 +119,17 @@ drugconnectivity_plot_moa_server <- function(id,
           )
       }
 
+      plot_data_csv <- function() {
+        df <- plotTopBarplot(14, return_csv = TRUE)
+        return(df)
+      }
+
       PlotModuleServer(
         "plot",
         plotlib = "plotly",
         func = plot.RENDER,
         func2 = plot.RENDER2,
-        csvFunc = plot_data,
+        csvFunc = plot_data_csv,
         res = c(70, 110),
         pdf.width = 9, pdf.height = 6,
         add.watermark = watermark
