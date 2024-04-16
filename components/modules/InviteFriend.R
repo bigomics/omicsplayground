@@ -80,7 +80,7 @@ InviteFriendModule <- function(
       }
 
       own_email <- (friend_email == auth$email)
-      own_email <- agrep(gsub("[0-9.-]|@.*","",friend_email), gsub("[0-9.-]|@.*","",auth$email))
+      own_email <- agrep(gsub("[0-9.-]|@.*", "", friend_email), gsub("[0-9.-]|@.*", "", auth$email))
       if (own_email) {
         shinyalert::shinyalert(text = "Meh. You cannot invite yourself... Or don't you have any friends?")
         dbg("[observeInviteFriendButton] error: Referrer is inviting him/her self")
@@ -95,20 +95,24 @@ InviteFriendModule <- function(
         dbg("[observeInviteFriendButton] error: Already registered")
         return(NULL)
       }
-      
+
       ## check already invited
       invite_file2 <- file.path(auth$user_dir, "INVITES.log")
-      if(!is.null(invite_file2) && file.exists(invite_file2)) {
-        invite_list  <- data.table::fread( invite_file2 )
-        colnames(invite_list) <- c("time","from","to")
+      if (!is.null(invite_file2) && file.exists(invite_file2)) {
+        invite_list <- data.table::fread(invite_file2)
+        colnames(invite_list) <- c("time", "from", "to")
         already_invited <- sum(invite_list$to == friend_email & invite_list$from == auth$email)
+<<<<<<< HEAD
+=======
+        dbg("[InviteFriendModule] input$invite : already_invited = ", already_invited)
+>>>>>>> fb374ee0521e13cf56163ed000211ea29221810e
         if (already_invited > 3) {
           shinyalert::shinyalert(text = "You've already invited your friend to Omics Playground!")
           dbg("[observeInviteFriendButton] error: Already invited")
           return(NULL)
         }
       }
-      
+
       ## Send email
       user_name <- auth$username
       user_email <- auth$email
