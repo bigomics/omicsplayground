@@ -250,6 +250,20 @@ LoadingBoard <- function(id,
     ## ========================== OBSERVE/REACT ====================================
     ## =============================================================================
 
+    ## =========================== BUTTON ACTIONS =============================
+    ## disable button if no row is selected
+    observeEvent(pgxtable$rows_selected(),
+      {
+        shiny::req(pgxtable)
+        if (is.null(pgxtable$rows_selected())) {
+          shinyjs::disable(id = "loadbutton")
+        } else {
+          shinyjs::enable(id = "loadbutton")
+        }
+      },
+      ignoreNULL = FALSE
+    )
+
     loadPGX <- function(pgxfile) {
       req(auth$logged)
       if (!auth$logged) {
