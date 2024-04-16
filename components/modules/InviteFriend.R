@@ -102,10 +102,6 @@ InviteFriendModule <- function(
         invite_list <- data.table::fread(invite_file2)
         colnames(invite_list) <- c("time", "from", "to")
         already_invited <- sum(invite_list$to == friend_email & invite_list$from == auth$email)
-<<<<<<< HEAD
-=======
-        dbg("[InviteFriendModule] input$invite : already_invited = ", already_invited)
->>>>>>> fb374ee0521e13cf56163ed000211ea29221810e
         if (already_invited > 3) {
           shinyalert::shinyalert(text = "You've already invited your friend to Omics Playground!")
           dbg("[observeInviteFriendButton] error: Already invited")
