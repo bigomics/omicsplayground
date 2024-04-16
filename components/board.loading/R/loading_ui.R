@@ -24,7 +24,7 @@ LoadingUI <- function(id) {
     flex = c(NA, NA, 1),
     shiny::div(
       id = "navheader-current-section",
-      HTML("Load Dataset &nbsp;"),
+      HTML("My Datasets &nbsp;"),
       shiny::actionLink(
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
