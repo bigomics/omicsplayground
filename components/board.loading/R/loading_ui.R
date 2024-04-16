@@ -43,7 +43,7 @@ LoadingUI <- function(id) {
       div(
       shiny::actionButton(
         ns("loadbutton"),
-        label = "Load dataset",
+        label = "Analyze dataset",
         icon = icon("file-import"),
         class = "btn btn-primary",
         width = NULL
@@ -51,7 +51,7 @@ LoadingUI <- function(id) {
       # create button to trigger new_upload modal in server
       shiny::actionButton(
         ns("newuploadbutton"),
-        label = "Upload dataset",
+        label = "Upload new dataset",
         icon = icon("upload"),
         class = "btn btn-info",
         width = NULL

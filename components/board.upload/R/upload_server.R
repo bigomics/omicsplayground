@@ -155,7 +155,7 @@ UploadBoard <- function(id,
         shinyalert::shinyalert(
           title = paste("Your dataset is ready!"),
           text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
-          confirmButtonText = "Load my new data!",
+          confirmButtonText = "Analyze my new data!",
           showCancelButton = TRUE,
           cancelButtonText = "Stay here.",
           inputId = "confirmload",

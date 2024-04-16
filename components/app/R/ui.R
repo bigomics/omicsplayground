@@ -307,10 +307,10 @@ app_ui <- function(x) {
           ),
           bigdash::sidebarTabHelp(
             "load-tab",
-            "Load dataset",
+            "Analyze dataset",
             "This panel shows the available datasets within the platform. These data sets
                     have been pre-computed and are ready to be used. Select a
-                    dataset in the table and load the data set by clicking the 'load' button."
+                    dataset in the table and load the data set by clicking the 'Analyze dataset' button."
           ),
           # ,
           # bigdash::sidebarTabHelp(

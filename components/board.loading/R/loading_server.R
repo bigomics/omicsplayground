@@ -57,7 +57,7 @@ LoadingBoard <- function(id,
     output$sharing_alert <- renderUI({
       if (!auth$options$ENABLE_USER_SHARE) {
         return(
-          bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+          bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and analyze the data by clicking the <b>Analyze Dataset</b> button below."))
         )
       }
       received_files <- pgxreceived$getReceivedFiles()
@@ -67,7 +67,7 @@ LoadingBoard <- function(id,
 
 
       if (num_received == 0 && num_shared == 0) {
-        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and analyze the data by clicking the <b>Analyze Dataset</b> button below."))
         return(tag)
       }
 
@@ -230,7 +230,7 @@ LoadingBoard <- function(id,
         genes, gene sets (or pathways), corresponding phenotypes and the creation
         date.<br><br><b>Selecting the dataset:</b> Users can select a dataset in
         the table. The Dataset info shows the information of the dataset of
-        interest and users can load the data by clicking the 'Load dataset'
+        interest and users can analyze the data by clicking the 'Analyze dataset'
         button.<br><br><br><center><iframe width='560' height='315'
         src='https://www.youtube.com/embed/elwT6ztt3Fo'
         title='YouTube video player' frameborder='0'
