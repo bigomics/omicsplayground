@@ -24,7 +24,7 @@ LoadingUI <- function(id) {
     flex = c(NA, NA, 1),
     shiny::div(
       id = "navheader-current-section",
-      HTML("Load Dataset &nbsp;"),
+      HTML("My Datasets &nbsp;"),
       shiny::actionLink(
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
@@ -40,6 +40,23 @@ LoadingUI <- function(id) {
       col_widths = 12,
       height = "calc(100vh - 180px)",
       uiOutput(ns("sharing_alert")),
+      div(
+      shiny::actionButton(
+        ns("loadbutton"),
+        label = "Analyze dataset",
+        icon = icon("file-import"),
+        class = "btn btn-primary",
+        width = NULL
+      ),
+      # create button to trigger new_upload modal in server
+      shiny::actionButton(
+        ns("newuploadbutton"),
+        label = "Upload new dataset",
+        icon = icon("upload"),
+        class = "btn btn-info",
+        width = NULL
+      ),
+    ),
       bslib::layout_columns(
         col_widths = c(7, 5),
         loading_table_datasets_ui(
