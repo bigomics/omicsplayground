@@ -75,13 +75,14 @@ InviteFriendModule <- function(
       friend_email <- input$email
       if (!checkValidEmailFormat(friend_email)) {
         ## shinyalert::shinyalert(text="Not a valid email")
-        dbg("[observeInviteFriendButton] error: Not a valid email")
+        dbg("[observeInviteFriend] error: Not a valid email")
         return(NULL)
       }
 
       own_email <- (friend_email == auth$email)
       own_email <- agrep(gsub("[0-9.-]|@.*", "", friend_email), gsub("[0-9.-]|@.*", "", auth$email))
-      if (own_email) {
+      
+      if (length(own_email) > 0 ) {
         shinyalert::shinyalert(text = "Meh. You cannot invite yourself... Or don't you have any friends?")
         dbg("[observeInviteFriendButton] error: Referrer is inviting him/her self")
         return(NULL)
@@ -90,6 +91,7 @@ InviteFriendModule <- function(
       ## check already registered
       already_registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
       already_registered <- grep("@", already_registered, value = TRUE)
+      
       if (friend_email %in% already_registered) {
         shinyalert::shinyalert(text = "No need to invite! Your friend is already on Omics Playground")
         dbg("[observeInviteFriendButton] error: Already registered")
