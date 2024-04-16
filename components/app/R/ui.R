@@ -80,13 +80,7 @@ app_ui <- function(x) {
           loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
         )
       )
-
-      ## Put some hidden UI in footer
-      footer <- shiny::tagList(
-        SocialMediaModuleUI("socialmodal"),
-        ## SendReferralModuleUI("sendreferral")
-      )
-
+      
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
         onClick = "logoutInApp()"
@@ -458,8 +452,7 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         ),
-        UploadUI("upload"),
-        shiny::tagList(footer)
+        UploadUI("upload")
       )
     }
 
