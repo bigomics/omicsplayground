@@ -491,20 +491,6 @@ loading_table_datasets_server <- function(id,
       pgx_name
     })
 
-    ## =========================== BUTTON ACTIONS =============================
-    ## disable button if no row is selected
-    observeEvent(table_module$rows_selected(),
-      {
-        shiny::req(table_module)
-        if (is.null(table_module$rows_selected())) {
-          shinyjs::disable(id = "loadbutton")
-        } else {
-          shinyjs::enable(id = "loadbutton")
-        }
-      },
-      ignoreNULL = FALSE
-    )
-
     ## ----------------- Download ZIP -----------------------
     observeEvent(input$download_zip,
       {
