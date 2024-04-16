@@ -79,20 +79,37 @@ InviteFriendModule <- function(
         return(NULL)
       }
 
-      if (friend_email == auth$email) {
-        shinyalert::shinyalert(text = "Meh. You cannot invite yourself...")
-        dbg("[observeInviteFriendButton] error: You cannot invite yourself")
+      own_email <- (friend_email == auth$email)
+      own_email <- agrep(gsub("[0-9.-]|@.*","",friend_email), gsub("[0-9.-]|@.*","",auth$email))
+      if (own_email) {
+        shinyalert::shinyalert(text = "Meh. You cannot invite yourself... Or don't you have any friends?")
+        dbg("[observeInviteFriendButton] error: Referrer is inviting him/her self")
         return(NULL)
       }
 
-      already.registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
-      already.registered <- grep("@", already.registered, value = TRUE)
-      if (friend_email %in% already.registered) {
+      ## check already registered
+      already_registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
+      already_registered <- grep("@", already_registered, value = TRUE)
+      if (friend_email %in% already_registered) {
         shinyalert::shinyalert(text = "No need to invite! Your friend is already on Omics Playground")
         dbg("[observeInviteFriendButton] error: Already registered")
         return(NULL)
       }
-
+      
+      ## check already invited
+      invite_file2 <- file.path(auth$user_dir, "INVITES.log")
+      if(!is.null(invite_file2) && file.exists(invite_file2)) {
+        invite_list  <- data.table::fread( invite_file2 )
+        colnames(invite_list) <- c("time","from","to")
+        already_invited <- sum(invite_list$to == friend_email & invite_list$from == auth$email)
+        dbg("[InviteFriendModule] input$invite : already_invited = ",already_invited)
+        if (already_invited > 3) {
+          shinyalert::shinyalert(text = "You have already invited your friend to Omics Playground!")
+          dbg("[observeInviteFriendButton] error: Already invited")
+          return(NULL)
+        }
+      }
+      
       ## Send email
       user_name <- auth$username
       user_email <- auth$email
@@ -116,9 +133,9 @@ InviteFriendModule <- function(
       invite.file2 <- file.path(auth$user_dir, "INVITES.log")
       do.append <- file.exists(invite.file)
       timestamp <- as.character(Sys.time())
-      invite_data <- list(timestamp, user_email, friend_email)
-      data.table::fwrite(invite_data, file = invite.file, quote = TRUE, append = do.append)
-      data.table::fwrite(invite_data, file = invite.file2, quote = TRUE, append = do.append)
+      invite_list <- list(timestamp, user_email, friend_email)
+      data.table::fwrite(invite_list, file = invite.file, quote = TRUE, append = do.append)
+      data.table::fwrite(invite_list, file = invite.file2, quote = TRUE, append = do.append)
 
       ## send confirmation
       sendConfirmationEmail(user_email, user_name, friend_email,

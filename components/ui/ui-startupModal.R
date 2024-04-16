@@ -34,7 +34,7 @@ ui.startupModal <- function(id, messages, title = NULL) {
     bsutils::modalHeader(
       ## bsutils::modalTitle(title),
       bsutils::modalTitle(""),
-      style = "background-color: #f0f9fd; margin-bottom: -30px;"
+      style = "background-color: #f0f9fd; margin-bottom: -10px;"
     ),
     do.call(
       function(...) {
