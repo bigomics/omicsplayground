@@ -61,7 +61,7 @@ UploadUI <- function(id) {
   )
   
   compute_panel <- wizardR::wizard_step(
-    step_title = "Dataset description",
+    step_title = "Step 4: Dataset description",
     #bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
     

@@ -592,7 +592,7 @@ UploadBoard <- function(id,
     # lock wizard it compute step
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
-        req(input$upload_wizard == "Dataset description")
+        req(input$upload_wizard == "Step 4: Dataset description")
         
         
         if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
