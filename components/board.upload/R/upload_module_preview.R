@@ -570,6 +570,7 @@ upload_table_preview_contrasts_server <- function(
                   fileInputArea(
                     ns("contrasts_csv"),
                     div(
+                      style = "display: flex; flex-direction: column; gap: 10px;",
                       shiny::h4("Choose comparisons.csv (optional)", class='mb-0'),
                       shiny::h6("Or build online", class='mt-0')
                     ),
