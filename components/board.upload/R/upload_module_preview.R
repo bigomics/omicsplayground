@@ -547,8 +547,9 @@ upload_table_preview_contrasts_server <- function(
                     )
                   },
                   actionButton(
-                      ns("run_build_comparisons"), "Create comparison online",
-                      class = "btn btn-warning"
+                      ns("run_build_comparisons"), "Build my comparisons",
+                      class = "btn btn-primary",
+                      icon("pen-to-square")
                     ),
                   ),
                 div(
@@ -570,7 +571,7 @@ upload_table_preview_contrasts_server <- function(
                     ns("contrasts_csv"),
                     div(
                       shiny::h4("Choose comparisons.csv (optional)", class='mb-0'),
-                      shiny::h5("Or create your comparisons online", class='mt-0')
+                      shiny::h6("Or build online", class='mt-0')
                     ),
                     multiple = FALSE,
                     accept = c(".csv"),
