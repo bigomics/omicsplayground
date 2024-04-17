@@ -675,8 +675,8 @@ upload_table_preview_contrasts_server <- function(
       # if contrasts not in file name, give warning and return
       if(!grepl("contrast", input$contrasts_csv$name, ignore.case = TRUE)){
         shinyalert::shinyalert(
-          title = "Contrasts not in filename.",
-          text = "Please make sure the file name contains 'contrasts', such as contrasts_dataset.csv or contrasts.csv.",
+          title = "Comparison not in filename.",
+          text = "Please make sure the file name contains 'comparison', such as comparison_dataset.csv or comparison.csv.",
           type = "error"
         )
         return()
