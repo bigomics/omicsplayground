@@ -700,7 +700,8 @@ upload_table_preview_contrasts_server <- function(
       contrRT = reactive(checked_contrasts()$matrix),
       countsRT = reactive(checked_counts()$matrix),
       upload_wizard = upload_wizard,
-      show_comparison_builder = show_comparison_builder
+      show_comparison_builder = show_comparison_builder,
+      autocontrast = reactive(input$autocontrast)
     )
 
     TableModuleServer(

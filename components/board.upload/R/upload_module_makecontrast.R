@@ -110,7 +110,8 @@ upload_module_makecontrast_server <- function(
   contrRT,
   countsRT,
   upload_wizard,
-  show_comparison_builder
+  show_comparison_builder,
+  autocontrast
   ) {
   shiny::moduleServer(
     id,
@@ -339,7 +340,7 @@ upload_module_makecontrast_server <- function(
         shiny::updateTextInput(session, "newname", value = "")
       })
 
-      shiny::observeEvent(input$autocontrast, {
+      shiny::observeEvent(autocontrast(), {
         shiny::req(phenoRT())
         df <- phenoRT()
 
