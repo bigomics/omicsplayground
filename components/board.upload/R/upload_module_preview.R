@@ -521,9 +521,34 @@ upload_table_preview_contrasts_server <- function(
           
         )
       } else {
+        # only display buttons if goOnlineComparison is false
+
         div(
           # if run_build_comparisons is clicked, then show the contrasts
           bslib::as_fill_carrier(),
+                  div(
+          style = "display: flex; justify-content: space-between; margin-bottom: 20px;",
+          div(
+            actionButton(
+              ns("goUploadComparison"), 
+              label = "Upload my comparisons",
+              class = "btn btn-primary",
+              icon("upload")
+            ),
+          ),
+          div(
+            # actionButton(
+            #   ns(), "Load Example",
+            #   class = "btn btn-info"
+            #   ),
+            actionButton(
+              ns("check_documentation"),
+              "Check Documentation",
+              class = "btn btn-primary",
+              onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
+              )
+          )
+          ),
           if(show_comparison_builder()){
             bslib::layout_columns(
             col_widths = 12,
@@ -627,6 +652,7 @@ upload_table_preview_contrasts_server <- function(
 
     observeEvent(input$goUploadComparison, {
       selected_contrast_input(TRUE)
+      show_comparison_builder(FALSE)
     })
 
     observeEvent(input$goOnlineComparison, {
