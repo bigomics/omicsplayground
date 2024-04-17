@@ -506,13 +506,16 @@ upload_table_preview_contrasts_server <- function(
             style = "display: flex; justify-content: center; gap: 20px;",
             actionButton(
             ns("goUploadComparison"),
-            label = "Upload my comparisons",
-            class = "btn btn-primary"
+            label = " Upload my comparisons",
+            class = "btn btn-primary",
+            icon("upload")
+
             ),
           actionButton(
             ns("goOnlineComparison"),
-            label = "Build my comparisons",
-            class = "btn btn-primary"
+            label = " Build my comparisons",
+            class = "btn btn-primary",
+            icon("pen-to-square")
             )
           )
           
