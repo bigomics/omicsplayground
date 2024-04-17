@@ -538,10 +538,16 @@ upload_table_preview_contrasts_server <- function(
                 ),
               ),
               div(
-                # actionButton(
-                #   ns(), "Load Example",
-                #   class = "btn btn-info"
-                #   ),
+                withTooltip(
+                  shiny::actionButton(
+                    ns("autocontrast"), 
+                    "Auto detect",
+                    # icon = icon("plus"),
+                    class = "btn btn-info"
+                  ),
+                  "If you are feeling lucky, try this to automatically create comparisons.",
+                  placement = "top", options = list(container = "body")
+                ),
                 actionButton(
                   ns("check_documentation"),
                   "Check Documentation",

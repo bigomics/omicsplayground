@@ -64,20 +64,6 @@ upload_module_makecontrast_ui <- function(id) {
                   "Add this comparison to the table.",
                   placement = "top", options = list(container = "body")
                 )
-              ),
-              shiny::div(
-                style = "padding-top: 5px",
-                withTooltip(
-                  shiny::actionButton(
-                    ns("autocontrast"), 
-                    "auto-comparisons",
-                    icon = icon("plus"),
-                    class = "btn btn-outline-secondary",
-                    width = "70%"
-                  ),
-                  "If you are feeling lucky, try this to automatically create comparisons.",
-                  placement = "top", options = list(container = "body")
-                )
               )
             ),
 #            bslib::card(
