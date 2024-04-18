@@ -95,7 +95,7 @@ InviteFriendModule <- function(
         dbg("[observeInviteFriendButton] error: Referrer is inviting him/her self")
         return(NULL)
       }
-      
+
       ## check already registered
       already_registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
       already_registered <- grep("@", already_registered, value = TRUE)
