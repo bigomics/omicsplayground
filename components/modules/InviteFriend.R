@@ -91,18 +91,13 @@ InviteFriendModule <- function(
       own_email <- (friend_email == auth$email)
       own_email <- agrep(gsub("[0-9.-]|@.*", "", friend_email), gsub("[0-9.-]|@.*", "", auth$email))
       if (length(own_email) > 0) {
-        shinyalert::shinyalert(text = "Meh. You cannot invite yourself...")
-        dbg("[observeInviteFriendButton] error: Referrer is inviting him/her self")
+        shinyalert::shinyalert(text = "Meh... You cannot invite yourself.")
         return(NULL)
       }
       
       ## check already registered
-      already_registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
-      already_registered <- grep("@", already_registered, value = TRUE)
-
-      if (friend_email %in% already_registered) {
-        shinyalert::shinyalert(text = "No need to invite! Your friend is already on Omics Playground")
-        dbg("[observeInviteFriendButton] error: Already registered")
+      if (checkExistUserFolder(friend_email)) {
+        shinyalert::shinyalert(text = "Your friend is already on Omics Playground")
         return(NULL)
       }
 
@@ -113,8 +108,7 @@ InviteFriendModule <- function(
         colnames(invite_list) <- c("time", "from", "to")
         already_invited <- sum(invite_list$to == friend_email & invite_list$from == auth$email)
         if (already_invited > 3) {
-          shinyalert::shinyalert(text = "You've already invited your friend to Omics Playground!")
-          dbg("[observeInviteFriendButton] error: Already invited")
+          shinyalert::shinyalert(text = "You've already invited your friend many times!")
           return(NULL)
         }
       }
@@ -132,7 +126,7 @@ InviteFriendModule <- function(
         return(NULL)
       }
 
-      message("sending invite email to", friend_email, "\n")
+      message("sending invite email to ", friend_email, "\n")
       sendInvitationEmail(user_email, user_name, friend_email,
         path_to_creds = gmail_creds
       )
