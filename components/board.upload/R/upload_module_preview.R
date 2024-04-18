@@ -89,7 +89,7 @@ upload_table_preview_counts_server <- function(
             ),
           shiny::actionButton(
             ns("check_documentation_counts"),
-            "Check Documentation",
+            "Check documentation",
             class = "btn btn-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
             )
@@ -315,7 +315,7 @@ upload_table_preview_samples_server <- function(
             ),
           actionButton(
             ns("check_documentation_samples"),
-            "Check Documentation",
+            "Check documentation",
             class = "btn btn-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
             )
@@ -536,21 +536,21 @@ upload_table_preview_contrasts_server <- function(
                   class = "btn btn-primary",
                   icon("upload")
                 ),
-              ),
-              div(
                 withTooltip(
                   shiny::actionButton(
                     ns("autocontrast"), 
-                    "Auto detect",
+                    "Auto detect comparisons",
                     # icon = icon("plus"),
                     class = "btn btn-info"
                   ),
                   "If you are feeling lucky, try this to automatically create comparisons.",
                   placement = "top", options = list(container = "body")
                 ),
+              ),
+              div(
                 actionButton(
                   ns("check_documentation"),
-                  "Check Documentation",
+                  "Check documentation",
                   class = "btn btn-primary",
                   onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
                   )
@@ -593,7 +593,7 @@ upload_table_preview_contrasts_server <- function(
                   ),
                 actionButton(
                   ns("check_documentation_contrasts"),
-                  "Check Documentation",
+                  "Check documentation",
                   class = "btn btn-primary",
                   onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
                   )
