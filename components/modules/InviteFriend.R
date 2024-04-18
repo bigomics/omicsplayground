@@ -252,7 +252,7 @@ The BigOmics Team
               "
 Dear {user_name},
 
-Thank you for referring your friend {friend_email} to join Omics Playground! 
+Thank you for referring your friend {friend_email} to join Omics Playground!
 
 As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. You'll be one step closer to claiming your exclusive BigOmics swag!
 
