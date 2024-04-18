@@ -81,9 +81,9 @@ UploadUI <- function(id) {
     wizardR::wizard(
       id = ns("upload_wizard"),
       width = 90,
-      height = 70,
+      height = 75,
       modal = TRUE,
-      style = "progress",
+      style = "dots",
       lock_start = TRUE,
       counts_ui,
       samples_ui,
