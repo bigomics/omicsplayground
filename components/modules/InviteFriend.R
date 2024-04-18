@@ -252,11 +252,11 @@ The BigOmics Team
               "
 Dear {user_name},
 
-Thank you for referring your friend {friend_email} to join Omics Playground! We appreciate your support and enthusiasm for our platform.
+Thank you for referring your friend {friend_email} to join Omics Playground! 
 
-As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. Once their accounts are verified, you'll be one step closer to claiming your exclusive BigOmics swag.
+As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. You'll be one step closer to claiming your exclusive BigOmics swag!
 
-Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. Thanks for being a part of BigOmics!
+Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. We appreciate your support and enthusiasm for our platform!
 
 Best,
 
