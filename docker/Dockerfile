@@ -38,6 +38,8 @@ WORKDIR /
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 
+# can be removed after base image is updated (v4), as this will be installed in base
+RUN R -e "remotes::install_github('bigomics/biomaRt',dependencies=FALSE)"
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------

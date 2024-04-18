@@ -73,6 +73,9 @@ FROM r-base1 AS r-base2
 RUN echo Downloading Playbase
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 
+# packages that need to be installed after playbase due to conflicts
+RUN R -e "remotes::install_github('bigomics/biomaRt',dependencies=FALSE)"
+
 ## playdata: perhaps not needed because playbase already states
 ## playdata as dependency in DESCRIPTION file.
 RUN git clone -b main --single-branch --depth 1 \
