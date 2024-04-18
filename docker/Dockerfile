@@ -40,6 +40,8 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"
 RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE, force=TRUE)"
 
+# can be removed after base image is updated (v4), as this will be installed in base
+RUN R -e "remotes::install_github('bigomics/biomaRt',dependencies=FALSE)"
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
