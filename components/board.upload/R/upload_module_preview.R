@@ -76,7 +76,7 @@ upload_table_preview_counts_server <- function(
             if(!is.null(uploaded$counts.csv)){
               shiny::actionButton(
                 ns("remove_counts"),
-                "Remove input",
+                "Clear table",
                 icon = icon("trash-can"),
                 class = "btn btn-danger"
               )
@@ -302,7 +302,7 @@ upload_table_preview_samples_server <- function(
             if(!is.null(uploaded$samples.csv)){
               shiny::actionButton(
                 ns("remove_samples"),
-                "Remove input",
+                "Clear table",
                 icon = icon("trash-can"),
                 class = "btn btn-danger"
               )
@@ -575,7 +575,7 @@ upload_table_preview_contrasts_server <- function(
                 if(!is.null(uploaded$contrasts.csv)){
                     shiny::actionButton(
                       ns("remove_contrasts"),
-                      "Remove input",
+                      "Clear table",
                       icon = icon("trash-can"),
                       class = "btn btn-danger"
                     )

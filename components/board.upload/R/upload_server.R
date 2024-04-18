@@ -724,12 +724,9 @@ UploadBoard <- function(id,
             }
 
             # if recomputing pgx, add data to wizard
-
-
-
             } else {
               shinyalert::shinyalert(
-                title = "Upload disabled",
+                title = "Computation in progress",
                 text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
                 type = "warning",
                 closeOnClickOutside = FALSE
