@@ -94,7 +94,7 @@ InviteFriendModule <- function(
         shinyalert::shinyalert(text = "Meh... You cannot invite yourself.")
         return(NULL)
       }
-      
+
       ## check already registered
       if (checkExistUserFolder(friend_email)) {
         shinyalert::shinyalert(text = "Your friend is already on Omics Playground")
