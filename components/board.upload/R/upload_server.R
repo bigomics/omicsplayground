@@ -546,8 +546,7 @@ UploadBoard <- function(id,
     # warn user when locked button is clicked (UX)
     observeEvent(
       input$upload_wizard_locked, {
-        
-        browser()
+
         # summaryze all error logs
         summary_checks <- list(
           checklist$samples.csv$checks,
@@ -557,11 +556,16 @@ UploadBoard <- function(id,
           checklist$samples_contrasts$checks
           )
 
-        
-        
-        if(length(summary_checks >0)) {
+        browser()
+
+        summary_check_content <- length(unlist(summary_checks, recursive = FALSE))
+
+        if(summary_check_content > 0 ) {
           # chekc which checks have error results
-          find_content <- !sapply(summary_checks, function(x) is.null(x) || length(x) ==0 )
+          find_content <- !sapply(
+            summary_checks,
+            function(x) is.null(x) || length(x) == 0
+            )
 
           summary_checks <- summary_checks[find_content]
 
@@ -587,7 +591,7 @@ UploadBoard <- function(id,
           } 
         }
         
-        if (length(summary_checks) == 0) {
+        if (summary_check_content == 0) {
           shinyalert::shinyalert(
             title = "Upload wizard locked",
             text = "Please complete the current step before proceeding.",
