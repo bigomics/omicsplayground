@@ -1,3 +1,7 @@
+##---------------------------------------------------
+## COUNTS
+##---------------------------------------------------
+
 upload_table_preview_counts_ui <- function(id) {
   
   ns <- shiny::NS(id)
@@ -229,6 +233,10 @@ upload_table_preview_counts_server <- function(
   }) ## end of moduleServer
 } ## end of server
 
+##---------------------------------------------------
+## SAMPLES
+##---------------------------------------------------
+
 upload_table_preview_samples_ui <- function(id) {
   ns <- shiny::NS(id)
   uiOutput(ns("table_samples"), fill=TRUE)
@@ -425,6 +433,10 @@ upload_table_preview_samples_server <- function(
     )
   })
 }
+
+##---------------------------------------------------
+## CONTRASTS
+##---------------------------------------------------
 
 upload_table_preview_contrasts_ui <- function(id) {
   ns <- shiny::NS(id)

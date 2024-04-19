@@ -43,7 +43,7 @@ LoadingUI <- function(id) {
       div(
       shiny::actionButton(
         ns("loadbutton"),
-        label = "Analyze dataset",
+        label = "Load selected",
         icon = icon("file-import"),
         class = "btn btn-primary",
         width = NULL

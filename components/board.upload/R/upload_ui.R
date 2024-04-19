@@ -22,11 +22,11 @@ UploadUI <- function(id) {
   )
 
   contrasts_ui <- wizardR::wizard_step(
-    step_title = "Step 3: Comparison",
+    step_title = "Step 3: Comparisons",
     upload_table_preview_contrasts_ui(
       ns("contrasts_preview")
-        )
     )
+  )
 
   # comparisons_panel <- wizardR::wizard_step(
   #   step_title = "Comparison Builder",

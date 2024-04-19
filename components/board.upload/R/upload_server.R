@@ -636,11 +636,10 @@ UploadBoard <- function(id,
         }
     })
 
-
     # lock wizard at Comparison step
     observeEvent(
       list(input$upload_wizard, modified_ct()),{
-        req(input$upload_wizard == "Step 3: Comparison")
+        req(input$upload_wizard == "Step 3: Comparisons")
         if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples()) || is.null(checked_counts())){
           wizardR::lock("upload_wizard")
         } else {
