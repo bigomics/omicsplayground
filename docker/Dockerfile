@@ -28,6 +28,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
+RUN R -e "install.packages('shinybrowser')"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
