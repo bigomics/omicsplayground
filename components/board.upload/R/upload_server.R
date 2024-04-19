@@ -546,7 +546,7 @@ UploadBoard <- function(id,
     # warn user when locked button is clicked (UX)
     observeEvent(
       input$upload_wizard_locked, {
-
+        
         # summaryze all error logs
         summary_checks <- list(
           checklist$samples.csv$checks,
@@ -576,7 +576,7 @@ UploadBoard <- function(id,
           error_list <- playbase::PGX_CHECKS
           error_list <- error_list[error_list$warning_type=="error", ]
 
-          if(get_all_codes %in% error_list$error){
+          if(any(get_all_codes %in% error_list$error)){
             
             # which warning is error
             which_error <- which(get_all_codes %in% error_list$error)
