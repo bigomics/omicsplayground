@@ -67,13 +67,16 @@ InviteFriendModule <- function(
       r_click() + input$action
     })
 
-    shiny::observeEvent({
-      list( r_click(), input$action )
-    },{
-      if( r_click() || input$action ) {
-        showModal()
+    shiny::observeEvent(
+      {
+        list(r_click(), input$action)
+      },
+      {
+        if (r_click() || input$action) {
+          showModal()
+        }
       }
-    })
+    )
 
     shiny::observeEvent(input$invite, {
       friend_email <- input$email
