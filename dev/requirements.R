@@ -119,7 +119,7 @@ pkg.extra <- c(
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
   'blastula','shinytest2','sodium','cookies',"shinyvalidate", "sparsesvd",
-  "recount"
+  "recount", "sf"
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
