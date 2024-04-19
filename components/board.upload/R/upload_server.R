@@ -546,6 +546,42 @@ UploadBoard <- function(id,
     # warn user when locked button is clicked (UX)
     observeEvent(
       input$upload_wizard_locked, {
+        browser()
+
+        # summaryze all error logs
+        summary_checks <- list(
+          checklist$samples.csv$checks,
+          checklist$counts.csv$checks,
+          checklist$contrasts.csv$checks,
+          checklist$samples_counts$checks,
+          checklist$samples_contrasts$checks
+          )
+
+        
+        # chekc which checks have error results
+        find_content <- !sapply(summary_checks, function(x) is.null(x) || length(x) ==0 )
+
+        summary_checks <- summary_checks[find_content]
+
+
+        # get the names of each list within summary checks
+        get_all_codes <- sapply(summary_checks, function(x) names(x))
+
+        
+        # check if any any code is error code
+        error_list <- playbase::PGX_CHECKS
+        error_list <- error_list[error_list$warning_type=="error", ]
+
+        if(get_all_codes %in% error_list$error){
+          # placeholder for warnings
+
+        }
+
+        
+
+
+
+        checked_contrasts()
         shinyalert::shinyalert(
           title = "Upload wizard locked",
           text = "Please complete the current step before proceeding.",
