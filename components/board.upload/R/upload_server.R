@@ -554,9 +554,7 @@ UploadBoard <- function(id,
           checklist$contrasts.csv$checks,
           checklist$samples_counts$checks,
           checklist$samples_contrasts$checks
-          )
-
-        browser()
+        )
 
         summary_check_content <- length(unlist(summary_checks, recursive = FALSE))
 
@@ -588,9 +586,17 @@ UploadBoard <- function(id,
                   pass_msg = "All counts checks passed",
                   null_msg = "Fix any errors with your input first."
             )
-          } 
+
+            # return shiny alert with result_alert
+            shinyalert::shinyalert(
+              title = "Please review your input:",
+              text = result_alert,
+              type = "error",
+              html = TRUE
+            )
+          }
         }
-        
+
         if (summary_check_content == 0) {
           shinyalert::shinyalert(
             title = "Upload wizard locked",
