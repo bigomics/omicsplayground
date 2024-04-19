@@ -546,11 +546,64 @@ UploadBoard <- function(id,
     # warn user when locked button is clicked (UX)
     observeEvent(
       input$upload_wizard_locked, {
-        shinyalert::shinyalert(
-          title = "Upload wizard locked",
-          text = "Please complete the current step before proceeding.",
-          type = "warning"
+
+        # summaryze all error logs
+        summary_checks <- list(
+          checklist$samples.csv$checks,
+          checklist$counts.csv$checks,
+          checklist$contrasts.csv$checks,
+          checklist$samples_counts$checks,
+          checklist$samples_contrasts$checks
         )
+
+        summary_check_content <- length(unlist(summary_checks, recursive = FALSE))
+
+        if(summary_check_content > 0 ) {
+          # chekc which checks have error results
+          find_content <- !sapply(
+            summary_checks,
+            function(x) is.null(x) || length(x) == 0
+            )
+
+          summary_checks <- summary_checks[find_content]
+
+
+          # get the names of each list within summary checks
+          get_all_codes <- sapply(summary_checks, function(x) names(x))
+
+          
+          # check if any any code is error code
+          error_list <- playbase::PGX_CHECKS
+          error_list <- error_list[error_list$warning_type=="error", ]
+
+          if(get_all_codes %in% error_list$error){
+            
+            # which warning is error
+            which_error <- which(get_all_codes %in% error_list$error)
+
+            result_alert <- check_to_html(
+                  unlist(summary_checks[which_error],  recursive = FALSE),
+                  pass_msg = "All counts checks passed",
+                  null_msg = "Fix any errors with your input first."
+            )
+
+            # return shiny alert with result_alert
+            shinyalert::shinyalert(
+              title = "Please review your input:",
+              text = result_alert,
+              type = "error",
+              html = TRUE
+            )
+          }
+        }
+
+        if (summary_check_content == 0) {
+          shinyalert::shinyalert(
+            title = "Upload wizard locked",
+            text = "Please complete the current step before proceeding.",
+            type = "warning"
+          )
+        }
       })
 
     # wizard lock/unlock logic
