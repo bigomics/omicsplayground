@@ -88,7 +88,7 @@ install.github <- function(repo, force=FALSE, dependencies=NA) {
 
 base.pkg = c("shiny","flexdashboard","shinydashboard", "shinyBS","systemfonts",
              "shinyjs","shinydashboardPlus",'R.utils','shinythemes',"shinybusy",
-             "shinycssloaders","shinyWidgets")
+             "shinycssloaders","shinyWidgets","shinybrowser")
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
@@ -119,7 +119,7 @@ pkg.extra <- c(
   'svgPanZoom','rhdf5','monocle','mygene',
   'iheatmapr','RcppZiggurat','Rfast','BH','topGO', 'survcomp','plsRcox',
   'blastula','shinytest2','sodium','cookies',"shinyvalidate", "sparsesvd",
-  "recount"
+  "recount", "sf"
 )
 
 pkg.used <- c(pkg.used, pkg.extra)

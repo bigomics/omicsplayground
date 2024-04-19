@@ -63,38 +63,42 @@ InviteFriendModule <- function(
       r_click(r_click() + 1)
     }
 
-    click <- shiny::reactive({
-      r_click() + input$action
-    })
-
-    shiny::observeEvent(click(), {
-      showModal()
+    shiny::observeEvent({
+      list( r_click(), input$action )
+    },{
+      btn_click <- !is.null(input$action) && input$action > 0
+      if( r_click() || btn_click ) {
+        showModal()
+      }
     })
 
     shiny::observeEvent(input$invite, {
       friend_email <- input$email
+
       if (!checkValidEmailFormat(friend_email)) {
         ## shinyalert::shinyalert(text="Not a valid email")
         dbg("[observeInviteFriend] error: Not a valid email")
         return(NULL)
       }
 
+      ## check personal email
+      is_personal_email <- checkPersonalEmail(friend_email)
+      if (is_personal_email) {
+        shinyalert::shinyalert(text = "Please use institutional or business email")
+        return(NULL)
+      }
+
+      ## check own email
       own_email <- (friend_email == auth$email)
       own_email <- agrep(gsub("[0-9.-]|@.*", "", friend_email), gsub("[0-9.-]|@.*", "", auth$email))
-
       if (length(own_email) > 0) {
-        shinyalert::shinyalert(text = "Meh. You cannot invite yourself... Or don't you have any friends?")
-        dbg("[observeInviteFriendButton] error: Referrer is inviting him/her self")
+        shinyalert::shinyalert(text = "Meh... You cannot invite yourself.")
         return(NULL)
       }
 
       ## check already registered
-      already_registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
-      already_registered <- grep("@", already_registered, value = TRUE)
-
-      if (friend_email %in% already_registered) {
-        shinyalert::shinyalert(text = "No need to invite! Your friend is already on Omics Playground")
-        dbg("[observeInviteFriendButton] error: Already registered")
+      if (checkExistUserFolder(friend_email)) {
+        shinyalert::shinyalert(text = "Your friend is already on Omics Playground")
         return(NULL)
       }
 
@@ -105,8 +109,7 @@ InviteFriendModule <- function(
         colnames(invite_list) <- c("time", "from", "to")
         already_invited <- sum(invite_list$to == friend_email & invite_list$from == auth$email)
         if (already_invited > 3) {
-          shinyalert::shinyalert(text = "You've already invited your friend to Omics Playground!")
-          dbg("[observeInviteFriendButton] error: Already invited")
+          shinyalert::shinyalert(text = "You've already invited your friend many times!")
           return(NULL)
         }
       }
@@ -124,7 +127,7 @@ InviteFriendModule <- function(
         return(NULL)
       }
 
-      message("sending invite email to", friend_email, "\n")
+      message("sending invite email to ", friend_email, "\n")
       sendInvitationEmail(user_email, user_name, friend_email,
         path_to_creds = gmail_creds
       )
@@ -252,11 +255,11 @@ The BigOmics Team
               "
 Dear {user_name},
 
-Thank you for referring your friend {friend_email} to join Omics Playground! We appreciate your support and enthusiasm for our platform.
+Thank you for referring your friend {friend_email} to join Omics Playground!
 
-As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. Once their accounts are verified, you'll be one step closer to claiming your exclusive BigOmics swag.
+As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. You'll be one step closer to claiming your exclusive BigOmics swag!
 
-Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. Thanks for being a part of BigOmics!
+Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. We appreciate your support and enthusiasm for our platform!
 
 Best,
 

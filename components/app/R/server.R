@@ -26,12 +26,34 @@ app_server <- function(input, output, session) {
   setwd(WORKDIR) ## for some reason it can change!! (defined in global.R)
   server.start_time <- Sys.time()
   session.start_time <- -1
-  authentication <- opt$AUTHENTICATION
+
+  ## show warning for mobile
+  is_mobile <- reactive({
+    bw <- shinybrowser::get_width()
+    bh <- shinybrowser::get_height()
+    dbg("[SERVER] shinybrowser: ", bw, "x", bh)
+    is_portrait <- bh > 1.2 * bw
+    is_small <- min(bw, bh) < 768
+    (is_portrait && is_small)
+  })
+
+  observeEvent(is_mobile(), {
+    if (is_mobile()) {
+      shinyalert::shinyalert(
+        title = "Sorry, not for mobile...",
+        text = "Omics Playground is not yet optimized for mobile. For the best experience, please use it from your desktop PC",
+        immediate = TRUE,
+        showCancelButton = FALSE,
+        showConfirmButton = TRUE
+      )
+    }
+  })
 
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
 
+  authentication <- opt$AUTHENTICATION
   auth <- NULL ## shared in module
   credentials_file <- file.path(ETC, "CREDENTIALS")
   has.credentials <- file.exists(credentials_file)
@@ -463,6 +485,7 @@ app_server <- function(input, output, session) {
     if (is.null(auth$logged) || !auth$logged) {
       return("(not logged in)")
     }
+
     user <- auth$email
     if (is.null(user) || user %in% c("", NA)) user <- auth$username
     if (is.null(user) || user %in% c("", NA)) user <- "User"

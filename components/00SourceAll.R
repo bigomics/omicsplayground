@@ -226,6 +226,7 @@ if(!file.exists('00SourceAll.R')) {
   source('ui/ui-colors.R',encoding='UTF-8')
   source('ui/ui-defaults.R',encoding='UTF-8')
   source('ui/ui-DropDownMenu.R',encoding='UTF-8')
+  source('ui/ui-fileInputArea.R',encoding='UTF-8')
   source('ui/ui-links.R',encoding='UTF-8')
   source('ui/ui-modalUI.R',encoding='UTF-8')
   source('ui/ui-PlotModule.R',encoding='UTF-8')

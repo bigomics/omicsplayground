@@ -50,18 +50,18 @@ upload_module_makecontrast_ui <- function(id) {
                 )
               ),
               br(),
-              shiny::HTML("<h4>4. Add to list:</h4>"),
+              shiny::HTML("<h4>4. Add my comparison:</h4>"),
               shiny::div(
                 style = "padding-top: 5px;",
                 withTooltip(
                   shiny::actionButton(
                     ns("addcontrast"),
-                    "add comparison",
+                    "add to list",
                     icon = icon("plus"),
-                    class = "btn btn-outline-primary",
-                    width = "70%"
+                    class = "btn-sm btn-outline-primary",
+                    width = "48%"
                   ),
-                  "Add this comparison to the table.",
+                  "Add this comparison to the list.",
                   placement = "top", options = list(container = "body")
                 )
               )
@@ -72,7 +72,7 @@ upload_module_makecontrast_ui <- function(id) {
 #                style = "width: 100%; gap: 10px; height: 75px !important;",
                 shiny::div(
                   style = "overflow: auto; margin-left: 30px;",
-                  shiny::HTML("<h4>2. Create comparisons:</h4>"),
+                  shiny::HTML("<h4>2. Create comparison:</h4>"),
                   withTooltip(
                     shiny::uiOutput(ns("createcomparison"),
                       style = "font-size:13px;"
@@ -153,22 +153,20 @@ upload_module_makecontrast_server <- function(
       )
 
 
-      observeEvent(
-        {
-          list(phenoRT(), upload_wizard(), show_comparison_builder())
-        },
-        {
-          req(upload_wizard() == "Step 3: Comparison", show_comparison_builder() == TRUE)
-          phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-          phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-          psel <- c(grep("sample|patient|name|id|^[.]",
-            phenotypes,
-            value = TRUE, invert = TRUE
-          ), phenotypes)[1]
-
-          updateSelectInput(session, "param", choices = phenotypes, selected = psel)
-        }
-      )
+      observeEvent({
+        list(phenoRT(), upload_wizard(), show_comparison_builder())
+      }, {
+        req(upload_wizard() == "Step 3: Create comparisons",
+            show_comparison_builder() == TRUE)
+        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
+        phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
+        psel <- c(grep("sample|patient|name|id|^[.]",
+                       phenotypes,
+                       value = TRUE, invert = TRUE
+                       ), phenotypes)[1]
+        
+        updateSelectInput(session, "param", choices = phenotypes, selected = psel)
+      })
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())

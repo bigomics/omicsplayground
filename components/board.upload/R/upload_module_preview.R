@@ -73,75 +73,78 @@ upload_table_preview_counts_server <- function(
 
     output$table_counts <- shiny::renderUI(
       div(
+        style = "width: 100%;",
         bslib::as_fill_carrier(),
         div(
           style = "display: flex; justify-content: space-between; margin-bottom: 20px;",
-          div(
-            if(!is.null(uploaded$counts.csv)){
-              shiny::actionButton(
-                ns("remove_counts"),
-                "Clear table",
-                icon = icon("trash-can"),
-                class = "btn btn-danger"
+          if(is.null(uploaded$counts.csv)){
+            div(               
+              actionButton(
+                ns("load_example"), "Load example data",
+                class = "btn-sm btn-outline-primary"
               )
-            }
-        ),
-        div(
-          actionButton(
-            ns("load_example"), "Load Example",
-            class = "btn btn-info"
-            ),
+            )
+          } else {
+            shiny::actionButton(
+              ns("remove_counts"),
+              "Cancel",
+              icon = icon("trash-can"),
+              class = "btn-sm btn-outline-danger"
+            )
+          },
           shiny::actionButton(
             ns("check_documentation_counts"),
-            "Check documentation",
-            class = "btn btn-primary",
+            "Read documentation",
+            class = "btn-sm btn-outline-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
-            )
-        )
+          )
         ),
         if(is.null(uploaded$counts.csv)){
-        bslib::layout_columns(
           bslib::card(
             fileInputArea(
               ns("counts_csv"),
-              shiny::h4("Choose counts.csv", class='mb-0'),
+              shiny::h4("Upload counts.csv", class='mb-0'),
               multiple = FALSE,
               accept = c(".csv"),
               width = "800px"
-            )
+            ),
+            style = "background-color: aliceblue;"
           )
-        )
-      }else{
-         bslib::layout_columns(
-        col_widths = c(9, 3),
-        TableModuleUI(
-          ns("counts_datasets"),
-          width = width,
-          height = height,
-          title = title,
-          info.text = info.text,
-          caption = caption,
-          label = "",
-          show.maximize = FALSE
-        ),
-        bslib::card(
-          div(
-            "Summary:",
-            br(),
-            check_to_html(
-              checklist$counts.csv$checks,
-                pass_msg = "All counts checks passed",
-                null_msg = "Counts checks not run yet.
+        } else {
+          bslib::layout_columns(
+            col_widths = c(9, 3),
+            TableModuleUI(
+              ns("counts_datasets"),
+              width = width,
+              height = height,
+              title = title,
+              info.text = info.text,
+              caption = caption,
+              label = "",
+              show.maximize = FALSE
+            ),
+            bslib::card(
+              div(
+                "Summary:",
+                br(),
+                check_to_html(
+                  checklist$counts.csv$checks,
+                  pass_msg = "All counts checks passed",
+                  null_msg = "Counts checks not run yet.
                             Fix any errors with counts first."
-              ),
-            legend
+                ),
+                legend
+              )
             )
           )
-      )
-      }
+        } ## end of if-else
       )
     )
 
+    observeEvent(input$upload_counts, {
+      shinyjs::click("counts_csv")
+    })
+    
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
 
@@ -206,8 +209,8 @@ upload_table_preview_counts_server <- function(
           showCancelButton = TRUE,
           closeOnEsc = FALSE,
           callbackR = delete_all_files_counts,
-          confirmButtonText = "Yes, remove all files.",
-          cancelButtonText = "No, cancel deletion."
+          confirmButtonText = "Remove all files.",
+          cancelButtonText = "Cancel deletion."
         )
 
         uploaded$counts.csv <- NULL
@@ -310,21 +313,22 @@ upload_table_preview_samples_server <- function(
             if(!is.null(uploaded$samples.csv)){
               shiny::actionButton(
                 ns("remove_samples"),
-                "Clear table",
+                "Cancel",
                 icon = icon("trash-can"),
-                class = "btn btn-danger"
+                class = "btn-sm btn-outline-danger"
+              )
+            } else {
+              actionButton(
+                ns("load_example"), "Load example data",
+                class = "btn-sm btn-outline-primary"
               )
             }
         ),
         div(
           actionButton(
-            ns("load_example"), "Load Example",
-            class = "btn btn-info"
-            ),
-          actionButton(
             ns("check_documentation_samples"),
-            "Check documentation",
-            class = "btn btn-primary",
+            "Read documentation",
+            class = "btn-sm btn-outline-primary",
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
             )
         )
@@ -338,7 +342,8 @@ upload_table_preview_samples_server <- function(
               multiple = FALSE,
               accept = c(".csv"),
               width = "800px"
-            )
+            ),
+            style = "background-color: aliceblue;"            
           )
         )
       }else{
@@ -413,8 +418,8 @@ upload_table_preview_samples_server <- function(
           showCancelButton = TRUE,
           closeOnEsc = FALSE,
           callbackR = delete_all_files_samples,
-          confirmButtonText = "Yes, remove samples and contrasts.",
-          cancelButtonText = "No, cancel deletion."
+          confirmButtonText = "Yes, remove samples and contrasts",
+          cancelButtonText = "Cancel"
         )
 
         } else {
@@ -545,15 +550,15 @@ upload_table_preview_contrasts_server <- function(
                 actionButton(
                   ns("goUploadComparison"), 
                   label = "Upload my comparisons",
-                  class = "btn btn-primary",
+                  class = "btn-sm btn-outline-primary",
                   icon("upload")
                 ),
                 withTooltip(
                   shiny::actionButton(
                     ns("autocontrast"), 
-                    "Auto detect comparisons",
+                    "Auto-detect comparisons",
                     # icon = icon("plus"),
-                    class = "btn btn-info"
+                    class = "btn-sm btn-outline-primary"
                   ),
                   "If you are feeling lucky, try this to automatically create comparisons.",
                   placement = "top", options = list(container = "body")
@@ -562,8 +567,8 @@ upload_table_preview_contrasts_server <- function(
               div(
                 actionButton(
                   ns("check_documentation"),
-                  "Check documentation",
-                  class = "btn btn-primary",
+                  "Read documentation",
+                  class = "btn-sm btn-outline-primary",
                   onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
                   )
               )
@@ -583,82 +588,83 @@ upload_table_preview_contrasts_server <- function(
               bslib::as_fill_carrier(),
               div(
                 style = "display: flex; justify-content: space-between; margin-bottom: 20px;",
-                div(
                 if(!is.null(uploaded$contrasts.csv)){
-                    shiny::actionButton(
-                      ns("remove_contrasts"),
-                      "Clear table",
-                      icon = icon("trash-can"),
-                      class = "btn btn-danger"
+                  shiny::actionButton(
+                    ns("remove_contrasts"),
+                    "Cancel",
+                    icon = icon("trash-can"),
+                    class = "btn-sm btn-outline-danger"
                     )
-                  },
-                  actionButton(
+                } else {
+                  div(
+                    actionButton(
                       ns("run_build_comparisons"), "Build my comparisons",
-                      class = "btn btn-primary",
+                      class = "btn-sm btn-outline-primary",
                       icon("pen-to-square")
                     ),
-                  ),
-                div(
-                actionButton(
-                  ns("load_example"), "Load Example",
-                  class = "btn btn-info"
-                  ),
+                    actionButton(
+                      ns("load_example"), "Load example data",
+                      class = "btn-sm btn-outline-primary"
+                    )
+                  )
+                },
                 actionButton(
                   ns("check_documentation_contrasts"),
                   "Check documentation",
-                  class = "btn btn-primary",
+                  class = "btn-sm btn-outline-primary",
                   onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
-                  )
-              )),
-              if(is.null(uploaded$contrasts.csv)){
-              bslib::layout_columns(
-                bslib::card(
-                  fileInputArea(
-                    ns("contrasts_csv"),
-                    div(
-                      style = "display: flex; flex-direction: column; gap: 10px;",
-                      shiny::h4("Choose comparisons.csv (optional)", class='mb-0'),
-                      shiny::h6("Or build online", class='mt-0')
-                    ),
-                    multiple = FALSE,
-                    accept = c(".csv"),
-                    width = "800px"
-                  )
                 )
-              )
-            }else{
-              bslib::layout_columns(
-              col_widths = c(9, 3),
-              TableModuleUI(
-                ns("contrasts_datasets"),
-                width = width,
-                height = height,
-                title = title,
-                info.text = info.text,
-                caption = caption,
-                label = "",
-                show.maximize = FALSE
               ),
-              bslib::card(
-                div(
-                  "Summary:",
-                  br(),
-                  check_to_html(
-                    checklist$contrasts.csv$checks,
-                      pass_msg = "All contrasts checks passed",
-                      null_msg = "Contrasts checks not run yet.
-                                  Fix any errors with contrasts first."
+              if(is.null(uploaded$contrasts.csv)){
+                bslib::layout_columns(
+                  bslib::card(
+                    fileInputArea(
+                      ns("contrasts_csv"),
+                      div(
+                        style = "display: flex; flex-direction: column; gap: 10px;",
+                        shiny::h4("Upload comparisons.csv (optional)", class='mb-0'),
+                        shiny::h6("Or build online", class='mt-0')
+                      ),
+                      multiple = FALSE,
+                      accept = c(".csv"),
+                      width = "800px"
                     ),
-                  check_to_html(checklist$samples_contrasts$checks,
-                      pass_msg = "All contrasts-samples checks passed",
-                      null_msg = "Contrasts-samples checks not run yet.
-                              Fix any errors with contrasts or samples first."
-                    ),
-                  legend
+                    style = "background-color: aliceblue;"                    
                   )
                 )
-            )
-            }
+              } else {
+                bslib::layout_columns(
+                  col_widths = c(9, 3),
+                  TableModuleUI(
+                    ns("contrasts_datasets"),
+                    width = width,
+                    height = height,
+                    title = title,
+                    info.text = info.text,
+                    caption = caption,
+                    label = "",
+                    show.maximize = FALSE
+                  ),
+                  bslib::card(
+                    div(
+                      "Summary:",
+                      br(),
+                      check_to_html(
+                        checklist$contrasts.csv$checks,
+                        pass_msg = "All contrasts checks passed",
+                        null_msg = "Contrasts checks not run yet.
+                                  Fix any errors with contrasts first."
+                      ),
+                      check_to_html(checklist$samples_contrasts$checks,
+                        pass_msg = "All contrasts-samples checks passed",
+                        null_msg = "Contrasts-samples checks not run yet.
+                              Fix any errors with contrasts or samples first."
+                      ),
+                      legend
+                    )
+                  )
+                )
+              }
             )
           }
         )
@@ -773,82 +779,14 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
 
 
 legend <-  shiny::div(
-           class = "pt-4",
-           style = "margin-top: 150px;",
-           span(style = "color: green", "Green"),
-           span("= data OK. "),
-           br(),
-           span(style = "color: orange", "Orange"),
-           span("= warning but data will still be uploaded. "),
-           br(),
-           span(style = "color:red", "Red"),
-           span("= error and data will not be uploaded.")
-        )
-
-
-fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
-                          width = NULL, buttonLabel = "Browse...", placeholder = "No file selected") {
-  restoredValue <- restoreInput(id = inputId, default = NULL)
-
-  # Catch potential edge case - ensure that it's either NULL or a data frame.
-  if (!is.null(restoredValue) && !is.data.frame(restoredValue)) {
-    warning("Restored value for ", inputId, " has incorrect format.")
-    restoredValue <- NULL
-  }
-
-  if (!is.null(restoredValue)) {
-    restoredValue <- toJSON(restoredValue, strict_atomic = FALSE)
-  }
-
-  inputTag <- tags$input(
-    id = inputId,
-    name = inputId,
-    type = "file",
-    # Don't use "display: none;" style, which causes keyboard accessibility issue; instead use the following workaround: https://css-tricks.com/places-its-tempting-to-use-display-none-but-dont/
-    style = "position: absolute !important; top: -99999px !important; left: -99999px !important;",
-    `data-restore` = restoredValue
-  )
-
-  if (multiple) {
-    inputTag$attribs$multiple <- "multiple"
-  }
-  if (length(accept) > 0) {
-    inputTag$attribs$accept <- paste(accept, collapse = ",")
-  }
-
-  div(
-    class = "form-group", #shiny-input-container w-100",
-    style = htmltools::css(width = htmltools::validateCssUnit(width), margin = "auto"),
-    shiny:::shinyInputLabel(inputId, ""),
-    div(
-      class = "input-group mb-3",
-      # input-group-prepend is for bootstrap 4 compat
-      tags$label(
-        class = "input-group-btn input-group-prepend w-100",
-        span(
-          class = "btn btn-area w-100", inputTag,
-          div(tags$image(src = icon_encoded, width = "80px;"), style = "margin-top: 2rem;"),
-          div(p(label), style = "font-size: 1.2rem; font-weight: 700; padding-top: 2rem;"),
-          div(p(buttonLabel), style = "font-size: 1rem; font-weight: 400; margin-bottom: 2rem;")
-        )
-      )
-    ),
-    tags$div(
-      id = paste(inputId, "_progress", sep = ""),
-      class = "progress active shiny-file-input-progress",
-      tags$div(class = "progress-bar")
-    )
-  )
-}
-
-# Icon from <https://icons.getbootstrap.com/icons/upload/>
-icon_file <- tempfile(fileext = ".svg")
-writeLines('
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#495057" class="bi bi-upload" viewBox="0 0 16 16">
-  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-  <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
-</svg>',
-  con = icon_file
+  class = "pt-4",
+  style = "margin-top: 150px;",
+  span(style = "color: green", "Green"),
+  span("= data OK. "),
+  br(),
+  span(style = "color: orange", "Orange"),
+  span("= warning but data will still be uploaded. "),
+  br(),
+  span(style = "color:red", "Red"),
+  span("= error and data will not be uploaded.")
 )
-
-icon_encoded <- xfun::base64_uri(icon_file)

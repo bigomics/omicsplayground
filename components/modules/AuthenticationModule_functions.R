@@ -213,6 +213,7 @@ checkMissingEmail <- function(email) {
 ## PGX.DIR="~/Playground/omicsplayground/data/"
 checkExistUserFolder <- function(email) {
   user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
+  user_dirs <- grep("@", user_dirs, value = TRUE)
   tolower(email) %in% tolower(user_dirs)
 }
 

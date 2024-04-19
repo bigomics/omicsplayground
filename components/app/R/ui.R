@@ -74,6 +74,7 @@ app_ui <- function(x) {
         sever::useSever(),
         bigLoaders::addBigLoaderDeps(),
         firebase::useFirebase(firestore = TRUE, analytics = TRUE),
+        shinybrowser::detect(),
         shinybusy::busy_start_up(
           text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
           background = "#2780e3", color = "#ffffff",
@@ -204,9 +205,7 @@ app_ui <- function(x) {
         )
       }
 
-      div.invitebutton <- shiny::actionButton("invite_button", "Invite!",
-        width = "auto", class = "quick-button"
-      )
+      div.invitebutton <- InviteFriendUI("invite")
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
@@ -453,7 +452,7 @@ app_ui <- function(x) {
           )
         ),
         UploadUI("upload")
-      )
+      ) ## end of bigPage
     }
 
     info("[ui.R] >>> creating UI")
