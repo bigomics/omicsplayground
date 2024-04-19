@@ -26,29 +26,29 @@ app_server <- function(input, output, session) {
   setwd(WORKDIR) ## for some reason it can change!! (defined in global.R)
   server.start_time <- Sys.time()
   session.start_time <- -1
-  
+
   ## show warning for mobile
   is_mobile <- reactive({
     bw <- shinybrowser::get_width()
     bh <- shinybrowser::get_height()
-    dbg("[SERVER] shinybrowser: ",bw,"x",bh)
-    is_portrait <- bh > 1.2*bw
-    is_small <- min(bw,bh) < 768
+    dbg("[SERVER] shinybrowser: ", bw, "x", bh)
+    is_portrait <- bh > 1.2 * bw
+    is_small <- min(bw, bh) < 768
     (is_portrait && is_small)
   })
-  
-  observeEvent( is_mobile(), {
-    if(is_mobile()) {
+
+  observeEvent(is_mobile(), {
+    if (is_mobile()) {
       shinyalert::shinyalert(
         title = "Sorry, not for mobile...",
         text = "Omics Playground is not yet optimized for mobile. For the best experience, please use it from your desktop PC",
         immediate = TRUE,
-       showCancelButton = FALSE,
-       showConfirmButton = TRUE        
+        showCancelButton = FALSE,
+        showConfirmButton = TRUE
       )
     }
   })
-  
+
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -70,25 +70,25 @@ app_server <- function(input, output, session) {
       domain = opt$DOMAIN,
       blocked_domain = opt$BLOCKED_DOMAIN
     )
-## } else if (authentication == "firebase") {
-##   auth <- FirebaseAuthenticationModule(
-##     id = "auth",
-##     domain = opt$DOMAIN,
-##     firebase.rds = "firebase.rds",
-##     credentials_file = credentials_file,
-##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-##     allow_new_users = opt$ALLOW_NEW_USERS
-##   )
-## } else if (authentication == "email-link") {
-##   auth <- EmailLinkAuthenticationModule(
-##     id = "auth",
-##     pgx_dir = PGX.DIR,
-##     domain = opt$DOMAIN,
-##     firebase.rds = "firebase.rds",
-##     credentials_file = credentials_file,
-##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-##     allow_new_users = opt$ALLOW_NEW_USERS
-##   )
+    ## } else if (authentication == "firebase") {
+    ##   auth <- FirebaseAuthenticationModule(
+    ##     id = "auth",
+    ##     domain = opt$DOMAIN,
+    ##     firebase.rds = "firebase.rds",
+    ##     credentials_file = credentials_file,
+    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+    ##     allow_new_users = opt$ALLOW_NEW_USERS
+    ##   )
+    ## } else if (authentication == "email-link") {
+    ##   auth <- EmailLinkAuthenticationModule(
+    ##     id = "auth",
+    ##     pgx_dir = PGX.DIR,
+    ##     domain = opt$DOMAIN,
+    ##     firebase.rds = "firebase.rds",
+    ##     credentials_file = credentials_file,
+    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
+    ##     allow_new_users = opt$ALLOW_NEW_USERS
+    ##   )
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
@@ -481,7 +481,7 @@ app_server <- function(input, output, session) {
     if (is.null(auth$logged) || !auth$logged) {
       return("(not logged in)")
     }
-    
+
     user <- auth$email
     if (is.null(user) || user %in% c("", NA)) user <- auth$username
     if (is.null(user) || user %in% c("", NA)) user <- "User"
