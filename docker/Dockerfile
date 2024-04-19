@@ -39,6 +39,11 @@ WORKDIR /
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 
+# NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
+
+# sf also added in requirements (check in final build that its installed before removing)
+RUN R -e "install.packages('sf')"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
