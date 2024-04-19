@@ -74,6 +74,7 @@ app_ui <- function(x) {
         sever::useSever(),
         bigLoaders::addBigLoaderDeps(),
         firebase::useFirebase(firestore = TRUE, analytics = TRUE),
+        shinybrowser::detect(),
         shinybusy::busy_start_up(
           text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
           background = "#2780e3", color = "#ffffff",
@@ -448,7 +449,7 @@ app_ui <- function(x) {
             UserSettingsUI("user_settings")
           )
         )
-      )
+      ) ## end of bigPage
     }
 
     info("[ui.R] >>> creating UI")
