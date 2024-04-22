@@ -165,7 +165,6 @@ upload_module_makecontrast_server <- function(
                        phenotypes,
                        value = TRUE, invert = TRUE
                        ), phenotypes)[1]
-        browser()
         updateSelectInput(session, "param", choices = phenotypes, selected = psel)
       })
 
