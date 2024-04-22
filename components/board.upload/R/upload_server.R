@@ -350,7 +350,7 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
-        list(status = status, SAMPLES = checked_samples,)
+        list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
       }
     )
 
@@ -383,7 +383,7 @@ UploadBoard <- function(id,
         }
 
         ## Check if samples.csv exists before uploading contrast.csv
-        cc <- checked_samples()
+        cc <- checked_samples_counts()
 
         ## -------------- max contrast check ------------------
         MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
@@ -401,10 +401,9 @@ UploadBoard <- function(id,
         }
 
         ## -------------- cross-check with samples ------------------
-        cc <- checked_samples()
-        if (!is.null(checked) && !is.null(cc$matrix)) {
+        if (!is.null(checked) && !is.null(cc$SAMPLES)) {
           cross_check <- playbase::pgx.crosscheckINPUT(
-            SAMPLES = cc$matrix,
+            SAMPLES = cc$SAMPLES,
             CONTRASTS = checked
           )
 
@@ -422,7 +421,7 @@ UploadBoard <- function(id,
 
         if (!is.null(checked)) {
           checked <- playbase::contrasts.convertToLabelMatrix(
-            contrasts = checked, samples = cc$matrix
+            contrasts = checked, samples = cc$SAMPLES
           )
         }
         if (is.null(checked)) {
@@ -746,7 +745,7 @@ UploadBoard <- function(id,
       title = "Uploaded Contrasts",
       info.text = "This is the uploaded comparison data.",
       caption = "This is the uploaded comparison data.",
-      checked_samples = checked_samples,
+      checked_samples = checked_samples_counts,
       checked_counts = checked_counts,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
