@@ -328,8 +328,6 @@ UploadBoard <- function(id,
             COUNTS = cc$matrix
           )
 
-          browser()
-
           write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
 
           checklist[["samples_counts"]]$checks <- cross_check$checks
@@ -746,7 +744,7 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded comparison data.",
       caption = "This is the uploaded comparison data.",
       checked_samples = checked_samples_counts,
-      checked_counts = checked_counts,
+      checked_counts = checked_samples_counts,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,

@@ -714,9 +714,9 @@ upload_table_preview_contrasts_server <- function(
 
     modified_ct <- upload_module_makecontrast_server(
       id = "makecontrast",
-      phenoRT = reactive(checked_samples()$matrix),
+      phenoRT = reactive(checked_samples()$SAMPLES),
       contrRT = reactive(checked_contrasts()$matrix),
-      countsRT = reactive(checked_counts()$matrix),
+      countsRT = reactive(checked_counts()$COUNTS),
       upload_wizard = upload_wizard,
       show_comparison_builder = show_comparison_builder,
       autocontrast = reactive(input$autocontrast)
