@@ -280,7 +280,7 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     ## Check SAMPLES matrix
     ## --------------------------------------------------------
-    checked_samples <- shiny::eventReactive(
+    checked_samples_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv, uploaded$samples.csv)
       },
@@ -327,12 +327,16 @@ UploadBoard <- function(id,
             SAMPLES = checked,
             COUNTS = cc$matrix
           )
+
+          browser()
+
           write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
 
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
           if (cross_check$PASS) {
-            checked <- res$df
+            res_samples <- cross_check$SAMPLES
+            res_counts <- cross_check$COUNTS
             status <- "OK"
           } else {
             checked <- NULL
@@ -346,7 +350,7 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
-        list(status = status, matrix = checked)
+        list(status = status, SAMPLES = checked_samples,)
       }
     )
 
