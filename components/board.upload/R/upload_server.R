@@ -650,7 +650,7 @@ UploadBoard <- function(id,
     # lock wizard it compute step
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
-        req(input$upload_wizard == "Step 4: Dataset description", upload_name())
+        req(input$upload_wizard == "Step 4: Compute!", upload_name())
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
 
