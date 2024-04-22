@@ -496,8 +496,8 @@ UploadBoard <- function(id,
     
     corrected1 <- upload_module_outliers_server(
       id = "checkqc",
-      r_X = shiny::reactive(checked_counts()$matrix),
-      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
+      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
       is.count = TRUE,
       height = height
@@ -505,8 +505,8 @@ UploadBoard <- function(id,
 
     upload_module_batchcorrect_server(
       id = "batchcorrect",
-      r_X = shiny::reactive(checked_counts()$matrix),
-      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
+      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
       r_results = modified_ct,
       is.count = TRUE
@@ -514,8 +514,8 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = shiny::reactive(checked_counts()$matrix), #TODO add return from new-bc module: corrected1$correctedCounts,
-      samplesRT = shiny::reactive(checked_samples()$matrix),
+      countsRT = shiny::reactive(checked_samples_counts()$COUNTS), #TODO add return from new-bc module: corrected1$correctedCounts,
+      samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
@@ -630,11 +630,11 @@ UploadBoard <- function(id,
 
     # lock/unlock wizard for samples.csv
     observeEvent(
-      list(uploaded$samples.csv, checked_samples, input$upload_wizard), {
+      list(uploaded$samples.csv, checked_samples_counts(), input$upload_wizard), {
         req(input$upload_wizard == "Step 2: Upload samples")
-        if (is.null(checked_samples()$status) || checked_samples()$status != "OK"){
+        if (is.null(checked_samples_counts()$status) || checked_samples_counts()$status != "OK"){
           wizardR::lock("upload_wizard")
-        } else if (!is.null(checked_samples()$status) && checked_samples()$status == "OK"){
+        } else if (!is.null(checked_samples_counts()$status) && checked_samples_counts()$status == "OK"){
           wizardR::unlock("upload_wizard")
         }
     })
@@ -643,7 +643,7 @@ UploadBoard <- function(id,
     observeEvent(
       list(input$upload_wizard, modified_ct()),{
         req(input$upload_wizard == "Step 3: Create comparisons")
-        if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples()) || is.null(checked_counts())){
+        if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples_counts()) || is.null(checked_counts())){
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
