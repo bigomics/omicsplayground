@@ -22,7 +22,7 @@ upload_module_makecontrast_ui <- function(id) {
           bslib::layout_columns(
             col_widths = c(3,9),
             shiny::div(
-              shiny::HTML("<h4>1. Choose phenotype:</h4>"),
+              shiny::HTML("<h6>1. Choose phenotype:</h6>"),
               withTooltip(
                 shiny::selectInput(
                   inputId = ns("param"),
@@ -37,7 +37,7 @@ upload_module_makecontrast_ui <- function(id) {
               ),
               br(),
               shiny::div(
-                shiny::HTML("<h4>3. Comparison name:</h4>"),
+                shiny::HTML("<h6>3. Comparison name:</h6>"),
                 withTooltip(
                   shiny::textInput(
                     ns("newname"),
@@ -50,7 +50,7 @@ upload_module_makecontrast_ui <- function(id) {
                 )
               ),
               br(),
-              shiny::HTML("<h4>4. Add my comparison:</h4>"),
+              shiny::HTML("<h6>4. Add my comparison:</h6>"),
               shiny::div(
                 style = "padding-top: 5px;",
                 withTooltip(
@@ -72,7 +72,7 @@ upload_module_makecontrast_ui <- function(id) {
 #                style = "width: 100%; gap: 10px; height: 75px !important;",
                 shiny::div(
                   style = "overflow: auto; margin-left: 30px;",
-                  shiny::HTML("<h4>2. Create comparison:</h4>"),
+                  shiny::HTML("<h6>2. Create comparison:</h6>"),
                   withTooltip(
                     shiny::uiOutput(ns("createcomparison"),
                       style = "font-size:13px;"
