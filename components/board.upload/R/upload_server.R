@@ -596,8 +596,8 @@ UploadBoard <- function(id,
             )
           } else {
             shinyalert::shinyalert(
-              title = "Upload wizard locked",
-              text = "Please complete the current step before proceeding.",
+              title = "Incomplete input!",
+              text = "Please finish the current step before proceeding.",
               type = "warning"
             )
           }
@@ -605,8 +605,8 @@ UploadBoard <- function(id,
 
         if (summary_check_content == 0) {
           shinyalert::shinyalert(
-            title = "Upload wizard locked",
-            text = "Please complete the current step before proceeding.",
+            title = "Incomplete input!",
+            text = "Please finish the current step before proceeding.",
             type = "warning"
           )
         }
