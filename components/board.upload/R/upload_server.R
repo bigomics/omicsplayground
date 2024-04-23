@@ -617,7 +617,7 @@ UploadBoard <- function(id,
     # lock/unlock wizard for counts.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
-        req(input$upload_wizard == "Step 1: Upload counts")
+        req(input$upload_wizard == "step_counts")
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
@@ -628,7 +628,7 @@ UploadBoard <- function(id,
     # lock/unlock wizard for samples.csv
     observeEvent(
       list(uploaded$samples.csv, checked_samples, input$upload_wizard), {
-        req(input$upload_wizard == "Step 2: Upload samples")
+        req(input$upload_wizard == "step_samples")
         if (is.null(checked_samples()$status) || checked_samples()$status != "OK"){
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_samples()$status) && checked_samples()$status == "OK"){
@@ -639,7 +639,7 @@ UploadBoard <- function(id,
     # lock wizard at Comparison step
     observeEvent(
       list(input$upload_wizard, modified_ct()),{
-        req(input$upload_wizard == "Step 3: Create comparisons")
+        req(input$upload_wizard == "step_comparisons")
         if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples()) || is.null(checked_counts())){
           wizardR::lock("upload_wizard")
         } else {
@@ -650,7 +650,7 @@ UploadBoard <- function(id,
     # lock wizard it compute step
     observeEvent(
       list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
-        req(input$upload_wizard == "Step 4: Compute!", upload_name())
+        req(input$upload_wizard == "step_compute", upload_name())
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
 
