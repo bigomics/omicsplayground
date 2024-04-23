@@ -164,12 +164,18 @@ drugconnectivity_plot_actmap_server <- function(id,
         dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 100)
       })
 
+      plot_data_csv <- function() {
+        data <- plot.RENDER()
+        df <- data$corr
+        return(df)
+      }
+
       PlotModuleServer(
         "plot",
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER2,
-        csvFunc = plot_data,
+        csvFunc = plot_data_csv,
         res = 72,
         pdf.width = 6, pdf.height = 9,
         add.watermark = watermark

@@ -166,12 +166,23 @@ dataview_plot_correlation_server <- function(id,
         plotly_modal_default()
     }
 
+    plot_data_csv <- function() {
+      pd <- plot_data()
+      df <- pd[[1]]
+      df$genes <- factor(df$genes, levels = df$genes)
+      df$gene_title <- stringr::str_extract(df$annot, "(?<=gene_title: <b>)[^<]+")
+      df$gene_name <- stringr::str_extract(df$annot, "(?<=gene_name: <b>)[^<]+")
+      df$color <- NULL
+      df$annot <- NULL
+      return(df)
+    }
+
     PlotModuleServer(
       "pltsrv",
       plotlib = "plotly",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

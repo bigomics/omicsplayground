@@ -98,10 +98,16 @@ connectivity_table_similarity_scores_server <- function(id,
       dt
     }
 
+    table_csv <- function() {
+      df <- get_datatable()
+      return(df)
+    }
+
     connectivityScoreTable <- TableModuleServer(
       "scores",
       func = connectivityScoreTable.RENDER,
       func2 = connectivityScoreTable.RENDER_modal,
+      csvFunc = table_csv,
       selector = "single"
     )
 

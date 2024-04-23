@@ -127,10 +127,18 @@ expression_table_genetable_server <- function(id,
       dt
     }
 
+    table_csv <- function() {
+      dt <- table.RENDER()
+      dt <- dt$x$data
+      dt$stars <- NULL
+      return(dt)
+    }
+
     genetable <- TableModuleServer(
       "datasets",
       func = table.RENDER,
       func2 = table.RENDER_modal,
+      csvFunc = table_csv,
       selector = "single"
     )
 

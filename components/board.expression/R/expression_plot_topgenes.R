@@ -223,12 +223,19 @@ expression_plot_topgenes_server <- function(id,
       fig
     }
 
+    plot_data_csv <- function() {
+      df <- plot_data()
+      df <- df$res
+      df <- df[, c("AveExpr0", "AveExpr1")]
+      return(df)
+    }
+
     PlotModuleServer(
       "pltmod",
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       plotlib = "plotly",
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(90, 105), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,

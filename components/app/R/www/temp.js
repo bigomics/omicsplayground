@@ -1,6 +1,7 @@
 let db;
 let pricing;
 let user;
+var dimension = [0, 0];
 
 //$(document).ready(function() {
 $(document).on('shiny:connected', function() {
@@ -45,7 +46,7 @@ $(document).on('shiny:connected', function() {
 	    // $('#authentication-upgrade').hide();  // really?
 	}
     });    
-
+    
 });  // end of on.shiny.connected
 
 

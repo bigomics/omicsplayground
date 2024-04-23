@@ -67,30 +67,57 @@ InviteFriendModule <- function(
       r_click() + input$action
     })
 
-    shiny::observeEvent(click(), {
-      showModal()
-    })
+    shiny::observeEvent(
+      {
+        list(r_click(), input$action)
+      },
+      {
+        if (r_click() || input$action) {
+          showModal()
+        }
+      }
+    )
 
     shiny::observeEvent(input$invite, {
       friend_email <- input$email
+
       if (!checkValidEmailFormat(friend_email)) {
         ## shinyalert::shinyalert(text="Not a valid email")
-        dbg("[observeInviteFriendButton] error: Not a valid email")
+        dbg("[observeInviteFriend] error: Not a valid email")
         return(NULL)
       }
 
-      if (friend_email == auth$email) {
-        shinyalert::shinyalert(text = "Meh. You cannot invite yourself...")
-        dbg("[observeInviteFriendButton] error: You cannot invite yourself")
+      ## check personal email
+      is_personal_email <- checkPersonalEmail(friend_email)
+      if (is_personal_email) {
+        shinyalert::shinyalert(text = "Please use institutional or business email")
         return(NULL)
       }
 
-      already.registered <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
-      already.registered <- grep("@", already.registered, value = TRUE)
-      if (friend_email %in% already.registered) {
-        shinyalert::shinyalert(text = "No need to invite! Your friend is already on Omics Playground")
-        dbg("[observeInviteFriendButton] error: Already registered")
+      ## check own email
+      own_email <- (friend_email == auth$email)
+      own_email <- agrep(gsub("[0-9.-]|@.*", "", friend_email), gsub("[0-9.-]|@.*", "", auth$email))
+      if (length(own_email) > 0) {
+        shinyalert::shinyalert(text = "Meh... You cannot invite yourself.")
         return(NULL)
+      }
+
+      ## check already registered
+      if (checkExistUserFolder(friend_email)) {
+        shinyalert::shinyalert(text = "Your friend is already on Omics Playground")
+        return(NULL)
+      }
+
+      ## check already invited
+      invite_file2 <- file.path(auth$user_dir, "INVITES.log")
+      if (!is.null(invite_file2) && file.exists(invite_file2)) {
+        invite_list <- data.table::fread(invite_file2)
+        colnames(invite_list) <- c("time", "from", "to")
+        already_invited <- sum(invite_list$to == friend_email & invite_list$from == auth$email)
+        if (already_invited > 3) {
+          shinyalert::shinyalert(text = "You've already invited your friend many times!")
+          return(NULL)
+        }
       }
 
       ## Send email
@@ -106,7 +133,7 @@ InviteFriendModule <- function(
         return(NULL)
       }
 
-      message("sending invite email to", friend_email, "\n")
+      message("sending invite email to ", friend_email, "\n")
       sendInvitationEmail(user_email, user_name, friend_email,
         path_to_creds = gmail_creds
       )
@@ -116,9 +143,9 @@ InviteFriendModule <- function(
       invite.file2 <- file.path(auth$user_dir, "INVITES.log")
       do.append <- file.exists(invite.file)
       timestamp <- as.character(Sys.time())
-      invite_data <- list(timestamp, user_email, friend_email)
-      data.table::fwrite(invite_data, file = invite.file, quote = TRUE, append = do.append)
-      data.table::fwrite(invite_data, file = invite.file2, quote = TRUE, append = do.append)
+      invite_list <- list(timestamp, user_email, friend_email)
+      data.table::fwrite(invite_list, file = invite.file, quote = TRUE, append = do.append)
+      data.table::fwrite(invite_list, file = invite.file2, quote = TRUE, append = do.append)
 
       ## send confirmation
       sendConfirmationEmail(user_email, user_name, friend_email,
@@ -234,11 +261,11 @@ The BigOmics Team
               "
 Dear {user_name},
 
-Thank you for referring your friend {friend_email} to join Omics Playground! We appreciate your support and enthusiasm for our platform.
+Thank you for referring your friend {friend_email} to join Omics Playground!
 
-As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. Once their accounts are verified, you'll be one step closer to claiming your exclusive BigOmics swag.
+As of now, you've referred {numref} number of colleagues of which {numsuccess} have successfully registered. You'll be one step closer to claiming your exclusive BigOmics swag!
 
-Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. Thanks for being a part of BigOmics!
+Your referral helps our community grow and brings us closer to making omics data analysis accessible to everyone. We appreciate your support and enthusiasm for our platform!
 
 Best,
 

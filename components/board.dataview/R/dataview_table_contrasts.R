@@ -114,9 +114,17 @@ dataview_table_contrasts_server <- function(id,
       dt
     })
 
+    table_csv <- function() {
+      dt <- table.RENDER()
+      dt <- dt$x$data
+      colnames(dt) <- make.names(colnames(dt))
+      return(dt)
+    }
+
     TableModuleServer(
       "datasets",
       func = table.RENDER,
+      csvFunc = table_csv,
       func2 = table.RENDER_modal,
       selector = "none"
     )

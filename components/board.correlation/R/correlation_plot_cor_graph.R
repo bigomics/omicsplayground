@@ -111,10 +111,21 @@ correlation_plot_cor_graph_server <- function(
       graph
     }
 
+    plot_csv_data <- function() {
+      gr <- plot_data()
+      if (is.null(gr)) {
+        return(NULL)
+      }
+      visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
+      visdata <- visdata$edges[, 1:5]
+      return(visdata)
+    }
+
     PlotModuleServer(
       "plot",
       plotlib = "visnetwork",
       func = cor_graph.VISNETWORK,
+      csvFunc = plot_csv_data,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

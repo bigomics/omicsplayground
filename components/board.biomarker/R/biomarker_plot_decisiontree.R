@@ -29,7 +29,7 @@ biomarker_plot_decisiontree_ui <- function(
     info.text = info.text,
     options = NULL,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf"),
     width = width,
     height = height
   )
@@ -84,7 +84,6 @@ biomarker_plot_decisiontree_server <- function(id,
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
-        csvFunc = plot_data,
         res = c(60, 100),
         pdf.width = 10, pdf.height = 6,
         add.watermark = watermark

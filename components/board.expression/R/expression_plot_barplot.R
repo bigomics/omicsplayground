@@ -45,7 +45,7 @@ expression_plot_barplot_ui <- function(
     plotlib = "plotly",
     caption = caption,
     options = plots_barplot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf"),
     width = width,
     height = height
   )
@@ -136,7 +136,6 @@ expression_plot_barplot_server <- function(id,
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

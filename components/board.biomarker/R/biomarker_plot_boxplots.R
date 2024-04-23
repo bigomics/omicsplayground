@@ -148,11 +148,18 @@ biomarker_plot_boxplots_server <- function(id,
         }
       }
 
+      plot_data_csv <- function() {
+        pdata <- plot_data()
+        df <- rbind(pdata$y, pdata$X)
+        return(df)
+      }
+
       PlotModuleServer(
         "plot",
         plotlib = "base", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER, # no separate modal plot render
+        csvFunc = plot_data_csv,
         res = c(90, 180),
         pdf.width = 10, pdf.height = 5.5,
         add.watermark = watermark

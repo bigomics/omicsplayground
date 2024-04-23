@@ -339,18 +339,16 @@ DataViewBoard <- function(id, pgx) {
         dbg("[DataViewBoard] obs3: 1")
         
         grpvar <- input$data_groupby
-        gr <- pgx$Y[samples, grpvar]
-        grps <- sort(unique(gr))
-        ## check if there are any samples remaining in the group after filtering
-        dbg("[DataViewBoard] len.groups = ", length(grps))
-        validate(need(length(grps) > 0, "No samples remaining in the group after filtering."))
-        dbg("[DataViewBoard] obs3: 2a")
-        
-        if (input$data_groupby != "<ungrouped>" && length(grps) > 1) {
-          mx <- tapply(samples, gr, function(ii) {
-            rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
-          })
-          counts <- do.call(cbind, mx)
+        if (grpvar != "<ungrouped>") {
+          gr <- pgx$Y[samples, grpvar]
+          grps <- sort(unique(gr))
+          ## check if there are any samples remaining in the group after filtering
+          if (length(grps) > 1) {
+            mx <- tapply(samples, gr, function(ii) {
+              rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
+            })
+            counts <- do.call(cbind, mx)
+          }
         }
 
         ## if too many samples (like scRNA-seq do subsampling...)

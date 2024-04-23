@@ -142,12 +142,20 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         )
     }
 
+    plot_data_csv <- function() {
+      pdat <- plot_data()
+      df <- pdat$df
+      df$group <- NULL
+      df$color <- NULL
+      return(df)
+    }
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
       func = plot.RENDER,
       func2 = modal_plot.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
+      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 4,
       add.watermark = watermark

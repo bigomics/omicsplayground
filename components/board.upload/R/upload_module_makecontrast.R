@@ -3,17 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-## =====================================================================================
-## ============================= GADGET UI =============================================
-## =====================================================================================
-
-
-MakeContrastGadget <- function(X, pheno, height = 720) {
-  gadgetize(MakeContrastUI, MakeContrastServer,
-    title = "MakeContrastGadget",
-    pheno = pheno, height = height
-  )
-}
 
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
