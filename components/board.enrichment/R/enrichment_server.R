@@ -40,16 +40,19 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
+    OBSERVERS <- fastmap::fastqueue()
+    
     shiny::observeEvent(input$gs_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Enrichment Analysis Board</strong>"),
         shiny::HTML(gs_infotext),
-        easyClose = TRUE, size = "l"
+        easyClose = TRUE, size = "xl"
       ))
-    })
+    }) %>% OBSERVERS$add()
 
     shiny::observe({
-      shiny::req(pgx$X)
+      shiny::req(pgx$gsetX)
+      
       meta <- pgx$gset.meta$meta
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(intersect(comparisons, names(meta)))
@@ -64,10 +67,11 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         choices = sort(gset.methods),
         selected = sel2
       )
-    })
+    }) %>% OBSERVERS$add()
 
     shiny::observe({
-      shiny::req(pgx$X)
+      shiny::req(pgx$gsetX)
+      
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
       nn <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
       gsets.groups <- names(gset_collections)[which(nn >= 5)]
@@ -76,7 +80,38 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       hmark <- grep("^H$|hallmark|", gsets.groups, ignore.case = TRUE, value = TRUE)
       if (length(hmark) > 0) sel <- hmark[1]
       shiny::updateSelectInput(session, "gs_features", choices = gsets.groups, selected = sel)
+    }) %>% OBSERVERS$add()
+
+    
+    ## This demonstrates active control of suspend/resume of
+    ## observers. Normally, it should be enough to use req(pgx$gsetX)
+    ## but dynamic control of observers may be needed in complex
+    ## scenarios. The resume/suspend function and the observer list
+    ## can be exported in the return of the module to allow the parent
+    ## to control the observer states.
+
+    suspend_observers <- function() {
+      dbg("[EnrichmentBoard] suspending",OBSERVERS$size(),"OBSERVERS")
+      lapply(OBSERVERS$as_list(), function(obs) {
+        obs$suspend()
+      })
+    }
+    
+    resume_observers <- function() {
+      dbg("[EnrichmentBoard] resuming",OBSERVERS$size(),"OBSERVERS")      
+      lapply(OBSERVERS$as_list(), function(obs) {
+        obs$resume()
+      })
+    }
+
+    observeEvent( pgx$gsetX, {
+      if(is.null(pgx$gsetX)) {
+        suspend_observers()
+      } else {
+        resume_observers()
+      }
     })
+    
 
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================

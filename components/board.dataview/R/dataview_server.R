@@ -111,6 +111,7 @@ DataViewBoard <- function(id, pgx) {
         pgx$counts
       )
     }, {
+      
         dbg("[DataViewBoard] obs2 (req)")      
         shiny::req(input$data_type)
         dbg("[DataViewBoard] obs2 (run)")
@@ -318,13 +319,10 @@ DataViewBoard <- function(id, pgx) {
           input$data_type
         )
     }, {
-        dbg("[DataViewBoard] obj3 (req)")
       
         shiny::req(pgx$X, pgx$Y, pgx$samples)
         shiny::req(input$data_groupby, input$data_type)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
-
-        dbg("[DataViewBoard] obs3 (start)")
         
         subtt <- NULL
         samples <- colnames(pgx$X)
@@ -335,8 +333,6 @@ DataViewBoard <- function(id, pgx) {
         } else {
           counts <- pmax(2**pgx$X[, samples, drop = FALSE] - 1, 0)
         }
-
-        dbg("[DataViewBoard] obs3: 1")
         
         grpvar <- input$data_groupby
         if (grpvar != "<ungrouped>") {
@@ -358,8 +354,6 @@ DataViewBoard <- function(id, pgx) {
           subtt <- c(subtt, "random subset")
         }
         colnames(counts) <- substring(colnames(counts), 1, 24)
-
-        dbg("[DataViewBoard] obs3: 2b")
         
         gset <- list()
         gg <- pgx$genes[rownames(counts), ]$gene_name
@@ -401,8 +395,6 @@ DataViewBoard <- function(id, pgx) {
           gg <- strwrap(paste(c(head(gg, 20), "+ ..."), collapse = " "), 40)
           paste(gg, collapse = "<br>")
         })
-
-        dbg("[DataViewBoard] obs3: 3")
         
         ## align
         ss <- names(total.counts)
@@ -421,8 +413,6 @@ DataViewBoard <- function(id, pgx) {
           prop.counts = prop.counts,
           gset.genes = gset.genes
         )
-
-        dbg("[DataViewBoard] obs3 (done)")
         
         getCountStatistics(res)
       },

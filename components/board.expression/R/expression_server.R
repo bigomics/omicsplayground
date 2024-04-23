@@ -39,7 +39,7 @@ ExpressionBoard <- function(id, pgx) {
         shiny::showModal(shiny::modalDialog(
           title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
           shiny::HTML(gx_infotext),
-          easyClose = TRUE, size = "l"
+          easyClose = TRUE, size = "xl"
         ))
       },
       ignoreInit = TRUE
