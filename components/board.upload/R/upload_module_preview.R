@@ -97,6 +97,9 @@ upload_table_preview_counts_server <- function(
           onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
           )
       )
+
+      alert <- bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE) 
+      htmltools::tagAppendChild(div(), alert)
       
       div(
         bslib::as_fill_carrier(),
@@ -105,9 +108,9 @@ upload_table_preview_counts_server <- function(
         if(is.null(uploaded$counts.csv)){
           bslib::layout_columns(          
             col_widths = c(-3,6,-3),
-##            row_heights = c(1,6,"auto"),
-            gap = "0.3rem",
-            div( bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE), style = "margin-bottom: -50px;"),
+            row_heights = list("auto","auto","auto"),
+            gap = "0.5rem",
+            alert,
             bslib::card( 
               fileInputArea(
                 ns("counts_csv"),
@@ -116,7 +119,7 @@ upload_table_preview_counts_server <- function(
                 accept = c(".csv"),
                 width = "100%"
               ),
-              style = "background-color: aliceblue;"
+              style = "background-color: aliceblue; border: 0.1rem dashed steelblue;"
             ),
             action_buttons            
           )
@@ -360,7 +363,7 @@ upload_table_preview_samples_server <- function(
                 accept = c(".csv"),
                 width = "100%"
               ),
-              style = "background-color: aliceblue;"            
+              style = "background-color: aliceblue; border: 0.1rem dashed steelblue;"
             ),
             action_buttons
           )
@@ -648,7 +651,7 @@ upload_table_preview_contrasts_server <- function(
                       accept = c(".csv"),
                       width = "100%"
                     ),
-                    style = "background-color: aliceblue;"                    
+                    style = "background-color: aliceblue; border: 0.1rem dashed steelblue;"
                   ),
                   action_buttons2
                 )
