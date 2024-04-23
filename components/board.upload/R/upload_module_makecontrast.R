@@ -138,7 +138,7 @@ upload_module_makecontrast_server <- function(
       observeEvent({
         list(phenoRT(), upload_wizard(), show_comparison_builder())
       }, {
-        req(upload_wizard() == "Step 3: Create comparisons",
+        req(upload_wizard() == "step_comparisons",
             show_comparison_builder() == TRUE)
         phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
         phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
