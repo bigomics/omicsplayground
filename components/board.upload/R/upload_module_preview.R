@@ -104,7 +104,7 @@ upload_table_preview_counts_server <- function(
         if(is.null(uploaded$counts.csv)){
           bslib::layout_columns(
             col_widths = c(-3,6,-3),
-            row_heights = list("auto","auto","auto"),
+            row_heights = list("auto",11,1),
             gap = "0.5rem",
             bslib::as_fill_carrier(
                 bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE),
