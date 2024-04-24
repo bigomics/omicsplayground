@@ -21,7 +21,7 @@ FeatureMapBoard <- function(id, pgx) {
     ## ================================================================================
 
     shiny::observeEvent(input$tabs, {
-      dbg("[FeatureMapBoard] input$tabs = ", input$tabs)
+      dbg("[FeatureMapBoard] changing to tab = ", input$tabs)
     })
 
     # Observer (1):
@@ -91,34 +91,30 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent(
-      {
-        list(pgx$samples, pgx$contrasts, input$showvar)
-      },
-      {
-        shiny::req(pgx$samples)
-        shiny::req(dim(pgx$contrasts))
-        shiny::req(input$showvar)
-
-        if (input$showvar == "phenotype") {
-          cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
-          cvar0 <- grep("^[.]", cvar, invert = TRUE, value = TRUE)[1]
-          shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
-          ## shinyjs::enable(ns("ref_group"))
-        }
-        if (input$showvar == "comparison") {
-          cvar <- colnames(pgx$contrasts)
-          sel.cvar <- head(cvar, 15)
-          shiny::updateSelectizeInput(session, "selcomp",
-            choices = cvar,
-            selected = sel.cvar
-          )
-          shiny::updateSelectInput(session, "ref_group", choices = "  ")
-          ## shinyjs::disable(ns("ref_group"))
-        }
+    observeEvent({
+      list(pgx$samples, pgx$contrasts, input$showvar)
+    }, {
+      shiny::req(pgx$samples)
+      shiny::req(dim(pgx$contrasts))
+      shiny::req(input$showvar)
+      
+      if (input$showvar == "phenotype") {
+        cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+        cvar0 <- head(grep("^[.]", cvar, invert = TRUE, value = TRUE),1)
+        shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
       }
-    )
-
+      if (input$showvar == "comparisons") {
+        cvar <- colnames(pgx$contrasts)
+        sel.cvar <- head(cvar, 8)
+        shiny::updateSelectizeInput(session, "selcomp",
+                                    choices = cvar,
+                                    selected = sel.cvar
+                                    )
+        shiny::updateSelectInput(session, "ref_group", choices = "  ")
+        ## shinyjs::disable(ns("ref_group"))
+      }
+    })
+    
     observeEvent(
       {
         list(pgx$samples, input$showvar, input$sigvar)
@@ -133,15 +129,12 @@ FeatureMapBoard <- function(id, pgx) {
       }
     )
 
-    observeEvent(
-      {
-        list(input$selcomp)
-      },
-      {
-        ## shiny::req(pgx$samples, input$sigvar, input$showvar)
-        shiny::updateSelectInput(session, "ref_group", choices = " ")
-      }
-    )
+    observeEvent({
+      list(input$selcomp)
+    }, {
+      ## shiny::req(pgx$samples, input$sigvar, input$showvar)
+      shiny::updateSelectInput(session, "ref_group", choices = " ")
+    })
 
 
     ## ================================================================================
@@ -285,7 +278,7 @@ FeatureMapBoard <- function(id, pgx) {
       if (input$showvar == "phenotype") {
         return(input$sigvar)
       }
-      if (input$showvar == "comparison") {
+      if (input$showvar == "comparisons") {
         return(input$selcomp)
       }
     })
