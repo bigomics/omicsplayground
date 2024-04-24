@@ -97,20 +97,20 @@ upload_table_preview_counts_server <- function(
           onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
           )
       )
-
-      alert <- bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE) 
-      htmltools::tagAppendChild(div(), alert)
-      
       div(
         bslib::as_fill_carrier(),
         ## style = "width: 100%; display: flex; justify-content: space-between; margin-bottom: 8px;",
         style = "width: 100%; display: flex; ",
         if(is.null(uploaded$counts.csv)){
-          bslib::layout_columns(          
+          bslib::layout_columns(
             col_widths = c(-3,6,-3),
             row_heights = list("auto","auto","auto"),
             gap = "0.5rem",
-            alert,
+            
+              bslib::as_fill_carrier(
+                bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE),
+                style = "align-items: end"
+            ),
             bslib::card( 
               fileInputArea(
                 ns("counts_csv"),
