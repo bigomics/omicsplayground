@@ -79,40 +79,52 @@ upload_module_computepgx_server <- function(
         div(
           # style = "display: flex; justify-content: center;",
 
-  bslib::layout_columns(
-    style = "width: 650px; margin-left: auto; margin-right: auto;",
-    col_widths = c(6,6),
-    gap = "20px",
-    shiny::textInput(
-      ns("selected_name"), NULL, ## "Dataset:",
-      placeholder = "Name of your dataset"
-    ),
-    shiny::selectInput(
-      inputId = ns("selected_organism"),
-      NULL,
-      choices = "Human",
-      selected = "Human",
-      multiple=FALSE
-    ),
-    shiny::textAreaInput(
-      ns("selected_description"), NULL,
-      placeholder = "Give a short description of your dataset",
-      height = 80, resize = "none"
-    ),
-    shiny::selectInput(
-      ns("selected_datatype"), NULL,
-      choices = c(
-        "RNA-seq", "scRNA-seq", "proteomics",
-        "mRNA microarray", "other"
-      )
-    ),
-    shiny::div(
-      shiny::actionLink(ns("options"), "Computation options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      style = "margin: 15px 0 15px 80px;"
-    )
-    ), ## end layout_col
+          bslib::layout_columns(
+          style = "width: 650px; margin-left: auto; margin-right: auto;",
+          col_widths = c(6,6),
+          gap = "20px",
+          div(
+            p("Dataset name:", style = "text-align: center;"),
+            shiny::textInput(
+              ns("selected_name"), NULL,
+              placeholder = "Name of your dataset"
+            )
+          ),
+          div(
+            p("Organism:", style = "text-align: center;"),
+            shiny::selectInput(
+              inputId = ns("selected_organism"),
+              NULL,
+              choices = "Human",
+              selected = "Human",
+              multiple=FALSE
+            )
+          ),
+          div(
+            p("Description:", style = "text-align: center;"),
+            shiny::textAreaInput(
+              ns("selected_description"), NULL,
+              placeholder = "Give a short description of your dataset",
+              height = 80, resize = "none"
+            )
+          ),
+          div(
+            p("Data type:", style = "text-align: center;"),
+            shiny::selectInput(
+              ns("selected_datatype"), NULL,
+              choices = c(
+                "RNA-seq", "scRNA-seq", "proteomics",
+                "mRNA microarray", "other"
+              )
+            )
+          )
+        ), ## end layout_col
+        shiny::div(
+            shiny::actionLink(ns("options"), "Computation options",
+              icon = icon("cog", lib = "glyphicon")
+            ),
+            style = "margin: 15px 0 15px 80px;"
+          ),
     shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
