@@ -80,8 +80,9 @@ upload_module_computepgx_server <- function(
           # style = "display: flex; justify-content: center;",
 
   bslib::layout_columns(
-    style = "width: 600px; margin-left: auto; margin-right: auto;",
+    style = "width: 650px; margin-left: auto; margin-right: auto;",
     col_widths = c(6,6),
+    gap = "20px",
     shiny::textInput(
       ns("selected_name"), NULL, ## "Dataset:",
       placeholder = "Name of your dataset"
@@ -93,17 +94,17 @@ upload_module_computepgx_server <- function(
       selected = "Human",
       multiple=FALSE
     ),
+    shiny::textAreaInput(
+      ns("selected_description"), NULL,
+      placeholder = "Give a short description of your dataset",
+      height = 80, resize = "none"
+    ),
     shiny::selectInput(
       ns("selected_datatype"), NULL,
       choices = c(
         "RNA-seq", "scRNA-seq", "proteomics",
         "mRNA microarray", "other"
       )
-    ),
-    shiny::textAreaInput(
-      ns("selected_description"), NULL,
-      placeholder = "Give a short description of your dataset",
-      height = 80, resize = "none"
     ),
     shiny::div(
       shiny::actionLink(ns("options"), "Computation options",
