@@ -80,9 +80,8 @@ upload_module_computepgx_server <- function(
           style = "display: flex; justify-content: center;",
 
   bslib::layout_columns(
-  align = "center",
-  width = 12,
-  shiny::tagList(
+    style = "width: 300px;",
+    col_widths = c(12),
     shiny::textInput(
       ns("selected_name"), NULL, ## "Dataset:",
       placeholder = "Name of your dataset"
@@ -112,7 +111,6 @@ upload_module_computepgx_server <- function(
       ),
       style = "margin: 15px 0 15px 80px;"
     )
-  ), ## end tagList
     ), ## end layout_col
 
         div(
