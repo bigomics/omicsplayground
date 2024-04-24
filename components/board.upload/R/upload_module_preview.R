@@ -355,7 +355,7 @@ upload_table_preview_samples_server <- function(
             row_heights = list("auto", 11, 1),
             gap = "0.3rem",
             bslib::as_fill_carrier(
-              div( bs_alert("The samples file (samples.csv) contains the phenotypic information of your samples. The file should be a tabular text file (csv) with the samples in the rows and the phenotypic data (metadata) in the columns. The first column contains the sample names, which must be unique, and has to match the names given in the header of the read counts file.", closable = FALSE), style = "margin-bottom: -50px;"),
+              bs_alert("The samples file (samples.csv) contains the phenotypic information of your samples. The file should be a tabular text file (csv) with the samples in the rows and the phenotypic data (metadata) in the columns. The first column contains the sample names, which must be unique, and has to match the names given in the header of the read counts file.", closable = FALSE),
               style = "align-items: end"
             ),
             bslib::card(
