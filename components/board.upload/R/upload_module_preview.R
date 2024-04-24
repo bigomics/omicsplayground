@@ -119,7 +119,7 @@ upload_table_preview_counts_server <- function(
                 accept = c(".csv"),
                 width = "100%"
               ),
-              style = "background-color: aliceblue; border: 0.1rem dashed steelblue;"
+              style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
             action_buttons            
           )
@@ -363,7 +363,7 @@ upload_table_preview_samples_server <- function(
                 accept = c(".csv"),
                 width = "100%"
               ),
-              style = "background-color: aliceblue; border: 0.1rem dashed steelblue;"
+              style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
             action_buttons
           )
@@ -627,7 +627,7 @@ upload_table_preview_contrasts_server <- function(
               col_widths = 12,
               ## height = "calc(100vh - 340px)",
               heights_equal = "row",
-              bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main' or 'Control' group. Give the contrast a name and click 'add'. You can also try 'auto-detect comparisons'.")),
+              bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main' or 'Control' group, give a name and click 'add'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
               upload_module_makecontrast_ui(ns("makecontrast")),
               action_buttons1
             )
@@ -651,7 +651,7 @@ upload_table_preview_contrasts_server <- function(
                       accept = c(".csv"),
                       width = "100%"
                     ),
-                    style = "background-color: aliceblue; border: 0.1rem dashed steelblue;"
+                    style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
                   ),
                   action_buttons2
                 )

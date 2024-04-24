@@ -95,7 +95,7 @@ upload_module_computepgx_server <- function(
                       ns("selected_name"), NULL, ## "Dataset:",
                       placeholder = "Name of your dataset"
                     ),
-                    width = "700"
+                    width = "600"
                   ),
                   shiny::tags$td("", width = "120")
                 ),
@@ -131,7 +131,7 @@ upload_module_computepgx_server <- function(
                     shiny::textAreaInput(
                       ns("selected_description"), NULL,
                       placeholder = "Give a short description of your dataset",
-                      height = 100, resize = "none"
+                      height = 80, resize = "none"
                     ),
                     style = "margin-left: 0px;"
                   )),
