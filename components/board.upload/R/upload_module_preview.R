@@ -351,7 +351,8 @@ upload_table_preview_samples_server <- function(
         bslib::as_fill_carrier(),
         if(is.null(uploaded$samples.csv)) {
           bslib::layout_columns(
-            col_widths = c(-3, 6, -3),                   
+            col_widths = c(-3, 6, -3),
+            row_heights = list("auto","auto","auto"),
             gap = "0.3rem",
             bslib::as_fill_carrier(
               div( bs_alert("The samples file (samples.csv) contains the phenotypic information of your samples. The file should be a tabular text file (csv) with the samples in the rows and the phenotypic data (metadata) in the columns. The first column contains the sample names, which must be unique, and has to match the names given in the header of the read counts file.", closable = FALSE), style = "margin-bottom: -50px;"),
@@ -639,7 +640,7 @@ upload_table_preview_contrasts_server <- function(
               if(is.null(uploaded$contrasts.csv)){
                 bslib::layout_columns(
                   col_widths = c(-3,6,-3),
-                  ## row_heights = c(1,6,"auto"),
+                  row_heights = list("auto","auto","auto"),
                   gap = "0.3rem",
                   bslib::as_fill_carrier(
                     bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE),
