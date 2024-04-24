@@ -15,7 +15,7 @@ foldchange_heatmap_ui <- function(
 
   FoldchangeHeatmap.opts <- shiny::tagList(
     withTooltip(
-      shiny::checkboxInput(ns("allfc"), "show all contrasts", TRUE),
+      shiny::checkboxInput(ns("allfc"), "show all contrasts", FALSE),
       "Show all contrasts or just the selected ones."
     ),
     withTooltip(

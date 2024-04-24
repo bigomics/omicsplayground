@@ -90,20 +90,12 @@ FeatureMapBoard <- function(id, pgx) {
 
     observeEvent(
     {
-      list(pgx$samples, pgx$contrasts, input$showvar)
+      list(pgx$samples, pgx$X, input$showvar)
     },
     {
-      dbg("[TEST] 0: input$showvar = ", input$showvar)
-      dbg("[TEST] 0: dim.pgx$contrasts = ", dim(pgx$contrasts))
-      dbg("[TEST] 0: dim.pgx$samples = ", dim(pgx$samples))
-
       shiny::req(pgx$samples)
-      shiny::req(pgx$contrasts)
+      shiny::req(pgx$X)
       shiny::req(input$showvar)
-
-      dbg("[TEST] 1: input$showvar = ", input$showvar)
-      dbg("[TEST] 1: dim.pgx$contrasts = ", dim(pgx$contrasts))
-      dbg("[TEST] 1: dim.pgx$samples = ", dim(pgx$samples))
       
       if (input$showvar == "phenotype") {
         cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
@@ -111,7 +103,7 @@ FeatureMapBoard <- function(id, pgx) {
         shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
       }
       if (input$showvar == "comparisons") {
-        cvar <- colnames(pgx$contrasts)
+        cvar <- colnames(pgx$model.parameters$contr.matrix)
         sel.cvar <- head(cvar, 8)
         shiny::updateSelectizeInput(session, "selcomp",
                                     choices = cvar,
