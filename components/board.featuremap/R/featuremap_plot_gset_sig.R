@@ -35,7 +35,6 @@ featuremap_plot_gset_sig_server <- function(id,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
 
