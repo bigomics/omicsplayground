@@ -120,11 +120,11 @@ upload_module_computepgx_server <- function(
           )
         ), ## end layout_col
         shiny::div(
-            shiny::actionLink(ns("options"), "Computation options",
-              icon = icon("cog", lib = "glyphicon")
-            ),
-            style = "margin: 15px 0 15px 80px;"
+          shiny::actionLink(ns("options"), "Computation options",
+            icon = icon("cog", lib = "glyphicon")
           ),
+          style = "display: flex; justify-content: center; margin: 15px 0;"
+        ),
     shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
