@@ -47,9 +47,7 @@ foldchange_heatmap_server <- function(id,
                                       input_comparisons,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       if (input$allfc) {
         FC <- getFoldChangeMatrix()$fc
       } else {
