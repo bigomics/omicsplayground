@@ -28,7 +28,6 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 WORKDIR /
 COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
-RUN R -e "install.packages('shinybrowser')"
 
 #------------------------------------------------------------
 # Install supporting bigomics stuff (as R packages)
@@ -41,7 +40,8 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 
 # NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
 
-# sf also added in requirements (check in final build that its installed before removing)
+# sf also added in requirements (check before removing!)
+RUN R -e "install.packages('shinybrowser')"
 RUN R -e "install.packages('sf')"
 
 #------------------------------------------------------------
