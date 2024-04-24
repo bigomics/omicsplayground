@@ -77,10 +77,10 @@ upload_module_computepgx_server <- function(
           )
         }        
         div(
-          style = "display: flex; justify-content: center;",
+          # style = "display: flex; justify-content: center;",
 
   bslib::layout_columns(
-    style = "width: 300px;",
+    style = "width: 300px; margin-left: auto; margin-right: auto;",
     col_widths = c(12),
     shiny::textInput(
       ns("selected_name"), NULL, ## "Dataset:",
