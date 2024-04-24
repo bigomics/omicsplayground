@@ -80,8 +80,8 @@ upload_module_computepgx_server <- function(
           # style = "display: flex; justify-content: center;",
 
   bslib::layout_columns(
-    style = "width: 300px; margin-left: auto; margin-right: auto;",
-    col_widths = c(12),
+    style = "width: 600px; margin-left: auto; margin-right: auto;",
+    col_widths = c(6,6),
     shiny::textInput(
       ns("selected_name"), NULL, ## "Dataset:",
       placeholder = "Name of your dataset"
