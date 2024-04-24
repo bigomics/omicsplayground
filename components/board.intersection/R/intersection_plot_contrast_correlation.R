@@ -16,12 +16,12 @@ contrast_correlation_ui <- function(
   ctcorrplot.opts <- shiny::tagList(
     ## "Show correlation values in cells."),
     withTooltip(
-      shiny::checkboxInput(ns("ctcorrplot_allfc"), "show all contrasts", TRUE),
+      shiny::checkboxInput(ns("allfc"), "show all contrasts", FALSE),
       "Show all contrasts or just the selected ones."
     ),
     ##       "Fix heatmap layout when changing number of top genes"),
     withTooltip(
-      shiny::radioButtons(ns("ctcorrplot_ntop"), "number of top genes",
+      shiny::radioButtons(ns("ntop"), "number of top genes",
         c("100", "1000", "all"),
         selected = "1000", inline = TRUE
       ),
@@ -50,6 +50,7 @@ contrast_correlation_server <- function(id,
                                         input_comparisons,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
 
@@ -58,27 +59,24 @@ contrast_correlation_server <- function(id,
         return(NULL)
       }
 
-      fc0 <- res$fc[, input_comparisons(), drop = FALSE]
-      qv0 <- res$qv[, input_comparisons(), drop = FALSE]
-
+      allfc <- input$allfc
+      fc0 <- res$fc
+      qv0 <- res$qv
+      if (!allfc) {
+        fc0 <- res$fc[, input_comparisons(), drop = FALSE]
+        qv0 <- res$qv[, input_comparisons(), drop = FALSE]
+      }
+      
       # module can only run with at least two comparisons
-      validate(
-        need(
-          dim(fc0)[2] >= 2,
-          "Less than 2 comparisons selected. Please select at least 2 comparison on the settings sidebar."
-        )
-      )
+      validate( need(
+        dim(fc0)[2] >= 2,
+        "Less than 2 comparisons selected. Please select at least 2 comparison on the settings sidebar."
+      ))
 
       ntop <- 2000
-      ntop <- input$ctcorrplot_ntop
+      ntop <- input$ntop
       if (ntop == "all") ntop <- 999999
       ntop <- as.integer(ntop)
-
-      allfc <- input$ctcorrplot_allfc
-      if (!allfc) {
-        kk <- match(comp, colnames(fc0))
-        fc0 <- fc0[, kk, drop = FALSE]
-      }
 
       R.full <- cor(apply(fc0, 2, rank), use = "pairwise")
       jj <- head(order(-rowMeans(fc0**2)), ntop)
