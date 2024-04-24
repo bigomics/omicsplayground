@@ -112,13 +112,12 @@ upload_module_computepgx_server <- function(
       style = "margin: 15px 0 15px 80px;"
     )
     ), ## end layout_col
-
-        div(
-          shiny::conditionalPanel(
+    shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
             bslib::layout_columns(
               width = 12,
+              height = "300px",
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
@@ -233,7 +232,7 @@ upload_module_computepgx_server <- function(
             }
             "))
           ) ## end of conditional panel
-        ) ## end of fill Col
+
         )
       })
 
