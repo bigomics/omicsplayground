@@ -84,14 +84,14 @@ upload_module_computepgx_server <- function(
           col_widths = c(6,6),
           gap = "20px",
           div(
-            p("Dataset name:", style = "text-align: center; margin:0;  font-weight: bold;"),
+            p("Dataset name:", style = "text-align: center;  margin: 0 0 5px 0; ;  font-weight: bold;"),
             shiny::textInput(
               ns("selected_name"), NULL,
               placeholder = "Name of your dataset"
             )
           ),
           div(
-            p("Organism:", style = "text-align: center;  margin:0; font-weight: bold;"),
+            p("Organism:", style = "text-align: center;   margin: 0 0 5px 0; font-weight: bold;"),
             shiny::selectInput(
               inputId = ns("selected_organism"),
               NULL,
@@ -101,7 +101,7 @@ upload_module_computepgx_server <- function(
             )
           ),
           div(
-            p("Description:", style = "text-align: center;  margin:0; font-weight: bold;"),
+            p("Description:", style = "text-align: center;   margin: 0 0 5px 0;; font-weight: bold;"),
             shiny::textAreaInput(
               ns("selected_description"), NULL,
               placeholder = "Give a short description of your dataset",
@@ -109,7 +109,7 @@ upload_module_computepgx_server <- function(
             )
           ),
           div(
-            p("Data type:", style = "text-align: center;  margin:0; font-weight: bold;"),
+            p("Data type:", style = "text-align: center;   margin: 0 0 5px 0; font-weight: bold;"),
             shiny::selectInput(
               ns("selected_datatype"), NULL,
               choices = c(
