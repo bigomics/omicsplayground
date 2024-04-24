@@ -77,83 +77,43 @@ upload_module_computepgx_server <- function(
           )
         }        
         div(
-        shiny::fillCol(
-          height = height,
-          flex = c(0.1, NA, 0.05, 1.3),
-          shiny::br(),
-          shiny::fluidRow(
-            shiny::column(
-              12,
-              align = "center", offset = 0,
-              shiny::tags$table(
-                style = "width:100%;vertical-align:top;padding:4px;",
-                shiny::tags$tr(
-                  shiny::tags$td("", width = "280"),
-                  shiny::tags$td("Name", width = "120"),
-                  shiny::tags$td(
-                    shiny::textInput(
-                      ns("selected_name"), NULL, ## "Dataset:",
-                      placeholder = "Name of your dataset"
-                    ),
-                    width = "600"
-                  ),
-                  shiny::tags$td("", width = "120")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Organism"),
-                  shiny::tags$td(
-                    shiny::selectInput(
-                      inputId = ns("selected_organism"),
-                      NULL,
-                      choices = "Human",
-                      selected = "Human",
-                      multiple=FALSE
-                      )),
-                  shiny::tags$td("")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Datatype"),
-                  shiny::tags$td(shiny::selectInput(
-                    ns("selected_datatype"), NULL,
-                    choices = c(
-                      "RNA-seq", "scRNA-seq", "proteomics",
-                      "mRNA microarray", "other"
-                    )
-                  )),
-                  shiny::tags$td("")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Description"),
-                  shiny::tags$td(shiny::div(
-                    shiny::textAreaInput(
-                      ns("selected_description"), NULL,
-                      placeholder = "Give a short description of your dataset",
-                      height = 80, resize = "none"
-                    ),
-                    style = "margin-left: 0px;"
-                  )),
-                  shiny::tags$td("")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td(""),
-                  shiny::tags$td(
-                    shiny::div(
-                      shiny::actionLink(ns("options"), "Computation options",
-                        icon = icon("cog", lib = "glyphicon")
-                      ),
-                      style = "margin: 15px 0 15px 80px;"
-                    )
-                  ),
-                  shiny::tags$td("")
-                )
-              ) ## end table
-            )
-          ),
-        ), ## end of fill Col
+          style = "display: flex; justify-content: center;",
+
+  bslib::layout_columns(
+  align = "center",
+  width = 12,
+  shiny::tagList(
+    shiny::textInput(
+      ns("selected_name"), NULL, ## "Dataset:",
+      placeholder = "Name of your dataset"
+    ),
+    shiny::selectInput(
+      inputId = ns("selected_organism"),
+      NULL,
+      choices = "Human",
+      selected = "Human",
+      multiple=FALSE
+    ),
+    shiny::selectInput(
+      ns("selected_datatype"), NULL,
+      choices = c(
+        "RNA-seq", "scRNA-seq", "proteomics",
+        "mRNA microarray", "other"
+      )
+    ),
+    shiny::textAreaInput(
+      ns("selected_description"), NULL,
+      placeholder = "Give a short description of your dataset",
+      height = 80, resize = "none"
+    ),
+    shiny::div(
+      shiny::actionLink(ns("options"), "Computation options",
+        icon = icon("cog", lib = "glyphicon")
+      ),
+      style = "margin: 15px 0 15px 80px;"
+    )
+  ), ## end tagList
+    ), ## end layout_col
 
         div(
           shiny::conditionalPanel(
