@@ -16,7 +16,7 @@ IntersectionInputs <- function(id) {
       "Toggle advanced options.",
       placement = "top"
     ),
-    shiny::br(), 
+    shiny::br(),
     shiny::conditionalPanel(
       "input.options % 2 == 1",
       ns = ns,

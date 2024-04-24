@@ -50,7 +50,6 @@ contrast_correlation_server <- function(id,
                                         input_comparisons,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
 
@@ -66,9 +65,9 @@ contrast_correlation_server <- function(id,
         fc0 <- res$fc[, input_comparisons(), drop = FALSE]
         qv0 <- res$qv[, input_comparisons(), drop = FALSE]
       }
-      
+
       # module can only run with at least two comparisons
-      validate( need(
+      validate(need(
         dim(fc0)[2] >= 2,
         "Less than 2 comparisons selected. Please select at least 2 comparison on the settings sidebar."
       ))
