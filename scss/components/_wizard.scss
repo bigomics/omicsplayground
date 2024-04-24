@@ -25,3 +25,8 @@
 .wizard .html-fill-container {
     min-width: 100%;
 }
+
+.form-check, .shiny-input-container .checkbox, .shiny-input-container .radio {
+  min-height: 0rem;
+  margin-bottom: 0rem;
+}
