@@ -106,8 +106,7 @@ upload_table_preview_counts_server <- function(
             col_widths = c(-3,6,-3),
             row_heights = list("auto","auto","auto"),
             gap = "0.5rem",
-            
-              bslib::as_fill_carrier(
+            bslib::as_fill_carrier(
                 bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE),
                 style = "align-items: end"
             ),
@@ -354,7 +353,10 @@ upload_table_preview_samples_server <- function(
           bslib::layout_columns(
             col_widths = c(-3, 6, -3),                   
             gap = "0.3rem",
-            div( bs_alert("The samples file (samples.csv) contains the phenotypic information of your samples. The file should be a tabular text file (csv) with the samples in the rows and the phenotypic data (metadata) in the columns. The first column contains the sample names, which must be unique, and has to match the names given in the header of the read counts file.", closable = FALSE), style = "margin-bottom: -50px;"),
+            bslib::as_fill_carrier(
+              div( bs_alert("The samples file (samples.csv) contains the phenotypic information of your samples. The file should be a tabular text file (csv) with the samples in the rows and the phenotypic data (metadata) in the columns. The first column contains the sample names, which must be unique, and has to match the names given in the header of the read counts file.", closable = FALSE), style = "margin-bottom: -50px;"),
+              style = "align-items: end"
+            ),
             bslib::card(
               fileInputArea(
                 ns("samples_csv"),
@@ -639,7 +641,10 @@ upload_table_preview_contrasts_server <- function(
                   col_widths = c(-3,6,-3),
                   ## row_heights = c(1,6,"auto"),
                   gap = "0.3rem",
-                  div( bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE), style = "margin-bottom: -50px;"),
+                  bslib::as_fill_carrier(
+                    bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE),
+                    style = "align-items: end"
+                  ),
                   bslib::card(
                     fileInputArea(
                       ns("contrasts_csv"),
