@@ -93,13 +93,17 @@ FeatureMapBoard <- function(id, pgx) {
       list(pgx$samples, pgx$contrasts, input$showvar)
     },
     {
+      dbg("[TEST] 0: input$showvar = ", input$showvar)
+      dbg("[TEST] 0: dim.pgx$contrasts = ", dim(pgx$contrasts))
+      dbg("[TEST] 0: dim.pgx$samples = ", dim(pgx$samples))
+
       shiny::req(pgx$samples)
       shiny::req(pgx$contrasts)
       shiny::req(input$showvar)
 
-      dbg("[TEST] input$showvar = ", input$showvar)
-      dbg("[TEST] dim.pgx$contrasts = ", dim(pgx$contrasts))
-      dbg("[TEST] dim.pgx$samples = ", dim(pgx$samples))
+      dbg("[TEST] 1: input$showvar = ", input$showvar)
+      dbg("[TEST] 1: dim.pgx$contrasts = ", dim(pgx$contrasts))
+      dbg("[TEST] 1: dim.pgx$samples = ", dim(pgx$samples))
       
       if (input$showvar == "phenotype") {
         cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
