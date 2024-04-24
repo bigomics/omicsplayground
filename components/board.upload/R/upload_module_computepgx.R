@@ -82,7 +82,7 @@ upload_module_computepgx_server <- function(
           bslib::layout_columns(
           style = "width: 650px; margin-left: auto; margin-right: auto;",
           col_widths = c(6,6),
-          gap = "10px",
+          gap = "20px",
           div(
             p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
             shiny::textInput(
