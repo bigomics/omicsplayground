@@ -27,6 +27,8 @@ upload_module_computepgx_server <- function(
     upload_description,
     upload_datatype,
     upload_organism,
+    upload_gx_methods,
+    upload_gset_methods,
     process_counter,
     reset_upload_text_input
     ) {
