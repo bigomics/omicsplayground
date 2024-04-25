@@ -27,8 +27,8 @@ UploadBoard <- function(id,
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
     upload_gset_methods <- reactiveVal(0)
-    upload_gx_methods <- reactiveVal(0)
-    process_counter <- reactiveVal(0)
+    upload_gx_methods <- reactiveVal(NULL)
+    process_counter <- reactiveVal(NULL)
     show_comparison_builder <- shiny::reactiveVal(FALSE)
     selected_contrast_input <- shiny::reactiveVal(FALSE)
     reset_upload_text_input <- shiny::reactiveVal(0)
@@ -671,19 +671,17 @@ UploadBoard <- function(id,
             text = "This dataset name already exists.",
             type = "error"
           )
-          
           upload_name(NULL)
-          
         }
-        browser()
-        if (length(upload_gx_methods()) == 0) {
+
+        if (is.null(upload_gx_methods())) {
           shinyalert::shinyalert(
             title = "ERROR",
             text = "You must select at least one gene test method",
             type = "error"
           )
         }
-        if (length(upload_gset_methods()) == 0) {
+        if (is.null(upload_gset_methods())) {
           shinyalert::shinyalert(
             title = "ERROR",
             text = "You must select at least one geneset test method",
@@ -706,8 +704,8 @@ UploadBoard <- function(id,
           upload_name() == "" || 
           upload_description() == "" || 
           is.null(upload_description())||
-          length(upload_gx_methods()) == 0 ||
-          length(upload_gset_methods()) == 0
+          is.null(upload_gx_methods()) ||
+          is.null(upload_gset_methods())
           ){
           wizardR::lock("upload_wizard")
         } else {
