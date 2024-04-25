@@ -50,80 +50,86 @@ FeatureMapBoard <- function(id, pgx) {
 
     # Observer (3):
     shiny::observeEvent(
-    {
-      list(pgx$name, pgx$X, pgx$gsetX)
-    },
-    {
-      shiny::req(pgx$X, pgx$gsetX)
-      dbg("[FeatureMapBoard] set families and geneset db..")
-      
-      ## set gene families
-      families <- names(playdata::FAMILIES)
-      shiny::updateSelectInput(session, "filter_genes",
-                               choices = families,
-                               selected = "<all>"
-                               )
+      {
+        list(pgx$name, pgx$X, pgx$gsetX)
+      },
+      {
+        shiny::req(pgx$X, pgx$gsetX)
+        dbg("[FeatureMapBoard] set families and geneset db..")
 
-      ## set geneset categories
-      gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
-      gsetcats <- c("<all>", gsetcats)
-      sel0 <- grep("^H$|hallmark", gsetcats, ignore.case = TRUE, value = TRUE)
-      sel0 <- "<all>"
-      
-      if (length(sel0) == 0) sel0 <- 1
-      shiny::updateSelectInput(session, "filter_gsets",
-                               choices = gsetcats, selected = sel0 )
-    })
+        ## set gene families
+        families <- names(playdata::FAMILIES)
+        shiny::updateSelectInput(session, "filter_genes",
+          choices = families,
+          selected = "<all>"
+        )
 
-    observeEvent(
-    {
-      list(input$sigvar, pgx$samples)
-    },
-    {
-      shiny::req(pgx$samples, input$sigvar)
-      if (input$sigvar %in% colnames(pgx$samples)) {
-        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-        y <- c("<average>", sort(unique(y)))
-        shiny::updateSelectInput(session, "ref_group", choices = y)
+        ## set geneset categories
+        gsetcats <- sort(unique(gsub(":.*", "", rownames(pgx$gsetX))))
+        gsetcats <- c("<all>", gsetcats)
+        sel0 <- grep("^H$|hallmark", gsetcats, ignore.case = TRUE, value = TRUE)
+        sel0 <- "<all>"
+
+        if (length(sel0) == 0) sel0 <- 1
+        shiny::updateSelectInput(session, "filter_gsets",
+          choices = gsetcats, selected = sel0
+        )
       }
-    })
+    )
 
     observeEvent(
-    {
-      list(pgx$samples, pgx$X, input$showvar)
-    },
-    {
-      shiny::req(pgx$samples)
-      shiny::req(pgx$X)
-      shiny::req(input$showvar)
-      
-      if (input$showvar == "phenotype") {
-        cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
-        cvar0 <- head(grep("^[.]", cvar, invert = TRUE, value = TRUE), 1)
-        shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
+      {
+        list(input$sigvar, pgx$samples)
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
       }
-      if (input$showvar == "comparisons") {
-        cvar <- colnames(pgx$model.parameters$contr.matrix)
-        sel.cvar <- head(cvar, 8)
-        shiny::updateSelectizeInput(session, "selcomp",
-                                    choices = cvar,
-                                    selected = sel.cvar)
-        shiny::updateSelectInput(session, "ref_group", choices = "  ")
-      }
-    })
+    )
 
     observeEvent(
-    {
-      list(pgx$samples, input$showvar, input$sigvar)
-    },
-    {
-      shiny::req(pgx$samples, input$sigvar, input$showvar)
-      if (input$sigvar %in% colnames(pgx$samples)) {
-        y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-        y <- c("<average>", sort(unique(y)))
-        shiny::updateSelectInput(session, "ref_group", choices = y)
+      {
+        list(pgx$samples, pgx$X, input$showvar)
+      },
+      {
+        shiny::req(pgx$samples)
+        shiny::req(pgx$X)
+        shiny::req(input$showvar)
+
+        if (input$showvar == "phenotype") {
+          cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+          cvar0 <- head(grep("^[.]", cvar, invert = TRUE, value = TRUE), 1)
+          shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
+        }
+        if (input$showvar == "comparisons") {
+          cvar <- colnames(pgx$model.parameters$contr.matrix)
+          sel.cvar <- head(cvar, 8)
+          shiny::updateSelectizeInput(session, "selcomp",
+            choices = cvar,
+            selected = sel.cvar
+          )
+          shiny::updateSelectInput(session, "ref_group", choices = "  ")
+        }
       }
-    })
+    )
+
+    observeEvent(
+      {
+        list(pgx$samples, input$showvar, input$sigvar)
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar, input$showvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
+      }
+    )
 
     observeEvent(
       {
