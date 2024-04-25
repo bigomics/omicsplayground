@@ -659,7 +659,7 @@ UploadBoard <- function(id,
         upload_description(), 
         upload_organism(),
         upload_gset_methods(),
-        upload_gx_methods(),
+        upload_gx_methods()
         ), {
         req(input$upload_wizard == "step_compute", upload_name())
 
@@ -675,7 +675,7 @@ UploadBoard <- function(id,
           upload_name(NULL)
           
         }
-
+        browser()
         if (length(upload_gx_methods()) == 0) {
           shinyalert::shinyalert(
             title = "ERROR",
