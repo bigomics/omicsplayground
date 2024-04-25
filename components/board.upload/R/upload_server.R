@@ -29,8 +29,8 @@ UploadBoard <- function(id,
     upload_gset_methods <- reactiveVal(NULL)
     upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
-    show_comparison_builder <- shiny::reactiveVal(FALSE)
-    selected_contrast_input <- shiny::reactiveVal(FALSE)
+    show_comparison_builder <- shiny::reactiveVal(TRUE)
+    selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
 
     output$navheader <- shiny::renderUI({

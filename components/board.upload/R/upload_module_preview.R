@@ -540,29 +540,31 @@ upload_table_preview_contrasts_server <- function(
 
     output$table_contrasts <- shiny::renderUI({
       
-      if(selected_contrast_input() == FALSE) {
+      # I will set selected_contrast_input to true for now (selection page will be disabled)
+      # if(selected_contrast_input() == FALSE) {
         # ask user if preferrence is upload contrast or create contrast online
-        div(
-          style = "display: flex; gap: 80px; flex-direction: column; justify-content: center; align-items: center; height: 50%;",
-          div(h4("Please choose one of the following options:")),
-          div(
-            style = "display: flex; justify-content: center; gap: 20px;",
-            actionButton(
-            ns("goUploadComparison"),
-            label = " Upload comparisons file",
-            class = "btn btn-primary m-1",
-            icon("upload")
-            ),
-          actionButton(
-            ns("goOnlineComparison"),
-            label = " Build my comparisons",
-            class = "btn btn-primary m-1",
-            icon("pen-to-square")
-            )
-          )
+        #TODO remove this is not needed
+        # div(
+        #   style = "display: flex; gap: 80px; flex-direction: column; justify-content: center; align-items: center; height: 50%;",
+        #   div(h4("Please choose one of the following options:")),
+        #   div(
+        #     style = "display: flex; justify-content: center; gap: 20px;",
+        #     actionButton(
+        #     ns("goUploadComparison"),
+        #     label = " Upload comparisons file",
+        #     class = "btn btn-primary m-1",
+        #     icon("upload")
+        #     ),
+        #   actionButton(
+        #     ns("goOnlineComparison"),
+        #     label = " Build my comparisons",
+        #     class = "btn btn-primary m-1",
+        #     icon("pen-to-square")
+        #     )
+        #   )
           
-        )
-      } else {
+        # )
+      # } else {
         # only display buttons if goOnlineComparison is false
 
         action_buttons1 <- div(
@@ -698,14 +700,14 @@ upload_table_preview_contrasts_server <- function(
             )
           }
         )
-      }
+      # }
 
     })
 
     # control state of comparison builder
-    observeEvent(input$run_build_comparisons, {
-      show_comparison_builder(TRUE)
-    })
+    # observeEvent(input$run_build_comparisons, {
+    #   show_comparison_builder(TRUE)
+    # })
 
     observeEvent(input$goUploadComparison, {
       selected_contrast_input(TRUE)
