@@ -16,7 +16,8 @@ LoadingBoard <- function(id,
                          reload_pgxdir,
                          current_page,
                          load_uploaded_data,
-                         recompute_pgx) {
+                         recompute_pgx,
+                         new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -56,7 +57,7 @@ LoadingBoard <- function(id,
     output$sharing_alert <- renderUI({
       if (!auth$options$ENABLE_USER_SHARE) {
         return(
-          bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+          bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and analyze the data by clicking the <b>Analyze Dataset</b> button below."))
         )
       }
       received_files <- pgxreceived$getReceivedFiles()
@@ -66,7 +67,7 @@ LoadingBoard <- function(id,
 
 
       if (num_received == 0 && num_shared == 0) {
-        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and load the data by clicking the <b>Load Dataset</b> button below."))
+        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and analyze the data by clicking the <b>Analyze Dataset</b> button below."))
         return(tag)
       }
 
@@ -179,7 +180,9 @@ LoadingBoard <- function(id,
       refresh_shared = refresh_shared,
       reload_pgxdir_public = reload_pgxdir_public,
       reload_pgxdir = reload_pgxdir,
-      recompute_pgx = recompute_pgx
+      recompute_pgx = recompute_pgx,
+      loadbutton = reactive(input$loadbutton),
+      new_upload = new_upload
     )
 
     loading_tsne_server(
@@ -227,7 +230,7 @@ LoadingBoard <- function(id,
         genes, gene sets (or pathways), corresponding phenotypes and the creation
         date.<br><br><b>Selecting the dataset:</b> Users can select a dataset in
         the table. The Dataset info shows the information of the dataset of
-        interest and users can load the data by clicking the 'Load dataset'
+        interest and users can analyze the data by clicking the 'Analyze dataset'
         button.<br><br><br><center><iframe width='560' height='315'
         src='https://www.youtube.com/embed/elwT6ztt3Fo'
         title='YouTube video player' frameborder='0'
@@ -246,6 +249,20 @@ LoadingBoard <- function(id,
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
     ## =============================================================================
+
+    ## =========================== BUTTON ACTIONS =============================
+    ## disable button if no row is selected
+    observeEvent(pgxtable$rows_selected(),
+      {
+        shiny::req(pgxtable)
+        if (is.null(pgxtable$rows_selected())) {
+          shinyjs::disable(id = "loadbutton")
+        } else {
+          shinyjs::enable(id = "loadbutton")
+        }
+      },
+      ignoreNULL = FALSE
+    )
 
     loadPGX <- function(pgxfile) {
       req(auth$logged)
@@ -354,6 +371,9 @@ LoadingBoard <- function(id,
         is_data_loaded(is_data_loaded() + 1)
       }
     }
+    observeEvent(input$newuploadbutton, {
+        new_upload(new_upload() + 1)
+      })
 
     observeEvent(load_uploaded_data(), {
       upload_pgx <- sub("[.]pgx$", "", load_uploaded_data())

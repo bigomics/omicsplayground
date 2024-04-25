@@ -14,17 +14,22 @@ upload_module_computepgx_server <- function(
     samplesRT,
     contrastsRT,
     raw_dir,
-    batchRT,
     metaRT,
     lib.dir,
-    selected_organism,
     auth,
     create_raw_dir,
-    enable_button = shiny::reactive(TRUE),
     alertready = TRUE,
     height = 720,
     recompute_info,
-    inactivityCounter) {
+    inactivityCounter,
+    upload_wizard,
+    upload_name,
+    upload_description,
+    upload_datatype,
+    upload_organism,
+    process_counter,
+    reset_upload_text_input
+    ) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -70,84 +75,62 @@ upload_module_computepgx_server <- function(
             multiple = FALSE,
             accept = c(".csv")
           )
-        }
+        }        
+        div(
+          # style = "display: flex; justify-content: center;",
 
-        shiny::fillCol(
-          height = height,
-          flex = c(0.2, NA, 0.05, 1.5),
-          shiny::br(),
-          shiny::fluidRow(
-            shiny::column(
-              12,
-              align = "center", offset = 0,
-              shiny::tags$table(
-                style = "width:100%;vertical-align:top;padding:4px;",
-                shiny::tags$tr(
-                  shiny::tags$td("", width = "300"),
-                  shiny::tags$td("Name", width = "100"),
-                  shiny::tags$td(
-                    shiny::textInput(
-                      ns("upload_name"), NULL, ## "Dataset:",
-                      placeholder = "Name of your dataset"
-                    ),
-                    width = "600"
-                  ),
-                  shiny::tags$td("", width = "120")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Datatype"),
-                  shiny::tags$td(shiny::selectInput(
-                    ns("upload_datatype"), NULL,
-                    choices = c(
-                      "RNA-seq", "scRNA-seq", "proteomics",
-                      "mRNA microarray", "other"
-                    )
-                  )),
-                  shiny::tags$td("")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Organism"),
-                  shiny::tags$td(shiny::tags$h6(selected_organism())),
-                  shiny::tags$td("")
-                ),
-                shiny::tags$tr(
-                  shiny::tags$td(""),
-                  shiny::tags$td("Description"),
-                  shiny::tags$td(shiny::div(
-                    shiny::textAreaInput(
-                      ns("upload_description"), NULL,
-                      placeholder = "Give a short description of your dataset",
-                      height = 100, resize = "none"
-                    ),
-                    style = "margin-left: 0px;"
-                  )),
-                  shiny::tags$td("")
-                )
-              ),
-              shiny::br(),
-              shiny::div(
-                shiny::actionButton(ns("compute"), "Compute!",
-                  icon = icon("running"),
-                  class = "btn-outline-primary"
-                ),
-                shiny::br(), br(),
-                shiny::actionLink(ns("options"), "Computation options",
-                  icon = icon("cog", lib = "glyphicon")
-                ),
-                style = "padding-right: 150px;"
+          bslib::layout_columns(
+          style = "width: 650px; margin-left: auto; margin-right: auto;",
+          col_widths = c(6,6),
+          gap = "20px",
+          div(
+            p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
+            shiny::textInput(
+              ns("selected_name"), NULL,
+              placeholder = "Name of your dataset"
+            )
+          ),
+          div(
+            p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
+            shiny::selectInput(
+              ns("selected_datatype"), NULL,
+              choices = c(
+                "RNA-seq", "scRNA-seq", "proteomics",
+                "mRNA microarray", "other"
               )
             )
           ),
-          shiny::br(),
-          shiny::br(),
-          shiny::conditionalPanel(
+          div(
+            p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
+            shiny::selectInput(
+              inputId = ns("selected_organism"),
+              NULL,
+              choices = "Human",
+              selected = "Human",
+              multiple=FALSE
+            )
+          ),
+          div(
+            p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
+            shiny::textAreaInput(
+              ns("selected_description"), NULL,
+              placeholder = "Give a short description of your dataset",
+              height = 80, resize = "none"
+            )
+          ),
+        ), ## end layout_col
+        shiny::div(
+          shiny::actionLink(ns("options"), "Computation options",
+            icon = icon("cog", lib = "glyphicon")
+          ),
+          style = "display: flex; justify-content: center; margin: 15px 0;"
+        ),
+    shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
-            shiny::fillRow(
-              shiny::wellPanel(
-                style = "width: 95%;",
+            bslib::layout_columns(
+              width = 12,
+              bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
                   shiny::HTML("<h4>Probe filtering:</h4>"),
@@ -176,8 +159,7 @@ upload_module_computepgx_server <- function(
                   )
                 )
               ),
-              shiny::wellPanel(
-                style = "width: 95%;",
+              bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
                   shiny::HTML("<h4>Gene tests:</h4>"),
@@ -185,8 +167,7 @@ upload_module_computepgx_server <- function(
                   selected = GENETEST.SELECTED
                 )
               ),
-              shiny::wellPanel(
-                style = "width: 95%;",
+              bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gset_methods"),
                   shiny::HTML("
@@ -202,8 +183,7 @@ upload_module_computepgx_server <- function(
                   selected = GENESET.SELECTED
                 ),
               ),
-              shiny::wellPanel(
-                style = "width: 95%;",
+              bslib::card(
                 shiny::checkboxGroupInput(
                   ns("extra_methods"),
                   shiny::HTML("<h4>Extra analysis:</h4>"),
@@ -219,13 +199,13 @@ upload_module_computepgx_server <- function(
                   selected = DEV.SELECTED
                 )
               ),
-              shiny::wellPanel(
+              bslib::card(
                 fileInput2(
                   ns("upload_gmt"),
                   shiny::tagList(
-                    shiny::tags$h4("Custom genesets (.gmt) file:"),
-                    shiny::tags$h6(
-                      "A GMT file as described",
+                    shiny::tags$h4("Custom genesets:"),
+                    shiny::p(
+                      "Upload a custom GMT file (.gmt) as described",
                       tags$a(
                         "here.",
                         href = readthedocs_url,
@@ -264,8 +244,14 @@ upload_module_computepgx_server <- function(
             }
             "))
           ) ## end of conditional panel
-        ) ## end of fill Col
+
+        )
       })
+
+      iv <- shinyvalidate::InputValidator$new()
+      iv$add_rule("selected_name", shinyvalidate::sv_required())
+      iv$add_rule("selected_description", shinyvalidate::sv_required())
+      iv$enable()
 
       shiny::outputOptions(output,
         "UI",
@@ -282,12 +268,29 @@ upload_module_computepgx_server <- function(
         }
       )
 
-      shiny::observeEvent(enable_button(), {
-        if (!enable_button()) {
-          shinyjs::disable(ns("compute"))
-        } else {
-          shinyjs::enable(ns("compute"))
-        }
+      # reset dataset name and description
+      observeEvent(reset_upload_text_input(), {
+        shiny::updateTextInput(session, "selected_name", value = "")
+        shiny::updateTextAreaInput(session, "selected_description", value = "")
+      })
+
+      # change upload_datatype to selected_datatype
+      
+      observeEvent(input$selected_datatype, {
+        upload_datatype(input$selected_datatype)
+      })
+
+      # change upload_organism to selected_organism
+      observeEvent(input$selected_organism, {
+        upload_organism(input$selected_organism)
+      })
+      # change upload_name to selected_name
+      observeEvent(input$selected_name, {
+        upload_name(input$selected_name)
+      })
+
+      observeEvent(input$selected_description, {
+        upload_description(input$selected_description)
       })
 
       # Input name and description
@@ -298,23 +301,23 @@ upload_module_computepgx_server <- function(
         if (is.null(pgx_info)) {
           if (!is.null(meta[["name"]])) {
             shiny::updateTextInput(session,
-              "upload_name",
+              "selected_name",
               value = meta[["name"]]
             )
           }
           if (!is.null(meta[["description"]])) {
             shiny::updateTextAreaInput(session,
-              "upload_description",
+              "selected_description",
               value = meta[["description"]]
             )
           }
         } else {
           shiny::updateTextInput(session,
-            "upload_name",
+            "selected_name",
             value = gsub(".pgx$", "", pgx_info[["name"]])
           )
           shiny::updateTextAreaInput(session,
-            "upload_description",
+            "selected_description",
             value = pgx_info[["description"]]
           )
         }
@@ -327,9 +330,7 @@ upload_module_computepgx_server <- function(
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = stringr::str_squish("There are cases where there is only one samples
-                    in a group. Some of the gene tests and enrichment
-                    methods are disabled."),
+            text = stringr::str_squish("There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled. Please note: a good experiment should have at least 3 replicates per condition."),
             type = "warning"
           )
           shiny::updateCheckboxGroupInput(
@@ -354,10 +355,30 @@ upload_module_computepgx_server <- function(
       # Define a reactive value to store the process object
       PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
-      process_counter <- reactiveVal(0)
       custom_geneset <- list(gmt = NULL, info = NULL)
       annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
+
+      observeEvent(auth$options$ENABLE_ANNOT, {
+
+        species_table <- playbase::SPECIES_TABLE
+
+        # keep only ensembl
+        species_table <- species_table[species_table$mart == "ensembl", ]
+
+        # remove no organism
+        if (!auth$options$ENABLE_ANNOT) {
+          species_table <- species_table[species_table$species_name != "No organism", ]
+        }
+
+        # Fill the selectInput with species_table
+        shiny::updateSelectInput(
+          session,
+          "selected_organism",
+          choices = species_table$species_name,
+          selected = species_table$species_name[1]
+        )
+      })
 
       ## react on custom GMT upload
       shiny::observeEvent(input$upload_gmt, {
@@ -393,6 +414,7 @@ upload_module_computepgx_server <- function(
               type = "success",
               closeOnClickOutside = TRUE
             )
+            
             GSET_CHECK <- TRUE
           }
         }
@@ -413,65 +435,9 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      # react on upload_annot_table
-      shiny::observeEvent(input$upload_annot_table, {
-        # trigger a popup
+      shiny::observeEvent(upload_wizard(), {
 
-        # if ENABLE_ANNOT is false, tell user this is alpha (under development)
-        if (!auth$options$ENABLE_ANNOT) {
-          shinyalert::shinyalert(
-            title = "Under development (alpha)",
-            text = "Custom probe annotation is under development.",
-            type = "info",
-            closeOnClickOutside = TRUE
-          )
-          return(NULL)
-        }
-
-        annot_table <<- playbase::fread.csv(input$upload_annot_table$datapath, row.names = 0, asMatrix = FALSE)
-
-        # check that we have at 100 matches between
-        features_matched <- sum(rownames(countsRT()) %in% annot_table$feature) >= 1
-        if (!features_matched) {
-          # reset annot_table
-          annot_table <<- NULL
-
-          shinyalert::shinyalert(
-            title = "No matches between counts and custom probe features.",
-            text = "Please check your custom probe annotation table!",
-            type = "error",
-            closeOnClickOutside = TRUE
-          )
-        } else {
-          shinyalert::shinyalert(
-            title = "Annotation table uploaded!",
-            text = "Your annotation table will be incorporated in the analysis.",
-            type = "success",
-            closeOnClickOutside = TRUE
-          )
-        }
-      })
-
-      shiny::observeEvent(input$compute, {
-        ## -----------------------------------------------------------
-        ## Check validity
-        ## -----------------------------------------------------------
-        if (!enable_button()) {
-          message("[ComputePgxServer:input$compute] WARNING:: *** DISABLED ***")
-          shinyalert::shinyalert(
-            title = "ERROR",
-            text = "Compute is disabled",
-            type = "error"
-          )
-          return(NULL)
-        }
-        if (!isValidFileName(input$upload_name)) {
-          message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
-          shinyalert::shinyalert(
-            title = "Invalid name",
-            text = "Please remove any slashes (/) from the name",
-            type = "error"
-          )
+        if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
 
@@ -486,18 +452,6 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        ## check for name and description
-        has.name <- input$upload_name != ""
-        has.description <- input$upload_description != ""
-        if (!has.name || !has.description) {
-          shinyalert::shinyalert(
-            title = "ERROR",
-            text = "You must give a dataset name and description",
-            type = "error"
-          )
-          return(NULL)
-        }
-
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
@@ -505,9 +459,6 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
-
-        ## !!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
-        ## batch  <- batchRT()
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
@@ -566,7 +517,7 @@ upload_module_computepgx_server <- function(
           raw_dir(create_raw_dir(auth))
         }
 
-        dataset_name <- gsub("[ ]", "_", trimws(input$upload_name))
+        dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 
@@ -575,8 +526,7 @@ upload_module_computepgx_server <- function(
         # Define create_pgx function arguments
 
         params <- list(
-          # Key data
-          organism = selected_organism(),
+          organism = upload_organism(),
           samples = samples,
           counts = counts,
           contrasts = contrasts,
@@ -606,8 +556,8 @@ upload_module_computepgx_server <- function(
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
-          datatype = input$upload_datatype,
-          description = input$upload_description,
+          datatype = upload_datatype(),
+          description = upload_description(),
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder,
@@ -656,7 +606,7 @@ upload_module_computepgx_server <- function(
             stdout = "|"
           ),
           number = process_counter(),
-          dataset_name = gsub("[ ]", "_", input$upload_name),
+          dataset_name = gsub("[ ]", "_", input$selected_name),
           raw_dir = raw_dir(),
           stderr = c(),
           stdout = c()
@@ -866,13 +816,6 @@ upload_module_computepgx_server <- function(
         } else if (process_counter() == 0) {
           # remove UI with JS, had problems with shiny::removeUI
           shinyjs::runjs("document.querySelector('.current-dataset #spinner-container').remove();")
-        }
-
-        MAX_DS_PROCESS <- 1
-        if (process_counter() < MAX_DS_PROCESS) {
-          shinyjs::enable("compute")
-        } else {
-          shinyjs::disable("compute")
         }
       })
 

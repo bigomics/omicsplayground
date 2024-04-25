@@ -37,6 +37,8 @@ WORKDIR /
 ##RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
+RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"
+RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE, force=TRUE)"
 
 # NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
 

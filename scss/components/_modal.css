@@ -38,10 +38,6 @@ html {
         align-items: center;
     }
     
-    .modal-header .btn-close {
-	margin: 0px;
-    }
-    
     .modal-footer .btn {
 	margin-left: 5px;
 	margin-bottom: 0;

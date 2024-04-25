@@ -81,7 +81,7 @@ app_ui <- function(x) {
           loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
         )
       )
-
+      
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
         onClick = "logoutInApp()"
@@ -104,10 +104,11 @@ app_ui <- function(x) {
       }
 
       menu_tree <- list(
-        "Load" = c(
-          welcome = "Welcome",
-          load    = "Load dataset",
-          upload  = "New dataset"
+        "Welcome" = c(
+          welcome = "Welcome"
+        ),
+        "Datasets" = c(
+          load    = "My Datasets"
         ),
         "DataView" = c(
           dataview = "DataView"
@@ -299,17 +300,18 @@ app_ui <- function(x) {
           ),
           bigdash::sidebarTabHelp(
             "load-tab",
-            "Load dataset",
+            "Analyze dataset",
             "This panel shows the available datasets within the platform. These data sets
                     have been pre-computed and are ready to be used. Select a
-                    dataset in the table and load the data set by clicking the 'load' button."
+                    dataset in the table and load the data set by clicking the 'Analyze dataset' button."
           ),
-          bigdash::sidebarTabHelp(
-            "upload-tab",
-            "Upload new",
-            "Here you can upload your own transcriptomics and proteomics data into
-                    the platform and perform computations for the Playground."
-          ),
+          # ,
+          # bigdash::sidebarTabHelp(
+          #   "upload-tab",
+          #   "Upload new",
+          #   "Here you can upload your own transcriptomics and proteomics data into
+          #           the platform and perform computations for the Playground."
+          # ),
           bigdash::sidebarTabHelp(
             "dataview-tab",
             "DataView",
@@ -431,14 +433,14 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "load-tab",
-
             # LoadingInputs("load")
             LoadingUI("load")
           ),
-          bigdash::bigTabItem(
-            "upload-tab",
-            UploadUI("upload")
-          ),
+          # ,
+          # bigdash::bigTabItem(
+          #   "upload-tab",
+          #   UploadUI("upload")
+          # ),
           bigdash::bigTabItem(
             "userprofile-tab",
             UserProfileUI("user_profile")
@@ -448,7 +450,8 @@ app_ui <- function(x) {
             UserSettingsInputs("user_settings"),
             UserSettingsUI("user_settings")
           )
-        )
+        ),
+        UploadUI("upload")
       ) ## end of bigPage
     }
 
