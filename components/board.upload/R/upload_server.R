@@ -795,7 +795,7 @@ UploadBoard <- function(id,
           upload_name(NULL)
           upload_description(NULL)
           upload_organism(NULL)
-          show_comparison_builder(FALSE)
+          show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
         })
 

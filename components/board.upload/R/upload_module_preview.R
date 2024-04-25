@@ -705,9 +705,9 @@ upload_table_preview_contrasts_server <- function(
     })
 
     # control state of comparison builder
-    # observeEvent(input$run_build_comparisons, {
-    #   show_comparison_builder(TRUE)
-    # })
+      observeEvent(input$run_build_comparisons, {
+        show_comparison_builder(TRUE)
+      })
 
     observeEvent(input$goUploadComparison, {
       selected_contrast_input(TRUE)
