@@ -56,6 +56,10 @@ LoadingBoard <- function(id,
 
     output$sharing_alert <- renderUI({
 
+      received_files <- pgxreceived$getReceivedFiles()
+      shared_files <- pgxshared$getSharedFiles()
+      num_received <- length(received_files)
+      num_shared <- length(shared_files)
       
       no_sharing1 <- !auth$options$ENABLE_USER_SHARE
       no_sharing2 <- (num_received == 0 && num_shared == 0) 
@@ -67,10 +71,6 @@ LoadingBoard <- function(id,
       }
       
       ## If not show alerts for sharing
-      received_files <- pgxreceived$getReceivedFiles()
-      shared_files <- pgxshared$getSharedFiles()
-      num_received <- length(received_files)
-      num_shared <- length(shared_files)
       msg <- c()
       if (num_received > 0) {
         msg <- paste("You have received <strong>", num_received, "datasets</strong> that you need to accept.")
