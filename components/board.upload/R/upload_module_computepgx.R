@@ -483,23 +483,6 @@ upload_module_computepgx_server <- function(
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
 
-        if (length(gx.methods) == 0) {
-          shinyalert::shinyalert(
-            title = "ERROR",
-            text = "You must select at least one gene test method",
-            type = "error"
-          )
-          return(NULL)
-        }
-        if (length(gset.methods) == 0) {
-          shinyalert::shinyalert(
-            title = "ERROR",
-            text = "You must select at least one geneset test method",
-            type = "error"
-          )
-          return(NULL)
-        }
-
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 

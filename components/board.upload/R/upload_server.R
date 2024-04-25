@@ -26,8 +26,8 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
-    upload_gset_methods <- reactiveVal(NULL)
-    upload_gx_methods <- reactiveVal(NULL)
+    upload_gset_methods <- reactiveVal(0)
+    upload_gx_methods <- reactiveVal(0)
     process_counter <- reactiveVal(0)
     show_comparison_builder <- shiny::reactiveVal(FALSE)
     selected_contrast_input <- shiny::reactiveVal(FALSE)
@@ -653,7 +653,14 @@ UploadBoard <- function(id,
 
     # lock wizard it compute step
     observeEvent(
-      list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
+      list(
+        input$upload_wizard, 
+        upload_name(), upload_datatype(), 
+        upload_description(), 
+        upload_organism(),
+        upload_gset_methods(),
+        upload_gx_methods(),
+        ), {
         req(input$upload_wizard == "step_compute", upload_name())
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
@@ -669,6 +676,21 @@ UploadBoard <- function(id,
           
         }
 
+        if (length(upload_gx_methods()) == 0) {
+          shinyalert::shinyalert(
+            title = "ERROR",
+            text = "You must select at least one gene test method",
+            type = "error"
+          )
+        }
+        if (length(upload_gset_methods()) == 0) {
+          shinyalert::shinyalert(
+            title = "ERROR",
+            text = "You must select at least one geneset test method",
+            type = "error"
+          )
+        }
+
         if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
@@ -679,7 +701,14 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
         
-        if (is.null(upload_name()) || upload_name() == "" || upload_description() == "" || is.null(upload_description())){
+        if (
+          is.null(upload_name()) || 
+          upload_name() == "" || 
+          upload_description() == "" || 
+          is.null(upload_description())||
+          length(upload_gx_methods()) == 0 ||
+          length(upload_gset_methods()) == 0
+          ){
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
