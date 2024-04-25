@@ -293,6 +293,16 @@ upload_module_computepgx_server <- function(
         upload_description(input$selected_description)
       })
 
+      # save input$gene_methods to upload_gx_methods
+      observeEvent(input$gene_methods, {
+        upload_gx_methods(input$gene_methods)
+      })
+
+      # save input$gset_methods to upload_gset_methods
+      observeEvent(input$gset_methods, {
+        upload_gset_methods(input$gset_methods)
+      })
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()

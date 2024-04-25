@@ -26,6 +26,8 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
+    upload_gset_methods <- reactiveVal(NULL)
+    upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
     show_comparison_builder <- shiny::reactiveVal(FALSE)
     selected_contrast_input <- shiny::reactiveVal(FALSE)
@@ -528,6 +530,8 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       upload_name = upload_name,
       upload_description = upload_description,
+      upload_gx_methods = upload_gx_methods,
+      upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input
     )
