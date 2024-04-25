@@ -684,7 +684,7 @@ UploadBoard <- function(id,
         if (is.null(upload_gset_methods())) {
           shinyalert::shinyalert(
             title = "ERROR",
-            text = "You must select at least one geneset test method",
+            text = "You must select at least one geneset (enrichment) test method",
             type = "error"
           )
         }
