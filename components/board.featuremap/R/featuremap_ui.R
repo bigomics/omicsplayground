@@ -12,10 +12,10 @@ FeatureMapInputs <- function(id) {
       shiny::radioButtons(
         ns("showvar"), "Show:",
         inline = TRUE,
-        choices = c("phenotype", "comparison")
+        choices = c("phenotype", "comparisons")
       ),
       "Show gene signatures colored by phenotype conditions (relative expression)
-       or by comparison (logFC).",
+       or by comparisons (logFC).",
       placement = "right", options = list(container = "body")
     ),
     shiny::conditionalPanel(
@@ -33,7 +33,7 @@ FeatureMapInputs <- function(id) {
       )
     ),
     shiny::conditionalPanel(
-      "input.showvar == 'comparison'",
+      "input.showvar == 'comparisons'",
       ns = ns,
       withTooltip(
         shiny::selectizeInput(ns("selcomp"), NULL, choices = NULL, multiple = TRUE),

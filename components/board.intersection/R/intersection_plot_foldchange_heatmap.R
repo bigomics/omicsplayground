@@ -15,19 +15,12 @@ foldchange_heatmap_ui <- function(
 
   FoldchangeHeatmap.opts <- shiny::tagList(
     withTooltip(
-      shiny::checkboxInput(ns("FoldchangeHeatmap_allfc"), "show all contrasts", TRUE),
+      shiny::checkboxInput(ns("allfc"), "show all contrasts", FALSE),
       "Show all contrasts or just the selected ones."
     ),
     withTooltip(
-      shiny::checkboxInput(ns("FoldchangeHeatmap_cluster"), "cluster genes", FALSE),
+      shiny::checkboxInput(ns("cluster"), "cluster genes", FALSE),
       "Cluster genes (columns)."
-    ),
-    withTooltip(
-      shiny::radioButtons(ns("FoldchangeHeatmap_annotype"), "annotation type",
-        c("boxplot", "barplot"),
-        inline = TRUE
-      ),
-      "Plot type of column annotation."
     )
   )
 
@@ -55,13 +48,12 @@ foldchange_heatmap_server <- function(id,
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      if (input$FoldchangeHeatmap_allfc) {
+      if (input$allfc) {
         FC <- getFoldChangeMatrix()$fc
       } else {
         FC <- getActiveFoldChangeMatrix()$fc
+        ## FC <- FC[, input_comparisons(), drop = FALSE]
       }
-
-      FC <- FC[, input_comparisons(), drop = FALSE]
 
       # check that dim(F)[2] >0, in case user has not selected any comparisons
       validate(
@@ -86,19 +78,18 @@ foldchange_heatmap_server <- function(id,
       bm <- 4
       cclust <- TRUE
       mh <- min(max(ncol(F1) * 0.35, 0.8), 8)
-      cclust <- input$FoldchangeHeatmap_cluster
+      cclust <- input$cluster
       if (level == "geneset") {
         bh <- 3
       }
       bm <- 5 - mh ## bottom margin
-      at <- input$FoldchangeHeatmap_annotype
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
 
       plt <- grid::grid.grabExpr({
         frame()
         playbase::heatmapWithAnnot(
           F1,
-          anno.type = at,
+          anno.type = "boxplot",
           bar.height = bh,
           map.height = mh,
           mar = c(bm, 0.5, 0.5, 1),
