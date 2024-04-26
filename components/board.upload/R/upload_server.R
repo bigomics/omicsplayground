@@ -254,25 +254,22 @@ UploadBoard <- function(id,
         }
       }
 
-        # store check and data regardless of it errors
-        checked <- res$df
-        
-        if (29 %in% res$checks$code) {
+        if ("e29" %in% names(res$checks)) {
           shinyalert::shinyalert(
-          title = paste("Your dataset is ready!"),
-          text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
-          confirmButtonText = "Analyze my new data!",
-          showCancelButton = TRUE,
-          cancelButtonText = "Stay here.",
-          inputId = "logCorrectCounts",
-          closeOnEsc = FALSE,
-          immediate = TRUE,
-          callbackR = load_my_dataset
-        )
-          
+            title = paste("Are your counts log-transformed?"),
+            text = paste("Counts data seems to be log-transformed. Would you like to revert to intensities?"),
+            confirmButtonText = "Convert counts to intensities.",
+            showCancelButton = TRUE,
+            cancelButtonText = "Skip correction, my counts are not log transformed.",
+            inputId = "logCorrectCounts",
+            closeOnEsc = FALSE,
+            immediate = TRUE,
+            callbackR = load_my_dataset
+          )
         }
-
         
+        # store check and data regardless of it errors (after counts log correction if user accepts it)
+        checked <- res$df
 
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
