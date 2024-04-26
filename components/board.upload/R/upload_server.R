@@ -238,8 +238,42 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
+
+        browser()
+        # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
+        counts_log_correction <- function() {
+        if (input$logCorrectCounts) {
+           print("before correction")
+          print(res$df)
+           
+          res$df <- 2**res$df
+          if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
+          
+          print("after correction")
+          print(res$df)
+        }
+      }
+
         # store check and data regardless of it errors
         checked <- res$df
+        
+        if (29 %in% res$checks$code) {
+          shinyalert::shinyalert(
+          title = paste("Your dataset is ready!"),
+          text = paste("Your dataset", new_pgx$name, "is ready for visualization. Happy discoveries!"),
+          confirmButtonText = "Analyze my new data!",
+          showCancelButton = TRUE,
+          cancelButtonText = "Stay here.",
+          inputId = "logCorrectCounts",
+          closeOnEsc = FALSE,
+          immediate = TRUE,
+          callbackR = load_my_dataset
+        )
+          
+        }
+
+        
+
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
           status <- "OK"
