@@ -285,8 +285,6 @@ UploadBoard <- function(id,
         #TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
         # req(checked_for_log(), !is.null(checked))  
         
-        write.csv(res$df, file.path(OPG, "user_counts_log_corrected.csv"), row.names = TRUE)
-
         checklist[["counts.csv"]]$checks <- res$checks
         
         if (res$PASS) {
