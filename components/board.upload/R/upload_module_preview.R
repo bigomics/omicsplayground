@@ -179,26 +179,13 @@ upload_table_preview_counts_server <- function(
       IS_EXPRESSION <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
       IS_COUNT <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
 
-      #TODO this needs review!
-      # if(IS_EXPRESSION){
-      #   df <- 2**df0 
-      #   if(min(df0,na.rm=TRUE) > 0) df <- df - 1
-      # }
+      if(IS_EXPRESSION){
+        df <- 2**df0
+        
+        # legacy code.. it might not be always the case, maybe we should ask users if they removed zeros by adding 1 to counts... /MMM
+        if(min(df0,na.rm=TRUE) > 0) df <- df - 1
+      }
 
-      # #TODO this needs review!
-      # if (IS_COUNT){
-      #   check.log <- ( all( df0 < 60) || min(df0, na.rm=TRUE) < 0 )
-      #   if(check.log) {
-      #     shinyalert::shinyalert(
-      #       title = "",
-      #       text = "Count matrix provided but log2-values detected. Converting log2 value to intensities.",
-      #       type = "warning"
-      #       )
-      #     #TODO this conversion should be optional ,upon confirmation of user
-      #     df <- 2**df0 - 1
-      #     if(min(df0, na.rm=TRUE) > 0) df <- df - 1
-      #   }
-      # }
       uploaded$counts.csv <- df
 
     })
