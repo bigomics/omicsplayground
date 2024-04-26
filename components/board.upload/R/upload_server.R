@@ -256,15 +256,15 @@ UploadBoard <- function(id,
 
         if ("e29" %in% names(res$checks)) {
           shinyalert::shinyalert(
-            title = paste("Are your counts log-transformed?"),
-            text = paste("Counts data seems to be log-transformed. Would you like to revert to intensities?"),
-            confirmButtonText = "Convert counts to intensities.",
+            title = paste("log-transformed counts?"),
+            text = paste("Your counts data seems to be log-transformed. Would you like to revert to intensities?"),
+            confirmButtonText = "Convert to intensities.",
             showCancelButton = TRUE,
-            cancelButtonText = "Skip correction, my counts are not log transformed.",
+            cancelButtonText = "My counts are not log transformed.",
             inputId = "logCorrectCounts",
             closeOnEsc = FALSE,
             immediate = TRUE,
-            callbackR = load_my_dataset
+            callbackR = counts_log_correction
           )
         }
         
