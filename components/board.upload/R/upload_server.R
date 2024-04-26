@@ -245,37 +245,46 @@ UploadBoard <- function(id,
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
-        counts_log_correction <- function(isConfirmed) {
-        if (isConfirmed) {
+        #   counts_log_correction <- function(isConfirmed) {
+        #   if (isConfirmed) {
+        #     res$df <- 2**res$df
+        #     if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
+        #     checked <<- res$df
+        #     checked_for_log(TRUE)
+        #   }
+        # }
+
+        if ("e29" %in% names(res$checks)) {
+          
+          #TODO find a way to give user option to correct or not (shinyalert callback breaks req and eventReactive)
+          # shinyalert::shinyalert(
+          #   title = paste("log-transformed counts?"),
+          #   text = paste("Your counts data seems to be log-transformed. Would you like to revert to intensities?"),
+          #   confirmButtonText = "Convert to intensities.",
+          #   showCancelButton = TRUE,
+          #   cancelButtonText = "My counts are not log transformed.",
+          #   inputId = "logCorrectCounts",
+          #   closeOnEsc = FALSE,
+          #   immediate = TRUE,
+          #   callbackR = counts_log_correction
+          # )
+
           res$df <- 2**res$df
           if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
           checked <<- res$df
           checked_for_log(TRUE)
-        }
-      }
 
-      if ("e29" %in% names(res$checks)) {
-        shinyalert::shinyalert(
-          title = paste("log-transformed counts?"),
-          text = paste("Your counts data seems to be log-transformed. Would you like to revert to intensities?"),
-          confirmButtonText = "Convert to intensities.",
-          showCancelButton = TRUE,
-          cancelButtonText = "My counts are not log transformed.",
-          inputId = "logCorrectCounts",
-          closeOnEsc = FALSE,
-          immediate = TRUE,
-          callbackR = counts_log_correction
-        )
       } else {
         checked <<- res$df
         checked_for_log(TRUE)
       }
 
-      #TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
-      # req(checked_for_log(), !is.null(checked))  
+        #TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
+        # req(checked_for_log(), !is.null(checked))  
         write.csv(res$df, file.path(OPG, "user_counts_log_corrected.csv"), row.names = TRUE)
 
         checklist[["counts.csv"]]$checks <- res$checks
+        
         if (res$PASS) {
           status <- "OK"
         } else {
