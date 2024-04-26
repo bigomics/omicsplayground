@@ -181,9 +181,15 @@ upload_table_preview_counts_server <- function(
 
       if(IS_EXPRESSION){
         df <- 2**df0
-        
         # legacy code.. it might not be always the case, maybe we should ask users if they removed zeros by adding 1 to counts... /MMM
         if(min(df0,na.rm=TRUE) > 0) df <- df - 1
+
+        
+        # warn user that this is happening in background
+        shinyalert::shinyalert(title = "",
+          text = "Expression counts uploaded. Converting log2 value to intensities.",
+          type = "warning"
+        )
       }
 
       uploaded$counts.csv <- df
