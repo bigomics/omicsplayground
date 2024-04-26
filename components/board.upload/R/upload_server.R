@@ -269,18 +269,22 @@ UploadBoard <- function(id,
           #   callbackR = counts_log_correction
           # )
 
+          
+          # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
           res$df <- 2**res$df
           if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
           checked <<- res$df
           checked_for_log(TRUE)
 
       } else {
+        # no correction needed
         checked <<- res$df
         checked_for_log(TRUE)
       }
 
         #TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
         # req(checked_for_log(), !is.null(checked))  
+        
         write.csv(res$df, file.path(OPG, "user_counts_log_corrected.csv"), row.names = TRUE)
 
         checklist[["counts.csv"]]$checks <- res$checks
