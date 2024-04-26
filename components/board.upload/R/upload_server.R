@@ -222,13 +222,17 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     ## Check COUNTS matrix
     ## --------------------------------------------------------
+    
+    checked_for_log <- reactiveVal(FALSE)
+    
     checked_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv)
       },
       {
         ## get uploaded counts
-        check <- NULL
+        
+        checked <- NULL
         df0 <- uploaded$counts.csv
         if (is.null(df0)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
@@ -241,7 +245,7 @@ UploadBoard <- function(id,
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
-        counts_log_correction <- function(res) {
+        counts_log_correction <- function(checked_for_log = checked_for_log) {
           if (input$logCorrectCounts) {
             res$df <<- 2**res$df
             if(min(res$df,na.rm=TRUE) > 0) res$df <<- res$df - 1
@@ -249,7 +253,10 @@ UploadBoard <- function(id,
           # store check and data regardless of it errors (after counts log correction if user accepts it)
           write.csv(res$df, file.path(OPG, "user_counts_log_corrected.csv"), row.names = TRUE)
           checked <<- res$df
+          checked_for_log(TRUE)
         }
+
+
 
         if ("e29" %in% names(res$checks)) {
           shinyalert::shinyalert(
@@ -263,13 +270,16 @@ UploadBoard <- function(id,
             immediate = TRUE,
             callbackR = counts_log_correction
           )
+          
+          checked <<- res$df
+
         } else {
-          checked <- res$df
+          checked <<- res$df
+          checked_for_log(TRUE)
         }
         
-        # R continues execution after shinyalert, so we need to check if checked is defined.
         browser()
-        req(exists("check"), check)
+        # req(checked_for_log(), !is.null(checked))
 
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
