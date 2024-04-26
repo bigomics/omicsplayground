@@ -273,12 +273,12 @@ UploadBoard <- function(id,
           # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
           res$df <- 2**res$df
           if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
-          checked <<- res$df
+          checked <- res$df
           checked_for_log(TRUE)
 
       } else {
         # no correction needed
-        checked <<- res$df
+        checked <- res$df
         checked_for_log(TRUE)
       }
 
