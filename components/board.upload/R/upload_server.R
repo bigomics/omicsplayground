@@ -239,20 +239,13 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
 
-        browser()
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
         counts_log_correction <- function() {
-        if (input$logCorrectCounts) {
-           print("before correction")
-          print(res$df)
-           
-          res$df <- 2**res$df
-          if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
-          
-          print("after correction")
-          print(res$df)
+          if (input$logCorrectCounts) {
+            res$df <- 2**res$df
+            if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
+          }
         }
-      }
 
         if ("e29" %in% names(res$checks)) {
           shinyalert::shinyalert(
