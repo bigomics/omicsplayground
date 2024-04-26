@@ -847,6 +847,8 @@ UploadBoard <- function(id,
 
     upload_ok <- shiny::reactive({
       check <- checkTables()
+      check.status <- check[, "status"]
+      dbg("[UploadBoard:upload_ok] check.status = ", check.status)
       all(check[, "status"] == "OK")
       all(grepl("ERROR", check[, "status"]) == FALSE)
     })
