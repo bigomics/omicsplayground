@@ -24,8 +24,6 @@ upload_table_preview_counts_server <- function(
 
     ns <- session$ns
 
-    show_batch_correction <- reactiveVal(FALSE)
-
     table_data <- shiny::reactive({
       shiny::req(uploaded$counts.csv)
       dt <- uploaded$counts.csv
@@ -109,7 +107,7 @@ upload_table_preview_counts_server <- function(
         bslib::as_fill_carrier(),
         ## style = "width: 100%; display: flex; justify-content: space-between; margin-bottom: 8px;",
         style = "width: 100%; display: flex; ",
-        if(is.null(uploaded$counts.csv) && !show_batch_correction()){
+        if(is.null(uploaded$counts.csv)){
           bslib::layout_columns(
             col_widths = c(-3,6,-3),
             row_heights = list("auto",11,1),
@@ -132,7 +130,7 @@ upload_table_preview_counts_server <- function(
           )
         },
         
-        if(!is.null(uploaded$counts.csv) && !show_batch_correction()) {
+        if(!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
             col_widths = c(9, 3),
             TableModuleUI(
@@ -501,6 +499,7 @@ upload_table_preview_contrasts_server <- function(
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
+    show_batch_correction <- reactiveVal(FALSE)
 
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
@@ -762,6 +761,15 @@ upload_table_preview_contrasts_server <- function(
       upload_wizard = upload_wizard,
       show_comparison_builder = show_comparison_builder,
       autocontrast = reactive(input$autocontrast)
+    )
+
+    correctedX <- upload_module_batchcorrect_server(
+      id = "batchcorrect",
+      r_X = shiny::reactive(checked_counts()$matrix),
+      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_contrasts = modified_ct,
+      r_results = modified_ct,
+      is.count = TRUE
     )
 
     TableModuleServer(

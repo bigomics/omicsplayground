@@ -555,15 +555,7 @@ UploadBoard <- function(id,
       height = height
     )
 
-    correctedX <- upload_module_batchcorrect_server(
-      id = "batchcorrect",
-      r_X = shiny::reactive(checked_counts()$matrix),
-      r_samples = shiny::reactive(checked_samples()$matrix),
-      r_contrasts = modified_ct,
-      r_results = modified_ct,
-      is.count = TRUE
-    )
-
+    
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = shiny::reactive(checked_counts()$matrix), #TODO add return from new-bc module: corrected1$correctedCounts,
