@@ -741,7 +741,7 @@ upload_table_preview_contrasts_server <- function(
         
         # check if contrasts are uploaded
         
-        if(!is.data.frame(modified_ct()) || dim(modified_ct())[2] == 0){
+        if(is.null(dim(modified_ct())) || dim(modified_ct())[2] == 0){
           shinyalert::shinyalert(
             title = "Comparisons not available.",
             text = "Please upload or add contrasts first before proceeding to batch correction.",
