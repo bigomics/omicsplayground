@@ -571,6 +571,12 @@ upload_table_preview_contrasts_server <- function(
             class = "btn-sm btn-secondary m-1",
             icon("upload")
           ),
+          shiny::actionButton(
+              ns("goBatchCorrection"),
+              label = "Batch correction",
+              class = "btn-sm btn-secondary m-1",
+              icon("pen")
+          ),
           withTooltip(
             shiny::actionButton(
               ns("autocontrast"), 
@@ -732,6 +738,17 @@ upload_table_preview_contrasts_server <- function(
     })
 
     observeEvent(input$goBatchCorrection, {
+        
+        # check if contrasts are uploaded
+        browser()
+        if(!is.data.frame(modified_ct()) || dim(modified_ct())[2] == 0){
+          shinyalert::shinyalert(
+            title = "Contrasts not uploaded.",
+            text = "Please upload contrasts first before proceeding to batch correction.",
+            type = "error"
+          )
+          return()
+        }
         show_batch_correction(TRUE)
     })
 
