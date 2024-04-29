@@ -86,13 +86,7 @@ upload_table_preview_counts_server <- function(
               "Cancel",
               icon = icon("trash-can"),
               class = "btn-sm btn-outline-danger m-1"
-              ),
-            shiny::actionButton(
-              ns("goBatchCorrection"),
-              label = "Batch correction",
-              class = "btn-sm btn-secondary m-1",
-              icon("pen")
-            )
+              )
           )
         },
         
@@ -202,10 +196,6 @@ upload_table_preview_counts_server <- function(
 
       uploaded$counts.csv <- df
 
-    })
-
-    observeEvent(input$goBatchCorrection, {
-        show_batch_correction(TRUE)
     })
 
     observeEvent(input$remove_counts, {
@@ -602,12 +592,18 @@ upload_table_preview_contrasts_server <- function(
         action_buttons2 <- div(
           style = "display: flex; justify-content: left; margin-bottom: 8px;",
           if(!is.null(uploaded$contrasts.csv)){
-            shiny::actionButton(
+            div(shiny::actionButton(
               ns("remove_contrasts"),
               "Cancel",
               icon = icon("trash-can"),
               class = "btn-sm btn-outline-danger m-1"
-              )
+              ),
+              shiny::actionButton(
+              ns("goBatchCorrection"),
+              label = "Batch correction",
+              class = "btn-sm btn-secondary m-1",
+              icon("pen")
+            ))
           } else {
             div(
               actionButton(
@@ -726,6 +722,10 @@ upload_table_preview_contrasts_server <- function(
     observeEvent(input$goOnlineComparison, {
       selected_contrast_input(TRUE)
       show_comparison_builder(TRUE)
+    })
+
+    observeEvent(input$goBatchCorrection, {
+        show_batch_correction(TRUE)
     })
 
     # pass counts to uploaded when uploaded
