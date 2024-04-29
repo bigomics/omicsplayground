@@ -555,7 +555,7 @@ UploadBoard <- function(id,
       height = height
     )
 
-    upload_module_batchcorrect_server(
+    correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       r_X = shiny::reactive(checked_counts()$matrix),
       r_samples = shiny::reactive(checked_samples()$matrix),
