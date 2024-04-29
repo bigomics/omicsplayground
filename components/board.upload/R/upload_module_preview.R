@@ -706,6 +706,7 @@ upload_table_preview_contrasts_server <- function(
           if(show_batch_correction()) {
           div(
             bslib::as_fill_carrier(),
+            style = "margin-bottom: 20px;",
             upload_module_batchcorrect_ui(ns("batchcorrect"))
           )
           
