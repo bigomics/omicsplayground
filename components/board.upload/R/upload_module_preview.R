@@ -17,10 +17,7 @@ upload_table_preview_counts_server <- function(
   height,
   title,
   info.text,
-  caption,
-  checked_counts,
-  checked_samples,
-  cjecked
+  caption
   ) 
   {
   moduleServer(id, function(input, output, session) {
@@ -163,11 +160,7 @@ upload_table_preview_counts_server <- function(
             ),
             action_buttons          
           )
-        }, ## end of if-else
-
-        if (!is.null(uploaded$counts.csv) && show_batch_correction()) {
-          upload_module_batchcorrect_ui(ns("batchcorrect"))
-        }
+        } ## end of if-else
       ) ## end of div
 
     })
@@ -712,7 +705,10 @@ upload_table_preview_contrasts_server <- function(
                 )
               }
             )
-          }
+          },
+          if (show_batch_correction()) {
+          upload_module_batchcorrect_ui(ns("batchcorrect"))
+        }
         )
       # }
 
