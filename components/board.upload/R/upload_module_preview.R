@@ -630,8 +630,17 @@ upload_table_preview_contrasts_server <- function(
             onclick ="window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/', '_blank')"
               )
         )
-        
-        
+
+        action_buttons3 <- div(
+          style = "display: flex; justify-content: left; margin-bottom: 20px;",
+          shiny::actionButton(
+              ns("returnComparisonStep"),
+              label = "Leave Batch correction",
+              class = "btn-sm btn-outline-danger m-1",
+              icon("")
+          )
+        )
+
         div(
           # if run_build_comparisons is clicked, then show the contrasts
           bslib::as_fill_carrier(),
@@ -710,12 +719,14 @@ upload_table_preview_contrasts_server <- function(
             )
           },
           if(show_batch_correction()) {
-          div(
-            bslib::as_fill_carrier(),
-            style = "margin-bottom: 20px;",
-            upload_module_batchcorrect_ui(ns("batchcorrect"))
-          )
-          
+            bslib::layout_columns(
+              col_widths = 12,
+              ## height = "calc(100vh - 340px)",
+              heights_equal = "row",
+              # bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main' or 'Control' group, give a name and click 'add'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
+              upload_module_batchcorrect_ui(ns("batchcorrect")),
+              action_buttons3
+            )
         }
         )
       # }
@@ -740,7 +751,7 @@ upload_table_preview_contrasts_server <- function(
     observeEvent(input$goBatchCorrection, {
         
         # check if contrasts are uploaded
-        
+
         if(is.null(dim(modified_ct())) || dim(modified_ct())[2] == 0){
           shinyalert::shinyalert(
             title = "Comparisons not available.",
@@ -766,7 +777,6 @@ upload_table_preview_contrasts_server <- function(
       }
       
       uploaded$contrasts.csv <- playbase::read.as_matrix(input$contrasts_csv$datapath)
-
     })
 
     observeEvent(input$remove_contrasts, {
