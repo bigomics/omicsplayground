@@ -76,7 +76,7 @@ upload_table_preview_counts_server <- function(
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin: 8px;",
         if(is.null(uploaded$counts.csv)){
-          div(               
+          div(
             actionButton(
               ns("load_example"), "Load example data",
               class = "btn-sm btn-outline-primary m-1"
@@ -110,7 +110,7 @@ upload_table_preview_counts_server <- function(
         bslib::as_fill_carrier(),
         ## style = "width: 100%; display: flex; justify-content: space-between; margin-bottom: 8px;",
         style = "width: 100%; display: flex; ",
-        if(is.null(uploaded$counts.csv)){
+        if(is.null(uploaded$counts.csv) && !show_batch_correction()){
           bslib::layout_columns(
             col_widths = c(-3,6,-3),
             row_heights = list("auto",11,1),
@@ -131,7 +131,9 @@ upload_table_preview_counts_server <- function(
             ),
             action_buttons            
           )
-        } else {
+        },
+        
+        if(!is.null(uploaded$counts.csv) && !show_batch_correction()) {
           bslib::layout_columns(
             col_widths = c(9, 3),
             TableModuleUI(
@@ -160,6 +162,10 @@ upload_table_preview_counts_server <- function(
             action_buttons          
           )
         }, ## end of if-else
+
+        if (!is.null(uploaded$counts.csv) && show_batch_correction()) {
+          upload_module_batchcorrect_ui(ns("batchcorrect"))
+        }
       ) ## end of div
 
     })
@@ -214,6 +220,10 @@ upload_table_preview_counts_server <- function(
           uploaded$contrasts.csv <- NULL
         }
       }
+
+      observeEvent(input$goBatchCorrection, {
+        show_batch_correction(TRUE)
+      })
       
       # if samples is not null, warn user that it will be deleted
       if(!is.null(uploaded$samples.csv) || !is.null(uploaded$contrasts.csv)){
