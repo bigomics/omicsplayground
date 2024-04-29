@@ -269,6 +269,13 @@ UploadBoard <- function(id,
           #   callbackR = counts_log_correction
           # )
 
+          # inform user that we are applying the correction
+          shinyalert::shinyalert(
+            title = "Converting log-transformed counts",
+            text = "Your counts data seems to be log-transformed. We are converting it to intensities.",
+            type = "info"
+          )
+
           
           # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
           res$df <- 2**res$df
