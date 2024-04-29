@@ -482,6 +482,7 @@ upload_table_preview_contrasts_server <- function(
   checked_samples,
   checked_contrasts,
   show_comparison_builder,
+  show_batch_correction,
   selected_contrast_input,
   upload_wizard
   )
@@ -489,7 +490,7 @@ upload_table_preview_contrasts_server <- function(
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
-    show_batch_correction <- reactiveVal(FALSE)
+    
 
     table_data <- shiny::reactive({
       shiny::req(uploaded$contrasts.csv)
@@ -634,10 +635,9 @@ upload_table_preview_contrasts_server <- function(
         action_buttons3 <- div(
           style = "display: flex; justify-content: left; margin-bottom: 20px;",
           shiny::actionButton(
-              ns("returnComparisonStep"),
+              ns("leaveComparisonStep"),
               label = "Leave Batch correction",
-              class = "btn-sm btn-outline-danger m-1",
-              icon("")
+              class = "btn-sm btn-danger m-1"
           )
         )
 
@@ -761,6 +761,10 @@ upload_table_preview_contrasts_server <- function(
           return()
         }
         show_batch_correction(TRUE)
+    })
+
+    observeEvent(input$leaveComparisonStep, {
+      show_batch_correction(FALSE)
     })
 
     # pass counts to uploaded when uploaded
