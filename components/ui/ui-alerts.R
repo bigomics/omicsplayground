@@ -9,7 +9,7 @@ shinyalert_storage_full <- function(numpgx = NULL, maxpgx = NULL) {
   if (!is.null(numpgx) && !is.null(maxpgx)) {
     msg <- paste(
       "You currently have", numpgx, "datasets.",
-      "You have reached your dataset limit of", maxpgx, "."
+      "You have reached your limit of", maxpgx, "datasets."
     )
   }
   msg <- paste(
