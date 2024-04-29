@@ -629,7 +629,7 @@ upload_table_preview_contrasts_server <- function(
         div(
           # if run_build_comparisons is clicked, then show the contrasts
           bslib::as_fill_carrier(),
-          if(show_comparison_builder()){
+          if(show_comparison_builder() && show_batch_correction() == FALSE){
             bslib::layout_columns(
               col_widths = 12,
               ## height = "calc(100vh - 340px)",
@@ -638,7 +638,9 @@ upload_table_preview_contrasts_server <- function(
               upload_module_makecontrast_ui(ns("makecontrast")),
               action_buttons1
             )
-          } else {
+          },
+          
+          if(!show_comparison_builder() && show_batch_correction() == FALSE){
             div(
               bslib::as_fill_carrier(),
               if(is.null(uploaded$contrasts.csv)){
@@ -701,8 +703,12 @@ upload_table_preview_contrasts_server <- function(
               }
             )
           },
-          if (show_batch_correction()) {
-          upload_module_batchcorrect_ui(ns("batchcorrect"))
+          if(show_batch_correction()) {
+          div(
+            bslib::as_fill_carrier(),
+            upload_module_batchcorrect_ui(ns("batchcorrect"))
+          )
+          
         }
         )
       # }
