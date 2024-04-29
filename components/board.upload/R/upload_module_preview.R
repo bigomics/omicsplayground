@@ -83,17 +83,19 @@ upload_table_preview_counts_server <- function(
             )
           )
         } else {
-          shiny::actionButton(
-            ns("remove_counts"),
-            "Cancel",
-            icon = icon("trash-can"),
-            class = "btn-sm btn-outline-danger m-1"
-            )
+          div(
+            shiny::actionButton(
+              ns("remove_counts"),
+              "Cancel",
+              icon = icon("trash-can"),
+              class = "btn-sm btn-outline-danger m-1"
+              ),
             actionButton(
-            ns("goBatchCorrection"), 
-            label = "Batch correction",
-            class = "btn-sm btn-secondary m-1",
-            icon("pen")
+              ns("goBatchCorrection"), 
+              label = "Batch correction",
+              class = "btn-sm btn-secondary m-1",
+              icon("pen")
+            )
           )
         },
         
