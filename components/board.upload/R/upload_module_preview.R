@@ -27,6 +27,8 @@ upload_table_preview_counts_server <- function(
 
     ns <- session$ns
 
+    show_batch_correction <- reactiveVal(FALSE)
+
     table_data <- shiny::reactive({
       shiny::req(uploaded$counts.csv)
       dt <- uploaded$counts.csv
@@ -90,8 +92,8 @@ upload_table_preview_counts_server <- function(
               icon = icon("trash-can"),
               class = "btn-sm btn-outline-danger m-1"
               ),
-            actionButton(
-              ns("goBatchCorrection"), 
+            shiny::actionButton(
+              ns("goBatchCorrection"),
               label = "Batch correction",
               class = "btn-sm btn-secondary m-1",
               icon("pen")
