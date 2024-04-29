@@ -213,6 +213,10 @@ upload_table_preview_counts_server <- function(
 
     })
 
+    observeEvent(input$goBatchCorrection, {
+        show_batch_correction(TRUE)
+    })
+
     observeEvent(input$remove_counts, {
 
       delete_all_files_counts <- function(value) {
@@ -222,10 +226,6 @@ upload_table_preview_counts_server <- function(
           uploaded$contrasts.csv <- NULL
         }
       }
-
-      observeEvent(input$goBatchCorrection, {
-        show_batch_correction(TRUE)
-      })
       
       # if samples is not null, warn user that it will be deleted
       if(!is.null(uploaded$samples.csv) || !is.null(uploaded$contrasts.csv)){
