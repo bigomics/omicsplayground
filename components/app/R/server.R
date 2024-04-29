@@ -170,8 +170,8 @@ app_server <- function(input, output, session) {
     nav_count = reactive(nav$count)
   )
 
-  UserSettingsBoard(
-    "user_settings",
+  AppSettingsBoard(
+    "app_settings",
     auth = auth,
     pgx = PGX
   )

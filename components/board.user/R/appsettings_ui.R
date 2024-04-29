@@ -3,12 +3,12 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserSettingsInputs <- function(id) {
+AppSettingsInputs <- function(id) {
   ns <- shiny::NS(id)
   bigdash::tabSettings()
 }
 
-UserSettingsUI <- function(id) {
+AppSettingsUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   div(

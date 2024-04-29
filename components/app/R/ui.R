@@ -431,7 +431,6 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "load-tab",
-
             # LoadingInputs("load")
             LoadingUI("load")
           ),
@@ -445,8 +444,8 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "usersettings-tab",
-            UserSettingsInputs("user_settings"),
-            UserSettingsUI("user_settings")
+            AppSettingsInputs("app_settings"),
+            AppSettingsUI("app_settings")
           )
         )
       ) ## end of bigPage
