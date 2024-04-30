@@ -30,7 +30,6 @@ UploadBoard <- function(id,
     upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
     show_comparison_builder <- shiny::reactiveVal(TRUE)
-    show_batch_correction <- reactiveVal(FALSE)
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
 
@@ -556,6 +555,15 @@ UploadBoard <- function(id,
       height = height
     )
 
+    correctedX <- upload_module_batchcorrect_server(
+      id = "batchcorrect",
+      r_X = shiny::reactive(checked_counts()$matrix),
+      r_samples = shiny::reactive(checked_samples()$matrix),
+      r_contrasts = modified_ct,
+      r_results = modified_ct,
+      is.count = TRUE
+    )
+
     
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
@@ -827,8 +835,7 @@ UploadBoard <- function(id,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,
-      upload_wizard = shiny::reactive(input$upload_wizard),
-      show_batch_correction = show_batch_correction
+      upload_wizard = shiny::reactive(input$upload_wizard)
 
     )
 
@@ -847,7 +854,6 @@ UploadBoard <- function(id,
           upload_organism(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
-          show_batch_correction(FALSE)
         })
 
         reset_upload_text_input(reset_upload_text_input()+1)

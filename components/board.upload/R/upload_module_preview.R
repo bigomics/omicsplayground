@@ -482,7 +482,6 @@ upload_table_preview_contrasts_server <- function(
   checked_samples,
   checked_contrasts,
   show_comparison_builder,
-  show_batch_correction,
   selected_contrast_input,
   upload_wizard
   )
@@ -572,12 +571,6 @@ upload_table_preview_contrasts_server <- function(
             class = "btn-sm btn-secondary m-1",
             icon("upload")
           ),
-          shiny::actionButton(
-              ns("goBatchCorrection"),
-              label = "Batch correction",
-              class = "btn-sm btn-secondary m-1",
-              icon("pen")
-          ),
           withTooltip(
             shiny::actionButton(
               ns("autocontrast"), 
@@ -604,13 +597,7 @@ upload_table_preview_contrasts_server <- function(
               "Cancel",
               icon = icon("trash-can"),
               class = "btn-sm btn-outline-danger m-1"
-              ),
-              shiny::actionButton(
-              ns("goBatchCorrection"),
-              label = "Batch correction",
-              class = "btn-sm btn-secondary m-1",
-              icon("pen")
-            ))
+              ))
           } else {
             div(
               actionButton(
@@ -632,19 +619,10 @@ upload_table_preview_contrasts_server <- function(
               )
         )
 
-        action_buttons3 <- div(
-          style = "display: flex; justify-content: left; margin-bottom: 20px;",
-          shiny::actionButton(
-              ns("leaveComparisonStep"),
-              label = "Leave Batch correction",
-              class = "btn-sm btn-danger m-1"
-          )
-        )
-
         div(
           # if run_build_comparisons is clicked, then show the contrasts
           bslib::as_fill_carrier(),
-          if(show_comparison_builder() && show_batch_correction() == FALSE){
+          if(show_comparison_builder()){
             bslib::layout_columns(
               col_widths = 12,
               ## height = "calc(100vh - 340px)",
@@ -655,7 +633,7 @@ upload_table_preview_contrasts_server <- function(
             )
           },
           
-          if(!show_comparison_builder() && show_batch_correction() == FALSE){
+          if(!show_comparison_builder()){
             div(
               bslib::as_fill_carrier(),
               if(is.null(uploaded$contrasts.csv)){
@@ -717,17 +695,7 @@ upload_table_preview_contrasts_server <- function(
                 )
               }
             )
-          },
-          if(show_batch_correction()) {
-            bslib::layout_columns(
-              col_widths = 12,
-              ## height = "calc(100vh - 340px)",
-              heights_equal = "row",
-              # bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main' or 'Control' group, give a name and click 'add'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
-              upload_module_batchcorrect_ui(ns("batchcorrect")),
-              action_buttons3
-            )
-        }
+          }
         )
       # }
 
@@ -746,25 +714,6 @@ upload_table_preview_contrasts_server <- function(
     observeEvent(input$goOnlineComparison, {
       selected_contrast_input(TRUE)
       show_comparison_builder(TRUE)
-    })
-
-    observeEvent(input$goBatchCorrection, {
-        
-        # check if contrasts are uploaded
-
-        if(is.null(dim(modified_ct())) || dim(modified_ct())[2] == 0){
-          shinyalert::shinyalert(
-            title = "Comparisons not available.",
-            text = "Please upload or add contrasts first before proceeding to batch correction.",
-            type = "error"
-          )
-          return()
-        }
-        show_batch_correction(TRUE)
-    })
-
-    observeEvent(input$leaveComparisonStep, {
-      show_batch_correction(FALSE)
     })
 
     # pass counts to uploaded when uploaded
@@ -799,15 +748,6 @@ upload_table_preview_contrasts_server <- function(
       upload_wizard = upload_wizard,
       show_comparison_builder = show_comparison_builder,
       autocontrast = reactive(input$autocontrast)
-    )
-
-    correctedX <- upload_module_batchcorrect_server(
-      id = "batchcorrect",
-      r_X = shiny::reactive(checked_counts()$matrix),
-      r_samples = shiny::reactive(checked_samples()$matrix),
-      r_contrasts = modified_ct,
-      r_results = modified_ct,
-      is.count = TRUE
     )
 
     TableModuleServer(
