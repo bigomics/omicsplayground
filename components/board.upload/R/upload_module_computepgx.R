@@ -5,7 +5,7 @@
 
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
-  shiny::uiOutput(ns("UI"))
+  shiny::uiOutput(ns("UI"), fill = TRUE)
 }
 
 upload_module_computepgx_server <- function(
@@ -79,11 +79,14 @@ upload_module_computepgx_server <- function(
           )
         }        
         div(
-          # style = "display: flex; justify-content: center;",
+          style = "overflow: auto;",
 
+          bslib::as_fill_carrier(),
           bslib::layout_columns(
           style = "width: 650px; margin-left: auto; margin-right: auto;",
+          fill = FALSE,
           col_widths = c(6,6),
+          # row_heights = c("1","auto"),
           gap = "10px",
           div(
             p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
@@ -130,6 +133,7 @@ upload_module_computepgx_server <- function(
     shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
+            
             bslib::layout_columns(
               width = 12,
               bslib::card(
