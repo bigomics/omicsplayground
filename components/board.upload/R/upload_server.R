@@ -653,20 +653,61 @@ UploadBoard <- function(id,
               html = TRUE
             )
           } else {
+
+            if(input$upload_wizard == "step_samples"){
             shinyalert::shinyalert(
-              title = "Incomplete input!",
+              title = "Upload your samples!",
+              text = "Please finish the current step before proceeding.",
+              type = "warning"
+            )
+          } else if(input$upload_wizard == "step_counts"){
+            shinyalert::shinyalert(
+              title = "Upload your counts!",
+              text = "Please finish the current step before proceeding.",
+              type = "warning"
+            )
+          } else if(input$upload_wizard == "step_comparisons"){
+            shinyalert::shinyalert(
+              title = "Define your comparisons!",
+              text = "Please finish the current step before proceeding.",
+              type = "warning"
+            )
+          } else if(input$upload_wizard == "step_compute"){
+            shinyalert::shinyalert(
+              title = "Start the computation!",
               text = "Please finish the current step before proceeding.",
               type = "warning"
             )
           }
+          }
         }
 
         if (summary_check_content == 0) {
+          if(input$upload_wizard == "step_samples"){
           shinyalert::shinyalert(
-            title = "Incomplete input!",
+            title = "Upload your samples!",
             text = "Please finish the current step before proceeding.",
             type = "warning"
           )
+        } else if(input$upload_wizard == "step_counts"){
+          shinyalert::shinyalert(
+            title = "Upload your counts!",
+            text = "Please finish the current step before proceeding.",
+            type = "warning"
+          )
+        } else if(input$upload_wizard == "step_comparisons"){
+          shinyalert::shinyalert(
+            title = "Define your comparisons!",
+            text = "Please finish the current step before proceeding.",
+            type = "warning"
+          )
+        } else if(input$upload_wizard == "step_compute"){
+          shinyalert::shinyalert(
+            title = "Start the computation!",
+            text = "Please finish the current step before proceeding.",
+            type = "warning"
+          )
+        }
         }
       })
 
