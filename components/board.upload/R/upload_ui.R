@@ -96,7 +96,7 @@ UploadUI <- function(id) {
       contrasts_ui,
       # comparisons_panel,
       # outliers_panel,
-      batchcorrect_panel,
+      # batchcorrect_panel,
       compute_panel,
       options = list(
         navigation = "buttons",
