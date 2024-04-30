@@ -668,6 +668,7 @@ UploadBoard <- function(id,
     observeEvent(
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
         req(input$upload_wizard == "step_counts")
+
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
@@ -701,17 +702,19 @@ UploadBoard <- function(id,
     observeEvent(
       list(
         input$upload_wizard, 
-        upload_name(), upload_datatype(), 
+        upload_name(),
+        upload_datatype(), 
         upload_description(), 
         upload_organism(),
         upload_gset_methods(),
         upload_gx_methods()
         ), {
-        req(input$upload_wizard == "step_compute", upload_name())
+
+        req(input$upload_wizard == "step_compute")
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
 
-        if(upload_name() %in% pgx_files$dataset){
+        if(!is.null(upload_name()) && upload_name() %in% pgx_files$dataset){
           shinyalert::shinyalert(
             title = "Invalid name",
             text = "This dataset name already exists.",
