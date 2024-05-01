@@ -656,7 +656,7 @@ UploadBoard <- function(id,
             )
           }}
 
-        if (is.null(results_alert)) {
+        if (is.null(result_alert)) {
           if(input$upload_wizard == "step_samples"){
           shinyalert::shinyalert(
             title = "Upload your samples!",
@@ -668,11 +668,11 @@ UploadBoard <- function(id,
             title = "Upload your counts!",
             text = "Please finish the current step before proceeding.",
             type = "warning"
-          )
+          ) 
         } else if(input$upload_wizard == "step_comparisons"){
           shinyalert::shinyalert(
-            title = "Define your comparisons!",
-            text = "Please finish the current step before proceeding.",
+            title = "Create at least one comparison!",
+            text = "Upload or build your comparisons.",
             type = "warning"
           )
         } else if(input$upload_wizard == "step_compute"){
