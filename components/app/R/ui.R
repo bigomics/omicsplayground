@@ -445,8 +445,8 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "usersettings-tab",
-            UserSettingsInputs("user_settings"),
-            UserSettingsUI("user_settings")
+            AppSettingsInputs("app_settings"),
+            AppSettingsUI("app_settings")
           )
         ),
         UploadUI("upload")

@@ -460,11 +460,16 @@ upload_module_computepgx_server <- function(
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
+
+        dbg("[upload_module_computepgx:input$compute] pgxdir = ", pgxdir)
+        dbg("[upload_module_computepgx:input$compute] numpgx = ", numpgx)
+        dbg("[upload_module_computepgx:input$compute] max.datasets = ", max.datasets)
+
         if (!auth$options$ENABLE_DELETE) {
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
         }
         if (numpgx >= max.datasets) {
-          shinyalert_storage_full() ## from ui-alerts.R
+          shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
           return(NULL)
         }
 
