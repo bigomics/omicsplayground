@@ -616,6 +616,8 @@ UploadBoard <- function(id,
 
         summary_check_content <- length(unlist(summary_checks, recursive = FALSE))
 
+        result_alert = NULL
+
         if(summary_check_content > 0 ) {
           # chekc which checks have error results
           find_content <- !sapply(
@@ -652,37 +654,9 @@ UploadBoard <- function(id,
               type = "error",
               html = TRUE
             )
-          } else {
+          }}
 
-            if(input$upload_wizard == "step_samples"){
-            shinyalert::shinyalert(
-              title = "Upload your samples!",
-              text = "Please finish the current step before proceeding.",
-              type = "warning"
-            )
-          } else if(input$upload_wizard == "step_counts"){
-            shinyalert::shinyalert(
-              title = "Upload your counts!",
-              text = "Please finish the current step before proceeding.",
-              type = "warning"
-            )
-          } else if(input$upload_wizard == "step_comparisons"){
-            shinyalert::shinyalert(
-              title = "Define your comparisons!",
-              text = "Please finish the current step before proceeding.",
-              type = "warning"
-            )
-          } else if(input$upload_wizard == "step_compute"){
-            shinyalert::shinyalert(
-              title = "Start the computation!",
-              text = "Please finish the current step before proceeding.",
-              type = "warning"
-            )
-          }
-          }
-        }
-
-        if (summary_check_content == 0) {
+        if (is.null(results_alert)) {
           if(input$upload_wizard == "step_samples"){
           shinyalert::shinyalert(
             title = "Upload your samples!",
@@ -708,8 +682,7 @@ UploadBoard <- function(id,
             type = "warning"
           )
         }
-        }
-      })
+        }})
 
     # wizard lock/unlock logic
 
