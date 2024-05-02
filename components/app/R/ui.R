@@ -219,10 +219,31 @@ app_ui <- function(x) {
             src = "static/bigomics-logo.png",
             height = "30"
             # width = "110",
-          ),
+            ),
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
+          left = bigdash::navbarDropdown(
+            "Datasets",
+##            style = "border: 1px; padding: 2px 6px;",
+            tags$li(
+              actionLink("data_upload_new", "Upload new data")
+            ),                     
+## !!!!!!!!!!!!!!!!!! not working yet !!!!!!!!!!!!!!!!!!!!!!!!
+            bigdash::navbarDropdownTab(
+              "My Library",
+              "mylibrary-tab"
+            ),
+            bigdash::navbarDropdownTab(
+              "Public datasets",
+              "publicdata-tab"
+            ),
+            bigdash::navbarDropdownTab(
+              "Shared datasets",
+              "datashare-tab"
+            )
+         ),
+## !!!!!!!!!!!!!!!!!! not working yet !!!!!!!!!!!!!!!!!!!!!!!!          
           div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
