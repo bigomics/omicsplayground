@@ -192,11 +192,6 @@ install.github('Bioconductor/BiocFileCache',dependencies=FALSE)
 install.github('renozao/xbioc',dependencies=TRUE)
 install.github("cysouw/qlcMatrix",dependencies=FALSE)
 
-print(" installing required packages...  6")
-
-# INSTALL packages that require specific versions
-remotes::install_version('matrixStats',version='1.1.0',force=TRUE)
-
 print(" installing required packages...  7")
 
  

@@ -12,6 +12,9 @@
 
 FROM bigomics/omicsplayground-base:ub2204_v3
 
+ARG BRANCH=master
+RUN echo "Building Docker image from branch $BRANCH"
+
 #------------------------------------------------------------
 # Install any extra (forgotten...) Ubuntu libs
 #------------------------------------------------------------
@@ -44,11 +47,13 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "install.packages('shinybrowser')"
 RUN R -e "install.packages('sf')"
 
+# This can be removed once new base is built
+RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
 WORKDIR /
-ARG BRANCH=master
 RUN echo Downloading $BRANCH branch
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
