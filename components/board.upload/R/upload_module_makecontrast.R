@@ -83,7 +83,8 @@ upload_module_makecontrast_ui <- function(id) {
 }
 
 upload_module_makecontrast_server <- function(
-  id,phenoRT,
+  id,
+  phenoRT,
   contrRT,
   countsRT,
   upload_wizard,
@@ -141,7 +142,6 @@ upload_module_makecontrast_server <- function(
                        phenotypes,
                        value = TRUE, invert = TRUE
                        ), phenotypes)[1]
-        
         updateSelectInput(session, "param", choices = phenotypes, selected = psel)
       })
 
