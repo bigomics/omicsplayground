@@ -9,6 +9,7 @@ UploadUI <- function(id) {
 
   counts_ui <- wizardR::wizard_step(
     step_title = "Step 1: Upload counts",
+    step_id = "step_counts",
     upload_table_preview_counts_ui(
       ns("counts_preview")
       )
@@ -16,6 +17,7 @@ UploadUI <- function(id) {
   
   samples_ui <- wizardR::wizard_step(
     step_title = "Step 2: Upload samples",
+    step_id = "step_samples",
     upload_table_preview_samples_ui(
       ns("samples_preview")
     )
@@ -23,6 +25,7 @@ UploadUI <- function(id) {
 
   contrasts_ui <- wizardR::wizard_step(
     step_title = "Step 3: Create comparisons",
+    step_id = "step_comparisons",
     upload_table_preview_contrasts_ui(
       ns("contrasts_preview")
     )
@@ -41,9 +44,11 @@ UploadUI <- function(id) {
 
   batchcorrect_panel <- wizardR::wizard_step(
     step_title = "BatchEffects",
+    step_id = "step_bc",
     bslib::layout_columns(
       col_widths = 12,
       heights_equal = "row",
+      style = "margin-bottom: 20px",
       upload_module_batchcorrect_ui(ns("batchcorrect")),
       #bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")      
     )
@@ -51,6 +56,7 @@ UploadUI <- function(id) {
 
   outliers_panel <- wizardR::wizard_step(
     step_title = "QC/BC",
+    step_id = "step_qc",
     bslib::layout_columns(
       col_widths = 12,
       # height = "calc(100vh - 340px)",
@@ -61,10 +67,10 @@ UploadUI <- function(id) {
   )
   
   compute_panel <- wizardR::wizard_step(
-    step_title = "Step 4: Dataset description",
+    step_title = "Step 4: Compute!",
+    step_id = "step_compute",
     #bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
-    
 ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
 ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
       upload_module_computepgx_ui(ns("compute"))
@@ -92,7 +98,6 @@ UploadUI <- function(id) {
       # outliers_panel,
       # batchcorrect_panel,
       compute_panel,
-      # review_panel,
       options = list(
         navigation = "buttons",
         finish = "Compute!"

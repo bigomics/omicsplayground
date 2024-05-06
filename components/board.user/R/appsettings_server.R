@@ -3,10 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-UserSettingsBoard <- function(id, auth, pgx) {
+AppSettingsBoard <- function(id, auth, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-    dbg("[UserSettingsBoard] >>> initializing User Settings...")
+    dbg("[AppSettingsBoard] >>> initializing User Settings...")
 
     ## module for system resources
     user_table_resources_server("resources", pgx = pgx)
@@ -21,12 +21,6 @@ UserSettingsBoard <- function(id, auth, pgx) {
         easyClose = TRUE, size = "l"
       ))
     })
-
-    #    output$newfeatures <- renderUI({
-    #      newfeat <- markdown::markdownToHTML(file = file.path(OPG, "FEATURES.md"),
-    #                                          fragment.only = TRUE)
-    #      HTML(newfeat)
-    #    })
 
     newfeatures.RENDER <- reactive({
       newfeat <- markdown::markdownToHTML(

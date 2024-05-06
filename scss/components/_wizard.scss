@@ -11,16 +11,22 @@
   justify-content: space-between !important
 }
 
-// .modal-dialog.modal-default {
-//   margin-top : 3vh;
-// }
-
-// .modal-body {
-//   margin-top: 1.5vh;
-// }
-
 .wizard .wizard-nav.dots .wizard-step .dot {
     top: -25px;
     height: 18px;
     width: 18px;
+}
+
+.wizard .wizard-content {
+    transition: none;
+    padding: 2.5rem 0 0rem 0; 
+}
+
+.wizard .html-fill-container {
+    min-width: 100%;
+}
+
+.form-check, .shiny-input-container .checkbox, .shiny-input-container .radio {
+  min-height: 0rem;
+  margin-bottom: 0rem;
 }

@@ -26,9 +26,11 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
+    upload_gset_methods <- reactiveVal(NULL)
+    upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
-    show_comparison_builder <- shiny::reactiveVal(FALSE)
-    selected_contrast_input <- shiny::reactiveVal(FALSE)
+    show_comparison_builder <- shiny::reactiveVal(TRUE)
+    selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
 
     output$navheader <- shiny::renderUI({
@@ -220,12 +222,17 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     ## Check COUNTS matrix
     ## --------------------------------------------------------
+    
+    checked_for_log <- reactiveVal(FALSE)
+    
     checked_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv)
       },
       {
         ## get uploaded counts
+        
+        checked <- NULL
         df0 <- uploaded$counts.csv
         if (is.null(df0)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
@@ -236,9 +243,57 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
-        # store check and data regardless of it errors
+
+        # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
+        #   counts_log_correction <- function(isConfirmed) {
+        #   if (isConfirmed) {
+        #     res$df <- 2**res$df
+        #     if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
+        #     checked <<- res$df
+        #     checked_for_log(TRUE)
+        #   }
+        # }
+
+        if ("e29" %in% names(res$checks)) {
+          
+          #TODO find a way to give user option to correct or not (shinyalert callback breaks req and eventReactive)
+          # shinyalert::shinyalert(
+          #   title = paste("log-transformed counts?"),
+          #   text = paste("Your counts data seems to be log-transformed. Would you like to revert to intensities?"),
+          #   confirmButtonText = "Convert to intensities.",
+          #   showCancelButton = TRUE,
+          #   cancelButtonText = "My counts are not log transformed.",
+          #   inputId = "logCorrectCounts",
+          #   closeOnEsc = FALSE,
+          #   immediate = TRUE,
+          #   callbackR = counts_log_correction
+          # )
+
+          # inform user that we are applying the correction
+          shinyalert::shinyalert(
+            title = "Converting log-transformed counts",
+            text = "Your counts data seems to be log-transformed. We are converting it to intensities.",
+            type = "info"
+          )
+
+          
+          # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
+          res$df <- 2**res$df
+          if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
+          checked <- res$df
+          checked_for_log(TRUE)
+
+      } else {
+        # no correction needed
         checked <- res$df
+        checked_for_log(TRUE)
+      }
+
+        #TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
+        # req(checked_for_log(), !is.null(checked))  
+        
         checklist[["counts.csv"]]$checks <- res$checks
+        
         if (res$PASS) {
           status <- "OK"
         } else {
@@ -501,7 +556,7 @@ UploadBoard <- function(id,
       height = height
     )
 
-    upload_module_batchcorrect_server(
+    correctedX <- upload_module_batchcorrect_server(
       id = "batchcorrect",
       r_X = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
@@ -510,6 +565,7 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
+    
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = shiny::reactive(checked_samples_counts()$COUNTS), #TODO add return from new-bc module: corrected1$correctedCounts,
@@ -529,6 +585,8 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       upload_name = upload_name,
       upload_description = upload_description,
+      upload_gx_methods = upload_gx_methods,
+      upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input
     )
@@ -558,6 +616,8 @@ UploadBoard <- function(id,
         )
 
         summary_check_content <- length(unlist(summary_checks, recursive = FALSE))
+
+        result_alert = NULL
 
         if(summary_check_content > 0 ) {
           # chekc which checks have error results
@@ -595,30 +655,43 @@ UploadBoard <- function(id,
               type = "error",
               html = TRUE
             )
-          } else {
-            shinyalert::shinyalert(
-              title = "Upload wizard locked",
-              text = "Please complete the current step before proceeding.",
-              type = "warning"
-            )
-          }
-        }
+          }}
 
-        if (summary_check_content == 0) {
+        if (is.null(result_alert)) {
+          if(input$upload_wizard == "step_samples"){
           shinyalert::shinyalert(
-            title = "Upload wizard locked",
-            text = "Please complete the current step before proceeding.",
+            title = "Upload your samples!",
+            text = "Please finish the current step before proceeding.",
+            type = "warning"
+          )
+        } else if(input$upload_wizard == "step_counts"){
+          shinyalert::shinyalert(
+            title = "Upload your counts!",
+            text = "Please finish the current step before proceeding.",
+            type = "warning"
+          ) 
+        } else if(input$upload_wizard == "step_comparisons"){
+          shinyalert::shinyalert(
+            title = "Create at least one comparison!",
+            text = "Upload or build your comparisons.",
+            type = "warning"
+          )
+        } else if(input$upload_wizard == "step_compute"){
+          shinyalert::shinyalert(
+            title = "Start the computation!",
+            text = "Please finish the current step before proceeding.",
             type = "warning"
           )
         }
-      })
+        }})
 
     # wizard lock/unlock logic
 
     # lock/unlock wizard for counts.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
-        req(input$upload_wizard == "Step 1: Upload counts")
+        req(input$upload_wizard == "step_counts")
+
         if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
           wizardR::lock("upload_wizard")
         } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
@@ -650,20 +723,42 @@ UploadBoard <- function(id,
 
     # lock wizard it compute step
     observeEvent(
-      list(input$upload_wizard, upload_name(), upload_datatype(), upload_description(), upload_organism()), {
-        req(input$upload_wizard == "Step 4: Dataset description", upload_name())
+      list(
+        input$upload_wizard, 
+        upload_name(),
+        upload_datatype(), 
+        upload_description(), 
+        upload_organism(),
+        upload_gset_methods(),
+        upload_gx_methods()
+        ), {
+
+        req(input$upload_wizard == "step_compute")
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
 
-        if(upload_name() %in% pgx_files$dataset){
+        if(!is.null(upload_name()) && upload_name() %in% pgx_files$dataset){
           shinyalert::shinyalert(
             title = "Invalid name",
             text = "This dataset name already exists.",
             type = "error"
           )
-          
           upload_name(NULL)
-          
+        }
+
+        if (is.null(upload_gx_methods())) {
+          shinyalert::shinyalert(
+            title = "ERROR",
+            text = "You must select at least one gene test method",
+            type = "error"
+          )
+        }
+        if (is.null(upload_gset_methods())) {
+          shinyalert::shinyalert(
+            title = "ERROR",
+            text = "You must select at least one geneset (enrichment) test method",
+            type = "error"
+          )
         }
 
         if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
@@ -676,7 +771,14 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
         
-        if (is.null(upload_name()) || upload_name() == "" || upload_description() == "" || is.null(upload_description())){
+        if (
+          is.null(upload_name()) || 
+          upload_name() == "" || 
+          upload_description() == "" || 
+          is.null(upload_description())||
+          is.null(upload_gx_methods()) ||
+          is.null(upload_gset_methods())
+          ){
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
@@ -765,7 +867,7 @@ UploadBoard <- function(id,
           upload_name(NULL)
           upload_description(NULL)
           upload_organism(NULL)
-          show_comparison_builder(FALSE)
+          show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
         })
 

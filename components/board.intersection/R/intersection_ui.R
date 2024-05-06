@@ -6,16 +6,17 @@
 IntersectionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
+    shiny::br(),
     withTooltip(shiny::selectInput(ns("comparisons"), "Contrasts:", choices = NULL, multiple = TRUE),
       "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
       placement = "top"
     ),
+    shiny::br(), shiny::br(),
     withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
     ),
-    shiny::br(), br(),
+    shiny::br(),
     shiny::conditionalPanel(
       "input.options % 2 == 1",
       ns = ns,

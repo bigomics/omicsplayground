@@ -55,23 +55,21 @@ LoadingBoard <- function(id,
     )
 
     output$sharing_alert <- renderUI({
-      if (!auth$options$ENABLE_USER_SHARE) {
-        return(
-          bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and analyze the data by clicking the <b>Analyze Dataset</b> button below."))
-        )
-      }
+
       received_files <- pgxreceived$getReceivedFiles()
       shared_files <- pgxshared$getSharedFiles()
       num_received <- length(received_files)
       num_shared <- length(shared_files)
-
-
-      if (num_received == 0 && num_shared == 0) {
-        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The table reports a brief description of each dataset. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE. Select a dataset in the table and analyze the data by clicking the <b>Analyze Dataset</b> button below."))
+      
+      no_sharing1 <- !auth$options$ENABLE_USER_SHARE
+      no_sharing2 <- (num_received == 0 && num_shared == 0) 
+      no_sharing <- no_sharing1 || no_sharing2
+      
+      if (no_sharing) {
+        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The <b>Signature t-SNE</b> shows similarity clustering of signatures using t-SNE. Select a dataset in the table and click the <b>Load selected</b> button below."))
         return(tag)
       }
-
-
+      
       ## If not show alerts for sharing
       msg <- c()
       if (num_received > 0) {
@@ -91,7 +89,7 @@ LoadingBoard <- function(id,
     output$sharing_panel_ui <- renderUI({
       if (!auth$options$ENABLE_USER_SHARE) {
         return(
-          "The demo version does not allow sharing of datasets."
+          "Your version does not allow sharing of datasets."
         )
       }
       received_files <- pgxreceived$getReceivedFiles()

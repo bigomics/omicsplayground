@@ -3,60 +3,54 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-## =====================================================================================
-## ============================= GADGET UI =============================================
-## =====================================================================================
-
-
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
-  tagList(
-    bslib::layout_columns(
-      col_widths = 12,
-      height = "100%",
-      row_heights = c(3,2),
-      bslib::card(
-        full_screen = FALSE,
-        bslib::card_body(
-          bslib::layout_columns(
-            col_widths = c(3,9),
+  bslib::layout_columns(
+    col_widths = 12,
+    height = "100%",
+    row_heights = c(3,2),
+    bslib::card(
+      full_screen = FALSE,
+      bslib::card_body(
+        bslib::layout_columns(
+          col_widths = c(3,9),
+          shiny::div(
+            shiny::HTML("<h6>1. Choose phenotype:</h6>"),
+            withTooltip(
+              shiny::selectInput(
+                inputId = ns("param"),
+                NULL,
+                width = "100%",
+                choices = "<samples>",
+                selected = "<samples>",
+                multiple = TRUE
+                ),
+              "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+              placement = "left", options = list(container = "body")
+            ),
+            br(),
             shiny::div(
-              shiny::HTML("<h4>1. Choose phenotype:</h4>"),
+              shiny::HTML("<h6>3. Comparison name:</h6>"),
               withTooltip(
-                shiny::selectInput(
-                  inputId = ns("param"),
+                shiny::textInput(
+                  ns("newname"),
                   NULL,
                   width = "100%",
-                  choices = "<samples>",
-                  selected = "<samples>",
-                  multiple = TRUE
-                ),
-                "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
-                placement = "left", options = list(container = "body")
-              ),
-              br(),
-              shiny::div(
-                shiny::HTML("<h4>3. Comparison name:</h4>"),
-                withTooltip(
-                  shiny::textInput(
-                    ns("newname"),
-                    NULL,
-                    width = "100%",
-                    placeholder = "e.g. MAIN_vs_CONTROL"
+                  placeholder = "e.g. MAIN_vs_CONTROL"
                   ),
-                  "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                  placement = "left", options = list(container = "body")
-                )
-              ),
-              br(),
-              shiny::HTML("<h4>4. Add my comparison:</h4>"),
-              shiny::div(
-                style = "padding-top: 5px;",
-                withTooltip(
-                  shiny::actionButton(
-                    ns("addcontrast"),
-                    "add to list",
+                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
+                placement = "left", options = list(container = "body")
+              )
+            ),
+            br(),
+            shiny::HTML("<h6>4. Add my comparison:</h6>"),
+            shiny::div(
+              style = "padding-top: 5px;",
+              withTooltip(
+                shiny::actionButton(
+                  ns("addcontrast"),
+                  "add to list",
                     icon = icon("plus"),
                     class = "btn-sm btn-outline-primary",
                     width = "48%"
@@ -66,40 +60,23 @@ upload_module_makecontrast_ui <- function(id) {
                 )
               )
             ),
-#            bslib::card(
-#              style = "border-width: 1px;",
-#              bslib::card_body(
-#                style = "width: 100%; gap: 10px; height: 75px !important;",
-                shiny::div(
-                  style = "overflow: auto; margin-left: 30px;",
-                  shiny::HTML("<h4>2. Create comparison:</h4>"),
-                  withTooltip(
-                    shiny::uiOutput(ns("createcomparison"),
-                      style = "font-size:13px;"
-                    ),
-                    "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
-                    placement = "top", options = list(container = "body")
-                  )
-#                )
-#              )
-            )  ## end of card col-10
+          shiny::div(
+            style = "overflow: auto; margin-left: 30px;",
+            shiny::HTML("<h6>2. Create comparison:</h6>"),
+            withTooltip(
+              shiny::uiOutput(ns("createcomparison"), style = "font-size:13px;"),
+              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
+              placement = "top", options = list(container = "body")
+            )
           )
         )  ## end of card-body
-        ## upload_plot_pcaplot_ui(
-        ##   ns("pcaplot"),
-        ##   title = "PCA/tSNE plot",
-        ##   info.text = "",
-        ##   caption = "",
-        ##   height = c("100%", 700),
-        ##   width = c("auto", 800)
-        ## )
-      ),
-      bslib::card(
-        full_screen = FALSE,
-        bslib::card_body(
-          style = "padding: 10px 20px;",
-          DT::dataTableOutput(ns("contrastTable"))
-        )
+      )
+    ),
+    bslib::card(
+      full_screen = FALSE,
+      bslib::card_body(
+        style = "padding: 10px 20px;",
+        DT::dataTableOutput(ns("contrastTable"))
       )
     )
   )
@@ -157,7 +134,7 @@ upload_module_makecontrast_server <- function(
       observeEvent({
         list(phenoRT(), upload_wizard(), show_comparison_builder())
       }, {
-        req(upload_wizard() == "Step 3: Create comparisons",
+        req(upload_wizard() == "step_comparisons",
             show_comparison_builder() == TRUE)
         phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
         phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...

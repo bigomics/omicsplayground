@@ -146,8 +146,6 @@ app_ui <- function(x) {
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
 
-      dbg("[ui.R] sum.enabled = ", sum(ENABLED))
-      dbg("[ui.R] names.enabled = ", names(ENABLED))
       menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
 
       populateSidebar <- function(menu_tree) {
@@ -447,8 +445,8 @@ app_ui <- function(x) {
           ),
           bigdash::bigTabItem(
             "usersettings-tab",
-            UserSettingsInputs("user_settings"),
-            UserSettingsUI("user_settings")
+            AppSettingsInputs("app_settings"),
+            AppSettingsUI("app_settings")
           )
         ),
         UploadUI("upload")

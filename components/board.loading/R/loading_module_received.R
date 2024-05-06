@@ -157,7 +157,7 @@ upload_module_received_server <- function(id,
           if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(auth$options$MAX_DATASETS)
           if (numpgx >= maxpgx) {
-            shinyalert_storage_full() ## from ui-alerts.R
+            shinyalert_storage_full(numpgx, maxpgx) ## from ui-alerts.R
             return(NULL)
           }
 

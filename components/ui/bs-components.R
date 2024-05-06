@@ -7,14 +7,20 @@
 ##
 ##
 
-bs_alert <- function(..., conditional = TRUE, style = "primary") {
+bs_alert <- function(..., conditional = TRUE, style = "primary", closable = TRUE) {
   id <- bigdash:::make_id()
+  if(conditional) {
+    btn.class <- "btn-close btn-close-bs-conditional"
+  } else {
+    btn.class <- "btn-close"
+  }
+  
   alert_tag <- shiny::tags$div(
     id = id,
     class = paste0("alert alert-", style, " alert-dismissible fade show"),
     role = "alert",
     ...,
-    if (conditional) {
+    if (closable) {
       shiny::tags$button(
         # Use display: none; instead of official boostrap close button.
         # If not, the element interfers with the bslib::layout_columns
@@ -23,17 +29,7 @@ bs_alert <- function(..., conditional = TRUE, style = "primary") {
         # bslib::layout_columns
         onclick = paste0('$("#', id, ' button").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$("#', id, ' button").parent().css("display", "none");'),
         type = "button",
-        class = "btn-close btn-close-bs-conditional",
-        `aria-label` = "Close",
-        shiny::tags$span(
-          `aria-hidden` = "true"
-        )
-      )
-    } else {
-      shiny::tags$button(
-        onclick = paste0('$("#', id, ' button").closest(".bslib-gap-spacing.html-fill-container").css("display", "none");$("#', id, ' button").parent().css("display", "none");'),
-        type = "button",
-        class = "btn-close",
+        class = btn.class,
         `aria-label` = "Close",
         shiny::tags$span(
           `aria-hidden` = "true"
