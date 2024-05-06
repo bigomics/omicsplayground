@@ -44,6 +44,9 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "install.packages('shinybrowser')"
 RUN R -e "install.packages('sf')"
 
+# This can be removed once new base is built
+RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
