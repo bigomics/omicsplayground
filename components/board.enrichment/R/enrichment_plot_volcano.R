@@ -42,6 +42,7 @@ enrichment_plot_volcano_server <- function(id,
       par(mar = subplot.MAR)
 
       shiny::req(pgx$X)
+      shiny::validate(shiny::need(!is.null(gset_selected()), "Please select a geneset."))
 
       comp <- 1
       gs <- 1
@@ -58,11 +59,6 @@ enrichment_plot_volcano_server <- function(id,
       limma <- cbind(gx.annot, limma1)
 
       gs <- gset_selected()
-      if (is.null(gs) || length(gs) == 0) {
-        frame()
-        text(0.5, 0.5, "Please select a geneset", col = "grey50")
-        return()
-      }
       gs <- gs[1]
 
       gset <- playdata::getGSETS(gs)[[1]]
