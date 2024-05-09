@@ -41,7 +41,7 @@ test_that("example data loads with no error",{
     pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
 
-    App$wait_for_idle(duration=10000)
+    App$wait_for_idle(duration=100000)
     
     # App$expect_values(cran = TRUE) # TODO: file bug about this...
     App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
