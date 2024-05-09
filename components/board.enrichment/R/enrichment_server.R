@@ -468,6 +468,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
       subplot.MAR = subplot.MAR,
+      geneDetails = geneDetails,
       watermark = WATERMARK
     )
 
