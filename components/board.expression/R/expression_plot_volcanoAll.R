@@ -25,6 +25,15 @@ expression_plot_volcanoAll_ui <- function(id,
     withTooltip(shiny::checkboxInput(ns("scale_per_plot"), "scale per plot", FALSE),
       "Scale each volcano plots individually.",
       placement = "right", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("color_up_down"),
+        label = "Color up/down regulated",
+        value = TRUE
+      ),
+      "Color up/down regulated features.",
+      placement = "left", options = list(container = "body")
     )
   )
 
@@ -127,7 +136,8 @@ expression_plot_volcanoAll_server <- function(id,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
-        margin_b = margin_b
+        margin_b = margin_b,
+        color_up_down = input$color_up_down
       )
 
       return(all_plts)

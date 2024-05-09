@@ -19,16 +19,17 @@ WORKDIR /
 ARG BRANCH=master
 ARG BRANCH_PLAYBASE=main
 ARG GITHUB_SHA=master
+ARG HEAD_REF=main
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 
-# check if playbase@{$GITHUB_HEAD_REF} exists, if it does, install.. other wise install main
-
-RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${GITHUB_HEAD_REF} | wc -l) && \
+# check if playbase@{$HEAD_REF} exists, if it does, install.. other wise install main
+RUN echo "Checking playbase branch ${HEAD_REF}"
+RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${HEAD_REF} | wc -l) && \
     if [ $BRANCH_EXISTS -eq 1 ]; then \
-        R -e "remotes::install_github('bigomics/playbase@${GITHUB_HEAD_REF}',dependencies=FALSE)"; \
+        R -e "remotes::install_github('bigomics/playbase@${HEAD_REF}',dependencies=FALSE)"; \
     else \
         R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)"; \
     fi
