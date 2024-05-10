@@ -35,6 +35,7 @@ enrichment_plot_volcano_server <- function(id,
                                            gs_fdr,
                                            gs_lfc,
                                            subplot.MAR,
+                                           geneDetails,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     volcano.RENDER <- shiny::reactive({
@@ -57,11 +58,9 @@ enrichment_plot_volcano_server <- function(id,
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
       gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
-
-      gs <- gset_selected()
-      gs <- gs[1]
-
-      gset <- playdata::getGSETS(gs)[[1]]
+      
+      gset <- geneDetails()$feature
+      
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 
