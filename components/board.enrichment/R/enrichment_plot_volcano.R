@@ -43,6 +43,7 @@ enrichment_plot_volcano_server <- function(id,
       par(mar = subplot.MAR)
 
       shiny::req(pgx$X)
+      shiny::validate(shiny::need(!is.null(gset_selected()), "Please select a geneset."))
 
       comp <- 1
       gs <- 1
@@ -57,14 +58,9 @@ enrichment_plot_volcano_server <- function(id,
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
       gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
-
-      gs <- gset_selected()
-      if (is.null(gs) || length(gs) == 0) {
-        frame()
-        text(0.5, 0.5, "Please select a geneset", col = "grey50")
-        return()
-      }
+      
       gset <- geneDetails()$feature
+      
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 
