@@ -58,9 +58,9 @@ enrichment_plot_volcano_server <- function(id,
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
       gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
-      
+
       gset <- geneDetails()$feature
-      
+
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 
