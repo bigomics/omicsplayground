@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:latest
+FROM bigomics/omicsplayground:test
 
 #------------------------------------------------------------
 # Set env variables 
@@ -29,9 +29,9 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 RUN echo "Checking playbase branch ${HEAD_REF}"
 RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${HEAD_REF} | wc -l) && \
     if [ $BRANCH_EXISTS -eq 1 ]; then \
-        R -e "remotes::install_github('bigomics/playbase@${HEAD_REF}',dependencies=FALSE)"; \
+    R -e "remotes::install_github('bigomics/playbase@${HEAD_REF}',dependencies=FALSE)"; \
     else \
-        R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)"; \
+    R -e "remotes::install_github('bigomics/playbase@${BRANCH_PLAYBASE}',dependencies=FALSE)"; \
     fi
 
 #------------------------------------------------------------
