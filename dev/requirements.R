@@ -123,7 +123,7 @@ pkg.extra <- c(
     "RcppParallel", "KEGGgraph", "svgPanZoom",
     "TxDb.Hsapiens.UCSC.hg19.knownGene",
     "TxDb.Mmusculus.UCSC.mm10.knownGene",
-    "listviewer", "SBGNview", "org.Hs.eg.db", "org.Mm.eg.db", "DeMixT",
+    "listviewer", "SBGNview", "org.Hs.eg.db", "org.Mm.eg.db", "org.Rn.eg.db", "DeMixT",
     "svgPanZoom", "rhdf5", "monocle", "mygene",
     "iheatmapr", "RcppZiggurat", "Rfast", "BH", "topGO", "survcomp",
     "blastula", "shinytest2", "sodium", "cookies", "shinyvalidate", "sparsesvd",
