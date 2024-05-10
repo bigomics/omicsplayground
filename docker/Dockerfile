@@ -49,6 +49,8 @@ RUN R -e "install.packages('sf')"
 
 # This can be removed once new base is built
 RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+RUN R -e "remotes::install_github('cran/Matrix', ref = '2b05c7bd06c47eeb5939180938513da91d94b01b')"
+RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
 
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
@@ -57,7 +59,7 @@ WORKDIR /
 RUN echo Downloading $BRANCH branch
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/bigomics/omicsplayground.git \   
+    https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
