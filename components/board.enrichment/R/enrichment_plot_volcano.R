@@ -12,6 +12,17 @@ enrichment_plot_volcano_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("color_up_down"),
+        label = "Color up/down regulated",
+        value = TRUE
+      ),
+      "Color up/down regulated features.",
+      placement = "left", options = list(container = "body")
+    )
+  )
 
   PlotModuleUI(
     ns("plot"),
@@ -23,6 +34,7 @@ enrichment_plot_volcano_ui <- function(
     caption = caption,
     plotlib = "plotly",
     plotlib2 = "plotly",
+    options = plot_opts,
     download.fmt = c("png", "pdf")
   )
 }
@@ -93,7 +105,8 @@ enrichment_plot_volcano_server <- function(id,
         ylab = "Significance (-log10q)",
         marker.size = 3,
         displayModeBar = FALSE,
-        showlegend = FALSE
+        showlegend = FALSE,
+        color_up_down = input$color_up_down
       ) %>%
         plotly::layout(margin = list(b = 60))
     })

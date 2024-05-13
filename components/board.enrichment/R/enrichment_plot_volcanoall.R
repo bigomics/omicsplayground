@@ -24,6 +24,15 @@ enrichment_plot_volcanoall_ui <- function(
       ),
       "Number of top genesets to consider for counting the gene frequency."
     ),
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("color_up_down"),
+        label = "Color up/down regulated",
+        value = TRUE
+      ),
+      "Color up/down regulated features.",
+      placement = "left", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(
@@ -115,7 +124,8 @@ enrichment_plot_volcanoall_server <- function(id,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
-        margin_b = margin_b
+        margin_b = margin_b,
+        color_up_down = input$color_up_down
       )
 
 
