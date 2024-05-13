@@ -36,6 +36,11 @@ COPY docker/Rprofile .Rprofile
 # Install supporting bigomics stuff (as R packages)
 #------------------------------------------------------------
 
+
+# This can be removed once new base is built
+RUN R -e "remotes::install_github('cran/Matrix', ref = '2b05c7bd06c47eeb5939180938513da91d94b01b')"
+RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
+
 WORKDIR /
 ##RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
@@ -57,7 +62,7 @@ WORKDIR /
 RUN echo Downloading $BRANCH branch
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/bigomics/omicsplayground.git \   
+    https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
