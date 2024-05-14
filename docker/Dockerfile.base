@@ -76,6 +76,9 @@ RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 # INSTALL packages that require specific versions
 RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
 
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
+RUN R -e "BiocManager::install('orthogene')"
+
 ## playdata: perhaps not needed because playbase already states
 ## playdata as dependency in DESCRIPTION file.
 RUN git clone -b main --single-branch --depth 1 \
