@@ -21,12 +21,25 @@ signature_plot_volcano_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("color_up_down"),
+        label = "Color up/down regulated",
+        value = TRUE
+      ),
+      "Color up/down regulated features.",
+      placement = "left", options = list(container = "body")
+    )
+  )
+
   PlotModuleUI(ns("plot"),
     title = title,
     info.text = info.text,
     caption = caption,
     download.fmt = c("png", "pdf"),
     plotlib = "plotly",
+    options = plot_opts,
     height = height,
     width = width
   )
@@ -107,7 +120,8 @@ signature_plot_volcano_server <- function(id,
         interplot_margin = c(0.02, 0.02, 0.04, 0.04),
         # Remove default titles
         title_y = "",
-        title_x = ""
+        title_x = "",
+        color_up_down = input$color_up_down
       ) %>%
         plotly::layout(
           annotations = list(
