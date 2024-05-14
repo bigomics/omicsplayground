@@ -84,30 +84,37 @@ UploadBoard <- function(id,
     ## RETHINK: is this robust to multiple users on same R process?
     uploaded_method <- NA
 
-    shiny::observeEvent( input$upload_files_btn, {
-      shinyjs::click(id = "upload_files")
-    }, ignoreNULL = TRUE )
+    shiny::observeEvent(input$upload_files_btn,
+      {
+        shinyjs::click(id = "upload_files")
+      },
+      ignoreNULL = TRUE
+    )
 
-    
-    shiny::observeEvent({
-      list( uploaded, input$tabs )
-    }, {
-      dbg("[upload_server:observeEvent(names.uploaded)] names(uploaded) = ",names(uploaded))
-      dbg("[upload_server:observeEvent(names.uploaded)] input$tabs = ",input$tabs)      
-      if( is.null(uploaded$counts.csv) && is.null(uploaded$samples.csv) ) {
-        dbg("[upload_server:observeEvent(names.uploaded)] *** UPLOADED EMPTY *** ")
-      }
-    }, ignoreNULL = FALSE)
-    
-    
+
+    shiny::observeEvent(
+      {
+        list(uploaded, input$tabs)
+      },
+      {
+        dbg("[upload_server:observeEvent(names.uploaded)] names(uploaded) = ", names(uploaded))
+        dbg("[upload_server:observeEvent(names.uploaded)] input$tabs = ", input$tabs)
+        if (is.null(uploaded$counts.csv) && is.null(uploaded$samples.csv)) {
+          dbg("[upload_server:observeEvent(names.uploaded)] *** UPLOADED EMPTY *** ")
+        }
+      },
+      ignoreNULL = FALSE
+    )
+
+
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
-      dbg("[upload_server:observeEvent(uploaded_pgx()] names(new_pgx) = ", names(new_pgx))      
+      dbg("[upload_server:observeEvent(uploaded_pgx()] names(new_pgx) = ", names(new_pgx))
       dbg("[upload_server:observeEvent(uploaded_pgx()] dim(new_pgx$X) = ", dim(new_pgx$X))
       dbg("[upload_server:observeEvent(uploaded_pgx()] new_pgx$name = ", new_pgx$name)
       dbg("[upload_server:observeEvent(uploaded_pgx()] uploaded_method = ", uploaded_method)
-      
+
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
@@ -121,7 +128,7 @@ UploadBoard <- function(id,
       pgxfile <- sub("[.]pgx$", "", new_pgx$name)
       pgxfile <- gsub("^[./-]*", "", pgxfile) ## prevent going to parent folder
       pgxfile <- paste0(gsub("[ \\/]", "_", pgxfile), ".pgx")
-      pgxdir  <- auth$user_dir
+      pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxfile)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
       ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -131,13 +138,16 @@ UploadBoard <- function(id,
       playbase::pgx.save(new_pgx, file = fn)
 
       shiny::withProgress(
-        message = "Scanning dataset library...", value = 0.33, {
-        playbase::pgxinfo.updateDatasetFolder(
-          pgxdir,
-          new.pgx = pgxfile,
-          update.sigdb = FALSE
-        )
-      })
+        message = "Scanning dataset library...",
+        value = 0.33,
+        {
+          playbase::pgxinfo.updateDatasetFolder(
+            pgxdir,
+            new.pgx = pgxfile,
+            update.sigdb = FALSE
+          )
+        }
+      )
 
       ## trigger reload of pgx table
       reload_pgxdir(reload_pgxdir() + 1)
@@ -179,12 +189,12 @@ UploadBoard <- function(id,
       }
     })
 
-    
+
     ## =====================================================================
     ## ======================= UI OBSERVERS ================================
     ## =====================================================================
 
-    shiny::observeEvent( input$expert_mode, {
+    shiny::observeEvent(input$expert_mode, {
       if (input$expert_mode) {
         shiny::showTab("tabs", "BatchEffects")
       } else {
@@ -222,16 +232,16 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     ## Check COUNTS matrix
     ## --------------------------------------------------------
-    
+
     checked_for_log <- reactiveVal(FALSE)
-    
+
     checked_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv)
       },
       {
         ## get uploaded counts
-        
+
         checked <- NULL
         df0 <- uploaded$counts.csv
         if (is.null(df0)) {
@@ -255,8 +265,7 @@ UploadBoard <- function(id,
         # }
 
         if ("e29" %in% names(res$checks)) {
-          
-          #TODO find a way to give user option to correct or not (shinyalert callback breaks req and eventReactive)
+          # TODO find a way to give user option to correct or not (shinyalert callback breaks req and eventReactive)
           # shinyalert::shinyalert(
           #   title = paste("log-transformed counts?"),
           #   text = paste("Your counts data seems to be log-transformed. Would you like to revert to intensities?"),
@@ -276,24 +285,23 @@ UploadBoard <- function(id,
             type = "info"
           )
 
-          
+
           # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
           res$df <- 2**res$df
-          if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
+          if (min(res$df, na.rm = TRUE) > 0) res$df <- res$df - 1
           checked <- res$df
           checked_for_log(TRUE)
+        } else {
+          # no correction needed
+          checked <- res$df
+          checked_for_log(TRUE)
+        }
 
-      } else {
-        # no correction needed
-        checked <- res$df
-        checked_for_log(TRUE)
-      }
+        # TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
+        # req(checked_for_log(), !is.null(checked))
 
-        #TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
-        # req(checked_for_log(), !is.null(checked))  
-        
         checklist[["counts.csv"]]$checks <- res$checks
-        
+
         if (res$PASS) {
           status <- "OK"
         } else {
@@ -485,14 +493,14 @@ UploadBoard <- function(id,
       }
     )
 
-      output$input_recap <- renderUI({
-        shiny::fluidRow(
-          shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
-          shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
-          shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
-          shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
-        )
-      })
+    output$input_recap <- renderUI({
+      shiny::fluidRow(
+        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
+        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
+        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
+        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
+      )
+    })
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
@@ -530,7 +538,7 @@ UploadBoard <- function(id,
         auth$options$MAX_SAMPLES, "samples and",
         auth$options$MAX_COMPARISONS, "comparisons)"
       )
-      upload_info <- sub("_LIMITS_", limits.text, upload_info, fixed=TRUE)
+      upload_info <- sub("_LIMITS_", limits.text, upload_info, fixed = TRUE)
       shiny::HTML(upload_info)
     })
 
@@ -538,7 +546,7 @@ UploadBoard <- function(id,
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
 
-    shiny::observeEvent( modified_ct(), {
+    shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and if
       ## so replace the uploaded reactive values.
       modct <- modified_ct()
@@ -546,7 +554,7 @@ UploadBoard <- function(id,
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
     })
-    
+
     corrected1 <- upload_module_outliers_server(
       id = "checkqc",
       r_X = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -565,10 +573,10 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
-    
+
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = shiny::reactive(checked_samples_counts()$COUNTS), #TODO add return from new-bc module: corrected1$correctedCounts,
+      countsRT = shiny::reactive(checked_samples_counts()$COUNTS), # TODO add return from new-bc module: corrected1$correctedCounts,
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
@@ -604,8 +612,8 @@ UploadBoard <- function(id,
 
     # warn user when locked button is clicked (UX)
     observeEvent(
-      input$upload_wizard_locked, {
-
+      input$upload_wizard_locked,
+      {
         # summaryze all error logs
         summary_checks <- list(
           checklist$samples.csv$checks,
@@ -617,14 +625,14 @@ UploadBoard <- function(id,
 
         summary_check_content <- length(unlist(summary_checks, recursive = FALSE))
 
-        result_alert = NULL
+        result_alert <- NULL
 
-        if(summary_check_content > 0 ) {
+        if (summary_check_content > 0) {
           # chekc which checks have error results
           find_content <- !sapply(
             summary_checks,
             function(x) is.null(x) || length(x) == 0
-            )
+          )
 
           summary_checks <- summary_checks[find_content]
 
@@ -632,20 +640,19 @@ UploadBoard <- function(id,
           # get the names of each list within summary checks
           get_all_codes <- sapply(summary_checks, function(x) names(x))
 
-          
+
           # check if any any code is error code
           error_list <- playbase::PGX_CHECKS
-          error_list <- error_list[error_list$warning_type=="error", ]
+          error_list <- error_list[error_list$warning_type == "error", ]
 
-          if(any(get_all_codes %in% error_list$error)){
-            
+          if (any(get_all_codes %in% error_list$error)) {
             # which warning is error
             which_error <- which(get_all_codes %in% error_list$error)
 
             result_alert <- check_to_html(
-                  unlist(summary_checks[which_error],  recursive = FALSE),
-                  pass_msg = "All counts checks passed",
-                  null_msg = "Fix any errors with your input first."
+              unlist(summary_checks[which_error], recursive = FALSE),
+              pass_msg = "All counts checks passed",
+              null_msg = "Fix any errors with your input first."
             )
 
             # return shiny alert with result_alert
@@ -655,89 +662,98 @@ UploadBoard <- function(id,
               type = "error",
               html = TRUE
             )
-          }}
+          }
+        }
 
         if (is.null(result_alert)) {
-          if(input$upload_wizard == "step_samples"){
-          shinyalert::shinyalert(
-            title = "Upload your samples!",
-            text = "Please finish the current step before proceeding.",
-            type = "warning"
-          )
-        } else if(input$upload_wizard == "step_counts"){
-          shinyalert::shinyalert(
-            title = "Upload your counts!",
-            text = "Please finish the current step before proceeding.",
-            type = "warning"
-          ) 
-        } else if(input$upload_wizard == "step_comparisons"){
-          shinyalert::shinyalert(
-            title = "Create at least one comparison!",
-            text = "Upload or build your comparisons.",
-            type = "warning"
-          )
-        } else if(input$upload_wizard == "step_compute"){
-          shinyalert::shinyalert(
-            title = "Start the computation!",
-            text = "Please finish the current step before proceeding.",
-            type = "warning"
-          )
+          if (input$upload_wizard == "step_samples") {
+            shinyalert::shinyalert(
+              title = "Upload your samples!",
+              text = "Please finish the current step before proceeding.",
+              type = "warning"
+            )
+          } else if (input$upload_wizard == "step_counts") {
+            shinyalert::shinyalert(
+              title = "Upload your counts!",
+              text = "Please finish the current step before proceeding.",
+              type = "warning"
+            )
+          } else if (input$upload_wizard == "step_comparisons") {
+            shinyalert::shinyalert(
+              title = "Create at least one comparison!",
+              text = "Upload or build your comparisons.",
+              type = "warning"
+            )
+          } else if (input$upload_wizard == "step_compute") {
+            shinyalert::shinyalert(
+              title = "Start the computation!",
+              text = "Please finish the current step before proceeding.",
+              type = "warning"
+            )
+          }
         }
-        }})
+      }
+    )
 
     # wizard lock/unlock logic
 
     # lock/unlock wizard for counts.csv
     observeEvent(
-      list(uploaded$counts.csv, checked_counts, input$upload_wizard), {
+      list(uploaded$counts.csv, checked_counts, input$upload_wizard),
+      {
         req(input$upload_wizard == "step_counts")
 
-        if (is.null(checked_counts()$status) || checked_counts()$status != "OK"){
+        if (is.null(checked_counts()$status) || checked_counts()$status != "OK") {
           wizardR::lock("upload_wizard")
-        } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK"){
+        } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK") {
           wizardR::unlock("upload_wizard")
         }
-    })
+      }
+    )
 
     # lock/unlock wizard for samples.csv
     observeEvent(
-      list(uploaded$samples.csv, checked_samples_counts(), input$upload_wizard), {
-        req(input$upload_wizard == "Step 2: Upload samples")
-        if (is.null(checked_samples_counts()$status) || checked_samples_counts()$status != "OK"){
+      list(uploaded$samples.csv, checked_samples_counts(), input$upload_wizard),
+      {
+        req(input$upload_wizard == "step_samples")
+        if (is.null(checked_samples_counts()$status) || checked_samples_counts()$status != "OK") {
           wizardR::lock("upload_wizard")
-        } else if (!is.null(checked_samples_counts()$status) && checked_samples_counts()$status == "OK"){
+        } else if (!is.null(checked_samples_counts()$status) && checked_samples_counts()$status == "OK") {
           wizardR::unlock("upload_wizard")
         }
-    })
+      }
+    )
 
     # lock wizard at Comparison step
     observeEvent(
-      list(input$upload_wizard, modified_ct()),{
-        req(input$upload_wizard == "Step 3: Create comparisons")
-        if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples_counts()) || is.null(checked_counts())){
+      list(input$upload_wizard, modified_ct()),
+      {
+        req(input$upload_wizard == "step_comparisons")
+        if (is.null(modified_ct()) || ncol(modified_ct()) == 0 || is.null(checked_contrasts()) || is.null(checked_samples_counts()) || is.null(checked_counts())) {
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
         }
-      })
+      }
+    )
 
     # lock wizard it compute step
     observeEvent(
       list(
-        input$upload_wizard, 
+        input$upload_wizard,
         upload_name(),
-        upload_datatype(), 
-        upload_description(), 
+        upload_datatype(),
+        upload_description(),
         upload_organism(),
         upload_gset_methods(),
         upload_gx_methods()
-        ), {
-
+      ),
+      {
         req(input$upload_wizard == "step_compute")
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
 
-        if(!is.null(upload_name()) && upload_name() %in% pgx_files$dataset){
+        if (!is.null(upload_name()) && upload_name() %in% pgx_files$dataset) {
           shinyalert::shinyalert(
             title = "Invalid name",
             text = "This dataset name already exists.",
@@ -770,20 +786,21 @@ UploadBoard <- function(id,
           )
           upload_name(NULL)
         }
-        
+
         if (
-          is.null(upload_name()) || 
-          upload_name() == "" || 
-          upload_description() == "" || 
-          is.null(upload_description())||
-          is.null(upload_gx_methods()) ||
-          is.null(upload_gset_methods())
-          ){
+          is.null(upload_name()) ||
+            upload_name() == "" ||
+            upload_description() == "" ||
+            is.null(upload_description()) ||
+            is.null(upload_gx_methods()) ||
+            is.null(upload_gset_methods())
+        ) {
           wizardR::lock("upload_wizard")
         } else {
           wizardR::unlock("upload_wizard")
         }
-    })
+      }
+    )
 
 
     observeEvent(auth$options$ENABLE_ANNOT, {
@@ -816,7 +833,7 @@ UploadBoard <- function(id,
       uploaded,
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
-      width =  c("auto", "100%"),
+      width = c("auto", "100%"),
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Counts",
       info.text = "This is the uploaded counts data.",
@@ -828,7 +845,7 @@ UploadBoard <- function(id,
       uploaded,
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
-      width =  c("auto", "100%"),
+      width = c("auto", "100%"),
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
@@ -851,12 +868,12 @@ UploadBoard <- function(id,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
-
     )
 
     # observe show_modal and start modal
     shiny::observeEvent(
-      list(new_upload()), {
+      list(new_upload()),
+      {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
 
@@ -871,7 +888,7 @@ UploadBoard <- function(id,
           selected_contrast_input(FALSE)
         })
 
-        reset_upload_text_input(reset_upload_text_input()+1)
+        reset_upload_text_input(reset_upload_text_input() + 1)
 
         wizardR::reset("upload_wizard")
 
@@ -879,12 +896,12 @@ UploadBoard <- function(id,
         if (new_upload() == 0) {
           return(NULL)
         }
-        
+
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
-          if(process_counter() < MAX_DS_PROCESS){
+          if (process_counter() < MAX_DS_PROCESS) {
             wizardR::wizard_show(ns("upload_wizard"))
-            if(!is.null(recompute_pgx())){
+            if (!is.null(recompute_pgx())) {
               pgx <- recompute_pgx()
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
@@ -892,27 +909,30 @@ UploadBoard <- function(id,
               recompute_info(
                 list(
                   "name" = pgx$name,
-                  "description" = pgx$description)
+                  "description" = pgx$description
                 )
+              )
             }
 
             # if recomputing pgx, add data to wizard
-            } else {
-              shinyalert::shinyalert(
-                title = "Computation in progress",
-                text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
-                type = "warning",
-                closeOnClickOutside = FALSE
-              )
-        }} else {
+          } else {
+            shinyalert::shinyalert(
+              title = "Computation in progress",
+              text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
+              type = "warning",
+              closeOnClickOutside = FALSE
+            )
+          }
+        } else {
           shinyalert::shinyalert(
-                title = "Upload disabled",
-                text = "Sorry, upload of new data is disabled for this account.",
-                type = "warning",
-                closeOnClickOutside = FALSE
-              )
+            title = "Upload disabled",
+            text = "Sorry, upload of new data is disabled for this account.",
+            type = "warning",
+            closeOnClickOutside = FALSE
+          )
         }
-    })
+      }
+    )
 
     ## ------------------------------------------------
     ## Board return object
