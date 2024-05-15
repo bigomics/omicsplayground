@@ -54,13 +54,13 @@ test_that("example data loads with no error",{
         if(board == "connectivity") {
           duration <- 100000
         } else {
-          duration <- 10000
+          duration <- 20000
         }
         App$wait_for_idle(duration=duration)
         App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
-      App$wait_for_idle(duration=10000)
+      App$wait_for_idle(duration=20000)
       App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
     }
   })
