@@ -52,6 +52,7 @@ test_that("example data loads with no error",{
           duration <- 10000
         }
         if(tab == "enrichment") {
+          App$wait_for_idle(duration=duration)
           App$set_inputs("enrichment-gs_fdr" = 0.5)
         }
         App$wait_for_idle(duration=duration)
