@@ -37,23 +37,24 @@ test_that("example data loads with no error",{
       ),
       shiny_args = list(port = 8080)
     )
+    App$get_values(input = TRUE)
 
     withr::defer(App$stop())
 
     pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
+    if(board == "enrichment") {
+      App$set_inputs("enrichment-gs_fdr" = 0.5)
+      App$wait_for_idle(duration=duration)
+    }
     tabs <- searchTabs(board)
     if (!is.null(tabs)){
       lapply(tabs, function(tab){
         App$run_js(generate_js_click_code(tab))
-        if(tab == "connectivity") {
+        if(board == "connectivity") {
           duration <- 100000
         } else {
           duration <- 10000
-        }
-        if(tab == "enrichment") {
-          App$wait_for_idle(duration=duration)
-          App$set_inputs("enrichment-gs_fdr" = 0.5)
         }
         App$wait_for_idle(duration=duration)
         App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
