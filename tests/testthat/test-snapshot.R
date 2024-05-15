@@ -46,11 +46,16 @@ test_that("example data loads with no error",{
     if (!is.null(tabs)){
       lapply(tabs, function(tab){
         App$run_js(generate_js_click_code(tab))
-        App$wait_for_idle(duration=10000)
+        if(tab == "connectivity") {
+          App$wait_for_idle(duration=100000)
+        } else {
+          App$wait_for_idle(duration=10000)
+        }
+        
         App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
-      App$wait_for_idle(duration=100000)
+      App$wait_for_idle(duration=10000)
       App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
     }
   })
