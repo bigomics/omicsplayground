@@ -1,4 +1,7 @@
-test_that("example data loads with no error", {
+test_that("example data loads with no error",{
+  # source aux functions
+  source("aux-test-functions.R")
+  
   # test single board minimal components
 
   # get all board names
@@ -39,10 +42,21 @@ test_that("example data loads with no error", {
 
     pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
-
-    App$wait_for_idle(duration = 20000)
-
-    # App$expect_values(cran = TRUE) # TODO: file bug about this...
-    App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
+    tabs <- searchTabs(board)
+    if (!is.null(tabs)){
+      lapply(tabs, function(tab){
+        App$run_js(generate_js_click_code(tab))
+        if(tab == "connectivity") {
+          App$wait_for_idle(duration=100000)
+        } else {
+          App$wait_for_idle(duration=10000)
+        }
+        
+        App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
+      })
+    } else {
+      App$wait_for_idle(duration=10000)
+      App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
+    }
   })
 })
