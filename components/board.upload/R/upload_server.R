@@ -395,6 +395,10 @@ UploadBoard <- function(id,
 
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
+          # initialize results
+          res_samples <- NULL
+          res_counts <- NULL
+
           if (cross_check$PASS) {
             res_samples <- cross_check$SAMPLES
             res_counts <- cross_check$COUNTS
