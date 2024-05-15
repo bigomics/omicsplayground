@@ -47,11 +47,14 @@ test_that("example data loads with no error",{
       lapply(tabs, function(tab){
         App$run_js(generate_js_click_code(tab))
         if(tab == "connectivity") {
-          App$wait_for_idle(duration=100000)
+          duration <- 100000
         } else {
-          App$wait_for_idle(duration=10000)
+          duration <- 10000
         }
-        
+        if(tab == "enrichment") {
+          App$set_inputs("enrichment-gs_fdr" = 0.5)
+        }
+        App$wait_for_idle(duration=duration)
         App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {

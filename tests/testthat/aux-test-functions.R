@@ -18,7 +18,6 @@ searchTabs <- function(board) {
     return(tabs[[board]])
 }
 
-# Define the R function
 generate_js_click_code <- function(data_value) {
   js_code <- sprintf(
     "
