@@ -22,14 +22,15 @@ signature_plot_enplots_ui <- function(
   ns <- shiny::NS(id)
   info_text <- "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
-  PlotModuleUI(ns("plotmodule"),
+  PlotModuleUI(ns("pltmod"),
     plotlib = "plotly",
     title = "Enrichment plots",
     info.text = info.text,
     caption = caption,
     download.fmt = c("png", "pdf"),
     height = height,
-    width = width
+    width = width,
+    subplot = TRUE
   )
 }
 
@@ -47,6 +48,23 @@ signature_plot_enplots_server <- function(id,
                                           enrichmentContrastTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    shiny::observe({
+      shiny::req(pgx)
+      ii <- enrichmentContrastTable$rows_selected()
+      if (is.null(ii)) {
+        ii <- enrichmentContrastTable$rows_all()
+      }
+      shiny::req(ii)
+      if(length(ii) > 1) {
+        shinyjs::show("pltmod-subplot_selector")
+        shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+      } else {
+        shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = "All")
+        shinyjs::hide("pltmod-subplot_selector")
+      }
+      
+    })
+
     plot_data <- shiny::reactive({
       # get_plots <- function() {
       shiny::req(pgx$X)
@@ -161,6 +179,7 @@ signature_plot_enplots_server <- function(id,
         plotly::layout(
           margin = list(l = 10, r = 10, b = 10, t = 20) # lrbt
         )
+      fig$plots <- plt
       return(fig)
     }
 
@@ -188,17 +207,27 @@ signature_plot_enplots_server <- function(id,
       return(fig)
     }
 
-
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      pd <- plot_data()
+      F <- pd[["F"]]
+      names_download <- colnames(F)[1:min(20, ncol(F))]
+      download_options <- 1:length(colnames(F)[1:min(20, ncol(F))])
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
 
     PlotModuleServer(
-      "plotmodule",
+      "pltmod",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       plotlib = "plotly",
       res = c(90, 130), ## resolution of plots
       pdf.width = 8,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }

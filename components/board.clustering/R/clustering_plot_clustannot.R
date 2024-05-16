@@ -45,6 +45,7 @@ clustering_plot_clusterannot_ui <- function(
     caption = caption,
     options = clustannot_plots.opts,
     download.fmt = c("png", "pdf"),
+    subplot = TRUE,
     width = width,
     height = height
   )
@@ -88,6 +89,7 @@ clustering_plot_clusterannot_server <- function(id,
         ann.types <- sel <- "<all>"
       }
       shiny::updateSelectInput(session, "xann_refset", choices = ann.types, selected = sel)
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
     })
 
     plot_data <- function() {
@@ -218,6 +220,8 @@ clustering_plot_clusterannot_server <- function(id,
           margin = list(l = 5, r = 0, b = 15, t = 20)
         ) %>%
         plotly::config(displayModeBar = FALSE)
+
+      p$plots <- plot_list
       p
     }
 
@@ -229,6 +233,16 @@ clustering_plot_clusterannot_server <- function(id,
       createAnnotBarPlots(fontsize = 15)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      rho <- plot_data()
+      names_download <- colnames(rho)[1:min(9, ncol(rho))]
+      download_options <- 1:min(9, ncol(rho))
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
@@ -238,6 +252,7 @@ clustering_plot_clusterannot_server <- function(id,
       res = 80, ## resolution of plots
       remove_margins = FALSE,
       pdf.width = 8, pdf.height = 5,
+      subplot = TRUE,
       add.watermark = watermark
     )
 

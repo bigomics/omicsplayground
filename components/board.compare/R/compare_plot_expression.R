@@ -9,14 +9,15 @@ compare_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
   info_text <- "<b>Multi barplots.</b> Barplots of expression values for multiple comparisons in the two datasets (blue and green). "
 
   PlotModuleUI(
-    ns("plot"),
+    ns("pltmod"),
     title = "Expression",
     plotlib = "plotly",
     label = "a",
     info.text = info_text,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf"),
+    subplot = TRUE
   )
 }
 
@@ -30,6 +31,10 @@ compare_plot_expression_server <- function(id,
                                            score_table,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
+
     plotly_multibarplot.RENDER <- shiny::reactive({
       shiny::req(input.contrast1())
       shiny::req(input.contrast2())
@@ -130,18 +135,29 @@ compare_plot_expression_server <- function(id,
         )
       ) %>%
         plotly::layout(margin = list(l = 0, b = 10, r = 0))
-
+      all_plt$plots <- sub_plots
+      all_plt$genes <- genes
       return(all_plt)
     })
 
+    subplot_names <- shiny::reactive({
+      genes <- plotly_multibarplot.RENDER()$genes
+      shiny::req(genes)
+      names_download <- genes
+      download_options <- 1:length(genes)
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
 
     PlotModuleServer(
-      "plot",
+      "pltmod",
       plotlib = "plotly",
       func = plotly_multibarplot.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 130),
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   })
 }

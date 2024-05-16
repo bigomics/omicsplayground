@@ -40,14 +40,15 @@ signature_plot_markers_ui <- function(
   )
 
   PlotModuleUI(
-    id = ns("plot"),
+    id = ns("pltmod"),
     plotlib = "plotly",
     title = title,
     caption = caption,
     options = markers.opts,
     info.text = info.text,
     download.fmt = c("png", "pdf"),
-    height = height
+    height = height,
+    subplot = TRUE
   )
 }
 
@@ -64,6 +65,10 @@ signature_plot_markers_server <- function(id,
                                           getCurrentMarkers,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
+
     calcSingleSampleValues <- function(X, y, method = c("rho", "gsva")) {
       ##
       ## Calculates single-sample enrichment values for given matrix and
@@ -170,7 +175,7 @@ signature_plot_markers_server <- function(id,
       return(res)
     })
 
-    get_plots <- function() {
+    get_plots <- function(get_data = FALSE) {
       ## get markers
       markers <- getCurrentMarkers()
       shiny::req(markers)
@@ -228,6 +233,9 @@ signature_plot_markers_server <- function(id,
       if (input$markers_sortby == "correlation") {
         rho <- cor(t(top.gx), fc1)[, 1]
         top.gx <- top.gx[order(-rho), , drop = FALSE]
+      }
+      if(get_data) {
+        return(top.gx)
       }
 
       plt <- list()
@@ -303,6 +311,7 @@ signature_plot_markers_server <- function(id,
           title = list(text = "genes in signature", size = 12),
           margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
         )
+      fig$plots <- plt
       return(fig)
     }
 
@@ -316,14 +325,28 @@ signature_plot_markers_server <- function(id,
       return(fig)
     }
 
+    subplot_names <- shiny::reactive({
+      top.gx <- get_plots(get_data = TRUE)
+      shiny::req(top.gx)
+      if (input$markers_layout == "6x6") nmax <- 35
+      if (input$markers_layout == "4x4") nmax <- 15
+      names_download <- rownames(top.gx)[1:(min(nmax, nrow(top.gx)))]
+      names_download <- c("INPUT SIGNATURE", names_download)
+      download_options <- 1:length(rownames(top.gx)[1:(min(nmax, nrow(top.gx))+1)])
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     PlotModuleServer(
-      "plot",
+      "pltmod",
       func = plotly.RENDER,
       func2 = plotly.RENDER_MODAL,
       plotlib = "plotly",
       res = c(100, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }

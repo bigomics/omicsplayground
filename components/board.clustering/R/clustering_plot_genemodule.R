@@ -38,6 +38,7 @@ clustering_plot_genemodule_ui <- function(
     caption = caption,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
+    subplot = TRUE,
     width = width,
     height = height
   )
@@ -61,6 +62,11 @@ clustering_plot_genemodule_server <- function(id,
                                               getTopMatrix,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
+
     plot_data <- shiny::reactive({
       res <- getTopMatrix()
       shiny::req(res)
@@ -128,6 +134,17 @@ clustering_plot_genemodule_server <- function(id,
       return(plts)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      pd <- plot_data()
+      mat <- pd$mat
+      names_download <- rownames(mat)
+      download_options <- 1:length(rownames(mat))
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     plotly.RENDER <- function() {
       ## layout in subplots
       plts <- render_plotly(title.cex = 0.92, title.y = 0.85)
@@ -135,7 +152,7 @@ clustering_plot_genemodule_server <- function(id,
       ncols <- ifelse(length(plts) > 4, 2, 1)
       ncols <- ifelse(length(plts) > 12, 3, ncols)
       nrows <- ceiling(length(plts) / ncols)
-      plotly::subplot(
+      plt <- plotly::subplot(
         plts,
         nrows = nrows,
         margin = c(0.02, 0.02, 0.03, 0.03), ## lrtb
@@ -151,6 +168,8 @@ clustering_plot_genemodule_server <- function(id,
           margin = list(l = 10, r = 10, b = 10, t = 10),
           showlegend = FALSE
         )
+      plt$plots <- plts
+      return(plt)
     }
 
     modal_plotly.RENDER <- function() {
@@ -192,6 +211,7 @@ clustering_plot_genemodule_server <- function(id,
       res = c(90, 105), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
+      subplot = TRUE,
       add.watermark = watermark
     )
   }) ## end of moduleServer

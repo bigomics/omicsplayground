@@ -31,7 +31,7 @@ singlecell_plot_phenoplot_ui <- function(
   )
 
   PlotModuleUI(
-    id = ns("plotmodule"),
+    id = ns("pltmod"),
     plotlib = "plotly",
     label = label,
     info.text = info.text,
@@ -40,7 +40,8 @@ singlecell_plot_phenoplot_ui <- function(
     options = phenoplot.opts,
     download.fmt = c("png", "pdf"),
     height = height,
-    width = width
+    width = width,
+    subplot = TRUE
   )
 }
 
@@ -57,6 +58,10 @@ singlecell_plot_phenoplot_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
 
     plot_data <- shiny::reactive({
       #
@@ -170,6 +175,7 @@ singlecell_plot_phenoplot_server <- function(id,
         plotly::layout(
           margin = list(l = 10, r = 10, b = 10, t = 20) # lrbt
         )
+      fig$plots <- plt
       return(fig)
     }
 
@@ -195,15 +201,28 @@ singlecell_plot_phenoplot_server <- function(id,
       return(fig)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(input$labelmode)
+      pd <- plot_data()
+      pheno <- pd[["pheno"]]
+      pheno <- pheno[1:min(20, length(pheno))]
+      names_download <- pheno
+      download_options <- 1:length(pheno)
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     PlotModuleServer(
-      "plotmodule",
+      "pltmod",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       plotlib = "plotly",
       res = c(85, 95),
       pdf.width = 6,
       pdf.height = 10,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }

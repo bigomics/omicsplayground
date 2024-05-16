@@ -52,7 +52,7 @@ singlecell_plot_icpplot_ui <- function(
   )
 
   PlotModuleUI(
-    id = ns("plot"),
+    id = ns("pltmod"),
     plotlib = "plotly",
     ## plotlib = "ggplot",
     label = label,
@@ -62,7 +62,8 @@ singlecell_plot_icpplot_ui <- function(
     options = icp.opts,
     download.fmt = c("png", "pdf"),
     height = height,
-    width = width
+    width = width,
+    subplot = TRUE
   )
 }
 
@@ -83,6 +84,10 @@ singlecell_plot_icpplot_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
@@ -200,7 +205,7 @@ singlecell_plot_icpplot_server <- function(id,
       return(plt)
     }
 
-    get_plotly <- function() {
+    get_plotly <- function(get_selected = FALSE) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -220,7 +225,9 @@ singlecell_plot_icpplot_server <- function(id,
       if (pd[["sortby"]] == "name") {
         sel <- sel[order(colnames(pd[["score"]])[sel])]
       }
-
+      if(get_selected) {
+        return(colnames(pd[["score"]])[sel])
+      }
       plt <- vector("list", length(sel))
       for (i in 1:length(sel)) {
         j <- sel[i]
@@ -279,6 +286,7 @@ singlecell_plot_icpplot_server <- function(id,
           title = list(text = pd$refset, size = 14),
           margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
         )
+      fig$plots <- plt
       return(fig)
     }
 
@@ -308,8 +316,18 @@ singlecell_plot_icpplot_server <- function(id,
       return(fig)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(method())
+      names_sel <- get_plotly(get_selected = TRUE)
+      names_download <- names_sel
+      download_options <- 1:length(names_sel)
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     PlotModuleServer(
-      id = "plot",
+      id = "pltmod",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       plotlib = "plotly",
@@ -317,7 +335,8 @@ singlecell_plot_icpplot_server <- function(id,
       ##      plotlib = "ggplot",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }

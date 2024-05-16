@@ -49,7 +49,8 @@ expression_plot_volcanoMethods_ui <- function(
     options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = width
+    width = width,
+    subplot = TRUE
   )
 }
 
@@ -70,6 +71,10 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(comp(), features())
@@ -128,6 +133,19 @@ expression_plot_volcanoMethods_server <- function(id,
       return(all_plts)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      pd <- plot_data()
+      sel.genes <- pd[["sel.genes"]]
+      comp <- pd[["comp"]]
+      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
+      fc <- mx[which(rownames(mx) %in% sel.genes), "fc", drop = FALSE]
+      names_download <- colnames(fc[[1]])
+      download_options <- 1:length(colnames(fc[[1]]))
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
 
     modal_plotly.RENDER <- function() {
       fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
@@ -163,7 +181,8 @@ expression_plot_volcanoMethods_server <- function(id,
       csvFunc = plot_data_csv,
       res = c(80, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }

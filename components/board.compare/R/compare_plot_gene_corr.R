@@ -16,7 +16,7 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
   )
 
   PlotModuleUI(
-    ns("plot"),
+    ns("pltmod"),
     plotlib = "plotly",
     title = "Gene correlation",
     label = "c",
@@ -24,7 +24,8 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
     options = genecorr.opts,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf"),
+    subplot = TRUE
   )
 }
 
@@ -42,6 +43,10 @@ compare_plot_gene_corr_server <- function(id,
       shiny::req(input.contrast1())
       ct <- input.contrast1()
       shiny::updateSelectInput(session, "colorby", choices = ct, selected = ct[1])
+    })
+
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
     })
 
     genecorr.RENDER <- shiny::reactive({
@@ -220,16 +225,30 @@ compare_plot_gene_corr_server <- function(id,
           titleX = TRUE, titleY = TRUE
         )
       )
+      plt$plots <- sub_plots
+      plt$genes <- higenes
       return(plt)
     })
 
+    subplot_names <- shiny::reactive({
+      genes <- plotly_genecorr.RENDER()$genes
+      shiny::req(genes)
+      browser()
+      names_download <- genes
+      download_options <- 1:length(genes)
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     PlotModuleServer(
-      "plot",
+      "pltmod",
       plotlib = "plotly",
       func = plotly_genecorr.RENDER, # genecorr.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   })
 }

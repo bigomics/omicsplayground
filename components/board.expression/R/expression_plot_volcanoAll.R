@@ -46,6 +46,7 @@ expression_plot_volcanoAll_ui <- function(id,
     caption = caption,
     options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
+    subplot = TRUE,
     height = height,
     width = width
   )
@@ -68,6 +69,10 @@ expression_plot_volcanoAll_server <- function(id,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(features())
@@ -143,6 +148,19 @@ expression_plot_volcanoAll_server <- function(id,
       return(all_plts)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      pd <- plot_data()
+      sel.genes <- pd[["sel.genes"]]
+      fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
+      fc <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), fc_cols, drop = FALSE]
+      names_download <- gsub("fc.", "", colnames(fc))
+      download_options <- 1:length(names_download)
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     modal_plotly.RENDER <- function() {
       fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
         playbase::plotly_build_light(.)
@@ -174,6 +192,7 @@ expression_plot_volcanoAll_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(70, 90), ## resolution of plots
       pdf.width = 12, pdf.height = 5,
+      subplot = TRUE,
       add.watermark = watermark
     )
   }) ## end of moduleServer

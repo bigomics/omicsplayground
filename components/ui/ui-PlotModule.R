@@ -27,6 +27,7 @@ PlotModuleUI <- function(id,
                          pdf.height = 8,
                          cards = FALSE,
                          card_names = NULL,
+                         subplot = FALSE,
                          header_buttons = NULL) {
   ns <- shiny::NS(id)
 
@@ -151,6 +152,13 @@ PlotModuleUI <- function(id,
         label = "Format",
         choices = download.fmt
       ),
+      if (subplot) {
+        shiny::selectInput(
+          inputId = ns("subplot_selector"),
+          label = "Choose plot",
+          choices = NULL
+        )
+      },
       div(
         id = ns("pdf_size_panel"),
         shiny::div(
@@ -394,6 +402,7 @@ PlotModuleServer <- function(id,
                              pdf.pointsize = 12,
                              add.watermark = FALSE,
                              remove_margins = FALSE,
+                             subplot = FALSE,
                              vis.delay = 0,
                              card = NULL) {
   moduleServer(
@@ -519,6 +528,10 @@ PlotModuleServer <- function(id,
               {
                 if (plotlib == "plotly") {
                   p <- func()
+                  if (subplot && input$subplot_selector != "All") {
+                    p <- p$plots[[as.numeric(input$subplot_selector)]]
+                  }
+                  plotly::last_plot()
                   p$width <- png.width
                   p$height <- png.height
                   plotlyExport(p, PNGFILE, width = p$width, height = p$height, scale = resx)

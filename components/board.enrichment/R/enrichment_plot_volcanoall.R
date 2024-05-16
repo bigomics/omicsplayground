@@ -36,7 +36,7 @@ enrichment_plot_volcanoall_ui <- function(
   )
 
   PlotModuleUI(
-    ns("plot"),
+    ns("pltmod"),
     plotlib = "plotly",
     title = title,
     info.text = info.text,
@@ -44,7 +44,8 @@ enrichment_plot_volcanoall_ui <- function(
     options = plot_options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf"),
+    subplot = TRUE
   )
 }
 
@@ -57,6 +58,10 @@ enrichment_plot_volcanoall_server <- function(id,
                                               calcGsetMeta,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(gs_features())
@@ -132,6 +137,17 @@ enrichment_plot_volcanoall_server <- function(id,
       return(all_plts)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      pd <- plot_data()
+      fc <- pd$FC
+      names_download <- colnames(fc)
+      download_options <- 1:length(colnames(fc))
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     modal_plotly.RENDER <- function() {
       fig <- plotly_plots(cex = 3, yrange = 0.5, n_rows = 2, margin_b = 20, margin_l = 50) %>%
         playbase::plotly_build_light(.)
@@ -149,14 +165,15 @@ enrichment_plot_volcanoall_server <- function(id,
 
 
     PlotModuleServer(
-      "plot",
+      "pltmod",
       plotlib = "plotly",
       func = modal_plotly.RENDER,
       func2 = big_plotly.RENDER,
       pdf.width = 10,
       pdf.height = 5,
       res = c(72, 85),
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end module-server
 } ## server

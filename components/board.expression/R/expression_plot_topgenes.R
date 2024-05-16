@@ -46,6 +46,7 @@ expression_plot_topgenes_ui <- function(
     caption = caption,
     options = topgenes_opts,
     download.fmt = c("png", "pdf", "csv"),
+    subplot = TRUE,
     width = width,
     height = height
   )
@@ -73,6 +74,10 @@ expression_plot_topgenes_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
+
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
@@ -173,6 +178,20 @@ expression_plot_topgenes_server <- function(id,
       return(plts)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(plot_data())
+      pd <- plot_data()
+      nplots <- min(8, nrow(pd[["res"]]))
+      if (pd$grouped) {
+        nplots <- min(18, nrow(pd[["res"]]))
+      }
+      names_download <- rownames(pd[["res"]])[1:nplots]
+      download_options <- 1:nplots
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     plotly.RENDER <- function() {
       ## layout in subplots
       plts <- render_plotly(annot.y = 1.00, xaxis.fontsize = 10, title.cex = 1)
@@ -180,7 +199,7 @@ expression_plot_topgenes_server <- function(id,
       pd <- plot_data()
       ncols <- ifelse(pd[["grouped"]], 8, 4)
       nrows <- ceiling(length(plts) / ncols)
-      plotly::subplot(
+      plt <- plotly::subplot(
         plts,
         nrows = nrows,
         margin = c(0.010, 0.010, 0.04, 0.04), ## lrtb
@@ -193,6 +212,8 @@ expression_plot_topgenes_server <- function(id,
           margin = list(b = 0),
           showlegend = FALSE
         )
+      plt$plots <- plts
+      return(plt)
     }
 
     modal_plotly.RENDER <- function() {
@@ -239,6 +260,7 @@ expression_plot_topgenes_server <- function(id,
       res = c(90, 105), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
+      subplot = TRUE,
       add.watermark = watermark
     )
   }) ## end of moduleServer

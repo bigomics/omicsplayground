@@ -33,7 +33,7 @@ signature_plot_volcano_ui <- function(
     )
   )
 
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(ns("pltmod"),
     title = title,
     info.text = info.text,
     caption = caption,
@@ -41,7 +41,8 @@ signature_plot_volcano_ui <- function(
     plotlib = "plotly",
     options = plot_opts,
     height = height,
-    width = width
+    width = width,
+    subplot = TRUE
   )
 }
 
@@ -62,6 +63,23 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    shiny::observe({
+      shiny::req(pgx, selected_gxmethods())
+      ii <- enrichmentContrastTable$rows_selected()
+      if (is.null(ii)) {
+        ii <- enrichmentContrastTable$rows_all()
+      }
+      shiny::req(ii)
+      if(length(ii) > 1) {
+        shinyjs::show("pltmod-subplot_selector")
+        shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+      } else {
+        shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = "All")
+        shinyjs::hide("pltmod-subplot_selector")
+      }
+      
+    })
+
     plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
       shiny::req(sigCalculateGSEA())
 
@@ -153,14 +171,31 @@ signature_plot_volcano_server <- function(id,
       return(fig)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(pgx, selected_gxmethods())
+      ii <- enrichmentContrastTable$rows_selected()
+      if (is.null(ii)) {
+        ii <- enrichmentContrastTable$rows_all()
+      }
+      shiny::req(ii)
+      gsea <- sigCalculateGSEA()
+      ct <- rownames(gsea$output)[ii]
+      names_download <- ct
+      download_options <- 1:length(ct)
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     PlotModuleServer(
-      "plot",
+      "pltmod",
       plotlib = "plotly",
       func = big_plotly.RENDER,
       res = c(90, 130), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }

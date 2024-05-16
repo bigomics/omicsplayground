@@ -27,6 +27,7 @@ clustering_plot_phenoplot_ui <- function(
     caption = caption,
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv"),
+    subplot = TRUE,
     width = width,
     height = height
   )
@@ -40,6 +41,10 @@ clustering_plot_phenoplot_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observe({
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
+    })
 
     plot_data <- reactive({
       pgx <- pgx
@@ -102,6 +107,17 @@ clustering_plot_phenoplot_server <- function(id,
       return(plt)
     }
 
+    subplot_names <- shiny::reactive({
+      shiny::req(pgx$Y, selected_phenotypes())
+      Y <- pgx$Y
+      pheno <- selected_phenotypes()
+      names_download <- pheno[1:min(20, length(pheno))]
+      download_options <- 1:min(20, length(pheno))
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
+    })
+
     plotly.RENDER <- function() {
       plt <- create_plots(cex = 0.85)
       nc <- floor(sqrt(length(plt)))
@@ -113,6 +129,7 @@ clustering_plot_phenoplot_server <- function(id,
       combined_plots <- plotly::layout(combined_plots,
         margin = list(t = 40)
       )
+      combined_plots$plots <- plt
       return(combined_plots)
     }
 
@@ -139,6 +156,7 @@ clustering_plot_phenoplot_server <- function(id,
       res = c(85), ## resolution of plots
       pdf.width = 6,
       pdf.height = 9,
+      subplot = TRUE,
       add.watermark = watermark
     )
   })

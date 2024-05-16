@@ -42,7 +42,7 @@ correlation_plot_scattercorr_ui <- function(
     )
   )
 
-  PlotModuleUI(ns("plot"),
+  PlotModuleUI(ns("pltmod"),
     title = title,
     plotlib = "plotly",
     label = "c",
@@ -51,7 +51,8 @@ correlation_plot_scattercorr_ui <- function(
     options = cor_scatter.opts,
     download.fmt = c("png", "pdf"),
     width = width,
-    height = height
+    height = height,
+    subplot = TRUE
   )
 }
 
@@ -77,6 +78,7 @@ correlation_plot_scattercorr_server <- function(id,
       px <- colnames(pgx$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
       shiny::updateSelectInput(session, "colorby", choices = px, selected = s1)
+      shiny::updateSelectInput(session, "pltmod-subplot_selector", choices = subplot_names())
     })
 
     cor_scatter.DATA <- shiny::reactive({
@@ -107,6 +109,26 @@ correlation_plot_scattercorr_server <- function(id,
       )
 
       return(dt)
+    })
+
+    subplot_names <- shiny::reactive({
+      shiny::req(cor_gene(), pgx$X, cor_scatter.DATA(), input$layout)
+      dt <- cor_scatter.DATA()
+      rho <- dt$rho
+      shiny::req(length(rho) > 0)
+      if (input$layout == "3x3") {
+        nrow <- ncol <- 3
+      } else if (input$layout == "4x4") {
+        nrow <- ncol <- 4
+      } else {
+        nrow <- ncol <- 5
+      }
+      nplots <- nrow * ncol
+      names_download <- names(rho)[1:nplots]
+      download_options <- 1:nplots
+      names(download_options) <- names_download
+      download_options <- c("All", download_options)
+      return(download_options)
     })
 
     plotly_scatter <- function(n_row, n_cols, markersize = 10, axis_title_pos = c(-0.1, -0.1),
@@ -205,7 +227,7 @@ correlation_plot_scattercorr_server <- function(id,
             margin = list(l = margin_l, b = margin_b)
           )
       )
-
+      all_plt$plots <- sub_plots
       return(all_plt)
     }
 
@@ -236,14 +258,15 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     PlotModuleServer(
-      "plot",
+      "pltmod",
       plotlib = "plotly",
       func = cor_scatter.PLOTFUN,
       func2 = cor_scatter.PLOTFUN2,
       res = c(100, 120), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      subplot = TRUE
     )
   }) ## end of moduleServer
 }
