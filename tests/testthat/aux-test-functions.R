@@ -26,7 +26,7 @@ generate_js_click_code <- function(data_value) {
     targetElement.click();
     }
     ",
-    data_value, data_value, data_value
+    data_value
   )
   return(js_code)
 }
