@@ -45,7 +45,7 @@ test_that("example data loads with no error",{
     App$set_inputs("pgx_path" = pgx_file)
     if(board == "enrichment") {
       App$set_inputs("enrichment-gs_fdr" = 0.5)
-      App$wait_for_idle(timeout = duration)
+      App$wait_for_idle(duration = 3000, timeout = duration)
     }
     tabs <- searchTabs(board)
     if (!is.null(tabs)){
@@ -56,11 +56,11 @@ test_that("example data loads with no error",{
         } else {
           duration <- 50000
         }
-        App$wait_for_idle(timeout = duration)
+        App$wait_for_idle(duration = 3000, timeout = duration)
         App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
-      App$wait_for_idle(timeout=20000)
+      App$wait_for_idle(duration = 3000)
       App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
     }
   })
