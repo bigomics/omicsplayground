@@ -1159,7 +1159,6 @@ LoginCodeAuthenticationModule <- function(id,
           # set options
           if (user_in_db){
             dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
-            browser()
             USER$options <- read_user_options_db(USER$email, user_database)
           } else {
             dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
