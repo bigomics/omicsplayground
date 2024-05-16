@@ -45,7 +45,6 @@ test_that("example data loads with no error",{
     App$set_inputs("pgx_path" = pgx_file)
     if(board == "enrichment") {
       App$set_inputs("enrichment-gs_fdr" = 0.5)
-      App$wait_for_idle(duration = 3000, timeout = duration)
     }
     tabs <- searchTabs(board)
     if (!is.null(tabs)){
