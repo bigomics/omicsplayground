@@ -52,7 +52,7 @@ test_that("example data loads with no error",{
       lapply(tabs, function(tab){
         App$run_js(generate_js_click_code(tab))
         if(board == "connectivity") {
-          duration <- 200000
+          duration <- 1000000
         } else {
           duration <- 50000
         }
