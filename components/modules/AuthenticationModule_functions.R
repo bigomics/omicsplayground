@@ -14,6 +14,19 @@ create_user_dir_if_needed <- function(user_dir, pgxdir) {
   }
 }
 
+check_user_options_db <- function(email, user_database = NULL) {
+  if (is.null(user_database)) {
+    return(FALSE)
+  }
+  connection <- connect_db(user_database)
+  user_opt <- query_by_email(email, connection)
+  if(is.null(user_opt)) {
+    return(FALSE) # user NOT in db
+  } else {
+    return(TRUE) # user IN db
+  }
+}
+
 read_user_options <- function(user_dir) {
   user_opt_file <- file.path(user_dir, "OPTIONS")
   new_opt <- opt ## opt from global
