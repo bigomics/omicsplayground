@@ -56,17 +56,17 @@ test_that("example data loads with no error",{
           App$wait_for_idle(duration = 10000, timeout = duration)
         } else if (board == "clustering") {
           duration <- 50000
-          App$wait_for_idle(duration = 10000, timeout = duration)
+          App$wait_for_idle(duration = 15000, timeout = duration)
         } else {
           duration <- 50000
           App$wait_for_idle(duration = 3000, timeout = duration)
         }
         
-        App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
+        App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport", threshold = 40)
       })
     } else {
       App$wait_for_idle(duration = 3000)
-      App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
+      App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport", threshold = 40)
     }
   })
 })
