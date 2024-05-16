@@ -54,6 +54,9 @@ test_that("example data loads with no error",{
         if(board == "connectivity") {
           duration <- 1000000
           App$wait_for_idle(duration = 10000, timeout = duration)
+        } else if (board == "clustering") {
+          duration <- 50000
+          App$wait_for_idle(duration = 10000, timeout = duration)
         } else {
           duration <- 50000
           App$wait_for_idle(duration = 3000, timeout = duration)
