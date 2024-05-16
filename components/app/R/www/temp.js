@@ -54,17 +54,23 @@ const unloadSidebar = () => {
 	$('.sidebar-content')
 		.children()
 		.each((index, el) => {
-			if($(el).hasClass('collapse'))
-				return;
-
-			if(index == 0){
+			if(index == 0 || index == 1){
 				$(el).show();
 				return;
 			}
-
+			if($(el).hasClass('collapse')){
+				return;
+			}
 			$(el).hide();
 		});
         $('#sidebar-help-container').hide();
+	$('.sidebar-content')
+		.children()
+		.each((index, el) => {
+			if($(el).hasClass('collapse') && $(el).hasClass('show')){
+				$(el).removeClass('show');
+			}
+		});
 }
 
 const sidebarClose = () => {
