@@ -152,7 +152,7 @@ upload_table_preview_counts_server <- function(
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
-      
+
       if (!grepl("csv", input$counts_csv$name, ignore.case = TRUE)) {
         shinyalert::shinyalert(
           title = "File format not supported.",
@@ -395,7 +395,6 @@ upload_table_preview_samples_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
-
       # check if samples is csv (necessary due to drag and drop of any file)
       if (!grepl("csv", input$samples_csv$name, ignore.case = TRUE)) {
         shinyalert::shinyalert(
@@ -709,7 +708,6 @@ upload_table_preview_contrasts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$contrasts_csv, {
-
       # check if contrasts is csv (necessary due to drag and drop of any file)
       if (!grepl("csv", input$contrasts_csv$name, ignore.case = TRUE)) {
         shinyalert::shinyalert(

@@ -81,7 +81,7 @@ app_ui <- function(x) {
           loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
         )
       )
-      
+
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
         onClick = "logoutInApp()"
@@ -108,7 +108,7 @@ app_ui <- function(x) {
           welcome = "Welcome"
         ),
         "Datasets" = c(
-          load    = "My Datasets"
+          load = "My Datasets"
         ),
         "DataView" = c(
           dataview = "DataView"

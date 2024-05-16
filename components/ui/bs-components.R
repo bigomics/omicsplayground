@@ -9,12 +9,12 @@
 
 bs_alert <- function(..., conditional = TRUE, style = "primary", closable = TRUE) {
   id <- bigdash:::make_id()
-  if(conditional) {
+  if (conditional) {
     btn.class <- "btn-close btn-close-bs-conditional"
   } else {
     btn.class <- "btn-close"
   }
-  
+
   alert_tag <- shiny::tags$div(
     id = id,
     class = paste0("alert alert-", style, " alert-dismissible fade show"),

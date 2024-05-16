@@ -1,4 +1,3 @@
-
 fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
                           width = NULL,
                           buttonLabel = "Drag your file here or click to browse",
@@ -32,7 +31,7 @@ fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
   }
 
   div(
-    class = "form-group", #shiny-input-container w-100",
+    class = "form-group", # shiny-input-container w-100",
     style = htmltools::css(width = htmltools::validateCssUnit(width), margin = "auto"),
     shiny:::shinyInputLabel(inputId, ""),
     div(
@@ -42,11 +41,11 @@ fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
         class = "input-group-btn input-group-prepend w-100",
         span(
           class = "btn btn-area w-100", inputTag,
-##          div(tags$image(src = fileInputArea_icon_encoded, width = "80px;"), style = "margin-top: 2rem;"),
-          div( icon("upload"), style = "font-size: 80px;"),
+          ##          div(tags$image(src = fileInputArea_icon_encoded, width = "80px;"), style = "margin-top: 2rem;"),
+          div(icon("upload"), style = "font-size: 80px;"),
           div(p(label), style = "font-size: 1.2rem; font-weight: 700; padding-top: 2rem;"),
           div(p(buttonLabel), style = "font-size: 1rem; font-weight: 400; margin: 0.7rem;"),
-          div("browse", style = "font-size:0.92rem; color:white; padding:6px 6px; background-color:#3181DE; width:75px; margin:auto;border-radius:4px;")  ## fake button
+          div("browse", style = "font-size:0.92rem; color:white; padding:6px 6px; background-color:#3181DE; width:75px; margin:auto;border-radius:4px;") ## fake button
         )
       )
     ),
@@ -67,4 +66,4 @@ writeLines('
 </svg>',
   con = fileInputArea_icon_file
 )
-fileInputArea_icon_encoded <- xfun::base64_uri(fileInputArea_icon_file)  ## can we not pass a string??
+fileInputArea_icon_encoded <- xfun::base64_uri(fileInputArea_icon_file) ## can we not pass a string??

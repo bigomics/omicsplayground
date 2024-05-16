@@ -9,12 +9,12 @@ upload_module_makecontrast_ui <- function(id) {
   bslib::layout_columns(
     col_widths = 12,
     height = "100%",
-    row_heights = c(3,2),
+    row_heights = c(3, 2),
     bslib::card(
       full_screen = FALSE,
       bslib::card_body(
         bslib::layout_columns(
-          col_widths = c(3,9),
+          col_widths = c(3, 9),
           shiny::div(
             shiny::HTML("<h6>1. Choose phenotype:</h6>"),
             withTooltip(
@@ -25,7 +25,7 @@ upload_module_makecontrast_ui <- function(id) {
                 choices = "<samples>",
                 selected = "<samples>",
                 multiple = TRUE
-                ),
+              ),
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
             ),
@@ -38,7 +38,7 @@ upload_module_makecontrast_ui <- function(id) {
                   NULL,
                   width = "100%",
                   placeholder = "e.g. MAIN_vs_CONTROL"
-                  ),
+                ),
                 "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
                 placement = "left", options = list(container = "body")
               )
@@ -51,15 +51,15 @@ upload_module_makecontrast_ui <- function(id) {
                 shiny::actionButton(
                   ns("addcontrast"),
                   "add to list",
-                    icon = icon("plus"),
-                    class = "btn-sm btn-outline-primary",
-                    width = "48%"
-                  ),
-                  "Add this comparison to the list.",
-                  placement = "top", options = list(container = "body")
-                )
+                  icon = icon("plus"),
+                  class = "btn-sm btn-outline-primary",
+                  width = "48%"
+                ),
+                "Add this comparison to the list.",
+                placement = "top", options = list(container = "body")
               )
-            ),
+            )
+          ),
           shiny::div(
             style = "overflow: auto; margin-left: 30px;",
             shiny::HTML("<h6>2. Create comparison:</h6>"),
@@ -69,7 +69,7 @@ upload_module_makecontrast_ui <- function(id) {
               placement = "top", options = list(container = "body")
             )
           )
-        )  ## end of card-body
+        ) ## end of card-body
       )
     ),
     bslib::card(
@@ -83,27 +83,26 @@ upload_module_makecontrast_ui <- function(id) {
 }
 
 upload_module_makecontrast_server <- function(
-  id,
-  phenoRT,
-  contrRT,
-  countsRT,
-  upload_wizard,
-  show_comparison_builder,
-  autocontrast
-  ) {
+    id,
+    phenoRT,
+    contrRT,
+    countsRT,
+    upload_wizard,
+    show_comparison_builder,
+    autocontrast) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-      ##rv <- shiny::reactiveValues(contr = NULL)
+      ## rv <- shiny::reactiveValues(contr = NULL)
       rv_contr <- shiny::reactiveVal(NULL)
-      
+
       rv <- reactiveValues(
         condition_start = NULL,
         condition_group1 = NULL,
         condition_group2 = NULL
       )
-      
+
       shiny::observe({
         rv_contr(contrRT())
       })
@@ -120,30 +119,34 @@ upload_module_makecontrast_server <- function(
           rv$condition_group2 <- NULL
 
           if (length(cond) == 0 || is.null(cond)) {
-          return(NULL)
-        }
+            return(NULL)
+          }
 
-        items <- c("<others>", sort(unique(cond)))
+          items <- c("<others>", sort(unique(cond)))
 
-        rv$condition_start <- items
-
+          rv$condition_start <- items
         }
       )
 
 
-      observeEvent({
-        list(phenoRT(), upload_wizard(), show_comparison_builder())
-      }, {
-        req(upload_wizard() == "step_comparisons",
-            show_comparison_builder() == TRUE)
-        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-        phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-        psel <- c(grep("sample|patient|name|id|^[.]",
-                       phenotypes,
-                       value = TRUE, invert = TRUE
-                       ), phenotypes)[1]
-        updateSelectInput(session, "param", choices = phenotypes, selected = psel)
-      })
+      observeEvent(
+        {
+          list(phenoRT(), upload_wizard(), show_comparison_builder())
+        },
+        {
+          req(
+            upload_wizard() == "step_comparisons",
+            show_comparison_builder() == TRUE
+          )
+          phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
+          phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
+          psel <- c(grep("sample|patient|name|id|^[.]",
+            phenotypes,
+            value = TRUE, invert = TRUE
+          ), phenotypes)[1]
+          updateSelectInput(session, "param", choices = phenotypes, selected = psel)
+        }
+      )
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
@@ -205,10 +208,9 @@ upload_module_makecontrast_server <- function(
       }
 
       shiny::observeEvent(c(input$group1, input$group2), {
-        
         # make sure group1 and 2 are not NULL or ""
         req(input$group1, input$group2)
-        
+
         # update rv
         rv$condition_group1 <- input$group1
         rv$condition_group2 <- input$group2
@@ -240,14 +242,14 @@ upload_module_makecontrast_server <- function(
         if (g1 == "" && g2 == "") tt <- ""
         shiny::updateTextInput(session, "newname", value = tt)
       })
-      
+
       shiny::observeEvent(c(input$group1, input$group2), {
-        if( length(input$group1) && length(input$group2)) {
-          shinyjs::removeClass( id="addcontrast", class = "btn-outline-primary")
-          shinyjs::addClass( id="addcontrast", class = "btn-primary")          
+        if (length(input$group1) && length(input$group2)) {
+          shinyjs::removeClass(id = "addcontrast", class = "btn-outline-primary")
+          shinyjs::addClass(id = "addcontrast", class = "btn-primary")
         } else {
-          shinyjs::addClass( id="addcontrast", class = "btn-outline-primary")
-          shinyjs::removeClass( id="addcontrast", class = "btn-primary")          
+          shinyjs::addClass(id = "addcontrast", class = "btn-outline-primary")
+          shinyjs::removeClass(id = "addcontrast", class = "btn-primary")
         }
       })
 
@@ -258,9 +260,9 @@ upload_module_makecontrast_server <- function(
           return(NULL)
         }
         if (!is.null(rv_contr()) && NCOL(rv_contr()) <= 1) {
-          rv_contr( rv_contr()[, 0, drop = FALSE] )
+          rv_contr(rv_contr()[, 0, drop = FALSE])
         } else {
-          rv_contr( rv_contr()[, -id, drop = FALSE] )
+          rv_contr(rv_contr()[, -id, drop = FALSE])
         }
       })
 
@@ -307,9 +309,9 @@ upload_module_makecontrast_server <- function(
         samples <- colnames(countsRT())
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
         if (is.null(rv_contr())) {
-          rv_contr( ctx1 )
+          rv_contr(ctx1)
         } else {
-          rv_contr( cbind(rv_contr(), ctx1) )
+          rv_contr(cbind(rv_contr(), ctx1))
         }
         # reset text input
         shiny::updateTextInput(session, "newname", value = "")
@@ -335,9 +337,9 @@ upload_module_makecontrast_server <- function(
         ## update reactive value
         ctx2 <- playbase::contrastAsLabels(ctx)
         if (!is.null(rv_contr())) {
-          rv_contr( cbind(rv_contr(), ctx2) )
+          rv_contr(cbind(rv_contr(), ctx2))
         } else {
-          rv_contr( ctx2 )
+          rv_contr(ctx2)
         }
       })
 
@@ -428,7 +430,7 @@ upload_module_makecontrast_server <- function(
       )
 
       ## pointer to reactive
-      return( rv_contr )
+      return(rv_contr)
     } ## end-of-server
   )
 }

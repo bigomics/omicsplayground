@@ -55,21 +55,20 @@ LoadingBoard <- function(id,
     )
 
     output$sharing_alert <- renderUI({
-
       received_files <- pgxreceived$getReceivedFiles()
       shared_files <- pgxshared$getSharedFiles()
       num_received <- length(received_files)
       num_shared <- length(shared_files)
-      
+
       no_sharing1 <- !auth$options$ENABLE_USER_SHARE
-      no_sharing2 <- (num_received == 0 && num_shared == 0) 
+      no_sharing2 <- (num_received == 0 && num_shared == 0)
       no_sharing <- no_sharing1 || no_sharing2
-      
+
       if (no_sharing) {
         tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The <b>Signature t-SNE</b> shows similarity clustering of signatures using t-SNE. Select a dataset in the table and click the <b>Load selected</b> button below."))
         return(tag)
       }
-      
+
       ## If not show alerts for sharing
       msg <- c()
       if (num_received > 0) {
@@ -370,8 +369,8 @@ LoadingBoard <- function(id,
       }
     }
     observeEvent(input$newuploadbutton, {
-        new_upload(new_upload() + 1)
-      })
+      new_upload(new_upload() + 1)
+    })
 
     observeEvent(load_uploaded_data(), {
       upload_pgx <- sub("[.]pgx$", "", load_uploaded_data())

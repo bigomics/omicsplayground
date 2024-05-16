@@ -66,8 +66,7 @@ loading_table_datasets_server <- function(id,
                                           recompute_pgx,
                                           loadbutton,
                                           newuploadbutton,
-                                          new_upload
-                                          ) {
+                                          new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
