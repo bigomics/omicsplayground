@@ -1151,9 +1151,20 @@ LoginCodeAuthenticationModule <- function(id,
           if (!opt$ENABLE_USERDIR) {
             USER$user_dir <- file.path(PGX.DIR)
           }
+          # OPTIONS priority:
+            # 1. OPTIONS Database
+            # 2. User OPTIONS file (on its data directory)
+          # check if user is in options db
+          user_in_db <- check_user_options_db(USER$email, user_database)
           # set options
-          USER$options <- read_user_options_db(USER$email, user_database)
-
+          if (user_in_db){
+            dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
+            browser()
+            USER$options <- read_user_options_db(USER$email, user_database)
+          } else {
+            dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
+            USER$options <- read_user_options(USER$user_dir)
+          }
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user
           shiny::removeModal()
