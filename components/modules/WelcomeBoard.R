@@ -3,76 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-WelcomeBoard <- function(id, auth, load_example) {
-  moduleServer(id, function(input, output, session) {
-    ns <- session$ns ## NAMESPACE
-
-    output$welcome <- shiny::renderText({
-      shiny::req(auth$logged)
-      if (!auth$logged) {
-        return(NULL)
-      }
-
-      name <- auth$username
-      if (is.null(name) || name %in% c("", NA)) name <- auth$email
-      dbg("[WelcomeBoard] name = ", name)
-      if (is.null(name) || name %in% c("", NA)) {
-        welcome <- paste0("Welcome back...")
-      } else {
-        first.name <- getFirstName(name) ## in app/R/utils.R
-        welcome <- paste0("Welcome back ", first.name, "...")
-      }
-      dbg("[WelcomeBoard] welcome = ", welcome)
-      welcome
-    })
-
-    output$welcome2 <- shiny::renderText({
-      shiny::req(auth$logged)
-      if (!auth$logged) {
-        return(NULL)
-      }
-      all.hello <- c(
-        "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
-        "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
-        "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
-      )
-      hello1 <- sample(all.hello, 1)
-      paste0(hello1, "! What would you like to do today?")
-    })
-
-    observeEvent(input$btn_example_data, {
-      if (is.null(load_example())) {
-        load_example(1)
-      } else {
-        load_example(load_example() + 1)
-      }
-    })
-
-    observeEvent(input$btn_upload_data, {
-      shiny::req(auth$options)
-      enable_upload <- auth$options$ENABLE_UPLOAD
-      if (enable_upload) {
-        bigdash.openSidebar()
-        bigdash.selectTab(session, "upload-tab")
-      } else {
-        shinyalert::shinyalert(
-          title = "Upload disabled",
-          text = "Sorry, upload of new data is disabled for this account.",
-          type = "warning",
-          #
-          closeOnClickOutside = FALSE
-        )
-      }
-    })
-
-    observeEvent(input$btn_load_data, {
-      bigdash.openSettings(lock = TRUE)
-      bigdash.openSidebar()
-      bigdash.selectTab(session, "load-tab")
-    })
-  })
-}
-
 WelcomeBoardInputs <- function(id) {
   return(NULL)
 }
@@ -183,4 +113,77 @@ WelcomeBoardUI <- function(id) {
       contents = list(mission.page, motto.page, created.page, credits.page)
     )
   )
+}
+
+
+
+WelcomeBoard <- function(id, auth, load_example, new_upload) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns ## NAMESPACE
+
+    bigdash.unloadSidebar()
+
+    output$welcome <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+
+      name <- auth$username
+      if (is.null(name) || name %in% c("", NA)) name <- auth$email
+      dbg("[WelcomeBoard] name = ", name)
+      if (is.null(name) || name %in% c("", NA)) {
+        welcome <- paste0("Welcome back...")
+      } else {
+        first.name <- getFirstName(name) ## in app/R/utils.R
+        welcome <- paste0("Welcome back ", first.name, "...")
+      }
+      dbg("[WelcomeBoard] welcome = ", welcome)
+      welcome
+    })
+
+    output$welcome2 <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+      all.hello <- c(
+        "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
+        "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
+        "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
+      )
+      hello1 <- sample(all.hello, 1)
+      paste0(hello1, "! What would you like to do today?")
+    })
+
+    observeEvent(input$btn_example_data, {
+      if (is.null(load_example())) {
+        load_example(1)
+      } else {
+        load_example(load_example() + 1)
+      }
+    })
+
+    observeEvent(input$btn_upload_data, {
+      shiny::req(auth$options)
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      if (enable_upload) {
+        new_upload(new_upload() + 1)
+      } else {
+        shinyalert::shinyalert(
+          title = "Upload disabled",
+          text = "Sorry, upload of new data is disabled for this account.",
+          type = "warning",
+          #
+          closeOnClickOutside = FALSE
+        )
+      }
+    })
+
+    observeEvent(input$btn_load_data, {
+      bigdash.openSettings(lock = TRUE)
+      bigdash.openSidebar()
+      bigdash.selectTab(session, "load-tab")
+    })
+  })
 }

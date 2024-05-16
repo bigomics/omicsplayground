@@ -48,13 +48,6 @@ loading_table_datasets_ui <- function(
         label = "",
         icon = NULL,
         width = "0%"
-      ),
-      shiny::actionButton(
-        ns("loadbutton"),
-        label = "Load dataset",
-        icon = icon("file-import"),
-        class = "btn btn-primary",
-        width = NULL
       )
     ) ## end of buttons div
   )
@@ -70,12 +63,14 @@ loading_table_datasets_server <- function(id,
                                           refresh_shared,
                                           reload_pgxdir_public,
                                           reload_pgxdir,
-                                          recompute_pgx) {
+                                          recompute_pgx,
+                                          loadbutton,
+                                          newuploadbutton,
+                                          new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     share_pgx <- reactiveVal(NULL)
-
 
     getPGXINFO <- shiny::reactive({
       shiny::req(auth$logged)
@@ -233,7 +228,7 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    shiny::observeEvent(input$loadbutton, {
+    shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
       pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
@@ -495,20 +490,6 @@ loading_table_datasets_server <- function(id,
       pgx_name
     })
 
-    ## =========================== BUTTON ACTIONS =============================
-    ## disable button if no row is selected
-    observeEvent(table_module$rows_selected(),
-      {
-        shiny::req(table_module)
-        if (is.null(table_module$rows_selected())) {
-          shinyjs::disable(id = "loadbutton")
-        } else {
-          shinyjs::enable(id = "loadbutton")
-        }
-      },
-      ignoreNULL = FALSE
-    )
-
     ## ----------------- Download ZIP -----------------------
     observeEvent(input$download_zip,
       {
@@ -579,9 +560,10 @@ loading_table_datasets_server <- function(id,
             load_uploaded_data <- shiny::reactiveVal(NULL)
             reload_pgxdir <- shiny::reactiveVal(0)
             recompute_pgx(pgx)
+            new_upload(new_upload() + 1)
 
-            bigdash.selectTab(session, "upload-tab")
-            shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
+            # bigdash.selectTab(session, "upload-tab")
+            # shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
 
             return(0)
           } else {

@@ -12,6 +12,9 @@
 
 FROM bigomics/omicsplayground-base:ub2204_v3
 
+ARG BRANCH=master
+RUN echo "Building Docker image from branch $BRANCH"
+
 #------------------------------------------------------------
 # Install any extra (forgotten...) Ubuntu libs
 #------------------------------------------------------------
@@ -33,10 +36,17 @@ COPY docker/Rprofile .Rprofile
 # Install supporting bigomics stuff (as R packages)
 #------------------------------------------------------------
 
+
+# This can be removed once new base is built
+RUN R -e "remotes::install_github('cran/Matrix', ref = '2b05c7bd06c47eeb5939180938513da91d94b01b')"
+RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
+
 WORKDIR /
 ##RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
+RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"
+RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE, force=TRUE)"
 
 # NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
 
@@ -44,15 +54,18 @@ RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "install.packages('shinybrowser')"
 RUN R -e "install.packages('sf')"
 
+# This can be removed once new base is built
+RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
+RUN R -e "BiocManager::install('orthogene')"
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
 WORKDIR /
-ARG BRANCH=master
 RUN echo Downloading $BRANCH branch
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-       https://github.com/bigomics/omicsplayground.git \   
+    https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------

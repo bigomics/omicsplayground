@@ -12,6 +12,17 @@ enrichment_plot_volcano_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("color_up_down"),
+        label = "Color up/down regulated",
+        value = TRUE
+      ),
+      "Color up/down regulated features.",
+      placement = "left", options = list(container = "body")
+    )
+  )
 
   PlotModuleUI(
     ns("plot"),
@@ -23,6 +34,7 @@ enrichment_plot_volcano_ui <- function(
     caption = caption,
     plotlib = "plotly",
     plotlib2 = "plotly",
+    options = plot_opts,
     download.fmt = c("png", "pdf")
   )
 }
@@ -35,6 +47,7 @@ enrichment_plot_volcano_server <- function(id,
                                            gs_fdr,
                                            gs_lfc,
                                            subplot.MAR,
+                                           geneDetails,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     volcano.RENDER <- shiny::reactive({
@@ -42,6 +55,7 @@ enrichment_plot_volcano_server <- function(id,
       par(mar = subplot.MAR)
 
       shiny::req(pgx$X)
+      shiny::validate(shiny::need(!is.null(gset_selected()), "Please select a geneset."))
 
       comp <- 1
       gs <- 1
@@ -57,15 +71,8 @@ enrichment_plot_volcano_server <- function(id,
       gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
 
-      gs <- gset_selected()
-      if (is.null(gs) || length(gs) == 0) {
-        frame()
-        text(0.5, 0.5, "Please select a geneset", col = "grey50")
-        return()
-      }
-      gs <- gs[1]
+      gset <- geneDetails()$feature
 
-      gset <- playdata::getGSETS(gs)[[1]]
       jj <- match(toupper(gset), toupper(limma$gene_name))
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 
@@ -98,7 +105,8 @@ enrichment_plot_volcano_server <- function(id,
         ylab = "Significance (-log10q)",
         marker.size = 3,
         displayModeBar = FALSE,
-        showlegend = FALSE
+        showlegend = FALSE,
+        color_up_down = input$color_up_down
       ) %>%
         plotly::layout(margin = list(b = 60))
     })
