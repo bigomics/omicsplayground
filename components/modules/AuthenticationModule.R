@@ -1029,6 +1029,8 @@ LoginCodeAuthenticationModule <- function(id,
 
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
+      query_email_nonce <- shiny::getQueryString()$email_nonce
+      query_email <- decrypt_email(query_email, query_email_nonce)
       query_email
     })
 
@@ -1041,7 +1043,7 @@ LoginCodeAuthenticationModule <- function(id,
         } else {
           login_email <- query_email()
         }
-
+        shiny::updateQueryString("?")
         if (email_sent) {
           info("[LoginCodeAuthenticationModule] email already sent. waiting for code.")
         } else {
