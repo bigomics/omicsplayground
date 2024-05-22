@@ -348,4 +348,3 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
     }
   }
 }
-

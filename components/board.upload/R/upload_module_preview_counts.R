@@ -247,9 +247,9 @@ upload_table_preview_counts_server <- function(
 
 
 
-##--------------------------------------------------------------------------
+## --------------------------------------------------------------------------
 ## convert list of checks to html tags for display in the data preview modal
-##--------------------------------------------------------------------------
+## --------------------------------------------------------------------------
 
 check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
   error_list <- playbase::PGX_CHECKS
