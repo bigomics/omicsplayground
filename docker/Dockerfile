@@ -57,7 +57,12 @@ RUN R -e "install.packages('sf')"
 # This can be removed once new base is built
 RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
 RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
+RUN R -e "remotes::install_github('cran/Matrix', ref = '23d9d53')"
 RUN R -e "BiocManager::install('orthogene')"
+RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
+RUN R -e "remotes::install_version('SeuratObject', '4.1.4', repos = c('https://satijalab.r-universe.dev', getOption('repos')))"
+RUN R -e "remotes::install_version('Seurat', '4.4.0', repos = c('https://satijalab.r-universe.dev', getOption('repos')))"
+
 #------------------------------------------------------------
 # Download fresh code from GitHub (not an R package)
 #------------------------------------------------------------
