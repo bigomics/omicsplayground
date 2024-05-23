@@ -36,7 +36,7 @@ expression_plot_maplot_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     caption = caption,
-    options = NULL,
+    options = options,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
