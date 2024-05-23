@@ -22,7 +22,7 @@ ui.startupModal <- function(id, messages, title = NULL) {
           header[[i]], "</h4>", messages2[[i]], "</div>"
         ))
       ),
-      class = "p-4"
+      class = "p-2"
     )
     carousel_items[[i]] <- tag1
   }
@@ -34,7 +34,7 @@ ui.startupModal <- function(id, messages, title = NULL) {
     bsutils::modalHeader(
       ## bsutils::modalTitle(title),
       bsutils::modalTitle(""),
-      style = "background-color: #f0f9fd; margin-bottom: -10px;"
+      style = "background-color: #f0f9fd; margin-bottom: 0px;"
     ),
     do.call(
       function(...) {
