@@ -20,7 +20,7 @@ check_user_options_db <- function(email, user_database = NULL) {
   }
   connection <- connect_db(user_database)
   user_opt <- query_by_email(email, connection)
-  if(is.null(user_opt)) {
+  if (is.null(user_opt)) {
     return(FALSE) # user NOT in db
   } else {
     return(TRUE) # user IN db
@@ -248,13 +248,13 @@ checkExpiredUser <- function(email, user_database) {
   connection <- connect_db(user_database)
   # connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
   query_result <- DBI::dbGetQuery(connection, paste0("
-    SELECT expiry 
-    FROM users 
+    SELECT expiry
+    FROM users
     WHERE email = '", email, "'
   "))
   # DBI::dbDisconnect(connection)
   disconnect_db(connection)
-  if(nrow(query_result) == 0) {
+  if (nrow(query_result) == 0) {
     return(TRUE)
   } else {
     valid_date <- as.Date(query_result[1, 1]) > as.Date(Sys.time())
