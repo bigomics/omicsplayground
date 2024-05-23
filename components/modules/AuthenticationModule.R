@@ -1030,8 +1030,12 @@ LoginCodeAuthenticationModule <- function(id,
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
       query_email_nonce <- shiny::getQueryString()$email_nonce
-      query_email <- decrypt_email(query_email, query_email_nonce)
-      query_email
+      if (!is.null(query_email) && is.null(query_email_nonce)) { # Back comp, if just email and not nonce (not encrypted) do not try to decrypt it
+        return(query_email)
+      } else {
+        query_email <- decrypt_email(query_email, query_email_nonce)
+        return(query_email)
+      }
     })
 
     shiny::observeEvent(
