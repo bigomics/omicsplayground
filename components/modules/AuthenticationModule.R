@@ -826,8 +826,8 @@ PasswordAuthenticationModule <- function(id,
 LoginCodeAuthenticationModule <- function(id,
                                           mail_creds,
                                           domain = NULL,
+                                          user_database = NULL,
                                           blocked_domain = NULL,
-                                          credentials_file = NULL,
                                           allow_personal = TRUE,
                                           allow_new_users = TRUE,
                                           redirect_login = FALSE) {
@@ -845,7 +845,7 @@ LoginCodeAuthenticationModule <- function(id,
       ## we continue but email is not working
       warning("[LoginCodeAuthenticationModule] ERROR : missing mail_creds file!!!")
     }
-    if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
+    # if (!is.null(credentials_file) && credentials_file == FALSE) credentials_file <- NULL
 
     USER <- shiny::reactiveValues(
       method = "login-code",
@@ -925,7 +925,7 @@ LoginCodeAuthenticationModule <- function(id,
         email = user_email,
         domain = domain,
         blocked_domain = blocked_domain,
-        credentials_file = credentials_file,
+        user_database = user_database,
         check.personal = !allow_personal,
         check.existing = !allow_new_users
       )
@@ -1053,8 +1053,8 @@ LoginCodeAuthenticationModule <- function(id,
           check <- checkEmail(
             email = login_email,
             domain = domain,
+            user_database = user_database,
             blocked_domain = blocked_domain,
-            credentials_file = credentials_file,
             check.personal = !allow_personal,
             check.existing = !allow_new_users
           )
@@ -1126,45 +1126,54 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     shiny::observeEvent(entered_code(), {
       shiny::req(entered_code())
-      if (!email_sent) {
-        return(NULL)
-      }
 
-      ## input_code <- input$login_password
-      input_code <- entered_code()
-      login.OK <- (input_code == login_code)
+      if (email_sent) {
+        input_code <- entered_code()
+        login.OK <- (input_code == login_code)
 
-      if (!login.OK) {
-        dbg("[LoginCodeAuthenticationModule] invalid code")
-        output$login2_warning <- shiny::renderText("invalid code")
-        entered_code("")
-        shinyjs::delay(4000, {
-          output$login2_warning <- shiny::renderText("")
-        })
-        updateTextInput(session, "login2_password", value = "")
-        return(NULL)
-      }
-
-      if (login.OK) {
-        output$login_warning <- shiny::renderText("")
-
-        ## create user_dir (always), set path, and set options
-        USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          USER$user_dir <- file.path(PGX.DIR)
+        if (!login.OK) {
+          dbg("[LoginCodeAuthenticationModule] invalid code")
+          output$login2_warning <- shiny::renderText("invalid code")
+          entered_code("")
+          shinyjs::delay(4000, {
+            output$login2_warning <- shiny::renderText("")
+          })
+          updateTextInput(session, "login2_password", value = "")
+          return(NULL)
         }
-        USER$options <- read_user_options(USER$user_dir)
 
-        session$sendCustomMessage("set-user", list(user = USER$email))
-        entered_code("") ## important for next user
-        shiny::removeModal()
+        if (login.OK) {
+          output$login_warning <- shiny::renderText("")
 
-        USER$logged <- TRUE
-        email_sent <<- FALSE
+          # create user_dir (always), set path, and set options
+          USER$user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+          if (!opt$ENABLE_USERDIR) {
+            USER$user_dir <- file.path(PGX.DIR)
+          }
+          # OPTIONS priority:
+            # 1. OPTIONS Database
+            # 2. User OPTIONS file (on its data directory)
+          # check if user is in options db
+          user_in_db <- check_user_options_db(USER$email, user_database)
+          # set options
+          if (user_in_db){
+            dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
+            USER$options <- read_user_options_db(USER$email, user_database)
+          } else {
+            dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
+            USER$options <- read_user_options(USER$user_dir)
+          }
+          session$sendCustomMessage("set-user", list(user = USER$email))
+          entered_code("") ## important for next user
+          shiny::removeModal()
 
-        ## Save session as cookie
-        save_session_cookie(session, USER)
+          USER$logged <- TRUE
+          email_sent <<- FALSE
+
+          ## Save session as cookie
+          save_session_cookie(session, USER)
+        }
       }
     })
 
