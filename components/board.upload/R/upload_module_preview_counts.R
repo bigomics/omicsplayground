@@ -157,8 +157,8 @@ upload_table_preview_counts_server <- function(
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
-
-      if (!grepl("csv", input$counts_csv$name, ignore.case = TRUE)) {
+      ext <- tools::file_ext(input$counts_csv$name)[1]
+      if (ext != "csv") {
         shinyalert::shinyalert(
           title = "File format not supported.",
           text = "Please make sure the file is a CSV file.",
