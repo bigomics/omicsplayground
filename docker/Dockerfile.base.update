@@ -27,7 +27,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN echo "Step 1: Install supporing libraries"
 
 # This can be removed once new base is built
-RUN R -e "remotes::install_github('cran/Matrix', ref = '2b05c7bd06c47eeb5939180938513da91d94b01b')"
+RUN R -e "remotes::install_version('Matrix', version = '1.6.3')"
 RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
 
 # NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
