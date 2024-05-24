@@ -35,7 +35,7 @@ COPY docker/Rprofile .Rprofile
 #------------------------------------------------------------
 # Install supporing libraries
 #------------------------------------------------------------
-RUN R -e "remotes::install_version('Matrix', version = '1.6.3')"
+RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
 
 WORKDIR /
 
