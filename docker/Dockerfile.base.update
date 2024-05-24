@@ -3,100 +3,63 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-FROM ubuntu:22.04 AS os-base
-##FROM ubuntu:20.10
-##FROM ubuntu:20.04
+## Start from base image, update git code and add data
+## folder. Create docker ready to be deployed.
 
-MAINTAINER Ivo Kwee "kwee@bigomics.ch"
+#------------------------------------------------------------
+# Start from lastest base image
+#------------------------------------------------------------
 
-# =====================================================================
-# Creates base docker image for Omics Playground. Generally not for
-# direct deployment but as base image for further build. Install
-# necessary Debian packages and R packages 
-# =====================================================================
+FROM bigomics/omicsplayground-base:ub2204_v3
 
+ARG BRANCH=master
+RUN echo "Building Docker image from branch $BRANCH"
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) Ubuntu libs
+#------------------------------------------------------------
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && apt install -y \
-    locales apt-utils software-properties-common \
-    libcurl4-gnutls-dev libnode-dev libv8-dev \
-    libssl-dev libxml2-dev libjpeg-dev \
-    libgl-dev libglu-dev tk-dev libhdf5-dev \
-    libgit2-dev libssh2-1-dev libnetcdf-dev \
-    libudunits2-dev libgdal-dev libbz2-dev \
-    jags emacs git procps htop \
-    python3 python3-pip python-is-python3 \
-    pdftk vim-tiny less wget gdebi-core \
-    pandoc pandoc-citeproc imagemagick \ 
-    libcairo2-dev libxt-dev xvfb \
-    libfftw3-dev libglpk-dev librsvg2-dev \
-    libgsl-dev librsvg2-dev libgsl-dev curl \
-    libsodium-dev
-
-# Install Chrome
-RUN apt-get update && apt-get install -y wget gnupg2
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-RUN apt-get update && apt-get install -y google-chrome-stable
-
-# Set the locale to UTF8
+#RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+# Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
-# Install basic stuff and R
-RUN apt install -y r-base r-base-dev r-recommended
-
 #------------------------------------------------------------
-# Install R packages that are required
+# Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
-FROM os-base AS r-base1
 WORKDIR /
+COPY docker/Rprofile .Rprofile
+#RUN pip3 install umap-learn
 
-RUN R -e "install.packages('remotes')"
+#------------------------------------------------------------
+# Install supporing libraries
+#------------------------------------------------------------
 
+RUN echo "Step 1: Install supporing libraries"
 
-## Omicsplayground (partial install): this installs only the needed
-## packages. The complete installation of OPG is done in the final
-## Dockerfile.
-RUN rm -fr /omicsplayground && mkdir -p /omicsplayground
-WORKDIR /omicsplayground
-COPY components /omicsplayground/components
-COPY dev /omicsplayground/dev
-RUN Rscript dev/requirements.R
+# This can be removed once new base is built
+RUN R -e "remotes::install_github('cran/Matrix', ref = '2b05c7bd06c47eeb5939180938513da91d94b01b')"
+RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
 
-## add any missing packages manually------------------------
-FROM r-base1 AS r-base2
-#RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
-#RUN R -e "install.packages(c('RSpectra'))"
+# NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
+RUN echo "Step 2: Install supporing libraries"
 
-## playbase -------------------------------
-RUN echo Downloading Playbase
-RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
+# sf also added in requirements (check before removing!)
+RUN R -e "install.packages('shinybrowser')"
+RUN R -e "install.packages('sf')"
+RUN echo "Step 3: Install supporting bigomics  (as R packages)"
 
-# INSTALL packages that require specific versions
+# This can be removed once new base is built
 RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
 RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
-RUN R -e "remotes::install_github('cran/Matrix', ref = '23d9d53')"
-RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', repos = NULL, type = 'source')"
 RUN R -e "BiocManager::install('orthogene', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
-RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
-RUN R -e "remotes::install_version('SeuratObject', '4.1.4', repos = c('https://satijalab.r-universe.dev', getOption('repos')))"
-RUN R -e "remotes::install_version('Seurat', '4.4.0', repos = c('https://satijalab.r-universe.dev', getOption('repos')))"
+RUN echo "Step 4: Install supporing libraries"
+RUN R -e "install.packages(c('spatstat.utils', 'spatstat.data', 'spatstat.core'), repos = 'https://spatstat.r-universe.dev', dependencies=FALSE)"
+RUN R -e "remotes::install_version('rgeos', version = '0.6-4')"
+RUN R -e "remotes::install_version('SeuratObject', '4.1.4', repos = c('https://satijalab.r-universe.dev', getOption('repos')), dependencies=FALSE)"
+RUN R -e "remotes::install_version('Seurat', '4.1.0', repos = c('https://satijalab.r-universe.dev', getOption('repos')), dependencies=FALSE)"
 RUN R -e "BiocManager::install('org.Rn.eg.db', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
 RUN R -e "BiocManager::install('AnnotationHub',dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
-RUN R -e "devtools::install_version('dbplyr', version = '2.3.4')"
-
-
-## playdata: perhaps not needed because playbase already states
-## playdata as dependency in DESCRIPTION file.
-RUN git clone -b main --single-branch --depth 1 \
-    https://github.com/bigomics/playdata.git \
-    && R CMD INSTALL playdata \
-    && rm -fr playdata
-
-#------------------------------------------------------------
-# Clean up when done.
-#------------------------------------------------------------
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN chmod ugo+rwX /tmp && chmod o+t /tmp
-
+RUN R -e "devtools::install_version('dbplyr', version = '2.3.4', dependencies=FALSE)"
+RUN echo "Step 5: Finished Install supporing libraries"
