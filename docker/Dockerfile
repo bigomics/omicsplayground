@@ -10,7 +10,7 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204_v3
+FROM bigomics/omicsplayground-base:ub2204_v4
 
 ARG BRANCH=master
 RUN echo "Building Docker image from branch $BRANCH"
@@ -36,36 +36,9 @@ COPY docker/Rprofile .Rprofile
 # Install supporing libraries
 #------------------------------------------------------------
 
-RUN echo "Step 1: Install supporing libraries"
-
-# This can be removed once new base is built
-RUN R -e "remotes::install_github('cran/Matrix', ref = '2b05c7bd06c47eeb5939180938513da91d94b01b')"
-RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
-
-# NEW INSTALLS THAT ARE BOTH IN OPG-BASE (can be removed when base v4 is built)
-RUN echo "Step 2: Install supporing libraries"
-
-# sf also added in requirements (check before removing!)
-RUN R -e "install.packages('shinybrowser')"
-RUN R -e "install.packages('sf')"
-RUN echo "Step 3: Install supporting bigomics  (as R packages)"
-
-# This can be removed once new base is built
-RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
-RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
-RUN R -e "BiocManager::install('orthogene', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
-RUN echo "Step 4: Install supporing libraries"
-RUN R -e "install.packages(c('spatstat.utils', 'spatstat.data', 'spatstat.core'), repos = 'https://spatstat.r-universe.dev', dependencies=FALSE)"
-RUN R -e "remotes::install_version('rgeos', version = '0.6-4')"
-RUN R -e "remotes::install_version('SeuratObject', '4.1.4', repos = c('https://satijalab.r-universe.dev', getOption('repos')), dependencies=FALSE)"
-RUN R -e "remotes::install_version('Seurat', '4.1.0', repos = c('https://satijalab.r-universe.dev', getOption('repos')), dependencies=FALSE)"
-RUN R -e "BiocManager::install('org.Rn.eg.db', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
-RUN R -e "BiocManager::install('AnnotationHub',dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
-RUN R -e "devtools::install_version('dbplyr', version = '2.3.4', dependencies=FALSE)"
-RUN echo "Step 5: Install supporing libraries"
-
 
 WORKDIR /
+
 ##RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
