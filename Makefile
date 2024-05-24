@@ -62,6 +62,13 @@ docker.base2: FORCE
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
+docker.base.update: FORCE 
+	@echo building docker $(BRANCH)
+	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+		-f docker/Dockerfile.base.update \
+	  	-t bigomics/omicsplayground.base.update:$(BRANCH) .
+
+
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
