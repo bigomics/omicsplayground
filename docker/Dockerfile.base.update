@@ -20,18 +20,6 @@ RUN echo "Building Docker image from branch $BRANCH"
 #------------------------------------------------------------
 ENV DEBIAN_FRONTEND noninteractive
 
-#RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-# Set the locale (uncomment UTF8)
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
-
-#------------------------------------------------------------
-# Install any extra (forgotten...) R packages since base
-#------------------------------------------------------------
-WORKDIR /
-COPY docker/Rprofile .Rprofile
-#RUN pip3 install umap-learn
-
 #------------------------------------------------------------
 # Install supporing libraries
 #------------------------------------------------------------
@@ -50,16 +38,19 @@ RUN R -e "install.packages('shinybrowser')"
 RUN R -e "install.packages('sf')"
 RUN echo "Step 3: Install supporting bigomics  (as R packages)"
 
-# This can be removed once new base is built
+# This can be removed once new base is built 
 RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
-RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
-RUN R -e "BiocManager::install('orthogene', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
 RUN echo "Step 4: Install supporing libraries"
 RUN R -e "install.packages(c('spatstat.utils', 'spatstat.data', 'spatstat.core'), repos = 'https://spatstat.r-universe.dev', dependencies=FALSE)"
 RUN R -e "remotes::install_version('rgeos', version = '0.6-4')"
 RUN R -e "remotes::install_version('SeuratObject', '4.1.4', repos = c('https://satijalab.r-universe.dev', getOption('repos')), dependencies=FALSE)"
 RUN R -e "remotes::install_version('Seurat', '4.1.0', repos = c('https://satijalab.r-universe.dev', getOption('repos')), dependencies=FALSE)"
+RUN echo "Step 4.5: Install supporing libraries"
 RUN R -e "BiocManager::install('org.Rn.eg.db', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
 RUN R -e "BiocManager::install('AnnotationHub',dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
 RUN R -e "devtools::install_version('dbplyr', version = '2.3.4', dependencies=FALSE)"
 RUN echo "Step 5: Finished Install supporing libraries"
+RUN R -e "install.packages('grr', dependencies=FALSE)" 
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
+RUN R -e "BiocManager::install('orthogene', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
+RUN echo "Step 6: Finished Install supporing libraries"
