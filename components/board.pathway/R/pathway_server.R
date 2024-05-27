@@ -119,19 +119,15 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       colnames(score2) <- paste0(colnames(score2), " ")
 
       if (rotate) score2 <- t(score2)
-
-      par(mfrow = c(1, 1), mar = c(1, 1, 10, 1), oma = c(0, 1.5, 0, 0.5))
-
-      corrplot::corrplot(
-        score2,
-        is.corr = FALSE,
-        cl.pos = "n",
-        col = playdata::BLUERED(100),
-        tl.cex = 1.0 * tl.cex,
-        tl.col = "grey20",
-        tl.srt = 90,
-        mar = c(0, 0, 0.5, 0)
+      bluered.pal <- colorRamp(colors = c("royalblue3", "white", "indianred3"))
+      x_axis <- colnames(score2)
+      y_axis <- rownames(score2)
+      fig <- plotly::plot_ly(
+          x = x_axis, y = y_axis,
+          z = score2, type = "heatmap",
+          colors = bluered.pal
       )
+      return(fig)
     }
 
 

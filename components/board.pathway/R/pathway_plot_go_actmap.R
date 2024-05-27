@@ -51,7 +51,7 @@ functional_plot_go_actmap_ui <- function(
     title = title,
     label = label,
     caption = caption,
-    plotlib = "base",
+    plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
     height = height,
@@ -139,16 +139,15 @@ functional_plot_go_actmap_server <- function(id,
 
         if (rotate) score <- t(score)
 
-        corrplot::corrplot(
-          score,
-          is.corr = FALSE,
-          cl.pos = "n",
-          col = playdata::BLUERED(100),
-          tl.cex = tl.cex,
-          tl.col = "grey20",
-          tl.srt = 90,
-          mar = c(0, 0, 0, 0)
+        bluered.pal <- colorRamp(colors = c("royalblue3", "white", "indianred3"))
+        x_axis <- colnames(score)
+        y_axis <- rownames(score)
+        fig <- plotly::plot_ly(
+            x = x_axis, y = y_axis,
+            z = score, type = "heatmap",
+            colors = bluered.pal
         )
+        return(fig)
       }
 
       plot_data <- shiny::reactive({
@@ -201,7 +200,7 @@ functional_plot_go_actmap_server <- function(id,
 
       PlotModuleServer(
         "plot",
-        plotlib = "base",
+        plotlib = "plotly",
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
