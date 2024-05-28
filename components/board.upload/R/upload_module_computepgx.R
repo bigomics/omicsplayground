@@ -380,8 +380,10 @@ upload_module_computepgx_server <- function(
       observeEvent(auth$options$ENABLE_ANNOT, {
         species_table <- playbase::SPECIES_TABLE
 
-        # keep only ensembl
-        species_table <- species_table[species_table$mart == "ensembl", ]
+        ## keep only ensembl (OLD, PLEASE REMOVE!)
+        if("mart" %in% colnames(species_table)) {
+          species_table <- species_table[species_table$mart == "ensembl", ]
+        }
 
         # remove no organism
         if (!auth$options$ENABLE_ANNOT) {
