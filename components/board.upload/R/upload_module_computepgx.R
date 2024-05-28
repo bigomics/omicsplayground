@@ -381,7 +381,7 @@ upload_module_computepgx_server <- function(
         species_table <- playbase::SPECIES_TABLE
 
         ## keep only ensembl (OLD, PLEASE REMOVE!)
-        if("mart" %in% colnames(species_table)) {
+        if ("mart" %in% colnames(species_table)) {
           species_table <- species_table[species_table$mart == "ensembl", ]
         }
 
