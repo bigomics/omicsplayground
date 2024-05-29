@@ -219,7 +219,6 @@ app_ui <- function(x) {
             height = "30"
             # width = "110",
           ),
-          left = NULL,
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
