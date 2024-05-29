@@ -73,6 +73,20 @@ FROM r-base1 AS r-base2
 RUN echo Downloading Playbase
 RUN R -e "remotes::install_github('bigomics/playbase',dependencies=TRUE)"
 
+# INSTALL packages that require specific versions
+RUN R -e "remotes::install_version('matrixStats',version='1.1.0',force=TRUE)"
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', type = 'source', repos = NULL)"
+RUN R -e "remotes::install_github('cran/Matrix', ref = '23d9d53')"
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz', repos = NULL, type = 'source')"
+RUN R -e "BiocManager::install('orthogene', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
+RUN R -e "install.packages('plsRcox', dependencies = FALSE)"
+RUN R -e "remotes::install_version('SeuratObject', '4.1.4', repos = c('https://satijalab.r-universe.dev', getOption('repos')))"
+RUN R -e "remotes::install_version('Seurat', '4.4.0', repos = c('https://satijalab.r-universe.dev', getOption('repos')))"
+RUN R -e "BiocManager::install('org.Rn.eg.db', dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
+RUN R -e "BiocManager::install('AnnotationHub',dependencies = NA, force = FALSE, ask = FALSE, update = FALSE)"
+RUN R -e "devtools::install_version('dbplyr', version = '2.3.4')"
+
+
 ## playdata: perhaps not needed because playbase already states
 ## playdata as dependency in DESCRIPTION file.
 RUN git clone -b main --single-branch --depth 1 \

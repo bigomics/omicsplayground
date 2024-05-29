@@ -21,18 +21,24 @@ expression_plot_volcano_ui <- function(id,
                                        height,
                                        width) {
   ns <- shiny::NS(id)
-  options <- tagList(
-    actionButton(ns("button1"), "some action")
+  plot_opts <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("color_up_down"),
+        label = "Color up/down regulated",
+        value = TRUE
+      ),
+      "Color up/down regulated features.",
+      placement = "left", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(
     ns("pltmod"),
     label = label,
     plotlib = "plotly",
-    #
-    #
     info.text = info.text,
-    options = NULL,
+    options = plot_opts,
     title = title,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
@@ -172,7 +178,8 @@ expression_plot_volcano_server <- function(id,
         xlab = "effect size (log2FC)",
         ylab = "significance (-log10q)",
         marker.size = 3,
-        showlegend = FALSE
+        showlegend = FALSE,
+        color_up_down = input$color_up_down
       )
       plt
     }

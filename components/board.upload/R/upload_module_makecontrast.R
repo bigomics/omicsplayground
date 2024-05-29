@@ -3,131 +3,148 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
 
-  tagList(
-    bslib::layout_columns(
-      col_widths = c(8, 4),
-      height = "50%",
-      bslib::card(
-        full_screen = TRUE,
-        style = "border-width: 1px;",
-        bslib::card_body(
-          shiny::fillRow(
-            style = "gap: 10px; height: 75px !important;",
-            flex = c(NA, NA, NA, NA, 1),
-            shiny::div(
-              shiny::HTML("<b>Phenotype:</b>"),
-              withTooltip(
-                shiny::selectInput(
-                  ns("param"),
-                  NULL,
-                  width = "250px",
-                  choices = NULL,
-                  selected = NULL,
-                  multiple = TRUE
-                ),
-                "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
-                placement = "left", options = list(container = "body")
-              )
+  bslib::layout_columns(
+    col_widths = 12,
+    height = "100%",
+    row_heights = c(3, 2),
+    bslib::card(
+      full_screen = FALSE,
+      bslib::card_body(
+        bslib::layout_columns(
+          col_widths = c(3, 9),
+          shiny::div(
+            shiny::HTML("<h6>1. Choose phenotype:</h6>"),
+            withTooltip(
+              shiny::selectInput(
+                inputId = ns("param"),
+                NULL,
+                width = "100%",
+                choices = "<samples>",
+                selected = "<samples>",
+                multiple = TRUE
+              ),
+              "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
+              placement = "left", options = list(container = "body")
             ),
+            br(),
             shiny::div(
-              shiny::HTML("<b>Comparison name:</b>"),
+              shiny::HTML("<h6>3. Comparison name:</h6>"),
               withTooltip(
-                shiny::textInput(ns("newname"),
+                shiny::textInput(
+                  ns("newname"),
                   NULL,
-                  width = "250px",
+                  width = "100%",
                   placeholder = "e.g. MAIN_vs_CONTROL"
                 ),
                 "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
                 placement = "left", options = list(container = "body")
               )
             ),
+            br(),
+            shiny::HTML("<h6>4. Add my comparison:</h6>"),
             shiny::div(
-              style = "padding-top: 20px; height: 35px;",
+              style = "padding-top: 5px;",
               withTooltip(
-                shiny::actionButton(ns("addcontrast"),
-                  "add comparison",
+                shiny::actionButton(
+                  ns("addcontrast"),
+                  "add to list",
                   icon = icon("plus"),
-                  class = "btn-outline-primary"
+                  class = "btn-sm btn-outline-primary",
+                  width = "48%"
                 ),
-                "Add this comparison to the table.",
+                "Add this comparison to the list.",
                 placement = "top", options = list(container = "body")
               )
-            ),
-            shiny::div(
-              style = "padding-top: 20px; height: 35px;",
-              withTooltip(
-                shiny::actionButton(ns("autocontrast"),
-                  "auto-contrasts",
-                  icon = icon("plus"),
-                  class = "small-button btn-outline-secondary"
-                ),
-                "If you are feeling lucky, try this to automatically create comparisons.",
-                placement = "top", options = list(container = "body")
-              )
-            ),
-            br() ## spacer
+            )
           ),
           shiny::div(
-            style = "overflow: auto;",
+            style = "overflow: auto; margin-left: 30px;",
+            shiny::HTML("<h6>2. Create comparison:</h6>"),
             withTooltip(
-              shiny::uiOutput(ns("createcomparison"),
-                style = "font-size:13px;"
-              ),
+              shiny::uiOutput(ns("createcomparison"), style = "font-size:13px;"),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
               placement = "top", options = list(container = "body")
             )
           )
-        )
-      ),
-      upload_plot_pcaplot_ui(
-        ns("pcaplot"),
-        title = "PCA/tSNE plot",
-        info.text = "",
-        caption = "",
-        height = c("100%", 700),
-        width = c("auto", 800)
+        ) ## end of card-body
       )
     ),
-    div(
-      style = "padding: 10px 20px;",
-      DT::dataTableOutput(ns("contrastTable"))
+    bslib::card(
+      full_screen = FALSE,
+      bslib::card_body(
+        style = "padding: 10px 20px;",
+        DT::dataTableOutput(ns("contrastTable"))
+      )
     )
   )
 }
 
-upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, height = 720) {
+upload_module_makecontrast_server <- function(
+    id,
+    phenoRT,
+    contrRT,
+    countsRT,
+    upload_wizard,
+    show_comparison_builder,
+    autocontrast) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-      rv <- shiny::reactiveValues(contr = NULL)
+      ## rv <- shiny::reactiveValues(contr = NULL)
+      rv_contr <- shiny::reactiveVal(NULL)
+
+      rv <- reactiveValues(
+        condition_start = NULL,
+        condition_group1 = NULL,
+        condition_group2 = NULL
+      )
 
       shiny::observe({
-        rv$contr <- contrRT()
-      })
-
-      shiny::observe({
-        shiny::req(phenoRT())
-        px <- colnames(phenoRT())
-        shiny::updateSelectInput(session, "pcaplot.colvar", choices = px)
+        rv_contr(contrRT())
       })
 
       observeEvent(
         {
-          phenoRT()
+          list(input$param, input$addcontrast)
         },
         {
+          # update the rv values when the param changes
+          cond <- sel.conditions()
+          rv$condition_start <- NULL
+          rv$condition_group1 <- NULL
+          rv$condition_group2 <- NULL
+
+          if (length(cond) == 0 || is.null(cond)) {
+            return(NULL)
+          }
+
+          items <- c("<others>", sort(unique(cond)))
+
+          rv$condition_start <- items
+        }
+      )
+
+
+      observeEvent(
+        {
+          list(phenoRT(), upload_wizard(), show_comparison_builder())
+        },
+        {
+          req(
+            upload_wizard() == "step_comparisons",
+            show_comparison_builder() == TRUE
+          )
           phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
           phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
           psel <- c(grep("sample|patient|name|id|^[.]",
             phenotypes,
             value = TRUE, invert = TRUE
           ), phenotypes)[1]
-          updateSelectInput(inputId = "param", choices = phenotypes, selected = psel)
+          updateSelectInput(session, "param", choices = phenotypes, selected = psel)
         }
       )
 
@@ -156,13 +173,6 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
       output$createcomparison <- shiny::renderUI({
         shiny::req(input$param)
-        cond <- sel.conditions()
-
-        if (length(cond) == 0 || is.null(cond)) {
-          return(NULL)
-        }
-
-        items <- c("<others>", sort(unique(cond)))
 
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
@@ -170,16 +180,19 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
           sortable::bucket_list(
             header = NULL,
             sortable::add_rank_list(
+              input_id = ns("conditions"),
               text = "Conditions:",
-              labels = items
+              labels = rv$condition_start,
             ),
             sortable::add_rank_list(
               input_id = ns("group1"),
-              text = "Main group:"
+              text = "Main group:",
+              labels = rv$condition_group1,
             ),
             sortable::add_rank_list(
               input_id = ns("group2"),
-              text = "Control group:"
+              text = "Control group:",
+              labels = rv$condition_group2,
             ),
             group_name = "cmpbucket"
           )
@@ -195,6 +208,22 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
       }
 
       shiny::observeEvent(c(input$group1, input$group2), {
+        # make sure group1 and 2 are not NULL or ""
+        req(input$group1, input$group2)
+
+        # update rv
+        rv$condition_group1 <- input$group1
+        rv$condition_group2 <- input$group2
+
+        # remove selected conditions from the start list
+        rv$condition_start <- setdiff(rv$condition_start, c(input$group1, input$group2))
+
+
+        # if some input$conditions are not in the start list, add them
+        if (length(input$conditions) > 0 && !input$conditions %in% rv$condition_start) {
+          rv$condition_start <- c(rv$condition_start, input$conditions)
+        }
+
         g1 <- gsub("[-_.,<> ]", ".", input$group1)
         g2 <- gsub("[-_.,<> ]", ".", input$group2)
         g1 <- gsub("[.]+", ".", g1)
@@ -214,16 +243,26 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         shiny::updateTextInput(session, "newname", value = tt)
       })
 
+      shiny::observeEvent(c(input$group1, input$group2), {
+        if (length(input$group1) && length(input$group2)) {
+          shinyjs::removeClass(id = "addcontrast", class = "btn-outline-primary")
+          shinyjs::addClass(id = "addcontrast", class = "btn-primary")
+        } else {
+          shinyjs::addClass(id = "addcontrast", class = "btn-outline-primary")
+          shinyjs::removeClass(id = "addcontrast", class = "btn-primary")
+        }
+      })
+
       shiny::observeEvent(input$contrast_delete, {
         ## Observe if a contrast is to be deleted
         id <- as.numeric(gsub(".*_", "", input$contrast_delete))
         if (length(id) == 0) {
           return(NULL)
         }
-        if (!is.null(rv$contr) && NCOL(rv$contr) <= 1) {
-          rv$contr <- rv$contr[, 0, drop = FALSE]
+        if (!is.null(rv_contr()) && NCOL(rv_contr()) <= 1) {
+          rv_contr(rv_contr()[, 0, drop = FALSE])
         } else {
-          rv$contr <- rv$contr[, -id, drop = FALSE]
+          rv_contr(rv_contr()[, -id, drop = FALSE])
         }
       })
 
@@ -257,7 +296,7 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
           shinyalert::shinyalert("ERROR", "Invalid comparison name")
           return(NULL)
         }
-        if (!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
+        if (!is.null(rv_contr()) && ct.name %in% colnames(rv_contr())) {
           shinyalert::shinyalert("ERROR", "Comparison name already exists.")
           return(NULL)
         }
@@ -269,14 +308,16 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         ## update reactive value
         samples <- colnames(countsRT())
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
-        if (is.null(rv$contr)) {
-          rv$contr <- ctx1
+        if (is.null(rv_contr())) {
+          rv_contr(ctx1)
         } else {
-          rv$contr <- cbind(rv$contr, ctx1)
+          rv_contr(cbind(rv_contr(), ctx1))
         }
+        # reset text input
+        shiny::updateTextInput(session, "newname", value = "")
       })
 
-      shiny::observeEvent(input$autocontrast, {
+      shiny::observeEvent(autocontrast(), {
         shiny::req(phenoRT())
         df <- phenoRT()
 
@@ -295,16 +336,16 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
 
         ## update reactive value
         ctx2 <- playbase::contrastAsLabels(ctx)
-        if (!is.null(rv$contr)) {
-          rv$contr <- cbind(rv$contr, ctx2)
+        if (!is.null(rv_contr())) {
+          rv_contr(cbind(rv_contr(), ctx2))
         } else {
-          rv$contr <- ctx2
+          rv_contr(ctx2)
         }
       })
 
       output$contrastTable <- DT::renderDataTable(
         {
-          ct <- rv$contr
+          ct <- rv_contr()
 
           if (is.null(ct) || NCOL(ct) == 0) {
             df <- data.frame(
@@ -388,22 +429,8 @@ upload_module_makecontrast_server <- function(id, phenoRT, contrRT, countsRT, he
         server = FALSE
       )
 
-      upload_plot_pcaplot_server(
-        "pcaplot",
-        phenoRT,
-        countsRT,
-        sel.conditions,
-        watermark = WATERMARK
-      )
-
-      return(
-        shiny::reactive({
-          if (is.null(rv$contr)) {
-            return(NULL)
-          }
-          rv
-        })
-      ) ## pointing to reactive
+      ## pointer to reactive
+      return(rv_contr)
     } ## end-of-server
   )
 }

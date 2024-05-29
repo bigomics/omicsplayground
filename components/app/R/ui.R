@@ -104,10 +104,11 @@ app_ui <- function(x) {
       }
 
       menu_tree <- list(
-        "Load" = c(
-          welcome = "Welcome",
-          load    = "Load dataset",
-          upload  = "New dataset"
+        "Welcome" = c(
+          welcome = "Welcome"
+        ),
+        "Datasets" = c(
+          load = "My Datasets"
         ),
         "DataView" = c(
           dataview = "DataView"
@@ -145,8 +146,6 @@ app_ui <- function(x) {
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
 
-      dbg("[ui.R] sum.enabled = ", sum(ENABLED))
-      dbg("[ui.R] names.enabled = ", names(ENABLED))
       menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
 
       populateSidebar <- function(menu_tree) {
@@ -219,7 +218,8 @@ app_ui <- function(x) {
             src = "static/bigomics-logo.png",
             height = "30"
             # width = "110",
-            ),
+          ),
+          left = NULL,
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
@@ -320,17 +320,18 @@ app_ui <- function(x) {
           ),
           bigdash::sidebarTabHelp(
             "load-tab",
-            "Load dataset",
+            "Analyze dataset",
             "This panel shows the available datasets within the platform. These data sets
                     have been pre-computed and are ready to be used. Select a
-                    dataset in the table and load the data set by clicking the 'load' button."
+                    dataset in the table and load the data set by clicking the 'Analyze dataset' button."
           ),
-          bigdash::sidebarTabHelp(
-            "upload-tab",
-            "Upload new",
-            "Here you can upload your own transcriptomics and proteomics data into
-                    the platform and perform computations for the Playground."
-          ),
+          # ,
+          # bigdash::sidebarTabHelp(
+          #   "upload-tab",
+          #   "Upload new",
+          #   "Here you can upload your own transcriptomics and proteomics data into
+          #           the platform and perform computations for the Playground."
+          # ),
           bigdash::sidebarTabHelp(
             "dataview-tab",
             "DataView",
@@ -455,10 +456,11 @@ app_ui <- function(x) {
             # LoadingInputs("load")
             LoadingUI("load")
           ),
-          bigdash::bigTabItem(
-            "upload-tab",
-            UploadUI("upload")
-          ),
+          # ,
+          # bigdash::bigTabItem(
+          #   "upload-tab",
+          #   UploadUI("upload")
+          # ),
           bigdash::bigTabItem(
             "userprofile-tab",
             UserProfileUI("user_profile")
@@ -468,7 +470,8 @@ app_ui <- function(x) {
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
           )
-        )
+        ),
+        UploadUI("upload")
       ) ## end of bigPage
     }
 
