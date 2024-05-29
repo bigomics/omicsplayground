@@ -129,7 +129,6 @@ LoadingUI <- function(id) {
     public_tabpanel <- NULL
   }
 
-
   ## ============================ Board object ===========================
   div(
     class = "p-0",
@@ -141,4 +140,189 @@ LoadingUI <- function(id) {
       sharing_tabpanel
     )
   )
+}
+
+
+
+## ====================================================================
+## ====================================================================
+## ====================================================================
+
+
+UploadNewUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+
+  tab_content <- bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+##    uiOutput(ns("sharing_alert")),
+      bslib::layout_columns(
+        col_widths = c(-5, 2, -5),
+        br(),
+        div(
+          shiny::selectInput(
+            ns("upload_datatype"),
+            "Data type",
+            c("RNA-seq","Proteomics","Olink Proteomics")
+            ),
+          shiny::actionButton(
+            ns("newuploadbutton"),
+            label = "Upload new dataset",
+            icon = icon("upload"),
+            class = "btn btn-info",
+            width = NULL
+          )
+        ),
+        br(),
+        br()
+      ) ## end of 7fr-5fr
+    )  
+  
+  div(
+    class = "row",
+    boardHeader(title = "My Library", info_link = ns("loading_userlibrary")),
+##    shiny::tabsetPanel(
+##      id = ns("tabs1"),
+##      shiny::tabPanel(
+##      "My Library",
+        tab_content
+##      ) ## tabPanel
+##    ) ## tabsetPanel
+  ) ## div
+  
+}
+
+
+UserLibraryUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+
+  usertab <- bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      uiOutput(ns("sharing_alert")),
+      div(
+        shiny::actionButton(
+          ns("loadbutton"),
+          label = "Load selected",
+          icon = icon("file-import"),
+          class = "btn btn-primary",
+          width = NULL
+        ),
+        # create button to trigger new_upload modal in server
+        shiny::actionButton(
+          ns("newuploadbutton"),
+          label = "Upload new dataset",
+          icon = icon("upload"),
+          class = "btn btn-info",
+          width = NULL
+        ),
+      ),
+      bslib::layout_columns(
+        col_widths = c(7, 5),
+        loading_table_datasets_ui(
+          ns("pgxtable"),
+          title = "Available datasets",
+          info.text = "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date.",
+          caption = "Table of datasets available in the platform.",
+          height = c("calc(100vh - 340px)", 700),
+          width = c("100%", "100%")
+        ),
+        loading_tsne_ui(
+          ns("tsne"),
+          title = "Signature t-SNE",
+          info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+          caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
+          height = c("calc(100vh - 340px)", "70vh"),
+          width = c("auto", "100%")
+        )
+      ) ## end of 7fr-5fr
+    )  
+  
+  div(
+    class = "row",
+    boardHeader(title = "My Library", info_link = ns("loading_userlibrary")),
+##    shiny::tabsetPanel(
+##      id = ns("tabs1"),
+##      shiny::tabPanel(
+##      "My Library",
+          usertab
+##      ) ## tabPanel
+##    ) ## tabsetPanel
+  ) ## div
+  
+}
+
+
+
+PublicLibraryUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+
+  tab_content <- bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")),
+          bslib::layout_columns(
+            col_widths = c(7, 5),
+            loading_table_datasets_public_ui(
+              ns("pgxtable_public"),
+              title = "Public datasets",
+              info.text = "This table shows available public datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
+              caption = "Table with public datasets available in the platform.",
+              height = c("calc(100vh - 330px)", 700),
+              width = c("100%", "100%")
+            ),
+            loading_tsne_ui(
+              ns("tsne_public"),
+              title = "Signature t-SNE",
+              info.text = "Each dot corresponds to a specific comparison/signature. Signatures that are clustered closer together, are more similar.",
+              caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
+              height = c("calc(100vh - 330px)", 700),
+              width = c("auto", "100%")
+            )
+          ) ## end of layout columns
+        ) ## end of layout columns
+
+  
+  div(
+    class = "row",
+    boardHeader(title = "Public Library", info_link = ns("loading_public")),
+##    shiny::tabsetPanel(
+##      id = ns("tabs1"),
+##      shiny::tabPanel(
+##        "Public Library",
+        tab_content
+##      ) ## tabPanel
+##    ) ## tabsetPanel
+  ) ## div
+  
+}
+
+
+
+SharedDatasetsUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+
+  tab_content <- bslib::layout_columns(
+    col_widths = 12,
+    height = "calc(100vh - 180px)",
+    bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      uiOutput(ns("sharing_panel_ui"))
+    )
+  )
+  
+  div(
+    class = "row",
+    boardHeader(title = "Sharing", info_link = ns("loading_sharing")),
+##    shiny::tabsetPanel(
+##      id = ns("tabs1"),
+##      shiny::tabPanel(
+##        "Sharing",
+        tab_content
+##      ) ## tabPanel
+##    ) ## tabsetPanel
+  ) ## div
+  
 }

@@ -222,24 +222,28 @@ app_ui <- function(x) {
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
-          left = bigdash::navbarDropdown(
-            "Datasets",
-##            style = "border: 1px; padding: 2px 6px;",
-            tags$li(
-              actionLink("data_upload_new", "Upload new data")
-            ),                     
 ## !!!!!!!!!!!!!!!!!! not working yet !!!!!!!!!!!!!!!!!!!!!!!!
+          left = bigdash::navbarDropdown(
+            "Open",
+            style = "border: 1px; padding: 2px 6px;",
+##            tags$li(
+##              actionLink("data_upload_new", "Upload new")
+##            ),                     
             bigdash::navbarDropdownTab(
-              "My Library",
-              "mylibrary-tab"
+              "Upload new",
+              "uploadnew-tab"
             ),
             bigdash::navbarDropdownTab(
-              "Public datasets",
+              "My Library",
+              "userlibrary-tab"
+            ),
+            bigdash::navbarDropdownTab(
+              "Public library",
               "publicdata-tab"
             ),
             bigdash::navbarDropdownTab(
-              "Shared datasets",
-              "datashare-tab"
+              "Sharing",
+              "sharing-tab"
             )
          ),
 ## !!!!!!!!!!!!!!!!!! not working yet !!!!!!!!!!!!!!!!!!!!!!!!          
@@ -468,6 +472,22 @@ app_ui <- function(x) {
             "usersettings-tab",
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
+          ),
+          bigdash::bigTabItem(
+            "uploadnew-tab",
+            UploadNewUI("uploadnew")
+          ),
+          bigdash::bigTabItem(
+            "userlibrary-tab",
+            UserLibraryUI("userlibrary")
+          ),
+          bigdash::bigTabItem(
+            "publicdata-tab",
+            PublicLibraryUI("publicdata")
+          ),
+          bigdash::bigTabItem(
+            "sharing-tab",
+            SharedDatasetsUI("sharing")
           )
         ),
         UploadUI("upload")
