@@ -70,7 +70,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     plotActivationMatrix <- function(meta, df, normalize = 1, nterms = 40, rotate = 0,
-                                     nfc = 10, tl.cex = 1.0, row.nchar = 50) {
+                                     nfc = 10, tl.cex = 1.0, row.nchar = 50, colorbar = FALSE) {
       fx <- sapply(meta, function(x) x$meta.fx)
       qv <- sapply(meta, function(x) x$meta.q)
       rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
@@ -125,7 +125,8 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       fig <- plotly::plot_ly(
           x = x_axis, y = y_axis,
           z = score2, type = "heatmap",
-          colors = bluered.pal
+          colors = bluered.pal,
+          showscale = colorbar
       )
       return(fig)
     }

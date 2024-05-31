@@ -87,7 +87,7 @@ functional_plot_go_actmap_server <- function(id,
 
 
       plotGOactmap <- function(score, go, normalize, rotate, maxterm, maxfc,
-                               tl.cex = 0.85, row.nchar = 60) {
+                               tl.cex = 0.85, row.nchar = 60, colorbar = FALSE) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
 
         ## avoid errors!!!
@@ -145,7 +145,8 @@ functional_plot_go_actmap_server <- function(id,
         fig <- plotly::plot_ly(
             x = x_axis, y = y_axis,
             z = score, type = "heatmap",
-            colors = bluered.pal
+            colors = bluered.pal,
+            showscale = colorbar
         )
         return(fig)
       }
@@ -166,7 +167,7 @@ functional_plot_go_actmap_server <- function(id,
         pathscore <- res$pathscore
         graph <- res$graph
 
-        plotGOactmap(
+        fig <- plotGOactmap(
           score = pathscore,
           go = graph,
           normalize = input$normalize,
@@ -194,7 +195,8 @@ functional_plot_go_actmap_server <- function(id,
           maxterm = 50,
           maxfc = 100,
           tl.cex = 1.1,
-          row.nchar = ifelse(rotate, 60, 200)
+          row.nchar = ifelse(rotate, 60, 200),
+          colorbar = TRUE
         )
       }
 

@@ -135,7 +135,8 @@ functional_plot_reactome_actmap_server <- function(id,
           nterms = 50,
           nfc = 100,
           tl.cex = 1.1,
-          row.nchar = ifelse(rotate, 60, 200)
+          row.nchar = ifelse(rotate, 60, 200),
+          colorbar = TRUE
         )
       }
 

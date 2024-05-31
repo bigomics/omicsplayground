@@ -140,7 +140,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           nterms = 50,
           nfc = 100,
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200)
+          row.nchar = ifelse(input$rotate, 60, 200),
+          colorbar = TRUE
         )
       }
 
