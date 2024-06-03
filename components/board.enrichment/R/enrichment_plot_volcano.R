@@ -91,6 +91,9 @@ enrichment_plot_volcano_server <- function(id,
       lfc <- 0.20
       lfc <- as.numeric(gs_lfc())
 
+      sig.genes <- fc.genes[which(qval <= fdr & abs(fx) > lfc)]
+      sel.genes <- intersect(sig.genes, sel.genes)
+
       playbase::plotlyVolcano(
         x = fx,
         y = -log10(qval),
