@@ -81,8 +81,6 @@ expression_table_genetable_server <- function(id,
       numeric.cols <- colnames(res)[numeric.cols]
       df <- res
       df$gene_name <- NULL
-      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
-      fx <- df[, fx.col]
 
       if (organism %in% c("Human", "human")) {
         df$human_ortholog <- NULL
@@ -90,6 +88,9 @@ expression_table_genetable_server <- function(id,
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
         df$feature <- NULL
       }
+
+      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
+      fx <- df[, fx.col]
 
       DT::datatable(df,
         rownames = FALSE,
