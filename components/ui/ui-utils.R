@@ -238,15 +238,6 @@ pgx.showCartoonModal <- function(msg = "Loading data...", img.path = "www/cartoo
   ))
 }
 
-pgx.showSmallModal <- function(msg = "Please wait...") {
-  shiny::showModal(shiny::modalDialog(
-    title = NULL,
-    shiny::HTML("<br><center><p>", msg, "</p></center>"),
-    footer = NULL,
-    size = "s", easyClose = FALSE, fade = FALSE
-  ))
-}
-
 HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteString) {
   pattern <- paste0("^", NoLinkString, "$")
   special_cases <- grepl(pattern, wrapHyperLinkOutput, perl = TRUE)

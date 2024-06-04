@@ -62,6 +62,12 @@ app_server <- function(input, output, session) {
     credentials_file <- NULL
   }
 
+  user_database <- file.path(ETC, "user_details.sqlite")
+  has.user_database <- file.exists(user_database)
+  if (!has.user_database && authentication != "login-code") {
+    user_database <- NULL
+  }
+
   if (authentication == "password") {
     auth <- PasswordAuthenticationModule(
       id = "auth",
@@ -94,8 +100,8 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
+      user_database = user_database,
       blocked_domain = opt$BLOCKED_DOMAIN,
-      credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
       redirect_login = FALSE
@@ -106,7 +112,7 @@ app_server <- function(input, output, session) {
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
       blocked_domain = opt$BLOCKED_DOMAIN,
-      credentials_file = credentials_file,
+      user_database = user_database,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS,
       redirect_login = TRUE
@@ -157,11 +163,13 @@ app_server <- function(input, output, session) {
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
+  new_upload <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
   WelcomeBoard("welcome",
     auth = auth,
-    load_example = load_example
+    load_example = load_example,
+    new_upload = new_upload
   )
 
   env$user_profile <- UserProfileBoard(
@@ -197,7 +205,8 @@ app_server <- function(input, output, session) {
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
     load_uploaded_data = load_uploaded_data,
-    recompute_pgx = recompute_pgx
+    recompute_pgx = recompute_pgx,
+    new_upload = new_upload
   )
 
   ## Modules needed from the start
@@ -211,7 +220,8 @@ app_server <- function(input, output, session) {
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
       recompute_info = recompute_info,
-      inactivityCounter = inactivityCounter
+      inactivityCounter = inactivityCounter,
+      new_upload = new_upload
     )
   }
 

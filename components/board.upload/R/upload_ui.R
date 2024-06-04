@@ -4,216 +4,105 @@
 ##
 
 
-UploadInputs <- function(id) {
-  ns <- shiny::NS(id) ## namespace
-  bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-    withTooltip(
-      shiny::selectInput(ns("fa_contrast"), "Comparison:",
-        choices = NULL
-      ),
-      "Select the comparison of interest.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::actionLink(ns("fa_options"), "Options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      "Show/hide advanced options",
-      placement = "top"
-    ),
-    shiny::br(),
-    shiny::conditionalPanel(
-      "input.fa_options % 2 == 1",
-      ns = ns,
-      shiny::tagList(
-        withTooltip(
-          shiny::checkboxInput(
-            ns("fa_filtertable"),
-            "filter significant (tables)",
-            FALSE
-          ),
-          "Click to filter the significant entries in the tables."
-        )
-      )
-    )
-  )
-}
-
 UploadUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  board_header <- fillRow(
-    flex = c(NA, NA, 1),
-    shiny::div(
-      id = "navheader-current-section",
-      HTML("Create New Dataset &nbsp;"),
-      shiny::actionLink(
-        ns("module_info"), "",
-        icon = shiny::icon("youtube"),
-        style = "color: #ccc;"
-      )
+  counts_ui <- wizardR::wizard_step(
+    step_title = "Step 1: Upload counts",
+    step_id = "step_counts",
+    upload_table_preview_counts_ui(
+      ns("counts_preview")
     )
   )
 
-  upload_select_db <- shiny::tabPanel(
-    "Select Organism",
-    bslib::layout_column_wrap(
-      width = 1,
-      heights_equal = "row",
-      height = "calc(100vh - 180px)",
-      # add a drop down selector for organism
-      shiny::div(
-        style = "display: flex; justify-content: center; align-items: center; margin-top: 100px;",
-        shiny::div(
-          style = "text-align: center;",
-          h3(shiny::HTML("<b>Select the organism:</b>")),
-          div(
-            style = "margin-top: 30px; padding-left: 70px; text-align: center;",
-            shiny::selectInput(
-              ns("selected_organism"),
-              NULL,
-              # restrict to ensembl species, as we are validating them in the first place
-              choices = NULL,
-              selected = NULL,
-              multiple = FALSE
-            )
-          ),
-          shiny::div(
-            style = "margin-top: 20px;text-align: center;",
-            shiny::actionButton(ns("proceed_to_upload"), "Next",
-              icon = icon("arrow-right"),
-              class = "btn btn-success"
-            )
-          ),
-          div(
-            style = "margin-top: 120px",
-            h3("Need a dataset to try?")
-          ),
-          shiny::div(
-            style = "margin-top: 30px",
-            shiny::downloadButton(
-              ns("downloadExampleData"),
-              width = "220px",
-              icon = icon("download"),
-              label = "Download example data",
-              class = "btn-outline-primary",
-              style = "margin-right: 10px;"
-            ),
-            shiny::actionButton(
-              ns("load_example"),
-              width = "220px",
-              icon = icon("table"),
-              label = "Use example data",
-              class = "btn-outline-primary",
-              style = "margin-left: 10px;"
-            )
-          )
-        )
-      )
+  samples_ui <- wizardR::wizard_step(
+    step_title = "Step 2: Upload samples",
+    step_id = "step_samples",
+    upload_table_preview_samples_ui(
+      ns("samples_preview")
     )
   )
 
+  contrasts_ui <- wizardR::wizard_step(
+    step_title = "Step 3: Create comparisons",
+    step_id = "step_comparisons",
+    upload_table_preview_contrasts_ui(
+      ns("contrasts_preview")
+    )
+  )
 
-  upload_panel <- shiny::tabPanel(
-    "Upload",
+  # comparisons_panel <- wizardR::wizard_step(
+  #   step_title = "Comparison Builder",
+  #   bslib::layout_columns(
+  #     col_widths = 12,
+  #     # height = "calc(100vh - 340px)",
+  #     heights_equal = "row",
+  #     upload_module_makecontrast_ui(ns("makecontrast")),
+  #     bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts'). Choose a phenotype, then create groups by dragging conditions to the boxes of the 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'."))
+  #   )
+  # )
+
+  batchcorrect_panel <- wizardR::wizard_step(
+    step_title = "BatchEffects",
+    step_id = "step_bc",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
-      bs_alert("In this panel, you can upload your data to the platform. The platform
-               requires 3 data files as explained below: a data file containing
-               counts/expression (counts.csv), a sample information file (samples.csv)
-               and a file specifying the statistical comparisons (comparisons.csv).
-               NB Users can now create comparisons from the platform itself, so the
-               comparisons.csv file is optional."),
-      bslib::layout_columns(
-        col_widths = c(4, 8),
-        div(
-          shiny::sidebarPanel(
-            width = "100%",
-            fileInput2(ns("upload_files"),
-              shiny::h4("Choose files"),
-              multiple = TRUE,
-              accept = c(".csv", ".pgx")
-            ),
-            shinyWidgets::prettySwitch(ns("advanced_mode"), "Batch correction (beta)")
-            # bslib::input_switch(ns("load_example"), "Load example data"),
-            # bslib::input_switch(ns("advanced_mode"), "Batch correction (beta)")
-          )
-        ),
-        shiny::div(shiny::uiOutput(ns("upload_info")))
-      ),
-      bslib::layout_columns(
-        col_widths = c(4, 4, 4),
-        upload_plot_countstats_ui(
-          id = ns("countStats"),
-          title = "Count Stats",
-          info.text = "Information about the uploaded counts.",
-          caption = "Information about the uploaded counts.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ),
-        upload_plot_phenostats_ui(
-          id = ns("phenoStats"),
-          title = "Pheno Stats",
-          info.text = "Information about the uploaded samples",
-          caption = "Information about the uploaded samples.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ),
-        upload_plot_contraststats_ui(
-          id = ns("contrastStats"),
-          title = "Comparison Stats",
-          info.text = "Information about the uploaded comparisons",
-          caption = "Information about the uploaded comparisons.",
-          height = c("75%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
+      heights_equal = "row",
+      style = "margin-bottom: 20px",
+      upload_module_batchcorrect_ui(ns("batchcorrect")),
+      # bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!")
     )
   )
 
-  batch_panel <- shiny::tabPanel(
-    "BatchCorrect",
-    bs_alert("Omics data often suffers from batch effect due to experiments done on different days, using different machines or done at different institutes. This will often cause so-called batch effects. Batch correction can clean your data from these 'unwanted variation'. But be careful, batch correction can also be dangerous if not used carefully and can remove valuable real signal. Only adviced for advanced users!"),
-    br(),
-    shiny::fillCol(
-      height = height,
-      upload_module_batchcorrect_ui(ns("batchcorrect"))
-    )
-  )
-
-  comparisons_panel <- shiny::tabPanel(
-    "Comparisons",
+  outliers_panel <- wizardR::wizard_step(
+    step_title = "QC/BC",
+    step_id = "step_qc",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 200px)",
+      # height = "calc(100vh - 340px)",
       heights_equal = "row",
-      bs_alert(HTML("Here, you can interactively <b>create comparisons</b> (also called 'contrasts', 'groups'...). Choose a phenotype, then create groups by dragging conditions to the boxes of 'main' or 'control' group. Give the contrast a name (please keep it short!) and then click 'add comparison'. If you are feeling lucky, you can also try 'auto-comparisons'.")),
-      upload_module_makecontrast_ui(ns("makecontrast"))
+      upload_module_outliers_ui(ns("checkqc"))
+      # bs_alert("Check for normalization, outliers and batch-effects.")
     )
   )
 
-  compute_panel <- shiny::tabPanel(
-    "Compute",
-    bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
-    br(),
-    shiny::fillCol(
-      height = height, #
-      upload_module_computepgx_ui(ns("compute"))
-    )
+  compute_panel <- wizardR::wizard_step(
+    step_title = "Step 4: Compute!",
+    step_id = "step_compute",
+    # bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
+    shiny::br(), shiny::br(),
+    ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+    ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
+    upload_module_computepgx_ui(ns("compute"))
   )
 
   div(
     class = "p-0",
-    board_header,
-    shiny::tabsetPanel(
-      id = ns("tabs"),
-      upload_select_db,
-      upload_panel,
-      batch_panel,
-      comparisons_panel,
-      compute_panel
+    # board_header,
+    div(
+      style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
+      shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode"),
+    ),
+    div(
+      wizardR::wizard(
+        id = ns("upload_wizard"),
+        width = 90,
+        height = 75,
+        modal = TRUE,
+        style = "dots",
+        lock_start = TRUE,
+        counts_ui,
+        samples_ui,
+        contrasts_ui,
+        # comparisons_panel,
+        # outliers_panel,
+        # batchcorrect_panel,
+        compute_panel,
+        options = list(
+          navigation = "buttons",
+          finish = "Compute!"
+        )
+      )
     )
   )
 }

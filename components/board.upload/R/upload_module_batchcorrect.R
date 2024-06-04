@@ -5,305 +5,348 @@
 
 
 ## =============================================================================
-## ==================== BATCHCORRECT GADGET UI =================================
+## ==================== BATCHCORRECT UI/SERVER =================================
 ## =============================================================================
 
-BatchCorrectGadget <- function(X, pheno, height = 720) {
-  gadgetize(BatchCorrectUI, BatchCorrectServer,
-    title = "BatchCorrect",
-    X = reactive(X), pheno = reactive(pheno), height = height
+
+upload_module_batchcorrect_ui <- function(id, height = "100%") {
+  ns <- shiny::NS(id)
+
+  bc_info <- HTML("<h4>Batch-effects analysis</h4>Batch correction can clean your data from 'unwanted variables'.\n")
+
+  clust.infotext <-
+    "Clustering of samples before ('uncorrected') and after the different batch-effect correction methods. After batch-effect correction clustering should improve. The silhouette score gives an indication of the clustering performance of the method."
+
+  covariate.info <-
+    "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
+
+  pcc.info <- "PC analysis by covariate (class). The heights of the bars correspond to the relative contribution of that covariate to the three PC, as measured by an F-test. "
+
+  clust.options <- tagList(
+    shiny::radioButtons(ns("clust.plottype"), "Type;", c("tsne", "pca", "heatmap"))
   )
-}
 
-BatchCorrectInputsUI <- function(id) {
-  ns <- shiny::NS(id)
-  shiny::uiOutput(ns("inputsUI"))
-}
+  covariate.options <- tagList(
+    shiny::radioButtons(
+      ns("covariate.plottype"), "Type;",
+      c("Covariate plot", "Correlation heatmap")
+    )
+  )
 
-BatchCorrectCanvas <- function(id, height = 720) {
-  ns <- shiny::NS(id)
-  shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner()
-}
 
-upload_module_batchcorrect_ui <- function(id, height = 720) {
-  ns <- shiny::NS(id)
-  shiny::sidebarLayout(
-    shiny::sidebarPanel(
-      shiny::uiOutput(ns("inputsUI")),
-      width = 2
+  bslib::layout_columns(
+    col_widths = c(2, 10),
+    height = "calc(100vh - 200px)",
+    heights_equal = "row",
+    bslib::card(
+      style = "background-color: #F7FAFD88;",
+      bc_info,
+      shiny::br(),
+      shiny::br(),
+      shiny::br(),
+      withTooltip(
+        shiny::actionLink(ns("adv_options"),
+          "Advanced options",
+          icon = icon("cog", lib = "glyphicon")
+        ),
+        "Toggle advanced options.",
+        placement = "top"
+      ),
+      shiny::conditionalPanel(
+        "input.adv_options % 2 == 1",
+        ns = ns,
+        shiny::selectizeInput(ns("tech_params"), "Technical covariates:",
+          choices = "<none>", multiple = TRUE
+        ),
+        shiny::selectizeInput(ns("batch_params"), "Batch covariates:",
+          choices = "<none>", multiple = TRUE
+        ),
+        shiny::actionButton(ns("recompute_button"), "Recompute",
+          class = "btn-sm btn-primary mt-3", width = "100%"
+        ),
+      ),
+      shiny::br(), shiny::br()
     ),
-    shiny::mainPanel(
-      shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner(),
-      width = 10
+    bslib::layout_columns(
+      width = 12,
+      bslib::layout_columns(
+        col_widths = 6,
+        row_heights = c(3, 3),
+        height = "calc(100vh - 200px)",
+        heights_equal = "row",
+        ##  shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner(),
+        PlotModuleUI(
+          ns("plot1"),
+          title = "Clustering",
+          info.text = clust.infotext,
+          caption = clust.infotext,
+          options = clust.options,
+          height = c("100%", "70vh")
+        ),
+        PlotModuleUI(
+          ns("plot2"),
+          title = "PC components",
+          info.text = pcc.info,
+          caption = pcc.info,
+          options = NULL,
+          height = c("100%", "70vh")
+        ),
+        PlotModuleUI(
+          ns("plot3"),
+          title = "Covariate analysis",
+          info.text = covariate.info,
+          caption = covariate.info,
+          options = covariate.options
+        ),
+        PlotModuleUI(
+          ns("plot4"),
+          title = "Statistics and score",
+          #          info.text = info.text,
+          #          caption = caption,
+          options = NULL
+        )
+      )
     )
   )
 }
 
-
-upload_module_batchcorrect_server <- function(id, X, pheno, is.count = FALSE, height = 720) {
+upload_module_batchcorrect_server <- function(id,
+                                              r_X,
+                                              r_samples,
+                                              r_contrasts,
+                                              r_results,
+                                              is.count = FALSE) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-      ## Counts matrix but with genes annotated for correcting
-      ## unwanted biological effects (mito,ribo,gender)
-      geneX <- reactive({
-        shiny::req(X())
-        X0 <- X()
-        ## <<<<<<<<<<<<<<<<<< PLEASE FIX >>>>>>>>>>>>>>>>>>>>>>
-        ##        ii <- which(rowSums(X0) > 0) ## bit faster
-        ##        shiny::withProgress(message = "Batch-correction (converting probes)...",
-        ##          value = 0, {
-        ##            gg <- playbase::probe2symbol( rownames(X0)[ii], )   ### <<<<<<<<< DOES NOT WORK!
-        ##        })
-        ##        rownames(X0)[ii] <- gg
-        X0
-      })
+      ## also return object
+      correctedX <- reactiveVal(NULL)
+      observeEvent(r_X(), correctedX(r_X()))
 
-      max.rho <- 0.5
-      getNotCorrelatedBatchPars <- function(pheno, model.par, max.rho = 0.5) {
-        getModelMatrix <- function(v) {
-          y <- as.character(pheno[, v])
-          y[is.na(y)] <- "NA" ## or impute???
-          m1 <- model.matrix(~y)[, -1, drop = FALSE]
-          colnames(m1) <- sub("^y", paste0(v, "="), colnames(m1))
-          m1
-        }
-
-        model.par <- intersect(model.par, colnames(pheno))
-        mod1 <- do.call(cbind, lapply(model.par, getModelMatrix))
-        rownames(mod1) <- rownames(pheno)
-
-        batch.prm <- setdiff(colnames(pheno), model.par)
-        mod0 <- do.call(cbind, lapply(batch.prm, getModelMatrix))
-        rho <- stats::cor(mod0, mod1)
-        rho
-        rho[is.na(rho)] <- 0
-        max(abs(rho), na.rm = TRUE)
-        if (max(abs(rho), na.rm = TRUE) > max.rho) {
-          idx <- which(abs(rho) > max.rho, arr.ind = TRUE)
-          idx
-          for (i in 1:nrow(idx)) {
-            v0 <- colnames(mod0)[idx[i, 1]]
-            v1 <- colnames(mod1)[idx[i, 2]]
-            cat(paste0(
-              "WARNING:: '", v0, "' is confounded with '", v1, "' ",
-              ": rho= ", round(rho[idx[i, 1], idx[i, 2]], 3), "\n"
-            ))
-          }
-          confounding.pars <- colnames(mod0)[idx[, 1]]
-          confounding.pars <- unique(gsub("=.*", "", confounding.pars))
-          cat("WARNING:: removing confounding batch factors:", confounding.pars, "\n")
-          batch.prm <- setdiff(batch.prm, confounding.pars)
-        }
-        batch.prm
-      }
-
-      ## reset batch parameters choices if modelparamters change.
-      observeEvent(input$bc_modelpar, {
-        px <- pheno()
-        if (is.null(px)) {
-          return(NULL)
-        }
-        sel <- apply(px, 2, function(x) length(unique(x[!is.na(x)])))
-        pheno.par <- sort(colnames(px)[sel > 1])
-        sel.par <- c(grep("^[.<]|batch", pheno.par, invert = TRUE, value = TRUE), pheno.par)[1]
-        batch.par <- c(pheno.par, "<cell_cycle>", "<gender>", "<libsize>", "<mito/ribo>")
-
-        bc <- setdiff(batch.par, input$bc_modelpar)
-        shiny::updateSelectInput(session, "bc_batchpar", choices = bc, selected = bc)
-      })
-
-      uiOK <- reactive({
-        px <- pheno()
-        mp <- input$bc_modelpar
-        ok <- all(mp %in% colnames(px)) && length(mp) > 0
-        ok
-      })
-
-      output$canvas <- shiny::renderPlot({
-        out <- outobj()
-
-        if (is.null(out$X) || length(out$X) == 0) {
-          warning("[BatchCorrect::canvas] WARNING :: X=NULL")
-          return(NULL)
-        }
-
-        shiny::req(X())
-
-        mp <- shiny::isolate(input$bc_modelpar)
-        if (is.null(mp) || length(mp) == 0) {
-          warning("[BatchCorrect::canvas] WARNING :: mp = ", mp)
-        }
-
-        p1 <- NULL
-        if (!is.null(mp)) p1 <- mp[1]
-
-        X0 <- X()
-        if (is.count) {
-          X0 <- log2(1 + X0) ## X0: normalized counts (e.g. CPM)
-        }
-        cX <- out$X
-        rownames(X0) <- sub("[;|,].*", "", rownames(X0))
-        rownames(cX) <- sub("[;|,].*", "", rownames(cX))
-
-        if (ncol(X0) != ncol(cX)) {
-          warning("[BatchCorrect] canvas.renderPlot : ***ERROR*** dimension mismatch!")
-        }
-        req(ncol(X0) == ncol(cX))
-
-        do.pca <- (input$bc_maptype == "PCA")
-        nmax <- as.integer(input$bc_nmax)
-        show_row <- (nmax < 50)
-
-        viz.BatchCorrectionMatrix(
-          X0 = X0, pheno = out$Y, cX = cX, phenotype = p1,
-          pca.heatmap = do.pca, npca = 3,
-          nmax = nmax, cex = 1.8, show_rownames = show_row,
-          title = NULL, subtitle = NULL, caption = NULL
-        )
-      })
-
-      output$inputsUI <- shiny::renderUI({
-        ns <- session$ns
-        bc.options <- c("none", "PCA", "HC", "SVA", "NNM")
-        bc.options <- c("none" = "none", "PCA" = "PCA", "SVA" = "SVA", "NN matching" = "NNM")
-        bc.selected <- "none"
-        bc_info <- NULL
-        bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
-
-        px <- pheno()
-        if (is.null(px)) {
-          return(NULL)
-        }
-        sel <- apply(px, 2, function(x) length(unique(x[!is.na(x)])))
-        pheno.par <- sort(colnames(px)[sel > 1])
-        sel.par <- c(grep("^[.<]|batch", pheno.par, invert = TRUE, value = TRUE), pheno.par)[1]
-        batch.par <- c(pheno.par, "<cell_cycle>", "<gender>", "<libsize>", "<mito/ribo>")
-
-        shiny::tagList(
-          shiny::p(bc_info),
-          shiny::br(),
-          shiny::actionButton(ns("bc_compute_button"), "Batch correct",
-            #
-            class = "run-button"
-          ),
-          shiny::br(),
-          shiny::br(),
-          withTooltip(
-            shiny::selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
-              selected = sel.par, multiple = TRUE
-            ),
-            "Please specify all your model parameters. These are the parameters of interest that will determine your groupings.",
-            placement = "top", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
-              selected = batch.par, multiple = TRUE
-            ),
-            "Specifiy the batch/unwanted parameters that you want to correct for. Bracketed parameters are technical/biological summaries computed from your data. These factors will be subtracted from your data using linear modelling (limma).",
-            placement = "left", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::radioButtons(
-              ns("bc_methods"), "Unsupervised correction:",
-              choices = bc.options,
-              selected = bc.selected,
-              inline = FALSE
-            ),
-            "Unsupervised correction methods. Correction will be performed additional to the (supervised) corrections above. PCA iteratively corrects low rank PC components not correlated to any model parameters; SVA applies surrogate variable analysis (Leek et al.); NNM applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data (unpublished).",
-            placement = "left", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::radioButtons(ns("bc_nmax"), "Nmax:", c(40, 200, 1000),
-              sel = 200, inline = TRUE
-            ),
-            "Maximum number of genes in heatmap",
-            placement = "left", options = list(container = "body")
-          ),
-          withTooltip(
-            shiny::radioButtons(ns("bc_maptype"), "Heatmap type:",
-              c("topSD", "PCA"),
-              inline = TRUE
-            ),
-            "Type of heatmap: top SD or PCA.",
-            placement = "left", options = list(container = "body")
-          )
-        )
-      })
-
-      ## ------------------------------------------------------------
-      ## Reactive return object
-      ## ------------------------------------------------------------
-      outobj <- shiny::eventReactive(
+      logX <- eventReactive(
         {
-          list(input$bc_compute_button, X(), pheno())
+          list(r_X())
         },
         {
-          shiny::req(geneX())
-          req(uiOK())
-
-          mp <- ""
-          bp <- "Chemotherapy"
-          mp <- "dlbcl.type"
-          bp <- "*"
-          mp <- input$bc_modelpar
-          bp <- input$bc_batchpar
-          bc <- input$bc_methods
-
-          lib.correct <- FALSE
-          bio.correct <- c()
-          if ("<libsize>" %in% bp) lib.correct <- TRUE
-          if ("<mito/ribo>" %in% bp) bio.correct <- c(bio.correct, c("mito", "ribo"))
-          if ("<cell_cycle>" %in% bp) bio.correct <- c(bio.correct, c("cell_cycle"))
-          if ("<gender>" %in% bp) bio.correct <- c(bio.correct, c("gender"))
-
-          hc.correct <- "HC" %in% bc
-          pca.correct <- "PCA" %in% bc
-          sva.correct <- "SVA" %in% bc
-          mnn.correct <- NULL
-          nnm.correct <- "NNM" %in% bc
-
-          X0 <- geneX()
-          if (is.count) {
-            X0 <- log2(1 + X0) ## X0: normalized counts (e.g. CPM)
-          }
-
-          out <- playbase::pgx.superBatchCorrect(
-            X = X0,
-            pheno = pheno(),
-            model.par = mp,
-            batch.par = bp,
-            #
-            lib.correct = lib.correct,
-            bio.correct = bio.correct,
-            hc.correct = hc.correct,
-            pca.correct = pca.correct,
-            sva.correct = sva.correct,
-            mnn.correct = mnn.correct,
-            nnm.correct = nnm.correct
-          )
-
-          ## restore original feature names
-          rownames(out$X) <- rownames(X())
-
-          out$params <- list(
-            model.par = mp,
-            batch.par = bp,
-            bio.correct = bio.correct,
-            hc.correct = hc.correct,
-            pca.correct = pca.correct,
-            sva.correct = sva.correct,
-            mnn.correct = mnn.correct,
-            nnm.correct = nnm.correct
-          )
-
-          out
-        },
-        ignoreInit = FALSE,
-        ignoreNULL = FALSE
+          shiny::validate(shiny::need(!is.null(r_X()), "no data. please upload."))
+          shiny::validate(shiny::need(!is.null(nrow(r_X())), "no data. please upload."))
+          X <- playbase::counts.mergeDuplicateFeatures(r_X())
+          X <- limma::normalizeQuantiles(playbase::logCPM(X)) ## standard normalization
+          X <- playbase::svdImpute2(X) ## standard impute
+          X
+        }
       )
 
-      return(outobj) ## pointing to reactive
+      analyze_batch_effects <- reactive({
+        ## shiny::req(r_contrasts(), r_samples(), r_X())
+        shiny::req(dim(r_contrasts()), dim(r_samples()), dim(logX()))
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        X <- logX()
+
+        shiny::validate(shiny::need(
+          !is.null(r_X()) && nrow(r_X()),
+          "No counts data. Please upload."
+        ))
+        shiny::validate(shiny::need(
+          !is.null(r_contrasts()) && nrow(r_contrasts()),
+          "No contrasts defined. Please create contrasts."
+        ))
+
+        bc <- playbase::detectBatchEffects(
+          X = X,
+          samples = samples,
+          pheno = NULL,
+          contrasts = contrasts,
+          ## params = c("statistical","technical","pca"),
+          params = c("statistical", "technical"),
+          p.pca = 0.5,
+          p.pheno = 0.05,
+          k.pca = 10,
+          nv = 2,
+          xrank = NULL
+        )
+
+        bparams <- c()
+        tparams <- c()
+
+        if ("technical" %in% names(bc$params) && length(bc$params$technical)) {
+          tparams <- sort(unique(sub("[.].*", "", bc$params$technical)))
+          choices3 <- c("<none>", paste0("<", tparams, ">"))
+          shiny::updateSelectInput(session, "tech_params",
+            choices = choices3,
+            selected = choices3[-1]
+          )
+        } else {
+          shiny::updateSelectInput(session, "tech_params",
+            choices = "<none>",
+            selected = "<none>"
+          )
+        }
+
+        if ("statistical" %in% names(bc$params) && length(bc$params$statistical)) {
+          bparams <- sort(bc$params$statistical)
+          choices2 <- c("<none>", bparams)
+          shiny::updateSelectInput(session, "batch_params",
+            choices = choices2,
+            selected = choices2[-1]
+          )
+        } else {
+          shiny::updateSelectInput(session, "batch_params",
+            choices = "<none>",
+            selected = "<none>"
+          )
+        }
+
+
+        bc$choices <- list(
+          batch_params = bparams,
+          tech_params  = tparams
+        )
+
+        bc
+      })
+
+      output_plot1 <- function() {
+        res <- r_results()
+        shiny::req(res)
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
+        pheno <- res$pheno
+        xlist <- res$xlist
+
+        type <- "umap"
+        if (input$clust.plottype == "heatmap") {
+          type <- "heatmap"
+          pos <- NULL
+        } else {
+          type <- "umap"
+          layout <- input$clust.plottype
+          pos <- res$pos[[layout]]
+        }
+
+        playbase::bc.plotResults(
+          X = X0,
+          xlist = xlist,
+          pos = pos,
+          pheno = pheno,
+          samples = samples,
+          type = type,
+          scores = NULL,
+          nmax = 1000,
+          cex = 0.95
+        )
+      }
+
+      output_plot2 <- function() {
+        res <- r_results()
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
+        xlist <- res$xlist
+
+        kk <- colnames(xlist[[1]])
+        X0 <- X0[, kk]
+        samples <- samples[kk, ]
+
+        playbase::bc.plotResults(
+          X = X0,
+          xlist = xlist,
+          pos = NULL,
+          pheno = NULL,
+          samples = samples,
+          type = "pc",
+          scores = NULL,
+          nmax = 1000
+        )
+      }
+
+      output_plot3 <- function() {
+        bc <- analyze_batch_effects()
+        shiny::req(bc)
+        if (input$covariate.plottype == "Covariate plot") {
+          par(mfrow = c(2, 2), mar = c(3.3, 4, 2, 2), mgp = c(2.2, 1, 0))
+          playbase::bc.CovariateAnalysisPlot(bc, k = 1:3, par = FALSE, col = "#273871")
+        } else {
+          par(mfrow = c(1, 1), mar = c(0, 3, 0, 3))
+          playbase::bc.plotCovariateHeatmap(bc)
+        }
+      }
+
+      output_plot4 <- function() {
+        res <- r_results()
+        shiny::req(res)
+        X0 <- isolate(logX())
+        samples <- isolate(r_samples())
+        pheno <- NULL
+        xlist <- res$xlist
+        sel <- c("score", "genes", "gsets", "SNR", "pc1.ratio", "silhouette")
+        sel <- intersect(sel, colnames(res$scores))
+        scores <- res$scores[, sel]
+
+        playbase::bc.plotResults(
+          X = X0,
+          xlist = xlist,
+          pos = NULL,
+          pheno = pheno,
+          samples = samples,
+          type = "scores",
+          scores = scores,
+          nmax = 1000,
+          ncol = 3
+        )
+      }
+
+
+      PlotModuleServer(
+        "plot1",
+        plotlib = "base",
+        func = output_plot1,
+        ##        func2 = plot.RENDER,
+        ##        csvFunc = plot_data,
+        res = c(70, 110),
+        pdf.width = 12,
+        pdf.height = 6,
+        add.watermark = FALSE
+      )
+
+      PlotModuleServer(
+        "plot2",
+        plotlib = "base",
+        func = output_plot2,
+        ##        func2 = plot.RENDER,
+        ##        csvFunc = plot_data,
+        res = c(65, 110),
+        pdf.width = 12,
+        pdf.height = 6,
+        add.watermark = FALSE
+      )
+
+      PlotModuleServer(
+        "plot3",
+        plotlib = "base",
+        func = output_plot3,
+        ##        func2 = plot.RENDER,
+        ##        csvFunc = plot_data,
+        res = c(70, 110),
+        pdf.width = 12,
+        pdf.height = 6,
+        add.watermark = FALSE
+      )
+
+      PlotModuleServer(
+        "plot4",
+        plotlib = "base",
+        func = output_plot4,
+        ##        func2 = plot.RENDER,
+        ##        csvFunc = plot_data,
+        res = c(65, 110),
+        pdf.width = 12,
+        pdf.height = 6,
+        add.watermark = FALSE
+      )
+
+
+      return(correctedX) ## pointing to reactive
     } ## end-of-server
   )
 }
