@@ -54,7 +54,7 @@ functional_table_reactome_server <- function(id,
       url <- paste0("https://reactome.org/content/detail/", df$reactome.id)
       reactome.id_link <- paste0(
         "<a href='", url, "' target='_blank'>",
-        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
         "</a>"
       )
 
