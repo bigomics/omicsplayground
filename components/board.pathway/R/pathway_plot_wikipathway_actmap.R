@@ -51,7 +51,7 @@ functional_plot_wikipathway_actmap_ui <- function(
     title = title,
     label = label,
     caption = caption,
-    plotlib = "base",
+    plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
     height = height,
@@ -140,13 +140,14 @@ functional_plot_wikipathway_actmap_server <- function(id,
           nterms = 50,
           nfc = 100,
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200)
+          row.nchar = ifelse(input$rotate, 60, 200),
+          colorbar = TRUE
         )
       }
 
       PlotModuleServer(
         "plot",
-        plotlib = "base",
+        plotlib = "plotly",
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
