@@ -124,10 +124,10 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       x_axis <- colnames(score2)
       y_axis <- rownames(score2)
       fig <- plotly::plot_ly(
-          x = x_axis, y = y_axis,
-          z = score2, type = "heatmap",
-          colors = bluered.pal,
-          showscale = colorbar
+        x = x_axis, y = y_axis,
+        z = score2, type = "heatmap",
+        colors = bluered.pal,
+        showscale = colorbar
       )
       return(fig)
     }

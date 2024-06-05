@@ -144,10 +144,10 @@ functional_plot_go_actmap_server <- function(id,
         x_axis <- colnames(score)
         y_axis <- rownames(score)
         fig <- plotly::plot_ly(
-            x = x_axis, y = y_axis,
-            z = score, type = "heatmap",
-            colors = bluered.pal,
-            showscale = colorbar
+          x = x_axis, y = y_axis,
+          z = score, type = "heatmap",
+          colors = bluered.pal,
+          showscale = colorbar
         )
         return(fig)
       }
