@@ -139,7 +139,7 @@ functional_plot_go_actmap_server <- function(id,
 
         if (rotate) score <- t(score)
 
-        bluered.pal <- colorRamp(colors = c("royalblue3", "white", "indianred3"))
+        bluered.pal <- colorRamp(colors = c("royalblue3", "#ebeffa", "white", "#faeeee", "indianred3"))
         x_axis <- colnames(score)
         y_axis <- rownames(score)
         fig <- plotly::plot_ly(

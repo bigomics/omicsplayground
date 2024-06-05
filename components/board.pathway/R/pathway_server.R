@@ -119,7 +119,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       colnames(score2) <- paste0(colnames(score2), " ")
 
       if (rotate) score2 <- t(score2)
-      bluered.pal <- colorRamp(colors = c("royalblue3", "white", "indianred3"))
+      bluered.pal <- colorRamp(colors = c("royalblue3", "#ebeffa", "white", "#faeeee", "indianred3"))
       x_axis <- colnames(score2)
       y_axis <- rownames(score2)
       fig <- plotly::plot_ly(
