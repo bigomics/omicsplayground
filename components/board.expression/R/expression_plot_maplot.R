@@ -23,7 +23,11 @@ expression_plot_maplot_ui <- function(
     width) {
   ns <- shiny::NS(id)
   options <- tagList(
-    actionButton(ns("button1"), "some action")
+    shiny::checkboxInput(
+      inputId = ns("color_up_down"),
+      label = "Color up/down regulated",
+      value = TRUE
+    )
   )
 
   PlotModuleUI(ns("pltmod"),
@@ -32,7 +36,7 @@ expression_plot_maplot_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     caption = caption,
-    options = NULL,
+    options = options,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -195,7 +199,8 @@ expression_plot_maplot_server <- function(id,
         ylab = "effect size (log2.FC)",
         marker.size = 4,
         displayModeBar = FALSE,
-        showlegend = FALSE
+        showlegend = FALSE,
+        color_up_down = input$color_up_down
       )
       plt
     }
