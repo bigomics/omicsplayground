@@ -68,15 +68,9 @@ expression_plot_volcano_server <- function(id,
                                            comp1,
                                            fdr,
                                            lfc,
-                                           features,
                                            res,
-                                           sel1,
-                                           df1,
-                                           sel2,
-                                           df2,
-                                           genes_in_sel_geneset,
-                                           watermark = FALSE,
-                                           genes_selected) {
+                                           genes_selected,
+                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({

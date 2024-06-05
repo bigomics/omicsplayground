@@ -359,13 +359,7 @@ ExpressionBoard <- function(id, pgx) {
       comp1 = shiny::reactive(input$gx_contrast),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
-      features = shiny::reactive(input$gx_features),
       res = fullDiffExprTable,
-      sel1 = genetable_rows_selected,
-      df1 = filteredDiffExprTable,
-      sel2 = gsettable_rows_selected,
-      df2 = gx_related_genesets,
-      genes_in_sel_geneset = genes_in_sel_geneset,
       watermark = WATERMARK,
       genes_selected = genes_selected
     )
