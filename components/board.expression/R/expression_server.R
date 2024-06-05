@@ -297,14 +297,14 @@ ExpressionBoard <- function(id, pgx) {
     })
 
     genes_selected <- shiny::reactive({
+      shiny::req(input$gx_features)
       df1 <- filteredDiffExprTable()
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
-      browser()
       features <- input$gx_features
       fam.genes <- res$symbol
-      fdr = input$gx_fdr
-      lfc = input$gx_lfc
+      fdr <- input$gx_fdr
+      lfc <- input$gx_lfc
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
