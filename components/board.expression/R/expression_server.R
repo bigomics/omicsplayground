@@ -301,8 +301,10 @@ ExpressionBoard <- function(id, pgx) {
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
       browser()
-      features = input$gx_features
+      features <- input$gx_features
       fam.genes <- res$symbol
+      fdr = input$gx_fdr
+      lfc = input$gx_lfc
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
@@ -315,6 +317,8 @@ ExpressionBoard <- function(id, pgx) {
       qval <- pmax(qval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
+      scaled.x <- scale(x, center = FALSE)
+      scaled.y <- scale(y, center = FALSE)
 
       sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
       sel.genes <- intersect(sig.genes, sel.genes)
