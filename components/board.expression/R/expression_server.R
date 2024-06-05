@@ -78,16 +78,12 @@ ExpressionBoard <- function(id, pgx) {
     gsettable_rows_selected <- reactiveVal()
 
     observe({
-      print("gsettable rows selected")
-      print(gsettable$rows_selected())
       gsettable_rows_selected(gsettable$rows_selected())
     })
 
     genetable_rows_selected <- reactiveVal()
 
     observe({
-      print("genetable_rows_selected")
-      print(genetable$rows_selected())
       genetable_rows_selected(genetable$rows_selected())
     })
 
@@ -291,8 +287,6 @@ ExpressionBoard <- function(id, pgx) {
       sel_genes <- pgx$GMT[, sel_gset]
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes > 0)]
-      print("sel_genes in genes_in_sel_geneset")
-      print(sel_genes)
       return(names(sel_genes))
     })
 
@@ -354,10 +348,6 @@ ExpressionBoard <- function(id, pgx) {
       }
 
       res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes)
-
-      print("genes_selected")
-      print(res)
-
       return(res)
     })
 
