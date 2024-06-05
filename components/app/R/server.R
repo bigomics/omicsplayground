@@ -333,6 +333,7 @@ app_server <- function(input, output, session) {
 
 
       shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
+        
         if (ENABLED["dataview"]) {
           info("[SERVER] calling module dataview")
           DataViewBoard("dataview", pgx = PGX)
@@ -354,19 +355,19 @@ app_server <- function(input, output, session) {
           ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
         }
 
-        if (ENABLED["clusterfeatures"]) {
+        if (ENABLED["clusterfeatures"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling FeatureMapBoard module")
           FeatureMapBoard("clusterfeatures", pgx = PGX)
         }
 
-        if (ENABLED["enrich"]) {
+        if (ENABLED["enrich"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling EnrichmentBoard module")
           EnrichmentBoard("enrich",
             pgx = PGX,
             selected_gxmethods = env$diffexpr$selected_gxmethods
           ) -> env$enrich
         }
-        if (ENABLED["pathway"]) {
+        if (ENABLED["pathway"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling PathwayBoard module")
           PathwayBoard("pathway",
             pgx = PGX,
@@ -381,7 +382,7 @@ app_server <- function(input, output, session) {
           DrugConnectivityBoard("drug", pgx = PGX)
         }
 
-        if (ENABLED["isect"]) {
+        if (ENABLED["isect"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling IntersectionBoard module")
           IntersectionBoard("isect",
             pgx = PGX,
@@ -390,7 +391,7 @@ app_server <- function(input, output, session) {
           )
         }
 
-        if (ENABLED["sig"]) {
+        if (ENABLED["sig"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling SignatureBoard module")
           SignatureBoard("sig",
             pgx = PGX,
@@ -409,7 +410,7 @@ app_server <- function(input, output, session) {
           BiomarkerBoard("bio", pgx = PGX)
         }
 
-        if (ENABLED["cmap"]) {
+        if (ENABLED["cmap"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling ConnectivityBoard module")
           ConnectivityBoard("cmap",
             pgx = PGX,
@@ -439,7 +440,7 @@ app_server <- function(input, output, session) {
           PcsfBoard("pcsf", pgx = PGX)
         }
 
-        if (ENABLED["comp"]) {
+        if (ENABLED["comp"] && !is.null(PGX$GMT)) {
           info("[SERVER] calling CompareBoard module")
           CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
         }
@@ -577,10 +578,14 @@ app_server <- function(input, output, session) {
       tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
       tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
       tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
-      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
+      
+      # this will remove tabs if user has no gmt
+      # such cases can happen when organism == No Organism or when no gene annotation table is provided or when a gene annotation table without human_ortholog is provided.
+      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab", "clusterfeatures-tab", "cmap-tab", "comp-tab") #TODO part of cluter feature map can be used without gmt, but it is not implemented yet
       for (tab_i in gset_tabs) {
         tabRequire(PGX, session, tab_i, "gsetX", TRUE)
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
+        tabRequire(PGX, session, tab_i, "GMT", TRUE)
       }
 
       ## DEVELOPER only tabs (still too alpha)

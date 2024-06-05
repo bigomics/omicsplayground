@@ -12,6 +12,8 @@ IntersectionBoard <- function(
     ns <- session$ns ## NAMESPACE
     fullH <- 800 # row height of panel
 
+    req(pgx$GMT) # Hacky fix to avoid crash in cae a pgx with genesets was loaded and afterwards a pgx of No organism and/orcustom annotation file without human ortholog
+
     infotext <-
       "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
 

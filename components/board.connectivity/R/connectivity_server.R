@@ -13,6 +13,8 @@ ConnectivityBoard <- function(
     fullH <- 750 # row height of panel
     tabH <- "70vh"
 
+    req(pgx$GMT) # Hacky fix to avoid crash in cae a pgx with genesets was loaded and afterwards a pgx of No organism and/orcustom annotation file without human ortholog
+
     infotext <- strwrap(
       "The <strong>Experiment connectivity</strong> module enables users to
       compare their data to other datasets. For the selected contrast, this
