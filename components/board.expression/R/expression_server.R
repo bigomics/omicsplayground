@@ -300,10 +300,32 @@ ExpressionBoard <- function(id, pgx) {
       df1 <- filteredDiffExprTable()
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
-      # sel.genes <- res$symbol[setdiff(jj, NA)]
       browser()
-      sel.genes <- NULL
-      lab.genes <- NULL
+      features = input$gx_features
+      fam.genes <- res$symbol
+      if (features != "<all>") {
+        gset <- playdata::getGSETS(features)
+        fam.genes <- unique(unlist(gset))
+      }
+      jj <- match(fam.genes, res$symbol)
+      sel.genes <- res$symbol[setdiff(jj, NA)]
+
+      fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+      qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
+      qval <- pmax(qval, 1e-20)
+      x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
+      y <- -log10(qval + 1e-12)
+
+      sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+      sel.genes <- intersect(sig.genes, sel.genes)
+      impt <- function(g) {
+        j <- match(g, fc.genes)
+        x1 <- scaled.x[j]
+        y1 <- scaled.y[j]
+        x <- sign(x1) * (x1**2 + 0.25 * y1**2)
+        names(x) <- g
+        x
+      }
 
       gene.selected <- !is.null(genetable_rows_selected()) && !is.null(df1)
       gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
