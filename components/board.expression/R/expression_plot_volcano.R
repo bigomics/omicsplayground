@@ -95,6 +95,7 @@ expression_plot_volcano_server <- function(id,
       sel2 <- sel2()
       df2 <- df2()
       ## if no gene selected we should show full volcano plot
+      browser()
       test <- genes_selected()
 
       fam.genes <- res$symbol
