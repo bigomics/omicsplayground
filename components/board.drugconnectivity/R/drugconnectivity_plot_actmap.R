@@ -112,7 +112,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         colnames(score) <- substring(colnames(score), 1, 30)
         rownames(score) <- substring(rownames(score), 1, 50)
 
-        bluered.pal <- colorRamp(colors = c("white", "indianred3"))
+        bluered.pal <- colorRamp(colors = c("white", "#faeeee", "#ebbbbb", "indianred3"))
         x_axis <- colnames(score)
         y_axis <- rownames(score)
         fig <- plotly::plot_ly(
