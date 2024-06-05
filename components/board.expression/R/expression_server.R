@@ -296,6 +296,42 @@ ExpressionBoard <- function(id, pgx) {
       return(names(sel_genes))
     })
 
+    genes_selected <- shiny::reactive({
+      df1 <- filteredDiffExprTable()
+      df2 <- gx_related_genesets()
+      gene.selected <- !is.null(genetable_rows_selected) && !is.null(df1)
+      gset.selected <- !is.null(gsettable_rows_selected) && !is.null(df2)
+      if (gene.selected && !gset.selected) {
+        lab.genes <- df1$symbol[genetable_rows_selected]
+        if (lab.genes == "") lab.genes <- df1$feature[genetable_rows_selected]
+        sel.genes <- lab.genes
+        lab.cex <- 1.3
+      } else if (gene.selected && gset.selected) {
+        sel.genes <- genes_in_sel_geneset()
+        lab.genes <- c(
+          head(sel.genes[order(impt(sel.genes))], 10),
+          head(sel.genes[order(-impt(sel.genes))], 10)
+        )
+        lab.cex <- 1
+      } else {
+        lab.genes <- c(
+          head(sel.genes[order(impt(sel.genes))], 10),
+          head(sel.genes[order(-impt(sel.genes))], 10)
+        )
+        lab.cex <- 1
+      }
+
+      browser()
+
+
+      res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes)
+
+      print("genes_selected")
+      print(res)
+
+      return(res)
+    })
+
     # Plotting ###
 
     # tab differential expression > Plot ####
@@ -311,7 +347,8 @@ ExpressionBoard <- function(id, pgx) {
       sel2 = gsettable_rows_selected,
       df2 = gx_related_genesets,
       genes_in_sel_geneset = genes_in_sel_geneset,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      genes_selected = genes_selected
     )
 
     expression_plot_maplot_server(

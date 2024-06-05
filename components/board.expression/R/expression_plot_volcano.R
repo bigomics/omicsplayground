@@ -75,7 +75,8 @@ expression_plot_volcano_server <- function(id,
                                            sel2,
                                            df2,
                                            genes_in_sel_geneset,
-                                           watermark = FALSE) {
+                                           watermark = FALSE,
+                                           genes_selected) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
@@ -94,6 +95,7 @@ expression_plot_volcano_server <- function(id,
       sel2 <- sel2()
       df2 <- df2()
       ## if no gene selected we should show full volcano plot
+      test <- genes_selected()
 
       fam.genes <- res$symbol
       if (features != "<all>") {
