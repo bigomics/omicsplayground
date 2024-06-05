@@ -147,6 +147,10 @@ expression_plot_volcano_server <- function(id,
       xlim <- c(-1, 1) * max(abs(x), na.rm = TRUE)
       ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
 
+      print("lab.genes, sel.genes")
+      print(lab.genes)
+      print(sel.genes)
+
       return(list(
         x = x,
         y = y,
