@@ -347,7 +347,7 @@ ExpressionBoard <- function(id, pgx) {
         lab.cex <- 1
       }
 
-      res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes)
+      res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes, "fc.genes" = fc.genes)
       return(res)
     })
 
@@ -456,6 +456,7 @@ ExpressionBoard <- function(id, pgx) {
       features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      genes_selected = genes_selected,
       watermark = WATERMARK
     )
 

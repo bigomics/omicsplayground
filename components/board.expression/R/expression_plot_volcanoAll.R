@@ -65,6 +65,7 @@ expression_plot_volcanoAll_server <- function(id,
                                               features,
                                               fdr,
                                               lfc,
+                                              genes_selected,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -101,9 +102,11 @@ expression_plot_volcanoAll_server <- function(id,
         comp = comp,
         fdr = fdr,
         lfc = lfc,
-        sel.genes = sel.genes,
         FC = FC,
-        Q = Q
+        Q = Q,
+        sel.genes = genes_selected()$sel.genes,
+        lab.genes = genes_selected()$lab.genes,
+        fc.genes = genes_selected()$fc.genes
       )
 
       return(pd)
@@ -124,7 +127,7 @@ expression_plot_volcanoAll_server <- function(id,
       qv <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), q_cols, drop = FALSE]
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
-      rm(pd)
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,
@@ -137,7 +140,11 @@ expression_plot_volcanoAll_server <- function(id,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down
+        color_up_down = input$color_up_down,
+        names = pd[["fc.genes"]],
+        highlight = pd[["sel.genes"]],
+        label = pd[["lab.genes"]],
+        by_sig = FALSE
       )
 
       return(all_plts)
