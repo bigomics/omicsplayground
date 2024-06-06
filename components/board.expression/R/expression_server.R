@@ -372,13 +372,8 @@ ExpressionBoard <- function(id, pgx) {
       gx_lfc = reactive(input$gx_lfc),
       gx_features = reactive(input$gx_features),
       res = fullDiffExprTable,
-      sel1 = genetable_rows_selected,
-      df1 = filteredDiffExprTable,
-      sel2 = gsettable_rows_selected,
-      df2 = gx_related_genesets,
-      fam.genes = res$gene_name,
-      watermark = WATERMARK,
-      genes_in_sel_geneset = genes_in_sel_geneset
+      genes_selected = genes_selected,
+      watermark = WATERMARK
     )
 
     expression_plot_barplot_server(
