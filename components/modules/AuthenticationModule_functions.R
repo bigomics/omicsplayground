@@ -302,9 +302,9 @@ checkEmail <- function(email, domain = NULL, blocked_domain = NULL, user_databas
   if (checkBlockedDomain(email, blocked_domain)) {
     return(list(valid = FALSE, msg = "domain blocked"))
   }
-  if (!checkAuthorizedUser(email, credentials_file)) {
-    return(list(valid = FALSE, msg = "user not authorized"))
-  }
+  # if (!checkAuthorizedUser(email, credentials_file)) {
+  #   return(list(valid = FALSE, msg = "user not authorized"))
+  # }
   if (!checkExpiredUser(email, user_database)) {
     return(list(valid = FALSE, msg = "user expired"))
   }
