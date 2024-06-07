@@ -62,7 +62,6 @@ expression_plot_volcanoAll_ui <- function(id,
 expression_plot_volcanoAll_server <- function(id,
                                               pgx,
                                               getAllContrasts,
-                                              features,
                                               fdr,
                                               lfc,
                                               genes_selected,
@@ -71,10 +70,8 @@ expression_plot_volcanoAll_server <- function(id,
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::req(features())
 
       # Input variables
-      features <- features()
       ct <- getAllContrasts()
       FC <- ct$F
       Q <- ct$Q
@@ -82,13 +79,6 @@ expression_plot_volcanoAll_server <- function(id,
       lfc <- as.numeric(lfc())
       comp <- names(FC)
       shiny::req(length(comp) > 0)
-
-      # Subset genes if requrired
-      sel.genes <- rownames(pgx$X)
-      if (features != "<all>") {
-        gset <- playdata::getGSETS(features)
-        sel.genes <- unique(unlist(gset))
-      }
 
       ## combined matrix for output
       matF <- do.call(cbind, FC)
@@ -169,13 +159,6 @@ expression_plot_volcanoAll_server <- function(id,
 
       return(fig)
     }
-
-    #    shiny::observeEvent(plotly::event_data("plotly_relayout"),{
-    #      shiny::req(modal_plotly.RENDER())
-    #      ns <- session$ns
-    #      print(ns("test"))
-    #      shinyHugePlot::updatePlotlyH(session, "expression-volcanoAll-pltmod-renderfigure", plotly::event_data("plotly_relayout"), ds)
-    #    })
 
     PlotModuleServer(
       "pltmod",
