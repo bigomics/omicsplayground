@@ -123,10 +123,12 @@ expression_plot_volcanoAll_server <- function(id,
       ## meta tables
       fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
       q_cols <- grep("q.*", colnames(pd[["FQ"]]))
-      fc <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), fc_cols, drop = FALSE]
-      qv <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), q_cols, drop = FALSE]
+      fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
+      qv <- pd[["FQ"]][, q_cols, drop = FALSE]
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
+
+
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
@@ -146,6 +148,8 @@ expression_plot_volcanoAll_server <- function(id,
         label = pd[["lab.genes"]],
         by_sig = FALSE
       )
+
+      all_plts
 
       return(all_plts)
     }
