@@ -76,7 +76,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           br()
         ),
         bslib::accordion_panel(
-          title = "3. Remove outliers (beta)",
+          title = "3. Remove outliers",
           p("Analyze and remove outliers (i.e. bad samples) from your dataset.\n"),
           shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
           br()
@@ -313,15 +313,14 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         cx <- xlist[[m]]
         dbg("[outliers_server] dim.correctedX = ", dim(cx))
 
-        cx
+
+        dbg("[outliers_server] dim.correctedCounts = ", dim(X))
+        pmax(2**cx - 1, 0)
+
+        return(cx)
       })
 
-      ## return object
-      correctedCounts <- reactive({
-        X <- correctedX()
-        dbg("[outliers_server] dim.correctedCounts = ", dim(X))
-        pmax(2**X - 1, 0)
-      })
+
 
       ## ------------------------------------------------------------------
       ## Compute reactive
@@ -718,7 +717,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       return(
         list(
-          correctedCounts = correctedCounts,
+          correctedCounts = correctedX,
           results = results_correction_methods
         )
       ) ## pointing to reactive

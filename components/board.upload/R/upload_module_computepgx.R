@@ -11,6 +11,7 @@ upload_module_computepgx_ui <- function(id) {
 upload_module_computepgx_server <- function(
     id,
     countsRT,
+    countsX,
     samplesRT,
     contrastsRT,
     raw_dir,
@@ -479,6 +480,8 @@ upload_module_computepgx_server <- function(
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
         counts <- countsRT()
+        ai <- 3
+        browser()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
