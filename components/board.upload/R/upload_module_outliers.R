@@ -56,8 +56,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           shiny::p("Replace missing values using an imputation method:\n"),
           shiny::selectInput(ns("impute_method"), NULL,
             ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
-            choices = c("MinDet", "MinProb", "NMF", "SVDimpute" = "SVD2", "zero"),
-            selected = "SVD2"
+            choices = c("Zero (default)" = "zero", "MinDet", "MinProb", "NMF", "SVDimpute" = "SVD2"),
+            selected = "zero"
           ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
           br()
@@ -67,7 +67,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           div("Normalize data values:\n"),
           shiny::selectInput(ns("scaling_method"), NULL,
             choices = c(
-              "CPM" = "cpm", "median.3" = "m3", "median.4" = "m4",
+              "CPM (default)" = "cpm", "median.3" = "m3", "median.4" = "m4",
               "zdist.2" = "z2", "quantile.001" = "q0.01"
             ),
             selected = "cpm"
@@ -76,7 +76,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           br()
         ),
         bslib::accordion_panel(
-          title = "3. Outlier detection",
+          title = "3. Remove outliers (beta)",
           p("Analyze and remove outliers (i.e. bad samples) from your dataset.\n"),
           shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
           br()
