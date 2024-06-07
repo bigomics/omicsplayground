@@ -106,7 +106,7 @@ expression_plot_volcanoAll_server <- function(id,
         Q = Q,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
-        fc.genes = genes_selected()$fc.genes
+        fc.genes = rownames(FQ)
       )
 
       return(pd)
