@@ -129,7 +129,8 @@ expression_plot_volcanoMethods_server <- function(id,
         color_up_down = input$color_up_down,
         names = rownames(fc),
         highlight = sel.genes,
-        label = lab.genes
+        label = lab.genes,
+        by_sig = FALSE
       )
       return(all_plts)
     }
