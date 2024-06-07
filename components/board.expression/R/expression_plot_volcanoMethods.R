@@ -64,7 +64,6 @@ expression_plot_volcanoMethods_ui <- function(
 expression_plot_volcanoMethods_server <- function(id,
                                                   pgx,
                                                   comp, # input$gx_contrast
-                                                  features, # input$gx_features
                                                   fdr, # input$gx_fdr
                                                   lfc, # input$gx_lfc
                                                   genes_selected,
@@ -73,17 +72,11 @@ expression_plot_volcanoMethods_server <- function(id,
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::req(comp(), features())
+      shiny::req(comp())
       comp <- comp()
-      features <- features()
 
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
-      sel.genes <- rownames(pgx$X)
-      if (features != "<all>") {
-        gset <- playdata::getGSETS(features)
-        sel.genes <- unique(unlist(gset))
-      }
 
       pd <- list(
         pgx = pgx,
