@@ -67,6 +67,7 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   features, # input$gx_features
                                                   fdr, # input$gx_fdr
                                                   lfc, # input$gx_lfc
+                                                  genes_selected,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -89,7 +90,8 @@ expression_plot_volcanoMethods_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         comp = comp,
-        sel.genes = sel.genes
+        sel.genes = genes_selected()$sel.genes,
+        lab.genes = genes_selected()$lab.genes
       )
 
       return(pd)
@@ -101,14 +103,15 @@ expression_plot_volcanoMethods_server <- function(id,
 
       # Input vars
       sel.genes <- pd[["sel.genes"]]
+      lab.genes <- pd[["lab.genes"]]
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
-      fc <- mx[which(rownames(mx) %in% sel.genes), "fc", drop = FALSE]
-      qv <- mx[which(rownames(mx) %in% sel.genes), "q", drop = FALSE]
-      rm(mx, pd)
+      fc <- mx[, "fc", drop = FALSE]
+      qv <- mx[, "q", drop = FALSE]
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,
@@ -123,7 +126,10 @@ expression_plot_volcanoMethods_server <- function(id,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down
+        color_up_down = input$color_up_down,
+        names = rownames(fc),
+        highlight = sel.genes,
+        label = lab.genes
       )
       return(all_plts)
     }

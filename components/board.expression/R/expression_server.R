@@ -469,6 +469,7 @@ ExpressionBoard <- function(id, pgx) {
       features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      genes_selected = genes_selected,
       watermark = WATERMARK
     )
 
