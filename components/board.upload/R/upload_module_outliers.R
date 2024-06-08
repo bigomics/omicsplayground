@@ -302,7 +302,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           y = pars$pheno,
           controls = NULL,
           methods = mm,
-          combatx = FALSE,
           ntop = Inf,
           sc = FALSE,
           remove.failed = TRUE
@@ -313,8 +312,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         cx <- xlist[[m]]
         dbg("[outliers_server] dim.correctedX = ", dim(cx))
 
-
-        dbg("[outliers_server] dim.correctedCounts = ", dim(X))
         pmax(2**cx - 1, 0)
 
         return(cx)

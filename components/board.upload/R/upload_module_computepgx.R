@@ -482,6 +482,7 @@ upload_module_computepgx_server <- function(
         counts <- countsRT()
         ai <- 3
         browser()
+        countsX <- countsX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
