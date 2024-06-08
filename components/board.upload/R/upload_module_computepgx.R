@@ -480,8 +480,6 @@ upload_module_computepgx_server <- function(
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
         counts <- countsRT()
-        ai <- 3
-        browser()
         countsX <- countsX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
@@ -539,8 +537,8 @@ upload_module_computepgx_server <- function(
           organism = input$selected_organism,
           samples = samples,
           counts = counts,
+          countsX = countsX,
           contrasts = contrasts,
-
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
