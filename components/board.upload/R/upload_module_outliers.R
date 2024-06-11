@@ -86,7 +86,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "4. Batch correction",
           shiny::p("Clean up your data from unwanted variation:\n"),
           shiny::selectInput(ns("bec_method"), NULL,
-            choices = c("uncorrected", "ComBat", "SVA", "RUV3", "NNM"),
+            choices = c("uncorrected", "ComBat", "SVA", "RUV3", "NPM"),
             selected = "uncorrected"
           ),
           shiny::conditionalPanel(
@@ -345,7 +345,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           res <- playbase::compare_batchcorrection_methods(
             X1, samples,
             pheno = NULL, contrasts = contrasts,
-            methods = c("ComBat", "RUV", "SVA", "NNM"),
+            methods = c("ComBat", "RUV", "SVA", "NPM"),
             ntop = 4000, xlist.init = xlist.init
           )
         })
