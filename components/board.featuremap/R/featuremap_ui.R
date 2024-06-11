@@ -54,6 +54,18 @@ FeatureMapInputs <- function(id) {
       )
     ),
     shiny::conditionalPanel(
+      "input.tabs == 'Gene' && input.filter_genes.includes('<custom>')",
+      ns = ns,
+      withTooltip(
+        shiny::textAreaInput(ns("customlist"), NULL,
+          value = NULL,
+          rows = 5, placeholder = "Paste your custom gene list"
+        ),
+        "Paste a custom list of genes to highlight.",
+        placement = "bottom"
+      )
+    ),
+    shiny::conditionalPanel(
       "input.tabs == 'Geneset'",
       ns = ns,
       withTooltip(
