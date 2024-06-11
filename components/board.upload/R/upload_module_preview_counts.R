@@ -141,7 +141,7 @@ upload_table_preview_counts_server <- function(
                 br(),
                 check_to_html(
                   checklist$counts.csv$checks,
-                  pass_msg = "All counts checks passed",
+                  pass_msg = "All counts checks passed - TEST",
                   null_msg = "Counts checks not run yet.
                             Fix any errors with counts first."
                 ),
