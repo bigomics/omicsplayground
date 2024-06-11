@@ -68,7 +68,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           shiny::selectInput(ns("scaling_method"), NULL,
             choices = c(
               "CPM (default)" = "cpm", "median.3" = "m3", "median.4" = "m4",
-              "zdist.2" = "z2", "quantile.001" = "q0.01"
+              "zdist.2" = "z2", "quantile.001" = "q0.01",
+              "MaxMedian" = "logMaxMedianNorm", "MaxSum" = "logMaxSumNorm"
             ),
             selected = "cpm"
           ),
