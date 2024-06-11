@@ -423,11 +423,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           boxplot(X0,
-            main = "raw", ylim = ylim,
+            main = "raw", ylim = ylim, las = 1,
             ylab = "expression (log2)", xlab = "samples"
           )
           boxplot(X1,
-            main = "normalized", ylim = ylim,
+            main = "normalized", ylim = ylim, las = 1, 
             ylab = "", xlab = "samples"
           )
         }
