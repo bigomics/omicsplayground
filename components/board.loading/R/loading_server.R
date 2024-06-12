@@ -378,6 +378,10 @@ LoadingBoard <- function(id,
       load_uploaded_data(NULL)
     })
 
+    # Generate report server module
+
+    DatasetReportServer(id = "generate_report")
+
     ## ================================================================================
     ## Header
     ## ================================================================================
