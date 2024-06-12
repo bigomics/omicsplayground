@@ -203,11 +203,13 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         if (input$zero_as_na) X[which(X == 0)] <- NA
         if (!input$skip_imput) { 
              X <- playbase::imputeMissing(X, method = input$impute_method)
-        } 
-        
-        ## sum up duplicates (in linear intensity scale): FIX TO KEEP NA FOR PROTEOMICS.
-        X <- log2(rowsum(2**X, rownames(X)))
-        X <- pmax(X, 0) ## really?
+             ## sum up duplicates (in linear intensity scale)
+             ## X <- log2(rowsum(2**X, rownames(X)))
+             ## X <- pmax(X, 0) ## really?
+             X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+        } else {
+             X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
+          }
         
         dbg("[outliers_server] dim.counts = ", dim(counts))
         if(input$skip_imput) {
