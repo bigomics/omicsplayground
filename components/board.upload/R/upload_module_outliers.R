@@ -585,7 +585,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           barplot(zscore,
             main = "outlier score",
-            ylim = c(0, max(7, 1.2 * max(Z))), ylab = "z-score"
+            las = 1, ylim = c(0, max(7, 1.2 * max(Z))), ylab = "z-score"
           )
           abline(h = z0, lty = 3, lwd = 1.5, col = "red")
           plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
