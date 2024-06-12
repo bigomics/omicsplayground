@@ -552,7 +552,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
         ## How about plotly??
         plot(pos,
-          col = col1, cex = 0.8 * cex1, pch = 20,
+          col = col1, cex = 0.8 * cex1, pch = 20, las = 1,
           xlim = c(-0.1, 1.1), ylim = c(-0.1, 1.1),
           xlab = "PC1", ylab = "PC2", main = "outliers"
         )
