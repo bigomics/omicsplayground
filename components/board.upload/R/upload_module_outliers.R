@@ -60,6 +60,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             selected = "zero"
           ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+          shiny::checkboxInput(ns("skip_imput"), "skip imputation", value = FALSE)
           br()
         ),
         bslib::accordion_panel(
