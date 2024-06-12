@@ -48,6 +48,7 @@ enrichment_plot_volcanomethods_server <- function(id,
                                                   gs_contrast,
                                                   gs_fdr,
                                                   gs_lfc,
+                                                  gset_selected,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -72,7 +73,8 @@ enrichment_plot_volcanomethods_server <- function(id,
         Q = Q,
         sel.gsets = sel.gsets,
         fdr = fdr,
-        lfc = lfc
+        lfc = lfc,
+        gset_selected = gset_selected()
       )
       pd
     })
@@ -84,6 +86,8 @@ enrichment_plot_volcanomethods_server <- function(id,
       # Input vars
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
+      highlight <- pd[["gset_selected"]]
+      label <- pd[["gset_selected"]]
       ## meta tables
       fc <- pd$FC
       qv <- pd$Q
@@ -103,7 +107,10 @@ enrichment_plot_volcanomethods_server <- function(id,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down
+        color_up_down = input$color_up_down,
+        label = label,
+        highlight = highlight,
+        by_sig = FALSE
       )
 
       return(all_plts)

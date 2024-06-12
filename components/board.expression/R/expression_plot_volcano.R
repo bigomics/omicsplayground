@@ -68,92 +68,36 @@ expression_plot_volcano_server <- function(id,
                                            comp1,
                                            fdr,
                                            lfc,
-                                           features,
                                            res,
-                                           sel1,
-                                           df1,
-                                           sel2,
-                                           df2,
-                                           genes_in_sel_geneset,
+                                           genes_selected,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(res())
       shiny::req(length(comp1()) > 0)
-      shiny::req(features())
       # calculate required inputs for plotting
 
       comp1 <- comp1()
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
-      features <- features()
       res <- res()
-      sel1 <- sel1()
-      df1 <- df1()
-      sel2 <- sel2()
-      df2 <- df2()
-      ## if no gene selected we should show full volcano plot
 
-      fam.genes <- res$symbol
-      if (features != "<all>") {
-        gset <- playdata::getGSETS(features)
-        fam.genes <- unique(unlist(gset))
-      }
-
-      jj <- match(fam.genes, res$symbol)
-      sel.genes <- res$symbol[setdiff(jj, NA)]
       fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
 
-      sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
-      sel.genes <- intersect(sig.genes, sel.genes)
-      scaled.x <- scale(x, center = FALSE)
-      scaled.y <- scale(y, center = FALSE)
-      impt <- function(g) {
-        j <- match(g, fc.genes)
-        x1 <- scaled.x[j]
-        y1 <- scaled.y[j]
-        x <- sign(x1) * (x1**2 + 0.25 * y1**2)
-        names(x) <- g
-        x
-      }
-
-      lab.cex <- 1
-      gene.selected <- !is.null(sel1) && !is.null(df1)
-      gset.selected <- !is.null(sel2) && !is.null(df2)
-      if (gene.selected && !gset.selected) {
-        lab.genes <- df1$symbol[sel1]
-        if (lab.genes == "") lab.genes <- df1$feature[sel1]
-        sel.genes <- lab.genes
-        lab.cex <- 1.3
-      } else if (gene.selected && gset.selected) {
-        sel.genes <- genes_in_sel_geneset()
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
-        )
-        lab.cex <- 1
-      } else {
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
-        )
-        lab.cex <- 1
-      }
-      xlim <- c(-1, 1) * max(abs(x), na.rm = TRUE)
-      ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
 
       return(list(
         x = x,
         y = y,
         fc.genes = fc.genes,
-        sel.genes = sel.genes,
-        lab.genes = lab.genes,
-        lab.cex = lab.cex,
+        sel.genes = genes_selected()$sel.genes,
+        lab.genes = genes_selected()$lab.genes,
+        lab.cex = 1,
         fdr = fdr,
         lfc = lfc
       ))

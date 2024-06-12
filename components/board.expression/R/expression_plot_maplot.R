@@ -68,12 +68,7 @@ expression_plot_maplot_server <- function(id,
                                           gx_lfc,
                                           gx_features,
                                           res,
-                                          sel1,
-                                          df1,
-                                          sel2,
-                                          df2,
-                                          fam.genes,
-                                          genes_in_sel_geneset,
+                                          genes_selected,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
@@ -84,99 +79,28 @@ expression_plot_maplot_server <- function(id,
         return(NULL)
       }
       shiny::req(pgx$X)
-      sel1 <- sel1()
-      df1 <- df1()
-      sel2 <- sel2()
-      df2 <- df2()
       X <- pgx$X
       res <- res()
       lfc <- as.numeric(gx_lfc())
       fdr <- as.numeric(gx_fdr())
 
-      dbg("[expression_plot_maplot.R] sel1 = ", sel1())
-
       if (is.null(res)) {
         return(NULL)
       }
 
-      ## filter genes by gene family or gene set
-      fam.genes <- res$symbol
-      if (gx_features() != "<all>") {
-        gset <- playdata::getGSETS(gx_features())
-        fam.genes <- unique(unlist(gset))
-      }
-
-      jj <- match(toupper(fam.genes), toupper(res$symbol))
-      sel.genes <- res$symbol[setdiff(jj, NA)]
-
-      qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
-
-      scaled.x <- scale(-log10(qval), center = FALSE)
-      scaled.y <- scale(y, center = FALSE)
-      fc.genes <- res$symbol
-
-      impt <- function(g) {
-        j <- match(g, fc.genes)
-        x1 <- scaled.x[j]
-        y1 <- scaled.y[j]
-        x <- sign(x1) * (0.25 * x1**2 + y1**2)
-        names(x) <- g
-        x
-      }
-
-      sig.genes <- fc.genes[which(qval <= fdr & abs(y) > lfc)]
-      sel.genes <- intersect(sig.genes, sel.genes)
-      lab.cex <- 1
-      gene.selected <- !is.null(sel1) && !is.null(df1)
-      gset.selected <- !is.null(sel2) && !is.null(df2)
-      if (gene.selected && !gset.selected) {
-        lab.genes <- df1$symbol[sel1]
-        sel.genes <- lab.genes
-        lab.cex <- 1.3
-      } else if (gene.selected && gset.selected) {
-        sel.genes <- genes_in_sel_geneset()
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
-        )
-        lab.cex <- 1
-      } else {
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
-        )
-        lab.cex <- 1
-      }
-
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
-
-      impt <- function(g) {
-        j <- match(g, fc.genes)
-        x1 <- scale(x, center = FALSE)[j]
-        y1 <- scale(y, center = FALSE)[j]
-        x <- sign(y1) * (1.0 * x1**2 + 1.0 * y1**2)
-        names(x) <- g
-        x
-      }
-      lab.genes <- c(
-        head(sel.genes[order(impt(sel.genes))], 10),
-        head(sel.genes[order(-impt(sel.genes))], 10)
-      )
+      fc.genes <- res$symbol
 
       return(list(
         x = x,
         y = y,
         ylim = ylim,
-        sel.genes = sel.genes,
-        lab.genes = lab.genes,
-        lab.cex = lab.cex,
+        sel.genes = genes_selected()$sel.genes,
+        lab.genes = genes_selected()$lab.genes,
         fc.genes = fc.genes,
-        sel1 = sel1,
-        df1 = df1,
-        sel2 = sel2,
-        df2 = df2,
+        lab.cex = 1,
         fdr = fdr,
         lfc = lfc
       ))
