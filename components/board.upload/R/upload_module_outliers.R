@@ -119,7 +119,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           info.text = missing.infotext,
           caption = missing.infotext,
           options = missing.options,
-          height = c("100%", "70vh")
+          height = c("100%", "70vh"),
+          show.maximize = FALSE
         ),
         PlotModuleUI(
           ns("plot1"),
@@ -127,7 +128,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           #         info.text = info.text,
           #         caption = caption,
           options = norm.options,
-          height = c("100%", "70vh")
+          height = c("100%", "70vh"),
+          show.maximize = FALSE
         ),
         PlotModuleUI(
           ns("plot3"),
@@ -135,7 +137,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           info.text = score.infotext,
           caption = score.infotext,
           options = outlier.options,
-          height = c("100%", "70vh")
+          height = c("100%", "70vh"),
+          show.maximize = FALSE
         ),
         PlotModuleUI(
           ns("plot4"),
@@ -144,7 +147,8 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           #          caption = caption,
           ##          options = bec.options,
           options = NULL,
-          height = c("100%", "70vh")
+          height = c("100%", "70vh"),
+          show.maximize = FALSE
         )
       )
     )
