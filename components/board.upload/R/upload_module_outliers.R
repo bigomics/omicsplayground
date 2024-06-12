@@ -60,7 +60,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             selected = "zero"
           ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-          shiny::checkboxInput(ns("skip_imput"), "skip imputation", value = FALSE),
+          shiny::checkboxInput(ns("skip_imput"), "skip imputation (retains NAs)", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -93,19 +93,11 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           shiny::conditionalPanel(
             "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
             ns = ns,
-            ##            shiny::selectInput(ns("bec_param"), "Batch parameter:", choices=NULL),
+            ## shiny::selectInput(ns("bec_param"), "Batch parameter:", choices=NULL),
             shiny::textOutput(ns("bec_param_text")),
             shiny::br(),
           ),
           shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
-          ## shiny::actionButton(
-          ##   ns("compute_button"),
-          ##   "Compute",
-          ##   class = "btn btn-primary",
-          ##   width ='80%',
-          ##   style = 'margin-left:10%; margin-top: 15px;'
-          ##   ##style = 'margin-left:10%; position: absolute; bottom: 30px;'
-          ## ),
           br()
         )
       ),
