@@ -441,11 +441,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            xlab = "expression (log2)"
+            las = 1, xlab = "expression (log2)"
           )
           hist(X1,
             breaks = 60, main = "normalized", xlim = xlim1,
-            xlab = "expression (log2)", ylab = ""
+            las = 1, xlab = "expression (log2)", ylab = ""
           )
         }
 
@@ -462,11 +462,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           playbase::gx.hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            xlab = "expression (log2)"
+            las = 1, xlab = "expression (log2)"
           )
           playbase::gx.hist(X1,
             breaks = 60, main = "normalized", xlim = xlim1,
-            xlab = "expression (log2)", ylab = ""
+            las = 1, xlab = "expression (log2)", ylab = ""
           )
         }
       }
@@ -483,7 +483,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         }
         q999 <- quantile(X1, probs = 0.999)[1]
         X1[X1 > q999] <- NA
-        h <- hist(X1, breaks = 80, plot = FALSE)
+        h <- hist(X1, breaks = 80, plot = FALSE, las = 1)
         hh <- h$breaks
 
         ## set zero value to 1, NA values to 2
@@ -497,10 +497,10 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), mgp = c(2.2, 0.85, 0))
 
         if (length(ii) > 0) {
-          hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2CPM)")
-          hist(X1[ii], breaks = hh, add = TRUE, col = "red")
+          hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
+          hist(X1[ii], breaks = hh, add = TRUE, col = "red", las = 1)
         } else {
-          hist(X1, breaks = hh, main = "", xlab = "expression (log2CPM)")
+          hist(X1, breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
         }
 
         if (input$missing_plottype == "heatmap") {
