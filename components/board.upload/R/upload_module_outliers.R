@@ -199,18 +199,22 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         shiny::req(r_X())
         counts <- r_X()
         X <- log2(1 + counts)
-        X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values
+        X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values 
         if (input$zero_as_na) X[which(X == 0)] <- NA
-        ## which.missing <- which( is.na(X) )
-        X <- playbase::imputeMissing(X, method = input$impute_method)
-
-        ## sum up duplicates (in linear intensity scale)
+        if (!input$skip_imput) { 
+             X <- playbase::imputeMissing(X, method = input$impute_method)
+        } 
+        
+        ## sum up duplicates (in linear intensity scale): FIX TO KEEP NA FOR PROTEOMICS.
         X <- log2(rowsum(2**X, rownames(X)))
         X <- pmax(X, 0) ## really?
-
+        
         dbg("[outliers_server] dim.counts = ", dim(counts))
-        dbg("[outliers_server] dim.imputedX = ", dim(X))
-
+        if(input$skip_imput) {
+          dbg("[outliers_server] Skipped imputation: dim.imputedX = ", dim(X))
+        } else {
+          dbg("[outliers_server] dim.imputedX = ", dim(X))
+        }
         X
       })
 
