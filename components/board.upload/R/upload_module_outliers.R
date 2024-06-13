@@ -206,6 +206,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values 
         if (input$zero_as_na) X[which(X == 0)] <- NA
         if (!input$skip_imput) { 
+             dbg("[outliers_server] Imputing data")
              X <- playbase::imputeMissing(X, method = input$impute_method)
              ## sum up duplicates (in linear intensity scale)
              ## X <- log2(rowsum(2**X, rownames(X)))
@@ -213,6 +214,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
              counts <- playbase::counts.mergeDuplicateFeatures(counts)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
         } else { ## needs refactoring.
+             dbg("[outliers_server] Skip imputation")
              counts <- playbase::counts.mergeDuplicateFeatures(counts, keep.NA = TRUE)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
           }
