@@ -210,8 +210,10 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
              ## sum up duplicates (in linear intensity scale)
              ## X <- log2(rowsum(2**X, rownames(X)))
              ## X <- pmax(X, 0) ## really?
+             counts <- playbase::counts.mergeDuplicateFeatures(counts)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-        } else {
+        } else { ## needs refactoring.
+             counts <- playbase::counts.mergeDuplicateFeatures(counts, keep.NA = TRUE)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
           }
         
