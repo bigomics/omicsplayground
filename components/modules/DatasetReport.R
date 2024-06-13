@@ -6,8 +6,11 @@
 DatasetReportUI <- function(id) {
     ns <- shiny::NS(id)
     shiny::actionButton(
-        ns("show_report_modal"), "Generate Report",
-        width = "auto", class = "quick-button"
+        ns("show_report_modal"),
+        label = "Generate Report",
+        icon = icon("file"),
+        class = "btn btn-secondary",
+        width = NULL
     )
 }
 
@@ -47,7 +50,6 @@ DatasetReportServer <- function(
         }
 
         shiny::observeEvent(input$show_report_modal, {
-            print("generate report clicked")
             showModal()
         })
     }) ## end of moduleServer
