@@ -18,7 +18,6 @@ DatasetReportServer <- function(
 
         showModal <- function() {
             body <- tagList(
-                
                 div(
                     shiny::textInput(
                         inputId = ns("available_datasets"),
@@ -47,14 +46,9 @@ DatasetReportServer <- function(
             shiny::showModal(modal)
         }
 
-
-
         shiny::observeEvent(input$show_report_modal, {
+            print("generate report clicked")
             showModal()
         })
-
-        # list(
-        #     click = ext_click ## exported function!
-        # )
     }) ## end of moduleServer
 }
