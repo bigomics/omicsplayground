@@ -25,8 +25,7 @@ DatasetReportServer <- function(
                     shiny::textInput(
                         inputId = ns("available_datasets"),
                         label = "", placeholder = "Select a dataset"
-                    ),
-                    style = "margin-top: -30px;"
+                    )
                 ),
                 shiny::actionButton(ns("generate_report_action"), "Submit", class = "btn btn-primary")
             )
@@ -34,16 +33,12 @@ DatasetReportServer <- function(
             modal <- shiny::modalDialog(
                 title = NULL,
                 bsutils::modalHeader(
-                    div(class = "modal-title", "Create a report"),
-                    style = "background-color: #f0f9fd;"
+                    div(class = "modal-title", "Create a report")
                 ),
-                # body,
+                body,
                 footer = NULL,
                 size = "l",
-                easyClose = TRUE,
-                tags$style(".modal-dialog {width: 720px;}"),
-                tags$style(".modal-content {background-color: #f0f9fd;}"),
-                tags$style(".modal-header {padding: 0px;}")
+                easyClose = TRUE
             )
 
             shiny::showModal(modal)
