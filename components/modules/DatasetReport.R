@@ -24,6 +24,7 @@ DatasetReportServer <- function(
             # Fetch the datasets from the API
             url <- Sys.getenv("API_BACKEND_URL")
             bearer_token <- Sys.getenv("BEARER_TOKEN")
+            quarto_file_path <- Sys.getenv("QUARTO_FILE_PATH")
 
             response <- httr::GET(
                 glue::glue("{url}/secure/datasets"),
@@ -54,13 +55,18 @@ DatasetReportServer <- function(
                         "quarto",
                         args = c(
                             "render",
-                            "../omicsplayground-report/main.qmd",
+                            file.path(quarto_file_path, "main.qmd"),
                             "--to",
                             "pdf",
                             "-P",
                             paste("dataset:", input$available_datasets, sep = "")
                         ),
                         stdout = file
+                    )
+
+                    file.copy(
+                        file.path(quarto_file_path, "main.pdf"),
+                        file
                     )
                 }
             )
