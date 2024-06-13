@@ -41,8 +41,28 @@ DatasetReportServer <- function(
                         choices = datasets,
                         selected = datasets[1]
                     ),
-                    shiny::actionButton(ns("generate_report_action"), "Submit", class = "btn btn-primary")
+                    shiny::downloadButton(ns("download_pdf"), "Download PDF")
                 )
+            )
+
+            output$download_pdf <- shiny::downloadHandler(
+                filename = function() {
+                    paste(input$available_datasets, ".pdf", sep = "")
+                },
+                content = function(file) {
+                    system2(
+                        "quarto",
+                        args = c(
+                            "render",
+                            "../omicsplayground-report/main.qmd",
+                            "--to",
+                            "pdf",
+                            "-P",
+                            paste("dataset:", input$available_datasets, sep = "")
+                        ),
+                        stdout = file
+                    )
+                }
             )
 
             modal <- shiny::modalDialog(
