@@ -32,7 +32,6 @@ DatasetReportServer <- function(
             )
 
             datasets <- jsonlite::fromJSON(httr::content(response, "text"))
-            print(datasets)
 
             body <- tagList(
                 div(
@@ -51,6 +50,14 @@ DatasetReportServer <- function(
                     paste(input$available_datasets, ".pdf", sep = "")
                 },
                 content = function(file) {
+                    shiny::removeModal()
+
+                    shinyalert::shinyalert(
+                        title = "Your report is being computed!",
+                        text = "Your download will start shortly.",
+                        type = "info"
+                    )
+
                     system2(
                         "quarto",
                         args = c(
