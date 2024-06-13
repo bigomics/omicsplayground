@@ -531,8 +531,7 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
-        # Define create_pgx function arguments
-
+        ## Define create_pgx function arguments
         params <- list(
           organism = input$selected_organism,
           samples = samples,
@@ -574,6 +573,10 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
+        ## Test check dim(counts) & dim(X)
+        dbg("[compute PGX process]: dim.X: ", dim(params$counts))
+        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX))
+        
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
