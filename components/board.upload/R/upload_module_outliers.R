@@ -208,9 +208,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         if (!input$skip_imput) { 
              dbg("[outliers_server] Imputing data")
              X <- playbase::imputeMissing(X, method = input$impute_method)
-             ## sum up duplicates (in linear intensity scale)
-             ## X <- log2(rowsum(2**X, rownames(X)))
-             ## X <- pmax(X, 0) ## really?
              counts <- playbase::counts.mergeDuplicateFeatures(counts)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
         } else { ## needs refactoring.
@@ -229,7 +226,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       })
 
       normalizedX <- reactive({
-        X <- imputedX() ## log
+        X <- imputedX() ## can be imputed or not (see above). log-scale.
         if (input$skip_norm) {
           return(X) ## log
         }
