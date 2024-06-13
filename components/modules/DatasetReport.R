@@ -46,7 +46,14 @@ DatasetReportServer <- function(
 
         shiny::observeEvent(input$show_report_modal, {
             url <- Sys.getenv("API_BACKEND_URL")
+            bearer_token <- Sys.getenv("BEARER_TOKEN")
 
+            response <- httr::GET(
+                glue::glue("{url}/secure/datasets"),
+                httr::add_headers(Authorization = paste("Bearer", bearer_token))
+            )
+
+            print(httr::content(response, "text"))
             showModal()
         })
     }) ## end of moduleServer
