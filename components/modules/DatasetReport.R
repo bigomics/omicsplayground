@@ -42,7 +42,7 @@ DatasetReportServer <- function(
                         choices = datasets,
                         selected = datasets[1]
                     ),
-                    shiny::downloadButton(ns("download_pdf"), "Download PDF")
+                    shiny::downloadButton(ns("download_pdf"), "Submit")
                 )
             )
 
@@ -56,17 +56,13 @@ DatasetReportServer <- function(
                         args = c(
                             "render",
                             file.path(quarto_file_path, "main.qmd"),
+                            "--output",
                             "--to",
                             "pdf",
                             "-P",
                             paste("dataset:", input$available_datasets, sep = "")
                         ),
                         stdout = file
-                    )
-
-                    file.copy(
-                        file.path(quarto_file_path, "main.pdf"),
-                        file
                     )
                 }
             )
