@@ -45,6 +45,8 @@ DatasetReportServer <- function(
         }
 
         shiny::observeEvent(input$show_report_modal, {
+            url <- Sys.getenv("API_BACKEND_URL")
+
             showModal()
         })
     }) ## end of moduleServer
