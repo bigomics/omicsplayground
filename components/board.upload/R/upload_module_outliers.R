@@ -723,7 +723,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
     
       return(
         list(
-          counts = counts,
+          ## counts = counts,
           correctedCounts = correctedX,
           results = results_correction_methods
         )
