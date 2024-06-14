@@ -198,7 +198,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## IMPUTE FIRST OR NORMALIZE????
+      ## Impute
       imputedX <- reactive({
         shiny::req(r_X())
         counts <- r_X()
@@ -208,11 +208,9 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         if (!input$skip_imput) { 
              dbg("[outliers_server] Imputing data")
              X <- playbase::imputeMissing(X, method = input$impute_method)
-             counts <- playbase::counts.mergeDuplicateFeatures(counts)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-        } else { ## needs refactoring.
+        } else {
              dbg("[outliers_server] Skip imputation")
-             counts <- playbase::counts.mergeDuplicateFeatures(counts, keep.NA = TRUE)
              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
           }
         
@@ -222,11 +220,16 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         } else {
           dbg("[outliers_server] dim.imputedX = ", dim(X))
         }
-        X
+        counts <- 2 ** X - 1
+        LL <- list(counts = counts, X = X)
+        dbg("[outliers_server] dim.counts = ", dim(LL$counts))
+        dbg("[outliers_server] dim.X = ", dim(LL$X))
+        LL
       })
 
+      ## Normalize
       normalizedX <- reactive({
-        X <- imputedX() ## can be imputed or not (see above). log-scale.
+        X <- imputedX()$X ## can be imputed or not (see above). log-scale.
         if (input$skip_norm) {
           dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
           return(X) ## log
@@ -262,7 +265,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           X[jj] <- 0
         })
         dbg("[outliers_server:normalizedX] dim.normalizedX = ", dim(X))
-        dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()))
+        dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()$X))
         X
       })
 
@@ -324,7 +327,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       })
 
 
-
       ## ------------------------------------------------------------------
       ## Compute reactive
       ## ------------------------------------------------------------------
@@ -333,7 +335,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         ## shiny::req(cleanX()$X, r_contrasts(), r_samples())
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        X0 <- imputedX()
+        X0 <- imputedX()$X
         X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
@@ -400,7 +402,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       plot_normalization <- function() {
         ## rX <- playbase::read.as_matrix("/home/kwee/Downloads/raw_allorenteizquierdo@health.ucsd.edu_7505cdba5/raw_counts.csv")
         rX <- r_X()
-        X0 <- imputedX()
+        X0 <- imputedX()$X
         X1 <- normalizedX()
 
         if (input$norm_zero_na) {
@@ -482,7 +484,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_X()
-        X1 <- imputedX()
+        X1 <- imputedX()$X
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
         ii <- which(is.na(X0))
@@ -718,12 +720,15 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
 
-     dbg("[outliers_server] dim.counts = ", dim(counts))                       
-     dbg("[outliers_server] dim.correctedX = ", dim(correctedX))
+     counts <- shiny::reactive({
+          shiny::req(imputedX()$counts)
+          dbg("[outliers_server] dim.counts = ", dim(imputedX()$counts))
+          return(imputedX()$counts)
+      })
     
       return(
         list(
-          ## counts = counts,
+          counts = counts,
           correctedCounts = correctedX,
           results = results_correction_methods
         )
