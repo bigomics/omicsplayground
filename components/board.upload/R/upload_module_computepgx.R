@@ -485,6 +485,11 @@ upload_module_computepgx_server <- function(
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
 
+        dbg("[upload_module_computepgx:input$compute] dim.counts = ", dim(counts))
+        dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX))
+        dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples))
+        dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts))
+        
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
