@@ -218,7 +218,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         
         dbg("[outliers_server] dim.counts = ", dim(counts))
         if(input$skip_imput) {
-          dbg("[outliers_server] Skipped imputation: dim.imputedX = ", dim(X))
+          dbg("[outliers_server] Skipped imputation: dim.X = ", dim(X))
         } else {
           dbg("[outliers_server] dim.imputedX = ", dim(X))
         }
@@ -228,6 +228,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       normalizedX <- reactive({
         X <- imputedX() ## can be imputed or not (see above). log-scale.
         if (input$skip_norm) {
+          dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
           return(X) ## log
         }
         samples <- r_samples()
@@ -717,10 +718,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
 
+     dbg("[outliers_server] dim.counts = ", dim(counts))                       
      dbg("[outliers_server] dim.correctedX = ", dim(correctedX))
     
       return(
         list(
+          counts = counts,
           correctedCounts = correctedX,
           results = results_correction_methods
         )
