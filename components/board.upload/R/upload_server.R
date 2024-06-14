@@ -577,10 +577,10 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
-
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = shiny::reactive(checked_samples_counts()$COUNTS),
+      ## countsRT = shiny::reactive(checked_samples_counts()$COUNTS),
+      countsRT = corrected1$counts,
       countsX = corrected1$correctedCounts,
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
