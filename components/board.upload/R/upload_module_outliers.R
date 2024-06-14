@@ -717,6 +717,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
 
+     dbg("[outliers_server] dim.correctedX = ", dim(correctedX))
+    
       return(
         list(
           correctedCounts = correctedX,
