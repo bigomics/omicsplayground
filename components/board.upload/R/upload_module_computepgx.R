@@ -143,16 +143,16 @@ upload_module_computepgx_server <- function(
                       "only.hugo",
                       "only.proteincoding",
                       "remove.unknown",
-                      "remove.notexpressed",
-                      "skip.normalization"
+                      "remove.notexpressed"
+                      ## "skip.normalization"
                     ),
                   choiceNames =
                     c(
                       "Transform probes to gene symbols",
                       "Protein-coding only",
                       "Remove Rik/ORF/LOC genes",
-                      "Remove not-expressed",
-                      "Skip normalization"
+                      "Remove not-expressed"
+                      ## "Skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -515,7 +515,7 @@ upload_module_computepgx_server <- function(
         only.hugo <- ("only.hugo" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        do.normalization <- !("skip.normalization" %in% flt)
+        ## do.normalization <- !("skip.normalization" %in% flt)
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         only.proteincoding <- ("only.proteincoding" %in% flt)
@@ -549,7 +549,7 @@ upload_module_computepgx_server <- function(
 
           # Options
           batch.correct = FALSE,
-          normalize = do.normalization,
+          ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = !remove.unknown,
