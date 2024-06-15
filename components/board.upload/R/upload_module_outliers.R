@@ -198,10 +198,24 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
+      ## Check for negative values (could populate proteomics data)
+      ## If present, add offset.
+      positive_r_X <- reactive({
+          shiny::req(r_X())
+          counts <- r_X()
+          if(any(counts<0, na.rm = TRUE)) {
+              dbg("[outliers_server] Negative values detected in the data. Adding offset.")
+              counts <- counts + abs(min(counts, na.rm = TRUE))  
+          } else { 
+              dbg("[outliers_server] No negative values detected in the data.")
+          }
+          counts
+      })
+      
       ## Impute
       imputedX <- reactive({
-        shiny::req(r_X())
-        counts <- r_X()
+        ## shiny::req(r_X())
+        counts <- positive_r_X()
         X <- log2(1 + counts)
         X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values 
         if (input$zero_as_na) X[which(X == 0)] <- NA
