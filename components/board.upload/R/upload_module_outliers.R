@@ -60,7 +60,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             selected = "zero"
           ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-          shiny::checkboxInput(ns("skip_imput"), "skip imputation (retains NAs)", value = FALSE),
+          shiny::checkboxInput(ns("skip_imput"), "Skip imputation (retains NAs)", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -240,6 +240,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
         shiny::withProgress(message = "Computing technical variation...", value = 0, {
           shiny::incProgress(amount = 0.25, "Global scaling...")
+          dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
           X <- playbase::global_scaling(X, method = input$scaling_method)
 
           shiny::incProgress(amount = 0.25, "Median centering...")
