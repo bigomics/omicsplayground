@@ -212,33 +212,31 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           counts
       })
       
-      ## Impute
+      ## Impute and remove duplicate features
       imputedX <- reactive({
-        ## shiny::req(r_X())
-        counts <- positive_r_X()
-        X <- log2(1 + counts)
-        X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values 
-        if (input$zero_as_na) X[which(X == 0)] <- NA
-        if (!input$skip_imput) { 
-             dbg("[outliers_server] Imputing data")
-             X <- playbase::imputeMissing(X, method = input$impute_method)
-             X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-        } else {
-             dbg("[outliers_server] Skip imputation")
-             X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
+          ## shiny::req(r_X())
+          counts <- positive_r_X()
+          X <- log2(1 + counts)
+          X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values 
+          ## counts[which(is.na(X))] <- NA ?? conform?
+          if (input$zero_as_na) X[which(X == 0)] <- NA
+          if (!input$skip_imput) {
+              nmissing <- sum(is.na(X))
+              dbg("[outliers_server] Data has ", nmissing, " missing values.")
+              dbg("[outliers_server] Imputing data using ", input$impute_method)
+              X <- playbase::imputeMissing(X, method = input$impute_method)
+              dbg("[outliers_server] Checking for duplicated features")
+              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+              dbg("[outliers_server] dim.imputedX = ", dim(X))
+          } else {
+              dbg("[outliers_server] Skipping imputation")
+              dbg("[outliers_server] Checking for duplicated features")
+              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
+              dbg("[outliers_server] dim.X = ", dim(X))
           }
-        
-        dbg("[outliers_server] dim.counts = ", dim(counts))
-        if(input$skip_imput) {
-          dbg("[outliers_server] Skipped imputation: dim.X = ", dim(X))
-        } else {
-          dbg("[outliers_server] dim.imputedX = ", dim(X))
-        }
-        counts <- 2 ** X - 1
-        LL <- list(counts = counts, X = X)
-        dbg("[outliers_server] dim.counts = ", dim(LL$counts))
-        dbg("[outliers_server] dim.X = ", dim(LL$X))
-        LL
+          counts <- 2 ** X - 1
+          LL <- list(counts = counts, X = X)
+          LL
       })
 
       ## Normalize
@@ -257,33 +255,39 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
           X <- playbase::global_scaling(X, method = input$scaling_method)
 
-          shiny::incProgress(amount = 0.25, "Median centering...")
+          ## shiny::incProgress(amount = 0.25, "Median centering...")
           ## eX <- playbase::pgx.countNormalization( eX, methods = "median.center")
-          mx <- apply(X, 2, median, na.rm = TRUE)
-          X <- t(t(X) - mx) + mean(mx)
+          ## mx <- apply(X, 2, median, na.rm = TRUE)
+          ## X <- t(t(X) - mx) + mean(mx)
 
-          ## technical effects correction
-          shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
-          pheno <- playbase::contrasts2pheno(contrasts, samples)
-          X <- playbase::removeTechnicalEffects(
-            X, samples, pheno,
-            p.pheno = 0.05, p.pca = 0.5, force = FALSE,
-            params = c("lib", "mito", "ribo", "cellcycle", "gender"),
-            nv = 2, k.pca = 10, xrank = NULL
-          )
+          ## technical & biological effects correction ## ps: also includes biological
+          ## add this user option.....
+          ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
+          ## pheno <- playbase::contrasts2pheno(contrasts, samples)
+          ## X <- playbase::removeTechnicalEffects(
+          ##  X, samples, pheno,
+          ##  p.pheno = 0.05, p.pca = 0.5, force = FALSE,
+          ##  params = c("lib", "mito", "ribo", "cellcycle", "gender"),
+          ##  nv = 2, k.pca = 10, xrank = NULL
+          ## )
 
-          ## for quantile normalization we omit the zero value and put back later
-          shiny::incProgress(amount = 0.25, "Quantile normalization...")
-          jj <- which(X < 0.01)
-          X[jj] <- NA
-          X <- limma::normalizeQuantiles(X)
-          X[jj] <- 0
+          if(input$scaling_method == "cpm") {
+              dbg("[outliers_server] Applying quantile normalization on logCPM-normalized data")
+              ## for quantile normalization we omit the zero value and put back later
+              shiny::incProgress(amount = 0.25, "Quantile normalization...")
+              ## jj <- which(X < 0.01)
+              ## X[jj] <- NA
+              X <- limma::normalizeQuantiles(X)
+              ## X[jj] <- 0
+          }
+
         })
+
         dbg("[outliers_server:normalizedX] dim.normalizedX = ", dim(X))
         dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()$X))
         X
-      })
 
+      })
 
       cleanX <- reactive({
         shiny::req(dim(normalizedX()))
