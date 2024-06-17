@@ -948,8 +948,19 @@ LoginCodeAuthenticationModule <- function(id,
         user_dir <- file.path(PGX.DIR)
       }
       USER$user_dir <- user_dir
-      USER$options <- read_user_options(user_dir)
-
+      # OPTIONS priority:
+      # 1. OPTIONS Database
+      # 2. User OPTIONS file (on its data directory)
+      # check if user is in options db
+      user_in_db <- check_user_options_db(USER$email, user_database)
+      # set options
+      if (user_in_db) {
+        dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
+        USER$options <- read_user_options_db(USER$email, user_database)
+      } else {
+        dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
+        USER$options <- read_user_options(USER$user_dir)
+      }
       session$sendCustomMessage("set-user", list(user = user_email))
 
       USER$logged <- TRUE

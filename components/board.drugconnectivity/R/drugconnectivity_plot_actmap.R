@@ -34,7 +34,7 @@ drugconnectivity_plot_actmap_ui <- function(
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
-    plotlib = "base",
+    plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -60,7 +60,7 @@ drugconnectivity_plot_actmap_server <- function(id,
                                                 watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      dseaPlotActmap <- function(pgx, dmethod, contr, nterms, nfc) {
+      dseaPlotActmap <- function(pgx, dmethod, contr, nterms, nfc, colorbar = FALSE) {
         if (is.null(pgx$drugs)) {
           return(NULL)
         }
@@ -107,17 +107,19 @@ drugconnectivity_plot_actmap_server <- function(id,
         } else {
           score <- score[order(-score[, 1]), , drop = FALSE]
         }
+        score <- score[nrow(score):1, ]
 
         colnames(score) <- substring(colnames(score), 1, 30)
         rownames(score) <- substring(rownames(score), 1, 50)
-        cex2 <- 0.85
-        par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1, 0, 0))
 
-        corrplot::corrplot(score,
-          is.corr = FALSE, cl.pos = "n",
-          col = playdata::BLUERED(100),
-          col.lim = c(-1, 1) * max(abs(score), na.rm = TRUE),
-          tl.cex = 0.9 * cex2, tl.col = "grey20", tl.srt = 90
+        bluered.pal <- colorRamp(colors = c("white", "#faeeee", "#ebbbbb", "indianred3"))
+        x_axis <- colnames(score)
+        y_axis <- rownames(score)
+        fig <- plotly::plot_ly(
+          x = x_axis, y = y_axis,
+          z = score, type = "heatmap",
+          colors = bluered.pal,
+          showscale = colorbar
         )
       }
 
@@ -161,7 +163,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
 
-        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 100)
+        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 100, colorbar = TRUE)
       })
 
       plot_data_csv <- function() {
@@ -172,7 +174,7 @@ drugconnectivity_plot_actmap_server <- function(id,
 
       PlotModuleServer(
         "plot",
-        plotlib = "base", # does not use plotly
+        plotlib = "plotly", # does not use plotly
         func = plot.RENDER,
         func2 = plot.RENDER2,
         csvFunc = plot_data_csv,

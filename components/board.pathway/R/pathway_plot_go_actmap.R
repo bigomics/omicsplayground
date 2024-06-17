@@ -51,7 +51,7 @@ functional_plot_go_actmap_ui <- function(
     title = title,
     label = label,
     caption = caption,
-    plotlib = "base",
+    plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
     height = height,
@@ -87,7 +87,7 @@ functional_plot_go_actmap_server <- function(id,
 
 
       plotGOactmap <- function(score, go, normalize, rotate, maxterm, maxfc,
-                               tl.cex = 0.85, row.nchar = 60) {
+                               tl.cex = 0.85, row.nchar = 60, colorbar = FALSE) {
         rownames(score) <- igraph::V(go)[rownames(score)]$Term
 
         ## avoid errors!!!
@@ -139,16 +139,17 @@ functional_plot_go_actmap_server <- function(id,
 
         if (rotate) score <- t(score)
 
-        corrplot::corrplot(
-          score,
-          is.corr = FALSE,
-          cl.pos = "n",
-          col = playdata::BLUERED(100),
-          tl.cex = tl.cex,
-          tl.col = "grey20",
-          tl.srt = 90,
-          mar = c(0, 0, 0, 0)
+        bluered.pal <- colorRamp(colors = c("royalblue3", "#ebeffa", "white", "#faeeee", "indianred3"))
+        score <- score[nrow(score):1, ]
+        x_axis <- colnames(score)
+        y_axis <- rownames(score)
+        fig <- plotly::plot_ly(
+          x = x_axis, y = y_axis,
+          z = score, type = "heatmap",
+          colors = bluered.pal,
+          showscale = colorbar
         )
+        return(fig)
       }
 
       plot_data <- shiny::reactive({
@@ -167,7 +168,7 @@ functional_plot_go_actmap_server <- function(id,
         pathscore <- res$pathscore
         graph <- res$graph
 
-        plotGOactmap(
+        fig <- plotGOactmap(
           score = pathscore,
           go = graph,
           normalize = input$normalize,
@@ -195,13 +196,14 @@ functional_plot_go_actmap_server <- function(id,
           maxterm = 50,
           maxfc = 100,
           tl.cex = 1.1,
-          row.nchar = ifelse(rotate, 60, 200)
+          row.nchar = ifelse(rotate, 60, 200),
+          colorbar = TRUE
         )
       }
 
       PlotModuleServer(
         "plot",
-        plotlib = "base",
+        plotlib = "plotly",
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
