@@ -35,7 +35,7 @@ pgx <- playbase::pgx.createPGX(
   description = params$description,
   creator = params$creator,
   batch.correct = params$batch.correct,
-  normalize = params$normalize,
+  ## normalize = params$normalize,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   only.known = params$only.known,
