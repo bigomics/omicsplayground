@@ -807,27 +807,6 @@ UploadBoard <- function(id,
     )
 
 
-    observeEvent(auth$options$ENABLE_ANNOT, {
-      species_table <- playbase::SPECIES_TABLE
-
-      # keep only ensembl
-      species_table <- species_table[species_table$mart == "ensembl", ]
-
-      # remove no organism
-      if (!auth$options$ENABLE_ANNOT) {
-        species_table <- species_table[species_table$species_name != "No organism", ]
-      }
-
-      # Fill the selectInput with species_table
-      shiny::updateSelectInput(
-        session,
-        "selected_organism",
-        choices = species_table$species_name,
-        selected = species_table$species_name[1]
-      )
-    })
-
-
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
