@@ -86,10 +86,10 @@ FORCE: ;
 
 ##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.5"
+VERSION = "v3.4.0"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
-version: 
+version: FORCE
 	@echo "new version ->" $(BUILD)
 	echo $(BUILD) > VERSION
 
