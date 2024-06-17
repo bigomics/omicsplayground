@@ -952,11 +952,11 @@ LoginCodeAuthenticationModule <- function(id,
       # 1. OPTIONS Database
       # 2. User OPTIONS file (on its data directory)
       # check if user is in options db
-      user_in_db <- check_user_options_db(USER$email, user_database)
+      user_in_db <- check_user_options_db(user_email, user_database)
       # set options
       if (user_in_db) {
         dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
-        USER$options <- read_user_options_db(USER$email, user_database)
+        USER$options <- read_user_options_db(user_email, user_database)
       } else {
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(USER$user_dir)
