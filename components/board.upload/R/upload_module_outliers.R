@@ -60,7 +60,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             selected = "zero"
           ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-          shiny::checkboxInput(ns("skip_imput"), "Skip imputation (retains NAs)", value = FALSE),
+          shiny::checkboxInput(ns("skip_imputation"), "Skip imputation (retains NAs)", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -70,7 +70,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             choices = c(
               "CPM (default)" = "cpm", "median.3" = "m3", "median.4" = "m4",
               "zdist.2" = "z2", "quantile.001" = "q0.01",
-              "logMaxMedian" = "logMM", "logMaxSum" = "logMS"
+              "logMaxMedian" = "logMaxMedian", "logMaxSum" = "logMaxSum"
             ),
             selected = "cpm"
           ),
@@ -198,26 +198,27 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## Check for negative values (could populate proteomics data)
-      ## If present, add offset.
-      positive_r_X <- reactive({
-          shiny::req(r_X())
-          counts <- r_X()
-          if(any(counts<0, na.rm = TRUE)) {
-              dbg("[outliers_server] Negative values detected in the data. Adding offset.")
-              counts <- counts + abs(min(counts, na.rm = TRUE))  
-          } else { 
-              dbg("[outliers_server] No negative values detected in the data.")
-          }
-          counts
-      })
+      ## ## Check for negative values (could populate proteomics data)
+      ## ## If present, add offset.
+      ## positive_r_X <- reactive({
+      ##     shiny::req(r_X())
+      ##     counts <- r_X()
+      ##     if(any(counts<0, na.rm = TRUE)) {
+      ##         dbg("[outliers_server] Negative values detected in the data. Adding offset.")
+      ##         counts <- counts + abs(min(counts, na.rm = TRUE))  
+      ##     } else { 
+      ##         dbg("[outliers_server] No negative values detected in the data.")
+      ##     }
+      ##     counts
+      ## })
       
-      ## Impute and remove duplicate features
+      ## Check for negative; Impute; Remove duplicate features
       imputedX <- reactive({
-          ## shiny::req(r_X())
-          counts <- positive_r_X()
+          shiny::req(r_X())
+          counts <- r_X()                   
           X <- log2(1 + counts)
-          X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values 
+          X[which(is.nan(X))] <- NA
+          X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values
           ## counts[which(is.na(X))] <- NA ?? conform?
           if (input$zero_as_na) X[which(X == 0)] <- NA
           if (!input$skip_imput) {
@@ -242,6 +243,14 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Normalize
       normalizedX <- reactive({
         X <- imputedX()$X ## can be imputed or not (see above). log-scale.
+
+        if(any(counts<0, na.rm = TRUE)) {
+            dbg("[outliers_server] Negative values detected in the data. Adding offset.")
+            X <- X + abs(min(X, na.rm = TRUE))  
+        } else { 
+            dbg("[outliers_server] No negative values detected in the data.")
+        }
+
         if (input$skip_norm) {
           dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
           return(X) ## log
@@ -510,7 +519,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         if (isolate(input$zero_as_na)) {
           ii <- which(is.na(X0) | X0 == 0)
         }
-        q999 <- quantile(X1, probs = 0.999)[1]
+        q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
         X1[X1 > q999] <- NA
         h <- hist(X1, breaks = 80, plot = FALSE, las = 1)
         hh <- h$breaks
