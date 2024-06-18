@@ -65,6 +65,10 @@ DatasetReportServer <- function(
                         type = "info"
                     )
 
+                    print("Generating report")
+                    print(input$available_datasets)
+                    print(input$sel_contrasts)
+
                     system2(
                         "quarto",
                         args = c(
@@ -74,7 +78,9 @@ DatasetReportServer <- function(
                             "--to",
                             "pdf",
                             "-P",
-                            paste("dataset:", input$available_datasets, sep = "")
+                            paste("dataset:", input$available_datasets, sep = ""),
+                            "-P",
+                            paste("comparisons:", paste0(input$sel_contrasts, collapse = ","), sep = "")
                         ),
                         stdout = file
                     )
