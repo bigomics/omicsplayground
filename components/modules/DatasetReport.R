@@ -41,6 +41,13 @@ DatasetReportServer <- function(
                         choices = datasets,
                         selected = datasets[1]
                     ),
+                    shiny::selectizeInput(
+                        inputId = ns("sel_contrasts"),
+                        label = "Select one or more contrasts",
+                        choices = c("None", "All", "Custom"),
+                        selected = "None",
+                        multiple = TRUE
+                    ),
                     shiny::downloadButton(ns("download_pdf"), "Submit")
                 )
             )
@@ -91,5 +98,29 @@ DatasetReportServer <- function(
         shiny::observeEvent(input$show_report_modal, {
             showModal()
         })
+
+        ## observe dataset and update contrasts
+        shiny::observeEvent(input$available_datasets, {
+            print("Dataset changed")
+            url <- Sys.getenv("API_BACKEND_URL")
+            bearer_token <- Sys.getenv("BEARER_TOKEN")
+
+            response <- httr::GET(
+                glue::glue("{url}/secure/contrast_names?dataset={input$available_datasets}"),
+                httr::add_headers(Authorization = paste("Bearer", bearer_token))
+            )
+
+            res <- jsonlite::fromJSON(httr::content(response, "text"))
+            print(res)
+
+            updateSelectizeInput(
+                session,
+                "sel_contrasts",
+                choices = res,
+                selected = res[1]
+            )
+        }) # end of observe dataset and update contrasts
+
+        # observe dataset and
     }) ## end of moduleServer
 }
