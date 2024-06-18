@@ -32,7 +32,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   )
 
   outlier.options <- tagList(
-    ##    shiny::radioButtons( ns('outlier_plottype'), "Plot type:", c("pca","heatmap"), inline = TRUE),
+
     shiny::checkboxInput(ns("outlier_shownames"), "show sample names", FALSE)
   )
 
@@ -55,12 +55,18 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "1. Missing values",
           shiny::p("Replace missing values using an imputation method:\n"),
           shiny::selectInput(ns("impute_method"), NULL,
-            ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
-            choices = c("Zero (default)" = "zero", "MinDet", "MinProb", "NMF", "SVDimpute" = "SVD2"),
+          ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
+            choices = c(
+                "Zero (default)" = "zero",
+                "MinDet",
+                "MinProb",
+                "NMF",
+                "SVDimpute" = "SVD2",
+                "Skip imputation" = "skip_imputation"
+            ),
             selected = "zero"
-          ),
+            ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-          shiny::checkboxInput(ns("skip_imputation"), "Skip imputation (retains NAs)", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -68,13 +74,20 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           div("Normalize data values:\n"),
           shiny::selectInput(ns("scaling_method"), NULL,
             choices = c(
-              "CPM (default)" = "cpm", "median.3" = "m3", "median.4" = "m4",
-              "zdist.2" = "z2", "quantile.001" = "q0.01",
-              "logMaxMedian" = "logMaxMedian", "logMaxSum" = "logMaxSum"
+                "CPM (default)" = "CPM",
+                "Mean centering" = "mean.center",
+                "Median centering" = "median.center",
+                "TMM" = "TMM",
+                "RLE" = "RLE",
+                "RLE2" = "RLE2",
+                "LogMaxMedian" = "logMaxMedian",
+                "LogMaxSum" = "logMaxSum",
+                "Skip normalization" = "SkipNorm"
             ),
-            selected = "cpm"
+            selected = "logCPM"
           ),
-          shiny::checkboxInput(ns("skip_norm"), "skip normalization", value = FALSE),
+          shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization (extra step)",
+                               value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -93,7 +106,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           shiny::conditionalPanel(
             "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
             ns = ns,
-            ## shiny::selectInput(ns("bec_param"), "Batch parameter:", choices=NULL),
             shiny::textOutput(ns("bec_param_text")),
             shiny::br(),
           ),
@@ -112,7 +124,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
         row_heights = c(3, 3),
         height = "calc(100vh - 200px)",
         heights_equal = "row",
-        ##  shiny::plotOutput(ns("canvas"), width = "100%", height = height) %>% bigLoaders::useSpinner(),
         PlotModuleUI(
           ns("plot2"),
           title = "Missing values",
@@ -125,8 +136,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
         PlotModuleUI(
           ns("plot1"),
           title = "Normalization",
-          #         info.text = info.text,
-          #         caption = caption,
           options = norm.options,
           height = c("100%", "70vh"),
           show.maximize = FALSE
@@ -143,9 +152,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
         PlotModuleUI(
           ns("plot4"),
           title = "Batch-effect correction",
-          #          info.text = info.text,
-          #          caption = caption,
-          ##          options = bec.options,
           options = NULL,
           height = c("100%", "70vh"),
           show.maximize = FALSE
@@ -178,7 +184,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           X <- r_X()
           samples <- r_samples()
           contrasts <- r_contrasts()
-          ## contrasts <- contrasts[,1,drop=FALSE]
 
           shiny::req(ncol(X) == nrow(samples))
           shiny::req(nrow(contrasts) == ncol(X))
@@ -197,22 +202,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
-
-      ## ## Check for negative values (could populate proteomics data)
-      ## ## If present, add offset.
-      ## positive_r_X <- reactive({
-      ##     shiny::req(r_X())
-      ##     counts <- r_X()
-      ##     if(any(counts<0, na.rm = TRUE)) {
-      ##         dbg("[outliers_server] Negative values detected in the data. Adding offset.")
-      ##         counts <- counts + abs(min(counts, na.rm = TRUE))  
-      ##     } else { 
-      ##         dbg("[outliers_server] No negative values detected in the data.")
-      ##     }
-      ##     counts
-      ## })
       
-      ## Check for negative; Impute; Remove duplicate features
+      ## Impute; Remove duplicate features
       imputedX <- reactive({
           shiny::req(r_X())
           counts <- r_X()                   
@@ -221,7 +212,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values
           ## counts[which(is.na(X))] <- NA ?? conform?
           if (input$zero_as_na) X[which(X == 0)] <- NA
-          if (!input$skip_imput) {
+          if (input$impute_method != "skip_imputation") {
               nmissing <- sum(is.na(X))
               dbg("[outliers_server] Data has ", nmissing, " missing values.")
               dbg("[outliers_server] Imputing data using ", input$impute_method)
@@ -240,64 +231,44 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           LL
       })
 
-      ## Normalize
+      ## Check for negative; Normalize
       normalizedX <- reactive({
         X <- imputedX()$X ## can be imputed or not (see above). log-scale.
-
-        if(any(counts<0, na.rm = TRUE)) {
+        if(any(X < 0, na.rm = TRUE)) {
             dbg("[outliers_server] Negative values detected in the data. Adding offset.")
-            X <- X + abs(min(X, na.rm = TRUE))  
+            X <- X - min(X, na.rm = TRUE)  
         } else { 
             dbg("[outliers_server] No negative values detected in the data.")
         }
-
-        if (input$skip_norm) {
+        if (input$scaling_method == "Skip normalization") {
           dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
-          return(X) ## log
+          return(X)
         }
         samples <- r_samples()
         contrasts <- r_contrasts()
         shiny::req(dim(X), dim(samples), dim(contrasts))
-
         shiny::withProgress(message = "Computing technical variation...", value = 0, {
-          shiny::incProgress(amount = 0.25, "Global scaling...")
-          dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
-          X <- playbase::global_scaling(X, method = input$scaling_method)
-
-          ## shiny::incProgress(amount = 0.25, "Median centering...")
-          ## eX <- playbase::pgx.countNormalization( eX, methods = "median.center")
-          ## mx <- apply(X, 2, median, na.rm = TRUE)
-          ## X <- t(t(X) - mx) + mean(mx)
-
-          ## technical & biological effects correction ## ps: also includes biological
-          ## add this user option.....
-          ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
-          ## pheno <- playbase::contrasts2pheno(contrasts, samples)
-          ## X <- playbase::removeTechnicalEffects(
-          ##  X, samples, pheno,
-          ##  p.pheno = 0.05, p.pca = 0.5, force = FALSE,
-          ##  params = c("lib", "mito", "ribo", "cellcycle", "gender"),
-          ##  nv = 2, k.pca = 10, xrank = NULL
-          ## )
-
-          if(input$scaling_method == "cpm") {
-              dbg("[outliers_server] Applying quantile normalization on logCPM-normalized data")
-              ## for quantile normalization we omit the zero value and put back later
-              shiny::incProgress(amount = 0.25, "Quantile normalization...")
-              ## jj <- which(X < 0.01)
-              ## X[jj] <- NA
-              X <- limma::normalizeQuantiles(X)
-              ## X[jj] <- 0
-          }
-
+            shiny::incProgress(amount = 0.25, "Global scaling...")
+            dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
+            counts <- 2 ** X - 1
+            X <- playbase::pgx.countNormalization(counts, method = input$scaling_method)
+            X <- log2(X + 1)
+            if (input$quantile_norm) {
+                dbg("[outliers_server] Applying quantile normalization")
+                shiny::incProgress(amount = 0.25, "Quantile normalization...")
+                ## Ignore nearly 0 values
+                jj <- which(X < 0.01)
+                X[jj] <- NA
+                X <- limma::normalizeQuantiles(X)
+                X[jj] <- 0
+            }
+            
         })
-
         dbg("[outliers_server:normalizedX] dim.normalizedX = ", dim(X))
         dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()$X))
         X
-
       })
-
+      ### ....>>
       cleanX <- reactive({
         shiny::req(dim(normalizedX()))
 
@@ -318,6 +289,17 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       correctedX <- shiny::reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
+
+        ## Technical & biological effects correction ## ps: also includes biological
+        ## add this user option.....
+        ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
+        ## pheno <- playbase::contrasts2pheno(contrasts, samples)
+        ## X <- playbase::removeTechnicalEffects(
+        ##  X, samples, pheno,
+        ##  p.pheno = 0.05, p.pca = 0.5, force = FALSE,
+        ##  params = c("lib", "mito", "ribo", "cellcycle", "gender"),
+        ##  nv = 2, k.pca = 10, xrank = NULL
+        ## )        
 
         ## recompute chosed correction method with full
         ## matrix. previous was done on shortened matrix.
