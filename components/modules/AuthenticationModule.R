@@ -959,7 +959,7 @@ LoginCodeAuthenticationModule <- function(id,
         USER$options <- read_user_options_db(user_email, user_database)
       } else {
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
-        USER$options <- read_user_options(USER$user_dir)
+        USER$options <- read_user_options(user_dir)
       }
       session$sendCustomMessage("set-user", list(user = user_email))
 
