@@ -97,8 +97,21 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           br()
         ),
         bslib::accordion_panel(
-          title = "4. Batch correction",
-          shiny::p("Clean up your data from unwanted variation:\n"),
+          title = "4. Remove unwanted technical and biogical variation",
+          shiny::p("Correct for technical and biogical factors:\n"),
+          shiny::selectInput(ns("correct_factor"), NULL,
+            choices = c(
+                "library size" = "lib",
+                "ribo", "cellcycle", "gender",
+                "Skip correction" = "SkipCorrection"
+            ),
+            selected = "Skip correction"
+          ),
+          br()
+        ),
+        bslib::accordion_panel(
+          title = "5. Batch-effect correction",
+          shiny::p("Remove batch effects from your data:\n"),
           shiny::selectInput(ns("bec_method"), NULL,
             choices = c("uncorrected", "ComBat", "SVA", "RUV3", "NPM"),
             selected = "uncorrected"
@@ -268,7 +281,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()$X))
         X
       })
-      ### ....>>
+
       cleanX <- reactive({
         shiny::req(dim(normalizedX()))
 
