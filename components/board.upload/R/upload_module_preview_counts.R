@@ -26,7 +26,7 @@ upload_table_preview_counts_server <- function(
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      shiny::req(uploaded$counts.csv)
+      shiny::req(!is.null(uploaded$counts.csv))
       dt <- uploaded$counts.csv
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
@@ -48,7 +48,7 @@ upload_table_preview_counts_server <- function(
 
     table.RENDER <- function() {
       dt <- table_data()
-      req(dt)
+      req(!is.null(dt))
 
       DT::datatable(dt,
         class = "compact hover",
