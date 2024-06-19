@@ -93,3 +93,10 @@ Or you can launch the platform from within an R session::
    If you have Shiny Server installed you can create a link to the
    shiny folder in the system-wide shiny-server apps folder or in your
    ShinyApps user folder.
+
+Environment variables for quarto report
+--------------------------------------------------------------------------------
+
+API_BACKEND_URL= host url of the api backend
+BEARER_TOKEN= bearer token for the api backend
+QUARTO_FILE_PATH=path to the quarto file
