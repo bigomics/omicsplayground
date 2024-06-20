@@ -39,7 +39,7 @@ docker.run2:
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
-docker: FORCE 
+docker: FORCE version
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		-f docker/Dockerfile \
@@ -91,9 +91,8 @@ renv: FORCE
 
 FORCE: ;
 
-##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.4.0"
+VERSION = "v3.4.1"
 BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
 
 version: FORCE
@@ -106,7 +105,7 @@ changelog:
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
 	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
 
-tags: 
+tags: version changelog
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
 	git push && git push --tags
 
