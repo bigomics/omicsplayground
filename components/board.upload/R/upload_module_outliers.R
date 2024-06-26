@@ -64,7 +64,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
                 "SVDimpute" = "SVD2",
                 "Skip imputation" = "skip_imputation"
             ),
-            selected = "zero"
+            selected = "SVD2"
             ),
           shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
           br()
@@ -103,7 +103,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
             choices = c(
                 "library size" = "lib",
                 "ribo", "cellcycle", "gender",
-                "Skip correction" = "SkipCorrection"
+                "Skip correction (Default)" = "SkipCorrection"
             ),
             selected = "Skip correction"
           ),
