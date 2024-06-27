@@ -1140,6 +1140,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       if (email_sent) {
         input_code <- entered_code()
+        input_code <- gsub(" ", "", input_code)
         login.OK <- (input_code == login_code)
 
         if (!login.OK) {
