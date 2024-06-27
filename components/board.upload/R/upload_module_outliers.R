@@ -324,7 +324,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           contrasts <- r_contrasts()
           kk <- intersect(colnames(X1), rownames(samples))
           kk <- intersect(kk, rownames(contrasts))
-          counts <- counts[, kk, drop = FALSE]
+          counts <- counts()[, kk, drop = FALSE]
           X1 <- X1[, kk, drop = FALSE]
           contrasts <- contrasts[kk, , drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
