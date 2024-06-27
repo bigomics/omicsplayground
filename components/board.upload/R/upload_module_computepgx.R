@@ -40,9 +40,13 @@ upload_module_computepgx_server <- function(
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
         "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-      )
+       )
       GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
-
+      ## GENETEST.METHODS <- c(
+      ##    "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma"
+      ##  )
+      ## GENETEST.SELECTED <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma")
+      
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
         "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",

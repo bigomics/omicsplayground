@@ -57,16 +57,16 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           shiny::selectInput(ns("impute_method"), NULL,
           ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
             choices = c(
-                "Zero (default)" = "zero",
+                ## "Zero (default)" = "zero",
+                "SVDimpute (default)" = "SVD2",
                 "MinDet",
                 "MinProb",
                 "NMF",
-                "SVDimpute" = "SVD2",
                 "Skip imputation" = "skip_imputation"
             ),
             selected = "SVD2"
             ),
-          shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+          ## shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -75,25 +75,26 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           shiny::selectInput(ns("scaling_method"), NULL,
             choices = c(
                 "CPM (default)" = "CPM",
-                "Mean centering" = "mean.center",
-                "Median centering" = "median.center",
-                "TMM" = "TMM",
-                "RLE" = "RLE",
-                "RLE2" = "RLE2",
+                ## "Mean centering" = "mean.center",
+                ## "Median centering" = "median.center",
+                ## "TMM" = "TMM",
+                ## "RLE" = "RLE",
+                ## "RLE2" = "RLE2",
                 "LogMaxMedian" = "logMaxMedian",
                 "LogMaxSum" = "logMaxSum",
                 "Skip normalization" = "SkipNorm"
             ),
             selected = "logCPM"
           ),
-          shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization (extra step)",
-                               value = FALSE),
+          shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
           title = "3. Remove outliers",
-          p("Analyze and remove outliers (i.e. bad samples) from your dataset.\n"),
-          shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
+          shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
+          ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
+          ## shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
+          shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = FALSE),
           br()
         ),
         bslib::accordion_panel(
@@ -113,7 +114,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "5. Batch-effect correction",
           shiny::p("Remove batch effects from your data:\n"),
           shiny::selectInput(ns("bec_method"), NULL,
-            choices = c("uncorrected", "ComBat", "SVA", "RUV3", "NPM"),
+            choices = c("uncorrected (default)", "ComBat", "SVA", "RUV3", "NPM"),
             selected = "uncorrected"
           ),
           shiny::conditionalPanel(
@@ -216,15 +217,18 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Object reactive chain
       ## ------------------------------------------------------------------
       
-      ## Impute; Remove duplicate features
-      imputedX <- reactive({
+      ## Add small number to 0s; Impute; Remove duplicate features
+      imputedX <- reactive({ ## FOR NOW WE CAN IMPUTE IF NEEDED.
           shiny::req(r_X())
           counts <- r_X()                   
-          X <- log2(1 + counts)
+          if(any(counts==0, na.rm=TRUE)) {
+              counts <- counts + 1e-10
+          }
+          X <- log2(counts)
           X[which(is.nan(X))] <- NA
           X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values
           ## counts[which(is.na(X))] <- NA ?? conform?
-          if (input$zero_as_na) X[which(X == 0)] <- NA
+          ## if (input$zero_as_na) X[which(X == 0)] <- NA
           if (input$impute_method != "skip_imputation") {
               nmissing <- sum(is.na(X))
               dbg("[outliers_server] Data has ", nmissing, " missing values.")
@@ -239,114 +243,119 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
               dbg("[outliers_server] dim.X = ", dim(X))
           }
-          counts <- 2 ** X - 1
+          counts <- 2 ** X
           LL <- list(counts = counts, X = X)
           LL
       })
 
-      ## Check for negative; Normalize
+      ## Normalize
       normalizedX <- reactive({
-        X <- imputedX()$X ## can be imputed or not (see above). log-scale.
-        if(any(X < 0, na.rm = TRUE)) {
-            dbg("[outliers_server] Negative values detected in the data. Adding offset.")
-            X <- X - min(X, na.rm = TRUE)  
-        } else { 
-            dbg("[outliers_server] No negative values detected in the data.")
-        }
-        if (input$scaling_method == "Skip normalization") {
-          dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
-          return(X)
-        }
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        shiny::req(dim(X), dim(samples), dim(contrasts))
-        shiny::withProgress(message = "Computing technical variation...", value = 0, {
-            shiny::incProgress(amount = 0.25, "Global scaling...")
-            dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
-            counts <- 2 ** X - 1
-            X <- playbase::pgx.countNormalization(counts, method = input$scaling_method)
-            X <- log2(X + 1)
-            if (input$quantile_norm) {
-                dbg("[outliers_server] Applying quantile normalization")
-                shiny::incProgress(amount = 0.25, "Quantile normalization...")
-                ## Ignore nearly 0 values
-                jj <- which(X < 0.01)
-                X[jj] <- NA
-                X <- limma::normalizeQuantiles(X)
-                X[jj] <- 0
-            }
-            
-        })
-        dbg("[outliers_server:normalizedX] dim.normalizedX = ", dim(X))
-        dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()$X))
-        X
+          X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
+          ## samples <- r_samples()
+          ## contrasts <- r_contrasts()
+          shiny::req(dim(X)) ##, dim(samples), dim(contrasts))
+          if (input$scaling_method == "Skip normalization") {
+              dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
+              return(X)
+          } else {
+              shiny::withProgress(message = "Normalizing the data...", value = 0, {
+                  shiny::incProgress(amount = 0.25, "Normalization...")
+                  dbg("[outliers_server] Normalization: dim.X = ", dim(X))
+                  dbg("[outliers_server] Normalization: Normalizing data using LIMMA", input$scaling_method)
+                  counts <- 2**X
+                  X <- playbase::pgx.countNormalization(counts, method = input$scaling_method)
+                  X <- log2(X)
+                  if (input$quantile_norm) {
+                      dbg("[outliers_server] Applying quantile normalization")
+                      shiny::incProgress(amount = 0.25, "Quantile normalization...")
+                      ## Ignore nearly 0 values
+                      ## jj <- which(X < 0.01)
+                      ## X[jj] <- NA
+                      X <- limma::normalizeQuantiles(X)
+                      ## X[jj] <- 0
+                  }
+              })
+          }
+          dbg("[outliers_server:normalizedX] dim.normalizedX = ", dim(X))
+          dbg("[outliers_server:normalizedX] dim.counts = ", dim(counts))
+          dbg("[outliers_server:normalizedX] dim.imputedX = ", dim(imputedX()$X))
+          X
       })
 
+      ## Remove outliers
       cleanX <- reactive({
-        shiny::req(dim(normalizedX()))
-
-        X <- normalizedX()
-        res <- playbase::detectOutlierSamples(X, plot = FALSE)
-        is.outlier <- (res$z.outlier > input$outlier_threshold)
-        if (any(is.outlier) && !all(is.outlier)) {
-          X <- X[, which(!is.outlier), drop = FALSE]
-        }
-        pos <- NULL
-        if (NCOL(X) > 1) {
-          pos <- irlba::irlba(X, nv = 2)$v
-          rownames(pos) <- colnames(X)
-        }
-        dbg("[outliers_server] dim.cleanX = ", dim(X))
-        list(X = X, pos = pos)
+          shiny::req(dim(normalizedX()))
+          X <- normalizedX()
+          if(input$remove_outliers) {
+              res <- playbase::detectOutlierSamples(X, plot = FALSE)
+              is.outlier <- (res$z.outlier > input$outlier_threshold)
+              if (any(is.outlier) && !all(is.outlier)) {
+                  X <- X[, which(!is.outlier), drop = FALSE]
+              }
+          }
+          pos <- NULL
+          if (NCOL(X) > 1) {
+              pos <- irlba::irlba(X, nv = 2)$v
+              rownames(pos) <- colnames(X)
+          }
+          dbg("[outliers_server] dim.cleanX = ", dim(X))
+          list(X = X, pos = pos)
       })
 
+      ## Technical and biological effects correction
       correctedX <- shiny::reactive({
-        shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
+          shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        ## Technical & biological effects correction ## ps: also includes biological
-        ## add this user option.....
-        ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
-        ## pheno <- playbase::contrasts2pheno(contrasts, samples)
-        ## X <- playbase::removeTechnicalEffects(
-        ##  X, samples, pheno,
-        ##  p.pheno = 0.05, p.pca = 0.5, force = FALSE,
-        ##  params = c("lib", "mito", "ribo", "cellcycle", "gender"),
-        ##  nv = 2, k.pca = 10, xrank = NULL
-        ## )        
+          ## Technical & biological effects correction ## ps: also includes biological
+          ## add this user option.....
+          ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
+          ## pheno <- playbase::contrasts2pheno(contrasts, samples)
+          ## X <- playbase::removeTechnicalEffects(
+          ##  X, samples, pheno,
+          ##  p.pheno = 0.05, p.pca = 0.5, force = FALSE,
+          ##  params = c("lib", "mito", "ribo", "cellcycle", "gender"),
+          ##  nv = 2, k.pca = 10, xrank = NULL
+          ## )        
 
-        ## recompute chosed correction method with full
-        ## matrix. previous was done on shortened matrix.
-        X1 <- cleanX()$X
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        kk <- intersect(colnames(X1), rownames(samples))
-        kk <- intersect(kk, rownames(contrasts))
-        X1 <- X1[, kk, drop = FALSE]
-        contrasts <- contrasts[kk, , drop = FALSE]
-        samples <- samples[kk, , drop = FALSE]
-        m <- input$bec_method
-        dbg("[outliers_server] methods = ", m)
-        mm <- unique(c("uncorrected", input$bec_method))
-        pars <- get_model_parameters()
-        xlist <- playbase::runBatchCorrectionMethods(
-          X = X1,
-          batch = pars$batch,
-          y = pars$pheno,
-          controls = NULL,
-          methods = mm,
-          ntop = Inf,
-          sc = FALSE,
-          remove.failed = TRUE
-        )
-        shiny::removeModal()
+          ## recompute chosed correction method with full
+          ## matrix. previous was done on shortened matrix.
+          X1 <- cleanX()$X
+          samples <- r_samples()
+          contrasts <- r_contrasts()
+          kk <- intersect(colnames(X1), rownames(samples))
+          kk <- intersect(kk, rownames(contrasts))
+          counts <- counts[, kk, drop = FALSE]
+          X1 <- X1[, kk, drop = FALSE]
+          contrasts <- contrasts[kk, , drop = FALSE]
+          samples <- samples[kk, , drop = FALSE]
 
-        dbg("[outliers_server] names.xlist = ", names(xlist))
-        cx <- xlist[[m]]
-        dbg("[outliers_server] dim.correctedX = ", dim(cx))
+          m <- input$bec_method
+          dbg("[outliers_server]: Batch correction method = ", m)
+          if(m == "uncorrected") {
+              dbg("[outliers_server]: Data not corrected for (potential) batch effects")
+              cx <- log2(X1+1)
+          } else {
+              mm <- unique(c("uncorrected", input$bec_method))
+              pars <- get_model_parameters()
+              xlist <- playbase::runBatchCorrectionMethods(
+                                     X = X1,
+                                     batch = pars$batch,
+                                     y = pars$pheno,
+                                     controls = NULL,
+                                     methods = mm,
+                                     ntop = Inf,
+                                     sc = FALSE,
+                                     remove.failed = TRUE
+                                 )
+              shiny::removeModal()
+              dbg("[outliers_server] names.xlist = ", names(xlist))
+              cx <- xlist[[m]]
+              dbg("[outliers_server] dim.correctedX = ", dim(cx))
+          }
 
-        pmax(2**cx - 1, 0)
-
-        return(cx)
+          ## pmax(2**cx - 1, 0)
+          cx <- 2 ** cx - 1
+          return(cx)
       })
 
 
@@ -451,14 +460,14 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dy <- 0.1 * (ymax - ymin)
           ylim <- c(ymin - dy, ymax + dy)
 
-          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+          par(mfrow = c(1, 2), mar = c(3.2, 6, 2, 0.5), mgp = c(2.1, 0.2, 0), tcl = 0.1)
           boxplot(X0,
-            main = "raw", ylim = ylim, las = 1,
-            ylab = "expression (log2)", xlab = "samples"
+            main = "raw", ylim = ylim, las = 2,
+            ylab = "expression (log2)", xlab = "", cex.axis=0.5
           )
           boxplot(X1,
-            main = "normalized", ylim = ylim, las = 1, 
-            ylab = "", xlab = "samples"
+            main = "normalized", ylim = ylim, las = 2, 
+            ylab = "", xlab = "", cex.axis=0.5
           )
         }
 
@@ -743,12 +752,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
 
-     counts <- shiny::reactive({
+      counts <- shiny::reactive({
           shiny::req(imputedX()$counts)
           dbg("[outliers_server] dim.counts = ", dim(imputedX()$counts))
           return(imputedX()$counts)
       })
-    
+      
       return(
         list(
           counts = counts,
