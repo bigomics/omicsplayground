@@ -261,7 +261,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               shiny::withProgress(message = "Normalizing the data...", value = 0, {
                   shiny::incProgress(amount = 0.25, "Normalization...")
                   dbg("[outliers_server] Normalization: dim.X = ", dim(X))
-                  dbg("[outliers_server] Normalization: Normalizing data using LIMMA", input$scaling_method)
+                  dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
                   counts <- 2**X
                   X <- playbase::pgx.countNormalization(counts, method = input$scaling_method)
                   X <- log2(X)
