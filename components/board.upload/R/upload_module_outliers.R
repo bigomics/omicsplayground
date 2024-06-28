@@ -58,13 +58,13 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
             choices = c(
                 ## "Zero (default)" = "zero",
-                "SVDimpute (default)" = "SVD2",
+                "SVDimpute" = "SVD2",
                 "MinDet",
                 "MinProb",
                 "NMF",
-                "Skip imputation" = "skip_imputation"
+                "Skip imputation (default)" = "skip_imputation"
             ),
-            selected = "SVD2"
+            selected = "skip_imputation"
             ),
           ## shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
           br()
@@ -222,7 +222,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           shiny::req(r_X())
           counts <- r_X()                   
           zeros <- sum(counts==0, na.rm=TRUE)
-          negs <- sum(counts<0, na.rm=TRUE) ## RETHINK: can be a problem (eg Olink NPX). Adding offset prior log2?
+          negs <- sum(counts<0, na.rm=TRUE) ## think: can be a problem for Olink NPX.
           nmissing <- sum(is.na(counts))
           dbg("[outliers_server] Counts data have ", zeros, " zero values.")
           dbg("[outliers_server] Counts data have ", negs, " negative values.")
@@ -234,21 +234,22 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               counts <- counts + 1e-10
           }
           X <- log2(counts)
-          ## if (input$zero_as_na) X[which(X == 0)] <- NA
-          if (input$impute_method != "skip_imputation") {
-              nmissing <- sum(is.na(X))
+          nmissing <- sum(is.na(X))
+          if(nmissing>0) {
               dbg("[outliers_server] Data has ", nmissing, " missing values.")
-              dbg("[outliers_server] Imputing data using ", input$impute_method)
-              X <- playbase::imputeMissing(X, method = input$impute_method)
-              dbg("[outliers_server] Checking for duplicated features")
-              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-              dbg("[outliers_server] dim.imputedX = ", dim(X))
+              if (input$impute_method != "skip_imputation") {
+                  dbg("[outliers_server] Imputing data using ", input$impute_method)
+                  X <- playbase::imputeMissing(X, method = input$impute_method)
+                  dbg("[outliers_server] dim.imputedX = ", dim(X))
+              } else {
+                  dbg("[outliers_server] Skipping imputation")
+              }
           } else {
-              dbg("[outliers_server] Skipping imputation")
-              dbg("[outliers_server] Checking for duplicated features")
-              X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE, keep.NA = TRUE)
-              dbg("[outliers_server] dim.X = ", dim(X))
+              dbg("[outliers_server] No missing values detected in the data.")
           }
+          dbg("[outliers_server] Checking for duplicated features")
+          X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+          dbg("[outliers_server] dim.X = ", dim(X))
           counts <- 2 ** X
           LL <- list(counts = counts, X = X)
           LL
