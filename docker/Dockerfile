@@ -39,8 +39,14 @@ RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
 
 WORKDIR /
 
-##RUN R -e "remotes::install_github('bigomics/shinyChatR',dependencies=FALSE)"  ## rename??
-RUN R -e "remotes::install_github('bigomics/playbase',dependencies=FALSE)"
+# check if playbase@{$BRANCH} exists, if it does, install.. other wise install main
+RUN echo "Checking playbase branch ${BRANCH}"
+RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l) && \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+    R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
+    else \
+    R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
+    fi
 RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"
 RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE, force=TRUE)"
