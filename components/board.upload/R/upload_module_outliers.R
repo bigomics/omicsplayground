@@ -222,7 +222,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           shiny::req(r_X())
           counts <- r_X()                   
           zeros <- sum(counts==0, na.rm=TRUE)
-          negs <- sum(counts<0, na.rm=TRUE)
+          negs <- sum(counts<0, na.rm=TRUE) ## RETHINK: can be a problem (eg Olink NPX). Adding offset prior log2?
           nmissing <- sum(is.na(counts))
           dbg("[outliers_server] Counts data have ", zeros, " zero values.")
           dbg("[outliers_server] Counts data have ", negs, " negative values.")
@@ -257,8 +257,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Normalize
       normalizedX <- reactive({
           X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
-          ## samples <- r_samples()
-          ## contrasts <- r_contrasts()
           shiny::req(dim(X)) ##, dim(samples), dim(contrasts))
           if (input$scaling_method == "Skip normalization") {
               dbg("[outliers_server] Skipped normalization: dim.X = ", dim(X))
