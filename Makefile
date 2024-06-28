@@ -79,12 +79,6 @@ docker.bash:
 	@echo bash into docker $(TAG)
 	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
-docker.mpoc: FORCE
-	@echo building mpoc docker
-	docker build --no-cache \
-		-f docker/Dockerfile.mpoc \
-		-t bigomics/omicsplayground:mpoc .
-
 
 doc: FORCE
 	Rscript dev/02_doc.R
