@@ -217,17 +217,23 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Object reactive chain
       ## ------------------------------------------------------------------
       
-      ## Add small number to 0s; Impute; Remove duplicate features
-      imputedX <- reactive({ ## FOR NOW WE CAN IMPUTE IF NEEDED.
+      ## Impute; Remove duplicate features
+      imputedX <- reactive({
           shiny::req(r_X())
           counts <- r_X()                   
+          zeros <- sum(counts==0, na.rm=TRUE)
+          negs <- sum(counts<0, na.rm=TRUE)
+          nmissing <- sum(is.na(counts))
+          dbg("[outliers_server] Counts data have ", zeros, " zero values.")
+          dbg("[outliers_server] Counts data have ", negs, " negative values.")
+          dbg("[outliers_server] Counts data have ", nmissing, " missing values.")
+          counts[which(is.nan(counts))] <- NA
+          counts[playbase::is.xxl(counts, z = 10)] <- NA
+          counts[which(is.na(counts))] <- 0
           if(any(counts==0, na.rm=TRUE)) {
               counts <- counts + 1e-10
           }
           X <- log2(counts)
-          X[which(is.nan(X))] <- NA
-          X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values
-          ## counts[which(is.na(X))] <- NA ?? conform?
           ## if (input$zero_as_na) X[which(X == 0)] <- NA
           if (input$impute_method != "skip_imputation") {
               nmissing <- sum(is.na(X))
