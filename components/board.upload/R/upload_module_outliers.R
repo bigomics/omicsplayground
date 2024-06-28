@@ -291,6 +291,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               is.outlier <- (res$z.outlier > input$outlier_threshold)
               if (any(is.outlier) && !all(is.outlier)) {
                   X <- X[, which(!is.outlier), drop = FALSE]
+                  ## also filter counts?
               }
           }
           pos <- NULL
@@ -320,41 +321,41 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           ## recompute chosed correction method with full
           ## matrix. previous was done on shortened matrix.
           X1 <- cleanX()$X
+          counts <- imputedX()$counts
           samples <- r_samples()
           contrasts <- r_contrasts()
           kk <- intersect(colnames(X1), rownames(samples))
           kk <- intersect(kk, rownames(contrasts))
-          counts <- counts()[, kk, drop = FALSE]
+          counts <- counts[, kk, drop = FALSE]
           X1 <- X1[, kk, drop = FALSE]
           contrasts <- contrasts[kk, , drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
 
           m <- input$bec_method
           dbg("[outliers_server]: Batch correction method = ", m)
-          if(m == "uncorrected") {
+          if(m == "uncorrected (default)") {
+              m <- "uncorrected"
               dbg("[outliers_server]: Data not corrected for (potential) batch effects")
-              cx <- log2(X1+1)
-          } else {
-              mm <- unique(c("uncorrected", input$bec_method))
-              pars <- get_model_parameters()
-              xlist <- playbase::runBatchCorrectionMethods(
-                                     X = X1,
-                                     batch = pars$batch,
-                                     y = pars$pheno,
-                                     controls = NULL,
-                                     methods = mm,
-                                     ntop = Inf,
-                                     sc = FALSE,
-                                     remove.failed = TRUE
-                                 )
-              shiny::removeModal()
-              dbg("[outliers_server] names.xlist = ", names(xlist))
-              cx <- xlist[[m]]
-              dbg("[outliers_server] dim.correctedX = ", dim(cx))
           }
+          mm <- unique(c("uncorrected", input$bec_method))
+          pars <- get_model_parameters()
+          xlist <- playbase::runBatchCorrectionMethods(
+                                 X = X1,
+                                 batch = pars$batch,
+                                 y = pars$pheno,
+                                 controls = NULL,
+                                 methods = mm,
+                                 ntop = Inf,
+                                 sc = FALSE,
+                                 remove.failed = TRUE
+                             )
+          shiny::removeModal()
+          dbg("[outliers_server] names.xlist = ", names(xlist))
+          cx <- xlist[[m]]
+          dbg("[outliers_server] dim.correctedX = ", dim(cx))
 
           ## pmax(2**cx - 1, 0)
-          cx <- 2 ** cx - 1
+          ## cx <- 2 ** cx - 1
           return(cx)
       })
 
@@ -752,17 +753,18 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         add.watermark = FALSE
       )
 
-      counts <- shiny::reactive({
+      correctedCounts <- shiny::reactive({
           shiny::req(imputedX()$counts)
-          dbg("[outliers_server] dim.counts = ", dim(imputedX()$counts))
+          dbg("[outliers_server] check.dim.counts = ", dim(imputedX()$counts))
+          dbg("[outliers_server] check.dim.correctedX = ", dim(correctedX))
           return(imputedX()$counts)
       })
       
       return(
         list(
-          counts = counts,
-          correctedCounts = correctedX,
-          results = results_correction_methods
+            counts = correctedCounts,
+            X = correctedX,
+            results = results_correction_methods
         )
       ) ## pointing to reactive
     } ## end-of-server
