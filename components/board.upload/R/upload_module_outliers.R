@@ -74,7 +74,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           div("Normalize data values:\n"),
           shiny::selectInput(ns("scaling_method"), NULL,
             choices = c(
-                "CPM (default)" = "CPM",
+                "LogCPM (default)" = "CPM",
                 ## "Mean centering" = "mean.center",
                 ## "Median centering" = "median.center",
                 ## "TMM" = "TMM",
@@ -220,6 +220,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Impute; Remove duplicate features
       imputedX <- reactive({
           shiny::req(r_X())
+
           counts <- r_X()                   
           zeros <- sum(counts==0, na.rm=TRUE)
           negs <- sum(counts<0, na.rm=TRUE) ## think: can be a problem for Olink NPX.
@@ -227,12 +228,15 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dbg("[outliers_server] Counts data have ", zeros, " zero values.")
           dbg("[outliers_server] Counts data have ", negs, " negative values.")
           dbg("[outliers_server] Counts data have ", nmissing, " missing values.")
+
           counts[which(is.nan(counts))] <- NA
           counts[playbase::is.xxl(counts, z = 10)] <- NA
           counts[which(is.na(counts))] <- 0
+
           if(any(counts==0, na.rm=TRUE)) {
               counts <- counts + 1e-10
           }
+
           X <- log2(counts)
           nmissing <- sum(is.na(X))
           if(nmissing>0) {
@@ -256,6 +260,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       })
 
       ## Normalize
+      ## Add prior depending data type.
+      ## Default to quantile when logCPM.
       normalizedX <- reactive({
           X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
           shiny::req(dim(X)) ##, dim(samples), dim(contrasts))
@@ -270,6 +276,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                   counts <- 2**X
                   X <- playbase::pgx.countNormalization(counts, method = input$scaling_method)
                   X <- log2(X)
+                  ## playbase::transformtoLog(counts, datatype=datatype)
                   if (input$quantile_norm) {
                       dbg("[outliers_server] Applying quantile normalization")
                       shiny::incProgress(amount = 0.25, "Quantile normalization...")
@@ -419,9 +426,9 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
           ## standard dim reduction methods
           pos <- list()
-          ##        pos[['tsne']] <- Rtsne::Rtsne(scaledX, check_duplicates=FALSE, perplexity=nb)$Y
+          ## pos[['tsne']] <- Rtsne::Rtsne(scaledX, check_duplicates=FALSE, perplexity=nb)$Y
           pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
-          ##        pos[['umap']] <- uwot::umap(scaledX, n_neighbors = ceiling(nb/2))
+          ## pos[['umap']] <- uwot::umap(scaledX, n_neighbors = ceiling(nb/2))
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
             colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
@@ -521,69 +528,80 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       ## missing values
       plot_missingvalues <- function() {
-        X0 <- r_X()
-        X1 <- imputedX()$X
-        X0 <- X0[rownames(X1), ] ## remove duplicates
-
-        ii <- which(is.na(X0))
-        if (isolate(input$zero_as_na)) {
-          ii <- which(is.na(X0) | X0 == 0)
-        }
-        q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
-        X1[X1 > q999] <- NA
-        h <- hist(X1, breaks = 80, plot = FALSE, las = 1)
-        hh <- h$breaks
-
-        ## set zero value to 1, NA values to 2
-        X2 <- 1 * is.na(X0)
-        ## X2 <- X2 + 1 * (!is.na(X0) & X0 == 0)
-        if (input$zero_as_na) X2[X0 == 0] <- 1
-        ## jj <- head( order(-rowMeans(is.na(X0))), 200)
-        jj <- head(order(-apply(X2, 1, sd)), 200)
-        X2 <- X2[jj, ]
-
-        par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), mgp = c(2.2, 0.85, 0))
-
-        if (length(ii) > 0) {
-          hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
-          hist(X1[ii], breaks = hh, add = TRUE, col = "red", las = 1)
-        } else {
-          hist(X1, breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
-        }
-
-        if (input$missing_plottype == "heatmap") {
-          if (any(X2 > 0)) {
-            ## NA heatmap
-            par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
-            playbase::gx.imagemap(X2, cex = -1)
-            title("missing values patterns", cex.main = 1.2)
+          X0 <- r_X()
+          X1 <- imputedX()$X
+          X0 <- X0[rownames(X1), ] ## remove duplicates
+          
+          if(!any(is.na(X0)) & !any(is.na(X1))) {
+              plot.new()
+              text(0.5, 0.5, "No missing values", cex=1.2)
+              ## par(mfrow = c(1, 2), mar = c(3.8, 3.2, 2, 0.5), mgp = c(2.5, 0.2, 0), 
+              ##    cex.axis = 0.8, cex.lab = 0.8, tcl = -0.2)
+              ## Main0 <- "Raw data\nno missing values"
+              ## hist(X0, breaks = 100, main = Main0, xlab = "Expression", las = 1, cex.main=1)
+              ## Main1 <- "Log2-transformed data\nno missing values"
+              ## hist(X1, breaks = 100, main = Main1, xlab = "Log2 expression", las = 1, cex.main=1)
           } else {
-            plot.new()
-            text(0.5, 0.5, "no missing values")
-          }
-        }
+              
+              ii <- which(is.na(X0))
+              if (isolate(input$zero_as_na)) {
+                  ii <- which(is.na(X0) | X0 == 0)
+              }
+              q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
+              X1[X1 > q999] <- NA
+              h <- hist(X1, breaks = 80, plot = FALSE, las = 1)
+              hh <- h$breaks
 
-        if (input$missing_plottype == "ratio plot") {
-          if (any(X2 > 0)) {
-            ## NA ratio plot
-            par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
-            x.avg <- rowMeans(X1, na.rm = TRUE)
-            x.nar <- rowMeans(is.na(X0))
-            x.avg2 <- cut(x.avg, breaks = 20)
-            x.nar2 <- tapply(1:nrow(X0), x.avg2, function(i) mean(is.na(X0[i, , drop = FALSE])))
-            aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
-            barplot(rbind(x.nar2, 1 - x.nar2),
-              beside = FALSE, names.arg = aa, las = 1,
-              xlab = "average intensity (log2)", ylab = "missing value ratio"
-            )
-            title("missingness vs. average intensity")
-          } else {
-            plot.new()
-            text(0.5, 0.5, "no missing values")
+              ## set zero value to 1, NA values to 2
+              X2 <- 1 * is.na(X0)
+              ## X2 <- X2 + 1 * (!is.na(X0) & X0 == 0)
+              if (input$zero_as_na) X2[X0 == 0] <- 1
+              ## jj <- head( order(-rowMeans(is.na(X0))), 200)
+              jj <- head(order(-apply(X2, 1, sd)), 200)
+              X2 <- X2[jj, ]
+
+              par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), mgp = c(2.2, 0.85, 0))
+
+              if (length(ii) > 0) {
+                  hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
+                  hist(X1[ii], breaks = hh, add = TRUE, col = "red", las = 1)
+              } else {
+                  hist(X1, breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
+              }
+
+              if (input$missing_plottype == "heatmap") {
+                  if (any(X2 > 0)) {
+                      ## NA heatmap
+                      par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
+                      playbase::gx.imagemap(X2, cex = -1)
+                      title("missing values patterns", cex.main = 1.2)
+                  } else {
+                      plot.new()
+                      text(0.5, 0.5, "no missing values")
+                  }
+              }
+
+              if (input$missing_plottype == "ratio plot") {
+                  if (any(X2 > 0)) {
+                      ## NA ratio plot
+                      par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
+                      x.avg <- rowMeans(X1, na.rm = TRUE)
+                      x.nar <- rowMeans(is.na(X0))
+                      x.avg2 <- cut(x.avg, breaks = 20)
+                      x.nar2 <- tapply(1:nrow(X0), x.avg2, function(i) mean(is.na(X0[i, , drop = FALSE])))
+                      aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
+                      barplot(rbind(x.nar2, 1 - x.nar2),
+                              beside = FALSE, names.arg = aa, las = 1,
+                              xlab = "average intensity (log2)", ylab = "missing value ratio"
+                              )
+                      title("missingness vs. average intensity")
+                  } else {
+                      plot.new()
+                      text(0.5, 0.5, "no missing values")
+                  }
+              }
           }
-        }
       }
-
       ## sample outlier PCA plot
       plot.outlierPCA <- function(pos, z, z0, shownames) {
         is.outlier <- (z > z0)
