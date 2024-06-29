@@ -537,8 +537,13 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           } else if (any(is.na(X0)) & !any(is.na(X1))) {
               X0[!is.na(X0)] <- 2
               X0[is.na(X0)] <- 1
+              par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.5, 0.5), mgp = c(2.2, 0.85, 0))
               playbase::gx.imagemap(X0, cex = -1)
-              title("missing values patterns", cex.main = 1.2)
+              title("Missing values patterns in raw data", cex.main = 0.8)
+              X1[!is.na(X1)] <- 2
+              X1[is.na(X1)] <- 1
+              playbase::gx.imagemap(X1, cex = -1)
+              title("No missing values in imputed data", cex.main = 0.8)
           } else {
               
               ii <- which(is.na(X0))
