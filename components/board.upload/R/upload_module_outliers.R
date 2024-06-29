@@ -84,16 +84,16 @@ upload_module_outliers_ui <- function(id, height = "100%") {
                 "LogMaxSum" = "logMaxSum",
                 "Skip normalization" = "SkipNorm"
             ),
-            selected = "logCPM"
+            selected = "CPM"
           ),
-          shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = FALSE),
+          shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
           br()
         ),
         bslib::accordion_panel(
-          title = "3. Remove outliers",
+          title = "3. Detect and remove outliers",
           shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
           ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
-          ## shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
+          shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
           shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = FALSE),
           br()
         ),
@@ -261,7 +261,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       ## Normalize
       ## Add prior depending data type.
-      ## Default to quantile when logCPM.
       normalizedX <- reactive({
           X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
           shiny::req(dim(X)) ##, dim(samples), dim(contrasts))
@@ -281,10 +280,10 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                       dbg("[outliers_server] Applying quantile normalization")
                       shiny::incProgress(amount = 0.25, "Quantile normalization...")
                       ## Ignore nearly 0 values
-                      ## jj <- which(X < 0.01)
-                      ## X[jj] <- NA
+                      jj <- which(X < 0.01)
+                      X[jj] <- NA
                       X <- limma::normalizeQuantiles(X)
-                      ## X[jj] <- 0
+                      X[jj] <- 0
                   }
               })
           }
@@ -535,12 +534,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           if(!any(is.na(X0)) & !any(is.na(X1))) {
               plot.new()
               text(0.5, 0.5, "No missing values", cex=1.2)
-              ## par(mfrow = c(1, 2), mar = c(3.8, 3.2, 2, 0.5), mgp = c(2.5, 0.2, 0), 
-              ##    cex.axis = 0.8, cex.lab = 0.8, tcl = -0.2)
-              ## Main0 <- "Raw data\nno missing values"
-              ## hist(X0, breaks = 100, main = Main0, xlab = "Expression", las = 1, cex.main=1)
-              ## Main1 <- "Log2-transformed data\nno missing values"
-              ## hist(X1, breaks = 100, main = Main1, xlab = "Log2 expression", las = 1, cex.main=1)
+          } else if (any(is.na(X0)) & !any(is.na(X1))) {
+              X0[!is.na(X0)] <- 2
+              X0[is.na(X0)] <- 1
+              playbase::gx.imagemap(X0, cex = -1)
+              title("missing values patterns", cex.main = 1.2)
           } else {
               
               ii <- which(is.na(X0))
