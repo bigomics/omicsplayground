@@ -100,8 +100,10 @@ upload_module_computepgx_server <- function(
               shiny::selectInput(
                 ns("selected_datatype"), NULL,
                 choices = c(
-                  "RNA-seq", "scRNA-seq", "proteomics",
-                  "mRNA microarray", "other"
+                    "RNA-seq", "scRNA-seq",
+                    "proteomic intensities: LC,MS",
+                    "proteomics: SNR",
+                    "mRNA microarray", "other"
                 )
               )
             ),
