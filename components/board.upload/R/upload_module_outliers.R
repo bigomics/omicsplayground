@@ -267,16 +267,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dbg("[outliers_server] Checking for duplicated features")
           X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
           dbg("[outliers_server] dim.X = ", dim(X))
-          
-          ## zeros <- sum(X==0, na.rm=TRUE)
-          ## negs <- sum(X<0, na.rm=TRUE)
-          ## nmissing <- sum(is.na(X))
-          ## infin <- sum(is.infinite(X))
-          ## dbg("[outliers_server] X data have ", zeros, " zero values.")
-          ## dbg("[outliers_server] X data have ", negs, " negative values.")
-          ## dbg("[outliers_server] X data have ", nmissing, " missing values.")
-          ## dbg("[outliers_server] X data have ", infin, " infinite values.")
-          
+                    
           counts <- 2 ** X
           LL <- list(counts = counts, X = X)
           LL
