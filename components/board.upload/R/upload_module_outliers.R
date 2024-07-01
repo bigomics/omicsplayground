@@ -425,11 +425,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## return object
       correctedCounts <- reactive({
           X <- correctedX()
-          ## if(input$scaling_method == "CPM") {
-          ##    counts <- 2 ** X - 1
-          ##} else {
-              counts <- 2 ** X
-          ## }
+          counts <- 2 ** X
           dbg("[outliers_server] dim.correctedCounts = ", dim(counts))
           counts
       })
