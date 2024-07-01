@@ -625,10 +625,16 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       output$outliers <- shiny::renderUI({
         score.infotext <-
-          "The outlier z-score is calculated as the average of z-score from correlation, euclidean distance and avarage feature z-score."
+          "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
 
         missing.infotext <-
-          "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
+          "Missing values (MVs) reduce the completeness of biological data and hinder preprocessing steps. MVs (i.e., NA), more often populate proteomics and metabolomics data. Here, MVs are identified and their patterns in your data is shown."
+
+        normalization.infotext <-
+          "Normalization enables to standardize the data and improve their consistency, comparability and reproducibility. Boxplots of raw (unnormalized) and normalized data are shown. Normalization method can be selected on the left, under “Normalization”."
+
+        batcheff.infotext <-
+          "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"), "Plot type:", c("heatmap", "ratio plot"),
@@ -767,6 +773,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                 ns("plot1"),
                 title = "Normalization",
                 options = norm.options,
+                info.text = normalization.infotext,
                 height = c("100%", "70vh"),
                 show.maximize = FALSE
               ),
@@ -783,6 +790,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                 ns("plot4"),
                 title = "Batch-effects correction",
                 options = NULL,
+                info.text = batcheff.infotext,
                 height = c("100%", "70vh"),
                 show.maximize = FALSE
               )
