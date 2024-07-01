@@ -669,7 +669,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         )
         div(
           bslib::as_fill_carrier(),
-          ## style = "width: 100%; display: flex; justify-content: space-between; margin-bottom: 8px;",
           style = "width: 100%; display: flex; ",
           bslib::layout_columns(
             col_widths = c(2, 10),
@@ -684,7 +683,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                   title = "1. Missing values",
                   shiny::p("Replace missing values using an imputation method:\n"),
                   shiny::selectInput(ns("impute_method"), NULL,
-                    ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
                     choices = c(
                       "SVDimpute (default)" = "SVD2",
                       "Zero" = "zero",
@@ -704,11 +702,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                   shiny::selectInput(ns("scaling_method"), NULL,
                     choices = c(
                       "LogCPM (default)" = "CPM",
-                      ## "Mean centering" = "mean.center",
-                      ## "Median centering" = "median.center",
-                      ## "TMM" = "TMM",
-                      ## "RLE" = "RLE",
-                      ## "RLE2" = "RLE2",
                       "LogMaxMedian" = "logMaxMedian",
                       "LogMaxSum" = "logMaxSum",
                       "Skip normalization" = "Skip_normalization"
@@ -771,7 +764,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               bslib::layout_columns(
                 col_widths = 6,
                 row_heights = c(3, 3),
-                # height = c("auto", "100%"),
                 heights_equal = "row",
                 PlotModuleUI(
                   ns("plot2"),
