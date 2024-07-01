@@ -68,16 +68,17 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
         zeros <- sum(counts == 0, na.rm = TRUE)
         negs <- sum(counts < 0, na.rm = TRUE) ## what about for Olink NPX?
-        nmissing <- sum(is.na(counts))
-        infin <- sum(is.infinite(counts))
-        dbg("[outliers_server] Counts data have ", zeros, " zero values.")
-        dbg("[outliers_server] Counts data have ", negs, " negative values.")
-        dbg("[outliers_server] Counts data have ", nmissing, " missing values.")
-        dbg("[outliers_server] Counts data have ", infin, " infinite values.")
+        # nmissing <- sum(is.na(counts))
+        # infin <- sum(is.infinite(counts))
+        # dbg("[outliers_server] Counts data have ", zeros, " zero values.")
+        # dbg("[outliers_server] Counts data have ", negs, " negative values.")
+        # dbg("[outliers_server] Counts data have ", nmissing, " missing values.")
+        # dbg("[outliers_server] Counts data have ", infin, " infinite values.")
         if (input$zero_as_na) {
           dbg("[outliers_server] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
+
         X <- log2(counts + 0.001)  ## NEED RETHINK
         X[playbase::is.xxl(X, z = 10)] <- NA
         nmissing <- sum(is.na(X))
@@ -96,7 +97,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         dbg("[outliers_server] Checking for duplicated features")
         X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
         dbg("[outliers_server] dim.X = ", dim(X))
-
         dbg("[outliers_server:imputeX] dim.counts = ", dim(counts))
         dbg("[outliers_server:imputeX] dim.X = ", dim(X))        
         
@@ -342,12 +342,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           )
 
           boxplot(X0,
-                  main = "raw", ylim = c(min(X0, na.rm = TRUE) * 0.8, max(X0, na.rm = TRUE) * 1.2), ## ylim=ylim,
-                  las = 2, ylab = "expression (log2)", xlab = "", cex.axis = 0.8
+            main = "raw", ylim = c(min(X0, na.rm = TRUE) * 0.8, max(X0, na.rm = TRUE) * 1.2), las = 2,
+            ylab = "expression (log2)", xlab = "", cex.axis = 0.8
           )
           boxplot(X1,
-                  main = "normalized", ylim=c(min(X1, na.rm = TRUE) * 0.8, max(X1, na.rm = TRUE) * 1.2), ## ylim = ylim,
-                  las = 2, ylab = "", xlab = "", cex.axis = 0.8
+            main = "normalized", ylim = c(min(X1, na.rm = TRUE) * 0.8, max(X1, na.rm = TRUE) * 1.2), las = 2,
+            ylab = "", xlab = "", cex.axis = 0.8
           )
         }
 
