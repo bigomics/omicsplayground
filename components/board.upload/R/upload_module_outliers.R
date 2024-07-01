@@ -662,7 +662,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         div(
         bslib::layout_columns(
           col_widths = c(2, 10),
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 250px)",
           heights_equal = "row",
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
