@@ -233,7 +233,6 @@ UploadBoard <- function(id,
     ## Check COUNTS matrix
     ## --------------------------------------------------------
 
-    checked_for_log <- reactiveVal(FALSE)
 
     checked_counts <- shiny::eventReactive(
       {
@@ -280,22 +279,13 @@ UploadBoard <- function(id,
 
           # inform user that we are applying the correction
           shinyalert::shinyalert(
-            title = "Converting log-transformed counts",
-            text = "Your counts data seems to be log-transformed. We are converting it to intensities.",
+            title = "Possible log-transformed counts: use expression.csv",
+            text = "Your counts data seems to be log-transformed. To upload log-transformed data, use expression.csv instead of counts.csv.",
             type = "info"
           )
-
-
-          # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
-          res$df <- 2**res$df
-          if (min(res$df, na.rm = TRUE) > 0) res$df <- res$df - 1
-          checked <- res$df
-          checked_for_log(TRUE)
-        } else {
-          # no correction needed
-          checked <- res$df
-          checked_for_log(TRUE)
         }
+
+        checked <- res$df
 
         # TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
         # req(checked_for_log(), !is.null(checked))
@@ -581,7 +571,7 @@ UploadBoard <- function(id,
       id = "compute",
       ## countsRT = shiny::reactive(checked_samples_counts()$COUNTS),
       countsRT = corrected1$counts,
-      countsX = corrected1$X, ##corrected1$correctedCounts,
+      countsX = corrected1$X, ## corrected1$correctedCounts,
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
