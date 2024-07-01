@@ -245,9 +245,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               dbg("[outliers_server] Adding 1e-20 to counts data")
               counts <- counts + 1e-20
           }
+
           X <- log2(counts)
           X[playbase::is.xxl(X, z = 10)] <- NA
           nmissing <- sum(is.na(X))
+
           if(nmissing>0) {
               dbg("[outliers_server] X has ", nmissing, " missing values.")
               if (input$impute_method != "skip_imputation") {
@@ -299,7 +301,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                   dbg("[outliers_server] Normalization: dim.X = ", dim(X))
                   dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
                   normCounts <- playbase::pgx.countNormalization(counts, method = input$scaling_method)
-                  normCounts <- normCounts + 1e-20
+                  if(input$scaling_method == "CPM") {
+                      normCounts <- normCounts + 1
+                  } else {
+                      normCounts <- normCounts + 1e-20
+                  }
                   X <- log2(normCounts)
                   if (input$quantile_norm) {
                       dbg("[outliers_server] Applying quantile normalization")
@@ -419,7 +425,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## return object
       correctedCounts <- reactive({
           X <- correctedX()
-          counts <- 2**X
+          ## if(input$scaling_method == "CPM") {
+          ##    counts <- 2 ** X - 1
+          ##} else {
+              counts <- 2 ** X
+          ## }
           dbg("[outliers_server] dim.correctedCounts = ", dim(counts))
           counts
       })
