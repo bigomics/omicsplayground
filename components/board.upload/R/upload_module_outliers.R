@@ -11,172 +11,7 @@
 
 upload_module_outliers_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
-
-  score.infotext <-
-    "The outlier z-score is calculated as the average of z-score from correlation, euclidean distance and avarage feature z-score."
-
-  missing.infotext <-
-    "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
-
-  missing.options <- tagList(
-    shiny::radioButtons(ns("missing_plottype"), "Plot type:", c("heatmap", "ratio plot"),
-      selected = "heatmap", inline = TRUE
-    ),
-  )
-
-  norm.options <- tagList(
-    shiny::radioButtons(ns("norm_plottype"), "Plot type:", c("boxplot", "histogram", "density"),
-      selected = "boxplot", inline = TRUE
-    ),
-    shiny::checkboxInput(ns("norm_zero_na"), "zero as NA", FALSE)
-  )
-
-  outlier.options <- tagList(
-
-    shiny::checkboxInput(ns("outlier_shownames"), "show sample names", FALSE)
-  )
-
-  bec.options <- tagList(
-    shiny::radioButtons(ns("bec_plottype"), "Plot type:", c("pca", "tsne", "heatmap"),
-      inline = TRUE
-    )
-  )
-
-  bslib::layout_columns(
-    col_widths = c(2, 10),
-    height = "calc(100vh - 200px)",
-    heights_equal = "row",
-    bslib::card(bslib::card_body(
-      style = "padding: 0px;",
-      bslib::accordion(
-        multiple = FALSE,
-        style = "background-color: #F7FAFD99;",
-        bslib::accordion_panel(
-          title = "1. Missing values",
-          shiny::p("Replace missing values using an imputation method:\n"),
-          shiny::selectInput(ns("impute_method"), NULL,
-          ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
-            choices = c(
-                "SVDimpute (default)" = "SVD2",
-                "Zero" = "zero",
-                "MinDet",
-                "MinProb",
-                "NMF",
-                "Skip imputation" = "skip_imputation"
-            ),
-            selected = "SVD2"
-            ),
-          shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-          br()
-        ),
-        bslib::accordion_panel(
-          title = "2. Normalization",
-          div("Normalize data values:\n"),
-          shiny::selectInput(ns("scaling_method"), NULL,
-            choices = c(
-                "LogCPM (default)" = "CPM",
-                ## "Mean centering" = "mean.center",
-                ## "Median centering" = "median.center",
-                ## "TMM" = "TMM",
-                ## "RLE" = "RLE",
-                ## "RLE2" = "RLE2",
-                "LogMaxMedian" = "logMaxMedian",
-                "LogMaxSum" = "logMaxSum",
-                "Skip normalization" = "Skip_normalization"
-            ),
-            selected = "CPM"
-          ),
-          shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
-          br()
-        ),
-        bslib::accordion_panel(
-          title = "3. Detect and remove outliers",
-          shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
-          shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = TRUE),
-          ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
-          shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
-          br()
-        ),
-        ## bslib::accordion_panel(
-        ##  title = "4. Remove unwanted technical and biogical variation",
-        ##  shiny::p("Correct for technical and biogical factors:\n"),
-        ##  shiny::selectInput(ns("correct_factor"), NULL,
-        ##    choices = c(
-        ##        "library size" = "lib",
-        ##        "ribo", "cellcycle", "gender",
-        ##        "Skip correction (Default)" = "Skip_correction"
-        ##    ),
-        ##    selected = "Skip_correction"
-        ##  ),
-        ##  br()
-        ## ),
-        bslib::accordion_panel(
-          title = "4. Batch-effect correction",
-          shiny::p("Remove batch effects from your data:\n"),
-          shiny::selectInput(ns("bec_method"), NULL,
-              choices = c("uncorrected (default)" = "uncorrected",
-                          "ComBat" = "ComBat",
-                          "SVA" = "SVA",
-                          "RUV3" = "RUV3",
-                          "NPM" = "NPmatch"),
-            selected = "uncorrected"
-          ),
-          shiny::conditionalPanel(
-            "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
-            ns = ns,
-            shiny::textOutput(ns("bec_param_text")),
-            shiny::br(),
-          ),
-          shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
-          br()
-        )
-      ),
-      br()
-    )),
-
-    ## ---------------------------- canvas ----------------------------------
-    bslib::layout_columns(
-      width = 12,
-      bslib::layout_columns(
-        col_widths = 6,
-        row_heights = c(3, 3),
-        height = "calc(100vh - 200px)",
-        heights_equal = "row",
-        PlotModuleUI(
-          ns("plot2"),
-          title = "Missing values",
-          info.text = missing.infotext,
-          caption = missing.infotext,
-          options = missing.options,
-          height = c("100%", "70vh"),
-          show.maximize = FALSE
-        ),
-        PlotModuleUI(
-          ns("plot1"),
-          title = "Normalization",
-          options = norm.options,
-          height = c("100%", "70vh"),
-          show.maximize = FALSE
-        ),
-        PlotModuleUI(
-          ns("plot3"),
-          title = "Outliers detection",
-          info.text = score.infotext,
-          caption = score.infotext,
-          options = outlier.options,
-          height = c("100%", "70vh"),
-          show.maximize = FALSE
-        ),
-        PlotModuleUI(
-          ns("plot4"),
-          title = "Batch-effects correction",
-          options = NULL,
-          height = c("100%", "70vh"),
-          show.maximize = FALSE
-        )
-      )
-    )
-  )
+  uiOutput(ns("outliers"))
 }
 
 
@@ -185,6 +20,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
       output$bec_param_text <- renderText({
         pars <- get_model_parameters()
         shiny::req(pars)
@@ -220,11 +56,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
-      
+
       ## Impute; Remove duplicate features
       imputedX <- reactive({
           shiny::req(r_X())
-          counts <- r_X()                   
+          shiny::req(!is.null(input$zero_as_na))
+          counts <- r_X()
 
           counts[which(is.nan(counts))] <- NA
           counts[which(is.infinite(counts))] <- NA
@@ -237,7 +74,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dbg("[outliers_server] Counts data have ", negs, " negative values.")
           dbg("[outliers_server] Counts data have ", nmissing, " missing values.")
           dbg("[outliers_server] Counts data have ", infin, " infinite values.")
-
           if(input$zero_as_na) {
               dbg("[outliers_server] Setting 0 values to NA")
               counts[which(counts==0)] <- NA
@@ -267,7 +103,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dbg("[outliers_server] Checking for duplicated features")
           X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
           dbg("[outliers_server] dim.X = ", dim(X))
-                    
+
           counts <- 2 ** X
           LL <- list(counts = counts, X = X)
           LL
@@ -341,7 +177,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                   X <- X[, which(!is.outlier), drop = FALSE]
                   ## also filter counts?
               }
-          }   
+          }
           pos <- NULL
           if (NCOL(X) > 1) {
                pos <- irlba::irlba(X, nv = 2)$v
@@ -364,7 +200,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       correctedX <- shiny::reactive({
           shiny::req(dim(cleanX()$X), dim(imputedX()$counts),
                      dim(r_contrasts()), dim(r_samples()))
-          
+
           ## Technical & biological effects correction ## ps: also includes biological
           ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
           ## pheno <- playbase::contrasts2pheno(contrasts, samples)
@@ -372,7 +208,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           ##  X, samples, pheno,
           ##  p.pheno = 0.05, p.pca = 0.5, force = FALSE,
           ##  params = c("lib", "mito", "ribo", "cellcycle", "gender"),
-          ##  nv = 2, k.pca = 10, xrank = NULL)        
+          ##  nv = 2, k.pca = 10, xrank = NULL)
 
           ## recompute chosed correction method with full
           ## matrix. previous was done on shortened matrix.
@@ -531,7 +367,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
             ylab = "expression (log2)", xlab = "", cex.axis=0.8
           )
           boxplot(X1,
-            main = "normalized", ylim = ylim, las = 2, 
+            main = "normalized", ylim = ylim, las = 2,
             ylab = "", xlab = "", cex.axis=0.8
           )
         }
@@ -583,7 +419,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           X0 <- r_X()
           X1 <- imputedX()$X
           X0 <- X0[rownames(X1), ] ## remove duplicates
-          
+
           if(!any(is.na(X0)) & !any(is.na(X1))) {
               plot.new()
               text(0.5, 0.5, "No missing values", cex=1.2)
@@ -598,7 +434,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               playbase::gx.imagemap(X1, cex = -1)
               title("No missing values in imputed data", cex.main = 0.8)
           } else {
-              
+
               ii <- which(is.na(X0))
               if (isolate(input$zero_as_na)) {
                   ii <- which(is.na(X0) | X0 == 0)
@@ -784,6 +620,179 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       }
 
       ## ------------------------------------------------------------------
+      ## Plot UI
+      ## ------------------------------------------------------------------
+
+      output$outliers <- shiny::renderUI({
+        score.infotext <-
+          "The outlier z-score is calculated as the average of z-score from correlation, euclidean distance and avarage feature z-score."
+
+        missing.infotext <-
+          "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
+
+        missing.options <- tagList(
+          shiny::radioButtons(ns("missing_plottype"), "Plot type:", c("heatmap", "ratio plot"),
+            selected = "heatmap", inline = TRUE
+          ),
+        )
+
+        norm.options <- tagList(
+          shiny::radioButtons(ns("norm_plottype"), "Plot type:", c("boxplot", "histogram", "density"),
+            selected = "boxplot", inline = TRUE
+          ),
+          shiny::checkboxInput(ns("norm_zero_na"), "zero as NA", FALSE)
+        )
+
+        outlier.options <- tagList(
+
+          shiny::checkboxInput(ns("outlier_shownames"), "show sample names", FALSE)
+        )
+
+        bec.options <- tagList(
+          shiny::radioButtons(ns("bec_plottype"), "Plot type:", c("pca", "tsne", "heatmap"),
+            inline = TRUE
+          )
+        )
+        div(
+        bslib::layout_columns(
+          col_widths = c(2, 10),
+          height = "calc(100vh - 200px)",
+          heights_equal = "row",
+          bslib::card(bslib::card_body(
+            style = "padding: 0px;",
+            bslib::accordion(
+              multiple = FALSE,
+              style = "background-color: #F7FAFD99;",
+              bslib::accordion_panel(
+                title = "1. Missing values",
+                shiny::p("Replace missing values using an imputation method:\n"),
+                shiny::selectInput(ns("impute_method"), NULL,
+                ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
+                  choices = c(
+                      "SVDimpute (default)" = "SVD2",
+                      "Zero" = "zero",
+                      "MinDet",
+                      "MinProb",
+                      "NMF",
+                      "Skip imputation" = "skip_imputation"
+                  ),
+                  selected = "SVD2"
+                  ),
+                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+                br()
+              ),
+              bslib::accordion_panel(
+                title = "2. Normalization",
+                div("Normalize data values:\n"),
+                shiny::selectInput(ns("scaling_method"), NULL,
+                  choices = c(
+                      "LogCPM (default)" = "CPM",
+                      ## "Mean centering" = "mean.center",
+                      ## "Median centering" = "median.center",
+                      ## "TMM" = "TMM",
+                      ## "RLE" = "RLE",
+                      ## "RLE2" = "RLE2",
+                      "LogMaxMedian" = "logMaxMedian",
+                      "LogMaxSum" = "logMaxSum",
+                      "Skip normalization" = "Skip_normalization"
+                  ),
+                  selected = "CPM"
+                ),
+                shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
+                br()
+              ),
+              bslib::accordion_panel(
+                title = "3. Detect and remove outliers",
+                shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
+                shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = TRUE),
+                ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
+                shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
+                br()
+              ),
+              ## bslib::accordion_panel(
+              ##  title = "4. Remove unwanted technical and biogical variation",
+              ##  shiny::p("Correct for technical and biogical factors:\n"),
+              ##  shiny::selectInput(ns("correct_factor"), NULL,
+              ##    choices = c(
+              ##        "library size" = "lib",
+              ##        "ribo", "cellcycle", "gender",
+              ##        "Skip correction (Default)" = "Skip_correction"
+              ##    ),
+              ##    selected = "Skip_correction"
+              ##  ),
+              ##  br()
+              ## ),
+              bslib::accordion_panel(
+                title = "4. Batch-effect correction",
+                shiny::p("Remove batch effects from your data:\n"),
+                shiny::selectInput(ns("bec_method"), NULL,
+                    choices = c("uncorrected (default)" = "uncorrected",
+                                "ComBat" = "ComBat",
+                                "SVA" = "SVA",
+                                "RUV3" = "RUV3",
+                                "NPM" = "NPmatch"),
+                  selected = "uncorrected"
+                ),
+                shiny::conditionalPanel(
+                  "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
+                  ns = ns,
+                  shiny::textOutput(ns("bec_param_text")),
+                  shiny::br(),
+                ),
+                shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
+                br()
+              )
+            ),
+            br()
+          )),
+
+          ## ---------------------------- canvas ----------------------------------
+          bslib::layout_columns(
+            width = 12,
+            bslib::layout_columns(
+              col_widths = 6,
+              row_heights = c(3, 3),
+              height = "calc(100vh - 200px)",
+              heights_equal = "row",
+              PlotModuleUI(
+                ns("plot2"),
+                title = "Missing values",
+                info.text = missing.infotext,
+                caption = missing.infotext,
+                options = missing.options,
+                height = c("100%", "70vh"),
+                show.maximize = FALSE
+              ),
+              PlotModuleUI(
+                ns("plot1"),
+                title = "Normalization",
+                options = norm.options,
+                height = c("100%", "70vh"),
+                show.maximize = FALSE
+              ),
+              PlotModuleUI(
+                ns("plot3"),
+                title = "Outliers detection",
+                info.text = score.infotext,
+                caption = score.infotext,
+                options = outlier.options,
+                height = c("100%", "70vh"),
+                show.maximize = FALSE
+              ),
+              PlotModuleUI(
+                ns("plot4"),
+                title = "Batch-effects correction",
+                options = NULL,
+                height = c("100%", "70vh"),
+                show.maximize = FALSE
+              )
+            )
+          )
+        ))
+
+      })
+
+      ## ------------------------------------------------------------------
       ## Plot modules
       ## ------------------------------------------------------------------
 
@@ -838,7 +847,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           dbg("[outliers_server] dim.counts = ", dim(imputedX()$counts))
           return(imputedX()$counts)
       })
-      
+
       return(
         list(
             counts = correctedCounts,
