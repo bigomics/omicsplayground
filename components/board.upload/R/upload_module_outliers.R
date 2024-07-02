@@ -216,9 +216,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           shiny::removeModal()
           dbg("[outliers_server] names.xlist = ", names(xlist))
           cx <- xlist[[m]]
-          dbg("[outliers_server] dim.correctedX = ", dim(cx))
         }
+
+        dbg("[outliers_server] dim.correctedX = ", dim(cx))
         return(cx)
+
       })
 
       ## return object
@@ -711,7 +713,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                       "uncorrected (default)" = "uncorrected",
                       "ComBat" = "ComBat",
                       "SVA" = "SVA",
-                      "RUV3" = "RUV3",
+                      "RUV" = "RUV",
                       "NPM" = "NPmatch"
                     ),
                     selected = 1
