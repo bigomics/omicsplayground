@@ -781,7 +781,7 @@ UploadBoard <- function(id,
           )
         }
 
-        if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
+        if (!is.null(upload_name()) && upload_name() != "" && !isValidFileName(upload_name())) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
             title = "Invalid name",
