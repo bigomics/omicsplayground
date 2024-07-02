@@ -251,7 +251,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism())
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
