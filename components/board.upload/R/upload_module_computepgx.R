@@ -283,8 +283,6 @@ upload_module_computepgx_server <- function(
 
       # change upload_organism to selected_organism
       observeEvent(input$selected_organism, {
-        ai=1
-        browser()
         upload_organism(input$selected_organism)
       })
       # change upload_name to selected_name

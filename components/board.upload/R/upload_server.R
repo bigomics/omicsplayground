@@ -251,7 +251,6 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        browser()
         res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism())
         write_check_output(res$checks, "COUNTS", raw_dir())
 
