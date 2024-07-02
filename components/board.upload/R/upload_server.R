@@ -251,6 +251,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
+        browser()
         res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism())
         write_check_output(res$checks, "COUNTS", raw_dir())
 
@@ -866,7 +867,7 @@ UploadBoard <- function(id,
           upload_datatype(NULL)
           upload_name(NULL)
           upload_description(NULL)
-          upload_organism(NULL)
+          # upload_organism(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
         })
