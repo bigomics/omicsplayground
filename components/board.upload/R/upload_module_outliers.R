@@ -74,6 +74,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         # dbg("[outliers_server] Counts data have ", negs, " negative values.")
         # dbg("[outliers_server] Counts data have ", nmissing, " missing values.")
         # dbg("[outliers_server] Counts data have ", infin, " infinite values.")
+
         if (input$zero_as_na) {
           dbg("[outliers_server] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
@@ -99,6 +100,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         } else {
           dbg("[outliers_server] No missing values detected in the data. Not imputing.")
         }
+
         dbg("[outliers_server] Checking for duplicated features")
         X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
         dbg("[outliers_server] dim.X = ", dim(X))
