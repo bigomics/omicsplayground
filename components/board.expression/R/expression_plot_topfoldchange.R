@@ -84,13 +84,10 @@ expression_plot_topfoldchange_server <- function(id,
       fc.top <- sort(fc.top)
       fc.top <- head(c(fc.top, rep(NA, 99)), 15)
 
-      klr.pal <- RColorBrewer::brewer.pal(4, "Paired")[2:1]
-      klr <- klr.pal[1 + 1 * (sign(fc.top) < 0)]
 
       return(list(
         sel = sel,
         fc.top = fc.top,
-        klr = klr,
         gene = gene
       ))
     })
@@ -120,7 +117,6 @@ expression_plot_topfoldchange_server <- function(id,
         yaxistitle = "Fold change (log2)",
         xaxistitle = "",
         yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
-        fillcolor = pd[["klr"]],
         margin = list(l = 10, r = 10, b = 0, t = 25),
         grouped = FALSE
       )
