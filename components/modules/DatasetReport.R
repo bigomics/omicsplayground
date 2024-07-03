@@ -44,9 +44,16 @@ DatasetReportServer <- function(
                     shiny::selectizeInput(
                         inputId = ns("sel_contrasts"),
                         label = "Select one or more contrasts",
-                        choices = c("None", "All", "Custom"),
-                        selected = "None",
+                        choices = c("Getting comparisons..."),
+                        selected = "Getting comparisons...",
                         multiple = TRUE
+                    ),
+                    shiny::selectizeInput(
+                        inputId = ns("output_format"),
+                        label = "Output",
+                        choices = c("PDF" = "pdf", "HTML" = "html"),
+                        selected = "PDF",
+                        multiple = FALSE
                     ),
                     shiny::downloadButton(ns("download_pdf"), "Submit")
                 )
@@ -54,7 +61,7 @@ DatasetReportServer <- function(
 
             output$download_pdf <- shiny::downloadHandler(
                 filename = function() {
-                    paste(input$available_datasets, ".pdf", sep = "")
+                    paste(input$available_datasets, paste0(".", input$output_format), sep = "")
                 },
                 content = function(file) {
                     shiny::removeModal()
@@ -76,7 +83,7 @@ DatasetReportServer <- function(
                             file.path(quarto_file_path, "main.qmd"),
                             "--output",
                             "--to",
-                            "pdf",
+                            tolower(input$output_format),
                             "-P",
                             paste("dataset:", input$available_datasets, sep = ""),
                             "-P",
