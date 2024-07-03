@@ -33,6 +33,19 @@ UploadBoard <- function(id,
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
 
+    # add task to compute annothub
+
+    ah_task <- ExtendedTask$new(function(organism) {
+      # This line would throw!
+      # input$x
+
+      future_promise({
+        Sys.sleep(3)
+        print("Annothub computed")
+        print(organism)
+      })
+    })
+
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
@@ -803,6 +816,16 @@ UploadBoard <- function(id,
         } else {
           wizardR::unlock("upload_wizard")
         }
+      }
+    )
+
+    # check probetypes when wizard is on counts adn every time upload_species change
+    observeEvent(
+      list(input$upload_wizard, upload_organism()),
+      {
+        req(input$upload_wizard == "step_counts")
+
+        ah_task$invoke(upload_organism())
       }
     )
 
