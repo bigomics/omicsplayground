@@ -332,24 +332,18 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
             rX <- rX[ii, jj]
           }
 
-          ## ymax <- max(max(X0, na.rm = TRUE), max(X1, na.rm = TRUE))
-          ## ymin <- quantile(X0[which(rX > 0)], probs = 0.001, na.rm = TRUE)
-          ## if (ymin > 0) ymin <- 0
-          ## dy <- 0.1 * (ymax - ymin)
-          ## ylim <- c(ymin - dy, ymax + dy)
-
           par(
-            mfrow = c(1, 2), mar = c(3.2, 6, 2, 0.5),
-            mgp = c(1.8, 0.2, 0), tcl = -0.2
+            mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5),
+            mgp = c(2.1, 0.8, 0)
           )
 
           boxplot(X0,
             main = "raw", ylim = c(min(X0, na.rm = TRUE) * 0.8, max(X0, na.rm = TRUE) * 1.2), las = 2,
-            ylab = "expression (log2)", xlab = "", cex.axis = 0.8
+            ylab = "expression (log2)", xlab = "", cex.axis = 0.8, cex = 0.5
           )
           boxplot(X1,
             main = "normalized", ylim = c(min(X1, na.rm = TRUE) * 0.8, max(X1, na.rm = TRUE) * 1.2), las = 2,
-            ylab = "", xlab = "", cex.axis = 0.8
+            ylab = "", xlab = "", cex.axis = 0.8, cex = 0.5
           )
         }
 
