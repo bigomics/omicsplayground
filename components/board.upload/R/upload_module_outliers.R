@@ -80,7 +80,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         }
 
         X <- log2(counts + 0.001)  ## NEED RETHINK
-        X[playbase::is.xxl(X, z = 10)] <- NA
+
+        if(input$remove_xxl_features) {
+            dbg("[outliers_server]: Checking for outlier features (z-score>10): put them as NAs.")
+            X[playbase::is.xxl(X, z = 10)] <- NA
+        }
+
         nmissing <- sum(is.na(X))
         if (nmissing > 0) {
           dbg("[outliers_server] X has ", nmissing, " missing values.")
@@ -665,6 +670,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                 ),
                 bslib::accordion_panel(
                   title = "2. Normalization",
+                  shiny::checkboxInput(ns("remove_xxl_features"),
+                                       label = "Treat outlier features (z-score>10) as NAs", value = FALSE),
                   div("Normalize data values:\n"),
                   shiny::selectInput(ns("scaling_method"), NULL,
                     choices = c(
