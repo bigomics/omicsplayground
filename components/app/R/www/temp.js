@@ -59,18 +59,11 @@ const unloadSidebar = () => {
 				return;
 			}
 			if($(el).hasClass('collapse')){
-				return;
+				$(el).removeClass('show');
 			}
 			$(el).hide();
 		});
         $('#sidebar-help-container').hide();
-	$('.sidebar-content')
-		.children()
-		.each((index, el) => {
-			if($(el).hasClass('collapse') && $(el).hasClass('show')){
-				$(el).removeClass('show');
-			}
-		});
 }
 
 const sidebarClose = () => {
@@ -372,23 +365,24 @@ Shiny.addCustomMessageHandler('referral-global-error', (msg) => {
 /* ********************* UI/BIGDASH HANDLERS **************************** */
 Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	setTimeout(() => {
-		$('.sidebar-content')
-			.children()
-			.each((index, el) => {
-				if($(el).hasClass('collapse'))
-					return;
-
-				$(el).show();
-			});
-
-	$('#sidebar-container .collapse')
-		.first()
-		.find('hr')
-		.first()
-		.hide();
-
-	if(!$('.big-tab[data-name="load-tab"]').is(':visible'))
-		return;
+	$('.sidebar-content')
+		.children()
+		.each((index, el) => {
+			if($(el).hasClass('collapse')) {
+				// if($(el).hasClass('show'))
+				// 	$(el).removeClass('show');
+				//$(el).hide();
+				$(el).removeClass('show');
+				$(el).css({'display' : ''});
+				return;
+			}
+			if($(el).hasClass('w-100')) {
+				console.log($(el).children().children()[[1]]);
+				$(el).children().children()[[1]].classList.remove('fa-angle-down');
+				$(el).children().children()[[1]].classList.add('fa-angle-right');
+			}
+			$(el).show();
+		});
 
 	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
 	$('#sidebar-help-container').show();
