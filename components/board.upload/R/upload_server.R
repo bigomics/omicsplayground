@@ -36,13 +36,20 @@ UploadBoard <- function(id,
     # add task to compute annothub
 
     ah_task <- ExtendedTask$new(function(organism) {
-      # This line would throw!
-      # input$x
-
       future_promise({
-        Sys.sleep(3)
-        print("Annothub computed")
+        # ah <- AnnotationHub::AnnotationHub()
+        # ahDb <- AnnotationHub::query(ah, pattern = c(
+        #   organism,
+        #   "OrgDb"
+        # ))
+        # ahDb <- ahDb[which(tolower(ahDb$species) == tolower(organism))]
+        # k <- length(ahDb)
+        # orgdb <- ahDb[[k]]
+        # orgdb
+
+        Sys.sleep(7)
         print(organism)
+        print("AnnotationHub queried")
       })
     })
 
@@ -264,7 +271,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism())
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism(), orgdb = NULL)
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
@@ -824,8 +831,9 @@ UploadBoard <- function(id,
       list(input$upload_wizard, upload_organism()),
       {
         req(input$upload_wizard == "step_counts")
+        print("Checking probetypes task started")
 
-        ah_task$invoke(upload_organism())
+        # ah_task$invoke(upload_organism())
       }
     )
 
