@@ -59,6 +59,7 @@ FeatureMapBoard <- function(id, pgx) {
 
         ## set gene families
         families <- names(playdata::FAMILIES)
+        families <- c("<custom>", families)
         shiny::updateSelectInput(session, "filter_genes",
           choices = families,
           selected = "<all>"
@@ -275,6 +276,33 @@ FeatureMapBoard <- function(id, pgx) {
       }
     }
 
+    filteredGenes <- shiny::reactive({
+      shiny::req(pgx$X)
+      shiny::validate(need(input$filter_genes, "Please input at least one value in Annotate genes!"))
+      sel <- input$filter_genes
+      filtgenes <- c()
+      if (is.null(pgx$version) | pgx$organism == "Human") {
+        filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
+      } else {
+        filtgenes <- unlist(lapply(sel, function(genes) {
+          if (genes == "<all>") {
+            x <- pgx$genes$symbol
+          } else {
+            x <- playdata::FAMILIES[[genes]]
+            x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
+          }
+          return(x)
+        }))
+      }
+      if ("<custom>" %in% sel) {
+        genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+        if (length(genes) > 0) {
+          filtgenes <- c(playbase::filterProbes(pgx$genes, genes), filtgenes)
+        }
+      }
+      filtgenes
+    })
+
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
@@ -294,7 +322,7 @@ FeatureMapBoard <- function(id, pgx) {
       pgx = pgx,
       plotUMAP = plotUMAP,
       sigvar = sigvar2,
-      filter_genes = shiny::reactive(input$filter_genes),
+      filteredGenes = filteredGenes,
       r_fulltable = shiny::reactive(input$show_fulltable),
       watermark = WATERMARK
     )

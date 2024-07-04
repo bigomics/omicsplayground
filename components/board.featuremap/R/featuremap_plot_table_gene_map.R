@@ -68,7 +68,7 @@ featuremap_plot_gene_map_server <- function(id,
                                             pgx,
                                             plotUMAP,
                                             sigvar,
-                                            filter_genes,
+                                            filteredGenes,
                                             r_fulltable,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -79,27 +79,6 @@ featuremap_plot_gene_map_server <- function(id,
       colnames(pos) <- c("x", "y")
       pos
     }
-
-    filteredGenes <- shiny::reactive({
-      shiny::req(pgx$X)
-      shiny::validate(need(filter_genes(), "Please input at least one value in Annotate genes!"))
-      sel <- filter_genes()
-      filtgenes <- c()
-      if (is.null(pgx$version) | pgx$organism == "Human") {
-        filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
-      } else {
-        filtgenes <- unlist(lapply(sel, function(genes) {
-          if (genes == "<all>") {
-            x <- pgx$genes$symbol
-          } else {
-            x <- playdata::FAMILIES[[genes]]
-            x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
-          }
-          return(x)
-        }))
-      }
-      filtgenes
-    })
 
     plot_data <- shiny::reactive({
       pos <- getUMAP()
@@ -240,9 +219,17 @@ featuremap_plot_gene_map_server <- function(id,
         X <- X[gg, , drop = FALSE]
         X <- X - rowMeans(X)
         y <- pgx$samples[, pheno]
-        FC <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[, i, drop = FALSE])
-        }))
+        if (length(gg) == 1) {
+          FC <- tapply(1:ncol(X), y, function(i) {
+            rowMeans(X[, i, drop = FALSE])
+          })
+          rownames(FC) <- gg
+        } else {
+          FC <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
+            rowMeans(X[, i, drop = FALSE])
+          }))
+        }
+
         is.fc <- FALSE
       } else {
         FC <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
