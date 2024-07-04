@@ -177,10 +177,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       ## Technical and biological effects correction
       correctedX <- shiny::reactive({
-        shiny::req(
-          dim(cleanX()$X),
-          dim(r_contrasts()), dim(r_samples())
-        )
+        shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
         ## Technical & biological effects correction ## ps: also includes biological
         ## shiny::incProgress(amount = 0.25, "Correcting for technical effects...")
@@ -204,25 +201,32 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
         m <- input$bec_method
         dbg("[outliers_server]: Batch correction method = ", m)
+        nmissing <- sum(is.na(X1))
+        if(nmissing>0  && m %in% c("SVA", "RUV")) { 
+            dbg("[outliers_server: correctedX]: X has ", nmissing, " missing values.")
+            dbg("[outliers_server: correctedX]: Unable to apply SVA or RUV (cannot handle missing values).")
+            m <- "uncorrected"
+        }
         if (m == "uncorrected") {
-          dbg("[outliers_server]: Data not corrected for (potential) batch effects")
-          cx <- X1
+            dbg("[outliers_server: correctedX]: Data not corrected for (potential) batch effects")
+            cx <- X1
         } else {
-          mm <- unique(c("uncorrected", input$bec_method))
-          pars <- get_model_parameters()
-          xlist <- playbase::runBatchCorrectionMethods(
-            X = X1,
-            batch = pars$batch,
-            y = pars$pheno,
-            controls = NULL,
-            methods = mm,
-            ntop = Inf,
-            sc = FALSE,
-            remove.failed = TRUE
-          )
-          shiny::removeModal()
-          dbg("[outliers_server] names.xlist = ", names(xlist))
-          cx <- xlist[[m]]
+            ## mm <- unique(c("uncorrected", input$bec_method))
+            mm <- unique(c("uncorrected", m))
+            pars <- get_model_parameters()
+            xlist <- playbase::runBatchCorrectionMethods(
+                                   X = X1,
+                                   batch = pars$batch,
+                                   y = pars$pheno,
+                                   controls = NULL,
+                                   methods = mm,
+                                   ntop = Inf,
+                                   sc = FALSE,
+                                   remove.failed = TRUE
+                               )
+            shiny::removeModal()
+            dbg("[outliers_server] names.xlist = ", names(xlist))
+            cx <- xlist[[m]]
         }
 
         dbg("[outliers_server] dim.correctedX = ", dim(cx))
@@ -266,11 +270,20 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
         shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
-          res <- playbase::compare_batchcorrection_methods(
+            dbg("[outliers_server]: results_correction_methods: ComBat, RUV, SVA, NPM")
+            mm <- c("ComBat", "RUV", "SVA", "NPM")
+            nmissing <- sum(is.na(X1))
+            if(nmissing>0) {
+                mm <- c("ComBat", "NPM")
+                dbg("[outliers_server]: results_correction_methods: Skipping RUV & SVA (cannot handle missing values).")
+            }
+            res <- playbase::compare_batchcorrection_methods(
             X1, samples,
-            pheno = NULL, contrasts = contrasts,
-            methods = c("ComBat", "RUV", "SVA", "NPM"),
-            ntop = 4000, xlist.init = xlist.init
+            pheno = NULL,
+            contrasts = contrasts,
+            methods = mm,
+            ntop = 4000,
+            xlist.init = xlist.init
           )
         })
 
@@ -299,9 +312,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
           ## standard dim reduction methods
           pos <- list()
-          ## pos[['tsne']] <- Rtsne::Rtsne(scaledX, check_duplicates=FALSE, perplexity=nb)$Y
           pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
-          ## pos[['umap']] <- uwot::umap(scaledX, n_neighbors = ceiling(nb/2))
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
             colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
@@ -551,7 +562,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
       plot_all_methods <- function() {
         res <- results_correction_methods()
-        pos.list <- res$pos[["tsne"]]
+        ## pos.list <- res$pos[["tsne"]]
+        pos.list <- res$pos[["pca"]]
         pheno <- res$pheno
         xdim <- length(res$pheno)
         col1 <- factor(pheno)
@@ -571,12 +583,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       plot_before_after <- function() {
         ##        out.res <- results_outlier_methods()
         res <- results_correction_methods()
-
         method <- input$bec_method
         if (method == "uncorrected") method <- "normalized"
-        pos0 <- res$pos[["tsne"]][["normalized"]]
-        pos1 <- res$pos[["tsne"]][[method]]
-
+        ## pos0 <- res$pos[["tsne"]][["normalized"]]
+        ## pos1 <- res$pos[["tsne"]][[method]]
+        pos0 <- res$pos[["pca"]][["normalized"]]
+        pos1 <- res$pos[["pca"]][[method]]
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, ]
         pos1 <- pos1[kk, ]
@@ -593,11 +605,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
 
         par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
         plot(pos0,
-          col = col1, pch = 20, cex = 1.0 * cex1, main = "before",
+          col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "before",
           xlab = "PC1", ylab = "PC2"
         )
         plot(pos1,
-          col = col1, pch = 20, cex = 1.0 * cex1, main = "after",
+          col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "after",
           xlab = "PC1", ylab = "PC2"
         )
       }
@@ -717,7 +729,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                       "ComBat" = "ComBat",
                       "SVA" = "SVA",
                       "RUV" = "RUV",
-                      "NPM" = "NPmatch"
+                      "NPM" = "NPM"
                     ),
                     selected = 1
                   ),
