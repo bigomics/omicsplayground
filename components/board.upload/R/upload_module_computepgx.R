@@ -61,8 +61,7 @@ upload_module_computepgx_server <- function(
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
 
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
-      ONESAMPLE.GENESET_METHODS <- sort(c("spearman", "gsva", "fgsea", "ssgsea", "fisher"))
-
+      ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
@@ -347,8 +346,7 @@ upload_module_computepgx_server <- function(
 
       shiny::observeEvent(contrastsRT(), {
         contrasts <- as.data.frame(contrastsRT())
-        has_one <- apply(contrasts, 2, function(x) all(table(x) == 1))
-
+        has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
         if (any(has_one)) {
           shinyalert::shinyalert(
             title = "WARNING",
@@ -364,7 +362,7 @@ upload_module_computepgx_server <- function(
           shiny::updateCheckboxGroupInput(session,
             "gset_methods",
             choices = ONESAMPLE.GENESET_METHODS,
-            sel = c("fisher", "fgsea", "gsva")
+            sel = c("fisher", "fgsea")
           )
         }
       })
@@ -383,11 +381,6 @@ upload_module_computepgx_server <- function(
 
       observeEvent(auth$options$ENABLE_ANNOT, {
         species_table <- playbase::SPECIES_TABLE
-
-        ## keep only ensembl (OLD, PLEASE REMOVE!)
-        if ("mart" %in% colnames(species_table)) {
-          species_table <- species_table[species_table$mart == "ensembl", ]
-        }
 
         # remove no organism
         if (!auth$options$ENABLE_ANNOT) {
