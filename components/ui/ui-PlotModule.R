@@ -674,6 +674,39 @@ PlotModuleServer <- function(id,
                   markfile <- file.path(FILES, "watermark-logo.pdf")
                   addWatermark.PDF2(file, w = pdf.width, h = pdf.height, mark = markfile)
                 }
+                # Add settings
+                if (TRUE){# add_settings) {
+                  # .subset2(session, "parent")$input$`dataview-data_groupby`
+                  # names(.subset2(session, "parent")$input)
+                  # Get board ns
+                  board_ns <- sub("-.*", "", ns(""))
+                  # Get board inputs
+                  board_inputs <- names(.subset2(session, "parent")$input)[grepl(board_ns, names(.subset2(session, "parent")$input))]
+                  # Get board settings
+                  board_settings <- board_inputs[grep("^[^-]*-[^-]*$", board_inputs)]
+                  # Remove `data_options`, `tabs` `board_info`
+                  board_settings <- board_settings[!grepl("data_options|tabs|board_info", board_settings)]
+                  # Get settings values
+                  board_settings_values <- lapply(board_settings, function(x){
+                    val <- .subset2(session, "parent")$input[[x]]
+                    if (is.null(val)) val <- ""
+                    return(val)
+                  }) |> unlist()
+                  # Merge values and input names (without namespacing)
+                  settings_table <- data.frame(
+                    setting = sub("^[^-]*-", "", board_settings),
+                    value = board_settings_values
+                  )
+                  # Print PDF temp table
+                  df_pdf <- tempfile(fileext = ".pdf")
+                  pdf(df_pdf)
+                  gridExtra::grid.table(settings_table)
+                  dev.off()
+                  # Construct the pdftk command
+                  pdftk_command <- sprintf("pdftk %s %s cat output %s", file, df_pdf, file)
+                  # Execute the command
+                  system(pdftk_command)
+                }
                 ## Record downloaded plot
                 record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
