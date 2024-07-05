@@ -592,7 +592,6 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Session Timers
   ## -------------------------------------------------------------
-
   ## invite module (from menu)
   invite <- InviteFriendModule(
     id = "invite",
@@ -795,8 +794,6 @@ app_server <- function(input, output, session) {
       message("-------------------------------")
 
       pgx.record_access(auth$email, action = "login", session = session)
-      enable_upload <- auth$options$ENABLE_UPLOAD
-      bigdash.toggleTab(session, "upload-tab", enable_upload)
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
