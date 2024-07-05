@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, circle = TRUE, border = "default") {
+DropdownMenu <- function(..., size = "default", status = "default", icon = NULL, circle = TRUE, border = "default", width = "") {
   id <- bigdash:::make_id()
   bslib::popover(
     tags$a(
@@ -28,7 +28,7 @@ DropdownMenu <- function(..., size = "default", status = "default", icon = NULL,
     placement = "bottom",
     options = list(
       animation = FALSE,
-      template = '<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
+      template = paste0('<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body style=width:,', width, ';"></div></div>')
     ),
     onClick = HTML(paste0("$(document).ready(function() { makePopoverDismissible('", id, "'); addActionOnPopoverChange('", id, "'); });"))
   )
