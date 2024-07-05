@@ -81,13 +81,14 @@ upload_module_computepgx_server <- function(
           bslib::as_fill_carrier(),
           bslib::layout_columns(
             fill = FALSE,
-            gap = "10px",
             div(
-              style = "display: flex; flex-direction: column; align-items: center;",
-              p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
-              shiny::textInput(
-                ns("selected_name"), NULL,
-                placeholder = "Name of your dataset"
+              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+              div(
+                p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
+                shiny::textInput(
+                  ns("selected_name"), NULL,
+                  placeholder = "Name of your dataset"
+                )
               ),
               div(
                 p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),

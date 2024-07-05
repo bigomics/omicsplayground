@@ -34,17 +34,18 @@ upload_module_initial_settings_server <- function(
           bslib::as_fill_carrier(),
           bslib::layout_columns(
             fill = FALSE,
-            gap = "10px",
             div(
               # add align items: center
-              style = "display: flex; flex-direction: column; align-items: center;",
-              p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-              shiny::selectInput(
-                inputId = ns("selected_organism"),
-                NULL,
-                choices = "Human",
-                selected = "Human",
-                multiple = FALSE
+              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+              div(
+                p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
+                shiny::selectInput(
+                  inputId = ns("selected_organism"),
+                  NULL,
+                  choices = "Human",
+                  selected = "Human",
+                  multiple = FALSE
+                )
               ),
               div(
                 p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
