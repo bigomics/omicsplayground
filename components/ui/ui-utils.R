@@ -244,3 +244,102 @@ HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteStrin
   wrapHyperLinkOutput[special_cases] <- SubstituteString
   return(wrapHyperLinkOutput)
 }
+
+addSettings <- function(ns, session, file) {
+  # Get board/plot ns
+  board_ns <- sub("-.*", "", ns(""))
+  plot_ns <- sub(".*-(.*?)-.*", "\\1", ns(""))
+  # Get board inputs
+  board_inputs <- names(.subset2(session, "parent")$input)[grepl(board_ns, names(.subset2(session, "parent")$input))]
+  board_inputs <- board_inputs[substr(board_inputs, 1, nchar(board_ns)+1) == paste0(board_ns, "-")]
+  # Get board settings
+  board_settings <- board_inputs[grep("^[^-]*-[^-]*$", board_inputs)]
+  # Remove `data_options`, `tabs` `board_info`
+  board_settings <- board_settings[!grepl("data_options|tabs|info|options|compute|pdx_runbutton", board_settings)]
+  # Get settings values
+  board_settings_values <- lapply(board_settings, function(x){
+    val <- .subset2(session, "parent")$input[[x]]
+    if (is.null(val)) val <- ""
+    if (nchar(val) > 30) val <- paste0(substr(val, 1, 30), "...")
+    return(val)
+  }) |> unlist()
+  # Merge values and input names (without namespacing)
+  settings_table <- data.frame(
+    setting = sub("^[^-]*-", "", board_settings),
+    value = board_settings_values
+  )
+  settings_table_corrected_cols <- lapply(settings_table$setting, function(x) {
+    inputLabelDictionary(board_ns, x)
+  }) |> unlist()
+  settings_table$setting <- settings_table_corrected_cols
+
+  # Get plot inputs
+  plot_inputs <- board_inputs[grepl(plot_ns, board_inputs)]
+  # Get plot settings
+  plot_settings <- plot_inputs[grep("^[^-]*-[^-]*-[^-]*$", plot_inputs)]
+  # Get plot values
+  plot_settings_values <- lapply(plot_settings, function(x){
+    val <- .subset2(session, "parent")$input[[x]]
+    if (is.null(val)) val <- ""
+    return(val)
+  }) |> unlist()
+  # Merge values and input names (without namespacing)
+  plot_table <- data.frame(
+    setting = sub("^[^-]*-", "", sub("^[^-]*-[^-]*-", "", plot_settings)),
+    value = plot_settings_values
+  )
+  
+  # Merge plot and settings
+  df <- rbind(plot_table, c("", ""), c("Setting", "Value"), settings_table)
+
+  # Setup table theme
+  table_theme <- gridExtra::ttheme_minimal(
+    core = list(
+      fg_params = list(
+        fontface = c(rep("plain", nrow(plot_table)+1), "bold", rep("plain", nrow(settings_table)))
+      )
+    )
+  )
+
+  # Print PDF temp table
+  df_pdf <- tempfile(fileext = ".pdf")
+  final_pdf <- tempfile(fileext = ".pdf")
+  pdf(df_pdf)
+  gridExtra::grid.table(df, rows = NULL, col = c("Plot option", "Value"), theme = table_theme)
+  dev.off()
+  # Construct the pdftk command
+  pdftk_command <- sprintf("pdftk %s %s cat output %s", file, df_pdf, final_pdf)
+  # Execute the command
+  system(pdftk_command)
+  ## finally copy to final exported file
+  dbg("[downloadHandler.PDF] copy PDFFILE", final_pdf, "to download file", file)
+  file.copy(final_pdf, file, overwrite = TRUE)
+}
+
+inputLabelDictionary <- function(board_ns, inputId) {
+  dictionary <- list(
+    drug = list(
+      dsea_contrast = "Contrast",
+      dsea_method = "Analysis type",
+      dseatable_filter = "Only annotated drugs"
+    ),
+    comp = list(
+      contrast1 = "Dataset1",
+      dataset2 = "Dataset2: (name)",
+      contrast2 = "Dataset2: (contrast)",
+      plottype = "Plot type",
+      hilighttype = "Highlight genes",
+      ntop = "ntop",
+      genelist = "Highlight genes (cusom)"
+    ),
+    bio = list(
+      pdx_predicted = "Predicted target",
+      pdx_filter = "Feature set",
+      pdx_samplefilter = "Filter samples",
+      pdx_select = "Feature set: <custom> Custom features"
+    )
+  )
+  val <- dictionary[[board_ns]][[inputId]]
+  if (is.null(val)) val <- inputId
+  return(val)
+}
