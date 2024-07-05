@@ -676,8 +676,6 @@ PlotModuleServer <- function(id,
                 }
                 # Add settings
                 if (TRUE){# add_settings) {
-                  # .subset2(session, "parent")$input$`dataview-data_groupby`
-                  # names(.subset2(session, "parent")$input)
                   # Get board ns
                   board_ns <- sub("-.*", "", ns(""))
                   # Get board inputs
@@ -685,7 +683,7 @@ PlotModuleServer <- function(id,
                   # Get board settings
                   board_settings <- board_inputs[grep("^[^-]*-[^-]*$", board_inputs)]
                   # Remove `data_options`, `tabs` `board_info`
-                  board_settings <- board_settings[!grepl("data_options|tabs|board_info", board_settings)]
+                  board_settings <- board_settings[!grepl("data_options|tabs|*_info", board_settings)]
                   # Get settings values
                   board_settings_values <- lapply(board_settings, function(x){
                     val <- .subset2(session, "parent")$input[[x]]
@@ -699,13 +697,17 @@ PlotModuleServer <- function(id,
                   )
                   # Print PDF temp table
                   df_pdf <- tempfile(fileext = ".pdf")
+                  final_pdf <- tempfile(fileext = ".pdf")
                   pdf(df_pdf)
-                  gridExtra::grid.table(settings_table)
+                  gridExtra::grid.table(settings_table, rows = NULL)
                   dev.off()
                   # Construct the pdftk command
-                  pdftk_command <- sprintf("pdftk %s %s cat output %s", file, df_pdf, file)
+                  pdftk_command <- sprintf("pdftk %s %s cat output %s", file, df_pdf, final_pdf)
                   # Execute the command
                   system(pdftk_command)
+                  ## finally copy to final exported file
+                  dbg("[downloadHandler.PDF] copy PDFFILE", final_pdf, "to download file", file)
+                  file.copy(final_pdf, file, overwrite = TRUE)
                 }
                 ## Record downloaded plot
                 record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
