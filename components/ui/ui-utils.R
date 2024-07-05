@@ -268,10 +268,6 @@ addSettings <- function(ns, session, file) {
     setting = sub("^[^-]*-", "", board_settings),
     value = board_settings_values
   )
-  settings_table_corrected_cols <- lapply(settings_table$setting, function(x) {
-    inputLabelDictionary(board_ns, x)
-  }) |> unlist()
-  settings_table$setting <- settings_table_corrected_cols
 
   # Get plot inputs
   plot_inputs <- board_inputs[grepl(plot_ns, board_inputs)]
@@ -292,11 +288,26 @@ addSettings <- function(ns, session, file) {
   # Merge plot and settings
   df <- rbind(plot_table, c("", ""), c("Setting", "Value"), settings_table)
 
+  # Correct column names
+  df_names <- lapply(df$setting, function(x) {
+  inputLabelDictionary(board_ns, x)
+  }) |> unlist()
+  df$setting <- df_names
+
   # Setup table theme
   table_theme <- gridExtra::ttheme_minimal(
+    colhead = list(
+      fg_params = list(
+        fontface = "bold", # Bold font for headers
+        hjust = 0,         # Left-align the text
+        x = 0              # Align text to the left within the cell
+      )
+    ),
     core = list(
       fg_params = list(
-        fontface = c(rep("plain", nrow(plot_table)+1), "bold", rep("plain", nrow(settings_table)))
+        fontface = c(rep("plain", nrow(plot_table)+1), "bold", rep("plain", nrow(settings_table))),
+        hjust = 0,
+        x = 0
       )
     )
   )
@@ -318,10 +329,21 @@ addSettings <- function(ns, session, file) {
 
 inputLabelDictionary <- function(board_ns, inputId) {
   dictionary <- list(
+    dataview = list(
+      search_gene = "Gene",
+      data_samplefilter = "Filter samples",
+      data_groupby = "Group by",
+      data_type = "Data type",
+      clustsamples = "cluster samples",
+      vars = "show variables"
+    ),
     drug = list(
       dsea_contrast = "Contrast",
       dsea_method = "Analysis type",
-      dseatable_filter = "Only annotated drugs"
+      dseatable_filter = "Only annotated drugs",
+      dsea_moatype = "Plot type",
+      qweight = "q-weighting",
+      dsea_normalize = "normalize activation matrix"
     ),
     comp = list(
       contrast1 = "Dataset1",
@@ -330,13 +352,21 @@ inputLabelDictionary <- function(board_ns, inputId) {
       plottype = "Plot type",
       hilighttype = "Highlight genes",
       ntop = "ntop",
-      genelist = "Highlight genes (cusom)"
+      genelist = "Highlight genes (cusom)",
+      colorby = "Color by"
     ),
     bio = list(
       pdx_predicted = "Predicted target",
       pdx_filter = "Feature set",
       pdx_samplefilter = "Filter samples",
-      pdx_select = "Feature set: <custom> Custom features"
+      pdx_select = "Feature set: <custom> Custom features",
+      clust_featureRank_method = "Method"
+    ),
+    wordcloud = list(
+      wc_contrast = "Contrast",
+      wordcloud_exclude = "Exclude words",
+      wordcloud_colors = "Colors",
+      tsne_algo = "Clustering algorithm"
     )
   )
   val <- dictionary[[board_ns]][[inputId]]
