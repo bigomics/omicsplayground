@@ -846,7 +846,8 @@ UploadBoard <- function(id,
       id = "initial",
       upload_organism = upload_organism,
       upload_datatype = upload_datatype,
-      auth = auth
+      auth = auth,
+      new_upload = new_upload
     )
 
     upload_table_preview_counts_server(

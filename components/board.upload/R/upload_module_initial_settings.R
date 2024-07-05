@@ -12,7 +12,8 @@ upload_module_initial_settings_server <- function(
     id,
     upload_datatype,
     upload_organism,
-    auth) {
+    auth,
+    new_upload) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -77,7 +78,7 @@ upload_module_initial_settings_server <- function(
       ## object from the uploaded files
       ## ------------------------------------------------------------------
 
-      observeEvent(auth$options$ENABLE_ANNOT, {
+      observeEvent(new_upload(), {
         species_table <- playbase::SPECIES_TABLE
 
         # remove no organism
@@ -87,8 +88,8 @@ upload_module_initial_settings_server <- function(
 
         # Fill the selectInput with species_table
         shiny::updateSelectInput(
-          session,
-          "selected_organism",
+          session = session,
+          ns("selected_organism"),
           choices = species_table$species_name,
           selected = species_table$species_name[1]
         )

@@ -90,16 +90,16 @@ upload_module_computepgx_server <- function(
               shiny::textInput(
                 ns("selected_name"), NULL,
                 placeholder = "Name of your dataset"
+              ),
+              div(
+                p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
+                shiny::textAreaInput(
+                  ns("selected_description"), NULL,
+                  placeholder = "Give a short description of your dataset",
+                  height = 80, resize = "none"
+                )
               )
-            ),
-            div(
-              p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
-              shiny::textAreaInput(
-                ns("selected_description"), NULL,
-                placeholder = "Give a short description of your dataset",
-                height = 80, resize = "none"
-              )
-            ),
+            )
           ), ## end layout_col
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
