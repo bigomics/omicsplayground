@@ -80,12 +80,10 @@ upload_module_computepgx_server <- function(
           style = "overflow: auto;",
           bslib::as_fill_carrier(),
           bslib::layout_columns(
-            style = "width: 650px; margin-left: auto; margin-right: auto;",
             fill = FALSE,
-            col_widths = c(6, 6),
-            # row_heights = c("1","auto"),
             gap = "10px",
             div(
+              style = "display: flex; flex-direction: column; align-items: center;",
               p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
               shiny::textInput(
                 ns("selected_name"), NULL,
