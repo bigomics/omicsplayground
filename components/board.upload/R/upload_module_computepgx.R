@@ -93,16 +93,6 @@ upload_module_computepgx_server <- function(
               )
             ),
             div(
-              p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-              shiny::selectInput(
-                ns("selected_datatype"), NULL,
-                choices = c(
-                  "RNA-seq", "scRNA-seq", "proteomics",
-                  "mRNA microarray", "other"
-                )
-              )
-            ),
-            div(
               p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
               shiny::selectInput(
                 inputId = ns("selected_organism"),

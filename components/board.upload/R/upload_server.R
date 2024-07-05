@@ -842,6 +842,13 @@ UploadBoard <- function(id,
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
 
+    upload_module_initial_settings_server(
+      id = "initial",
+      upload_organism = upload_organism,
+      upload_datatype = upload_datatype,
+      auth = auth
+    )
+
     upload_table_preview_counts_server(
       "counts_preview",
       uploaded,
