@@ -40,10 +40,10 @@ upload_module_computepgx_server <- function(
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
         "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-       )
+      )
       ## GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
       GENETEST.SELECTED <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma")
-      
+
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
         "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
@@ -84,21 +84,20 @@ upload_module_computepgx_server <- function(
           bslib::layout_columns(
             fill = FALSE,
             div(
-              p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
-              shiny::textInput(
-                ns("selected_name"), NULL,
-                placeholder = "Name of your dataset"
-              )
-            ),
-            div(
-              p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-              shiny::selectInput(
-                ns("selected_datatype"), NULL,
-                choices = c(
-                    "RNA-seq", "scRNA-seq",
-                    "proteomic intensities: LC,MS",
-                    "proteomics: SNR",
-                    "mRNA microarray", "other"
+              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+              div(
+                p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
+                shiny::textInput(
+                  ns("selected_name"), NULL,
+                  placeholder = "Name of your dataset"
+                )
+              ),
+              div(
+                p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
+                shiny::textAreaInput(
+                  ns("selected_description"), NULL,
+                  placeholder = "Give a short description of your dataset",
+                  height = 80, resize = "none"
                 )
               )
             )
@@ -442,7 +441,7 @@ upload_module_computepgx_server <- function(
         dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX))
         dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples))
         dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts))
-        
+
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
@@ -534,7 +533,7 @@ upload_module_computepgx_server <- function(
         ## Test check dim(counts) & dim(X)
         dbg("[compute PGX process]: dim.X: ", dim(params$counts))
         dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX))
-        
+
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
