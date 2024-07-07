@@ -66,13 +66,13 @@ UploadUI <- function(id) {
   )
 
   outliers_panel <- wizardR::wizard_step(
-    step_title = "QC/BC",
+    step_title = "Step 5: QC/BC",
     step_id = "step_qc",
     upload_module_outliers_ui(ns("checkqc"))
   )
 
   compute_panel <- wizardR::wizard_step(
-    step_title = "Step 5: Dataset description",
+    step_title = "Step 6: Compute!",
     step_id = "step_compute",
     # bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
@@ -100,10 +100,8 @@ UploadUI <- function(id) {
         counts_ui,
         samples_ui,
         contrasts_ui,
-        compute_panel,
-        # comparisons_panel,
         outliers_panel,
-        # batchcorrect_panel,
+        compute_panel,
         options = list(
           navigation = "buttons",
           finish = "Compute!"
