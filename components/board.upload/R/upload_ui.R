@@ -68,13 +68,7 @@ UploadUI <- function(id) {
   outliers_panel <- wizardR::wizard_step(
     step_title = "QC/BC",
     step_id = "step_qc",
-    bslib::layout_columns(
-      col_widths = 12,
-      # height = "calc(100vh - 340px)",
-      heights_equal = "row",
-      upload_module_outliers_ui(ns("checkqc"))
-      # bs_alert("Check for normalization, outliers and batch-effects.")
-    )
+    upload_module_outliers_ui(ns("checkqc"))
   )
 
   compute_panel <- wizardR::wizard_step(
@@ -108,7 +102,7 @@ UploadUI <- function(id) {
         contrasts_ui,
         compute_panel,
         # comparisons_panel,
-        # outliers_panel,
+        outliers_panel,
         # batchcorrect_panel,
         options = list(
           navigation = "buttons",

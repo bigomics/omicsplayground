@@ -11,6 +11,7 @@ upload_module_computepgx_ui <- function(id) {
 upload_module_computepgx_server <- function(
     id,
     countsRT,
+    countsX,
     samplesRT,
     contrastsRT,
     raw_dir,
@@ -39,9 +40,10 @@ upload_module_computepgx_server <- function(
       GENETEST.METHODS <- c(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
         "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-      )
-      GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
-
+       )
+      ## GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
+      GENETEST.SELECTED <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma")
+      
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
         "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
@@ -82,20 +84,21 @@ upload_module_computepgx_server <- function(
           bslib::layout_columns(
             fill = FALSE,
             div(
-              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
-              div(
-                p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
-                shiny::textInput(
-                  ns("selected_name"), NULL,
-                  placeholder = "Name of your dataset"
-                )
-              ),
-              div(
-                p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
-                shiny::textAreaInput(
-                  ns("selected_description"), NULL,
-                  placeholder = "Give a short description of your dataset",
-                  height = 80, resize = "none"
+              p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
+              shiny::textInput(
+                ns("selected_name"), NULL,
+                placeholder = "Name of your dataset"
+              )
+            ),
+            div(
+              p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
+              shiny::selectInput(
+                ns("selected_datatype"), NULL,
+                choices = c(
+                    "RNA-seq", "scRNA-seq",
+                    "proteomic intensities: LC,MS",
+                    "proteomics: SNR",
+                    "mRNA microarray", "other"
                 )
               )
             )
@@ -120,16 +123,16 @@ upload_module_computepgx_server <- function(
                       "only.hugo",
                       "only.proteincoding",
                       "remove.unknown",
-                      "remove.notexpressed",
-                      "skip.normalization"
+                      "remove.notexpressed"
+                      ## "skip.normalization"
                     ),
                   choiceNames =
                     c(
                       "Transform probes to gene symbols",
                       "Protein-coding only",
                       "Remove Rik/ORF/LOC genes",
-                      "Remove not-expressed",
-                      "Skip normalization"
+                      "Remove not-expressed"
+                      ## "Skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -430,10 +433,16 @@ upload_module_computepgx_server <- function(
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
         counts <- countsRT()
+        countsX <- countsX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
 
+        dbg("[upload_module_computepgx:input$compute] dim.counts = ", dim(counts))
+        dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX))
+        dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples))
+        dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts))
+        
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
@@ -459,7 +468,7 @@ upload_module_computepgx_server <- function(
         only.hugo <- ("only.hugo" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        do.normalization <- !("skip.normalization" %in% flt)
+        ## do.normalization <- !("skip.normalization" %in% flt)
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         only.proteincoding <- ("only.proteincoding" %in% flt)
@@ -480,21 +489,20 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
-        # Define create_pgx function arguments
-
+        ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
           samples = samples,
           counts = counts,
+          countsX = countsX,
           contrasts = contrasts,
-
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
 
           # Options
           batch.correct = FALSE,
-          normalize = do.normalization,
+          ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = !remove.unknown,
@@ -523,6 +531,10 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
+        ## Test check dim(counts) & dim(X)
+        dbg("[compute PGX process]: dim.X: ", dim(params$counts))
+        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX))
+        
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
