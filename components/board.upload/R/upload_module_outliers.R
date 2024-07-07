@@ -15,8 +15,14 @@ upload_module_outliers_ui <- function(id, height = "100%") {
 }
 
 
-upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
-                                          is.count = FALSE, height = 720) {
+upload_module_outliers_server <- function(
+    id,
+    r_X,
+    r_samples,
+    r_contrasts,
+    upload_datatype,
+    is.count = FALSE,
+    height = 720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -62,7 +68,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         shiny::req(r_X())
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_X()
-
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
@@ -80,11 +85,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
           counts[which(counts == 0)] <- NA
         }
 
-        X <- log2(counts + 0.001)  ## NEED RETHINK
+        X <- log2(counts + 0.001) ## NEED RETHINK
 
-        if(input$remove_xxl_features) {
-            dbg("[outliers_server]: Checking for outlier features (z-score>10): put them as NAs.")
-            X[playbase::is.xxl(X, z = 10)] <- NA
+        if (input$remove_xxl_features) {
+          dbg("[outliers_server]: Checking for outlier features (z-score>10): put them as NAs.")
+          X[playbase::is.xxl(X, z = 10)] <- NA
         }
 
         nmissing <- sum(is.na(X))
@@ -105,9 +110,9 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
         dbg("[outliers_server] dim.X = ", dim(X))
         dbg("[outliers_server:imputeX] dim.counts = ", dim(counts))
-        dbg("[outliers_server:imputeX] dim.X = ", dim(X))        
-        
-        X  ## log!!
+        dbg("[outliers_server:imputeX] dim.X = ", dim(X))
+
+        X ## log!!
       })
 
       ## Normalize
@@ -124,7 +129,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
             shiny::incProgress(amount = 0.25, "Normalization...")
             dbg("[outliers_server] Normalization: dim.X = ", dim(X))
             dbg("[outliers_server] Normalization: Normalizing data using ", input$scaling_method)
-            normCounts <- playbase::pgx.countNormalization(2**X, method = input$scaling_method)            
+            normCounts <- playbase::pgx.countNormalization(2**X, method = input$scaling_method)
             if (input$scaling_method == "CPM") {
               prior <- 1
             } else {
@@ -135,11 +140,11 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
               dbg("[outliers_server] Applying quantile normalization")
               shiny::incProgress(amount = 0.25, "Quantile normalization...")
               ## Ignore inflated 0 (or extreme negative) values
-##            minx <- min(X, na.rm=TRUE)
-##            jj <- which(X <= minx + 1e-8)
-##            X[jj] <- NA
+              ##            minx <- min(X, na.rm=TRUE)
+              ##            jj <- which(X <= minx + 1e-8)
+              ##            X[jj] <- NA
               X <- limma::normalizeQuantiles(X)
-##            X[jj] <- minx
+              ##            X[jj] <- minx
             }
           })
         }
@@ -202,36 +207,35 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         m <- input$bec_method
         dbg("[outliers_server]: Batch correction method = ", m)
         nmissing <- sum(is.na(X1))
-        if(nmissing>0  && m %in% c("SVA", "RUV")) { 
-            dbg("[outliers_server: correctedX]: X has ", nmissing, " missing values.")
-            dbg("[outliers_server: correctedX]: Unable to apply SVA or RUV (cannot handle missing values).")
-            m <- "uncorrected"
+        if (nmissing > 0 && m %in% c("SVA", "RUV")) {
+          dbg("[outliers_server: correctedX]: X has ", nmissing, " missing values.")
+          dbg("[outliers_server: correctedX]: Unable to apply SVA or RUV (cannot handle missing values).")
+          m <- "uncorrected"
         }
         if (m == "uncorrected") {
-            dbg("[outliers_server: correctedX]: Data not corrected for (potential) batch effects")
-            cx <- X1
+          dbg("[outliers_server: correctedX]: Data not corrected for (potential) batch effects")
+          cx <- X1
         } else {
-            ## mm <- unique(c("uncorrected", input$bec_method))
-            mm <- unique(c("uncorrected", m))
-            pars <- get_model_parameters()
-            xlist <- playbase::runBatchCorrectionMethods(
-                                   X = X1,
-                                   batch = pars$batch,
-                                   y = pars$pheno,
-                                   controls = NULL,
-                                   methods = mm,
-                                   ntop = Inf,
-                                   sc = FALSE,
-                                   remove.failed = TRUE
-                               )
-            shiny::removeModal()
-            dbg("[outliers_server] names.xlist = ", names(xlist))
-            cx <- xlist[[m]]
+          ## mm <- unique(c("uncorrected", input$bec_method))
+          mm <- unique(c("uncorrected", m))
+          pars <- get_model_parameters()
+          xlist <- playbase::runBatchCorrectionMethods(
+            X = X1,
+            batch = pars$batch,
+            y = pars$pheno,
+            controls = NULL,
+            methods = mm,
+            ntop = Inf,
+            sc = FALSE,
+            remove.failed = TRUE
+          )
+          shiny::removeModal()
+          dbg("[outliers_server] names.xlist = ", names(xlist))
+          cx <- xlist[[m]]
         }
 
         dbg("[outliers_server] dim.correctedX = ", dim(cx))
         return(cx)
-
       })
 
       ## return object
@@ -242,7 +246,7 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         } else {
           prior <- 0.001
         }
-        counts <- 2 ** X - prior
+        counts <- 2**X - prior
         ## counts <- pmax(2**X - prior, 0)
         dbg("[outliers_server] dim.correctedCounts = ", dim(counts))
         counts
@@ -270,14 +274,14 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
         shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
-            dbg("[outliers_server]: results_correction_methods: ComBat, RUV, SVA, NPM")
-            mm <- c("ComBat", "RUV", "SVA", "NPM")
-            nmissing <- sum(is.na(X1))
-            if(nmissing>0) {
-                mm <- c("ComBat", "NPM")
-                dbg("[outliers_server]: results_correction_methods: Skipping RUV & SVA (cannot handle missing values).")
-            }
-            res <- playbase::compare_batchcorrection_methods(
+          dbg("[outliers_server]: results_correction_methods: ComBat, RUV, SVA, NPM")
+          mm <- c("ComBat", "RUV", "SVA", "NPM")
+          nmissing <- sum(is.na(X1))
+          if (nmissing > 0) {
+            mm <- c("ComBat", "NPM")
+            dbg("[outliers_server]: results_correction_methods: Skipping RUV & SVA (cannot handle missing values).")
+          }
+          res <- playbase::compare_batchcorrection_methods(
             X1, samples,
             pheno = NULL,
             contrasts = contrasts,
@@ -414,8 +418,8 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
         ##        if (!any(is.na(X0)) & !any(is.na(X1))) {
-        has.zeros <- any(X0==0, na.rm=TRUE)
-        if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros) ) {    
+        has.zeros <- any(X0 == 0, na.rm = TRUE)
+        if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
         } else if (any(is.na(X0)) && !any(is.na(X1))) {
@@ -671,10 +675,10 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
                       "SVDimpute (default)" = "SVD2",
-##                      "Zero" = "zero",
-##                      "MinDet",
-##                      "MinProb",
-##                      "NMF",
+                      ##                      "Zero" = "zero",
+                      ##                      "MinDet",
+                      ##                      "MinProb",
+                      ##                      "NMF",
                       "Skip imputation" = "skip_imputation"
                     ),
                     selected = "SVD2"
@@ -685,11 +689,12 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
                 bslib::accordion_panel(
                   title = "2. Normalization",
                   shiny::checkboxInput(ns("remove_xxl_features"),
-                                       label = "Treat outlier features (z-score>10) as NAs", value = FALSE),
+                    label = "Treat outlier features (z-score>10) as NAs", value = FALSE
+                  ),
                   div("Normalize data values:\n"),
                   shiny::selectInput(ns("scaling_method"), NULL,
                     choices = c(
-                      "LogCPM (default)" = "CPM",             ## log2(nC+1)
+                      "LogCPM (default)" = "CPM", ## log2(nC+1)
                       "LogMaxMedian" = "logMaxMedian",
                       "LogMaxSum" = "logMaxSum",
                       "Skip normalization" = "Skip_normalization"

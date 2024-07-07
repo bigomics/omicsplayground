@@ -561,6 +561,7 @@ UploadBoard <- function(id,
       r_X = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
+      upload_datatype = upload_datatype,
       is.count = TRUE,
       height = height
     )
