@@ -82,11 +82,7 @@ upload_module_computepgx_server <- function(
           style = "overflow: auto;",
           bslib::as_fill_carrier(),
           bslib::layout_columns(
-            style = "width: 650px; margin-left: auto; margin-right: auto;",
             fill = FALSE,
-            col_widths = c(6, 6),
-            # row_heights = c("1","auto"),
-            gap = "10px",
             div(
               p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
               shiny::textInput(
@@ -105,25 +101,7 @@ upload_module_computepgx_server <- function(
                     "mRNA microarray", "other"
                 )
               )
-            ),
-            div(
-              p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-              shiny::selectInput(
-                inputId = ns("selected_organism"),
-                NULL,
-                choices = "Human",
-                selected = "Human",
-                multiple = FALSE
-              )
-            ),
-            div(
-              p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
-              shiny::textAreaInput(
-                ns("selected_description"), NULL,
-                placeholder = "Give a short description of your dataset",
-                height = 80, resize = "none"
-              )
-            ),
+            )
           ), ## end layout_col
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
@@ -253,10 +231,15 @@ upload_module_computepgx_server <- function(
         )
       })
 
+      # Input validators
       iv <- shinyvalidate::InputValidator$new()
-      iv$add_rule("selected_name", shinyvalidate::sv_required())
-      iv$add_rule("selected_description", shinyvalidate::sv_required())
       iv$enable()
+      shiny::observeEvent(input$selected_name, {
+        iv$add_rule("selected_name", shinyvalidate::sv_required())
+      })
+      shiny::observeEvent(input$selected_description, {
+        iv$add_rule("selected_description", shinyvalidate::sv_required())
+      })
 
       shiny::outputOptions(output,
         "UI",
@@ -279,16 +262,7 @@ upload_module_computepgx_server <- function(
         shiny::updateTextAreaInput(session, "selected_description", value = "")
       })
 
-      # change upload_datatype to selected_datatype
 
-      observeEvent(input$selected_datatype, {
-        upload_datatype(input$selected_datatype)
-      })
-
-      # change upload_organism to selected_organism
-      observeEvent(input$selected_organism, {
-        upload_organism(input$selected_organism)
-      })
       # change upload_name to selected_name
       observeEvent(input$selected_name, {
         upload_name(input$selected_name)
@@ -378,23 +352,6 @@ upload_module_computepgx_server <- function(
       custom_geneset <- list(gmt = NULL, info = NULL)
       annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
-
-      observeEvent(auth$options$ENABLE_ANNOT, {
-        species_table <- playbase::SPECIES_TABLE
-
-        # remove no organism
-        if (!auth$options$ENABLE_ANNOT) {
-          species_table <- species_table[species_table$species_name != "No organism", ]
-        }
-
-        # Fill the selectInput with species_table
-        shiny::updateSelectInput(
-          session,
-          "selected_organism",
-          choices = species_table$species_name,
-          selected = species_table$species_name[1]
-        )
-      })
 
       ## react on custom GMT upload
       shiny::observeEvent(input$upload_gmt, {
@@ -534,7 +491,7 @@ upload_module_computepgx_server <- function(
 
         ## Define create_pgx function arguments
         params <- list(
-          organism = input$selected_organism,
+          organism = upload_organism(),
           samples = samples,
           counts = counts,
           countsX = countsX,
@@ -564,7 +521,7 @@ upload_module_computepgx_server <- function(
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
-          datatype = input$selected_datatype,
+          datatype = upload_datatype(),
           description = input$selected_description,
           creator = creator,
           date = this.date,
@@ -827,7 +784,7 @@ upload_module_computepgx_server <- function(
           )
         } else if (process_counter() == 0) {
           # remove UI with JS, had problems with shiny::removeUI
-          shinyjs::runjs("document.querySelector('.current-dataset #spinner-container').remove();")
+          shinyjs::runjs("document.querySelector('.current-dataset #spinner-container')?.remove();")
         }
       })
 

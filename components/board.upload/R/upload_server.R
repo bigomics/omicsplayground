@@ -33,6 +33,26 @@ UploadBoard <- function(id,
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
 
+    # add task to compute annothub
+
+    ah_task <- ExtendedTask$new(function(organism) {
+      future_promise({
+        # ah <- AnnotationHub::AnnotationHub()
+        # ahDb <- AnnotationHub::query(ah, pattern = c(
+        #   organism,
+        #   "OrgDb"
+        # ))
+        # ahDb <- ahDb[which(tolower(ahDb$species) == tolower(organism))]
+        # k <- length(ahDb)
+        # orgdb <- ahDb[[k]]
+        # orgdb
+
+        Sys.sleep(7)
+        print(organism)
+        print("AnnotationHub queried")
+      })
+    })
+
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
@@ -189,19 +209,6 @@ UploadBoard <- function(id,
       }
     })
 
-
-    ## =====================================================================
-    ## ======================= UI OBSERVERS ================================
-    ## =====================================================================
-
-    shiny::observeEvent(input$expert_mode, {
-      if (input$expert_mode) {
-        shiny::showTab("tabs", "BatchEffects")
-      } else {
-        shiny::hideTab("tabs", "BatchEffects")
-      }
-    })
-
     ## =====================================================================
     ## ================== DATA LOADING OBSERVERS ===========================
     ## =====================================================================
@@ -250,7 +257,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism(), orgdb = NULL)
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
@@ -772,7 +779,7 @@ UploadBoard <- function(id,
           )
         }
 
-        if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
+        if (!is.null(upload_name()) && upload_name() != "" && !isValidFileName(upload_name())) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
             title = "Invalid name",
@@ -797,10 +804,29 @@ UploadBoard <- function(id,
       }
     )
 
+    # check probetypes when wizard is on counts adn every time upload_species change
+    observeEvent(
+      list(input$upload_wizard, upload_organism()),
+      {
+        req(input$upload_wizard == "step_counts")
+        print("Checking probetypes task started")
+
+        # ah_task$invoke(upload_organism())
+      }
+    )
+
 
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
+
+    upload_module_initial_settings_server(
+      id = "initial",
+      upload_organism = upload_organism,
+      upload_datatype = upload_datatype,
+      auth = auth,
+      new_upload = new_upload
+    )
 
     upload_table_preview_counts_server(
       "counts_preview",
@@ -857,7 +883,7 @@ UploadBoard <- function(id,
           upload_datatype(NULL)
           upload_name(NULL)
           upload_description(NULL)
-          upload_organism(NULL)
+          # upload_organism(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
         })

@@ -111,6 +111,9 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(magrittr)
+library(future)
+library(promises)
+future::plan(future::multisession)
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 

@@ -7,8 +7,19 @@
 UploadUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
+
+  initial_panel <- wizardR::wizard_step(
+    step_title = "Step 1: Start information",
+    step_id = "step_initial",
+    # bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
+    shiny::br(), shiny::br(),
+    ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+    ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
+    upload_module_initial_settings_ui(ns("initial"))
+  )
+
   counts_ui <- wizardR::wizard_step(
-    step_title = "Step 1: Upload counts",
+    step_title = "Step 2: Upload counts",
     step_id = "step_counts",
     upload_table_preview_counts_ui(
       ns("counts_preview")
@@ -16,7 +27,7 @@ UploadUI <- function(id) {
   )
 
   samples_ui <- wizardR::wizard_step(
-    step_title = "Step 2: Upload samples",
+    step_title = "Step 3: Upload samples",
     step_id = "step_samples",
     upload_table_preview_samples_ui(
       ns("samples_preview")
@@ -24,7 +35,7 @@ UploadUI <- function(id) {
   )
 
   contrasts_ui <- wizardR::wizard_step(
-    step_title = "Step 3: Create comparisons",
+    step_title = "Step 4: Create comparisons",
     step_id = "step_comparisons",
     upload_table_preview_contrasts_ui(
       ns("contrasts_preview")
@@ -61,7 +72,7 @@ UploadUI <- function(id) {
   )
 
   compute_panel <- wizardR::wizard_step(
-    step_title = "Step 4: Compute!",
+    step_title = "Step 5: Dataset description",
     step_id = "step_compute",
     # bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
@@ -84,14 +95,15 @@ UploadUI <- function(id) {
         height = 75,
         modal = TRUE,
         style = "dots",
-        lock_start = TRUE,
+        lock_start = FALSE,
+        initial_panel,
         counts_ui,
         samples_ui,
         contrasts_ui,
+        compute_panel,
         # comparisons_panel,
         outliers_panel,
         # batchcorrect_panel,
-        compute_panel,
         options = list(
           navigation = "buttons",
           finish = "Compute!"
