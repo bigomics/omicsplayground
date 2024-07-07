@@ -35,8 +35,8 @@ UploadBoard <- function(id,
 
     # add task to compute annothub
 
-    ah_task <- ExtendedTask$new(function(organism) {
-      future_promise({
+    ##ah_task <- ExtendedTask$new(function(organism) {
+    ##  future_promise({
         # ah <- AnnotationHub::AnnotationHub()
         # ahDb <- AnnotationHub::query(ah, pattern = c(
         #   organism,
@@ -47,11 +47,11 @@ UploadBoard <- function(id,
         # orgdb <- ahDb[[k]]
         # orgdb
 
-        Sys.sleep(7)
-        print(organism)
-        print("AnnotationHub queried")
-      })
-    })
+    ##    Sys.sleep(7)
+    ##    print(organism)
+    ##    print("AnnotationHub queried")
+    ##  })
+    ## })
 
     output$navheader <- shiny::renderUI({
       fillRow(
