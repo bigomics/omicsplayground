@@ -30,7 +30,7 @@ upload_table_preview_contrasts_server <- function(
 
 
     table_data <- shiny::reactive({
-      shiny::req(uploaded$contrasts.csv)
+      shiny::req(!is.null(uploaded$contrasts.csv))
       dt <- uploaded$contrasts.csv
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
@@ -52,7 +52,7 @@ upload_table_preview_contrasts_server <- function(
 
     table.RENDER <- function() {
       dt <- table_data()
-      req(dt)
+      req(!is.null(dt))
 
       DT::datatable(dt,
         class = "compact hover",
