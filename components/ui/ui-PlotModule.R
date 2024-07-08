@@ -6,6 +6,7 @@
 
 PlotModuleUI <- function(id,
                          info.text = "Figure",
+                         info.references = NULL,
                          title = "",
                          options = NULL,
                          label = "",
@@ -221,10 +222,37 @@ PlotModuleUI <- function(id,
     header_buttons,
     DropdownMenu(
       shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
-      width = "250px",
+      if (!is.null(info.references)) {
+        html_code <- ""
+        for (i in seq_along(info.references)) {
+          ref <- info.references[[i]]
+          name <- ref[[1]]
+          link <- ref[[2]]
+
+          # Create the formatted HTML string
+          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "'>", link, "</a><br>")
+
+          # Append the formatted string to the HTML code
+          html_code <- paste0(html_code, formatted_ref)
+        }
+        shiny::div(
+          class = "plotmodule-info",
+          shiny::HTML("<b>References</b><br>"),
+          shiny::HTML(html_code)
+        )
+      } else {NULL},
+      shiny::HTML("<br>"),
+      shiny::actionButton(
+        ns("copy_info"),
+        "Copy text",
+        icon = shiny::icon("clipboard"),
+        class = "btn-outline-dark btn-sm",
+        onclick = "copyPlotModuleInfo();"
+      ),
       size = "xs",
       icon = shiny::icon("info"),
-      status = "default"
+      status = "default",
+      width = "300px"
     ),
     options.button,
     shiny::div(class = "download-button", title = "download", dload.button),

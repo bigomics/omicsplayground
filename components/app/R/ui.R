@@ -66,6 +66,7 @@ app_ui <- function(x) {
         shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
         ##    gtag2, ## Google Tag Manager???
         shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
+        shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
