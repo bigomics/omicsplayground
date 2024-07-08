@@ -51,7 +51,7 @@ wordcloud_table_leading_edge_server <- function(id,
         df$leading.edge
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
       )
 
       tbl <- DT::datatable(df,

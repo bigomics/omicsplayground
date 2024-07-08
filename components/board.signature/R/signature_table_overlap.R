@@ -45,7 +45,7 @@ signature_table_overlap_server <- function(id,
         df$geneset
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
       )
 
       DT::datatable(df,

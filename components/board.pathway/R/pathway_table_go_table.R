@@ -84,7 +84,7 @@ functional_table_go_table_server <- function(id,
         id2
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
       )
 
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
