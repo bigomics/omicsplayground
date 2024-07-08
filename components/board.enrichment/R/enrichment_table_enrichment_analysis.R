@@ -76,7 +76,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         rownames(rpt)
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
       )
       selectmode <- "single"
 
@@ -86,10 +86,14 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
       colnames(rpt) <- sub("GS", "geneset", colnames(rpt))
 
+      rpt$i <- GS_link
+      new_order <- c(names(rpt)[1], "i", names(rpt)[names(rpt) != "i" & names(rpt) != names(rpt)[1]])
+      rpt <- rpt[, new_order]
+
       DT::datatable(rpt,
         class = "compact cell-border stripe hover",
-        rownames = GS_link,
-        escape = c(-1, -5),
+        rownames = NULL,
+        escape = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
