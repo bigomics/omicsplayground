@@ -18,50 +18,57 @@ upload_module_initial_settings_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
-
-      output$UI <- shiny::renderUI({
-        upload_annot_table_ui <- NULL
-        if (auth$options$ENABLE_ANNOT) {
-          upload_annot_table_ui <- fileInput2(
-            ns("upload_annot_table"),
-            shiny::tags$h4("Probe annotation (alpha):"),
-            multiple = FALSE,
-            accept = c(".csv")
-          )
+      
+      observeEvent(new_upload(), {
+        species_table <- playbase::SPECIES_TABLE
+        # remove no organism
+        if (!auth$options$ENABLE_ANNOT) {
+          species_table <- species_table[species_table$species_name != "No organism", ]
         }
-        div(
-          style = "overflow: auto;",
-          bslib::as_fill_carrier(),
-          bslib::layout_columns(
-            fill = FALSE,
-            div(
-              # add align items: center
-              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+        output$UI <- shiny::renderUI({
+          upload_annot_table_ui <- NULL
+          if (auth$options$ENABLE_ANNOT) {
+            upload_annot_table_ui <- fileInput2(
+              ns("upload_annot_table"),
+              shiny::tags$h4("Probe annotation (alpha):"),
+              multiple = FALSE,
+              accept = c(".csv")
+            )
+          }
+          div(
+            style = "overflow: auto;",
+            bslib::as_fill_carrier(),
+            bslib::layout_columns(
+              fill = FALSE,
               div(
-                p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-                shiny::selectInput(
-                  inputId = ns("selected_organism"),
-                  NULL,
-                  choices = "Human",
-                  selected = "Human",
-                  multiple = FALSE
-                )
-              ),
-              div(
-                p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-                shiny::selectInput(
-                  ns("selected_datatype"), NULL,
-                  choices = c(
-                    "RNA-seq", "scRNA-seq",
-                    "proteomic intensities: LC,MS",
-                    "proteomics: SNR",
-                    "mRNA microarray", "other"
+                # add align items: center
+                style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+                div(
+                  p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
+                  shiny::selectInput(
+                    inputId = ns("selected_organism"),
+                    label = NULL,
+                    choices = species_table$species_name,
+                    selected = species_table$species_name[1],
+                    multiple = FALSE
+                  )
+                ),
+                div(
+                  p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
+                  shiny::selectInput(
+                    ns("selected_datatype"), NULL,
+                    choices = c(
+                      "RNA-seq", "scRNA-seq",
+                      "proteomic intensities: LC,MS",
+                      "proteomics: SNR",
+                      "mRNA microarray", "other"
+                    )
                   )
                 )
               )
             )
           )
-        )
+        })
       })
 
       # change upload_datatype to selected_datatype
@@ -73,28 +80,6 @@ upload_module_initial_settings_server <- function(
       # change upload_organism to selected_organism
       observeEvent(input$selected_organism, {
         upload_organism(input$selected_organism)
-      })
-
-      ## ------------------------------------------------------------------
-      ## After confirmation is received, start computing the PGX
-      ## object from the uploaded files
-      ## ------------------------------------------------------------------
-
-      observeEvent(new_upload(), {
-        species_table <- playbase::SPECIES_TABLE
-
-        # remove no organism
-        if (!auth$options$ENABLE_ANNOT) {
-          species_table <- species_table[species_table$species_name != "No organism", ]
-        }
-
-        # Fill the selectInput with species_table
-        shiny::updateSelectInput(
-          session = session,
-          ns("selected_organism"),
-          choices = species_table$species_name,
-          selected = species_table$species_name[1]
-        )
       })
     } ## end-of-server
   )
