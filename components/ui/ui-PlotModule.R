@@ -1091,6 +1091,15 @@ PlotModuleServer <- function(id,
         )]] <- render2
       }
 
+      shiny::observeEvent(input$copy_info, {
+        shinyjs::runjs(
+          paste0(
+            "addTick('",
+            ns("copy_info"),
+            "')"
+          )
+        )
+      })
 
 
       ## --------------------------------------------------------------------------------

@@ -60,6 +60,7 @@ app_ui <- function() {
       shiny::tags$head(shiny::tags$script(src = "static/test_trigger.js")),
       shiny::tags$head(shiny::tags$script(src = "static/dropdown-extra.js")),
       shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
+      shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
       shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "static/styles.min.css")),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "static/favicon.ico")),
       shinyjs::useShinyjs(),
