@@ -284,9 +284,23 @@ addSettings <- function(ns, session, file) {
     setting = sub("^[^-]*-", "", sub("^[^-]*-[^-]*-", "", plot_settings)),
     value = plot_settings_values
   )
-  
+
+  # Get loaded metadata
+  timestamp <- as.character(format(Sys.time(), "%a %b %d %X %Y"))
+  version <-scan(file.path(OPG, "VERSION"), character())[1]
+  dataset <- LOADEDPGX
+  datatype <- DATATYPEPGX
+  metadata <- data.frame(
+    setting = c("Dataset", "Timestamp", "Data type", "Version"),
+    value = c(dataset, timestamp, datatype, version)
+  )
+
   # Merge plot and settings
-  df <- rbind(plot_table, c("", ""), c("Setting", "Value"), settings_table)
+  df <- rbind(
+    metadata, c("", ""),
+    c("Plot option", "Value"), plot_table, c("", ""),
+    c("Setting", "Value"), settings_table
+  )
 
   # Correct column names
   df_names <- lapply(df$setting, function(x) {
@@ -305,7 +319,13 @@ addSettings <- function(ns, session, file) {
     ),
     core = list(
       fg_params = list(
-        fontface = c(rep("plain", nrow(plot_table)+1), "bold", rep("plain", nrow(settings_table))),
+        fontface = c(
+          rep("plain", nrow(metadata)+1),
+          "bold",
+          rep("plain", nrow(plot_table)+1),
+          "bold",
+          rep("plain", nrow(settings_table))
+        ),
         hjust = 0,
         x = 0
       )
@@ -316,7 +336,7 @@ addSettings <- function(ns, session, file) {
   df_pdf <- tempfile(fileext = ".pdf")
   final_pdf <- tempfile(fileext = ".pdf")
   pdf(df_pdf)
-  gridExtra::grid.table(df, rows = NULL, col = c("Plot option", "Value"), theme = table_theme)
+  gridExtra::grid.table(df, rows = NULL, col = c("Metadata", "Value"), theme = table_theme)
   dev.off()
   # Construct the pdftk command
   pdftk_command <- sprintf("pdftk %s %s cat output %s", file, df_pdf, final_pdf)
