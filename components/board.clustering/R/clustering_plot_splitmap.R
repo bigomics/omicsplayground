@@ -108,6 +108,14 @@ clustering_plot_splitmap_server <- function(id,
 
     ns <- session$ns
 
+    shiny::observeEvent(pgx$Y, {
+      if(nrow(pgx$Y) > 100) { # Put cexCol (heatmap) to 0 if more than 100 samples
+        shiny::updateNumericInput(session, "hm_cexCol", value = 0)
+      } else {
+        shiny::updateNumericInput(session, "hm_cexCol", value = 1)
+      }
+    })
+
     plot_data <- shiny::reactive({
       ## ComplexHeatmap based splitted heatmap ##########
 
