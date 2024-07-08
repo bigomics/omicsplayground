@@ -159,6 +159,14 @@ PlotModuleUI <- function(id,
           shiny::br()
         )
       ),
+      shiny::conditionalPanel(
+        condition = "input.downloadOption == 'pdf'",
+        ns = ns,
+        shiny::checkboxInput(
+          inputId = ns("get_pdf_settings"),
+          label = "Include plot settings"
+        )
+      ),
       download_buttons,
     ),
     size = "xs",
@@ -705,7 +713,7 @@ PlotModuleServer <- function(id,
                   addWatermark.PDF2(file, w = pdf.width, h = pdf.height, mark = markfile)
                 }
                 # Add settings
-                if (TRUE){# add_settings) {
+                if (input$get_pdf_settings) {
                   addSettings(ns, session, file)
                 }
                 ## Record downloaded plot
