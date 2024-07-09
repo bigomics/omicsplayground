@@ -79,6 +79,9 @@ DatasetReportServer <- function(
                     print(input$available_datasets)
                     print(input$sel_contrasts)
 
+                    pgx_path <- file.path(auth$user_dir, paste0(input$available_datasets, ".pgx", ""))
+                    print(pgx_path)
+
                     system2(
                         "quarto",
                         args = c(
@@ -88,9 +91,9 @@ DatasetReportServer <- function(
                             "--to",
                             tolower(input$output_format),
                             "-P",
-                            paste("dataset:", input$available_datasets, sep = ""),
+                            paste("pgxdir:", pgx_path, sep = ""),
                             "-P",
-                            paste("comparisons:", input$sel_contrasts[1], sep = "")
+                            paste("comparison:", input$sel_contrasts[1], sep = "")
                         ),
                         stdout = file
                     )
@@ -116,18 +119,21 @@ DatasetReportServer <- function(
         })
 
         ## observe dataset and update contrasts
-        shiny::observeEvent(input$available_datasets, {
-            pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(input$available_datasets, ".pgx")))
+        shiny::observeEvent(input$available_datasets,
+            {
+                pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(input$available_datasets, ".pgx")))
 
-            contrasts <- playbase::pgx.getContrasts(pgx)
+                contrasts <- playbase::pgx.getContrasts(pgx)
 
-            updateSelectizeInput(
-                session,
-                "sel_contrasts",
-                choices = contrasts,
-                selected = contrasts[1]
-            )
-        }) # end of observe dataset and update contrasts
+                updateSelectizeInput(
+                    session,
+                    "sel_contrasts",
+                    choices = contrasts,
+                    selected = contrasts[1]
+                )
+            },
+            ignoreNULL = FALSE
+        ) # end of observe dataset and update contrasts
 
         # observe dataset and
     }) ## end of moduleServer
