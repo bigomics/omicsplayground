@@ -393,3 +393,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
   if (is.null(val)) val <- inputId
   return(val)
 }
+
+tspan <- function(label) {
+  shiny::span(class = "i18n", `data-key` = label, label)
+}
