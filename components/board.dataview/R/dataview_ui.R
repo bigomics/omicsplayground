@@ -16,7 +16,7 @@ DataViewInputs <- function(id) {
 
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("search_gene"), "Gene:", choices = NULL),
+    withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
       "Enter a gene of interest for the analysis.",
       placement = "top"
     ),
@@ -80,8 +80,8 @@ DataViewUI <- function(id) {
           col_widths = c(2, 10),
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
-            title = "Gene info",
-            info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
+            title = tspan("Gene info"),
+            info.text = tspan("Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases."),
             caption = "Information about the selected gene and its function from public databases.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
@@ -92,7 +92,7 @@ DataViewUI <- function(id) {
               col_widths = c(4, 4, 4),
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
-                title = "Gene expression",
+                title = tspan("Gene expression"),
                 info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -122,8 +122,8 @@ DataViewUI <- function(id) {
               dataview_plot_correlation_ui(
                 ns("correlationplot"),
                 label = "d",
-                title = "Top correlated genes",
-                info.text = "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
+                title = tspan("Top correlated genes"),
+                info.text = tspan("Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively."),
                 caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -134,7 +134,7 @@ DataViewUI <- function(id) {
                 width = c("auto", "100%"),
                 label = "e",
                 title = "Tissue expression (GTEX)",
-                info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
+                info.text = tspan("Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options."),
                 caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, we use the human ortholog to query the GTEX database.")
               )
             )
@@ -183,7 +183,7 @@ DataViewUI <- function(id) {
           col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            title = "Dataset abundance of major gene types",
+            title = tspan("Dataset abundance of major gene types"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
             caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -209,11 +209,11 @@ DataViewUI <- function(id) {
         col_widths = 12,
         row_heights = list("auto", 1),
         height = fullH,
-        bs_alert("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
+        bs_alert(tspan("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
-          title = "Gene expression table",
-          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
+          title = tspan("Gene expression table"),
+          info.text = tspan("The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."),
           caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")

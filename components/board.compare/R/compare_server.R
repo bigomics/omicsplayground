@@ -41,7 +41,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ),
       "Gene Correlation" = list(
         enable = NULL,
-        disable = c("plottype", "ntop", "hilighttype")
+        disable = c("plottype", "ntop", "hilighttype", "genelist")
       )
     )
 
