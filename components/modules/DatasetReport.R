@@ -86,11 +86,11 @@ DatasetReportServer <- function(
                             file.path(quarto_file_path, "visreport.qmd"),
                             "--output",
                             "--to",
-                            tolower(input$output_format) # ,
-                            # "-P",
-                            # paste("dataset:", input$available_datasets, sep = ""),
-                            # "-P",
-                            # paste("comparisons:", paste0(input$sel_contrasts, collapse = ","), sep = "")
+                            tolower(input$output_format),
+                            "-P",
+                            paste("dataset:", input$available_datasets, sep = ""),
+                            "-P",
+                            paste("comparisons:", input$sel_contrasts[1], sep = "")
                         ),
                         stdout = file
                     )
