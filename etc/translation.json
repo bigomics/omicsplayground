@@ -1,0 +1,18 @@
+{
+    "cultural_date_format": "%d-%m-%Y",
+    "languages": ["RNA-seq", "proteomics"],
+    "translation": [
+        {
+            "RNA-seq": "Gene:",
+            "proteomics": "Proteine:"
+        },
+        {
+            "RNA-seq": "Gene expression",
+            "proteomics": "Proteine abundance"
+        },
+        {
+            "RNA-seq": "Gene info",
+            "proteomics": "Proteine info"
+        }
+      ]
+  }
