@@ -110,20 +110,15 @@ DatasetReportServer <- function(
 
         ## observe dataset and update contrasts
         shiny::observeEvent(input$available_datasets, {
-            info <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
+            pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(input$available_datasets, ".pgx")))
 
-
-            res <- info[info$dataset == input$available_datasets, , drop = FALSE]
-
-            # split contrasts by " "
-
-            condition <- unlist(strsplit(res$condition, " "))
+            contrasts <- playbase::pgx.getContrasts(pgx)
 
             updateSelectizeInput(
                 session,
                 "sel_contrasts",
-                choices = condition,
-                selected = condition[1]
+                choices = contrasts,
+                selected = contrasts[1]
             )
         }) # end of observe dataset and update contrasts
 
