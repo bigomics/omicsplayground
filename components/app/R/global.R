@@ -250,3 +250,8 @@ shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
 
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+
+## Initialize translator
+library(shiny.i18n)
+DICTIONARY <- file.path(ETC, "translation.json")
+i18n <<- Translator$new(translation_json_path = DICTIONARY)
