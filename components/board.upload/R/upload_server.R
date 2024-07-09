@@ -33,6 +33,26 @@ UploadBoard <- function(id,
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
 
+    # add task to compute annothub
+
+    ah_task <- ExtendedTask$new(function(organism) {
+       future_promise({
+        # ah <- AnnotationHub::AnnotationHub()
+        # ahDb <- AnnotationHub::query(ah, pattern = c(
+        #   organism,
+        #   "OrgDb"
+        # ))
+        # ahDb <- ahDb[which(tolower(ahDb$species) == tolower(organism))]
+        # k <- length(ahDb)
+        # orgdb <- ahDb[[k]]
+        # orgdb
+
+        Sys.sleep(7)
+        print(organism)
+        print("AnnotationHub queried")
+      })
+    })
+
     output$navheader <- shiny::renderUI({
       fillRow(
         flex = c(NA, 1, NA),
@@ -220,7 +240,6 @@ UploadBoard <- function(id,
     ## Check COUNTS matrix
     ## --------------------------------------------------------
 
-    checked_for_log <- reactiveVal(FALSE)
 
     checked_counts <- shiny::eventReactive(
       {
@@ -238,7 +257,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism(), orgdb = NULL)
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
@@ -267,22 +286,13 @@ UploadBoard <- function(id,
 
           # inform user that we are applying the correction
           shinyalert::shinyalert(
-            title = "Converting log-transformed counts",
-            text = "Your counts data seems to be log-transformed. We are converting it to intensities.",
+            title = "Possible log-transformed counts: use expression.csv",
+            text = "Your counts data seems to be log-transformed. To upload log-transformed data, use expression.csv instead of counts.csv.",
             type = "info"
           )
-
-
-          # this should be run only when user confirms to convert to intensities in shinyalert (counts_log_correction function)
-          res$df <- 2**res$df
-          if (min(res$df, na.rm = TRUE) > 0) res$df <- res$df - 1
-          checked <- res$df
-          checked_for_log(TRUE)
-        } else {
-          # no correction needed
-          checked <- res$df
-          checked_for_log(TRUE)
         }
+
+        checked <- res$df
 
         # TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
         # req(checked_for_log(), !is.null(checked))
@@ -551,6 +561,7 @@ UploadBoard <- function(id,
       r_X = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
+      upload_datatype = upload_datatype,
       is.count = TRUE,
       height = height
     )
@@ -564,10 +575,13 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
-
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = shiny::reactive(checked_samples_counts()$COUNTS), # TODO add return from new-bc module: corrected1$correctedCounts,
+      ## countsRT = shiny::reactive(checked_samples_counts()$COUNTS),
+      ## countsRT = corrected1$counts,
+      ## countsX = corrected1$X, ## corrected1$correctedCounts,
+      countsRT = corrected1$counts,
+      countsX = corrected1$X,
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
@@ -768,7 +782,7 @@ UploadBoard <- function(id,
           )
         }
 
-        if (!is.null(upload_name()) && !isValidFileName(upload_name())) {
+        if (!is.null(upload_name()) && upload_name() != "" && !isValidFileName(upload_name())) {
           message("[ComputePgxServer:input$compute] WARNING:: Invalid name")
           shinyalert::shinyalert(
             title = "Invalid name",
@@ -793,10 +807,29 @@ UploadBoard <- function(id,
       }
     )
 
+    # check probetypes when wizard is on counts adn every time upload_species change
+    observeEvent(
+      list(input$upload_wizard, upload_organism()),
+      {
+        req(input$upload_wizard == "step_counts")
+        print("Checking probetypes task started")
+
+        # ah_task$invoke(upload_organism())
+      }
+    )
+
 
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
+
+    upload_module_initial_settings_server(
+      id = "initial",
+      upload_organism = upload_organism,
+      upload_datatype = upload_datatype,
+      auth = auth,
+      new_upload = new_upload
+    )
 
     upload_table_preview_counts_server(
       "counts_preview",
@@ -853,7 +886,7 @@ UploadBoard <- function(id,
           upload_datatype(NULL)
           upload_name(NULL)
           upload_description(NULL)
-          upload_organism(NULL)
+          # upload_organism(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
         })

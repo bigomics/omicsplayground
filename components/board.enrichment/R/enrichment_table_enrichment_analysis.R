@@ -72,11 +72,11 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
       ## wrap genesets names with known links.
       GS_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(rpt)),
+        rep_len("<i class='fa-solid fa-info'></i>", nrow(rpt)),
         rownames(rpt)
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
+        NoLinkString = "<i class='fa-solid fa-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
       )
       selectmode <- "single"
 
@@ -89,7 +89,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       DT::datatable(rpt,
         class = "compact cell-border stripe hover",
         rownames = GS_link,
-        escape = c(-1, -5),
+        escape = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
