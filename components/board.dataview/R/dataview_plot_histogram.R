@@ -32,14 +32,14 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
     .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
       if (length(jj) > n) jj <- sample(jj, n, replace = TRUE)
-      h0 <- hist(as.vector(c(gx[jj], min(gx), max(gx))),
+      h0 <- hist(as.vector(c(gx[jj], min(gx, na.rm = TRUE), max(gx, na.rm = TRUE))),
         breaks = 120,
         plot = plot,
         main = main,
         border = FALSE,
         col = "grey",
         freq = FALSE, #
-        xlim = c(min(gx), max(gx)),
+        xlim = c(min(gx, na.rm = TRUE), max(gx, na.rm = TRUE)),
         xlab = "expression (log2)",
         cex.lab = 1
       )

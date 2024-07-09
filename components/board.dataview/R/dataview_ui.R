@@ -16,7 +16,7 @@ DataViewInputs <- function(id) {
 
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("search_gene"), "Gene:", choices = NULL),
+    withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
       "Enter a gene of interest for the analysis.",
       placement = "top"
     ),
@@ -80,7 +80,7 @@ DataViewUI <- function(id) {
           col_widths = c(2, 10),
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
-            title = "Gene info",
+            title = tspan("Gene info"),
             info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
             caption = "Information about the selected gene and its function from public databases.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -92,7 +92,7 @@ DataViewUI <- function(id) {
               col_widths = c(4, 4, 4),
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
-                title = "Gene expression",
+                title = tspan("Gene expression"),
                 info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),

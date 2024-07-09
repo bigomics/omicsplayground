@@ -543,6 +543,10 @@ app_server <- function(input, output, session) {
       ## trigger on change dataset
       dbg("[SERVER] trigger on change dataset")
 
+      ## write GLOBAL variables
+      LOADEDPGX <<- PGX$name
+      DATATYPEPGX <<- PGX$datatype
+      shiny.i18n::update_lang(DATATYPEPGX, session)
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE

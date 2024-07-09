@@ -11,6 +11,7 @@ upload_module_computepgx_ui <- function(id) {
 upload_module_computepgx_server <- function(
     id,
     countsRT,
+    countsX,
     samplesRT,
     contrastsRT,
     raw_dir,
@@ -40,7 +41,8 @@ upload_module_computepgx_server <- function(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
         "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
       )
-      GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
+      ## GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
+      GENETEST.SELECTED <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma")
 
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
@@ -80,46 +82,25 @@ upload_module_computepgx_server <- function(
           style = "overflow: auto;",
           bslib::as_fill_carrier(),
           bslib::layout_columns(
-            style = "width: 650px; margin-left: auto; margin-right: auto;",
             fill = FALSE,
-            col_widths = c(6, 6),
-            # row_heights = c("1","auto"),
-            gap = "10px",
             div(
-              p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
-              shiny::textInput(
-                ns("selected_name"), NULL,
-                placeholder = "Name of your dataset"
-              )
-            ),
-            div(
-              p("Data type:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-              shiny::selectInput(
-                ns("selected_datatype"), NULL,
-                choices = c(
-                  "RNA-seq", "scRNA-seq", "proteomics",
-                  "mRNA microarray", "other"
+              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+              div(
+                p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
+                shiny::textInput(
+                  ns("selected_name"), NULL,
+                  placeholder = "Name of your dataset"
+                )
+              ),
+              div(
+                p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
+                shiny::textAreaInput(
+                  ns("selected_description"), NULL,
+                  placeholder = "Give a short description of your dataset",
+                  height = 80, resize = "none"
                 )
               )
-            ),
-            div(
-              p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
-              shiny::selectInput(
-                inputId = ns("selected_organism"),
-                NULL,
-                choices = "Human",
-                selected = "Human",
-                multiple = FALSE
-              )
-            ),
-            div(
-              p("Description:", style = "text-align: left;   margin: 0 0 2px 0;; font-weight: bold;"),
-              shiny::textAreaInput(
-                ns("selected_description"), NULL,
-                placeholder = "Give a short description of your dataset",
-                height = 80, resize = "none"
-              )
-            ),
+            )
           ), ## end layout_col
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
@@ -280,16 +261,7 @@ upload_module_computepgx_server <- function(
         shiny::updateTextAreaInput(session, "selected_description", value = "")
       })
 
-      # change upload_datatype to selected_datatype
 
-      observeEvent(input$selected_datatype, {
-        upload_datatype(input$selected_datatype)
-      })
-
-      # change upload_organism to selected_organism
-      observeEvent(input$selected_organism, {
-        upload_organism(input$selected_organism)
-      })
       # change upload_name to selected_name
       observeEvent(input$selected_name, {
         upload_name(input$selected_name)
@@ -380,23 +352,6 @@ upload_module_computepgx_server <- function(
       annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
-      observeEvent(auth$options$ENABLE_ANNOT, {
-        species_table <- playbase::SPECIES_TABLE
-
-        # remove no organism
-        if (!auth$options$ENABLE_ANNOT) {
-          species_table <- species_table[species_table$species_name != "No organism", ]
-        }
-
-        # Fill the selectInput with species_table
-        shiny::updateSelectInput(
-          session,
-          "selected_organism",
-          choices = species_table$species_name,
-          selected = species_table$species_name[1]
-        )
-      })
-
       ## react on custom GMT upload
       shiny::observeEvent(input$upload_gmt, {
         filePath <- input$upload_gmt$datapath
@@ -477,9 +432,15 @@ upload_module_computepgx_server <- function(
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
         counts <- countsRT()
+        countsX <- countsX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
+
+        dbg("[upload_module_computepgx:input$compute] dim.counts = ", dim(counts))
+        dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX))
+        dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples))
+        dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts))
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
@@ -527,14 +488,13 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
-        # Define create_pgx function arguments
-
+        ## Define create_pgx function arguments
         params <- list(
-          organism = input$selected_organism,
+          organism = upload_organism(),
           samples = samples,
           counts = counts,
+          countsX = countsX,
           contrasts = contrasts,
-
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
@@ -560,7 +520,7 @@ upload_module_computepgx_server <- function(
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
-          datatype = input$selected_datatype,
+          datatype = upload_datatype(),
           description = input$selected_description,
           creator = creator,
           date = this.date,
@@ -569,6 +529,10 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
+
+        ## Test check dim(counts) & dim(X)
+        dbg("[compute PGX process]: dim.X: ", dim(params$counts))
+        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX))
 
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)

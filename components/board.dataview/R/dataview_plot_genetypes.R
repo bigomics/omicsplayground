@@ -17,7 +17,7 @@ dataview_plot_genetypes_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    caption,
+    caption = caption,
     plotlib = "plotly",
     info.text = info.text,
     options = NULL,
