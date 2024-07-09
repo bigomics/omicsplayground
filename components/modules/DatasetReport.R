@@ -27,12 +27,7 @@ DatasetReportServer <- function(
                 return(NULL)
             }
 
-            browser()
             info <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
-
-
-
-
 
             body <- tagList(
                 div(
@@ -44,7 +39,7 @@ DatasetReportServer <- function(
                     ),
                     shiny::selectizeInput(
                         inputId = ns("sel_contrasts"),
-                        label = "Select one or more contrasts",
+                        label = "Select one or more comparisons",
                         choices = c("Getting comparisons..."),
                         selected = "Getting comparisons...",
                         multiple = TRUE
@@ -115,13 +110,20 @@ DatasetReportServer <- function(
 
         ## observe dataset and update contrasts
         shiny::observeEvent(input$available_datasets, {
-            browser()
+            info <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
+
+
+            res <- info[info$dataset == input$available_datasets, , drop = FALSE]
+
+            # split contrasts by " "
+
+            condition <- unlist(strsplit(res$condition, " "))
 
             updateSelectizeInput(
                 session,
                 "sel_contrasts",
-                choices = res,
-                selected = res[1]
+                choices = condition,
+                selected = condition[1]
             )
         }) # end of observe dataset and update contrasts
 
