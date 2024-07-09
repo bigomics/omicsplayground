@@ -20,6 +20,13 @@ DatasetReportServer <- function(
     moduleServer(id, function(input, output, session) {
         ns <- session$ns ## NAMESPACE
 
+        quarto_file_path <- Sys.getenv("QUARTO_FILE_PATH")
+
+        if (is.null(quarto_file_path)) {
+            warning("QUARTO_FILE_PATH is not set. Please set it to the path where the quarto file is located.")
+            return(NULL)
+        }
+
 
         showModal <- function() {
             shiny::req(auth$logged)
@@ -76,14 +83,14 @@ DatasetReportServer <- function(
                         "quarto",
                         args = c(
                             "render",
-                            file.path(quarto_file_path, "main.qmd"),
+                            file.path(quarto_file_path, "visreport.qmd"),
                             "--output",
                             "--to",
-                            tolower(input$output_format),
-                            "-P",
-                            paste("dataset:", input$available_datasets, sep = ""),
-                            "-P",
-                            paste("comparisons:", paste0(input$sel_contrasts, collapse = ","), sep = "")
+                            tolower(input$output_format) # ,
+                            # "-P",
+                            # paste("dataset:", input$available_datasets, sep = ""),
+                            # "-P",
+                            # paste("comparisons:", paste0(input$sel_contrasts, collapse = ","), sep = "")
                         ),
                         stdout = file
                     )
