@@ -36,20 +36,19 @@ UploadBoard <- function(id,
     # add task to compute annothub
 
     ah_task <- ExtendedTask$new(function(organism) {
-       future_promise({
-        # ah <- AnnotationHub::AnnotationHub()
-        # ahDb <- AnnotationHub::query(ah, pattern = c(
-        #   organism,
-        #   "OrgDb"
-        # ))
-        # ahDb <- ahDb[which(tolower(ahDb$species) == tolower(organism))]
-        # k <- length(ahDb)
-        # orgdb <- ahDb[[k]]
-        # orgdb
-
-        Sys.sleep(7)
+      future_promise({
+        print("AnnotationHub started")
+        ah <- AnnotationHub::AnnotationHub()
+        ahDb <- AnnotationHub::query(ah, pattern = c(
+          organism,
+          "OrgDb"
+        ))
+        ahDb <- ahDb[which(tolower(ahDb$species) == tolower(organism))]
+        k <- length(ahDb)
+        orgdb <- ahDb[[k]]
         print(organism)
         print("AnnotationHub queried")
+        orgdb
       })
     })
 
@@ -257,7 +256,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism(), orgdb = NULL)
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
@@ -599,7 +598,8 @@ UploadBoard <- function(id,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
-      reset_upload_text_input = reset_upload_text_input
+      reset_upload_text_input = reset_upload_text_input,
+      ah_task = ah_task
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -812,7 +812,7 @@ UploadBoard <- function(id,
         req(input$upload_wizard == "step_counts")
         print("Checking probetypes task started")
 
-        # ah_task$invoke(upload_organism())
+        ah_task$invoke(upload_organism())
       }
     )
 

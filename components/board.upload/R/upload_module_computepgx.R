@@ -31,7 +31,8 @@ upload_module_computepgx_server <- function(
     upload_gx_methods,
     upload_gset_methods,
     process_counter,
-    reset_upload_text_input) {
+    reset_upload_text_input,
+    ah_task) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -107,6 +108,9 @@ upload_module_computepgx_server <- function(
               icon = icon("cog", lib = "glyphicon")
             ),
             style = "display: flex; justify-content: center; margin: 15px 0;"
+          ),
+          shiny::div(
+            shiny::uiOutput(ns("ah_task_result")),
           ),
           shiny::conditionalPanel(
             "input.options%2 == 1",
@@ -286,6 +290,11 @@ upload_module_computepgx_server <- function(
         },
         ignoreNULL = FALSE
       )
+
+      # handle ah task result
+      output$ah_task_result <- shiny::renderUI({
+        detect_probetype(ah = ah_task$result())
+      })
 
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
