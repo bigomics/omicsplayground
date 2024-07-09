@@ -100,7 +100,7 @@ UploadUI <- function(id) {
         counts_ui,
         samples_ui,
         contrasts_ui,
-        # outliers_panel,
+        outliers_panel,
         compute_panel,
         options = list(
           navigation = "buttons",
