@@ -15,31 +15,32 @@ DatasetReportUI <- function(id) {
 }
 
 DatasetReportServer <- function(
-    id) {
+    id,
+    auth) {
     moduleServer(id, function(input, output, session) {
         ns <- session$ns ## NAMESPACE
 
 
         showModal <- function() {
-            # Fetch the datasets from the API
-            url <- Sys.getenv("API_BACKEND_URL")
-            bearer_token <- Sys.getenv("BEARER_TOKEN")
-            quarto_file_path <- Sys.getenv("QUARTO_FILE_PATH")
+            shiny::req(auth$logged)
+            if (is.null(auth$logged) || !auth$logged) {
+                return(NULL)
+            }
 
-            response <- httr::GET(
-                glue::glue("{url}/secure/datasets"),
-                httr::add_headers(Authorization = paste("Bearer", bearer_token))
-            )
+            browser()
+            info <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
 
-            datasets <- jsonlite::fromJSON(httr::content(response, "text"))
+
+
+
 
             body <- tagList(
                 div(
                     shiny::selectInput(
                         inputId = ns("available_datasets"),
                         label = "",
-                        choices = datasets,
-                        selected = datasets[1]
+                        choices = info$dataset,
+                        selected = info$dataset[1]
                     ),
                     shiny::selectizeInput(
                         inputId = ns("sel_contrasts"),
@@ -114,17 +115,7 @@ DatasetReportServer <- function(
 
         ## observe dataset and update contrasts
         shiny::observeEvent(input$available_datasets, {
-            print("Dataset changed")
-            url <- Sys.getenv("API_BACKEND_URL")
-            bearer_token <- Sys.getenv("BEARER_TOKEN")
-
-            response <- httr::GET(
-                glue::glue("{url}/secure/contrast_names?dataset={input$available_datasets}"),
-                httr::add_headers(Authorization = paste("Bearer", bearer_token))
-            )
-
-            res <- jsonlite::fromJSON(httr::content(response, "text"))
-            print(res)
+            browser()
 
             updateSelectizeInput(
                 session,

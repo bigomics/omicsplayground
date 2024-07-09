@@ -380,7 +380,7 @@ LoadingBoard <- function(id,
 
     # Generate report server module
 
-    DatasetReportServer(id = "generate_report")
+    DatasetReportServer(id = "generate_report", auth = auth)
 
     ## ================================================================================
     ## Header
