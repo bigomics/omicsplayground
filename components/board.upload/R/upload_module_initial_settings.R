@@ -61,6 +61,7 @@ upload_module_initial_settings_server <- function(
                       "RNA-seq", "scRNA-seq",
                       "proteomic intensities: LC,MS",
                       "proteomics: SNR",
+                      "proteomics",
                       "mRNA microarray", "other"
                     )
                   )
