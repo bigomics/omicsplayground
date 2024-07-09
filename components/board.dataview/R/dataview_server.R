@@ -34,7 +34,7 @@ DataViewBoard <- function(id, pgx) {
         the total number of counts (abundance) per sample and their distribution among the samples are displayed.
         This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
 
-        The <strong>Gene overview</strong> panel displays figures related to the expression level of the selected gene,
+        The <strong>Overview</strong> panel displays figures related to the expression level of the selected gene,
         correlation, and average expression ranking within the dataset.
         More information about the gene and hyperlinks to external databases are provided. Furthermore,
         it displays the correlation and tissue expression for a selected gene in external reference datasets.
@@ -93,7 +93,7 @@ DataViewBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Gene overview" = list(disable = NULL),
+      "Overview" = list(disable = NULL),
       "Sample QC" = list(disable = c("search_gene")),
       "Counts table" = list(disable = NULL),
       "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
