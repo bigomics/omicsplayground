@@ -4,31 +4,31 @@
     "translation": [
         {
             "RNA-seq": "Gene:",
-            "proteomics": "Proteine:"
+            "proteomics": "Protein:"
         },
         {
             "RNA-seq": "Gene expression",
-            "proteomics": "Proteine abundance"
+            "proteomics": "Protein abundance"
         },
         {
             "RNA-seq": "Gene info",
-            "proteomics": "Proteine info"
+            "proteomics": "Protein info"
         },
         {
             "RNA-seq": "Top correlated genes",
-            "proteomics": "Top correlated proteines"
+            "proteomics": "Top correlated proteins"
         },
         {
             "RNA-seq": "Gene expression table",
-            "proteomics": "Proteine abundance table"
+            "proteomics": "Protein abundance table"
         },
         {
             "RNA-seq": "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
-            "proteomics": "Information about the selected proteine and its function from public databases. For more information, follow the hyperlinks to public databases."
+            "proteomics": "Information about the selected protein and its function from public databases. For more information, follow the hyperlinks to public databases."
         },
         {
             "RNA-seq": "Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
-            "proteomics": "Colors are from absolute abundance levels of proteines, where the low and high expressions range between the light and dark colors, respectively."
+            "proteomics": "Colors are from absolute abundance levels of proteins, where the low and high expressions range between the light and dark colors, respectively."
         },
         {
             "RNA-seq": "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
@@ -40,7 +40,7 @@
         },
         {
             "RNA-seq": "In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.",
-            "proteomics": "In Counts table panel, the exact expression values across the samples can be looked up, where proteins are ordered by the correlation with respect to the selected proteine. Proteine-wise average expression of a phenotype sample grouping is also presented in this table."
+            "proteomics": "In Counts table panel, the exact expression values across the samples can be looked up, where proteins are ordered by the correlation with respect to the selected protein. Protein-wise average expression of a phenotype sample grouping is also presented in this table."
         },
         {
             "RNA-seq": "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
