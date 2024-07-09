@@ -68,13 +68,13 @@ DataViewUI <- function(id) {
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
-    # Gene overview tab #####
+    # Overview tab #####
     shiny::tabPanel(
-      "Gene overview",
+      "Overview",
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
+        bs_alert(tspan("The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database.")),
         bslib::layout_columns(
           height = "100%",
           col_widths = c(2, 10),
