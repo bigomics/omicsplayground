@@ -31,7 +31,9 @@ upload_module_computepgx_server <- function(
     upload_gx_methods,
     upload_gset_methods,
     process_counter,
-    reset_upload_text_input) {
+    reset_upload_text_input,
+    ah_task,
+    probetype) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -102,6 +104,18 @@ upload_module_computepgx_server <- function(
               )
             )
           ), ## end layout_col
+          if (!is.null(probetype()) && probetype() == "running") {
+            shiny::div(
+              style = "display: flex; justify-content: center; align-items: center;",
+              shiny::tags$h4(
+                "Probe type detection running, please wait...",
+                style = "color: red;"
+              )
+            )
+          },
+          shiny::div(
+            shiny::uiOutput(ns("ah_task_result"))
+          ),
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
               icon = icon("cog", lib = "glyphicon")
@@ -286,6 +300,23 @@ upload_module_computepgx_server <- function(
         },
         ignoreNULL = FALSE
       )
+
+      # handle ah task result
+      output$ah_task_result <- shiny::renderUI({
+        probetype(playbase::detect_probetype(organism = upload_organism(), probes = rownames(countsRT()), orgdb = ah_task$result()))
+
+        if (is.null(probetype())) {
+          shiny::div(
+            style = "display: flex; justify-content: center; align-items: center; color: red;",
+            shiny::tags$h4("Probe not valid, please check organism or your counts file.")
+          )
+        } else {
+          shiny::div(
+            style = "display: flex; justify-content: center; align-items: center",
+            shiny::tags$h4("Probe type detected: ", probetype())
+          )
+        }
+      })
 
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
