@@ -16,7 +16,8 @@ DatasetReportUI <- function(id) {
 
 DatasetReportServer <- function(
     id,
-    auth) {
+    auth,
+    pgxtable) {
     moduleServer(id, function(input, output, session) {
         ns <- session$ns ## NAMESPACE
 
@@ -34,16 +35,11 @@ DatasetReportServer <- function(
                 return(NULL)
             }
 
-            info <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
+            dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
 
             body <- tagList(
                 div(
-                    shiny::selectInput(
-                        inputId = ns("available_datasets"),
-                        label = "Select the dataset:",
-                        choices = info$dataset,
-                        selected = info$dataset[1]
-                    ),
+                    shiny::h4(paste("Generate report for dataset: ", dataset)),
                     shiny::selectizeInput(
                         inputId = ns("sel_contrasts"),
                         label = "Select one or more comparisons",
@@ -64,7 +60,7 @@ DatasetReportServer <- function(
 
             output$download_pdf <- shiny::downloadHandler(
                 filename = function() {
-                    paste(input$available_datasets, paste0(".", input$output_format), sep = "")
+                    paste(dataset, paste0(".", input$output_format), sep = "")
                 },
                 content = function(file) {
                     shiny::removeModal()
@@ -75,18 +71,13 @@ DatasetReportServer <- function(
                         type = "info"
                     )
 
-                    print("Generating report")
-                    print(input$available_datasets)
-                    print(input$sel_contrasts)
-
-
                     # create a switch statement to replace pdf by poster-typst
                     output_format <- switch(input$output_format,
                         "PDF" = "poster-typst",
                         "HTML" = "html"
                     )
 
-                    pgx_path <- file.path(auth$user_dir, paste0(input$available_datasets, ".pgx", ""))
+                    pgx_path <- file.path(auth$user_dir, paste0(dataset, ".pgx", ""))
                     print(pgx_path)
 
                     system2(
@@ -128,11 +119,14 @@ DatasetReportServer <- function(
         ## observe dataset and update contrasts
         shiny::observeEvent(
             {
-                list(input$available_datasets, input$show_report_modal)
+                list(input$show_report_modal)
             },
             {
-                req(input$available_datasets)
-                pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(input$available_datasets, ".pgx")))
+                ai <- 1
+
+                req(pgxtable, !is.null(pgxtable$rows_selected()))
+                dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
+                pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(dataset, ".pgx")))
 
                 contrasts <- playbase::pgx.getContrasts(pgx)
 
