@@ -335,6 +335,9 @@ addSettings <- function(ns, session, file) {
     )
   )
 
+  # Compute PDF height using nrow
+  height <- nrow(df) * 0.5 + 2
+
   # Print PDF temp table
   df_pdf <- tempfile(fileext = ".pdf")
   final_pdf <- tempfile(fileext = ".pdf")
