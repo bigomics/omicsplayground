@@ -903,6 +903,7 @@ UploadBoard <- function(id,
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
+            wizardR::unlock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
               pgx <- recompute_pgx()
