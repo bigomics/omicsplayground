@@ -105,9 +105,13 @@ upload_module_computepgx_server <- function(
               )
             )
           ), ## end layout_col
-          if (probetype() == "running") {
+          if (!is.null(probetype()) && probetype() == "running") {
             shiny::div(
-              shiny::tags$h4("Probe type detection running, please wait...", style = "color: red;")
+              style = "display: flex; justify-content: center; align-items: center;",
+              shiny::tags$h4(
+                "Probe type detection running, please wait...",
+                style = "color: red;"
+              )
             )
           },
           shiny::div(
@@ -302,9 +306,17 @@ upload_module_computepgx_server <- function(
       output$ah_task_result <- shiny::renderUI({
         probetype(playbase::detect_probetype(organism = upload_organism(), probes = rownames(countsRT()), orgdb = ah_task$result()))
 
-        shiny::div(
-          shiny::tags$h4("Probe type detected: ", probetype())
-        )
+        if (is.null(probetype())) {
+          shiny::div(
+            style = "display: flex; justify-content: center; align-items: center; color: red;",
+            shiny::tags$h4("Probe not valid, please check organism or your counts file.")
+          )
+        } else {
+          shiny::div(
+            style = "display: flex; justify-content: center; align-items: center",
+            shiny::tags$h4("Probe type detected: ", probetype())
+          )
+        }
       })
 
       # Input name and description
