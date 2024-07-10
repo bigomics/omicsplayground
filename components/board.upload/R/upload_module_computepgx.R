@@ -69,6 +69,8 @@ upload_module_computepgx_server <- function(
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
+      probetype <- shiny::reactiveVal(NULL)
+
       output$UI <- shiny::renderUI({
         upload_annot_table_ui <- NULL
         if (auth$options$ENABLE_ANNOT) {
@@ -293,8 +295,25 @@ upload_module_computepgx_server <- function(
 
       # handle ah task result
       output$ah_task_result <- shiny::renderUI({
-        browser()
-        probe_type <- playbase::detect_probetype(organism = upload_organism(), probes = rownames(countsRT()), orgdb = ah_task$result())
+        if (probetype() == "NA" || is.null(probetype())) {
+          # write a red text message
+          shiny::div(
+            shiny::tags$h4("Auto-detecting probe type running, please wait...", style = "color: red;")
+          )
+        }
+        probetype(playbase::detect_probetype(organism = upload_organism(), probes = rownames(countsRT()), orgdb = ah_task$result()))
+
+        status <- ah_task$status()
+        if (status == "running") {
+          shiny::div(
+            shiny::tags$h4(probetype()),
+          )
+        }
+        return(
+          shiny::div(
+            shiny::tags$h4("Probe type detected: ", probetype())
+          )
+        )
       })
 
       # Input name and description
