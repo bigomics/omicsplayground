@@ -32,7 +32,8 @@ upload_module_computepgx_server <- function(
     upload_gset_methods,
     process_counter,
     reset_upload_text_input,
-    ah_task) {
+    ah_task,
+    probetype) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -68,8 +69,6 @@ upload_module_computepgx_server <- function(
       DEV.SELECTED <- c()
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
-
-      probetype <- shiny::reactiveVal("running")
 
       output$UI <- shiny::renderUI({
         upload_annot_table_ui <- NULL
