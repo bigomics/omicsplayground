@@ -341,7 +341,7 @@ addSettings <- function(ns, session, file) {
   # Print PDF temp table
   df_pdf <- tempfile(fileext = ".pdf")
   final_pdf <- tempfile(fileext = ".pdf")
-  pdf(df_pdf, height = height)
+  pdf(df_pdf, height = height, width = 10)
   gridExtra::grid.table(df, rows = NULL, col = c("Metadata", "Value"), theme = table_theme)
   dev.off()
   # Construct the pdftk command
