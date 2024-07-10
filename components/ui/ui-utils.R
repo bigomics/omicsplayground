@@ -388,7 +388,13 @@ inputLabelDictionary <- function(board_ns, inputId) {
       showlabels = "Shoe group labels",
       hm_pcaverage = "Average by gene module",
       hm_pcscale = "Scale values",
-      gx_grouped = "Group samples"
+      gx_grouped = "Group samples",
+      hm_filterXY = "Exclude X/Y genes",
+      hm_filterMitoRibo = "Exclude mito/ribo genes",
+      hmpca.colvar = "Color/label",
+      hmpca.shapevar = "Shape",
+      hm_clustmethod = "Layout",
+      hm_level = "Level"
     ),
     diffexpr = list(
       gx_contrast = "Contrast",

@@ -20,11 +20,11 @@ clustering_plot_clustpca_ui <- function(
 
   plot_opts <- shiny::tagList(
     withTooltip(
-      shiny::selectInput(parent("hmpca.colvar"), "Color/label:", choices = NULL, width = "100%"),
+      shiny::selectInput(ns("hmpca.colvar"), "Color/label:", choices = NULL, width = "100%"),
       "Set colors/labels according to a given phenotype."
     ),
     withTooltip(
-      shiny::selectInput(parent("hmpca.shapevar"), "Shape:", choices = NULL, width = "100%"),
+      shiny::selectInput(ns("hmpca.shapevar"), "Shape:", choices = NULL, width = "100%"),
       "Set shapes according to a given phenotype."
     ),
     withTooltip(
@@ -66,8 +66,6 @@ clustering_plot_clustpca_ui <- function(
 clustering_plot_clustpca_server <- function(id,
                                             pgx,
                                             selected_samples,
-                                            hmpca.colvar,
-                                            hmpca.shapevar,
                                             clustmethod,
                                             watermark = FALSE,
                                             parent) {
@@ -227,8 +225,8 @@ clustering_plot_clustpca_server <- function(id,
     create_plotlist <- function() {
       samples <- selected_samples()
       options <- input$hmpca_options
-      colvar <- hmpca.colvar()
-      shapevar <- hmpca.shapevar()
+      colvar <- input$hmpca.colvar
+      shapevar <- input$hmpca.shapevar
       clustmethod <- clustmethod()
       label <- input$pca_label
 

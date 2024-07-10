@@ -76,8 +76,8 @@ ClusteringBoard <- function(id, pgx) {
           ignore.case = TRUE
         )
       }
-      shiny::updateSelectInput(session, "hmpca.colvar", choices = var.types0, selected = sel)
-      shiny::updateSelectInput(session, "hmpca.shapevar", choices = var.types1, selected = "<none>")
+      shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.colvar"), choices = var.types0, selected = sel)
+      shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.shapevar"), choices = var.types1, selected = "<none>")
       shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
     })
 
@@ -726,8 +726,6 @@ ClusteringBoard <- function(id, pgx) {
     clustering_plot_clustpca_server("PCAplot",
       pgx = pgx,
       selected_samples = selected_samples,
-      hmpca.colvar = shiny::reactive(input$hmpca.colvar),
-      hmpca.shapevar = shiny::reactive(input$hmpca.shapevar),
       clustmethod = shiny::reactive(input$hm_clustmethod),
       watermark = WATERMARK,
       parent = ns
