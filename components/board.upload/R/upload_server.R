@@ -32,6 +32,7 @@ UploadBoard <- function(id,
     show_comparison_builder <- shiny::reactiveVal(TRUE)
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
+    probetype <- shiny::reactiveVal("running")
 
     # add task to compute annothub
 
@@ -601,7 +602,8 @@ UploadBoard <- function(id,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
-      ah_task = ah_task
+      ah_task = ah_task,
+      probetype = probetype
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -751,7 +753,8 @@ UploadBoard <- function(id,
         upload_description(),
         upload_organism(),
         upload_gset_methods(),
-        upload_gx_methods()
+        upload_gx_methods(),
+        probetype()
       ),
       {
         req(input$upload_wizard == "step_compute")
@@ -813,7 +816,7 @@ UploadBoard <- function(id,
       {
         req(input$upload_wizard == "step_counts")
         print("Checking probetypes task started")
-
+        probetype("running")
         ah_task$invoke(upload_organism())
       }
     )
