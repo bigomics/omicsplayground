@@ -106,13 +106,16 @@ upload_module_computepgx_server <- function(
             )
           ), ## end layout_col
           shiny::div(
+            shiny::uiOutput(ns("ah_task_process"))
+          ),
+          shiny::div(
+            shiny::uiOutput(ns("ah_task_result"))
+          ),
+          shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
               icon = icon("cog", lib = "glyphicon")
             ),
             style = "display: flex; justify-content: center; margin: 15px 0;"
-          ),
-          shiny::div(
-            shiny::uiOutput(ns("ah_task_result")),
           ),
           shiny::conditionalPanel(
             "input.options%2 == 1",
@@ -295,24 +298,18 @@ upload_module_computepgx_server <- function(
 
       # handle ah task result
       output$ah_task_result <- shiny::renderUI({
-        if (probetype() == "NA" || is.null(probetype())) {
-          # write a red text message
-          shiny::div(
-            shiny::tags$h4("Auto-detecting probe type running, please wait...", style = "color: red;")
-          )
-        }
         probetype(playbase::detect_probetype(organism = upload_organism(), probes = rownames(countsRT()), orgdb = ah_task$result()))
 
-        status <- ah_task$status()
-        if (status == "running") {
-          shiny::div(
-            shiny::tags$h4(probetype()),
-          )
-        }
-        return(
-          shiny::div(
-            shiny::tags$h4("Probe type detected: ", probetype())
-          )
+        shiny::div(
+          shiny::tags$h4("Probe type detected: ", probetype())
+        )
+      })
+
+      # handle ah task process
+      output$ah_task_process <- shiny::renderUI({
+        print("Auto-detecting probe type running, please wait...")
+        shiny::div(
+          shiny::tags$h4("Auto-detecting probe type running, please wait...", style = "color: red;")
         )
       })
 
