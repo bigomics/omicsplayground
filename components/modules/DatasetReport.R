@@ -54,7 +54,7 @@ DatasetReportServer <- function(
                     shiny::selectizeInput(
                         inputId = ns("output_format"),
                         label = "Output format:",
-                        choices = c("PDF" = "poster-typst", "HTML" = "html"),
+                        choices = c("PDF", "HTML"),
                         selected = "PDF",
                         multiple = FALSE
                     ),
@@ -79,6 +79,13 @@ DatasetReportServer <- function(
                     print(input$available_datasets)
                     print(input$sel_contrasts)
 
+
+                    # create a switch statement to replace pdf by poster-typst
+                    output_format <- switch(input$output_format,
+                        "PDF" = "poster-typst",
+                        "HTML" = "html"
+                    )
+
                     pgx_path <- file.path(auth$user_dir, paste0(input$available_datasets, ".pgx", ""))
                     print(pgx_path)
 
@@ -89,7 +96,7 @@ DatasetReportServer <- function(
                             file.path(quarto_file_path, "visreport.qmd"),
                             "--output",
                             "--to",
-                            tolower(input$output_format),
+                            tolower(output_format),
                             "-P",
                             paste("pgxdir:", pgx_path, sep = ""),
                             "-P",
