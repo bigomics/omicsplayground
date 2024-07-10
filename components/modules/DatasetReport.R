@@ -123,8 +123,8 @@ DatasetReportServer <- function(
                     ncontrasts <- length(input$sel_contrasts)
                     for(i in 1:ncontrasts) {
                       ct <- input$sel_contrasts[i]
-                      progress$inc(message = paste0("Creating summary for comparison ",i,"/",ncontrasts),
-                                   value = 1/(ncontrasts+1))                      
+                      progress$inc(1/(ncontrasts+1),
+                                   detail = paste0("Creating summary for comparison ",i,"/",ncontrasts))
 
                       dbg("pgx_path = ",pgx_path)
                       dbg("pgx_file = ",pgx_file)
@@ -150,7 +150,7 @@ DatasetReportServer <- function(
                     }
 
                     ## finally merge all pages
-                    progress$inc(message = "Merging pages",value = 1/(ncontrasts+1))                      
+                    progress$inc(1/(ncontrasts+1), detail = "Merging pages")                      
                     if(render_format == "poster-typst") {
                       dbg("[DatasetReportServer:download_pdf] merging PDF pages...")
                       system2(
