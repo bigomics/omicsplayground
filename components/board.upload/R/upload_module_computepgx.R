@@ -69,7 +69,7 @@ upload_module_computepgx_server <- function(
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
-      probetype <- shiny::reactiveVal(NULL)
+      probetype <- shiny::reactiveVal("running")
 
       output$UI <- shiny::renderUI({
         upload_annot_table_ui <- NULL
@@ -105,9 +105,11 @@ upload_module_computepgx_server <- function(
               )
             )
           ), ## end layout_col
-          shiny::div(
-            shiny::uiOutput(ns("ah_task_process"))
-          ),
+          if (probetype() == "running") {
+            shiny::div(
+              shiny::tags$h4("Probe type detection running, please wait...", style = "color: red;")
+            )
+          },
           shiny::div(
             shiny::uiOutput(ns("ah_task_result"))
           ),
@@ -302,14 +304,6 @@ upload_module_computepgx_server <- function(
 
         shiny::div(
           shiny::tags$h4("Probe type detected: ", probetype())
-        )
-      })
-
-      # handle ah task process
-      output$ah_task_process <- shiny::renderUI({
-        print("Auto-detecting probe type running, please wait...")
-        shiny::div(
-          shiny::tags$h4("Auto-detecting probe type running, please wait...", style = "color: red;")
         )
       })
 
