@@ -261,6 +261,7 @@ addSettings <- function(ns, session, file) {
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
     if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
+    val <- paste(val, collapse = ", ")
     return(val)
   }) |> unlist()
   # Merge values and input names (without namespacing)
@@ -277,6 +278,8 @@ addSettings <- function(ns, session, file) {
   plot_settings_values <- lapply(plot_settings, function(x){
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
+    if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
+    val <- paste(val, collapse = ", ")
     return(val)
   }) |> unlist()
   # Merge values and input names (without namespacing)
