@@ -87,8 +87,19 @@ DatasetReportServer <- function(
 
                     print("Generating report...")
 
+<<<<<<< HEAD
                     pgx_file <- paste0(input$sel_dataset, ".pgx")
                     pgx_path <- auth$user_dir
+=======
+
+                    # create a switch statement to replace pdf by poster-typst
+                    output_format <- switch(input$output_format,
+                        "PDF" = "poster-typst",
+                        "HTML" = "html"
+                    )
+
+                    pgx_path <- file.path(auth$user_dir, paste0(input$available_datasets, ".pgx", ""))
+>>>>>>> 124fb3d48d644e7e414894a234aeb58d4e4de574
                     print(pgx_path)
 
                     render_format <- "poster-typst"
@@ -129,6 +140,7 @@ DatasetReportServer <- function(
                       system2(
                         "quarto",
                         args = c(
+<<<<<<< HEAD
                           "render",
                           file.path(quarto_file_path, "visreport-comparison.qmd"),
                           "--output -",
@@ -137,6 +149,17 @@ DatasetReportServer <- function(
                           "-P", paste0("comparison:", ct),
                           "-P", paste0("dataset:", pgx_file),
                           "-P", paste0("user:", auth$email)
+=======
+                            "render",
+                            file.path(quarto_file_path, "visreport.qmd"),
+                            "--output",
+                            "--to",
+                            tolower(output_format),
+                            "-P",
+                            paste("pgxdir:", pgx_path, sep = ""),
+                            "-P",
+                            paste("comparison:", input$sel_contrasts[1], sep = "")
+>>>>>>> 124fb3d48d644e7e414894a234aeb58d4e4de574
                         ),
                         stdout = tmp
                       )
