@@ -16,7 +16,8 @@ DatasetReportUI <- function(id) {
 
 DatasetReportServer <- function(
     id,
-    auth) {
+    auth,
+    pgxtable) {
     moduleServer(id, function(input, output, session) {
         ns <- session$ns ## NAMESPACE
 
@@ -26,7 +27,7 @@ DatasetReportServer <- function(
         }
 
         if (is.null(quarto_file_path) || quarto_file_path == "") {
-            warning("ERROR: Please set QUARTO_FILE_PATH to quarto file location.")
+            warning("[DatasetReportServer] ERROR: Please set QUARTO_FILE_PATH to quarto file location.")
             return(NULL)
         }
 
@@ -36,16 +37,12 @@ DatasetReportServer <- function(
                 return(NULL)
             }
 
-            info <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
+            dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
+            dataset <- sub("[.]pgx$","",dataset)
 
             body <- tagList(
                 div(
-                    shiny::selectInput(
-                        inputId = ns("sel_dataset"),
-                        label = "Select the dataset:",
-                        choices = info$dataset,
-                        selected = info$dataset[1]
-                    ),
+                    shiny::h4(paste("Generate report for dataset: ", dataset)),
                     shiny::selectizeInput(
                         inputId = ns("sel_contrasts"),
                         label = "Select one or more comparisons",
@@ -60,7 +57,7 @@ DatasetReportServer <- function(
                           "Visual summary (PDF)" = "pdf",
                           "HTML report" = "html"
                         ),
-                        selected = 1,
+                        selected = "PDF",
                         multiple = FALSE
                     ),
                     shiny::downloadButton(ns("download_pdf"), "Submit")
@@ -69,41 +66,41 @@ DatasetReportServer <- function(
 
             output$download_pdf <- shiny::downloadHandler(
                 filename = function() {
-                  datatset <- sub("[.]pgx$","",input$sel_dataset)
-                  ext <- ".pdf"
-                  if(input$output_format %in% c("html")) {
-                    ext <- ".html"
-                  }
-                  paste0(input$sel_dataset,"-",input$output_format,ext)
+                    paste0(dataset, "-report.", input$output_format)
                 },
                 content = function(file) {
                     shiny::removeModal()
 
                     shinyalert::shinyalert(
                         title = "Your report is being created!",
-                        text = "Please wait...",
+                        text = "Please wait. Your download will start shortly.",
                         type = "info"
                     )
 
-                    print("Generating report...")
-
-                    pgx_file <- paste0(input$sel_dataset, ".pgx")
+                    
                     pgx_path <- auth$user_dir
-
-                    # create a switch statement to replace pdf by poster-typst
+                    sel_dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
+                    sel_dataset <- sub("[.]pgx$","",sel_dataset)
+                    pgx_file <- paste0(sel_dataset, ".pgx")
+                    
+                    dbg("pgx_path = ",pgx_path)
+                    dbg("pgx_file = ",pgx_file)
+                    dbg("sel_dataset = ",sel_dataset)
+                    dbg("names(auth) = ",names(auth))
+                    dbg("auth$email = ",auth$email)
+                    dbg("auth$username = ",auth$username)
+                    
+                    ## create a switch statement to replace pdf by poster-typst
                     render_format <- switch(input$output_format,
                         "pdf" = "poster-typst",
                         "html" = "html"
                     )
 
-                    pgx_path <- file.path(auth$user_dir, paste0(input$available_datasets, ".pgx", ""))
-                    print(pgx_path)
-
                     ## Create a Progress object
                     progress <- shiny::Progress$new()
                     on.exit(progress$close())
-                    progress$set(message = "Creating dataset summary", value = 0)
-                                        
+                    
+                    progress$set(message = "Creating dataset summary...", value = 0)
                     all_ct <- paste(input$sel_contrasts, collapse=",")                    
                     files <- c()
                     tmp <- tempfile(fileext=".pdf")  ## ??                   
@@ -126,9 +123,14 @@ DatasetReportServer <- function(
                     ncontrasts <- length(input$sel_contrasts)
                     for(i in 1:ncontrasts) {
                       ct <- input$sel_contrasts[i]
-                      progress$set(message = paste0("Creating summary for comparison ",
-                                                    i,"/",ncontrasts),
+                      progress$set(message = paste0("Creating summary for comparison ",i,"/",ncontrasts),
                                    value = 1/(ncontrasts+1))                      
+
+                      dbg("pgx_path = ",pgx_path)
+                      dbg("pgx_file = ",pgx_file)
+                      dbg("ct = ",ct)
+                      dbg("auth$email = ",auth$email)
+
                       tmp <- tempfile(fileext=".pdf")
                       system2(
                         "quarto",
@@ -144,9 +146,10 @@ DatasetReportServer <- function(
                         ),
                         stdout = tmp
                       )
-                      files <- c(files, tmp)
+                      files <- c(files, tmp)                      
                     }
 
+                    ## finally merge all pages
                     progress$set(message = "Merging pages",value = 1/(ncontrasts+1))                      
                     if(render_format == "poster-typst") {
                       dbg("[DatasetReportServer:download_pdf] merging PDF pages...")
@@ -163,17 +166,19 @@ DatasetReportServer <- function(
                       )
                       stdout = file
                     }                    
-                    
+
                     dbg("[DatasetReportServer:download_pdf] done!")
                     shinyalert::shinyalert(
                         title = "Your report is ready!",
                         text = "Your report has been downloaded.",
                         type = "info",
                         immediate = TRUE
-                    )
-
+                    )                    
                     
-                }
+                } ## end-of-content
+
+
+                
             )
 
             modal <- shiny::modalDialog(
@@ -195,22 +200,27 @@ DatasetReportServer <- function(
         })
 
         ## observe dataset and update contrasts
-        shiny::observeEvent({
-            list(input$sel_dataset, input$show_report_modal)
-        }, {
-            req(input$sel_dataset)
-            pgx_file <- file.path(auth$user_dir, paste0(input$sel_dataset, ".pgx"))
-            pgx <- playbase::pgx.load(pgx_file)
-            
-            contrasts <- playbase::pgx.getContrasts(pgx)
-            
-            updateSelectizeInput(
-                session,
-              "sel_contrasts",
-              choices = contrasts,
-              selected = head(contrasts,6)
-            )
-        }) # end of observe dataset and update contrasts
+        shiny::observeEvent(
+            {
+                list(input$show_report_modal)
+            },
+            {
+                ai <- 1
+
+                req(pgxtable, !is.null(pgxtable$rows_selected()))
+                dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
+                pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(dataset, ".pgx")))
+
+                contrasts <- playbase::pgx.getContrasts(pgx)
+
+                updateSelectizeInput(
+                    session,
+                    "sel_contrasts",
+                    choices = contrasts,
+                    selected = head(contrasts,6)
+                )
+            }
+        ) # end of observe dataset and update contrasts
 
         # observe dataset and
     }) ## end of moduleServer
