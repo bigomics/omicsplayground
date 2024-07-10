@@ -260,7 +260,7 @@ addSettings <- function(ns, session, file) {
   board_settings_values <- lapply(board_settings, function(x){
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
-    if (nchar(val) > 30) val <- paste0(substr(val, 1, 30), "...")
+    if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
     return(val)
   }) |> unlist()
   # Merge values and input names (without namespacing)
