@@ -363,7 +363,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
       clustsamples = "cluster samples",
       vars = "show variables"
     ),
-    clustering = list(
+    clustersamples = list(
       selected_phenotypes = "Show phenotypes",
       hm_splitby = "Split samples by",
       hm_splitvar = "Split samples by (phenotype/gene)",
@@ -390,7 +390,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
       hm_pcscale = "Scale values",
       gx_grouped = "Group samples"
     ),
-    expression = list(
+    diffexpr = list(
       gx_contrast = "Contrast",
       gx_features = "Gene family",
       gx_fdr = "FDR",
