@@ -54,6 +54,7 @@ DatasetReportServer <- function(
                     shiny::selectizeInput(
                         inputId = ns("output_format"),
                         label = "Output format:",
+                        choices = c("PDF" = "poster-typst", "HTML" = "html"),
                         selected = "PDF",
                         multiple = FALSE
                     ),
