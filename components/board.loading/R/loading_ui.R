@@ -71,6 +71,7 @@ LoadingUI <- function(id) {
           ns("tsne"),
           title = "Signature t-SNE",
           info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+          info.methods = "This are the methods [1] explained with references [2].",
           info.references = list(
             list(
               "Escriba et al.",

@@ -6,7 +6,9 @@
 
 PlotModuleUI <- function(id,
                          info.text = "Figure",
+                         info.methods = NULL,
                          info.references = NULL,
+                         info.extra_link = NULL,
                          title = "",
                          options = NULL,
                          label = "",
@@ -229,7 +231,18 @@ PlotModuleUI <- function(id,
     },
     header_buttons,
     DropdownMenu(
-      shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML("<b>Plot info</b><br>"),
+        shiny::HTML(as.character(info.text))
+      ),
+      if (!is.null(info.methods)) {
+        shiny::div(
+          class = "plotmodule-info",
+          shiny::HTML("<b>Methods</b><br>"),
+          shiny::HTML(info.methods)
+        )
+      } else {NULL},
       if (!is.null(info.references)) {
         html_code <- ""
         for (i in seq_along(info.references)) {
