@@ -293,7 +293,8 @@ upload_module_computepgx_server <- function(
 
       # handle ah task result
       output$ah_task_result <- shiny::renderUI({
-        detect_probetype(ah = ah_task$result())
+        browser()
+        probe_type <- playbase::detect_probetype(organism = upload_organism(), probes = rownames(countsRT()), orgdb = ah_task$result())
       })
 
       # Input name and description
