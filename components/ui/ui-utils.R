@@ -336,12 +336,12 @@ addSettings <- function(ns, session, file) {
   )
 
   # Compute PDF height using nrow
-  height <- nrow(df) * 0.6 + 2
+  height <- nrow(df) * 0.5 + 2
 
   # Print PDF temp table
   df_pdf <- tempfile(fileext = ".pdf")
   final_pdf <- tempfile(fileext = ".pdf")
-  pdf(df_pdf)
+  pdf(df_pdf, height = height)
   gridExtra::grid.table(df, rows = NULL, col = c("Metadata", "Value"), theme = table_theme)
   dev.off()
   # Construct the pdftk command
