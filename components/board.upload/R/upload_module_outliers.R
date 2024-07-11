@@ -830,11 +830,30 @@ upload_module_outliers_server <- function(
         add.watermark = FALSE
       )
 
+      cX <- reactive({
+          shiny::req(dim(correctedX()$X))
+          cX <- correctedX()$X
+          dbg("[outliers_server:fCHECK] dim.cX = ", dim(cX))
+          cX
+      })
+
+      impX <- reactive({
+          shiny::req(dim(correctedX()$X))
+          if(length(correctedX()) == 2) {
+              impX <- correctedX()$impX1
+              dbg("[outliers_server:fCHECK] dim.impX = ", dim(impX))
+          } else {
+              impX <- NULL
+              dbg("[outliers_server:fCHECK] dim.impX = NULL")
+          }
+          impX
+      })
+          
       return(
-        list(
-          counts = correctedCounts,
-          X = correctedX,
-          results = results_correction_methods
+          list(counts = correctedCounts,
+               X = cX,
+               ## impX = impX,
+               results = results_correction_methods
         )
       ) ## pointing to reactive
     } ## end-of-server
