@@ -19,8 +19,6 @@ visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom 
   tmp.html <- paste0(tempfile(), "-visnet.html")
   tmp.png <- paste0(tempfile(), "-webshot.png")
   visNetwork::visSave(vis2, file = tmp.html)
-  dbg("[visPrint] width = ", width)
-  dbg("[visPrint] height = ", height)
   webshot2::webshot(
     url = tmp.html,
     file = tmp.png,
@@ -31,7 +29,6 @@ visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom 
     vwidth = width,
     vheight = height
   )
-  dbg("[visPrint] tmp.png = ", tmp.png)
   if (is.pdf) {
     cmd <- paste("convert", tmp.png, "-density 600", file)
     system(cmd)
