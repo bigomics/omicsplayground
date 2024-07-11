@@ -34,7 +34,7 @@ ClusteringBoard <- function(id, pgx) {
       ),
       "PCA/tSNE" = list(
         enable = NULL,
-        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo")
+        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale")
       ),
       "Parallel" = list(
         enable = NULL,
