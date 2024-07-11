@@ -14,6 +14,9 @@ clustering_plot_clustpca_ui <- function(
     width,
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption,
     parent) {
   ns <- shiny::NS(id)
@@ -55,6 +58,9 @@ clustering_plot_clustpca_ui <- function(
     label = label,
     plotlib = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),

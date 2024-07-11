@@ -216,9 +216,9 @@ ClusteringBoard <- function(id, pgx) {
         } else if (ft == "<contrast>") {
           ct <- input$hm_contrast
           shiny::req(ct)
-          shiny::req(splitmap$hm_ntop())
+          shiny::req(input$hm_ntop)
           fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
-          n1 <- floor(as.integer(splitmap$hm_ntop()) / 2)
+          n1 <- floor(as.integer(input$hm_ntop) / 2)
           gg <- unique(c(head(fc, n1), tail(fc, n1)))
           if (input$hm_splitby == "gene") {
             if (!(input$hm_splitvar %in% gg)) {
@@ -327,7 +327,7 @@ ClusteringBoard <- function(id, pgx) {
       input$hm_contrast,
       pgx$X,
       ## input$hm_group,
-      splitmap$hm_ntop()
+      input$hm_ntop
     )
 
 
@@ -353,7 +353,7 @@ ClusteringBoard <- function(id, pgx) {
       }
 
       nmax <- 4000
-      nmax <- as.integer(splitmap$hm_ntop())
+      nmax <- as.integer(input$hm_ntop)
       idx <- NULL
       splitvar <- "none"
       splitvar <- input$hm_splitvar
@@ -416,7 +416,7 @@ ClusteringBoard <- function(id, pgx) {
       }
 
       ## Any BMC scaling?? ##########
-      if (do.split && splitmap$hm_scale() == "BMC") {
+      if (do.split && input$hm_scale == "BMC") {
         for (g in unique(grp)) {
           jj <- which(grp == g)
           zx1 <- zx[, jj, drop = FALSE]
@@ -427,7 +427,7 @@ ClusteringBoard <- function(id, pgx) {
       ## Create reduced matrix according to topmode #######
       topmode <- "marker"
       topmode <- "sd"
-      topmode <- splitmap$hm_topmode()
+      topmode <- input$hm_topmode
       if (topmode == "marker" && length(table(grp)) <= 1) {
         topmode <- "sd"
       }
@@ -447,7 +447,7 @@ ClusteringBoard <- function(id, pgx) {
         NPCA <- 5
         svdres <- irlba::irlba(zx - rowMeans(zx), nv = NPCA)
         ntop <- 12
-        ntop <- as.integer(splitmap$hm_ntop()) / NPCA
+        ntop <- as.integer(input$hm_ntop) / NPCA
         gg <- rownames(zx)
         sv.top <- lapply(1:NPCA, function(i) gg[head(order(-abs(svdres$u[, i])), ntop)])
         gg.top <- unlist(sv.top)
@@ -473,7 +473,7 @@ ClusteringBoard <- function(id, pgx) {
         }
         gg <- rownames(zx)
         ntop <- 12
-        ntop <- ceiling(as.integer(splitmap$hm_ntop()) / ncol(grp.dx))
+        ntop <- ceiling(as.integer(input$hm_ntop) / ncol(grp.dx))
         grp.top <- lapply(1:nc, function(i) gg[head(order(-grp.dx[, i]), ntop)])
         idx <- unlist(mapply(rep, 1:nc, sapply(grp.top, length)))
         idx <- paste0("M", idx)
@@ -495,7 +495,7 @@ ClusteringBoard <- function(id, pgx) {
       }
 
       CLUSTK <- 4 ## number of gene groups (NEED RETHINK)
-      CLUSTK <- as.integer(splitmap$hm_clustk())
+      CLUSTK <- as.integer(input$hm_clustk)
       if (is.null(idx)) {
         D <- as.dist(1 - cor(t(zx), use = "pairwise"))
         system.time(hc <- fastcluster::hclust(D, method = "ward.D2"))
@@ -663,7 +663,7 @@ ClusteringBoard <- function(id, pgx) {
 
       ## ----------- for each gene cluster compute average correlation
       hm_topmode <- "sd"
-      hm_topmode <- splitmap$hm_topmode()
+      hm_topmode <- input$hm_topmode
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
       colnames(rho) <- idxx
@@ -714,12 +714,16 @@ ClusteringBoard <- function(id, pgx) {
     })
 
     # plots ##########
-    splitmap <- clustering_plot_splitmap_server(
+    clustering_plot_splitmap_server(
       id = "splitmap",
       pgx = pgx,
       getTopMatrix = getTopMatrix,
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
+      hm_ntop = shiny::reactive(input$hm_ntop),
+      hm_scale = shiny::reactive(input$hm_scale),
+      hm_topmode = shiny::reactive(input$hm_topmode),
+      hm_clustk = shiny::reactive(input$hm_clustk),
       watermark = WATERMARK
     )
 

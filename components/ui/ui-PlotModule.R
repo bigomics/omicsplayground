@@ -251,7 +251,7 @@ PlotModuleUI <- function(id,
           link <- ref[[2]]
 
           # Create the formatted HTML string
-          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "'>", link, "</a><br>")
+          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
 
           # Append the formatted string to the HTML code
           html_code <- paste0(html_code, formatted_ref)
@@ -260,6 +260,18 @@ PlotModuleUI <- function(id,
           class = "plotmodule-info",
           shiny::HTML("<b>References</b><br>"),
           shiny::HTML(html_code)
+        )
+      } else {NULL},
+      if (!is.null(info.extra_link)) {
+        shiny::div(
+          class = "plotmodule-info",
+          shiny::HTML(
+            paste0(
+              "<b><a href='",
+              info.extra_link,
+              "' target='_blank'>Further information...</a></b>"
+            )
+          )
         )
       } else {NULL},
       shiny::HTML("<br>"),

@@ -6,10 +6,33 @@
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
+  topmodes <- c("sd", "pca", "marker")
+
   settings_items1 <- tagList(
     withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:", choices = NULL, multiple = TRUE),
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
+    ),
+    hr(),
+    withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
+      "Specify the criteria for selecting top features to be shown in the heatmap.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::selectInput(ns("hm_ntop"), "Top N:", c(50, 150, 500), selected = 50),
+      "Select the number of top features in the heatmap.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(shiny::selectInput(ns("hm_clustk"), "K modules:", 1:6, selected = 4),
+      "Select the number of gene clusters.",
+      placement = "right", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::radioButtons(
+        ns("hm_scale"), "Scale:",
+        choices = c("relative", "absolute", "BMC"), inline = TRUE
+      ),
+      "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
+      placement = "right", options = list(container = "body")
     ),
     hr(),
     withTooltip(
@@ -150,7 +173,23 @@ ClusteringUI <- function(id) {
               label = "a",
               title = "Clustered Heatmap",
               caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
-              info.text = "In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. Gene clusters are also functionally annotated in the 'Annotate clusters' panel on the right. Hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. Under the plot settings, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: SD - features with the highest standard deviation across all the samples,marker - features that are overexpressed in each phenotype class compared to the rest, or by PCA - by principal components. Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.",
+              info.text = "Using the {cexCol} and {cexRow} options it is possible to adjust the font size for the column and row labels. Also, it is possible to select wether to display or not the legend. Gene clusters are functionally annotated in the 'Annotate clusters' panel on the right.",
+              info.methods = "The heatmap is generated using the ComplexHeatmap R/Bioconductor package [1] on scaled log-expression values (z-score) using euclidean distance and Ward linkage using the fastcluster R package [2]. The available methods to select the top features are sd (standard deviation) - features with the highest standard deviation across all the samples, marker - features that are overexpressed in each phenotype class compared to the rest, or by PCA - principal component analysis (performed using the irlba R package [3]). In the heatmap, red corresponds to overexpression, blue to underexpression of the gene.",
+              info.references = list(
+                list(
+                  "Gu Z (2016). “Complex heatmaps reveal patterns and correlations in multidimensional genomic data.” Bioinformatics.",
+                  "https://doi.org/10.1093/bioinformatics/btw313"
+                ),
+                list(
+                  "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                  "https://doi.org/10.18637/jss.v053.i09"
+                ),
+                list(
+                  "Baglama J (2022). “irlba: Fast Truncated Singular Value Decomposition and Principal Components Analysis for Large Dense and Sparse Matrices”.",
+                  "https://doi.org/10.32614/CRAN.package.irlba"
+                )
+              ),
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
@@ -159,7 +198,27 @@ ClusteringUI <- function(id) {
               clustering_plot_clusterannot_ui(
                 id = ns("plots_clustannot"),
                 title = "Functional annotation of gene modules",
-                info.text = "For each cluster, functional annotation terms are ranked by correlating gene sets from more than 42 published reference databases, including well-known databases such as GO, KEGG and Gene Ontology. In the plot settings, users can specify the level and reference set to be used under the Reference level and Reference set settings, respectively.",
+                info.text = "By setting the {Reference level} and {Reference set} it can be specified the level and reference set to be used. The gene clusters can be visualized in the Heatmap on the left.",
+                info.methods = "The clusters are computed using fastcluster R package [1]. For each cluster, functional annotation terms are ranked by correlating gene sets from different public databases including: MSigDB [2], Gene Ontology [3], and Kyoto Encyclopedia of Genes and Genomes (KEGG) [4].",
+                info.references = list(
+                  list(
+                    "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                    "https://doi.org/10.18637/jss.v053.i09"
+                  ),
+                  list(
+                    "Liberzon (2011). Molecular signatures database (MSigDB) 3.0. Bioinformatics, 27(12), 1739-1740.",
+                    "https://doi.org/10.1093/bioinformatics/btr260"
+                  ),
+                  list(
+                    "Ashburner (2000). Gene ontology: tool for the unification of biology. Nature genetics, 25(1), 25-29.",
+                    "https://doi.org/10.1038/75556"
+                  ),
+                  list(
+                    "Kanehisa (2000). KEGG: kyoto encyclopedia of genes and genomes. Nucleic acids research, 28(1), 27-30.",
+                    "https://doi.org/10.1093/nar/28.1.27"
+                  )
+                ),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
                 caption = "Top ranked annotation features (by correlation) for each gene cluster as defined in the heatmap.",
                 label = "a",
                 height = c("60%", TABLE_HEIGHT_MODAL),
@@ -168,7 +227,7 @@ ClusteringUI <- function(id) {
               clustering_table_clustannot_ui(
                 ns("tables_clustannot"),
                 title = "Annotation scores",
-                info.text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings.",
+                info.text = "Mean correlation values of features in the clusters with respect to the annotation references database. The information displayed corresponds to the functional annotation of gene modules plot.",
                 caption = "Average correlation values of annotation terms, for each gene cluster.",
                 height = c("40%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -189,7 +248,23 @@ ClusteringUI <- function(id) {
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
               title = "Dimensionality reduction",
-              info.text = "The PCA/tSNE panel visualizes unsupervised clustering obtained by the principal components analysis (PCA), t-distributed stochastic embedding (tSNE) or the Uniform Manifold Approximation and Projection (UMAP) algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. Users can select from three different clustering approaches (default=t-SNE).",
+              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions.",
+              info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other.",
+              info.references = list(
+                list(
+                  "Krijthe J (2023) Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation.",
+                  "https://doi.org/10.32614/CRAN.package.Rtsne"
+                ),
+                list(
+                  "Melville J (2024) uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.",
+                  "https://doi.org/10.32614/CRAN.package.uwot"
+                ),
+                list(
+                  "Baglama J (2022). “irlba: Fast Truncated Singular Value Decomposition and Principal Components Analysis for Large Dense and Sparse Matrices”.",
+                  "https://doi.org/10.32614/CRAN.package.irlba"
+                )
+              ),
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Clustering plot of the dataset samples.",
               label = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -199,7 +274,7 @@ ClusteringUI <- function(id) {
             clustering_plot_phenoplot_ui(
               id = ns("clust_phenoplot"),
               title = "Phenotype distribution",
-              info.text = "This figure visualizes the distribution of the available phenotype data. The plots show the distribution of the phenotypes superposed on the t-SNE clustering. You can choose to put the group labels in the figure or as separate legend in the plot settings",
+              info.text = "Visualization of the dimensionality reduction plot coloured by the available phenotypes. The group labels can be toggled on the options.",
               caption = "t-SNE clustering plot of phenotype distribution for the current samples.",
               label = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -221,7 +296,15 @@ ClusteringUI <- function(id) {
               clustering_plot_parcoord_ui(
                 id = ns("parcoord"),
                 title = "Parallel coordinates",
-                info.text = "The Parallel Coordinates panel displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. The plot is interactive.",
+                info.text = "Control the scale of the values from the options. Also, there is the possibility of averaging by gene module. Arrange the experimental conditions by click&dragging their names on the x-axis. Highlight genes by click and dragging on any y-axis.",
+                info.methods = "Expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustering (performed using the fastcluster R package [1]).",
+                info.references = list(
+                  list(
+                    "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                    "https://doi.org/10.18637/jss.v053.i09"
+                  )
+                ),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
                 caption = "The interactive Parallel Coordinates plot displays the expression levels of selected genes across all conditions.",
                 label = "a",
                 width = c("100%", "100%"),
@@ -230,7 +313,7 @@ ClusteringUI <- function(id) {
               clustering_table_parcoord_ui(
                 id = ns("parcoord"),
                 title = "Selected genes",
-                info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+                info.text = "Expression levels of selected genes across all conditions in the analysis. The selection of genes is performed on the Parallel coordinates plot by click & dragging on any y-axis. If not selection is performed on the plot, all the genes are displayed.",
                 caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
                 label = "a",
                 width = c("100%", "100%"),
@@ -240,7 +323,15 @@ ClusteringUI <- function(id) {
             clustering_plot_genemodule_ui(
               id = ns("genemodule"),
               title = "Module expression",
-              info.text = "",
+              info.text = "Series of histograms displaying the overall expression of each module by individual sample.",
+              info.methods = "The modules are computed using the fastcluster R package [1].",
+              info.references = list(
+                list(
+                    "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                    "https://doi.org/10.18637/jss.v053.i09"
+                  )
+              ),
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "",
               width = c("100%", "100%"),
               height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL)

@@ -19,37 +19,14 @@ clustering_plot_splitmap_ui <- function(
     title,
     caption,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     height,
     width) {
   ns <- shiny::NS(id)
 
-  topmodes <- c("sd", "pca", "marker")
-
   splitmap_opts <- shiny::tagList(
-    shiny::fillRow(
-      height = 50,
-      withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
-        "Specify the criteria for selecting top features to be shown in the heatmap.",
-        placement = "right", options = list(container = "body")
-      ),
-      withTooltip(shiny::selectInput(ns("hm_ntop"), "Top N:", c(50, 150, 500), selected = 50),
-        "Select the number of top features in the heatmap.",
-        placement = "right", options = list(container = "body")
-      ),
-      withTooltip(shiny::selectInput(ns("hm_clustk"), "K modules:", 1:6, selected = 4),
-        "Select the number of gene clusters.",
-        placement = "right", options = list(container = "body")
-      )
-    ),
-    br(),
-    withTooltip(
-      shiny::radioButtons(
-        ns("hm_scale"), "Scale:",
-        choices = c("relative", "absolute", "BMC"), inline = TRUE
-      ),
-      "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
-      placement = "right", options = list(container = "body")
-    ),
     withTooltip(
       shiny::checkboxInput(
         ns("hm_legend"), "show legend",
@@ -77,6 +54,9 @@ clustering_plot_splitmap_ui <- function(
     label = label,
     plotlib = c("plotly", "base"),
     info.text = info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption = caption,
     options = splitmap_opts,
     download.fmt = c("png", "pdf", "csv"),
@@ -102,6 +82,10 @@ clustering_plot_splitmap_server <- function(id,
                                             getTopMatrix,
                                             selected_phenotypes,
                                             hm_level,
+                                            hm_ntop,
+                                            hm_scale,
+                                            hm_topmode,
+                                            hm_clustk,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     fullH <- 850
@@ -154,8 +138,8 @@ clustering_plot_splitmap_server <- function(id,
       cex1 <- ifelse(ncol(zx) > 200, 0, cex1)
 
       scale.mode <- "none"
-      if (input$hm_scale == "relative") scale.mode <- "row.center"
-      if (input$hm_scale == "BMC") scale.mode <- "row.bmc"
+      if (hm_scale() == "relative") scale.mode <- "row.center"
+      if (hm_scale() == "BMC") scale.mode <- "row.bmc"
       scale.mode
 
       ## split genes dimension in 5 groups
@@ -224,8 +208,8 @@ clustering_plot_splitmap_server <- function(id,
 
       ## -------------- variable to split samples
       scale <- "none"
-      if (input$hm_scale == "relative") scale <- "row.center"
-      if (input$hm_scale == "BMC") scale <- "row.bmc"
+      if (hm_scale() == "relative") scale <- "row.center"
+      if (hm_scale() == "BMC") scale <- "row.bmc"
 
       plt <- NULL
 
@@ -318,11 +302,11 @@ clustering_plot_splitmap_server <- function(id,
       )
     })
 
-    return(list(
-      hm_ntop = shiny::reactive(input$hm_ntop),
-      hm_scale = shiny::reactive(input$hm_scale),
-      hm_topmode = shiny::reactive(input$hm_topmode),
-      hm_clustk = shiny::reactive(input$hm_clustk)
-    ))
+    # return(list(
+    #   hm_ntop = shiny::reactive(input$hm_ntop),
+    #   hm_scale = shiny::reactive(input$hm_scale),
+    #   hm_topmode = shiny::reactive(input$hm_topmode),
+    #   hm_clustk = shiny::reactive(input$hm_clustk)
+    # ))
   }) ## end of moduleServer
 }
