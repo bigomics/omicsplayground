@@ -13,7 +13,7 @@ ClusteringInputs <- function(id) {
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
-    hr(),
+    hr(id = ns("pheno_bar")),
     withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
       "Specify the criteria for selecting top features to be shown in the heatmap.",
       placement = "right", options = list(container = "body")
@@ -34,7 +34,7 @@ ClusteringInputs <- function(id) {
       "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
       placement = "right", options = list(container = "body")
     ),
-    hr(),
+    hr(id = ns("cluster_bar")),
     withTooltip(
       shiny::radioButtons(
         ns("hm_splitby"), "Split samples by:",
@@ -56,7 +56,7 @@ ClusteringInputs <- function(id) {
         "Average expression values by group."
       )
     ),
-    hr(),
+    hr(id = ns("spliby_bar")),
     withTooltip(
       shiny::selectInput(ns("hm_samplefilter"), "Filter samples:",
         choices = NULL, multiple = TRUE
