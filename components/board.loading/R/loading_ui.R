@@ -56,6 +56,7 @@ LoadingUI <- function(id) {
           class = "btn btn-info",
           width = NULL
         ),
+        DatasetReportUI(id = ns("generate_report"))
       ),
       bslib::layout_columns(
         col_widths = c(7, 5),
