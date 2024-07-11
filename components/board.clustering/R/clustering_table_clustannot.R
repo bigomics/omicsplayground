@@ -64,11 +64,11 @@ clustering_table_clustannot_server <- function(
 
       if (xann_level == "geneset") {
         feature_link <- playbase::wrapHyperLink(
-          rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
+          rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
           rownames(df)
         ) |> HandleNoLinkFound(
-          NoLinkString = "<i class='fa-solid fa-info'></i>",
-          SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
+          NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+          SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
         )
       } else {
         feature_link <- FALSE
