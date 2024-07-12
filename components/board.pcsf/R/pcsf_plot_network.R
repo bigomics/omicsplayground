@@ -152,7 +152,7 @@ pcsf_plot_network_server <- function(id,
         label_cex <- 30 + 80 * (abs(fx) / max(abs(fx)))**2
       }
 
-      visnet <- visplot.PCSF(  ## from playbase or util_pcsf.R??? (IK)
+      visnet <- visplot.PCSF( ## from playbase or util_pcsf.R??? (IK)
         net,
         style = 1,
         node_size = 30,
