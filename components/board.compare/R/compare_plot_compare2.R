@@ -45,16 +45,24 @@ compare_plot_compare2_server <- function(id,
                                          createPlot,
                                          plottype,
                                          dataset2,
+                                         compute,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    contrast1 <- shiny::reactiveVal(FALSE)
+    contrast2 <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      contrast1(input.contrast1())
+      contrast2(input.contrast2())
+    })
+
     plot_data <- shiny::reactive({
       pgx1 <- pgx
       pgx2 <- dataset2()
-      ct2 <- input.contrast2()
+      ct2 <- contrast2()
       shiny::req(ct2)
-      shiny::req(input.contrast1())
+      shiny::req(contrast1())
       if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }
@@ -71,10 +79,10 @@ compare_plot_compare2_server <- function(id,
     scatter2.RENDER <- shiny::reactive({
       pgx1 <- pgx
       pgx2 <- dataset2()
-      ct2 <- input.contrast2()
+      ct2 <- contrast2()
       shiny::req(ct2)
       # shiny::req(input.contrast1())
-      shiny::req(input.contrast1())
+      shiny::req(contrast1())
       if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
         return(NULL)
       }

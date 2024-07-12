@@ -66,8 +66,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     hilightgenes <- reactiveVal(NULL)
 
     shiny::observe({
-      shiny::req(input$contrast1)
-      shiny::req(input$contrast2)
+      shiny::req(contrast1())
+      shiny::req(contrast2())
 
       df <- getOmicsScoreTable()
       req(df)
@@ -83,6 +83,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         gsub("[ ]", "", genes)
       })
       shiny::updateTextAreaInput(session, "genelist", value = higenes)
+    })
+
+    contrast1 <- shiny::reactiveVal(FALSE)
+    contrast2 <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(input$compute_compare, {
+      contrast1(input$contrast1)
+      contrast2(input$contrast2)
     })
 
     ## ================================================================================
@@ -109,8 +116,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     cum_fc <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2())
-      shiny::req(input$contrast1)
-      shiny::req(input$contrast2)
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       pgx1 <- pgx
       pgx2 <- dataset2()
       org1 <- playbase::pgx.getOrganism(pgx1)
@@ -118,8 +125,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       ct1 <- head(names(pgx1$gx.meta$meta), 2)
       ct2 <- head(names(pgx2$gx.meta$meta), 2)
-      ct1 <- input$contrast1
-      ct2 <- input$contrast2
+      ct1 <- contrast1()
+      ct2 <- contrast2()
 
       shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
       shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
@@ -166,10 +173,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     getOmicsScoreTable <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2())
-      shiny::req(input$contrast1)
-      shiny::req(input$contrast2)
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       shiny::req(
-        input$contrast2 %in% colnames(playbase::pgx.getMetaMatrix(dataset2())$fc)
+        contrast2() %in% colnames(playbase::pgx.getMetaMatrix(dataset2())$fc)
       )
       pgx1 <- pgx
       pgx2 <- dataset2()
@@ -317,6 +324,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
 
@@ -330,6 +338,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
 
@@ -340,6 +349,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       hilightgenes = hilightgenes,
       input.contrast1 = reactive(input$contrast1),
       input.contrast2 = reactive(input$contrast2),
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
 
@@ -350,6 +360,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
 
@@ -358,6 +369,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
 
@@ -380,6 +392,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
 
@@ -394,6 +407,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
+      compute = shiny::reactive(input$compute_compare),
       watermark = WATERMARK
     )
   })
