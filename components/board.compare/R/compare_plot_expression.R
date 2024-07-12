@@ -28,11 +28,25 @@ compare_plot_expression_server <- function(id,
                                            hilightgenes,
                                            getOmicsScoreTable,
                                            score_table,
+                                           compute,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    contrast1 <- shiny::reactiveVal(FALSE)
+    contrast2 <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      contrast1(input.contrast1())
+      contrast2(input.contrast2())
+    })
+
     plotly_multibarplot.RENDER <- shiny::reactive({
-      shiny::req(input.contrast1())
-      shiny::req(input.contrast2())
+      dt <- tryCatch({
+        getOmicsScoreTable()
+      }, error = function(w) {
+        FALSE
+      })
+      shiny::validate(shiny::need(dt, "Please select contrasts and run 'Compute'"))
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       shiny::req(getOmicsScoreTable())
       shiny::req(hilightgenes())
       shiny::req(score_table())
@@ -44,8 +58,8 @@ compare_plot_expression_server <- function(id,
 
       ct1 <- head(names(pgx1$gx.meta$meta), 3)
       ct2 <- head(names(pgx2$gx.meta$meta), 3)
-      ct1 <- input.contrast1()
-      ct2 <- input.contrast2()
+      ct1 <- contrast1()
+      ct2 <- contrast2()
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
         target_col1 <- target_col2 <- "gene_name"
       } else if (org1 == org2) {
