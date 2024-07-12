@@ -275,6 +275,8 @@ ClusteringUI <- function(id) {
               id = ns("clust_phenoplot"),
               title = "Phenotype distribution",
               info.text = "Visualization of the dimensionality reduction plot coloured by the available phenotypes. The group labels can be toggled on the options.",
+              info.methods = "See Dimensionality reduction",
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "t-SNE clustering plot of phenotype distribution for the current samples.",
               label = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
