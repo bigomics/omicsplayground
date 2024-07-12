@@ -25,11 +25,14 @@ DatasetReportServer <- function(
         if(quarto_file_path == "") {
           ## default to parent of OPG
           quarto_file_path <- file.path(OPG, "../pgx-visreport")
+          if(!dir.exists(quarto_file_path)) quarto_file_path <- NULL
         }
+
+        dbg("[DatasetReportServer] quarto_file_path = ", quarto_file_path)
         
         if (is.null(quarto_file_path) || quarto_file_path == "") {
             warning("[DatasetReportServer] ERROR: Please set QUARTO_FILE_PATH.")
-            return(NULL)
+            ## return(NULL)
         }
 
         output$visreport_thumbnail <- shiny::renderUI({
@@ -258,7 +261,16 @@ DatasetReportServer <- function(
         }
 
         shiny::observeEvent(input$show_report_modal, {
+          if (is.null(quarto_file_path) || quarto_file_path == "") {
+            shinyalert::shinyalert(
+              title = "Duh!",
+              text = "Reporting is not available for this server",
+              type = "error",
+              immediate = TRUE
+              )                    
+          } else {
             showModal()
+          }
         })
 
         ## observe dataset and update contrasts
