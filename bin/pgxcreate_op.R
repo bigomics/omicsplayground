@@ -47,7 +47,7 @@ pgx <- playbase::pgx.createPGX(
   annot_table = params$annot_table
 )
 
-message("[create PGX process] : PGX created succefully")
+message("[create PGX process] : PGX created successfully")
 message("[compute PGX process] : starting process")
 
 pgx <- playbase::pgx.computePGX(
