@@ -12,6 +12,7 @@ upload_module_computepgx_server <- function(
     id,
     countsRT,
     countsX,
+    impX,
     samplesRT,
     contrastsRT,
     raw_dir,
@@ -41,8 +42,8 @@ upload_module_computepgx_server <- function(
         "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
         "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
       )
-      ## GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
-      GENETEST.SELECTED <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma")
+      ## GENETEST.SELECTED <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+      GENETEST.SELECTED <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma") 
 
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
@@ -433,14 +434,16 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         counts <- countsRT()
         countsX <- countsX()
+        impX <- impX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
 
-        dbg("[upload_module_computepgx:input$compute] dim.counts = ", dim(counts))
-        dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX))
-        dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples))
-        dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts))
+        dbg("[upload_module_computepgx:input$compute] dim.counts = ", dim(counts)[1], ",", dim(counts)[2])
+        dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX)[1], ",", dim(countsX)[2])
+        dbg("[upload_module_computepgx:input$compute] dim.impX = ", dim(impX)[1], ",", dim(impX)[2])
+        dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples)[1], ",", dim(samples)[2])
+        dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts)[1], ",", dim(contrasts)[2])
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
@@ -494,6 +497,7 @@ upload_module_computepgx_server <- function(
           samples = samples,
           counts = counts,
           countsX = countsX,
+          impX = impX,
           contrasts = contrasts,
           # Extra tables
           annot_table = annot_table,
@@ -531,8 +535,9 @@ upload_module_computepgx_server <- function(
         )
 
         ## Test check dim(counts) & dim(X)
-        dbg("[compute PGX process]: dim.X: ", dim(params$counts))
-        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX))
+        dbg("[compute PGX process]: dim.X: ", dim(params$counts)[1], ",", dim(params$counts)[2])
+        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX)[1], ",", dim(params$countsX)[2])
+        dbg("[compute PGX process]: dim.impX: ", dim(params$impX)[1], ",", dim(params$impX)[2])
 
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
