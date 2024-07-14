@@ -242,14 +242,22 @@ upload_module_outliers_server <- function(
 
           X0 <- imputedX()
           X1 <- cleanX()$X
+          samples <- r_samples()
+          contrasts <- r_contrasts()
+
+          nmissing <- sum(is.na(X0))
+          if (nmissing > 0) {
+              dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X0.")
+              dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
+              X0 <- playbase::imputeMissing(X0, method = "SVD2")
+          }
+          
           nmissing <- sum(is.na(X1))
           if (nmissing > 0) {
               dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X1.")
               dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
-              impX1 <- playbase::imputeMissing(X1, method = "SVD2")
+              X1 <- playbase::imputeMissing(X1, method = "SVD2")
           }
-          samples <- r_samples()
-          contrasts <- r_contrasts()
 
           kk <- intersect(colnames(X1), colnames(X0))
           kk <- intersect(kk, rownames(samples))
@@ -265,10 +273,8 @@ upload_module_outliers_server <- function(
               dbg("[outliers_server:results_correction_methods] ComBat, RUV, SVA, NPM")
               mm <- c("ComBat", "RUV", "SVA", "NPM")
               res <- playbase::compare_batchcorrection_methods(
-                                   X1, samples, pheno = NULL,
-                                   contrasts = contrasts,
-                                   methods = mm, ntop = 4000,
-                                   xlist.init = xlist.init)
+                                   X1, samples, pheno = NULL, contrasts = contrasts,
+                                   methods = mm, ntop = 4000, xlist.init = xlist.init)
           })
 
           selected <- res$best.method
@@ -336,19 +342,14 @@ upload_module_outliers_server <- function(
             rX <- rX[ii, jj]
           }
 
-          par(
-            mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5),
-            mgp = c(2.1, 0.8, 0)
-          )
-
+          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           boxplot(X0,
-            main = "raw", ylim = c(min(X0, na.rm = TRUE) * 0.8, max(X0, na.rm = TRUE) * 1.2), las = 2,
-            ylab = "expression (log2)", xlab = "", cex.axis = 0.8, cex = 0.5
-          )
+                  main = "raw", ylim = c(min(X0, na.rm = TRUE) * 0.8, max(X0, na.rm = TRUE) * 1.2),
+                  las = 2, ylab = "expression (log2)", xlab = "", cex.axis = 0.8, cex = 0.5)
+
           boxplot(X1,
-            main = "normalized", ylim = c(min(X1, na.rm = TRUE) * 0.8, max(X1, na.rm = TRUE) * 1.2), las = 2,
-            ylab = "", xlab = "", cex.axis = 0.8, cex = 0.5
-          )
+                  main = "normalized", ylim = c(min(X1, na.rm = TRUE) * 0.8, max(X1, na.rm = TRUE) * 1.2),
+                  las = 2, ylab = "", xlab = "", cex.axis = 0.8, cex = 0.5)
         }
 
         if (input$norm_plottype == "histogram") {
@@ -363,12 +364,10 @@ upload_module_outliers_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = "expression (log2)"
-          )
+            las = 1, xlab = "expression (log2)")
           hist(X1,
             breaks = 60, main = "normalized", xlim = xlim1,
-            las = 1, xlab = "expression (log2)", ylab = ""
-          )
+            las = 1, xlab = "expression (log2)", ylab = "")
         }
 
         if (input$norm_plottype == "density") {
@@ -384,12 +383,11 @@ upload_module_outliers_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           playbase::gx.hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = "expression (log2)"
-          )
+            las = 1, xlab = "expression (log2)")
+
           playbase::gx.hist(X1,
             breaks = 60, main = "normalized", xlim = xlim1,
-            las = 1, xlab = "expression (log2)", ylab = ""
-          )
+            las = 1, xlab = "expression (log2)", ylab = "")
         }
       }
 
@@ -852,7 +850,7 @@ upload_module_outliers_server <- function(
       return(
           list(counts = correctedCounts,
                X = cX,
-               ## impX = impX,
+               impX = impX,
                results = results_correction_methods
         )
       ) ## pointing to reactive
