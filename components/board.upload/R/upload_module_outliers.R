@@ -83,8 +83,11 @@ upload_module_outliers_server <- function(
               counts[which(counts == 0)] <- NA
           }
 
-          X <- log2(counts + 0.001) ## NEED RETHINK
-
+          m <- input$scaling_method
+          prior <- ifelse(m == "CPM", 1, 1e-3) ## NEW
+          X <- log2(counts + prior) ## NEED RETHINK
+          ## X <- log2(counts + 0.001)
+          
           if (input$remove_xxl_features) {
               dbg("[outliers_server:imputedX]: Put outlier features (z-score>10) as NAs.")
               X[playbase::is.xxl(X, z = 10)] <- NA
@@ -126,7 +129,7 @@ upload_module_outliers_server <- function(
                   shiny::incProgress(amount = 0.25, "Normalization...")
                   dbg("[outliers_server:normalizedX] Normalizing data using ", m)
                   prior <- ifelse(m == "CPM", 1, 1e-3) ## NEED RETHINK: generalize??
-                  normCounts <- playbase::pgx.countNormalization(2**X, method = m)
+                  normCounts <- playbase::pgx.countNormalization(2 ** X - prior, method = m)
                   X <- log2(normCounts + prior)
                   if (input$quantile_norm) {
                       dbg("[outliers_server:normalizedX] Applying quantile normalization")
@@ -847,10 +850,17 @@ upload_module_outliers_server <- function(
           impX
       })
           
+      norm_method <- reactive({
+          m <- input$scaling_method
+          dbg("[outliers_server:fCHECK] Normalization method = ", m)
+          m
+      })
+
       return(
           list(counts = correctedCounts,
                X = cX,
                impX = impX,
+               norm_method = norm_method,
                results = results_correction_methods
         )
       ) ## pointing to reactive

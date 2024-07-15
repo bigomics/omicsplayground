@@ -13,6 +13,7 @@ upload_module_computepgx_server <- function(
     countsRT,
     countsX,
     impX,
+    norm_method,
     samplesRT,
     contrastsRT,
     raw_dir,
@@ -505,6 +506,7 @@ upload_module_computepgx_server <- function(
 
           # Options
           batch.correct = FALSE,
+          norm_method = norm_method,
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
