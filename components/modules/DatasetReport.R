@@ -130,7 +130,10 @@ DatasetReportServer <- function(
                     shinyalert::shinyalert(
                         title = "Preparing your report!",
                         text = "We are chopping the vegetables, boiling the water and simmering the sauce. Stay with us. Your download will start shortly.",
-                        type = "info",
+                        type = "",
+                        imageUrl = "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTRpeG8wcTZyOXJxOTRramhsM3p3Z2wwNDVlbm5nNDdnZXlsc3ludyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JSYv0MWRkzOWCk8f0Z/giphy.webp",
+                        imageWidth = 300,
+                        imageHeight = 200,
                         closeOnEsc = FALSE
                     )
                     
@@ -169,6 +172,7 @@ DatasetReportServer <- function(
 
                     if(input$report_type %in% c("dataset-summary","report")) {
                       progress$inc(0.3, detail = "Creating dataset summary...")
+
                       all_ct <- paste(input$sel_contrasts, collapse=",")
                       system2(
                         "quarto",
@@ -232,7 +236,7 @@ DatasetReportServer <- function(
                     shinyalert::shinyalert(
                         title = "Yay! Your report is ready",
                         text = "We finished your report. Please check your downloads folder.",
-                        type = "info",
+                        type = "",
                         immediate = TRUE
                     )                    
 
