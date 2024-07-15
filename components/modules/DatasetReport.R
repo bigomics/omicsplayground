@@ -67,7 +67,17 @@ DatasetReportServer <- function(
 
             dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
             dataset <- sub("[.]pgx$","",dataset)
-
+            
+            if( length(dataset) ==0 || is.null(dataset) || dataset == "" ) {
+                shinyalert::shinyalert(
+                    title = "",
+                    text = "Please select a dataset from the table first",
+                    type = "error",
+                    closeOnEsc = TRUE
+                )
+                return(NULL)
+            }
+            
             body <- shiny::tagList(
                 "Create and download a summary report for the current dataset '",
                 shiny::tags$b(dataset),"'.",
@@ -100,12 +110,21 @@ DatasetReportServer <- function(
                           multiple = FALSE
                         ),
                         br(),
-                        shiny::selectizeInput(
-                          inputId = ns("sel_contrasts"),
+                        shiny::radioButtons(
+                          inputId = ns("contrasts_choice"),
                           label = "Select comparisons to include in your report:",
-                          choices = c("Getting comparisons..."),
-                          selected = "Getting comparisons...",
-                          multiple = TRUE
+                          choices = c("all (maximum 20)" = "all", "select")
+                        ),
+                        shiny::conditionalPanel(
+                            "input.contrasts_choice == 'select'",
+                            ns = ns,
+                            shiny::selectizeInput(
+                                inputId = ns("sel_contrasts"),
+                                label = "Select comparisons:",
+                                choices = c("Getting comparisons..."),
+                                selected = "Getting comparisons...",
+                                multiple = TRUE
+                            )
                         )
                     ),
                     div(
@@ -122,7 +141,7 @@ DatasetReportServer <- function(
                         "slide"  = "pdf",
                         "report" = "html"
                     )                                              
-                    paste0(dataset, "-", input$report_type, ".", ext)
+                    paste0(dataset,"-",input$report_type,"-",input$output_format,".", ext)
                 },
                 content = function(file) {
                     shiny::removeModal()
@@ -130,7 +149,10 @@ DatasetReportServer <- function(
                     shinyalert::shinyalert(
                         title = "Preparing your report!",
                         text = "We are chopping the vegetables, boiling the water and simmering the sauce. Stay with us. Your download will start shortly.",
-                        type = "info",
+                        type = "",
+                        imageUrl = "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTRpeG8wcTZyOXJxOTRramhsM3p3Z2wwNDVlbm5nNDdnZXlsc3ludyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JSYv0MWRkzOWCk8f0Z/giphy.webp",
+                        imageWidth = 300,
+                        imageHeight = 200,
                         closeOnEsc = FALSE
                     )
                     
@@ -162,21 +184,32 @@ DatasetReportServer <- function(
                     setwd(tmpdir)
                     file.copy( file.path(qdir,"visreport-dataset.qmd"), "." )
                     file.copy( file.path(qdir,"visreport-comparison.qmd"), "." )
+                    file.copy( file.path(qdir,"visreport-bigpage.qmd"), "." )
                     file.copy( file.path(qdir,"_extensions"), ".", recursive = TRUE )
                     file.copy( file.path(qdir,"images"), ".", recursive = TRUE )
+
+                    sel_contrasts <- input$sel_contrasts
+                    if( input$contrasts_choice == "all") {
+                      sel_contrasts <- getContrasts()
+                    }
+                    dbg("[DatasetReportServer] sel_contrasts = ", sel_contrasts)
                     
                     progress$set(message = "Creating report", value = 0)
 
                     if(input$report_type %in% c("dataset-summary","report")) {
                       progress$inc(0.3, detail = "Creating dataset summary...")
-                      all_ct <- paste(input$sel_contrasts, collapse=",")
+                      qmd_file = "visreport-dataset.qmd"
+                      if(input$output_format == "slide") {
+                        qmd_file = "visreport-bigpage.qmd"
+                      }
+                      all_ct <- paste(sel_contrasts, collapse=",")
                       system2(
                         "quarto",
                         args = c(
                           "render",
-                          file.path(quarto_file_path, "visreport-dataset.qmd"),
+                          file.path(quarto_file_path, qmd_file),
                           "--output -",
-                          paste("--to", render_format),
+                          paste("--to poster-typst"),
                           "-P", paste0("pgxdir:", pgx_path),
                           "-P", paste0("comparisons:", all_ct),
                           "-P", paste0("dataset:", sel_dataset),
@@ -189,9 +222,9 @@ DatasetReportServer <- function(
 
                     if(input$report_type == "comparison-summary") {                    
                       files <- c()                    
-                      ncontrasts <- length(input$sel_contrasts)
+                      ncontrasts <- length(sel_contrasts)
                       for(i in 1:ncontrasts) {
-                        ct <- input$sel_contrasts[i]
+                        ct <- sel_contrasts[i]
                         progress$inc(
                            1/(ncontrasts+1),
                            detail = paste0("summarizing comparison ",i,"/",ncontrasts)
@@ -232,7 +265,7 @@ DatasetReportServer <- function(
                     shinyalert::shinyalert(
                         title = "Yay! Your report is ready",
                         text = "We finished your report. Please check your downloads folder.",
-                        type = "info",
+                        type = "",
                         immediate = TRUE
                     )                    
 
@@ -273,16 +306,22 @@ DatasetReportServer <- function(
           }
         })
 
-        ## observe dataset and update contrasts
-        shiny::observeEvent({
+        getContrasts <- eventReactive({
             list(input$show_report_modal)
         }, {
             req(pgxtable, !is.null(pgxtable$rows_selected()))
             dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
             pgx <- playbase::pgx.load(file.path(auth$user_dir, paste0(dataset, ".pgx")))
+            playbase::pgx.getContrasts(pgx)
+        })
 
-            contrasts <- playbase::pgx.getContrasts(pgx)
-
+        ## observe dataset and update contrasts
+        shiny::observeEvent({
+            list(input$show_report_modal)
+        }, {
+            contrasts <- getContrasts()
+            shiny::req(contrasts)
+            
             updateSelectizeInput(
                 session,
                 "sel_contrasts",
