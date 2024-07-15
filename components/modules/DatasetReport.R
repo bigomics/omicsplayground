@@ -198,6 +198,7 @@ DatasetReportServer <- function(
 
                     if(input$report_type %in% c("dataset-summary","report")) {
                       progress$inc(0.3, detail = "Creating dataset summary...")
+
                       qmd_file = "visreport-dataset.qmd"
                       if(input$output_format == "slide") {
                         qmd_file = "visreport-bigpage.qmd"
