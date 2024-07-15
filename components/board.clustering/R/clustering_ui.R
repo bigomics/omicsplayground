@@ -173,7 +173,7 @@ ClusteringUI <- function(id) {
               label = "a",
               title = "Clustered Heatmap",
               caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
-              info.text = "Using the {cexCol} and {cexRow} options it is possible to adjust the font size for the column and row labels. Also, it is possible to select wether to display or not the legend. Gene clusters are functionally annotated in the 'Annotate clusters' panel on the right.",
+              info.text = "Using the {cexCol} and {cexRow} options it is possible to adjust the font size for the column and row labels. Also, it is possible to select whether to display or not the legend. Gene clusters are functionally annotated in the 'Annotate clusters' panel on the right.",
               info.methods = "The heatmap is generated using the ComplexHeatmap R/Bioconductor package [1] on scaled log-expression values (z-score) using euclidean distance and Ward linkage using the fastcluster R package [2]. The available methods to select the top features are sd (standard deviation) - features with the highest standard deviation across all the samples, marker - features that are overexpressed in each phenotype class compared to the rest, or by PCA - principal component analysis (performed using the irlba R package [3]). In the heatmap, red corresponds to overexpression, blue to underexpression of the gene.",
               info.references = list(
                 list(
