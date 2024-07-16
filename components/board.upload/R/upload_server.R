@@ -12,7 +12,7 @@ UploadBoard <- function(id,
                         recompute_pgx,
                         recompute_info,
                         inactivityCounter,
-                        new_upload) {
+                        new_upload, session2) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -839,7 +839,7 @@ UploadBoard <- function(id,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
       height = c("100%", TABLE_HEIGHT_MODAL),
-      title = "Uploaded Counts",
+      title = ifelse(tolower(upload_datatype()) == "proteomics", "Uploaded Expression", "Uploaded Counts"),
       info.text = "This is the uploaded counts data.",
       caption = "This is the uploaded counts data."
     )
@@ -941,5 +941,6 @@ UploadBoard <- function(id,
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
+    return(upload_datatype)
   })
 }

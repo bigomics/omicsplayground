@@ -211,7 +211,7 @@ app_server <- function(input, output, session) {
 
   ## Modules needed from the start
   if (opt$ENABLE_UPLOAD) {
-    UploadBoard(
+    upload_datatype <-UploadBoard(
       id = "upload",
       pgx_dir = PGX.DIR,
       pgx = PGX,
@@ -224,6 +224,12 @@ app_server <- function(input, output, session) {
       new_upload = new_upload
     )
   }
+
+  shiny::observeEvent(upload_datatype(), {
+    if (tolower(upload_datatype()) == "proteomics") {
+      shiny.i18n::update_lang("proteomics", session)
+    }
+  })
 
 
   ## Modules needed after dataset is loaded (deferred) --------------

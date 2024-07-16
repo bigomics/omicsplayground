@@ -65,6 +65,10 @@
         {
             "RNA-seq": "Counts boxplots",
             "proteomics": "Abundance boxplots"
+        },
+        {
+            "RNA-seq": "Step 2: Upload counts",
+            "proteomics": "Step 2: Upload expression"
         }
       ]
   }
