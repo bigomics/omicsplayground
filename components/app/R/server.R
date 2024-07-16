@@ -545,7 +545,7 @@ app_server <- function(input, output, session) {
 
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
-      DATATYPEPGX <<- PGX$datatype
+      DATATYPEPGX <<- tolower(PGX$datatype)
       shiny.i18n::update_lang(DATATYPEPGX, session)
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
