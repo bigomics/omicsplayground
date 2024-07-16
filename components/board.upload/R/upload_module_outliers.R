@@ -645,6 +645,97 @@ upload_module_outliers_server <- function(
             inline = TRUE
           )
         )
+        
+        navmenu <- tagList(
+          bslib::card(bslib::card_body(
+            style = "padding: 0px;",
+            bslib::accordion(
+              multiple = FALSE,
+              style = "background-color: #F7FAFD99;",
+              bslib::accordion_panel(
+                title = "1. Missing values",
+                shiny::p("Replace missing values using an imputation method:\n"),
+                shiny::selectInput(ns("impute_method"), NULL,
+                  choices = c(
+                    "SVDimpute (default)" = "SVD2",
+                    ##                      "Zero" = "zero",
+                    ##                      "MinDet",
+                    ##                      "MinProb",
+                    ##                      "NMF",
+                    "Skip imputation" = "skip_imputation"
+                  ),
+                  selected = "SVD2"
+                  ),
+                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+                br()
+              ),
+              bslib::accordion_panel(
+                title = "2. Normalization",
+                shiny::checkboxInput(ns("remove_xxl_features"),
+                  label = "Treat outlier features (z-score>10) as NAs", value = FALSE
+                  ),
+                div("Normalize data values:\n"),
+                shiny::selectInput(ns("scaling_method"), NULL,
+                  choices = c(
+                    "LogCPM" = "CPM", ## log2(nC+1)
+                    "LogMaxMedian" = "logMaxMedian",
+                    "LogMaxSum" = "logMaxSum",
+                      "Skip normalization" = "Skip_normalization"
+                  ),
+                  selected = ifelse(tolower(upload_datatype()) == "proteomics", "logMaxMedian", "CPM")
+                  ),
+                shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
+                br()
+              ),
+              bslib::accordion_panel(
+                title = "3. Detect and remove outliers",
+                shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
+                shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = TRUE),
+                ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
+                shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
+                br()
+              ),
+              ## bslib::accordion_panel(
+              ##  title = "4. Remove unwanted technical and biogical variation",
+              ##  shiny::p("Correct for technical and biogical factors:\n"),
+              ##  shiny::selectInput(ns("correct_factor"), NULL,
+              ##    choices = c(
+              ##        "library size" = "lib",
+              ##        "ribo", "cellcycle", "gender",
+              ##        "Skip correction (Default)" = "Skip_correction"
+              ##    ),
+              ##    selected = "Skip_correction"
+              ##  ),
+              ##  br()
+              ## ),
+              bslib::accordion_panel(
+                title = "4. Batch-effect correction",
+                shiny::p("Remove batch effects from your data:\n"),
+                shiny::selectInput(ns("bec_method"), NULL,
+                  choices = c(
+                    "uncorrected (default)" = "uncorrected",
+                    "ComBat" = "ComBat",
+                    "SVA" = "SVA",
+                    "RUV" = "RUV",
+                      "NPM" = "NPM"
+                  ),
+                  selected = 1
+                ),
+                shiny::conditionalPanel(
+                  "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
+                  ns = ns,
+                  shiny::textOutput(ns("bec_param_text")),
+                  shiny::br(),
+                  ),
+                shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
+                br()
+              )
+            ),
+              br()
+          ))
+        )
+
+        ## ---------------------------- UI ----------------------------------
         div(
           bslib::as_fill_carrier(),
           style = "width: 100%; display: flex; ",
@@ -652,118 +743,31 @@ upload_module_outliers_server <- function(
             col_widths = c(2, 10),
             style = "margin-bottom: 20px;",
             heights_equal = "row",
-            bslib::card(bslib::card_body(
-              style = "padding: 0px;",
-              bslib::accordion(
-                multiple = FALSE,
-                style = "background-color: #F7FAFD99;",
-                bslib::accordion_panel(
-                  title = "1. Missing values",
-                  shiny::p("Replace missing values using an imputation method:\n"),
-                  shiny::selectInput(ns("impute_method"), NULL,
-                    choices = c(
-                      "SVDimpute (default)" = "SVD2",
-                      ##                      "Zero" = "zero",
-                      ##                      "MinDet",
-                      ##                      "MinProb",
-                      ##                      "NMF",
-                      "Skip imputation" = "skip_imputation"
-                    ),
-                    selected = "SVD2"
-                  ),
-                  shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-                  br()
-                ),
-                bslib::accordion_panel(
-                  title = "2. Normalization",
-                  shiny::checkboxInput(ns("remove_xxl_features"),
-                    label = "Treat outlier features (z-score>10) as NAs", value = FALSE
-                  ),
-                  div("Normalize data values:\n"),
-                  shiny::selectInput(ns("scaling_method"), NULL,
-                    choices = c(
-                      "LogCPM" = "CPM", ## log2(nC+1)
-                      "LogMaxMedian" = "logMaxMedian",
-                      "LogMaxSum" = "logMaxSum",
-                      "Skip normalization" = "Skip_normalization"
-                    ),
-                    selected = ifelse(tolower(upload_datatype()) == "proteomics", "logMaxMedian", "CPM")
-                  ),
-                  shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
-                  br()
-                ),
-                bslib::accordion_panel(
-                  title = "3. Detect and remove outliers",
-                  shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
-                  shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = TRUE),
-                  ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
-                  shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
-                  br()
-                ),
-                ## bslib::accordion_panel(
-                ##  title = "4. Remove unwanted technical and biogical variation",
-                ##  shiny::p("Correct for technical and biogical factors:\n"),
-                ##  shiny::selectInput(ns("correct_factor"), NULL,
-                ##    choices = c(
-                ##        "library size" = "lib",
-                ##        "ribo", "cellcycle", "gender",
-                ##        "Skip correction (Default)" = "Skip_correction"
-                ##    ),
-                ##    selected = "Skip_correction"
-                ##  ),
-                ##  br()
-                ## ),
-                bslib::accordion_panel(
-                  title = "4. Batch-effect correction",
-                  shiny::p("Remove batch effects from your data:\n"),
-                  shiny::selectInput(ns("bec_method"), NULL,
-                    choices = c(
-                      "uncorrected (default)" = "uncorrected",
-                      "ComBat" = "ComBat",
-                      "SVA" = "SVA",
-                      "RUV" = "RUV",
-                      "NPM" = "NPM"
-                    ),
-                    selected = 1
-                  ),
-                  shiny::conditionalPanel(
-                    "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
-                    ns = ns,
-                    shiny::textOutput(ns("bec_param_text")),
-                    shiny::br(),
-                  ),
-                  shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
-                  br()
-                )
-              ),
-              br()
-            )),
-
-            ## ---------------------------- canvas ----------------------------------
+            ## ----------- menu ------------            
+            navmenu,            
+            ## ----------- canvas ------------
             bslib::layout_columns(
-              width = 12,
-              bslib::layout_columns(
-                col_widths = 6,
-                row_heights = c(3, 3),
-                heights_equal = "row",
-                PlotModuleUI(
-                  ns("plot2"),
-                  title = "Missing values",
-                  info.text = missing.infotext,
-                  caption = missing.infotext,
-                  options = missing.options,
-                  height = c("auto", "100%"),
-                  show.maximize = FALSE
+              col_widths = c(6,6),
+              row_heights = c(3,3),
+              heights_equal = "row",
+              PlotModuleUI(
+                ns("plot2"),
+                title = "Missing values",
+                info.text = missing.infotext,
+                caption = missing.infotext,
+                options = missing.options,
+                height = c("auto", "100%"),
+                show.maximize = FALSE
+              ),
+              PlotModuleUI(
+                ns("plot1"),
+                title = "Normalization",
+                options = norm.options,
+                info.text = normalization.infotext,
+                height = c("auto", "100%"),
+                show.maximize = FALSE
                 ),
-                PlotModuleUI(
-                  ns("plot1"),
-                  title = "Normalization",
-                  options = norm.options,
-                  info.text = normalization.infotext,
-                  height = c("auto", "100%"),
-                  show.maximize = FALSE
-                ),
-                PlotModuleUI(
+              PlotModuleUI(
                   ns("plot3"),
                   title = "Outliers detection",
                   info.text = score.infotext,
@@ -771,16 +775,15 @@ upload_module_outliers_server <- function(
                   options = outlier.options,
                   height = c("auto", "100%"),
                   show.maximize = FALSE
-                ),
-                PlotModuleUI(
-                  ns("plot4"),
-                  title = "Batch-effects correction",
-                  options = NULL,
-                  info.text = batcheff.infotext,
-                  height = c("auto", "100%"),
-                  show.maximize = FALSE
+              ),
+              PlotModuleUI(
+                ns("plot4"),
+                title = "Batch-effects correction",
+                options = NULL,
+                info.text = batcheff.infotext,
+                height = c("auto", "100%"),
+                show.maximize = FALSE
                 )
-              )
             )
           )
         )
@@ -794,8 +797,6 @@ upload_module_outliers_server <- function(
         "plot1",
         plotlib = "base",
         func = plot_normalization,
-        ##      func2 = plot.RENDER,
-        ##      csvFunc = plot_data,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -816,8 +817,6 @@ upload_module_outliers_server <- function(
         "plot3",
         plotlib = "base",
         func = plot_outliers,
-        ##      func2 = plot.RENDER,
-        ##      csvFunc = plot_data,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -828,8 +827,6 @@ upload_module_outliers_server <- function(
         "plot4",
         plotlib = "base",
         func = plot_correction,
-        ## func2 = plot.RENDER,
-        ## csvFunc = plot_data,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
