@@ -94,6 +94,12 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
         sample = as.vector(mapply(rep, colnames(hist)[-c(1, 2)], nrow(hist)))
       )
 
+      if (DATATYPEPGX == "proteomics") {
+        xlab <- "Abundance"
+      } else {
+        xlab <- "Expression"
+      }
+
       fig <-
         plotly::plot_ly(
           data = df,
@@ -112,7 +118,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
           # )
         ) %>%
         plotly::layout(
-          xaxis = list(title = "Expression"),
+          xaxis = list(title = xlab),
           yaxis = list(title = "Density"),
           ## TODO: decide if unified label or not - maybe only in zoom mode as it's that long?
           hovermode = "x unified",

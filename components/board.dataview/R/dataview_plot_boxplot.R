@@ -27,7 +27,6 @@ dataview_plot_boxplot_ui <- function(
 
 dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    data_type <- r.data_type()
     ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
@@ -71,9 +70,12 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.dat
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
+      data_type <- r.data_type()
 
       if (data_type == "counts") {
         ylab <- "Counts (log2CPM)"
+      } else if (data_type == "abundance") {
+        ylab <- "Abundance"
       } else {
         ylab <- "Abundance (log2)"
       }

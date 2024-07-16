@@ -44,9 +44,15 @@ dataview_plot_totalcounts_server <- function(id,
         "counts"
       } else {"abundance"}
 
-      ylab <- paste0("total ", type, " (log10)")
+      logtype <- if (data_type == "log2") {
+        " (log2)"
+      } else if (data_type == "logCPM") {
+        " (logCPM)"
+      } else ("")
+
+      ylab <- paste0("total ", type, logtype)
       if (data_groupby != "<ungrouped>") {
-        ylab <- paste0("average total ", type, " (log10)")
+        ylab <- paste0("average total ", type, logtype)
       }
 
       res <- list(
