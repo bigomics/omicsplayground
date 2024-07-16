@@ -42,7 +42,7 @@ DataViewInputs <- function(id) {
       ns = ns,
       withTooltip(
         shiny::radioButtons(ns("data_type"), "Data type:",
-          choices = c("counts", "logCPM"), selected = "logCPM", inline = TRUE
+          choices = c("logCPM", "counts"), inline = TRUE
         ),
         "Choose an input data type for the analysis.",
         placement = "bottom"
@@ -68,13 +68,13 @@ DataViewUI <- function(id) {
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
-    # Gene overview tab #####
+    # Overview tab #####
     shiny::tabPanel(
-      "Gene overview",
+      "Overview",
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
+        bs_alert(tspan("The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database.")),
         bslib::layout_columns(
           height = "100%",
           col_widths = c(2, 10),
@@ -155,7 +155,7 @@ DataViewUI <- function(id) {
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             label = "a",
-            title = "Total counts",
+            title = tspan("Total counts"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Barplot of the average number of counts (abundance) for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -163,7 +163,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
-            title = "Counts boxplots",
+            title = tspan("Counts boxplots"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -171,7 +171,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_histogram_ui(
             ns("counts_histplot"),
-            title = "Density distribution of counts",
+            title = tspan("Density distribution of counts"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Density distribution of total counts per sample/group",
             height = c("100%", TABLE_HEIGHT_MODAL),

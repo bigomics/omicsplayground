@@ -25,7 +25,7 @@ dataview_plot_boxplot_ui <- function(
   )
 }
 
-dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, watermark = FALSE) {
+dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
@@ -70,6 +70,15 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
+      data_type <- r.data_type()
+
+      if (data_type == "counts") {
+        ylab <- "Counts (log2CPM)"
+      } else if (data_type == "abundance") {
+        ylab <- "Abundance"
+      } else {
+        ylab <- "Abundance (log2)"
+      }
 
       df <- res$counts[, ]
       if (nrow(df) > 1000) {
@@ -84,7 +93,7 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, water
         data = long.df,
         x = "sample",
         y = "value",
-        yaxistitle = "Counts (log2)"
+        yaxistitle = ylab
       ) %>%
         plotly_default()
 

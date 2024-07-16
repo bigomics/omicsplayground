@@ -34,7 +34,7 @@ DataViewBoard <- function(id, pgx) {
         the total number of counts (abundance) per sample and their distribution among the samples are displayed.
         This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
 
-        The <strong>Gene overview</strong> panel displays figures related to the expression level of the selected gene,
+        The <strong>Overview</strong> panel displays figures related to the expression level of the selected gene,
         correlation, and average expression ranking within the dataset.
         More information about the gene and hyperlinks to external databases are provided. Furthermore,
         it displays the correlation and tissue expression for a selected gene in external reference datasets.
@@ -84,11 +84,16 @@ DataViewBoard <- function(id, pgx) {
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
+      shiny::updateRadioButtons(
+        session = session,
+        "data_type",
+        choices = c("log2", "abundance")
+      )
     })
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Gene overview" = list(disable = NULL),
+      "Overview" = list(disable = NULL),
       "Sample QC" = list(disable = c("search_gene")),
       "Counts table" = list(disable = NULL),
       "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
@@ -221,6 +226,7 @@ DataViewBoard <- function(id, pgx) {
     dataview_plot_totalcounts_server(
       "counts_total",
       getCountStatistics,
+      r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
 
@@ -228,6 +234,7 @@ DataViewBoard <- function(id, pgx) {
       "counts_boxplot",
       input,
       getCountStatistics,
+      r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
 
@@ -314,7 +321,7 @@ DataViewBoard <- function(id, pgx) {
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
-        if (input$data_type == "counts") {
+        if (input$data_type %in% c("counts", "abundance")) {
           counts <- pgx$counts[, samples, drop = FALSE]
         } else {
           if (any(pgx$X[, samples, drop = FALSE] < 0)) {

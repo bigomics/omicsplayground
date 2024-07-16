@@ -50,7 +50,7 @@ dataview_table_rawdata_server <- function(id,
         gene <- rownames(pgx$X)[1]
       }
 
-      if (data_type == "counts") {
+      if (data_type %in% c("counts", "abundance")) {
         x <- parse_sample(pgx$counts)
         x_cpm <- parse_sample(pgx$X)
       } else if (data_type == "CPM") {
@@ -156,6 +156,10 @@ dataview_table_rawdata_server <- function(id,
         )
       }
       x <- x[order(-x$rho, -x$SD), , drop = FALSE]
+
+      if (DATATYPEPGX == "proteomics") {
+        colnames(x)[1] <- "protein"
+      }
 
       list(
         x = x,
