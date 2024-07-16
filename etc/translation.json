@@ -45,6 +45,10 @@
         {
             "RNA-seq": "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
             "proteomics": "The column 'rho' reports the correlation with the protein selected in 'Search protein' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."
+        },
+        {
+            "RNA-seq": "counts",
+            "proteomics": "abundance"
         }
       ]
   }

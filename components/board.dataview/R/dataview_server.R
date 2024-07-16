@@ -84,6 +84,11 @@ DataViewBoard <- function(id, pgx) {
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
+      shiny::updateRadioButtons(
+        session = session,
+        "data_type",
+        choices = c("log2", "abundance")
+      )
     })
 
     # Observe tabPanel change to update Settings visibility
@@ -221,6 +226,7 @@ DataViewBoard <- function(id, pgx) {
     dataview_plot_totalcounts_server(
       "counts_total",
       getCountStatistics,
+      r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
 
@@ -228,6 +234,7 @@ DataViewBoard <- function(id, pgx) {
       "counts_boxplot",
       input,
       getCountStatistics,
+      r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
 
@@ -314,7 +321,7 @@ DataViewBoard <- function(id, pgx) {
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
-        if (input$data_type == "counts") {
+        if (input$data_type %in% c("counts", "abundance")) {
           counts <- pgx$counts[, samples, drop = FALSE]
         } else {
           if (any(pgx$X[, samples, drop = FALSE] < 0)) {

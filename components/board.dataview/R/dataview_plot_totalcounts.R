@@ -29,18 +29,24 @@ dataview_plot_totalcounts_ui <- function(
 
 dataview_plot_totalcounts_server <- function(id,
                                              getCountStatistics,
+                                             r.data_type,
                                              r.data_groupby = reactive(""),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       data_groupby <- r.data_groupby()
+      data_type <- r.data_type()
 
       tbl <- getCountStatistics()
       req(tbl)
 
-      ylab <- "total counts (log10)"
+      type <- if (data_type == "counts") {
+        "counts"
+      } else {"abundance"}
+
+      ylab <- paste0("total ", type, " (log10)")
       if (data_groupby != "<ungrouped>") {
-        ylab <- "average total counts (log10)"
+        ylab <- paste0("average total ", type, " (log10)")
       }
 
       res <- list(
