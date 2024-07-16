@@ -433,13 +433,13 @@ upload_module_outliers_server <- function(
           jj <- head(order(-apply(X2, 1, sd)), 200)
           X2 <- X2[jj, ]
 
-          par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), mgp = c(2.2, 0.85, 0))
+          par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), tcl=-0.15, mgp = c(2.2, 0.2, 0))
 
           if (length(ii) > 0) {
-            hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
+            hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2)", las = 1)
             hist(X1[ii], breaks = hh, add = TRUE, col = "red", las = 1)
           } else {
-            hist(X1, breaks = hh, main = "", xlab = "expression (log2CPM)", las = 1)
+            hist(X1, breaks = hh, main = "", xlab = "expression (log2)", las = 1)
           }
 
           if (input$missing_plottype == "heatmap") {
