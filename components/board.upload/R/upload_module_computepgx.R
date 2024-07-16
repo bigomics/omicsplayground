@@ -39,10 +39,20 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
       ## statistical method for GENE level testing
-      GENETEST.METHODS <- c(
-        "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-        "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-      )
+      GENETEST.METHODS <- shiny::reactiveVal("")
+      shiny::observeEvent(upload_datatype(), {
+        if (tolower(upload_datatype()) == "proteomics") {
+          GENETEST.METHODS(
+            c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          )
+        } else {
+          GENETEST.METHODS(
+            c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
+            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
+          )
+        }
+      })
+      
       ## GENETEST.SELECTED <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
       GENETEST.SELECTED <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma") 
 
@@ -148,7 +158,7 @@ upload_module_computepgx_server <- function(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
                   shiny::HTML("<h4>Gene tests:</h4>"),
-                  GENETEST.METHODS,
+                  GENETEST.METHODS(),
                   selected = GENETEST.SELECTED
                 )
               ),
