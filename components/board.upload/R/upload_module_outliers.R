@@ -271,7 +271,7 @@ upload_module_outliers_server <- function(
           samples <- samples[kk, , drop = FALSE]
 
           xlist.init <- list("uncorrected" = X0, "normalized" = X1)
-
+          
           shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
               dbg("[outliers_server:results_correction_methods] ComBat, RUV, SVA, NPM")
               mm <- c("ComBat", "RUV", "SVA", "NPM")
@@ -549,8 +549,13 @@ upload_module_outliers_server <- function(
 
       plot_all_methods <- function() {
         res <- results_correction_methods()
-        ## pos.list <- res$pos[["tsne"]]
-        pos.list <- res$pos[["pca"]]
+        pos.list <- res$pos[["tsne"]] ## "pca"
+        mm <- c("uncorrected", "normalized", "ComBat", "RUV", "SVA", "NPM")
+        pos.list <- pos.list[mm]
+        dbg("[outliers_server:plots_all_methods] names(res) = ", names(res))
+        dbg("[outliers_server:plots_all_methods] names(res$xlist) = ", names(res$xlist))
+        dbg("[outliers_server:plots_all_methods] names(res$pos) = ", names(res$pos))
+        dbg("[outliers_server:plots_all_methods] names(pos.list) = ", names(pos.list))
         pheno <- res$pheno
         xdim <- length(res$pheno)
         col1 <- factor(pheno)
