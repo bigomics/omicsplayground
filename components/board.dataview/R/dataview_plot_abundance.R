@@ -14,7 +14,6 @@ dataview_plot_abundance_ui <- function(
   ns <- shiny::NS(id)
 
   menu_grouped <- "<code>grouped</code>"
-  info_text <- paste0("Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ", menu_grouped, " setting uder the main <i>Options</i>.")
 
   PlotModuleUI(
     ns("pltmod"),
@@ -22,7 +21,7 @@ dataview_plot_abundance_ui <- function(
     label = label,
     caption = caption,
     plotlib = "plotly",
-    info.text = info_text,
+    info.text = info.text,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,

@@ -10,13 +10,19 @@ dataview_plot_tsne_ui <- function(
     height,
     width,
     caption,
-    info.text) {
+    info.text,
+    info.methods,
+    info.references,
+    info.extra_link) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("pltmod"),
     plotlib = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height,
