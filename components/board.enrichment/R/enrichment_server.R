@@ -362,7 +362,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
       rpt <- getFilteredGeneSetTable()
       gs <- rownames(rpt)[i]
-      
+
       return(gs)
     })
 
