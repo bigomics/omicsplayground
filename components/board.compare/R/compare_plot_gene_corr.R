@@ -36,11 +36,20 @@ compare_plot_gene_corr_server <- function(id,
                                           hilightgenes,
                                           getOmicsScoreTable,
                                           score_table,
+                                          compute,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    shiny::observeEvent(input.contrast1(), {
-      shiny::req(input.contrast1())
-      ct <- input.contrast1()
+
+    contrast1 <- shiny::reactiveVal(FALSE)
+    contrast2 <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      contrast1(input.contrast1())
+      contrast2(input.contrast2())
+    })
+
+    shiny::observeEvent(contrast1(), {
+      shiny::req(contrast1())
+      ct <- contrast1()
       shiny::updateSelectInput(session, "colorby", choices = ct, selected = ct[1])
     })
 
@@ -48,14 +57,14 @@ compare_plot_gene_corr_server <- function(id,
       shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
       shiny::req(hilightgenes())
-      shiny::req(input.contrast1())
-      shiny::req(input.contrast2())
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       shiny::req(score_table())
 
       pgx1 <- pgx
       pgx2 <- dataset2()
-      ct1 <- input.contrast1()
-      ct2 <- input.contrast2()
+      ct1 <- contrast1()
+      ct2 <- contrast2()
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
 
@@ -139,8 +148,8 @@ compare_plot_gene_corr_server <- function(id,
       shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
       shiny::req(hilightgenes())
-      shiny::req(input.contrast1())
-      shiny::req(input.contrast2())
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       shiny::req(score_table())
 
       # Input variables
