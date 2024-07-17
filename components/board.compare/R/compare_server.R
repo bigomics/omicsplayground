@@ -85,9 +85,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       shiny::updateTextAreaInput(session, "genelist", value = higenes)
     })
 
-    contrast1 <- shiny::reactiveVal(FALSE)
-    contrast2 <- shiny::reactiveVal(FALSE)
-    shiny::observeEvent(input$compute_compare, {
+    ## allow trigger on explicit compare button
+    contrast1 <- shiny::reactiveVal()
+    contrast2 <- shiny::reactiveVal()
+    shiny::observeEvent(input$compare_button, {
       contrast1(input$contrast1)
       contrast2(input$contrast2)
     })
@@ -173,7 +174,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     getOmicsScoreTable <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2())
-      shiny::req(contrast1())
+      shiny::req(contrast1())  ## trigger on button
       shiny::req(contrast2())
       shiny::req(
         contrast2() %in% colnames(playbase::pgx.getMetaMatrix(dataset2())$fc)
@@ -318,13 +319,14 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     compare_plot_compare1_server(
       "dataset1",
       pgx = pgx,
-      input.contrast1 = shiny::reactive(input$contrast1),
-      input.contrast2 = shiny::reactive(input$contrast2),
+      ## input.contrast1 = shiny::reactive(input$contrast1),
+      input.contrast1 = contrast1,
+      ## input.contrast2 = shiny::reactive(input$contrast2),
       hilightgenes = hilightgenes,
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
-      compute = shiny::reactive(input$compute_compare),
+      ## compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -338,18 +340,19 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
-      compute = shiny::reactive(input$compute_compare),
+      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
     # FC Correlation
+    
     compare_plot_fc_correlation_server(
       "fcfcplot",
       cum_fc = cum_fc,
       hilightgenes = hilightgenes,
       input.contrast1 = reactive(input$contrast1),
       input.contrast2 = reactive(input$contrast2),
-      compute = shiny::reactive(input$compute_compare),
+      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -360,7 +363,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
-      compute = shiny::reactive(input$compute_compare),
+      ## compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -369,7 +372,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       pgx = pgx,
       dataset2 = dataset2,
       cum_fc = cum_fc,
-      compute = shiny::reactive(input$compute_compare),
+      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -392,7 +395,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
-      compute = shiny::reactive(input$compute_compare),
+      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -407,7 +410,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       hilightgenes = hilightgenes,
       getOmicsScoreTable = getOmicsScoreTable,
       score_table = score_table,
-      compute = shiny::reactive(input$compute_compare),
+      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
   })

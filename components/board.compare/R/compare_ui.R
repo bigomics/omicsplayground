@@ -23,15 +23,20 @@ CompareInputs <- function(id) {
       "Select second contrast to compare.",
       placement = "right", options = list(container = "body")
     ),
+    shiny::br(),
     withTooltip(
-      shiny::actionButton(ns("compute_compare"),
-        label = "Compute",
-        class = "btn-outline-primary"
+      shiny::actionButton(
+        ns("compare_button"),
+        label = "Compare",
+        class = "btn-outline-primary",
+        icon = icon("refresh")        
       ),
       "Click to start comparison computation.",
       placement = "right"
     ),
     shiny::br(),
+    shiny::br(),
+    shiny::br(),        
     withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "right", options = list(container = "body")
