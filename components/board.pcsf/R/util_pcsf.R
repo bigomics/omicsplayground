@@ -89,7 +89,7 @@ visplot.PCSF <- function(
   visNet
 }
 
-plot.pcsf <- function(net, fx0 = NULL, label.cex = 1) {
+plot.pcsf.NOTUSED <- function(net, fx0 = NULL, label.cex = 1) {
   ## take largest connected graph
   csize <- clusters(net)$csize
   csize
@@ -107,11 +107,6 @@ plot.pcsf <- function(net, fx0 = NULL, label.cex = 1) {
   vertex.label.cex <- label.cex
 
   vertex.size <- igraph::V(net)$prize**0.66
-
-
-
-
-
   vertex.color <- "lightblue"
   cpal <- colorRampPalette(c("blue2", "grey90", "red3"))(33)
   vertex.color <- cpal[1 + 16 + round(16 * fx0)]

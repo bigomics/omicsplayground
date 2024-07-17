@@ -76,24 +76,23 @@ wikipathview <- function(wp, val) {
   }
 
   if (!is.null(val)) {
-    if (sum(names(val) %in% toupper(labels)) == 0) {
-      return(NULL)
-    }
-    found_indexes <- which(toupper(labels) %in% names(val))
-    labels <- labels[found_indexes]
-    rect_nodes <- rect_nodes[found_indexes]
-    val <- val[toupper(labels)]
-    rr <- as.character(round(66 * pmin(1, abs(val / 2.0))**0.5))
-    rr <- stringr::str_pad(rr, width = 2, pad = "0")
-    colors <- ifelse(val > 0, paste0("#ff0000", rr), paste0("#0055ff", rr))
-    if (isClassic) {
-      current_style <- xml_attr(rect_nodes, "style")
-      new_style <- paste0(current_style, " fill:", colors, ";")
-      lapply(seq_along(new_style), function(x) {
-        xml_set_attr(rect_nodes[x], "style", new_style[x])
-      })
-    } else {
-      xml_attr(rect_nodes, "fill") <- colors
+    if (sum(names(val) %in% toupper(labels)) > 0) {
+      found_indexes <- which(toupper(labels) %in% names(val))
+      labels <- labels[found_indexes]
+      rect_nodes <- rect_nodes[found_indexes]
+      val <- val[toupper(labels)]
+      rr <- as.character(round(66 * pmin(1, abs(val / 2.0))**0.5))
+      rr <- stringr::str_pad(rr, width = 2, pad = "0")
+      colors <- ifelse(val > 0, paste0("#ff0000", rr), paste0("#0055ff", rr))
+      if (isClassic) {
+        current_style <- xml_attr(rect_nodes, "style")
+        new_style <- paste0(current_style, " fill:", colors, ";")
+        lapply(seq_along(new_style), function(x) {
+          xml_set_attr(rect_nodes[x], "style", new_style[x])
+        })
+      } else {
+        xml_attr(rect_nodes, "fill") <- colors
+      }
     }
   }
 

@@ -7,11 +7,11 @@
 ##
 
 message("[create PGX process] : starting process")
-args <- commandArgs(trailingOnly=TRUE)
+args <- commandArgs(trailingOnly = TRUE)
 
 temp_dir <- args[1]
 
-if(!exists("temp_dir")) {
+if (!exists("temp_dir")) {
   temp_dir <- getwd()
 }
 
@@ -55,16 +55,17 @@ pgx <- playbase::pgx.computePGX(
   max.genes = params$max.genes,
   gx.methods = params$gx.methods,
   gset.methods = params$gset.methods,
+  custom.geneset = pgx$custom.geneset,
   extra.methods = params$extra.methods,
-  use.design = params$use.design,        ## no.design+prune are combined
-  prune.samples = params$prune.samples,  ##
+  use.design = params$use.design, ## no.design+prune are combined
+  prune.samples = params$prune.samples, ##
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
   cluster.contrasts = params$cluster.contrasts,
   pgx.dir = params$pgx.save.folder,
   libx.dir = params$libx.dir,
   user_input_dir = temp_dir
-  )
+)
 
 # annotate pgx
 
@@ -72,12 +73,12 @@ message("[ComputePgxServer:@compute] initialize object\n")
 
 # Save output to a PGX file
 
-pgx_name <- paste0(params$name,".pgx")
+pgx_name <- paste0(params$name, ".pgx")
 # if pgx.save folder exists, save pgx file to it, otherwise save in temp_dir
 if (dir.exists(params$pgx.save.folder)) {
-  pgx_name <- file.path(params$pgx.save.folder,pgx_name)
+  pgx_name <- file.path(params$pgx.save.folder, pgx_name)
 } else {
-  pgx_name <- file.path(temp_dir,pgx_name)
+  pgx_name <- file.path(temp_dir, pgx_name)
 }
 save(pgx, file = pgx_name)
 
@@ -90,4 +91,4 @@ params$sendSuccessMessageToUser(
   path_to_creds = gmail_creds
 )
 
-message("[compute PGX process] : process finished, pgx is saved as", pgx_name,"\n")
+message("[compute PGX process] : process finished, pgx is saved as", pgx_name, "\n")
