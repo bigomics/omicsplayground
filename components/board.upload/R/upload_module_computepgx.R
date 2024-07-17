@@ -249,10 +249,15 @@ upload_module_computepgx_server <- function(
         )
       })
 
+      # Input validators
       iv <- shinyvalidate::InputValidator$new()
-      iv$add_rule("selected_name", shinyvalidate::sv_required())
-      iv$add_rule("selected_description", shinyvalidate::sv_required())
       iv$enable()
+      shiny::observeEvent(input$selected_name, {
+        iv$add_rule("selected_name", shinyvalidate::sv_required())
+      })
+      shiny::observeEvent(input$selected_description, {
+        iv$add_rule("selected_description", shinyvalidate::sv_required())
+      })
 
       shiny::outputOptions(output,
         "UI",
@@ -814,7 +819,7 @@ upload_module_computepgx_server <- function(
           )
         } else if (process_counter() == 0) {
           # remove UI with JS, had problems with shiny::removeUI
-          shinyjs::runjs("document.querySelector('.current-dataset #spinner-container').remove();")
+          shinyjs::runjs("document.querySelector('.current-dataset #spinner-container')?.remove();")
         }
       })
 

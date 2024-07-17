@@ -20,9 +20,12 @@ InviteFriendModule <- function(
 
     ## email text input validator
     iv <- shinyvalidate::InputValidator$new()
-    iv$add_rule("email", shinyvalidate::sv_required())
-    iv$add_rule("email", shinyvalidate::sv_email())
     iv$enable()
+
+    observeEvent(input$email, {
+      iv$add_rule("email", shinyvalidate::sv_required())
+      iv$add_rule("email", shinyvalidate::sv_email())
+    })
 
     showModal <- function() {
       body <- tagList(

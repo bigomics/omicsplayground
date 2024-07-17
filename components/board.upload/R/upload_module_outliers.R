@@ -396,7 +396,6 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## ------------------------------------------------------------------
 
       plot_normalization <- function() {
-        ## rX <- playbase::read.as_matrix("/home/kwee/Downloads/raw_allorenteizquierdo@health.ucsd.edu_7505cdba5/raw_counts.csv")
         rX <- r_X()
         X0 <- imputedX()
         X1 <- normalizedX()
