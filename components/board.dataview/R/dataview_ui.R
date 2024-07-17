@@ -17,7 +17,7 @@ DataViewInputs <- function(id) {
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
-      "Enter a gene of interest for the analysis.",
+      "Enter a gene/protein of interest.",
       placement = "top"
     ),
     withTooltip(

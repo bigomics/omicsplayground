@@ -682,7 +682,7 @@ upload_module_outliers_server <- function(
                     "LogMaxSum" = "logMaxSum",
                       "Skip normalization" = "Skip_normalization"
                   ),
-                  selected = ifelse(tolower(upload_datatype()) == "proteomics", "logMaxMedian", "CPM")
+                  selected = ifelse(tolower(upload_datatype()) == "lc/ms proteomics", "logMaxMedian", "CPM")
                   ),
                 shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
                 br()

@@ -226,7 +226,7 @@ app_server <- function(input, output, session) {
   }
 
   shiny::observeEvent(upload_datatype(), {
-    if (tolower(upload_datatype()) == "proteomics") {
+      if (tolower(upload_datatype()) == "lc/ms proteomics") {
       shiny.i18n::update_lang("proteomics", session)
     }
   })
