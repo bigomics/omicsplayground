@@ -812,7 +812,7 @@ UploadBoard <- function(id,
       list(uploaded$counts.csv, upload_organism())
     }, {
       shiny::req(uploaded$counts.csv,upload_organism())
-      dbg("Invoking probetype ExtendedTask")
+      dbg("[UploadBoard] Invoking probetype ExtendedTask")
       probes <- rownames(uploaded$counts.csv)
       probetype("running")
       ah_task$invoke(upload_organism(), probes)
@@ -822,7 +822,7 @@ UploadBoard <- function(id,
       ah_task$status()
     , {
 
-      dbg("[observeEvent:ah_task$result] status = ", ah_task$status() )
+      dbg("[observeEvent:ah_task$result] task status = ", ah_task$status() )
       if( ah_task$status() != "success" ) return(NULL)
       if( ah_task$status() == "error" ) {
         probetype("error")        
@@ -833,6 +833,7 @@ UploadBoard <- function(id,
       organism <- upload_organism()
       probetype(detected_probetype)  ## set RV      
       if (detected_probetype == "error") {
+        dbg("[UploadBoard] ExtendedTask result has ERROR")
         shinyalert::shinyalert(
           title = "Probes not recognized!",
           text = paste("Your probes do not match any probe type for organism <b>",
@@ -841,9 +842,10 @@ UploadBoard <- function(id,
           type = "error",
           size = 's',
           html = TRUE
-        )
+        )        
       } else {
-        if(1) {
+        dbg("[UploadBoard] ExtendedTask result SUCCESFUL: detected_probetype = ", detected_probetype)        
+        if(0) {
           shinyalert::shinyalert(
             title = "Probes OK!",
             text = paste(
@@ -854,6 +856,7 @@ UploadBoard <- function(id,
             size='xs'
           )
         }
+        dbg()
       }
       
     })

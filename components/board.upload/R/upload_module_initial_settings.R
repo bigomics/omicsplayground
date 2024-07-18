@@ -41,8 +41,12 @@ upload_module_initial_settings_server <- function(
             bslib::layout_columns(
               fill = FALSE,
               div(
-                # add align items: center
                 style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+                div(
+                  style = "margin-top: 0px; width: 40%;",
+                  bs_alert(HTML("This dialog will guide you to upload your own data into Omics Playground. You should prepare at the minimum two CSV files: a <b>counts.csv</b> file (containing your transcriptomics or proteomics data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>."), closable = FALSE)
+                ),
+                br(),
                 div(
                   p("Organism:", style = "text-align: left;   margin: 0 0 2px 0; font-weight: bold;"),
                   shiny::selectInput(
