@@ -460,6 +460,7 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
+        ## bail out if probetype task is not finished or has error
         p <- probetype()
         if( is.null(p) || grepl("error",tolower(p)) || p == "") {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
