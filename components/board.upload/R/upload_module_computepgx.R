@@ -85,11 +85,15 @@ upload_module_computepgx_server <- function(
           bslib::as_fill_carrier(),
           bslib::layout_columns(
             width = "100%",
-            col_widths = c(-5,2,2,-3),
+            col_widths = c(-5,2,-5),
             fill = FALSE,
             div(
-              ##  style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
-              style = "display: flex; flex-direction: column; margin-left: 0px; gap: 20px;",              
+              ##style = "display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;",
+              style = "display: flex; flex-direction: column; gap: 20px; width: 100%;",              
+              shiny::div(
+                style = "margin-left: 0px; text-align: left; width: 100%;",              
+                shiny::uiOutput(ns("input_recap2"))
+              ),              
               div(
                 p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
                 shiny::textInput(
@@ -102,13 +106,9 @@ upload_module_computepgx_server <- function(
                 shiny::textAreaInput(
                   ns("selected_description"), NULL,
                   placeholder = "Give a short description of your dataset",
-                  height = 80, resize = "none"
+                  height = 60, resize = "none"
                 )
               )
-            ),
-            shiny::div(
-              style = "margin-left: 0px;",              
-              shiny::uiOutput(ns("input_recap2"))
             )
           ), ## end layout_col
           if (!is.null(probetype()) && probetype() == "running") {
