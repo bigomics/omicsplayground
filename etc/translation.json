@@ -1,6 +1,6 @@
 {
     "cultural_date_format": "%d-%m-%Y",
-    "languages": ["RNA-seq", "proteomics"],
+    "languages": ["RNA-seq", "lc/ms proteomics"],
     "translation": [
         {
             "RNA-seq": "Gene:",
@@ -32,11 +32,11 @@
         },
         {
             "RNA-seq": "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
-            "proteomics": "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the protein or feature of interest under the main Options."
+            "lc/ms proteomics": "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the protein or feature of interest under the main Options."
         },
         {
             "RNA-seq": "Dataset abundance of major gene types",
-            "proteomics": "Dataset abundance of major protein types"
+            "lc/ms proteomics": "Dataset abundance of major protein types"
         },
         {
             "RNA-seq": "In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.",

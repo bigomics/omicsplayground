@@ -52,13 +52,21 @@ dataview_plot_averagerank_server <- function(id,
       }
 
       nsamples <- length(samples)
-      if (data_type == "counts") {
-        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE]), decreasing = TRUE)
-        ylab <- "expression (counts)"
+      if (data_type %in% c("counts", "abundance")) {
+        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
+        if (data_type == "counts") {
+          ylab <- "expression (counts)"
+        } else {
+          ylab <- "expression (abundance)"
+        }
       }
-      if (data_type == "logCPM") {
-        mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE]), decreasing = TRUE)
-        ylab <- "expression (log2CPM)"
+      if (data_type %in% c("logCPM", "log2")) {
+        mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
+        if (data_type == "logCPM") {
+          ylab <- "expression (log2CPM)"
+        } else {
+          ylab <- "expression (log2)"
+        }
       }
 
       sel <- which(sub(".*:", "", names(mean.fc)) == gene)
@@ -95,9 +103,9 @@ dataview_plot_averagerank_server <- function(id,
       pd <- plot_data()
       req(pd)
 
-      mean.fc <- log2(pd$df$mean.fc)
       mean.fc <- pd$df$mean.fc
       sel <- pd$sel
+      dbg("[dataview::averageRankPlot] length.sel = ", length(sel))
       gene <- pd$gene
       ylab <- pd$ylab
 

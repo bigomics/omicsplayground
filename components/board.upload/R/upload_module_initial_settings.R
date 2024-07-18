@@ -62,10 +62,11 @@ upload_module_initial_settings_server <- function(
                   shiny::selectInput(
                     ns("selected_datatype"), NULL,
                     choices = c(
-                      "RNA-seq", "scRNA-seq",
-                      "proteomic intensities: LC,MS",
-                      "proteomics: SNR",
-                      "mRNA microarray", "other"
+                        "RNA-seq",
+                        "scRNA-seq",
+                        "mRNA microarray",
+                        "LC/MS proteomics",
+                        "other"
                     )
                   )
                 )

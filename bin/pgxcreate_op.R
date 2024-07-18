@@ -28,6 +28,8 @@ pgx <- playbase::pgx.createPGX(
   organism = params$organism,
   counts = params$counts,
   X = params$countsX,
+  impX = params$impX,
+  norm_method = params$norm_method,
   samples = params$samples,
   contrasts = params$contrasts,
   name = params$name,
@@ -47,7 +49,7 @@ pgx <- playbase::pgx.createPGX(
   annot_table = params$annot_table
 )
 
-message("[create PGX process] : PGX created succefully")
+message("[create PGX process] : PGX created successfully")
 message("[compute PGX process] : starting process")
 
 pgx <- playbase::pgx.computePGX(

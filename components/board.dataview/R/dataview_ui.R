@@ -17,7 +17,7 @@ DataViewInputs <- function(id) {
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
-      "Enter a gene of interest for the analysis.",
+      "Enter a gene/protein of interest.",
       placement = "top"
     ),
     withTooltip(
@@ -42,7 +42,7 @@ DataViewInputs <- function(id) {
       ns = ns,
       withTooltip(
         shiny::radioButtons(ns("data_type"), "Data type:",
-          choices = c("counts", "logCPM"), selected = "logCPM", inline = TRUE
+          choices = c("logCPM", "counts"), inline = TRUE
         ),
         "Choose an input data type for the analysis.",
         placement = "bottom"
@@ -155,7 +155,7 @@ DataViewUI <- function(id) {
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             label = "a",
-            title = "Total counts",
+            title = tspan("Total counts"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Barplot of the average number of counts (abundance) for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -163,7 +163,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
-            title = "Counts boxplots",
+            title = tspan("Counts boxplots"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -171,7 +171,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_histogram_ui(
             ns("counts_histplot"),
-            title = "Density distribution of counts",
+            title = tspan("Density distribution of counts"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Density distribution of total counts per sample/group",
             height = c("100%", TABLE_HEIGHT_MODAL),

@@ -12,7 +12,7 @@ UploadBoard <- function(id,
                         recompute_pgx,
                         recompute_info,
                         inactivityCounter,
-                        new_upload) {
+                        new_upload, session2) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -574,9 +574,10 @@ UploadBoard <- function(id,
       id = "compute",
       ## countsRT = shiny::reactive(checked_samples_counts()$COUNTS),
       ## countsRT = corrected1$counts,
-      ## countsX = corrected1$X, ## corrected1$correctedCounts,
       countsRT = corrected1$counts,
       countsX = corrected1$X,
+      impX = corrected1$impX, 
+      norm_method = corrected1$norm_method(),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       raw_dir = raw_dir,
@@ -881,7 +882,7 @@ UploadBoard <- function(id,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
       height = c("100%", TABLE_HEIGHT_MODAL),
-      title = "Uploaded Counts",
+      title = ifelse(tolower(upload_datatype()) == "lc/ms proteomics", "Uploaded Expression", "Uploaded Counts"),
       info.text = "This is the uploaded counts data.",
       caption = "This is the uploaded counts data."
     )
@@ -984,5 +985,6 @@ UploadBoard <- function(id,
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------
+    return(upload_datatype)
   })
 }

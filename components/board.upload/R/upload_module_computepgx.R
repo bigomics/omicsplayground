@@ -12,6 +12,8 @@ upload_module_computepgx_server <- function(
     id,
     countsRT,
     countsX,
+    impX,
+    norm_method,
     samplesRT,
     contrastsRT,
     raw_dir,
@@ -39,12 +41,22 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
       ## statistical method for GENE level testing
-      GENETEST.METHODS <- c(
-        "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-        "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-      )
-      ## GENETEST.SELECTED <- c("trend.limma", "deseq2.wald", "edger.qlf")
-      GENETEST.SELECTED <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma")
+      GENETEST.METHODS <- shiny::reactiveVal("")
+      shiny::observeEvent(upload_datatype(), {
+        if (tolower(upload_datatype()) == "lc/ms proteomics") {
+          GENETEST.METHODS(
+            c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          )
+        } else {
+          GENETEST.METHODS(
+            c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
+            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
+          )
+        }
+      })
+      
+      ## GENETEST.SELECTED <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+      GENETEST.SELECTED <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma") 
 
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
@@ -52,7 +64,7 @@ upload_module_computepgx_server <- function(
         ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
         "fgsea"
       )
-      GENESET.SELECTED <- c("fisher", "gsva", "fgsea")
+      GENESET.SELECTED <- c("fisher", "gsva") ## "fgsea")
 
       ## batch correction and extrs methods
       EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
@@ -143,16 +155,16 @@ upload_module_computepgx_server <- function(
                       "only.hugo",
                       "only.proteincoding",
                       "remove.unknown",
-                      "remove.notexpressed",
-                      "skip.normalization"
+                      "remove.notexpressed"
+                      ## "skip.normalization"
                     ),
                   choiceNames =
                     c(
                       "Transform probes to gene symbols",
                       "Protein-coding only",
                       "Remove Rik/ORF/LOC genes",
-                      "Remove not-expressed",
-                      "Skip normalization"
+                      "Remove not-expressed"
+                      ## "Skip normalization"
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
@@ -167,7 +179,7 @@ upload_module_computepgx_server <- function(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
                   shiny::HTML("<h4>Gene tests:</h4>"),
-                  GENETEST.METHODS,
+                  GENETEST.METHODS(),
                   selected = GENETEST.SELECTED
                 )
               ),
@@ -487,6 +499,7 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         counts <- countsRT()
         countsX <- countsX()
+        impX <- impX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
@@ -516,7 +529,7 @@ upload_module_computepgx_server <- function(
         only.hugo <- ("only.hugo" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        do.normalization <- !("skip.normalization" %in% flt)
+        ## do.normalization <- !("skip.normalization" %in% flt)
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         only.proteincoding <- ("only.proteincoding" %in% flt)
@@ -543,6 +556,7 @@ upload_module_computepgx_server <- function(
           samples = samples,
           counts = counts,
           countsX = countsX,
+          impX = impX,
           contrasts = contrasts,
           # Extra tables
           annot_table = annot_table,
@@ -550,7 +564,8 @@ upload_module_computepgx_server <- function(
 
           # Options
           batch.correct = FALSE,
-          normalize = do.normalization,
+          norm_method = norm_method,
+          ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = !remove.unknown,
@@ -580,8 +595,9 @@ upload_module_computepgx_server <- function(
         )
 
         ## Test check dim(counts) & dim(X)
-        dbg("[compute PGX process]: dim.X: ", dim(params$counts))
-        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX))
+        dbg("[compute PGX process]: dim.X: ", dim(params$counts)[1], ",", dim(params$counts)[2])
+        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX)[1], ",", dim(params$countsX)[2])
+        dbg("[compute PGX process]: dim.impX: ", dim(params$impX)[1], ",", dim(params$impX)[2])
 
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
