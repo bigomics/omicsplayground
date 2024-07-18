@@ -43,7 +43,7 @@ upload_module_computepgx_server <- function(
       ## statistical method for GENE level testing
       GENETEST.METHODS <- shiny::reactiveVal("")
       shiny::observeEvent(upload_datatype(), {
-        if (tolower(upload_datatype()) == "lc/ms proteomics") {
+        if (tolower(upload_datatype()) == "proteomics") {
           GENETEST.METHODS(
             c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
           )

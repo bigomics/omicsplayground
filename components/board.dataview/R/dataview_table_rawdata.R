@@ -157,7 +157,7 @@ dataview_table_rawdata_server <- function(id,
       }
       x <- x[order(-x$rho, -x$SD), , drop = FALSE]
 
-      if (DATATYPEPGX == "lc/ms proteomics") {
+      if (DATATYPEPGX == "proteomics") {
         colnames(x)[1] <- "protein"
       }
 
