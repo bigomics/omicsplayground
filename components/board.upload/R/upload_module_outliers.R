@@ -753,9 +753,7 @@ upload_module_outliers_server <- function(
 
             ## ---------------------------- canvas ----------------------------------
             bslib::layout_columns(
-              width = 12,
-              bslib::layout_columns(
-                col_widths = 6,
+                col_widths = c(6,6),
                 row_heights = c(3, 3),
                 heights_equal = "row",
                 PlotModuleUI(
@@ -792,7 +790,6 @@ upload_module_outliers_server <- function(
                   height = c("auto", "100%"),
                   show.maximize = FALSE
                 )
-              )
             )
           )
         )
