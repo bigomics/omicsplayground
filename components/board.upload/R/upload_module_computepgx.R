@@ -84,9 +84,12 @@ upload_module_computepgx_server <- function(
           style = "overflow: auto;",
           bslib::as_fill_carrier(),
           bslib::layout_columns(
+            width = "100%",
+            col_widths = c(-5,2,2,-3),
             fill = FALSE,
             div(
-              style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+              ##  style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
+              style = "display: flex; flex-direction: column; margin-left: 0px; gap: 20px;",              
               div(
                 p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
                 shiny::textInput(
@@ -102,6 +105,10 @@ upload_module_computepgx_server <- function(
                   height = 80, resize = "none"
                 )
               )
+            ),
+            shiny::div(
+              style = "margin-left: 0px;",              
+              shiny::uiOutput(ns("input_recap2"))
             )
           ), ## end layout_col
           if (!is.null(probetype()) && probetype() == "running") {
@@ -301,20 +308,29 @@ upload_module_computepgx_server <- function(
         ignoreNULL = FALSE
       )
 
+      output$input_recap2 <- renderUI({
+        tagList(
+          shiny::HTML("<b>Data type:</b>", upload_datatype()),
+          shiny::HTML("<br><b>Organism:</b>", upload_organism()),
+          shiny::HTML("<br><b>Probe type:</b>", probetype())        
+          ## shiny::HTML("<b>Name:</b><br>", upload_name()),
+          ## shiny::HTML("<b>Description:</b><br>", upload_description())
+        )
+      })
+
       # handle ah task result
       output$probetype_result <- shiny::renderUI({
-
         p <- probetype()
         if (is.null(p) || p == "error") {
           shiny::div(
             style = "display: flex; justify-content: center; align-items: center; color: red;",
-            shiny::tags$h4("Probes not recognized, please check organism or your probe names.")
+            shiny::tags$p("Probes not recognized, please check organism or your probe names.")
           )
         } else {
-          shiny::div(
-            style = "display: flex; justify-content: center; align-items: center",
-            shiny::tags$h4("Probe type detected: ", p)
-          )
+#          shiny::div(
+#            style = "display: flex; justify-content: center; align-items: center",
+#            shiny::tags$p("Probe type detected: ", p)
+#          )
         }
       })
 

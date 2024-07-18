@@ -497,6 +497,7 @@ UploadBoard <- function(id,
       )
     })
 
+
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
       content = function(file) {
@@ -789,13 +790,15 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
 
-        if (
-          is.null(upload_name()) ||
-            upload_name() == "" ||
-            upload_description() == "" ||
-            is.null(upload_description()) ||
-            is.null(upload_gx_methods()) ||
-            is.null(upload_gset_methods())
+        probetype.finished <- !(probetype() %in% c("error","running"))
+        
+        if ( is.null(upload_name()) ||
+             upload_name() == "" ||
+             upload_description() == "" ||
+             is.null(upload_description()) ||
+             is.null(upload_gx_methods()) ||
+             is.null(upload_gset_methods()) ||
+             !probetype.finished
         ) {
           wizardR::lock("upload_wizard")
         } else {
@@ -844,8 +847,8 @@ UploadBoard <- function(id,
           shinyalert::shinyalert(
             title = "Probes OK!",
             text = paste(
-              "Your probe type has been detected successfully.",
-              "\nSelected organism: ", organism,
+              "Probe type has been detected successfully.",
+              "\n\nSelected organism: ", organism,
               "\nDetected probe type: ", detected_probetype),          
             type = "info",
             size='xs'
