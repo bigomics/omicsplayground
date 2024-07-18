@@ -258,8 +258,11 @@ PlotModuleUI <- function(id,
         }
         shiny::div(
           class = "plotmodule-info",
-          shiny::HTML("<b>References</b><br>"),
-          shiny::HTML(html_code)
+          shiny::HTML("<b>References</b>"),
+          shiny::div(
+            class = "plotmodule-info plotmodule-references",
+            shiny::HTML(html_code)
+          )
         )
       } else {NULL},
       if (!is.null(info.extra_link)) {
