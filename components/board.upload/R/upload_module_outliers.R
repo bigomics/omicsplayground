@@ -242,59 +242,11 @@ upload_module_outliers_server <- function(
       results_correction_methods <- reactive({
           shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-<<<<<<< HEAD
-        dbg("[outliers_server:results_correction_methods] dim(r_contrasts) = ", dim(r_contrasts()))
-        
-        X0 <- imputedX()
-        X1 <- cleanX()$X
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        kk <- intersect(colnames(X1), colnames(X0))
-        kk <- intersect(kk, rownames(samples))
-        kk <- intersect(kk, rownames(contrasts))
-        X1 <- X1[, kk, drop = FALSE]
-        X0 <- X0[, kk, drop = FALSE]
-        contrasts <- contrasts[kk, , drop = FALSE]
-        samples <- samples[kk, , drop = FALSE]
-        xlist.init <- list("uncorrected" = X0, "normalized" = X1)
-=======
+          
           X0 <- imputedX()
           X1 <- cleanX()$X
           samples <- r_samples()
           contrasts <- r_contrasts()
->>>>>>> MPoC_NA
-
-          nmissing <- sum(is.na(X0))
-          if (nmissing > 0) {
-              dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X0.")
-              dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
-              X0 <- playbase::imputeMissing(X0, method = "SVD2")
-          }
-          
-          nmissing <- sum(is.na(X1))
-          if (nmissing > 0) {
-              dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X1.")
-              dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
-              X1 <- playbase::imputeMissing(X1, method = "SVD2")
-          }
-<<<<<<< HEAD
-          res <- playbase::compare_batchcorrection_methods(
-            X1, samples,
-            pheno = NULL,
-            contrasts = contrasts,
-            methods = mm,
-            ntop = 4000,
-            xlist.init = xlist.init,
-            evaluate = FALSE,  ## no score computation
-            clust.method = "tsne"
-          )
-        })
-
-##        selected <- res$best.method
-##        dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
-##        shiny::updateSelectInput(session, "bec_method", selected = selected)
-=======
-
           kk <- intersect(colnames(X1), colnames(X0))
           kk <- intersect(kk, rownames(samples))
           kk <- intersect(kk, rownames(contrasts))
@@ -302,22 +254,35 @@ upload_module_outliers_server <- function(
           X0 <- X0[, kk, drop = FALSE]
           contrasts <- contrasts[kk, , drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
->>>>>>> MPoC_NA
 
+          nmissing <- sum(is.na(X0))
+          if (nmissing > 0) {
+            dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X0.")
+            dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
+            X0 <- playbase::imputeMissing(X0, method = "SVD2")
+          }
+          
+          nmissing <- sum(is.na(X1))
+          if (nmissing > 0) {
+            dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X1.")
+            dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
+            X1 <- playbase::imputeMissing(X1, method = "SVD2")
+          }
+
+          methods <- c("ComBat", "RUV", "SVA", "NPM")
           xlist.init <- list("uncorrected" = X0, "normalized" = X1)
           
-          shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
-              dbg("[outliers_server:results_correction_methods] ComBat, RUV, SVA, NPM")
-              mm <- c("ComBat", "RUV", "SVA", "NPM")
-              res <- playbase::compare_batchcorrection_methods(
-                                   X1, samples, pheno = NULL, contrasts = contrasts,
-                                   methods = mm, ntop = 4000, xlist.init = xlist.init)
-          })
-
-          selected <- res$best.method
-          dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
-          shiny::updateSelectInput(session, "bec_method", selected = selected)
-
+          res <- playbase::compare_batchcorrection_methods(
+            X1, samples,
+            pheno = NULL,
+            contrasts = contrasts,
+            methods = methods,
+            ntop = 4000,
+            xlist.init = xlist.init,
+            evaluate = FALSE,  ## no score computation
+            clust.method = "tsne"
+          )
+         
           return(res)
       })
 
