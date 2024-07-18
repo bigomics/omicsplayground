@@ -32,24 +32,18 @@ UploadBoard <- function(id,
     show_comparison_builder <- shiny::reactiveVal(TRUE)
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
+    probetype <- shiny::reactiveVal("running")
 
-    # add task to compute annothub
-
-    ah_task <- ExtendedTask$new(function(organism) {
-       future_promise({
-        # ah <- AnnotationHub::AnnotationHub()
-        # ahDb <- AnnotationHub::query(ah, pattern = c(
-        #   organism,
-        #   "OrgDb"
-        # ))
-        # ahDb <- ahDb[which(tolower(ahDb$species) == tolower(organism))]
-        # k <- length(ahDb)
-        # orgdb <- ahDb[[k]]
-        # orgdb
-
-        Sys.sleep(7)
-        print(organism)
-        print("AnnotationHub queried")
+    # add task to detect probetype using annothub
+    ah_task <- ExtendedTask$new(function(organism, probes) {
+      future_promise({
+        dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
+        probetype0 <- playbase::detect_probetype(organism, probes)
+        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
+        if(is.null(probetype0)) probetype0 <- "error"
+        ##probetype(probetype0)
+        ##dbg("[UploadBoard:ExtendedTask.new] RV.probetype = ", probetype())
+        probetype0
       })
     })
 
@@ -257,7 +251,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS", organism = upload_organism(), orgdb = NULL)
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
@@ -601,7 +595,9 @@ UploadBoard <- function(id,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
-      reset_upload_text_input = reset_upload_text_input
+      reset_upload_text_input = reset_upload_text_input,
+      ## ah_task = ah_task,
+      probetype = probetype
     )
 
     uploaded_pgx <- shiny::reactive({
@@ -751,7 +747,8 @@ UploadBoard <- function(id,
         upload_description(),
         upload_organism(),
         upload_gset_methods(),
-        upload_gx_methods()
+        upload_gx_methods(),
+        probetype()
       ),
       {
         req(input$upload_wizard == "step_compute")
@@ -807,18 +804,58 @@ UploadBoard <- function(id,
       }
     )
 
-    # check probetypes when wizard is on counts adn every time upload_species change
+    ## check probetypes we have counts and every time upload_species changes
+    observeEvent({
+      list(uploaded$counts.csv, upload_organism())
+    }, {
+      shiny::req(uploaded$counts.csv,upload_organism())
+      dbg("Invoking probetype ExtendedTask")
+      probes <- rownames(uploaded$counts.csv)
+      probetype("running")
+      ah_task$invoke(upload_organism(), probes)
+    })
+    
     observeEvent(
-      list(input$upload_wizard, upload_organism()),
-      {
-        req(input$upload_wizard == "step_counts")
-        print("Checking probetypes task started")
+      ah_task$status()
+    , {
 
-        # ah_task$invoke(upload_organism())
+      dbg("[observeEvent:ah_task$result] status = ", ah_task$status() )
+      if( ah_task$status() != "success" ) return(NULL)
+      if( ah_task$status() == "error" ) {
+        probetype("error")        
+        return(NULL)
       }
-    )
+      
+      detected_probetype <- ah_task$result()
+      organism <- upload_organism()
+      probetype(detected_probetype)  ## set RV      
+      if (detected_probetype == "error") {
+        shinyalert::shinyalert(
+          title = "Probes not recognized!",
+          text = paste("Your probes do not match any probe type for organism <b>",
+                       organism, "</b>. Please correct organism or check",
+                       "your probe names."),
+          type = "error",
+          size = 's',
+          html = TRUE
+        )
+      } else {
+        if(1) {
+          shinyalert::shinyalert(
+            title = "Probes OK!",
+            text = paste(
+              "Your probe type has been detected successfully.",
+              "\nSelected organism: ", organism,
+              "\nDetected probe type: ", detected_probetype),          
+            type = "info",
+            size='xs'
+          )
+        }
+      }
+      
+    })
 
-
+    
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
@@ -903,6 +940,7 @@ UploadBoard <- function(id,
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
+            wizardR::unlock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
               pgx <- recompute_pgx()

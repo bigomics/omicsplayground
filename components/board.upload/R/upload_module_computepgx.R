@@ -31,7 +31,9 @@ upload_module_computepgx_server <- function(
     upload_gx_methods,
     upload_gset_methods,
     process_counter,
-    reset_upload_text_input) {
+    reset_upload_text_input,
+##    ah_task,
+    probetype) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -102,6 +104,18 @@ upload_module_computepgx_server <- function(
               )
             )
           ), ## end layout_col
+          if (!is.null(probetype()) && probetype() == "running") {
+            shiny::div(
+              style = "display: flex; justify-content: center; align-items: center;",
+              shiny::tags$h4(
+                "Probe type detection still running, please wait...",
+                style = "color: red;"
+              )
+            )
+          },
+          shiny::div(
+            shiny::uiOutput(ns("probetype_result"))
+          ),
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
               icon = icon("cog", lib = "glyphicon")
@@ -287,6 +301,23 @@ upload_module_computepgx_server <- function(
         ignoreNULL = FALSE
       )
 
+      # handle ah task result
+      output$probetype_result <- shiny::renderUI({
+
+        p <- probetype()
+        if (is.null(p) || p == "error") {
+          shiny::div(
+            style = "display: flex; justify-content: center; align-items: center; color: red;",
+            shiny::tags$h4("Probes not recognized, please check organism or your probe names.")
+          )
+        } else {
+          shiny::div(
+            style = "display: flex; justify-content: center; align-items: center",
+            shiny::tags$h4("Probe type detected: ", p)
+          )
+        }
+      })
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -408,17 +439,23 @@ upload_module_computepgx_server <- function(
       })
 
       shiny::observeEvent(upload_wizard(), {
+        
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
 
+        p <- probetype()
+        dbg("[computepgx_server:upload_wizard] probetype = ", p)
+        if( is.null(p) || grepl("error",tolower(p)) || p == "") {
+          dbg("[computepgx_server:upload_wizard] WARNING probetype failed")
+          return(NULL)
+        }
+        shiny::req(!(p %in% c("error","running","")))
+
+        
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-
-        dbg("[upload_module_computepgx:input$compute] pgxdir = ", pgxdir)
-        dbg("[upload_module_computepgx:input$compute] numpgx = ", numpgx)
-        dbg("[upload_module_computepgx:input$compute] max.datasets = ", max.datasets)
 
         if (!auth$options$ENABLE_DELETE) {
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
@@ -436,11 +473,6 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
-
-        dbg("[upload_module_computepgx:input$compute] dim.counts = ", dim(counts))
-        dbg("[upload_module_computepgx:input$compute] dim.countsX = ", dim(countsX))
-        dbg("[upload_module_computepgx:input$compute] dim.samples = ", dim(samples))
-        dbg("[upload_module_computepgx:input$compute] dim.contrasts = ", dim(contrasts))
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
