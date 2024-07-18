@@ -75,7 +75,23 @@ ExpressionUI <- function(id) {
         expression_plot_volcano_ui(ns("plots_volcano"),
           label = "a",
           title = "Volcano plot",
-          info.text = "A volcano plot of genes for the selected comparison under the Contrast settings plotting fold-change versus significance on the x and y axes, respectively.",
+          info.text = "Volcano plot of genes for the selected {Contrast} displaying fold-change versus significance. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted. The plot can be colored by using the {Color up/down regulated} plot setting.",
+          info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests.",
+          info.references = list(
+            list(
+              "Love MI, Huber W, Anders S (2014). “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.” Genome Biology, 15, 550.",
+              "https://doi.org/10.1186/s13059-014-0550-8"
+            ),
+            list(
+              "Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor package for differential expression analysis of digital gene expression data.” Bioinformatics, 26(1), 139-140.",
+              "https://doi.org/10.1093/bioinformatics/btp616"
+            ),
+            list(
+              "Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK (2015). “limma powers differential expression analyses for RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7)",
+              "https://doi.org/10.1093/nar/gkv007"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "Volcano-plot displaying fold-change versus significance.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
@@ -83,7 +99,9 @@ ExpressionUI <- function(id) {
         expression_plot_maplot_ui(
           id = ns("plots_maplot"),
           title = "Bland-Altman (MA) plot",
-          info.text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the Contrast settings plotting mean intensity versus fold-change on the x and y axes, respectively.",
+          info.text = "Bland-Altman (MA) plot of genes for the selected {Contrast} displaying mean intensity versus fold-change. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted. The plot can be colored by using the {Color up/down regulated} plot setting.",
+          info.methods = "See Volcano plot",
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "MA-plot displaying signal intensity versus fold-change.",
           label = "b",
           height = c("100%", TABLE_HEIGHT_MODAL),
@@ -92,8 +110,8 @@ ExpressionUI <- function(id) {
         expression_plot_barplot_ui(
           id = ns("plots_barplot"),
           title = "Differential expression",
-          info.text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the Contrast settings.",
-          caption = "Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast.",
+          info.text = "Barplot displaying the expression for the gene selected under the Differential expression analysis table for the conditions of the selected {Contrast}. Under the plot settings it is possible to control the scale with {log scale}, show the expression of other groups {show others} and group/ungroup the conditions {grouped}.",
+          caption = "Barplot displaying the expression for the gene selected under the Differential expression analysis table for the conditions of the selected {Contrast}.",
           label = "c",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
@@ -101,7 +119,7 @@ ExpressionUI <- function(id) {
         expression_plot_topfoldchange_ui(
           id = ns("plots_topfoldchange"),
           title = "Gene in comparison",
-          info.text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the Table section.",
+          info.text = "Barplot displaying the fold change summary across all contrasts for the gene selected in the Differential expression analysis table.",
           caption = "Sorted barplot of the differential expression of the selected gene across all contrasts.",
           label = "d",
           height = c("100%", TABLE_HEIGHT_MODAL),
@@ -117,7 +135,7 @@ ExpressionUI <- function(id) {
         expression_plot_topgenes_ui(
           id = ns("topgenes"),
           title = "Expression of top differentially expressed genes",
-          info.text = "Under the plot Settings, users can scale the abundance levels (counts) or ungroup the samples in the plot from the log scale and ungroup samples settings, respectively.",
+          info.text = "Barplot displaying the expression for the top differentially expressed genes for the conditions of the selected {Contrast}. Under the plot settings it is possible to control the scale with {log scale}, show the expression of other groups {show others} and group/ungroup the conditions {grouped}.",
           caption = "Expression barplots of the top most differentially expressed genes for the selected comparison.",
           label = "a",
           height = c("100%", TABLE_HEIGHT_MODAL),
@@ -133,7 +151,23 @@ ExpressionUI <- function(id) {
         expression_plot_volcanoAll_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
-          info.text = "Under the Volcano (all) tab, the platform simultaneously displays multiple volcano plots for genes across all comparisons. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong.",
+          info.text = "Volcano plot of genes for all contrasts displaying fold-change versus significance. The plots can be colored by using the {Color up/down regulated} plot setting; also the plots can be scaled using the {scale per plot} plot setting.",
+          info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests. By comparing multiple volcano plots, it can immediately be seen which comparison is statistically weak or strong.",
+          info.references = list(
+            list(
+              "Love MI, Huber W, Anders S (2014). “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.” Genome Biology, 15, 550.",
+              "https://doi.org/10.1186/s13059-014-0550-8"
+            ),
+            list(
+              "Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor package for differential expression analysis of digital gene expression data.” Bioinformatics, 26(1), 139-140.",
+              "https://doi.org/10.1093/bioinformatics/btp616"
+            ),
+            list(
+              "Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK (2015). “limma powers differential expression analyses for RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7)",
+              "https://doi.org/10.1093/nar/gkv007"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "Simultaneous visualisation of volcano plots of genes for all comparisons.",
           label = "a",
           height = c("100%", TABLE_HEIGHT_MODAL),
@@ -149,7 +183,23 @@ ExpressionUI <- function(id) {
         expression_plot_volcanoMethods_ui(
           id = ns("volcanoMethods"),
           title = "Volcano plots for all methods",
-          info.text = "These plots provide users an overview of the statistics of all methods at the same time. Methods showing better statistical significance will show volcano plots with 'higher wings'.",
+          info.text = "Volcano plots of genes for selected {Contrast} of all the statistical methods displaying fold-change versus significance. The plots can be colored by using the {Color up/down regulated} plot setting; also the plots can be scaled using the {scale per plot} plot setting.",
+          info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests. By comparing multiple volcano plots, it can immediately be seen which method captures better signal. Methods showing better statistical significance will show volcano plots with 'higher wings'.",
+          info.references = list(
+            list(
+              "Love MI, Huber W, Anders S (2014). “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.” Genome Biology, 15, 550.",
+              "https://doi.org/10.1186/s13059-014-0550-8"
+            ),
+            list(
+              "Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor package for differential expression analysis of digital gene expression data.” Bioinformatics, 26(1), 139-140.",
+              "https://doi.org/10.1093/bioinformatics/btp616"
+            ),
+            list(
+              "Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK (2015). “limma powers differential expression analyses for RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7)",
+              "https://doi.org/10.1093/nar/gkv007"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. ",
           label = "a",
           height = c("100%", TABLE_HEIGHT_MODAL),
