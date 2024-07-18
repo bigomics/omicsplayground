@@ -242,27 +242,10 @@ upload_module_outliers_server <- function(
       results_correction_methods <- reactive({
           shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-<<<<<<< HEAD
-        dbg("[outliers_server:results_correction_methods] dim(r_contrasts) = ", dim(r_contrasts()))
-        
-        X0 <- imputedX()
-        X1 <- cleanX()$X
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        kk <- intersect(colnames(X1), colnames(X0))
-        kk <- intersect(kk, rownames(samples))
-        kk <- intersect(kk, rownames(contrasts))
-        X1 <- X1[, kk, drop = FALSE]
-        X0 <- X0[, kk, drop = FALSE]
-        contrasts <- contrasts[kk, , drop = FALSE]
-        samples <- samples[kk, , drop = FALSE]
-        xlist.init <- list("uncorrected" = X0, "normalized" = X1)
-=======
           X0 <- imputedX()
           X1 <- cleanX()$X
           samples <- r_samples()
           contrasts <- r_contrasts()
->>>>>>> MPoC_NA
 
           nmissing <- sum(is.na(X0))
           if (nmissing > 0) {
@@ -277,23 +260,6 @@ upload_module_outliers_server <- function(
               dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
               X1 <- playbase::imputeMissing(X1, method = "SVD2")
           }
-<<<<<<< HEAD
-          res <- playbase::compare_batchcorrection_methods(
-            X1, samples,
-            pheno = NULL,
-            contrasts = contrasts,
-            methods = mm,
-            ntop = 4000,
-            xlist.init = xlist.init,
-            evaluate = FALSE,  ## no score computation
-            clust.method = "tsne"
-          )
-        })
-
-##        selected <- res$best.method
-##        dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
-##        shiny::updateSelectInput(session, "bec_method", selected = selected)
-=======
 
           kk <- intersect(colnames(X1), colnames(X0))
           kk <- intersect(kk, rownames(samples))
@@ -302,7 +268,6 @@ upload_module_outliers_server <- function(
           X0 <- X0[, kk, drop = FALSE]
           contrasts <- contrasts[kk, , drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
->>>>>>> MPoC_NA
 
           xlist.init <- list("uncorrected" = X0, "normalized" = X1)
           
@@ -311,7 +276,7 @@ upload_module_outliers_server <- function(
               mm <- c("ComBat", "RUV", "SVA", "NPM")
               res <- playbase::compare_batchcorrection_methods(
                                    X1, samples, pheno = NULL, contrasts = contrasts,
-                                   methods = mm, ntop = 4000, xlist.init = xlist.init)
+                                   clust.method = "tsne", methods = mm, xlist.init = xlist.init)
           })
 
           selected <- res$best.method
@@ -582,57 +547,49 @@ upload_module_outliers_server <- function(
       }
 
       plot_all_methods <- function() {
-        res <- results_correction_methods()
-        pos.list <- res$pos        
-        ## pos.list <- res$pos[["tsne"]] ## "pca"
-        ## mm <- c("uncorrected", "normalized", "ComBat", "RUV", "SVA", "NPM")
-        ## pos.list <- pos.list[mm]
-        pheno <- res$pheno
-        xdim <- length(res$pheno)
-        col1 <- factor(pheno)
-        cex1 <- cut(xdim,
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
-        cex1 <- 2.5 * as.numeric(as.character(cex1))
-
-        par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
-        for (i in 1:length(pos.list)) {
-          plot(pos.list[[i]], col = col1, cex = cex1, pch = 20)
-          title(names(pos.list)[i], cex.main = 1.5)
-        }
+          res <- results_correction_methods()
+          mm <- c("uncorrected", "normalized", "ComBat", "RUV", "SVA", "NPM")
+          pos.list <- res$pos[mm]
+          pheno <- res$pheno
+          xdim <- length(res$pheno)
+          col1 <- factor(pheno)
+          cex1 <- cut(xdim,
+                      breaks = c(0, 40, 100, 250, 1000, 999999),
+                      c(1, 0.85, 0.7, 0.55, 0.4))
+          cex1 <- 2.5 * as.numeric(as.character(cex1))
+          par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
+          for (i in 1:length(pos.list)) {
+              plot(pos.list[[i]], col = col1, cex = cex1, pch = 20)
+              title(names(pos.list)[i], cex.main = 1.5)
+          }
       }
 
       plot_before_after <- function() {
-        ##        out.res <- results_outlier_methods()
-        res <- results_correction_methods()
-        method <- input$bec_method
-        if (method == "uncorrected") method <- "normalized"
-        pos0 <- res$pos[["normalized"]]
-        pos1 <- res$pos[[method]]
-        kk <- intersect(rownames(pos0), rownames(pos1))
-        pos0 <- pos0[kk, ]
-        pos1 <- pos1[kk, ]
+          ## out.res <- results_outlier_methods()
+          res <- results_correction_methods()
+          method <- input$bec_method
+          if (method == "uncorrected") method <- "normalized"
+          pos0 <- res$pos[["normalized"]]
+          pos1 <- res$pos[[method]]
+          kk <- intersect(rownames(pos0), rownames(pos1))
+          pos0 <- pos0[kk, ]
+          pos1 <- pos1[kk, ]
 
-        ## pheno <- r_contrasts()[,1]
-        pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
-        pheno <- pheno[rownames(pos0)]
-        col1 <- factor(pheno)
-        cex1 <- cut(nrow(pos1),
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
-        cex1 <- 2.7 * as.numeric(as.character(cex1))
-
-        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-        plot(pos0,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "before",
-          xlab = "PC1", ylab = "PC2"
-        )
-        plot(pos1,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "after",
-          xlab = "PC1", ylab = "PC2"
-        )
+          ## pheno <- r_contrasts()[,1]
+          pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
+          pheno <- pheno[rownames(pos0)]
+          col1 <- factor(pheno)
+          cex1 <- cut(nrow(pos1),
+                      breaks = c(0, 40, 100, 250, 1000, 999999),
+                      c(1, 0.85, 0.7, 0.55, 0.4))
+          cex1 <- 2.7 * as.numeric(as.character(cex1))
+          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+          plot(pos0,
+               col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "before",
+               xlab = "PC1", ylab = "PC2")
+          plot(pos1,
+               col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "after",
+               xlab = "PC1", ylab = "PC2")
       }
 
       ## ------------------------------------------------------------------
