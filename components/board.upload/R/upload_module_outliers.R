@@ -269,19 +269,24 @@ upload_module_outliers_server <- function(
           contrasts <- contrasts[kk, , drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
 
+          methods <- c("ComBat", "RUV", "SVA", "NPM")
           xlist.init <- list("uncorrected" = X0, "normalized" = X1)
-          
           shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
               dbg("[outliers_server:results_correction_methods] ComBat, RUV, SVA, NPM")
               mm <- c("ComBat", "RUV", "SVA", "NPM")
               res <- playbase::compare_batchcorrection_methods(
-                                   X1, samples, pheno = NULL, contrasts = contrasts,
-                                   clust.method = "tsne", methods = mm, xlist.init = xlist.init)
+                                   X1, samples,
+                                   pheno = NULL,
+                                   contrasts = contrasts,
+                                   clust.method = "tsne",
+                                   methods = mm,
+                                   evaluate = FALSE,  ## no score computation
+                                   xlist.init = xlist.init)
           })
 
-          selected <- res$best.method
-          dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
-          shiny::updateSelectInput(session, "bec_method", selected = selected)
+          ## selected <- res$best.method
+          ## dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
+          ## shiny::updateSelectInput(session, "bec_method", selected = selected)
 
           return(res)
       })
