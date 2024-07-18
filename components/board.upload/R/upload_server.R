@@ -543,9 +543,9 @@ UploadBoard <- function(id,
     ## =====================================================================
 
     shiny::observeEvent(modified_ct(), {
-      ## Monitor for changes in the contrast matrix and if
-      ## so replace the uploaded reactive values.
+      ## Monitor for changes in the contrast matrix and replace user contrast file
       modct <- modified_ct()
+      dbg("[UploadBoard:modified_ct] contrasts has been modified")
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }

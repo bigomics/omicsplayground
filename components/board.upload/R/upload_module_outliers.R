@@ -14,7 +14,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   uiOutput(ns("outliers"), fill = TRUE)
 }
 
-
 upload_module_outliers_server <- function(
     id,
     r_X,
@@ -260,6 +259,8 @@ upload_module_outliers_server <- function(
         ## shiny::req(cleanX()$X, r_contrasts(), r_samples())
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
+        dbg("[outliers_server:results_correction_methods] dim(r_contrasts) = ", dim(r_contrasts()))
+        
         X0 <- imputedX()
         X1 <- cleanX()$X
         samples <- r_samples()
@@ -287,13 +288,15 @@ upload_module_outliers_server <- function(
             contrasts = contrasts,
             methods = mm,
             ntop = 4000,
-            xlist.init = xlist.init
+            xlist.init = xlist.init,
+            evaluate = FALSE,  ## no score computation
+            clust.method = "tsne"
           )
         })
 
-        selected <- res$best.method
-        dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
-        shiny::updateSelectInput(session, "bec_method", selected = selected)
+##        selected <- res$best.method
+##        dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
+##        shiny::updateSelectInput(session, "bec_method", selected = selected)
 
         return(res)
       })
@@ -566,8 +569,7 @@ upload_module_outliers_server <- function(
 
       plot_all_methods <- function() {
         res <- results_correction_methods()
-        ## pos.list <- res$pos[["tsne"]]
-        pos.list <- res$pos[["pca"]]
+        pos.list <- res$pos
         pheno <- res$pheno
         xdim <- length(res$pheno)
         col1 <- factor(pheno)
@@ -589,10 +591,8 @@ upload_module_outliers_server <- function(
         res <- results_correction_methods()
         method <- input$bec_method
         if (method == "uncorrected") method <- "normalized"
-        ## pos0 <- res$pos[["tsne"]][["normalized"]]
-        ## pos1 <- res$pos[["tsne"]][[method]]
-        pos0 <- res$pos[["pca"]][["normalized"]]
-        pos1 <- res$pos[["pca"]][[method]]
+        pos0 <- res$pos[["normalized"]]
+        pos1 <- res$pos[[method]]
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, ]
         pos1 <- pos1[kk, ]
