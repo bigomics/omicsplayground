@@ -94,8 +94,6 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
         sample = as.vector(mapply(rep, colnames(hist)[-c(1, 2)], nrow(hist)))
       )
 
-      xlab <- getUnits(DATATYPEX)
-      
       if (DATATYPEPGX == "proteomics") {
         xlab <- "Abundance"
       } else {
