@@ -36,12 +36,11 @@ COPY docker/Rprofile .Rprofile
 # Install supporing libraries
 #------------------------------------------------------------
 RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
-RUN R -e "install.packages('ruv')"
+RUN R -e "install.packages(c('ruv','shiny.i18n'))"
 
-
-WORKDIR /
 
 # check if playbase@{$BRANCH} exists, if it does, install.. other wise install main
+WORKDIR /
 RUN echo "Checking playbase branch ${BRANCH}"
 RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l) && \
     if [ $BRANCH_EXISTS -eq 1 ]; then \
