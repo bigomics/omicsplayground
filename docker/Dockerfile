@@ -33,7 +33,7 @@ COPY docker/Rprofile .Rprofile
 #RUN pip3 install umap-learn
 
 #------------------------------------------------------------
-# Install supporing libraries
+# Install supporting libraries
 #------------------------------------------------------------
 RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
 RUN R -e "install.packages('ruv')"
