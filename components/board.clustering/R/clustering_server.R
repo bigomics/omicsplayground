@@ -498,7 +498,13 @@ ClusteringBoard <- function(id, pgx) {
       CLUSTK <- as.integer(splitmap$hm_clustk())
       if (is.null(idx)) {
         D <- as.dist(1 - cor(t(zx), use = "pairwise"))
+        D[which(is.nan(D))] <- 1
+        D[which(is.na(D))] <- 1
+        dbg("is.na(D):", sum(is.na(D)))
+        dbg("is.nan(D):", sum(is.nan(D)))
+        dbg("--------------[MONITORING:1]----------------------")
         system.time(hc <- fastcluster::hclust(D, method = "ward.D2"))
+        dbg("--------------[MONITORING:2]----------------------")
         ngrp <- min(CLUSTK, nrow(zx)) ## how many default groups???
         idx <- paste0("S", cutree(hc, ngrp))
       }
@@ -608,7 +614,6 @@ ClusteringBoard <- function(id, pgx) {
 
     getClustAnnotCorrelation <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
-
       filt <- getTopMatrix()
       shiny::req(filt)
 
