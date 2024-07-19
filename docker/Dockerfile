@@ -64,6 +64,9 @@ RUN rm -fr /omicsplayground  \
     https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
+## initialize AnnotationHub
+RUN Rscript dev/init_annothub.R
+
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
