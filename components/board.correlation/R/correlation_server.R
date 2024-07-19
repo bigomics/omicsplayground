@@ -168,9 +168,10 @@ CorrelationBoard <- function(id, pgx) {
       gene0 <- toupper(gene) ## uppercase mouse
       R <- playbase::pgx.getGeneCorrelation(gene0, xref = xref)
       if (is.null(R)) {
-        return(NULL)
+          return(NULL)
       }
-      R <- R[rownames(zx), , drop = FALSE]
+      cm <- intersect(rownames(R), rownames(zx))
+      R <- R[cm, , drop = FALSE]
 
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2))
@@ -178,7 +179,7 @@ CorrelationBoard <- function(id, pgx) {
 
       rho.genes <- rownames(zx)
       if ("hgnc_symbol" %in% colnames(pgx$genes)) {
-        rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
+          rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
       }
 
       R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
