@@ -78,7 +78,27 @@ BiomarkerUI <- function(id) {
           biomarker_plot_importance_ui(
             ns("pdx_importance"),
             title = "Variable importance",
-            info.text = "An importance score for each variable is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. By combining several methods, the platform aims to select the best possible biomarkers. The top features are plotted according to cumulative ranking by the algorithms.",
+            info.text = "Barplot displaying the most important genes for the {Predicted target}.",
+            info.methods = "The importance score for each gene is calculated using multiple machine learning algorithms, including sPLS [1], elastic nets [2], random forests [3], and extreme gradient boosting [4]. By combining several methods, the best possible biomarkers are selected. The top features are plotted according to cumulative ranking by the algorithms.",
+            info.references = list(
+              list(
+                "Le Cao (2017). “mixOmics: An R package for 'omics feature selection and multiple data integration.” PLoS computational biology, 13(11), e1005752.",
+                "https://doi.org/doi:10.18129/B9.bioc.mixOmics"
+              ),
+              list(
+                "Friedman J, Tibshirani R, Hastie T (2010). “Regularization Paths for Generalized Linear Models via Coordinate Descent.” Journal of Statistical Software, 33(1), 1–22.",
+                "https://doi.org/10.18637/jss.v033.i01"
+              ),
+              list(
+                "Liaw A, Wiener M (2002). “Classification and Regression by randomForest.” R News, 2(3), 18-22.",
+                "https://doi.org/10.32614/CRAN.package.randomForest"
+              ),
+              list(
+                "Chen T (2024) xgboost: Extreme Gradient Boosting",
+                "https://doi.org/10.32614/CRAN.package.xgboost"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
             caption = "Barchart indicating the cumulative weight of a proposed biomarker based on six machine learning algorithms.",
             height = imgH1,
             width = c("auto", "100%"),
@@ -87,7 +107,9 @@ BiomarkerUI <- function(id) {
           biomarker_plot_boxplots_ui(
             ns("pdx_boxplots"),
             title = "Biomarker expression",
-            info.text = "These boxplots shows the expression of genes/samples of the identified features.",
+            info.text = "Boxplot displaying the expression for the top genes according to their importance. The expression is grouped by the {Predicted target} selected on the computation.",
+            info.methods = "See Variable importance",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
             caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
             height = imgH1,
             width = c("auto", "100%"),
@@ -96,7 +118,15 @@ BiomarkerUI <- function(id) {
           biomarker_plot_heatmap_ui(
             ns("pdx_heatmap"),
             title = "Heatmap",
-            info.text = "Expression heatmap of top gene features according to their variable importance.",
+            info.text = "Expression heatmap of top 40 gene features according to their importance for the {Predicted target}. By default only the samples used on the computation are displayed, using the {show all samples} plot setting all samples can be displayed.",
+            info.methods = "Heatmap clustering performed with the fastcluster R package [1] using the 'ward.D2' method with euclidean distance.",
+            info.references = list(
+              list(
+                "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                "https://doi.org/10.18637/jss.v053.i09"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
             caption = "Heatmap indicating the expression pattern across selected phenotypic groups for the most likely biomarkers.",
             height = imgH2,
             width = c("auto", "100%"),
@@ -105,7 +135,9 @@ BiomarkerUI <- function(id) {
           biomarker_plot_decisiontree_ui(
             ns("pdx_decisiontree"),
             title = "Decision tree",
-            info.text = "The decision tree shows a tree solution for classification based on the top most important features. The plot provides a proportion of the samples that are defined by each biomarker in the boxes.",
+            info.text = "Decision tree showing a solution for classification based on the top most important features for the {Predicted target}. The plot provides a proportion of the samples that are defined by each biomarker in the boxes.",
+            info.methods = "See Variable importance",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
             caption = "Decision tree indicating expression-based biomarkers that distinguish the selected phenotypic groups.",
             height = imgH2,
             width = c("auto", "100%"),
@@ -121,7 +153,15 @@ BiomarkerUI <- function(id) {
           biomarker_plot_featurerank_ui(
             id = ns("featurerank"),
             title = "Feature-set ranking",
-            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminative power of the feature set (or gene family) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family) can explain the variance in the data the best. Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner.",
+            info.text = "Ranked discriminant score for top feature sets. The plot ranks the discriminative power of the feature set (or gene family) as a cumulative discriminant score for all phenotype variables. Three methods to compute the discriminant score can be selected on the plot settings under {Method}.",
+            info.methods = "Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups (performed using core stats R package). Thus, a feature set is highly discriminative if the between-group correlation is low. 'P-value' based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner. For 'meta' and 'p-value' the limma R/Bioconductor package is used [1]. In this way, is possible to find which feature set (or gene family) can explain the variance in the data the best.",
+            info.references = list(
+              list(
+                "Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK (2015). “limma powers differential expression analyses for RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7), e47.",
+                "https://doi.org/10.1093/nar/gkv007"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
             caption = "Ranked discriminant score for top feature sets.",
             label = "",
             height = c("100%", TABLE_HEIGHT_MODAL),
