@@ -7,6 +7,8 @@ enrichment_plot_freq_top_gsets_ui <- function(
     id,
     title,
     info.text,
+    info.methods,
+    info.extra_link,
     caption,
     height,
     width) {
@@ -42,6 +44,8 @@ enrichment_plot_freq_top_gsets_ui <- function(
     label = "b",
     plotlib = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = topEnrichedFreq.opts,
     height = height,
