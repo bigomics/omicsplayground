@@ -32,7 +32,6 @@ ui.startupModal <- function(id, messages, title = NULL) {
     title = NULL,
     footer = NULL,
     bsutils::modalHeader(
-      ## bsutils::modalTitle(title),
       bsutils::modalTitle(""),
       style = "background-color: #f0f9fd; margin-bottom: 0px;"
     ),
@@ -47,11 +46,11 @@ ui.startupModal <- function(id, messages, title = NULL) {
       },
       carousel_items
     ),
-    easyClose = TRUE,
-    tags$style(".modal-dialog {width: 720px;}"),
-    tags$style(".modal-content {background-color: #f0f9fd;}"),
-    tags$style(".modal-header {padding: 0px;}")
+    easyClose = TRUE
+#    tags$style(".modal-dialog {width: 720px;}"),
+#    tags$style(".modal-content {background-color: #f0f9fd;}"),
+#    tags$style(".modal-header {padding: 0px;}")
   )
-  ## return(div(id=id, modal))
+  modal <- div(id=id, modal)
   return(modal)
 }
