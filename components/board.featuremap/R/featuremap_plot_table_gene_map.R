@@ -92,10 +92,10 @@ featuremap_plot_gene_map_server <- function(id,
       FC <- playbase::pgx.getMetaMatrix(pgx)$fc
       FC <- scale(FC, center = FALSE)
       if (colorby == "sd.FC") {
-        fc <- (rowMeans(FC**2))**0.5
+          fc <- (rowMeans(FC**2))**0.5
       } else {
-        cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
-        fc <- sqrt(rowMeans(cX**2))
+          cX <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
+          fc <- sqrt(rowMeans(cX**2))
       }
 
       ## conform
