@@ -108,16 +108,55 @@ CorrelationBoard <- function(id, pgx) {
       X
     })
 
-    getPartialCorrelationMatrix <- shiny::reactive({
-      shiny::req(pgx$X, input$cor_gene)
+    getFilteredImpExpression <- shiny::reactive({
+        shiny::req(pgx$impX, input$cor_gene)
+        X <- pgx$impX
+        gene <- rownames(X)[1]
+        gene <- input$cor_gene
 
+        ## filter genes
+        ft <- input$cor_features
+        if (ft == "<custom>" && input$cor_customfeatures != "") {
+            genes <- toupper(pgx$genes$gene_name)
+            gg1 <- strsplit(input$cor_customfeatures, split = "[, ;\n\t]")[[1]]
+            if (length(gg1) == 1) gg1 <- paste0(gg1, "*")
+            gg1 <- gsub("[ \n\t]", "", gg1)
+            starred <- grep("[*]", gg1)
+            if (length(starred) > 0) {
+                gg2 <- lapply(gg1[starred], function(a) {
+                    genes[grep(paste0("^", sub("[*]", "", a)), genes, ignore.case = TRUE)]
+                })
+                gg1 <- unique(c(gg1, unlist(gg2)))
+            }
+            gg1 <- gg1[which(toupper(gg1) %in% toupper(pgx$genes$gene_name))]
+            psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
+            psel <- intersect(psel, rownames(X))
+            X <- X[psel, , drop = FALSE]
+        } else if (ft != "<all>" && ft %in% names(playdata::iGSETS)) {
+            ft <- input$cor_features
+            psel <- playbase::filterProbes(pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
+                                        #
+            psel <- intersect(psel, rownames(X))
+            X <- X[psel, , drop = FALSE]
+        }
+
+        X <- X + 1e-3 * matrix(rnorm(length(X)), nrow(X), ncol(X))
+        X
+    })
+
+    getPartialCorrelationMatrix <- shiny::reactive({
+      shiny::req(pgx$X, pgx$impX, input$cor_gene)
+      
       gene <- rownames(pgx$X)[1]
       gene <- input$cor_gene
 
       ## filter gene expression matrix
       X <- getFilteredExpression()
-
-
+      nmissing <- sum(is.na(X))
+      if(nmissing>0) {
+          X <- getFilteredImpExpression()
+      }
+      
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
       res <- playbase::pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
