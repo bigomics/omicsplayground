@@ -263,10 +263,12 @@ CorrelationBoard <- function(id, pgx) {
       if ("hgnc_symbol" %in% colnames(pgx$genes)) {
         rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
       }
-      R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
-      rownames(R) <- zx.genes0
+      
+      gg <- intersect(zx.genes0, rownames(R))
+      R <- R[gg, , drop = FALSE]
+      ## R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
+      ## rownames(R) <- zx.genes0
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
-
       R
     })
 

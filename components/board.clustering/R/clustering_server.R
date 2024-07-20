@@ -509,7 +509,7 @@ ClusteringBoard <- function(id, pgx) {
       kk <- grep("sample|patient", colnames(annot), invert = TRUE)
       annot <- annot[, kk, drop = FALSE] ## no group??
       samples <- colnames(zx) ## original sample list
-
+      
       ## ----------------------------------------------------
       ## ------------ calculate group summarized ------------
       ## ----------------------------------------------------
@@ -611,7 +611,6 @@ ClusteringBoard <- function(id, pgx) {
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
       filt <- getTopMatrix()
       shiny::req(filt)
-
       zx <- filt$mat
       idx <- filt$idx
       samples <- filt$samples
