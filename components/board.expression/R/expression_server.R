@@ -162,11 +162,6 @@ ExpressionBoard <- function(id, pgx) {
       mean0 <- (AveExpr0 + AveExpr1) / 2
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
-
-      dbg("----------MONITOR1", sum(is.na(AveExpr0)))
-      dbg("----------MONITOR2", range(AveExpr0, na.rm = TRUE))
-      dbg("----------MONITOR3", sum(is.na(AveExpr1)))
-      dbg("----------MONITOR4", range(AveExpr1, na.rm = TRUE))
       
       if(all(c("map", "chr") %in% colnames(pgx$genes))) {
           colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0" 
