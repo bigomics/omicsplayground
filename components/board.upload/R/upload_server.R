@@ -884,6 +884,7 @@ UploadBoard <- function(id,
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = ifelse(tolower(upload_datatype()) == "proteomics", "Uploaded Expression", "Uploaded Counts"),
       info.text = "This is the uploaded counts data.",
+      upload_datatype = upload_datatype,
       caption = "This is the uploaded counts data."
     )
 
