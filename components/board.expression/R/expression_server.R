@@ -137,9 +137,9 @@ ExpressionBoard <- function(id, pgx) {
       rownames(mx.q) <- rownames(mx)
       rownames(mx.fc) <- rownames(mx)
 
-      mx.fc[is.infinite(mx.fc) | is.nan(mx.fc)] <- NA
-      mx.p[is.infinite(mx.p) | is.nan(mx.p)] <- NA
-      mx.q[is.infinite(mx.q) | is.nan(mx.q)] <- NA
+      mx.fc[which(is.infinite(mx.fc) | is.nan(mx.fc))] <- NA
+      mx.p[which(is.infinite(mx.p) | is.nan(mx.p))] <- NA
+      mx.q[which(is.infinite(mx.q) | is.nan(mx.q))] <- NA
 
       ## !!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
       ## must recompute meta parameters (maxQ method)
@@ -154,8 +154,8 @@ ExpressionBoard <- function(id, pgx) {
       ## recalculate group averages???
       y0 <- pgx$model.parameters$exp.matrix[, comparison]
       names(y0) <- rownames(pgx$model.parameters$exp.matrix)
-      AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE])
-      AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE])
+      AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE], na.rm = TRUE)
+      AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE], na.rm = TRUE)
 
       logFC <- mx$meta.fx
       ## [hack] adjust averages to match logFC...
@@ -163,6 +163,11 @@ ExpressionBoard <- function(id, pgx) {
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
 
+      dbg("----------MONITOR1", sum(is.na(AveExpr0)))
+      dbg("----------MONITOR2", range(AveExpr0, na.rm = TRUE))
+      dbg("----------MONITOR3", sum(is.na(AveExpr1)))
+      dbg("----------MONITOR4", range(AveExpr1, na.rm = TRUE))
+      
       if(all(c("map", "chr") %in% colnames(pgx$genes))) {
           colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0" 
           colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
