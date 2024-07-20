@@ -145,7 +145,7 @@ CorrelationBoard <- function(id, pgx) {
     })
 
     getPartialCorrelationMatrix <- shiny::reactive({
-      shiny::req(pgx$X, pgx$impX, input$cor_gene)
+      shiny::req(pgx$X, input$cor_gene)
       
       gene <- rownames(pgx$X)[1]
       gene <- input$cor_gene
