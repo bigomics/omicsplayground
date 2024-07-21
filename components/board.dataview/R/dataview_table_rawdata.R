@@ -93,16 +93,16 @@ dataview_table_rawdata_server <- function(id,
         names(rho) <- rownames(x)
 
         # geometric std deviation
-        sdx <- round(exp(apply(logx[, samples], 1, sd)), digits = 3)
+        sdx <- round(exp(apply(logx[, samples], 1, sd, na.rm = TRUE)), digits = 3)
         # geometric mean
-        avg <- round(exp(rowMeans(logx)), digits = 3)
+        avg <- round(exp(rowMeans(logx, na.rm = TRUE)), digits = 3)
       } else {
         # compute the geometric mean, mean(x)
         logx <- x
         rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
         rho <- round(rho[rownames(logx)], digits = 3)
-        sdx <- round(apply(logx[, samples], 1, sd), digits = 3)
-        avg <- round(rowMeans(logx), digits = 3)
+        sdx <- round(apply(logx[, samples], 1, sd, na.rm = TRUE), digits = 3)
+        avg <- round(rowMeans(logx, na.rm = TRUE), digits = 3)
       }
 
       group <- NULL
