@@ -55,7 +55,6 @@ CorrelationBoard <- function(id, pgx) {
     ## update filter choices upon change of data set
     shiny::observe({
       req(pgx$X)
-      
       genes <- rownames(pgx$X[complete.cases(pgx$X), ])
       ## genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
       genes <- sort(pgx$genes[genes, ]$gene_name)
@@ -161,7 +160,9 @@ CorrelationBoard <- function(id, pgx) {
       
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
+      dbg("------------[MONITOR 1]-------------")
       res <- playbase::pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
+      dbg("------------[MONITOR 2]-------------")
       res$meta.pcor <- res$pcor
 
       j <- which(rownames(res$pcor) == gene)
@@ -179,8 +180,10 @@ CorrelationBoard <- function(id, pgx) {
       res <- getPartialCorrelationMatrix()
       gene <- rownames(res$cor)[1]
       gene <- input$cor_gene
+      dbg("-----------MONITOR I")
       rho <- res$cor[gene, ]
       prho <- res$pcor[gene, ]
+      dbg("-----------MONITOR II")
       df <- data.frame(cor = rho, pcor = prho)
       df
     })
@@ -223,9 +226,11 @@ CorrelationBoard <- function(id, pgx) {
           rho.genes <- as.character(pgx$genes[zx.genes0, ]$hgnc_symbol)
       }
 
+      dbg("-------------MONITOR KK1")
       R <- R[match(rho.genes, rownames(R)), , drop = FALSE]
       rownames(R) <- zx.genes0
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
+      dbg("-------------MONITOR KK2")
 
       R
     })
@@ -259,7 +264,9 @@ CorrelationBoard <- function(id, pgx) {
       zx <- zx[gg, , drop = FALSE]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2))
+      dbg("------------MONITOR PP1")
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene0])
+      dbg("------------MONITOR PP2")
 
       rho.genes <- rownames(zx)
       if ("hgnc_symbol" %in% colnames(pgx$genes)) {
