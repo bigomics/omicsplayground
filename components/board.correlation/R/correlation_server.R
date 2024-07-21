@@ -55,10 +55,12 @@ CorrelationBoard <- function(id, pgx) {
     ## update filter choices upon change of data set
     shiny::observe({
       req(pgx$X)
-
-      genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
+      
+      genes <- rownames(pgx$X[complete.cases(pgx$X), ])
+      ## genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
+      genes <- sort(pgx$genes[genes, ]$gene_name)
       sel <- genes[1] ## most var gene
-      sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
+      ## sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
       shiny::updateSelectizeInput(session, "cor_gene", choices = genes, selected = sel, server = TRUE)
 
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
