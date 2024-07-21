@@ -88,7 +88,7 @@ upload_module_outliers_server <- function(
           ## X <- log2(counts + 0.001)
           
           if (input$remove_xxl_features) {
-              dbg("[outliers_server:imputedX]: Put outlier features (z-score>10) as NAs.")
+              dbg("[outliers_server:imputedX]: Assign NA to outlier features")
               X[playbase::is.xxl(X, z = 10)] <- NA
           }
 
@@ -663,7 +663,7 @@ upload_module_outliers_server <- function(
               bslib::accordion_panel(
                 title = "2. Normalization",
                 shiny::checkboxInput(ns("remove_xxl_features"),
-                  label = "Treat outlier features (z-score>10) as NAs", value = FALSE
+                  label = "Treat outlier features as NA", value = FALSE
                   ),
                 div("Normalize data values:\n"),
                 shiny::selectInput(ns("scaling_method"), NULL,
