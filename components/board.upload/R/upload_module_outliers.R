@@ -679,8 +679,8 @@ upload_module_outliers_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                title = "3. Detect and remove outliers",
-                shiny::p("Identify and remove outliers (i.e., bad samples) from your dataset.\n"),
+                title = "3. Remove outlier samples",
+                shiny::p("Identify and remove outlier samples from your dataset.\n"),
                 shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = TRUE),
                 ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
                 shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
@@ -708,7 +708,7 @@ upload_module_outliers_server <- function(
                     "ComBat" = "ComBat",
                     "SVA" = "SVA",
                     "RUV" = "RUV",
-                      "NPM" = "NPM"
+                    "NPM" = "NPM"
                   ),
                   selected = 1
                 ),
