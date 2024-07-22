@@ -65,6 +65,7 @@ RUN rm -fr /omicsplayground  \
     && chmod -R ugo+rwX /omicsplayground 
 
 ## initialize AnnotationHub
+WORKDIR /omicsplayground
 RUN Rscript dev/init_annothub.R
 
 #------------------------------------------------------------
