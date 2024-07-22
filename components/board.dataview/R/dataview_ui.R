@@ -183,7 +183,7 @@ DataViewUI <- function(id) {
           col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            title = tspan("Dataset abundance of major gene types"),
+            title = tspan("Abundance of major feature types"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
             caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -192,7 +192,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
-            title = "Abundance of major gene types per group",
+            title = "Abundance of major feature types per group",
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
             caption = "Barplot showing the group or sample relative abundance of counts in terms of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -204,7 +204,7 @@ DataViewUI <- function(id) {
     ),
     # counts table tab #####
     shiny::tabPanel(
-      "Counts table",
+      "Data table",
       bslib::layout_columns(
         col_widths = 12,
         row_heights = list("auto", 1),
