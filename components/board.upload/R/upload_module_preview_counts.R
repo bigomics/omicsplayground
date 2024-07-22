@@ -22,6 +22,7 @@ upload_table_preview_counts_server <- function(
     height,
     title,
     info.text,
+    upload_datatype,
     caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -115,7 +116,7 @@ upload_table_preview_counts_server <- function(
             bslib::card(
               fileInputArea(
                 ns("counts_csv"),
-                shiny::h4("Upload counts.csv", class = "mb-0"),
+                shiny::h4(ifelse(tolower(upload_datatype()) == "proteomics", "Upload abundance.csv", "Upload counts.csv"), class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "100%"

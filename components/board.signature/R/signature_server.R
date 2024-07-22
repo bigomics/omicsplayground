@@ -121,8 +121,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
           if (grepl("^@", gset[1]) && gene %in% xfeatures) {
             ## most correlated with this genes
             jj <- match(gene, xfeatures) ## single gene
-            rho <- cor(t(pgx$X), pgx$X[jj, ])[, 1]
-            gset <- head(names(sort(abs(rho), decreasing = TRUE)), 36) ## how many?
+              if(any(is.na(pgx$X))) {
+                  rho <- cor(t(pgx$impX), pgx$impX[jj, ])[, 1]
+              } else {
+                  rho <- cor(t(pgx$X), pgx$X[jj, ])[, 1]
+              }
+              gset <- head(names(sort(abs(rho), decreasing = TRUE)), 36) ## how many?
           } else {
             ## grep-like match
             rx <- toupper(gset[1])
@@ -174,7 +178,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         return(NULL)
       }
 
-
       ## observe input list
       gset <- head(rownames(pgx$X), 100)
       gset <- getCurrentMarkers()
@@ -202,7 +205,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       }
 
       ## ------------ prioritize with quick correlation
-
       y <- 1 * (toupper(rownames(F)) %in% toupper(gset))
       ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)[, 1]
       rho <- cor(apply(F, 2, ss.rank), y, use = "pairwise")[, 1]
@@ -218,6 +220,10 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       F <- F[!duplicated(rownames(F)), , drop = FALSE]
       F <- F + 1e-4 * matrix(rnorm(length(F)), nrow(F), ncol(F))
 
+      if(any(is.na(F))) {
+          F <- F[complete.cases(F), , drop = FALSE]
+      }
+
       ## ------------- do fast GSEA
       gmt <- list("gset" = unique(gset))
       res <- NULL
@@ -229,7 +235,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
           res <- lapply(1:ncol(F), function(i) {
             set.seed(123)
             suppressWarnings(suppressMessages(
-              res <- fgsea::fgsea(gmt, stats = F[, i], nperm = 1000, nproc = 1)
+                res <- fgsea::fgsea(gmt, stats = F[, i], nperm = 1000, nproc = 1)
             ))
             res <- as.data.frame(res[, c("pval", "padj", "ES", "NES")])
             rownames(res)[1] <- colnames(F)[i]
@@ -269,6 +275,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       output <- output[order(-abs(output[, "NES"])), , drop = FALSE]
       F <- F[, rownames(output), drop = FALSE]
       gsea <- list(F = as.matrix(F), gset = gset, output = output)
+
       return(gsea)
     })
 

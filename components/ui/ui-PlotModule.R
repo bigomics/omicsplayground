@@ -6,6 +6,7 @@
 
 PlotModuleUI <- function(id,
                          info.text = "Figure",
+                         info.references = NULL,
                          title = "",
                          options = NULL,
                          label = "",
@@ -158,6 +159,14 @@ PlotModuleUI <- function(id,
           shiny::br()
         )
       ),
+      shiny::conditionalPanel(
+        condition = "input.downloadOption == 'pdf'",
+        ns = ns,
+        shiny::checkboxInput(
+          inputId = ns("get_pdf_settings"),
+          label = "Include plot settings"
+        )
+      ),
       download_buttons,
     ),
     size = "xs",
@@ -221,10 +230,37 @@ PlotModuleUI <- function(id,
     header_buttons,
     DropdownMenu(
       shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
-      width = "250px",
+      if (!is.null(info.references)) {
+        html_code <- ""
+        for (i in seq_along(info.references)) {
+          ref <- info.references[[i]]
+          name <- ref[[1]]
+          link <- ref[[2]]
+
+          # Create the formatted HTML string
+          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "'>", link, "</a><br>")
+
+          # Append the formatted string to the HTML code
+          html_code <- paste0(html_code, formatted_ref)
+        }
+        shiny::div(
+          class = "plotmodule-info",
+          shiny::HTML("<b>References</b><br>"),
+          shiny::HTML(html_code)
+        )
+      } else {NULL},
+      shiny::HTML("<br>"),
+      shiny::actionButton(
+        ns("copy_info"),
+        "Copy text",
+        icon = shiny::icon("clipboard"),
+        class = "btn-outline-dark btn-sm",
+        onclick = "copyPlotModuleInfo();"
+      ),
       size = "xs",
       icon = shiny::icon("info"),
-      status = "default"
+      status = "default",
+      width = "300px"
     ),
     options.button,
     shiny::div(class = "download-button", title = "download", dload.button),
@@ -676,6 +712,10 @@ PlotModuleServer <- function(id,
                   markfile <- file.path(FILES, "watermark-logo.pdf")
                   addWatermark.PDF2(file, w = pdf.width, h = pdf.height, mark = markfile)
                 }
+                # Add settings
+                if (input$get_pdf_settings) {
+                  addSettings(ns, session, file)
+                }
                 ## Record downloaded plot
                 record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
               },
@@ -1061,6 +1101,15 @@ PlotModuleServer <- function(id,
         )]] <- render2
       }
 
+      shiny::observeEvent(input$copy_info, {
+        shinyjs::runjs(
+          paste0(
+            "addTick('",
+            ns("copy_info"),
+            "')"
+          )
+        )
+      })
 
 
       ## --------------------------------------------------------------------------------

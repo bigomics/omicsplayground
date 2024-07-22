@@ -7,8 +7,17 @@
 UploadUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
+  initial_panel <- wizardR::wizard_step(
+    step_title = "Start",
+    step_id = "step_initial",
+    shiny::br(), shiny::br(),
+    ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+    ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
+    upload_module_initial_settings_ui(ns("initial"))
+  )
+
   counts_ui <- wizardR::wizard_step(
-    step_title = "Step 1: Upload counts",
+    step_title = tspan("Step 1: Upload counts"),
     step_id = "step_counts",
     upload_table_preview_counts_ui(
       ns("counts_preview")
@@ -55,24 +64,18 @@ UploadUI <- function(id) {
   )
 
   outliers_panel <- wizardR::wizard_step(
-    step_title = "QC/BC",
+    step_title = "Step 4: QC/BC",
     step_id = "step_qc",
-    bslib::layout_columns(
-      col_widths = 12,
-      # height = "calc(100vh - 340px)",
-      heights_equal = "row",
-      upload_module_outliers_ui(ns("checkqc"))
-      # bs_alert("Check for normalization, outliers and batch-effects.")
-    )
+    upload_module_outliers_ui(ns("checkqc"))
   )
 
   compute_panel <- wizardR::wizard_step(
-    step_title = "Step 4: Compute!",
+    step_title = "Compute!",
     step_id = "step_compute",
     # bs_alert("OK. We now have everything to compute your data. Please name your dataset and give a short description of the experiment. You can select/deselect some computation options but if you do not understand, it is safer to leave the defaults. If you are ready, hit 'Compute'. Computation can take 10-40 minutes depending on the size of your data and number of comparisons."),
     shiny::br(), shiny::br(),
-    ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
-    ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
+    ## shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+    ## shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
     upload_module_computepgx_ui(ns("compute"))
   )
 
@@ -90,13 +93,12 @@ UploadUI <- function(id) {
         height = 75,
         modal = TRUE,
         style = "dots",
-        lock_start = TRUE,
+        lock_start = FALSE,
+        initial_panel,
         counts_ui,
         samples_ui,
         contrasts_ui,
-        # comparisons_panel,
-        # outliers_panel,
-        # batchcorrect_panel,
+        outliers_panel,
         compute_panel,
         options = list(
           navigation = "buttons",
