@@ -68,7 +68,7 @@ functional_table_wikipathway_server <- function(id,
 
       pathway.id_link <- paste0(
         "<a href='", url, "' target='_blank'>",
-        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
         "</a>"
       )
 

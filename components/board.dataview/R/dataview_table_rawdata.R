@@ -50,7 +50,7 @@ dataview_table_rawdata_server <- function(id,
         gene <- rownames(pgx$X)[1]
       }
 
-      if (data_type == "counts") {
+      if (data_type %in% c("counts", "abundance")) {
         x <- parse_sample(pgx$counts)
         x_cpm <- parse_sample(pgx$X)
       } else if (data_type == "CPM") {
@@ -93,16 +93,16 @@ dataview_table_rawdata_server <- function(id,
         names(rho) <- rownames(x)
 
         # geometric std deviation
-        sdx <- round(exp(apply(logx[, samples], 1, sd)), digits = 3)
+        sdx <- round(exp(apply(logx[, samples], 1, sd, na.rm = TRUE)), digits = 3)
         # geometric mean
-        avg <- round(exp(rowMeans(logx)), digits = 3)
+        avg <- round(exp(rowMeans(logx, na.rm = TRUE)), digits = 3)
       } else {
         # compute the geometric mean, mean(x)
         logx <- x
         rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
         rho <- round(rho[rownames(logx)], digits = 3)
-        sdx <- round(apply(logx[, samples], 1, sd), digits = 3)
-        avg <- round(rowMeans(logx), digits = 3)
+        sdx <- round(apply(logx[, samples], 1, sd, na.rm = TRUE), digits = 3)
+        avg <- round(rowMeans(logx, na.rm = TRUE), digits = 3)
       }
 
       group <- NULL
@@ -156,6 +156,10 @@ dataview_table_rawdata_server <- function(id,
         )
       }
       x <- x[order(-x$rho, -x$SD), , drop = FALSE]
+
+      if (DATATYPEPGX == "proteomics") {
+        colnames(x)[1] <- "protein"
+      }
 
       list(
         x = x,

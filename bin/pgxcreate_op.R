@@ -27,15 +27,17 @@ if (file.exists(params_from_op)) {
 pgx <- playbase::pgx.createPGX(
   organism = params$organism,
   counts = params$counts,
+  X = params$countsX,
+  impX = params$impX,
+  norm_method = params$norm_method,
   samples = params$samples,
   contrasts = params$contrasts,
   name = params$name,
   datatype = params$datatype,
   description = params$description,
   creator = params$creator,
-  X = NULL,
   batch.correct = params$batch.correct,
-  normalize = params$normalize,
+  ## normalize = params$normalize,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   only.known = params$only.known,
@@ -47,7 +49,7 @@ pgx <- playbase::pgx.createPGX(
   annot_table = params$annot_table
 )
 
-message("[create PGX process] : PGX created succefully")
+message("[create PGX process] : PGX created successfully")
 message("[compute PGX process] : starting process")
 
 pgx <- playbase::pgx.computePGX(
