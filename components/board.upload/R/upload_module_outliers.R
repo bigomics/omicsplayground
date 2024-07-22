@@ -662,9 +662,6 @@ upload_module_outliers_server <- function(
               ),
               bslib::accordion_panel(
                 title = "2. Normalization",
-                shiny::checkboxInput(ns("remove_xxl_features"),
-                  label = "Treat outlier features as NA", value = FALSE
-                  ),
                 div("Normalize data values:\n"),
                 shiny::selectInput(ns("scaling_method"), NULL,
                   choices = c(
@@ -679,10 +676,10 @@ upload_module_outliers_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                title = "3. Remove outlier samples",
-                shiny::p("Identify and remove outlier samples from your dataset.\n"),
-                shiny::checkboxInput(ns("remove_outliers"), "Check and remove outliers", value = TRUE),
-                ## shiny::selectInput(ns("remove_outliers_samples"), NULL,
+                title = "3. Remove outliers",
+                shiny::p("Remove outlier features and samples from your data.\n"),
+                shiny::checkboxInput(ns("remove_xxl_features"), label = "Treat outlier features as NA", value = FALSE),
+                shiny::checkboxInput(ns("remove_outliers"), "Remove outlier samples (select threshold)", value = FALSE),
                 shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
                 br()
               ),
