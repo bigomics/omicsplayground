@@ -64,7 +64,7 @@ upload_module_computepgx_server <- function(
         ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
         "fgsea"
       )
-      GENESET.SELECTED <- c("fisher", "gsva") ## "fgsea")
+      GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
 
       ## batch correction and extrs methods
       EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
