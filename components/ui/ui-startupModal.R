@@ -47,10 +47,7 @@ ui.startupModal <- function(id, messages, title = NULL) {
       carousel_items
     ),
     easyClose = TRUE
-#    tags$style(".modal-dialog {width: 720px;}"),
-#    tags$style(".modal-content {background-color: #f0f9fd;}"),
-#    tags$style(".modal-header {padding: 0px;}")
   )
-  modal <- div(id=id, modal)
+  modal <- div(id = id, modal)
   return(modal)
 }

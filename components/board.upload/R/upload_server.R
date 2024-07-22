@@ -124,11 +124,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
-      dbg("[upload_server:observeEvent(uploaded_pgx()] names(new_pgx) = ", names(new_pgx))
-      dbg("[upload_server:observeEvent(uploaded_pgx()] dim(new_pgx$X) = ", dim(new_pgx$X))
-      dbg("[upload_server:observeEvent(uploaded_pgx()] new_pgx$name = ", new_pgx$name)
-      dbg("[upload_server:observeEvent(uploaded_pgx()] uploaded_method = ", uploaded_method)
-
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
@@ -233,67 +228,90 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     ## Check COUNTS matrix
     ## --------------------------------------------------------
+    checked_for_log <- reactiveVal(FALSE)
 
-
-    checked_counts <- shiny::eventReactive(
+    uploaded_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv)
       },
       {
-        ## get uploaded counts
-
-        checked <- NULL
+        ## --------------------------------------------------------
+        ## Single matrix counts check
+        ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
+        shiny::req(df0)
+
+        checked_for_log(FALSE)
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        write_check_output(res$checks, "COUNTS", raw_dir())
+
+        # check if error 29 exists (log2 transform detected), give
+        # action to user revert to intensities or skip correction.
+        if ("e29" %in% names(res$checks)) {
+          shinyalert::shinyalert(
+            title = paste("Log-transformed counts?"),
+            text = paste("Omics Playground expects linear intensities. Your data seems to be log-transformed. Would you like to undo the logarithm and convert to intensities?"),
+            confirmButtonText = "Yes, convert",
+            showCancelButton = TRUE,
+            cancelButtonText = "No, keep as is",
+            inputId = "logCorrectCounts",
+            closeOnEsc = FALSE,
+            immediate = TRUE,
+            callbackR = function(x) checked_for_log(TRUE)
+          )
+          checked_for_log(FALSE)
+        } else {
+          checked_for_log(TRUE)
+        }
+
+        res
+      }
+    )
+
+    checked_counts <- shiny::eventReactive(
+      {
+        list(checked_for_log(), uploaded_counts())
+      },
+      {
+        ## get uploaded counts
+        checked <- NULL
+        res <- uploaded_counts()
+        df0 <- res$df
+
         if (is.null(df0)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
 
-        ## --------------------------------------------------------
-        ## Single matrix counts check
-        ## --------------------------------------------------------
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-        write_check_output(res$checks, "COUNTS", raw_dir())
+        ## wait for dialog finished
+        shiny::req(checked_for_log())
 
-        # check if error 29 exists (log2 transform detected), give action to user revert to intensities or skip correction
-        #   counts_log_correction <- function(isConfirmed) {
-        #   if (isConfirmed) {
-        #     res$df <- 2**res$df
-        #     if(min(res$df,na.rm=TRUE) > 0) res$df <- res$df - 1
-        #     checked <<- res$df
-        #     checked_for_log(TRUE)
-        #   }
-        # }
+        # If error 29 exists (log2 transform detected) and user
+        # confirms to convert to intensities in shinyalert do log2
+        # correction (un-doing log transform).
+        isConfirmed <- input$logCorrectCounts
+        if ("e29" %in% names(res$checks) && isConfirmed) {
+          dbg("[UploadBoard::checked_counts] Converting log-transformed counts!!!")
+          res$df <- 2**res$df
+          if (min(res$df, na.rm = TRUE) >= 1) res$df <- res$df - 1
+        }
 
-        if ("e29" %in% names(res$checks)) {
-          # TODO find a way to give user option to correct or not (shinyalert callback breaks req and eventReactive)
-          # shinyalert::shinyalert(
-          #   title = paste("log-transformed counts?"),
-          #   text = paste("Your counts data seems to be log-transformed. Would you like to revert to intensities?"),
-          #   confirmButtonText = "Convert to intensities.",
-          #   showCancelButton = TRUE,
-          #   cancelButtonText = "My counts are not log transformed.",
-          #   inputId = "logCorrectCounts",
-          #   closeOnEsc = FALSE,
-          #   immediate = TRUE,
-          #   callbackR = counts_log_correction
-          # )
+        # Any further negative values are not allowed. We will set
+        # them to zero and inform the user.
+        if (any(res$df < 0, na.rm = TRUE)) {
+          num_neg <- sum(res$df < 0, na.rm = TRUE)
+          res$df <- pmax(res$df, 0)
 
-          # inform user that we are applying the correction
           shinyalert::shinyalert(
-            title = "Possible log-transformed counts: use expression.csv",
-            text = "Your counts data seems to be log-transformed. To upload log-transformed data, use expression.csv instead of counts.csv.",
-            type = "info"
+            title = "Negative values",
+            text = paste("We have detected", num_neg, "negative values in your data. Negative values are not allowed and are set to zero. If you wish otherwise, please correct your data manually."),
+            type = "warning"
           )
         }
 
-        checked <- res$df
-
-        # TODO if you use the req, eventReactive will return at shiny alert execution, and data will not be corrected
-        # req(checked_for_log(), !is.null(checked))
-
+        ## update checklist and status
         checklist[["counts.csv"]]$checks <- res$checks
-
         if (res$PASS) {
+          checked <- res$df
           status <- "OK"
         } else {
           checked <- NULL
@@ -336,7 +354,7 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     checked_samples_counts <- shiny::eventReactive(
       {
-        list(uploaded$counts.csv, uploaded$samples.csv)
+        list(checked_counts()$matrix, uploaded$samples.csv)
       },
       {
         ## get uploaded counts
@@ -698,17 +716,20 @@ UploadBoard <- function(id,
       }
     )
 
-    # wizard lock/unlock logic
+    # --------------- wizard lock/unlock logic ------------------------
+
+    ## Note: would be good to be able to lock/unlock left and
+    ## right navigation separately... IK
 
     # lock/unlock wizard for counts.csv
     observeEvent(
-      list(uploaded$counts.csv, checked_counts, input$upload_wizard),
+      list(uploaded$counts.csv, checked_counts(), input$upload_wizard),
       {
         req(input$upload_wizard == "step_counts")
-
-        if (is.null(checked_counts()$status) || checked_counts()$status != "OK") {
+        chk <- checked_counts()$status
+        if (is.null(chk) || chk != "OK") {
           wizardR::lock("upload_wizard")
-        } else if (!is.null(checked_counts()$status) && checked_counts()$status == "OK") {
+        } else if (!is.null(chk) && chk == "OK") {
           wizardR::unlock("upload_wizard")
         }
       }
@@ -876,8 +897,9 @@ UploadBoard <- function(id,
     )
 
     upload_table_preview_counts_server(
-      "counts_preview",
-      uploaded,
+      id = "counts_preview",
+      uploaded = uploaded,
+      checked_matrix = shiny::reactive(checked_counts()$matrix),
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),

@@ -362,6 +362,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
       rpt <- getFilteredGeneSetTable()
       gs <- rownames(rpt)[i]
+
       return(gs)
     })
 
@@ -527,6 +528,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
       calcGsetMeta = calcGsetMeta,
+      gset_selected = gset_selected,
       watermark = WATERMARK
     )
 
@@ -539,6 +541,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
+      gset_selected = gset_selected,
       watermark = WATERMARK
     )
 
