@@ -5,16 +5,16 @@
 
 
 ## =========================================================================
-## ==================== OUTLIERS UI/SERVER =================================
+## ==================== NORMALIZATION UI/SERVER =================================
 ## =========================================================================
 
 
-upload_module_outliers_ui <- function(id, height = "100%") {
+upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
-  uiOutput(ns("outliers"), fill = TRUE)
+  uiOutput(ns("normalization"), fill = TRUE)
 }
 
-upload_module_outliers_server <- function(
+upload_module_normalization_server <- function(
     id,
     r_X,
     r_samples,
@@ -73,12 +73,12 @@ upload_module_outliers_server <- function(
 
           negs <- sum(counts < 0, na.rm = TRUE)
           if(negs > 0) {
-              dbg("[outliers_server:imputedX] Counts data have ", negs, " negative values.")
+              dbg("[normalization_server:imputedX] Counts data have ", negs, " negative values.")
               counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX) 
           }
           
           if (input$zero_as_na) {
-              dbg("[outliers_server:imputedX] Setting 0 values to NA")
+              dbg("[normalization_server:imputedX] Setting 0 values to NA")
               counts[which(counts == 0)] <- NA
           }
 
@@ -88,7 +88,7 @@ upload_module_outliers_server <- function(
           ## X <- log2(counts + 0.001)
           
           if (input$remove_xxl_features) {
-              dbg("[outliers_server:imputedX]: Assign NA to outlier features")
+              dbg("[normalization_server:imputedX]: Assign NA to outlier features")
               X[playbase::is.xxl(X, z = 10)] <- NA
           }
 
@@ -96,19 +96,19 @@ upload_module_outliers_server <- function(
           m <- input$impute_method
 
           if (nmissing > 0) {
-              dbg("[outliers_server:imputedX] X has ", nmissing, " missing values (NAs).")
+              dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
               if (m != "skip_imputation") {
-                  dbg("[outliers_server:imputedX] Imputing data using ", m)
+                  dbg("[normalization_server:imputedX] Imputing data using ", m)
                   X <- playbase::imputeMissing(X, method = m)
-                  dbg("[outliers_server:imputedX] dim.imputedX = ", dim(X))            
+                  dbg("[normalization_server:imputedX] dim.imputedX = ", dim(X))            
               } else {
-                  dbg("[outliers_server:imputedX] Skipping imputation")
+                  dbg("[normalization_server:imputedX] Skipping imputation")
               }
           } else {
-              dbg("[outliers_server:imputedX] No NAs detected in the data. Not imputing.")
+              dbg("[normalization_server:imputedX] No NAs detected in the data. Not imputing.")
           }
 
-          dbg("[outliers_server:imputedX] Checking for duplicated features")
+          dbg("[normalization_server:imputedX] Checking for duplicated features")
           X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
 
           X
@@ -121,17 +121,17 @@ upload_module_outliers_server <- function(
 
           m <- input$scaling_method
           if (m == "Skip_normalization") {
-              dbg("[outliers_server:normalizedX] Skipping ormalization")
+              dbg("[normalization_server:normalizedX] Skipping ormalization")
               return(X)
           } else {
               shiny::withProgress(message = "Normalizing the data...", value = 0, {
                   shiny::incProgress(amount = 0.25, "Normalization...")
-                  dbg("[outliers_server:normalizedX] Normalizing data using ", m)
+                  dbg("[normalization_server:normalizedX] Normalizing data using ", m)
                   prior <- ifelse(m == "CPM", 1, 1e-3) ## NEED RETHINK: generalize??
                   normCounts <- playbase::pgx.countNormalization(2 ** X - prior, method = m)
                   X <- log2(normCounts + prior)
                   if (input$quantile_norm) {
-                      dbg("[outliers_server:normalizedX] Applying quantile normalization")
+                      dbg("[normalization_server:normalizedX] Applying quantile normalization")
                       shiny::incProgress(amount = 0.25, "Quantile normalization...")
                       X <- limma::normalizeQuantiles(X)
                   }
@@ -148,7 +148,7 @@ upload_module_outliers_server <- function(
           
           if (input$remove_outliers) {
               threshold <- input$outlier_threshold
-              dbg("[outliers_server:cleanX] Removing outliers: Threshold = ", threshold)
+              dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
               res <- playbase::detectOutlierSamples(X, plot = FALSE)
               is.outlier <- (res$z.outlier > threshold)
               if (any(is.outlier) && !all(is.outlier)) {
@@ -160,7 +160,7 @@ upload_module_outliers_server <- function(
               pos <- irlba::irlba(X, nv = 2)$v
               rownames(pos) <- colnames(X)
           }
-          dbg("[outliers_server:cleanX] dim.cleanX = ", dim(X))
+          dbg("[normalization_server:cleanX] dim.cleanX = ", dim(X))
           list(X = X, pos = pos)
 
       })
@@ -181,16 +181,16 @@ upload_module_outliers_server <- function(
           samples <- samples[kk, , drop = FALSE]
 
           m <- input$bec_method
-          dbg("[outliers_server:correctedX] Batch correction method = ", m)
+          dbg("[normalization_server:correctedX] Batch correction method = ", m)
           nmissing <- sum(is.na(X1))
           
           if (m == "uncorrected") {
-              dbg("[outliers_server:correctedX] Data not corrected for (potential) batch effects")
+              dbg("[normalization_server:correctedX] Data not corrected for (potential) batch effects")
               if(nmissing == 0) {
                   cx <- list(X = X1)
               } else {
-                  dbg("[outliers_server:correctedX] ", nmissing, " missing values in X1.")
-                  dbg("[outliers_server:correctedX] Generating an internal, SVD2-imputed matrix")
+                  dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
+                  dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
                   impX1 <- playbase::imputeMissing(X1, method = "SVD2")
                   cx <- list(X = X1, impX1 = impX1)
               }
@@ -200,13 +200,13 @@ upload_module_outliers_server <- function(
               batch <- pars$batch
               pheno <- pars$pheno
               if(nmissing == 0) {
-                  dbg("[outliers_server:correctedX] No missing values in X1.")
+                  dbg("[normalization_server:correctedX] No missing values in X1.")
                   xlist <- playbase::runBatchCorrectionMethods(X = X1, batch = batch,
                                                                y = pheno, methods = mm, ntop = Inf)
                   cx <- list(X = xlist[[m]])
               } else {
-                  dbg("[outliers_server:correctedX] ", nmissing, " missing values in X1.")
-                  dbg("[outliers_server:correctedX] Generating an internal, SVD2-imputed matrix")
+                  dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
+                  dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
                   impX1 <- playbase::imputeMissing(X1, method = "SVD2")
                   xlist <- playbase::runBatchCorrectionMethods(X = impX1, batch = batch,
                                                                y = pheno, methods = mm, ntop = Inf)
@@ -218,9 +218,9 @@ upload_module_outliers_server <- function(
           }
           shiny::removeModal()
           
-          dbg("[outliers_server:correctedX] names.cx = ", names(cx))
-          dbg("[outliers_server:correctedX] length.cx = ", length(cx))
-          dbg("[outliers_server:correctedX] dim.correctedX = ", dim(cx[[1]]))
+          dbg("[normalization_server:correctedX] names.cx = ", names(cx))
+          dbg("[normalization_server:correctedX] length.cx = ", length(cx))
+          dbg("[normalization_server:correctedX] dim.correctedX = ", dim(cx[[1]]))
 
           return(cx)
       })
@@ -230,9 +230,9 @@ upload_module_outliers_server <- function(
           shiny::req(dim(correctedX()$X))
           X <- correctedX()$X
           prior <- ifelse(input$scaling_method == "CPM", 1, 1e-3)
-          dbg("[outliers_server:correctedCounts] Generating correctedCounts matrix. Prior=", prior)
+          dbg("[normalization_server:correctedCounts] Generating correctedCounts matrix. Prior=", prior)
           counts <- 2 ** X - prior
-          dbg("[outliers_server:correctedCounts] dim.correctedCounts = ", dim(counts))
+          dbg("[normalization_server:correctedCounts] dim.correctedCounts = ", dim(counts))
           counts
       })
 
@@ -249,15 +249,15 @@ upload_module_outliers_server <- function(
 
           nmissing <- sum(is.na(X0))
           if (nmissing > 0) {
-              dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X0.")
-              dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
+              dbg("[normalization_server:results_correction_methods] ", nmissing, " missing values in X0.")
+              dbg("[normalization_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
               X0 <- playbase::imputeMissing(X0, method = "SVD2")
           }
           
           nmissing <- sum(is.na(X1))
           if (nmissing > 0) {
-              dbg("[outliers_server:results_correction_methods] ", nmissing, " missing values in X1.")
-              dbg("[outliers_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
+              dbg("[normalization_server:results_correction_methods] ", nmissing, " missing values in X1.")
+              dbg("[normalization_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
               X1 <- playbase::imputeMissing(X1, method = "SVD2")
           }
 
@@ -272,7 +272,7 @@ upload_module_outliers_server <- function(
           methods <- c("ComBat", "RUV", "SVA", "NPM")
           xlist.init <- list("uncorrected" = X0, "normalized" = X1)
           shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
-              dbg("[outliers_server:results_correction_methods] ComBat, RUV, SVA, NPM")
+              dbg("[normalization_server:results_correction_methods] ComBat, RUV, SVA, NPM")
               mm <- c("ComBat", "RUV", "SVA", "NPM")
               res <- playbase::compare_batchcorrection_methods(
                                    X1, samples,
@@ -285,7 +285,7 @@ upload_module_outliers_server <- function(
           })
 
           ## selected <- res$best.method
-          ## dbg("[outliers_server:results_correction_methods] selected.best_method = ", selected)
+          ## dbg("[normalization_server:results_correction_methods] selected.best_method = ", selected)
           ## shiny::updateSelectInput(session, "bec_method", selected = selected)
 
           return(res)
@@ -601,7 +601,7 @@ upload_module_outliers_server <- function(
       ## Plot UI
       ## ------------------------------------------------------------------
 
-      output$outliers <- shiny::renderUI({
+      output$normalization <- shiny::renderUI({
         score.infotext <-
           "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
 
@@ -824,7 +824,7 @@ upload_module_outliers_server <- function(
       cX <- reactive({
           shiny::req(dim(correctedX()$X))
           cX <- correctedX()$X
-          dbg("[outliers_server:fCHECK] dim.cX = ", dim(cX))
+          dbg("[normalization_server:fCHECK] dim.cX = ", dim(cX))
           cX
       })
 
@@ -832,17 +832,17 @@ upload_module_outliers_server <- function(
           shiny::req(dim(correctedX()$X))
           if(length(correctedX()) == 2) {
               impX <- correctedX()$impX1
-              dbg("[outliers_server:fCHECK] dim.impX = ", dim(impX))
+              dbg("[normalization_server:fCHECK] dim.impX = ", dim(impX))
           } else {
               impX <- NULL
-              dbg("[outliers_server:fCHECK] dim.impX = NULL")
+              dbg("[normalization_server:fCHECK] dim.impX = NULL")
           }
           impX
       })
           
       norm_method <- reactive({
           m <- input$scaling_method
-          dbg("[outliers_server:fCHECK] Normalization method = ", m)
+          dbg("[normalization_server:fCHECK] Normalization method = ", m)
           m
       })
 

@@ -567,7 +567,7 @@ UploadBoard <- function(id,
       }
     })
 
-    corrected1 <- upload_module_outliers_server(
+    corrected1 <- upload_module_normalization_server(
       id = "checkqc",
       r_X = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
