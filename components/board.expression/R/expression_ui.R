@@ -110,7 +110,7 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Top genes",
+      "Top features",
       bslib::layout_columns(
         col_widths = 12,
         height = halfH,
