@@ -39,7 +39,7 @@ DataViewBoard <- function(id, pgx) {
         More information about the gene and hyperlinks to external databases are provided. Furthermore,
         it displays the correlation and tissue expression for a selected gene in external reference datasets.
 
-        In <strong>Counts table</strong> panel, the exact expression values across the samples can be looked up,
+        In <strong>Data table</strong> panel, the exact expression values across the samples can be looked up,
         where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression
         of a phenotype sample grouping is also presented in this table.
 
@@ -95,7 +95,7 @@ DataViewBoard <- function(id, pgx) {
     tab_elements <- list(
       "Overview" = list(disable = NULL),
       "Sample QC" = list(disable = c("search_gene")),
-      "Counts table" = list(disable = NULL),
+      "Data table" = list(disable = NULL),
       "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
       "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type"))
     )

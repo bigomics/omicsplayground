@@ -209,7 +209,7 @@ DataViewUI <- function(id) {
         col_widths = 12,
         row_heights = list("auto", 1),
         height = fullH,
-        bs_alert(tspan("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
+        bs_alert(tspan("In Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
           title = tspan("Gene expression table"),
