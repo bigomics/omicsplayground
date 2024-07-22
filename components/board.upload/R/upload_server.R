@@ -257,8 +257,7 @@ UploadBoard <- function(id,
 
     checked_counts <- shiny::eventReactive(
       {
-        ##list( checked_for_log(), input$logCorrectCounts, uploaded_counts() )
-        list( checked_for_log(), input$logCorrectCounts, uploaded_counts() )        
+        list( checked_for_log(), uploaded_counts() )
       },
       {
         
@@ -282,16 +281,26 @@ UploadBoard <- function(id,
           dbg("[UploadBoard::checked_counts] Converting log-transformed counts!!!")
           res$df <- 2**res$df
           if (min(res$df, na.rm = TRUE) >= 1) res$df <- res$df - 1
-          checked <- res$df
-        } else {
-          # no correction needed
-          checked <- res$df
         }
+        
+        # Any further negative values are not allowed. We will set
+        # them to zero and inform the user. 
+        if( any(res$df < 0, na.rm = TRUE) ) {
 
-
+          num_neg <- sum( res$df < 0, na.rm=TRUE)
+          res$df <- pmax( res$df, 0)
+          
+          shinyalert::shinyalert(
+            title = "Negative values",
+            text = paste("We have detected",num_neg,"negative values in your data. Negative values are not allowed and are set to zero. If you wish otherwise, please correct your data manually."),
+            type = "warning"
+          )
+        }
+        
         ## update checklist and status
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
+          checked <- res$df
           status <- "OK"
         } else {
           checked <- NULL
@@ -334,7 +343,6 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     checked_samples_counts <- shiny::eventReactive(
       {
-        ##  list(uploaded$counts.csv, uploaded$samples.csv)
         list(checked_counts()$matrix, uploaded$samples.csv)        
       },
       {
