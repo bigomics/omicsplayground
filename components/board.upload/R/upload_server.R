@@ -863,8 +863,8 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-##        upload_datatype(NULL)  ## not good... crashing on new
-##        upload_organism(NULL)  ## not good... crashing on new
+          ##        upload_datatype(NULL)  ## not good... crashing on new
+          ##        upload_organism(NULL)  ## not good... crashing on new
           upload_name(NULL)
           upload_description(NULL)
           show_comparison_builder(TRUE)
