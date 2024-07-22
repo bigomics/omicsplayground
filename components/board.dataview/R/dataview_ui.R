@@ -183,7 +183,7 @@ DataViewUI <- function(id) {
           col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            title = tspan("Dataset abundance of major gene types"),
+            title = tspan("Abundance of major feature types"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
             caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -192,7 +192,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
-            title = "Abundance of major gene types per group",
+            title = "Abundance of major feature types per group",
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
             caption = "Barplot showing the group or sample relative abundance of counts in terms of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -204,12 +204,12 @@ DataViewUI <- function(id) {
     ),
     # counts table tab #####
     shiny::tabPanel(
-      "Counts table",
+      "Data table",
       bslib::layout_columns(
         col_widths = 12,
         row_heights = list("auto", 1),
         height = fullH,
-        bs_alert(tspan("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
+        bs_alert(tspan("In Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
           title = tspan("Gene expression table"),

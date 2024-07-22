@@ -67,19 +67,19 @@ dataview_plot_expression_server <- function(id,
       if (data_type %in% c("counts", "abundance")) {
         gx <- pgx$counts[pp, samples]
         if (data_type == "counts") {
-          ylab <- "expression (counts)"
+          ylab <- "Expression"
         } else {
-          ylab <- "expression (abundance)"
+          ylab <- "Abundance"
         }
       } else if (data_type == "CPM") {
         gx <- 2**pgx$X[pp, samples]
-        ylab <- "expression (CPM)"
+        ylab <- "Expression (CPM)"
       } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
         if (data_type == "logCPM") {
-          ylab <- "expression (log2CPM)"
+          ylab <- "Expression (log2)"
         } else {
-          ylab <- "expression (log2)"
+          ylab <- "Abundance (log2)"
         }
       }
 

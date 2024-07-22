@@ -52,20 +52,21 @@ dataview_plot_averagerank_server <- function(id,
       }
 
       nsamples <- length(samples)
+
       if (data_type %in% c("counts", "abundance")) {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         if (data_type == "counts") {
-          ylab <- "expression (counts)"
+            ylab <- "Expression"
         } else {
-          ylab <- "expression (abundance)"
+            ylab <- "Abundance"
         }
       }
       if (data_type %in% c("logCPM", "log2")) {
         mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         if (data_type == "logCPM") {
-          ylab <- "expression (log2CPM)"
+            ylab <- "Expression (log2)"
         } else {
-          ylab <- "expression (log2)"
+            ylab <- "Abundance (log2)"
         }
       }
 
