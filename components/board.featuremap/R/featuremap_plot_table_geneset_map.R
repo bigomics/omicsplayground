@@ -143,7 +143,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
       nlabel <- pd$nlabel
       colorby <- pd$colorby
       colgamma <- as.numeric(input$gsmap_gamma)
-
       fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
       if (length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA

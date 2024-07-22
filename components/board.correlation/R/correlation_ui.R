@@ -70,9 +70,9 @@ CorrelationUI <- function(id) {
           col_widths = 12,
           correlation_plot_barplot_ui(
             id = ns("cor_barplot"),
-            title = "Top correlated genes",
-            info.text = "Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction.",
-            caption = "Barplot showing the highest correlated genes with respect to the selected gene.",
+            title = "Top correlated features",
+            info.text = "Highest correlated feature in respect to the selected feature. The height of the bars correspond to the Pearson correlation value. The blue bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction.",
+            caption = "Barplot showing the highest correlated feature with respect to the selected feature.",
             label = "",
             height = c("50%", "70vh"),
             width = c("auto", "100%")

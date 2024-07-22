@@ -110,13 +110,13 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Top genes",
+      "Top features",
       bslib::layout_columns(
         col_widths = 12,
         height = halfH,
         expression_plot_topgenes_ui(
           id = ns("topgenes"),
-          title = "Expression of top differentially expressed genes",
+          title = "Expression of top differentially expressed features",
           info.text = "Under the plot Settings, users can scale the abundance levels (counts) or ungroup the samples in the plot from the log scale and ungroup samples settings, respectively.",
           caption = "Expression barplots of the top most differentially expressed genes for the selected comparison.",
           label = "a",
