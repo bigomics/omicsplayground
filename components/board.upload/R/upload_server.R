@@ -380,6 +380,10 @@ UploadBoard <- function(id,
         }
 
         ## -------------- cross-check with counts ------------------
+        # initialize results
+        res_samples <- NULL
+        res_counts <- NULL
+
         cc <- checked_counts()
         if (!is.null(checked) && !is.null(cc$matrix)) {
           cross_check <- playbase::pgx.crosscheckINPUT(
@@ -388,12 +392,7 @@ UploadBoard <- function(id,
           )
 
           write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
-
           checklist[["samples_counts"]]$checks <- cross_check$checks
-
-          # initialize results
-          res_samples <- NULL
-          res_counts <- NULL
 
           if (cross_check$PASS) {
             res_samples <- cross_check$SAMPLES
