@@ -400,11 +400,11 @@ upload_module_outliers_server <- function(
 
       ## missing values
       plot_missingvalues <- function() {
+        
         X0 <- r_X()
         X1 <- imputedX()
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
-        ##        if (!any(is.na(X0)) & !any(is.na(X1))) {
         has.zeros <- any(X0 == 0, na.rm = TRUE)
         if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
           plot.new()
@@ -415,11 +415,13 @@ upload_module_outliers_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.5, 0.5), mgp = c(2.2, 0.85, 0))
           playbase::gx.imagemap(X0, cex = -1)
           title("Missing values patterns in raw data", cex.main = 0.8)
+
           X1[!is.na(X1)] <- 2
           X1[is.na(X1)] <- 1
           playbase::gx.imagemap(X1, cex = -1)
           title("No missing values in imputed data", cex.main = 0.8)
         } else {
+
           ii <- which(is.na(X0))
           if (isolate(input$zero_as_na)) {
             ii <- which(is.na(X0) | X0 == 0)
@@ -431,9 +433,7 @@ upload_module_outliers_server <- function(
 
           ## set zero value to 1, NA values to 2
           X2 <- 1 * is.na(X0)
-          ## X2 <- X2 + 1 * (!is.na(X0) & X0 == 0)
           if (input$zero_as_na) X2[X0 == 0] <- 1
-          ## jj <- head( order(-rowMeans(is.na(X0))), 200)
           jj <- head(order(-apply(X2, 1, sd)), 200)
           X2 <- X2[jj, ]
 

@@ -34,7 +34,6 @@ upload_module_computepgx_server <- function(
     upload_gset_methods,
     process_counter,
     reset_upload_text_input,
-##    ah_task,
     probetype) {
   shiny::moduleServer(
     id,
@@ -42,18 +41,16 @@ upload_module_computepgx_server <- function(
       ns <- session$ns
       
       ## statistical method for GENE level testing
-      GENETEST.METHODS <- shiny::reactiveVal("")
-      shiny::observeEvent(upload_datatype(), {
+      GENETEST.METHODS <- shiny::eventReactive({
+        upload_datatype()
+      } , {
         if (tolower(upload_datatype()) == "proteomics") {
-          GENETEST.METHODS(
-            c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          )
+          mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
         } else {
-          GENETEST.METHODS(
-            c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
-          )
+          mm <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
+                  "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
         }
+        return(mm)
       })
       
       ## GENETEST.SELECTED <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
