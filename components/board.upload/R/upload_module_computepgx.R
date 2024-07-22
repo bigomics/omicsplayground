@@ -40,6 +40,7 @@ upload_module_computepgx_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
+      
       ## statistical method for GENE level testing
       GENETEST.METHODS <- shiny::reactiveVal("")
       shiny::observeEvent(upload_datatype(), {
@@ -819,9 +820,11 @@ upload_module_computepgx_server <- function(
           info("[computePGX:on_process_completed] : ERROR: Result file not found")
         }
         ## remove temp dir only if "user_input/raw_" is present in raw_dir
+        info("[computePGX:on_process_completed] raw_dir = ", raw_dir)
         if (grepl("raw_", raw_dir)) {
           # check if no ERROR_ files exist in raw_dir
           if (length(list.files(raw_dir, pattern = "ERROR_")) == 0) {
+            info("[computePGX:on_process_completed] : SUCCESS: Removing folder ", raw_dir)
             unlink(raw_dir, recursive = TRUE)
           }
         }

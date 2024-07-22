@@ -41,8 +41,6 @@ UploadBoard <- function(id,
         probetype0 <- playbase::detect_probetype(organism, probes)
         dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
         if(is.null(probetype0)) probetype0 <- "error"
-        ##probetype(probetype0)
-        ##dbg("[UploadBoard:ExtendedTask.new] RV.probetype = ", probetype())
         probetype0
       })
     })
@@ -950,10 +948,10 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          upload_datatype(NULL)
+          # upload_datatype(NULL)  ## not good! crash on new upload
+          # upload_organism(NULL)
           upload_name(NULL)
           upload_description(NULL)
-          # upload_organism(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
         })
