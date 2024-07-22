@@ -220,17 +220,17 @@ UploadBoard <- function(id,
     uploaded_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv)
-      } , {
-
+      },
+      {
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
         shiny::req(df0)
 
-        checked_for_log(FALSE)        
+        checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-        write_check_output(res$checks, "COUNTS", raw_dir())        
+        write_check_output(res$checks, "COUNTS", raw_dir())
 
         # check if error 29 exists (log2 transform detected), give
         # action to user revert to intensities or skip correction.
@@ -257,16 +257,15 @@ UploadBoard <- function(id,
 
     checked_counts <- shiny::eventReactive(
       {
-        list( checked_for_log(), uploaded_counts() )
+        list(checked_for_log(), uploaded_counts())
       },
       {
-        
         ## get uploaded counts
         checked <- NULL
         res <- uploaded_counts()
         df0 <- res$df
 
-        if (is.null(df0)) {        
+        if (is.null(df0)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
 
@@ -277,26 +276,25 @@ UploadBoard <- function(id,
         # confirms to convert to intensities in shinyalert do log2
         # correction (un-doing log transform).
         isConfirmed <- input$logCorrectCounts
-        if ("e29" %in% names(res$checks) && isConfirmed ) {
+        if ("e29" %in% names(res$checks) && isConfirmed) {
           dbg("[UploadBoard::checked_counts] Converting log-transformed counts!!!")
           res$df <- 2**res$df
           if (min(res$df, na.rm = TRUE) >= 1) res$df <- res$df - 1
         }
-        
-        # Any further negative values are not allowed. We will set
-        # them to zero and inform the user. 
-        if( any(res$df < 0, na.rm = TRUE) ) {
 
-          num_neg <- sum( res$df < 0, na.rm=TRUE)
-          res$df <- pmax( res$df, 0)
-          
+        # Any further negative values are not allowed. We will set
+        # them to zero and inform the user.
+        if (any(res$df < 0, na.rm = TRUE)) {
+          num_neg <- sum(res$df < 0, na.rm = TRUE)
+          res$df <- pmax(res$df, 0)
+
           shinyalert::shinyalert(
             title = "Negative values",
-            text = paste("We have detected",num_neg,"negative values in your data. Negative values are not allowed and are set to zero. If you wish otherwise, please correct your data manually."),
+            text = paste("We have detected", num_neg, "negative values in your data. Negative values are not allowed and are set to zero. If you wish otherwise, please correct your data manually."),
             type = "warning"
           )
         }
-        
+
         ## update checklist and status
         checklist[["counts.csv"]]$checks <- res$checks
         if (res$PASS) {
@@ -343,7 +341,7 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     checked_samples_counts <- shiny::eventReactive(
       {
-        list(checked_counts()$matrix, uploaded$samples.csv)        
+        list(checked_counts()$matrix, uploaded$samples.csv)
       },
       {
         ## get uploaded counts
@@ -701,7 +699,7 @@ UploadBoard <- function(id,
 
     ## Note: would be good to be able to lock/unlock left and
     ## right navigation separately... IK
-    
+
     # lock/unlock wizard for counts.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts(), input$upload_wizard),
@@ -811,7 +809,7 @@ UploadBoard <- function(id,
     ## =====================================================================
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
-    
+
     upload_table_preview_counts_server(
       id = "counts_preview",
       uploaded = uploaded,

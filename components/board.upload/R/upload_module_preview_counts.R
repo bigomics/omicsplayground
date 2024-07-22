@@ -15,23 +15,21 @@ upload_table_preview_counts_ui <- function(id) {
 upload_table_preview_counts_server <- function(
     id,
     uploaded,
-    checked_matrix, 
+    checked_matrix,
     checklist,
     scrollY,
     width,
     height,
     title,
     info.text,
-    caption
-    )
-{
+    caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      ##shiny::req(!is.null(uploaded$counts.csv))
-      ##dt <- uploaded$counts.csv
-      shiny::req(!is.null(checked_matrix()))      
+      ## shiny::req(!is.null(uploaded$counts.csv))
+      ## dt <- uploaded$counts.csv
+      shiny::req(!is.null(checked_matrix()))
       dt <- checked_matrix()
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
@@ -182,7 +180,7 @@ upload_table_preview_counts_server <- function(
         return()
       }
 
-      df0 <- playbase::read_counts(input$counts_csv$datapath)      
+      df0 <- playbase::read_counts(input$counts_csv$datapath)
       df <- df0
 
       is_expression <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
