@@ -237,10 +237,10 @@ UploadBoard <- function(id,
         if ("e29" %in% names(res$checks)) {
           shinyalert::shinyalert(
             title = paste("Log-transformed counts?"),
-            text = paste("Omics Playground expects linear intensities. Your data seems to be log-transformed. Would you like to convert to intensities?"),
-            confirmButtonText = "Yes, convert to intensities",
+            text = paste("Omics Playground expects linear intensities. Your data seems to be log-transformed. Would you like to undo the logarithm and convert to intensities?"),
+            confirmButtonText = "Yes, convert",
             showCancelButton = TRUE,
-            cancelButtonText = "No, keep as it is",
+            cancelButtonText = "No, keep as is",
             inputId = "logCorrectCounts",
             closeOnEsc = FALSE,
             immediate = TRUE,
