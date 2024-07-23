@@ -256,9 +256,10 @@ library(shiny.i18n)
 DICTIONARY <- file.path(ETC, "translation.json")
 ##i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 
+dbg("[global.R] getwd() = ",getwd())
 dbg("[global.R] DICTIONARY = ",DICTIONARY)
 dbg("[global.R] file.exists(DICTIONARY) = ",file.exists(DICTIONARY))
-dbg("[global.R] readLines = ",readLines(DICTIONARY)[1:6])
+dbg("[global.R] ls.ETC = ",dir(ETC))
 
 i18n <- shiny.i18n::Translator$new(translation_json_path = readLines(DICTIONARY))
 
