@@ -553,6 +553,8 @@ app_server <- function(input, output, session) {
       LOADEDPGX <<- PGX$name
       DATATYPEPGX <<- tolower(PGX$datatype)
       shiny.i18n::update_lang(DATATYPEPGX, session)
+      dbg("[SERVER] changing 'language' to", DATATYPEPGX)
+      
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
