@@ -118,7 +118,7 @@ FeatureMapUI <- function(id) {
             featuremap_plot_gene_map_ui(
               ns("geneUMAP"),
               title = "Feature UMAP",
-              info.text = "UMAP clustering of features (e.g., genes, proteins) colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
+              info.text = "UMAP clustering of features (i.e. genes) colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
               caption = "Feature UMAP coloured by level of variance. Shades of red indicate high variance.",
               height = height1,
               width = c("auto", "100%")
