@@ -42,35 +42,41 @@ docker.run2:
 docker: FORCE version
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) .
 docker2: FORCE 
 	@echo building docker $(BRANCH)
 	docker build --build-arg BRANCH=$(BRANCH) \
+		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) .
 
 docker.base: FORCE
 	@echo building docker BASE
 	docker build  \
+		--progress plain \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.base2: FORCE
 	@echo building docker BASE
 	docker build --no-cache \
+		--progress plain \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.base.update: FORCE 
 	@echo building docker
 	docker build --no-cache \
+		--progress plain \
 		-f docker/Dockerfile.base.update \
 	  	-t bigomics/omicsplayground-base:ub2204_v3_upd .
 
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
+		--progress plain \
 		-f docker/Dockerfile.test \
 	  	-t bigomics/omicsplayground:test .
 
