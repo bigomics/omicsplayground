@@ -395,7 +395,7 @@ tspan <- function(label) {
   shiny::span(class = "i18n", `data-key` = label, label)
 }
 
-tspan <- function(text) {
+tspan <- Vectorize( function(text) {
   if(is.null(text)) return(NULL)
   if(length(text)==0) return(NULL)
   if(!grepl("gene|expression|counts", text, ignore.case=TRUE)) return(text)
@@ -406,4 +406,4 @@ tspan <- function(text) {
     text <- gsub(k, tt, text, ignore.case = FALSE)
   }
   text
-}
+}, "text")
