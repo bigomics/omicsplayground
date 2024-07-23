@@ -253,14 +253,6 @@ PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 
 ## Initialize translator
 library(shiny.i18n)
-DICTIONARY <- file.path(ETC, "translation.json")
-##i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
-
-dbg("[global.R] getwd() = ",getwd())
-dbg("[global.R] DICTIONARY = ",DICTIONARY)
-dbg("[global.R] file.exists(DICTIONARY) = ",file.exists(DICTIONARY))
-dbg("[global.R] ls.ETC = ",dir(ETC))
-
-i18n <- shiny.i18n::Translator$new(translation_json_path = readLines(DICTIONARY))
-
+DICTIONARY <- file.path(FILES, "translation.json")
+i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 
