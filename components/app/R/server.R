@@ -226,8 +226,10 @@ app_server <- function(input, output, session) {
   }
 
   shiny::observeEvent(upload_datatype(), {
-      if (tolower(upload_datatype()) == "proteomics") {
+    if (tolower(upload_datatype()) == "proteomics") {
       shiny.i18n::update_lang("proteomics", session)
+    } else {
+      shiny.i18n::update_lang("RNA-seq", session)
     }
   })
 
@@ -547,13 +549,16 @@ app_server <- function(input, output, session) {
     },
     {
       ## trigger on change dataset
-      dbg("[SERVER] trigger on change dataset")
+      dbg("[SERVER] trigger on new PGX")
 
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
       DATATYPEPGX <<- tolower(PGX$datatype)
-      shiny.i18n::update_lang(DATATYPEPGX, session)
-      dbg("[SERVER] changing 'language' to", DATATYPEPGX)
+
+      ## change language
+      lang <- ifelse(DATATYPEPGX == "proteomics", "proteomics", "RNA-seq") 
+      dbg("[SERVER] changing 'language' to", lang)
+      shiny.i18n::update_lang(lang, session)
       
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
