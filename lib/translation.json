@@ -3,6 +3,42 @@
     "languages": ["RNA-seq", "proteomics"],
     "translation": [
         {
+            "RNA-seq": "transcriptomics",
+            "proteomics": "proteomics"
+        },
+        {
+            "RNA-seq": "Transcriptomics",
+            "proteomics": "Proteomics"
+        },
+        {
+            "RNA-seq": "RNA-seq",
+            "proteomics": "Proteomics"
+        },
+        {
+            "RNA-seq": "Gene",
+            "proteomics": "Protein"
+        },
+        {
+            "RNA-seq": "gene",
+            "proteomics": "protein"
+        },
+        {
+            "RNA-seq": "counts",
+            "proteomics": "abundance"
+        },
+        {
+            "RNA-seq": "Counts",
+            "proteomics": "Abundance"
+        },
+        {
+            "RNA-seq": "expression",
+            "proteomics": "abundance"
+        },
+        {
+            "RNA-seq": "Expression",
+            "proteomics": "Abundance"
+        },
+        {
             "RNA-seq": "Gene:",
             "proteomics": "Protein:"
         },
@@ -45,10 +81,6 @@
         {
             "RNA-seq": "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
             "proteomics": "The column 'rho' reports the correlation with the protein selected in 'Search protein' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."
-        },
-	{
-            "RNA-seq": "counts",
-            "proteomics": "abundance"
         },
         {
             "RNA-seq": "The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database.",
