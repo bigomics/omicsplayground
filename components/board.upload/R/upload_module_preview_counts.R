@@ -26,10 +26,8 @@ upload_table_preview_counts_server <- function(
     caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     table_data <- shiny::reactive({
-      ## shiny::req(!is.null(uploaded$counts.csv))
-      ## dt <- uploaded$counts.csv
       shiny::req(!is.null(checked_matrix()))
       dt <- checked_matrix()
       nrow0 <- nrow(dt)
@@ -181,18 +179,14 @@ upload_table_preview_counts_server <- function(
         return()
       }
 
-      df0 <- playbase::read_counts(input$counts_csv$datapath)
-      df <- df0
+      df <- playbase::read_counts(input$counts_csv$datapath)
 
       is_expression <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
       is_count <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
 
       if (FALSE && is_expression) {
-        df <- 2**df0
-        # legacy code.. it might not be always the case, maybe we
-        # should ask users if they removed zeros by adding 1 to
-        # counts... /MMM
-        if (min(df0, na.rm = TRUE) >= 1) df <- df - 1
+        df <- 2**df
+        if (min(df, na.rm = TRUE) >= 1) df <- df - 1
 
         # warn user that this is happening in background
         shinyalert::shinyalert(

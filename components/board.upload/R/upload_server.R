@@ -391,6 +391,10 @@ UploadBoard <- function(id,
         }
 
         ## -------------- cross-check with counts ------------------
+        # initialize results
+        res_samples <- NULL
+        res_counts <- NULL
+
         cc <- checked_counts()
         if (!is.null(checked) && !is.null(cc$matrix)) {
           cross_check <- playbase::pgx.crosscheckINPUT(
@@ -399,12 +403,7 @@ UploadBoard <- function(id,
           )
 
           write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
-
           checklist[["samples_counts"]]$checks <- cross_check$checks
-
-          # initialize results
-          res_samples <- NULL
-          res_counts <- NULL
 
           if (cross_check$PASS) {
             res_samples <- cross_check$SAMPLES
@@ -567,7 +566,7 @@ UploadBoard <- function(id,
       }
     })
 
-    corrected1 <- upload_module_outliers_server(
+    corrected1 <- upload_module_normalization_server(
       id = "checkqc",
       r_X = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),

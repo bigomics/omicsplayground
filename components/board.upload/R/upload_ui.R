@@ -63,10 +63,10 @@ UploadUI <- function(id) {
     )
   )
 
-  outliers_panel <- wizardR::wizard_step(
+  normalization_panel <- wizardR::wizard_step(
     step_title = "Step 4: QC/BC",
     step_id = "step_qc",
-    upload_module_outliers_ui(ns("checkqc"))
+    upload_module_normalization_ui(ns("checkqc"))
   )
 
   compute_panel <- wizardR::wizard_step(
@@ -98,7 +98,7 @@ UploadUI <- function(id) {
         counts_ui,
         samples_ui,
         contrasts_ui,
-        outliers_panel,
+        normalization_panel,
         compute_panel,
         options = list(
           navigation = "buttons",
