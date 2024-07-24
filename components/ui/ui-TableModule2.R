@@ -14,8 +14,7 @@ TableModuleUI <- function(id,
                           caption = "",
                           caption2 = info.text,
                           just.info = FALSE,
-                          show.maximize = TRUE,
-                          translate = TRUE) {
+                          show.maximize = TRUE) {
   ns <- shiny::NS(id)
 
   if (length(height) == 1) height <- c(height, 800)
@@ -31,14 +30,6 @@ TableModuleUI <- function(id,
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
-  ## translate text between datatypes
-  if(translate) {
-    title <- tspan(title)
-    info.text <- tspan(info.text)
-    caption <- tspan(caption)
-    caption2 <- tspan(caption2)        
-  }
-  
   options.button <- ""
 
   if (!just.info && !is.null(options) && length(options) > 0) {
