@@ -16,7 +16,7 @@ upload_module_initial_settings_ui <- function(id) {
         style = "display: flex; flex-direction: column; align-items: center; gap: 20px;",
         div(
           style = "margin-top: 0px; width: 40%;",
-          bs_alert("This dialog will guide you to upload your own data into Omics Playground. You should prepare at the minimum two CSV files: an <b>expression.csv</b> file (containing your transcriptomics or proteomics data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>.", closable = FALSE, translate = TRUE, html = TRUE)
+          bs_alert("This dialog will guide you to upload your own data into Omics Playground. You should prepare at the minimum two CSV files: an <b>expression.csv</b> file (containing your transcriptomics data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>.", closable = FALSE, translate = TRUE, html = TRUE)
         ),
         br(),
         div(
