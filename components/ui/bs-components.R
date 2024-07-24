@@ -7,7 +7,8 @@
 ##
 ##
 
-bs_alert <- function(..., conditional = TRUE, style = "primary", closable = TRUE) {
+bs_alert <- function(..., conditional = TRUE, style = "primary",
+                     closable = TRUE, translate = TRUE ) {
   id <- bigdash:::make_id()
   if (conditional) {
     btn.class <- "btn-close btn-close-bs-conditional"
@@ -15,11 +16,17 @@ bs_alert <- function(..., conditional = TRUE, style = "primary", closable = TRUE
     btn.class <- "btn-close"
   }
 
+  text <- paste(list(...), collapse=" ")
+
+  if(translate) {
+    text <- tspan(text)
+  }
+  
   alert_tag <- shiny::tags$div(
     id = id,
     class = paste0("alert alert-", style, " alert-dismissible fade show"),
     role = "alert",
-    ...,
+    text,
     if (closable) {
       shiny::tags$button(
         # Use display: none; instead of official boostrap close button.

@@ -134,7 +134,7 @@ DataViewUI <- function(id) {
                 width = c("auto", "100%"),
                 label = "e",
                 title = "Tissue expression (GTEX)",
-                info.text = tspan("Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options."),
+                info.text = "Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options.",
                 caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, we use the human ortholog to query the GTEX database.")
               )
             )
@@ -155,7 +155,7 @@ DataViewUI <- function(id) {
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             label = "a",
-            title = tspan("Total counts"),
+            title = "Total counts",
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Barplot of the average number of counts (abundance) for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -163,7 +163,7 @@ DataViewUI <- function(id) {
           ),
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
-            title = tspan("Counts boxplots"),
+            title = "Counts boxplots",
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
             caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = c("100%", TABLE_HEIGHT_MODAL),
@@ -185,7 +185,7 @@ DataViewUI <- function(id) {
             ns("counts_genetypes"),
             title = tspan("Abundance of major feature types"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
-            caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
+            caption = "Barplot showing the dataset relative counts in terms of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "d"
@@ -209,11 +209,11 @@ DataViewUI <- function(id) {
         col_widths = 12,
         row_heights = list("auto", 1),
         height = fullH,
-        bs_alert(tspan("In Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
+        bs_alert("In this Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
-          title = tspan("Gene expression table"),
-          info.text = tspan("The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."),
+          title = "Gene expression table",
+          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
           caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
@@ -227,7 +227,7 @@ DataViewUI <- function(id) {
         height = fullH,
         col_widths = 12,
         row_heights = list("auto", 1.33, 1),
-        bs_alert("In the Sample information panel, more complete information about samples can be found."),
+        bs_alert("This Sample information panel shows provided phenotype information about the samples."),
         bslib::layout_columns(
           width = 6,
           dataview_plot_phenoheatmap_ui(
