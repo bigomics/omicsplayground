@@ -222,31 +222,27 @@ app_ui <- function(x) {
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
-## !!!!!!!!!!!!!!!!!! not working yet !!!!!!!!!!!!!!!!!!!!!!!!
-          left = bigdash::navbarDropdown(
-            "Open",
+          left = tags$div(
+            style = "padding: 0 0 0 20px;",                        
+            bigdash::navbarDropdown(
+            "Datasets",
             style = "border: 1px; padding: 2px 6px;",
-##            tags$li(
-##              actionLink("data_upload_new", "Upload new")
-##            ),                     
+            tags$li(
+              actionLink("menu_upload_new", "Upload new")
+            ),                     
+            ## bigdash::navbarDropdownTab(
+            ##   "Upload new",
+            ##   "uploadnew-tab"
+            ## ),
             bigdash::navbarDropdownTab(
-              "Upload new",
-              "uploadnew-tab"
+              "Load from library",
+              "load-tab"
             ),
             bigdash::navbarDropdownTab(
-              "My Library",
-              "userlibrary-tab"
-            ),
-            bigdash::navbarDropdownTab(
-              "Public library",
-              "publicdata-tab"
-            ),
-            bigdash::navbarDropdownTab(
-              "Sharing",
+              "Shared datasets",
               "sharing-tab"
             )
-         ),
-## !!!!!!!!!!!!!!!!!! not working yet !!!!!!!!!!!!!!!!!!!!!!!!          
+         )),
           div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
@@ -474,20 +470,8 @@ app_ui <- function(x) {
             AppSettingsUI("app_settings")
           ),
           bigdash::bigTabItem(
-            "uploadnew-tab",
-            UploadNewUI("uploadnew")
-          ),
-          bigdash::bigTabItem(
-            "userlibrary-tab",
-            UserLibraryUI("userlibrary")
-          ),
-          bigdash::bigTabItem(
-            "publicdata-tab",
-            PublicLibraryUI("publicdata")
-          ),
-          bigdash::bigTabItem(
             "sharing-tab",
-            SharedDatasetsUI("sharing")
+            SharedDatasetsUI("load")
           )
         ),
         UploadUI("upload")
