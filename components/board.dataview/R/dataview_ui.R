@@ -74,7 +74,7 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert(tspan("The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database.")),
+        bs_alert("The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
         bslib::layout_columns(
           height = "100%",
           col_widths = c(2, 10),
@@ -149,7 +149,7 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes."),
+        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total counts per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as proportion of ribosomal genes."),
         bslib::layout_columns(
           col_widths = c(4, 4, 4),
           dataview_plot_totalcounts_ui(
@@ -157,7 +157,7 @@ DataViewUI <- function(id) {
             label = "a",
             title = tspan("Total counts"),
             info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
-            caption = "Barplot of the average number of counts (abundance) for each group.",
+            caption = "Barplot of the average counts for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
@@ -183,18 +183,18 @@ DataViewUI <- function(id) {
           col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            title = tspan("Abundance of major feature types"),
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
-            caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
+            title = tspan("Proportion of major gene types"),
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Gene types can be ribosomal genes, kinases or RNA binding motifs, etc..",
+            caption = "Barplot showing the proportion of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "d"
           ),
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
-            title = "Abundance of major feature types per group",
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc..",
-            caption = "Barplot showing the group or sample relative abundance of counts in terms of major gene types.",
+            title = "Proportion of major gene types per sample/group",
+            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Gene types can be ribosomal genes, kinases or RNA binding motifs, etc..",
+            caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             label = "e",
             width = c("auto", "100%")

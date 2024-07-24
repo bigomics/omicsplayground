@@ -325,12 +325,12 @@ UploadBoard <- function(id,
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
             ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max contrasts reached
+            # pop up telling user max sample reached
             shinyalert::shinyalert(
-              title = "Maximum counts reached",
+              title = "Maximum samples reached",
               text = paste(
-                "You have reached the maximum number of counts allowed. Please",
-                "upload a new COUNTS file with a maximum of", MAXSAMPLES, "samples."
+                "You have reached the maximum number of samples allowed. Please",
+                tspan("upload a new counts file with a maximum of", MAXSAMPLES, "samples.")
               ),
               type = "error"
             )
@@ -690,7 +690,7 @@ UploadBoard <- function(id,
             )
           } else if (input$upload_wizard == "step_counts") {
             shinyalert::shinyalert(
-              title = "Upload your counts!",
+              title = "Upload your data!",              
               text = "Please finish the current step before proceeding.",
               type = "warning"
             )
