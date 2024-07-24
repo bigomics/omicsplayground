@@ -391,9 +391,9 @@ inputLabelDictionary <- function(board_ns, inputId) {
   return(val)
 }
 
-tspan <- function(label) {
-  shiny::span(class = "i18n", `data-key` = label, label)
-}
+## tspan <- function(label) {
+##   shiny::span(class = "i18n", `data-key` = label, label)
+## }
 
 tspan <- Vectorize( function(text) {
   if(is.null(text)) return(NULL)
