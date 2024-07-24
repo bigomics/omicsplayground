@@ -100,7 +100,6 @@ upload_table_preview_counts_server <- function(
       )
       div(
         bslib::as_fill_carrier(),
-        ## style = "width: 100%; display: flex; justify-content: space-between; margin-bottom: 8px;",
         style = "width: 100%; display: flex; ",
         if (is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
@@ -108,7 +107,7 @@ upload_table_preview_counts_server <- function(
             row_heights = list("auto", 11, 1),
             gap = "0.5rem",
             bslib::as_fill_carrier(
-              bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE),
+              bs_alert(tspan("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample."), closable = FALSE),
               style = "align-items: end"
             ),
             bslib::card(
@@ -143,9 +142,9 @@ upload_table_preview_counts_server <- function(
                 br(),
                 check_to_html(
                   checklist$counts.csv$checks,
-                  pass_msg = "All counts checks passed",
-                  null_msg = "Counts checks not run yet.
-                            Fix any errors with counts first."
+                  pass_msg = tspan("All counts checks passed"),
+                  null_msg = tspan("Counts checks not run yet.
+                            Fix any errors with counts first.")
                 ),
                 preview_module_legend
               )
@@ -172,8 +171,8 @@ upload_table_preview_counts_server <- function(
       # if counts not in file name, give warning and return
       if (!grepl("count", input$counts_csv$name, ignore.case = TRUE) && !grepl("expression", input$counts_csv$name, ignore.case = TRUE)) {
         shinyalert::shinyalert(
-          title = "Counts not in filename.",
-          text = "Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.",
+          title = tspan("Counts not in filename."),
+          text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv."),
           type = "error"
         )
         return()
@@ -214,7 +213,7 @@ upload_table_preview_counts_server <- function(
         shinyalert::shinyalert(
           inputId = "alert_delete_counts",
           title = "Warning",
-          text = "Removing counts will also remove samples and contrasts. Do you want to proceed?",
+          text = tspan("Removing counts will also remove samples and contrasts. Do you want to proceed?"),
           type = "warning",
           showCancelButton = TRUE,
           closeOnEsc = FALSE,
