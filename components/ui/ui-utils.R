@@ -400,7 +400,7 @@ tspan <- Vectorize( function(text) {
   if(length(text)==0) return(NULL)
   if(!grepl("gene|expression|counts", text, ignore.case=TRUE)) return(text)
   keys <- c("gene","Gene","expression","Expression","counts","Counts",
-            "transcriptomics","Transcriptomics","RNA-seq")
+            "transcriptomics","Transcriptomics","RNA-seq","logCPM")
   for(k in keys) {
     tt <- i18n$t(k)
     text <- gsub(k, tt, text, ignore.case = FALSE)
