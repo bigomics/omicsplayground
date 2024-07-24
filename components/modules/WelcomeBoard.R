@@ -164,7 +164,9 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
       }
     })
 
-    observeEvent(input$btn_upload_data, {
+    observeEvent({
+      input$btn_upload_data
+    } , {
       shiny::req(auth$options)
       enable_upload <- auth$options$ENABLE_UPLOAD
       if (enable_upload) {

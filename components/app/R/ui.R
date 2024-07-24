@@ -222,10 +222,30 @@ app_ui <- function(x) {
             height = "30"
             # width = "110",
           ),
-          left = NULL,
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
+          left = tags$div(
+            style = "padding: 0 0 0 20px;",                        
+            bigdash::navbarDropdown(
+            "Datasets",
+            style = "border: 1px; padding: 2px 6px;",
+            tags$li(
+              actionLink("menu_upload_new", "Upload new")
+            ),                     
+            ## bigdash::navbarDropdownTab(
+            ##   "Upload new",
+            ##   "uploadnew-tab"
+            ## ),
+            bigdash::navbarDropdownTab(
+              "Load from library",
+              "load-tab"
+            ),
+            bigdash::navbarDropdownTab(
+              "Shared datasets",
+              "sharing-tab"
+            )
+         )),
           div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
@@ -458,6 +478,10 @@ app_ui <- function(x) {
             "usersettings-tab",
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
+          ),
+          bigdash::bigTabItem(
+            "sharing-tab",
+            SharedDatasetsUI("load")
           )
         ),
         UploadUI("upload")

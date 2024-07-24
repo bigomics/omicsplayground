@@ -35,7 +35,7 @@ LoadingUI <- function(id) {
   )
 
   user_tabpanel <- shiny::tabPanel(
-    "My Library",
+    "Load from Library",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
@@ -139,7 +139,6 @@ LoadingUI <- function(id) {
     public_tabpanel <- NULL
   }
 
-
   ## ============================ Board object ===========================
   div(
     class = "p-0",
@@ -147,8 +146,84 @@ LoadingUI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
       user_tabpanel,
-      public_tabpanel,
-      sharing_tabpanel
+      public_tabpanel
+#      sharing_tabpanel
     )
   )
+}
+
+## ====================================================================
+## ====================================================================
+## ====================================================================
+
+
+UploadNewUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+
+  tab_content <- bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+##    uiOutput(ns("sharing_alert")),
+      bslib::layout_columns(
+        col_widths = c(-5, 2, -5),
+        br(),
+        div(
+          shiny::selectInput(
+            ns("upload_datatype"),
+            "Data type",
+            c("RNA-seq","Proteomics","Olink Proteomics")
+            ),
+          shiny::actionButton(
+            ns("newuploadbutton"),
+            label = "Upload new dataset",
+            icon = icon("upload"),
+            class = "btn btn-info",
+            width = NULL
+          )
+        ),
+        br(),
+        br()
+      ) ## end of 7fr-5fr
+    )  
+  
+  div(
+    class = "row",
+    boardHeader(title = "My Library", info_link = ns("loading_userlibrary")),
+##    shiny::tabsetPanel(
+##      id = ns("tabs1"),
+##      shiny::tabPanel(
+##      "My Library",
+        tab_content
+##      ) ## tabPanel
+##    ) ## tabsetPanel
+  ) ## div  
+}
+
+SharedDatasetsUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+  
+  tab_content <- bslib::layout_columns(
+    col_widths = 12,
+    height = "calc(100vh - 180px)",
+    bs_alert(HTML("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets.")),
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      uiOutput(ns("sharing_panel_ui"))
+##      sharing_tabpanel
+    )
+  )
+  
+  div(
+    class = "row",
+    boardHeader(title = "Shared datasets", info_link = ns("loading_sharing")),
+##    shiny::tabsetPanel(
+##      id = ns("tabs1"),
+##      shiny::tabPanel(
+##        "Sharing",
+        tab_content
+##      ) ## tabPanel
+##    ) ## tabsetPanel
+  ) ## div
+  
 }

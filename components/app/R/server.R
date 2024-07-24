@@ -969,6 +969,24 @@ app_server <- function(input, output, session) {
     }
   })
 
+  observeEvent({
+    input$menu_upload_new
+  } , {
+    shiny::req(auth$options)
+    enable_upload <- auth$options$ENABLE_UPLOAD
+    if (enable_upload) {
+      new_upload(new_upload() + 1)
+    } else {
+      shinyalert::shinyalert(
+          title = "Upload disabled",
+          text = "Sorry, upload of new data is disabled for this account.",
+          type = "warning",
+          closeOnClickOutside = FALSE
+      )
+    }
+  })
+
+  
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
