@@ -137,9 +137,9 @@ ExpressionBoard <- function(id, pgx) {
       rownames(mx.q) <- rownames(mx)
       rownames(mx.fc) <- rownames(mx)
 
-      mx.fc[is.infinite(mx.fc) | is.nan(mx.fc)] <- NA
-      mx.p[is.infinite(mx.p) | is.nan(mx.p)] <- NA
-      mx.q[is.infinite(mx.q) | is.nan(mx.q)] <- NA
+      mx.fc[which(is.infinite(mx.fc) | is.nan(mx.fc))] <- NA
+      mx.p[which(is.infinite(mx.p) | is.nan(mx.p))] <- NA
+      mx.q[which(is.infinite(mx.q) | is.nan(mx.q))] <- NA
 
       ## !!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
       ## must recompute meta parameters (maxQ method)
@@ -154,15 +154,19 @@ ExpressionBoard <- function(id, pgx) {
       ## recalculate group averages???
       y0 <- pgx$model.parameters$exp.matrix[, comparison]
       names(y0) <- rownames(pgx$model.parameters$exp.matrix)
-      AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE])
-      AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE])
+      AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE], na.rm = TRUE)
+      AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE], na.rm = TRUE)
 
       logFC <- mx$meta.fx
       ## [hack] adjust averages to match logFC...
       mean0 <- (AveExpr0 + AveExpr1) / 2
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
-
+      
+      if(all(c("map", "chr") %in% colnames(pgx$genes))) {
+          colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0" 
+          colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
+      }
       aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
       gene.annot <- pgx$genes[rownames(mx), aa]
       gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
@@ -290,6 +294,67 @@ ExpressionBoard <- function(id, pgx) {
       return(names(sel_genes))
     })
 
+    genes_selected <- shiny::reactive({
+      shiny::req(input$gx_features)
+      df1 <- filteredDiffExprTable()
+      df2 <- gx_related_genesets()
+      res <- fullDiffExprTable()
+      features <- input$gx_features
+      fam.genes <- res$symbol
+      fdr <- input$gx_fdr
+      lfc <- input$gx_lfc
+      if (features != "<all>") {
+        gset <- playdata::getGSETS(features)
+        fam.genes <- unique(unlist(gset))
+      }
+      jj <- match(fam.genes, res$symbol)
+      sel.genes <- res$symbol[setdiff(jj, NA)]
+
+      fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+      qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
+      qval <- pmax(qval, 1e-20)
+      x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
+      y <- -log10(qval + 1e-12)
+      scaled.x <- scale(x, center = FALSE)
+      scaled.y <- scale(y, center = FALSE)
+
+      sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+      sel.genes <- intersect(sig.genes, sel.genes)
+      impt <- function(g) {
+        j <- match(g, fc.genes)
+        x1 <- scaled.x[j]
+        y1 <- scaled.y[j]
+        x <- sign(x1) * (x1**2 + 0.25 * y1**2)
+        names(x) <- g
+        x
+      }
+
+      gene.selected <- !is.null(genetable_rows_selected()) && !is.null(df1)
+      gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
+      if (gene.selected && !gset.selected) {
+        lab.genes <- df1$symbol[genetable_rows_selected()]
+        if (lab.genes == "") lab.genes <- df1$feature[genetable_rows_selected]
+        sel.genes <- lab.genes
+        lab.cex <- 1.3
+      } else if (gene.selected && gset.selected) {
+        sel.genes <- genes_in_sel_geneset()
+        lab.genes <- c(
+          head(sel.genes[order(impt(sel.genes))], 10),
+          head(sel.genes[order(-impt(sel.genes))], 10)
+        )
+        lab.cex <- 1
+      } else {
+        lab.genes <- c(
+          head(sel.genes[order(impt(sel.genes))], 10),
+          head(sel.genes[order(-impt(sel.genes))], 10)
+        )
+        lab.cex <- 1
+      }
+
+      res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes, "fc.genes" = fc.genes)
+      return(res)
+    })
+
     # Plotting ###
 
     # tab differential expression > Plot ####
@@ -298,14 +363,9 @@ ExpressionBoard <- function(id, pgx) {
       comp1 = shiny::reactive(input$gx_contrast),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
-      features = shiny::reactive(input$gx_features),
       res = fullDiffExprTable,
-      sel1 = genetable_rows_selected,
-      df1 = filteredDiffExprTable,
-      sel2 = gsettable_rows_selected,
-      df2 = gx_related_genesets,
-      genes_in_sel_geneset = genes_in_sel_geneset,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      genes_selected = genes_selected
     )
 
     expression_plot_maplot_server(
@@ -316,13 +376,8 @@ ExpressionBoard <- function(id, pgx) {
       gx_lfc = reactive(input$gx_lfc),
       gx_features = reactive(input$gx_features),
       res = fullDiffExprTable,
-      sel1 = genetable_rows_selected,
-      df1 = filteredDiffExprTable,
-      sel2 = gsettable_rows_selected,
-      df2 = gx_related_genesets,
-      fam.genes = res$gene_name,
-      watermark = WATERMARK,
-      genes_in_sel_geneset = genes_in_sel_geneset
+      genes_selected = genes_selected,
+      watermark = WATERMARK
     )
 
     expression_plot_barplot_server(
@@ -402,9 +457,9 @@ ExpressionBoard <- function(id, pgx) {
       id = "volcanoAll",
       pgx = pgx,
       getAllContrasts = getAllContrasts,
-      features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      genes_selected = genes_selected,
       watermark = WATERMARK
     )
 
@@ -414,9 +469,9 @@ ExpressionBoard <- function(id, pgx) {
       id = "volcanoMethods",
       pgx = pgx,
       comp = shiny::reactive(input$gx_contrast),
-      features = shiny::reactive(input$gx_features),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      genes_selected = genes_selected,
       watermark = WATERMARK
     )
 

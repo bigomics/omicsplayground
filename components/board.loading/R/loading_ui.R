@@ -71,6 +71,16 @@ LoadingUI <- function(id) {
           ns("tsne"),
           title = "Signature t-SNE",
           info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
+          info.references = list(
+            list(
+              "Escriba et al.",
+              "http.google.com"
+            ),
+            list(
+              "Ningu et al.",
+              "test.com"
+            )
+          ),
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 340px)", "70vh"),
           width = c("auto", "100%")

@@ -54,6 +54,18 @@ FeatureMapInputs <- function(id) {
       )
     ),
     shiny::conditionalPanel(
+      "input.tabs == 'Gene' && input.filter_genes.includes('<custom>')",
+      ns = ns,
+      withTooltip(
+        shiny::textAreaInput(ns("customlist"), NULL,
+          value = NULL,
+          rows = 5, placeholder = "Paste your custom gene list"
+        ),
+        "Paste a custom list of genes to highlight.",
+        placement = "bottom"
+      )
+    ),
+    shiny::conditionalPanel(
       "input.tabs == 'Geneset'",
       ns = ns,
       withTooltip(
@@ -105,25 +117,25 @@ FeatureMapUI <- function(id) {
             col_widths = c(5, 7),
             featuremap_plot_gene_map_ui(
               ns("geneUMAP"),
-              title = "Gene UMAP",
-              info.text = "UMAP clustering of genes colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the gene expression. Genes that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
-              caption = "Gene UMAP coloured by level of variance. Shades of red indicate high variance.",
+              title = "Feature UMAP",
+              info.text = "UMAP clustering of features (e.g., genes, proteins) colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
+              caption = "Feature UMAP coloured by level of variance. Shades of red indicate high variance.",
               height = height1,
               width = c("auto", "100%")
             ),
             featuremap_plot_gene_sig_ui(
               ns("geneSigPlots"),
-              title = "Gene signatures",
-              info.text = "UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance.",
-              caption = "Gene signature maps coloured by differential expression.",
+              title = "Feature signatures",
+              info.text = "UMAP clustering of features colored by relative log-expression of the phenotype group. The distance metric is covariance. Features that are clustered nearby have high covariance.",
+              caption = "Feature signature maps coloured by differential expression.",
               height = height1,
               width = c("auto", "100%")
             )
           ),
           featuremap_table_gene_map_ui(
             ns("geneUMAP"),
-            title = "Gene table",
-            info.text = "The contents of this table can be subsetted by selecting (by click&drag) on the Gene map plot.",
+            title = "Feature table",
+            info.text = "The contents of this table can be subsetted by selecting (by click&drag) on the Feature map plot.",
             caption = "",
             height = height2,
             width = c("auto", "100%")

@@ -39,32 +39,44 @@ docker.run2:
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
-docker: FORCE 
+docker: FORCE version
 	@echo building docker $(BRANCH)
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) .
 docker2: FORCE 
 	@echo building docker $(BRANCH)
 	docker build --build-arg BRANCH=$(BRANCH) \
+		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) .
 
 docker.base: FORCE
 	@echo building docker BASE
 	docker build  \
+		--progress plain \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.base2: FORCE
 	@echo building docker BASE
 	docker build --no-cache \
+		--progress plain \
 		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
+
+docker.base.update: FORCE 
+	@echo building docker
+	docker build --no-cache \
+		--progress plain \
+		-f docker/Dockerfile.base.update \
+	  	-t bigomics/omicsplayground-base:ub2204_v3_upd .
 
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
+		--progress plain \
 		-f docker/Dockerfile.test \
 	  	-t bigomics/omicsplayground:test .
 
@@ -84,12 +96,11 @@ renv: FORCE
 
 FORCE: ;
 
-##VERSION=`head -n1 VERSION`
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.3.4.9001"
-BUILD := $(VERSION)"-"$(BRANCH)""$(DATE)
+VERSION = "v3.5.0-alpha.1"
+BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
-version: 
+version: FORCE
 	@echo "new version ->" $(BUILD)
 	echo $(BUILD) > VERSION
 
@@ -99,7 +110,7 @@ changelog:
 	sh ./dev/create-changelog.sh 'feat' 3 > FEATURES.md
 	sh ./dev/create-changelog-pr.sh 1 4 > CHANGELOG-pr.md 
 
-tags: 
+tags: version changelog
 	git tag -f -a $(VERSION) -m 'version $(VERSION)'
 	git push && git push --tags
 

@@ -211,7 +211,7 @@ app_server <- function(input, output, session) {
 
   ## Modules needed from the start
   if (opt$ENABLE_UPLOAD) {
-    UploadBoard(
+    upload_datatype <-UploadBoard(
       id = "upload",
       pgx_dir = PGX.DIR,
       pgx = PGX,
@@ -224,6 +224,14 @@ app_server <- function(input, output, session) {
       new_upload = new_upload
     )
   }
+
+  shiny::observeEvent(upload_datatype(), {
+    if (tolower(upload_datatype()) == "proteomics") {
+      shiny.i18n::update_lang("proteomics", session)
+    } else {
+      shiny.i18n::update_lang("RNA-seq", session)
+    }
+  })
 
 
   ## Modules needed after dataset is loaded (deferred) --------------
@@ -541,8 +549,17 @@ app_server <- function(input, output, session) {
     },
     {
       ## trigger on change dataset
-      dbg("[SERVER] trigger on change dataset")
+      dbg("[SERVER] trigger on new PGX")
 
+      ## write GLOBAL variables
+      LOADEDPGX <<- PGX$name
+      DATATYPEPGX <<- tolower(PGX$datatype)
+
+      ## change language
+      lang <- ifelse(DATATYPEPGX == "proteomics", "proteomics", "RNA-seq") 
+      dbg("[SERVER] changing 'language' to", lang)
+      shiny.i18n::update_lang(lang, session)
+      
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
@@ -592,7 +609,6 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Session Timers
   ## -------------------------------------------------------------
-
   ## invite module (from menu)
   invite <- InviteFriendModule(
     id = "invite",
@@ -795,8 +811,6 @@ app_server <- function(input, output, session) {
       message("-------------------------------")
 
       pgx.record_access(auth$email, action = "login", session = session)
-      enable_upload <- auth$options$ENABLE_UPLOAD
-      bigdash.toggleTab(session, "upload-tab", enable_upload)
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()

@@ -38,7 +38,8 @@ wgcna_plot_module_membership_server <- function(id,
       out <- wgcna.compute()
 
       MEs <- out$net$MEs
-      rho <- cor(MEs, out$datExpr)
+      ## rho <- cor(MEs, out$datExpr)
+      rho <- cor(MEs, out$datExpr, use = "pairwise.complete.obs")
       rho[is.na(rho) | is.infinite(rho)] <- 0
 
       ylab0 <- "ME correlation"

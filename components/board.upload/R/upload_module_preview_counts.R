@@ -15,19 +15,21 @@ upload_table_preview_counts_ui <- function(id) {
 upload_table_preview_counts_server <- function(
     id,
     uploaded,
+    checked_matrix,
     checklist,
     scrollY,
     width,
     height,
     title,
     info.text,
+    upload_datatype,
     caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     table_data <- shiny::reactive({
-      shiny::req(uploaded$counts.csv)
-      dt <- uploaded$counts.csv
+      shiny::req(!is.null(checked_matrix()))
+      dt <- checked_matrix()
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXSHOW <- 100
@@ -48,7 +50,7 @@ upload_table_preview_counts_server <- function(
 
     table.RENDER <- function() {
       dt <- table_data()
-      req(dt)
+      req(!is.null(dt))
 
       DT::datatable(dt,
         class = "compact hover",
@@ -112,7 +114,7 @@ upload_table_preview_counts_server <- function(
             bslib::card(
               fileInputArea(
                 ns("counts_csv"),
-                shiny::h4("Upload counts.csv", class = "mb-0"),
+                shiny::h4(ifelse(tolower(upload_datatype()) == "proteomics", "Upload abundance.csv", "Upload counts.csv"), class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "100%"
@@ -177,18 +179,14 @@ upload_table_preview_counts_server <- function(
         return()
       }
 
-      df0 <- playbase::read.as_matrix(input$counts_csv$datapath)
-      df <- df0
-      # file.copy(df0, file.path(raw_dir(), "raw_counts.csv"))
+      df <- playbase::read_counts(input$counts_csv$datapath)
 
-      IS_EXPRESSION <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
-      IS_COUNT <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
+      is_expression <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
+      is_count <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
 
-      if (IS_EXPRESSION) {
-        df <- 2**df0
-        # legacy code.. it might not be always the case, maybe we should ask users if they removed zeros by adding 1 to counts... /MMM
-        if (min(df0, na.rm = TRUE) > 0) df <- df - 1
-
+      if (FALSE && is_expression) {
+        df <- 2**df
+        if (min(df, na.rm = TRUE) >= 1) df <- df - 1
 
         # warn user that this is happening in background
         shinyalert::shinyalert(

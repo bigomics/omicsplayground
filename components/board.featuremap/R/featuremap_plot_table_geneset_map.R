@@ -143,7 +143,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
       nlabel <- pd$nlabel
       colorby <- pd$colorby
       colgamma <- as.numeric(input$gsmap_gamma)
-
       fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
       if (length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA
@@ -230,9 +229,17 @@ featuremap_plot_table_geneset_map_server <- function(id,
         X <- pgx$gsetX[gg, , drop = FALSE]
         X <- X - rowMeans(X, na.rm = TRUE)
         y <- pgx$samples[, pheno]
-        F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[, c(i, i), drop = FALSE])
-        }))
+        if (nrow(X) == 1) {
+          F <- tapply(1:ncol(X), y, function(i) {
+            rowMeans(X[, c(i, i), drop = FALSE])
+          })
+          F <- data.frame(t(F))
+          rownames(F) <- gg
+        } else {
+          F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
+            rowMeans(X[, c(i, i), drop = FALSE])
+          }))
+        }
         is.fc <- FALSE
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc

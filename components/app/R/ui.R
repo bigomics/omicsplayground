@@ -66,6 +66,8 @@ app_ui <- function(x) {
         shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
         ##    gtag2, ## Google Tag Manager???
         shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
+        shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
+        shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
@@ -207,6 +209,7 @@ app_ui <- function(x) {
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
+        shiny.i18n::usei18n(i18n),
         header,
         title = "Omics Playground v3",
         theme = big_theme2,
@@ -295,13 +298,20 @@ app_ui <- function(x) {
             ),
             logout.tab
           ),
-          bigdash::hover_dropdown(
-            bslib::input_switch("enable_beta", "Enable beta features"),
-            bslib::input_switch("enable_info", "Show info alerts", value = TRUE),
-            selector_switch(
-              class = "card-footer-checked",
-              label = "show captions",
-              is.checked = FALSE
+          bigdash::navbarDropdown(
+            shiny::icon("cog"),
+            bigdash::navbarDropdownItem(
+              bslib::input_switch("enable_beta", "Enable beta features")
+            ),
+            bigdash::navbarDropdownItem(
+              bslib::input_switch("enable_info", "Show info alerts", value = TRUE)
+            ),
+            bigdash::navbarDropdownItem(
+              selector_switch(
+                class = "card-footer-checked",
+                label = "show captions",
+                is.checked = FALSE
+              )
             )
           )
         ),

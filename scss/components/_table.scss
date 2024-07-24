@@ -98,8 +98,12 @@ html {
       
     .icon_nested {
     position: absolute;
-    left: 5px;
+    left: 1px;
     color: rgba(217, 83, 79, 1);
+    }
+
+    .blank_icon {
+        color: transparent;
     }
     
     table.dataTable>tbody>tr.selected>* {
