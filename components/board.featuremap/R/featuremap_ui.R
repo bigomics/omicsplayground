@@ -112,13 +112,13 @@ FeatureMapUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
-          bs_alert("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions."),
+          bs_alert(tspan("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers. By coloring the UMAP with the foldchange, one can visually compare the global effect between different conditions.")),
           bslib::layout_columns(
             col_widths = c(5, 7),
             featuremap_plot_gene_map_ui(
               ns("geneUMAP"),
               title = "Feature UMAP",
-              info.text = "UMAP clustering of features (e.g., genes, proteins) colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
+              info.text = "UMAP clustering of features (i.e. genes) colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
               caption = "Feature UMAP coloured by level of variance. Shades of red indicate high variance.",
               height = height1,
               width = c("auto", "100%")

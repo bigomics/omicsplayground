@@ -28,7 +28,8 @@ PlotModuleUI <- function(id,
                          pdf.height = 8,
                          cards = FALSE,
                          card_names = NULL,
-                         header_buttons = NULL) {
+                         header_buttons = NULL,
+                         translate = TRUE ) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -82,6 +83,14 @@ PlotModuleUI <- function(id,
     if (is.null(outputFunc2)) outputFunc2 <- getOutputFunc(plotlib2)
   }
 
+  ## translate text between datatypes
+  if(translate) {
+    title <- tspan(title)
+    info.text <- tspan(info.text)
+    caption <- tspan(caption)
+    caption2 <- tspan(caption2)        
+  }
+  
   ## --------------------------------------------------------------------------------
   ## ------------------------ BUTTONS -----------------------------------------------
   ## --------------------------------------------------------------------------------
@@ -229,7 +238,9 @@ PlotModuleUI <- function(id,
     },
     header_buttons,
     DropdownMenu(
-      shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
+      shiny::div(class = "plotmodule-info", shiny::HTML(
+        paste0("<b>", as.character(title),".", "</b>", "&nbsp;",
+               as.character(info.text)))),
       if (!is.null(info.references)) {
         html_code <- ""
         for (i in seq_along(info.references)) {

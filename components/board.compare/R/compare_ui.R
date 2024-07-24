@@ -143,7 +143,7 @@ CompareUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("If the samples are exactly the same in your two datasets, you can plot their gene expression and find highly correlated features, e.g. for genes and proteins."),
+        bs_alert("If the samples are exactly the same in your two datasets, you can plot their gene expression and find highly correlated genes."),
         bslib::layout_columns(
           col_widths = c(6, 6),
           height = fullH,
