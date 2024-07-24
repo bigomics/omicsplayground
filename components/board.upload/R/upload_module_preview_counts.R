@@ -200,6 +200,7 @@ upload_table_preview_counts_server <- function(
     })
 
     observeEvent(input$remove_counts, {
+
       delete_all_files_counts <- function(value) {
         if (input$alert_delete_counts) {
           uploaded$counts.csv <- NULL

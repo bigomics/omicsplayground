@@ -237,7 +237,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
-        shiny::req(df0)
+        if(is.null(df0)) return(NULL)
 
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
@@ -274,9 +274,7 @@ UploadBoard <- function(id,
         ## get uploaded counts
         checked <- NULL
         res <- uploaded_counts()
-        df0 <- res$df
-
-        if (is.null(df0)) {
+        if (is.null(res)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
 
