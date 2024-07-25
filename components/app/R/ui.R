@@ -230,13 +230,13 @@ app_ui <- function(x) {
             bigdash::navbarDropdown(
             "Datasets",
             style = "border: 1px; padding: 2px 6px;",
-            tags$li(
-              actionLink("menu_upload_new", "Upload new")
-            ),                     
-            ## bigdash::navbarDropdownTab(
-            ##   "Upload new",
-            ##   "uploadnew-tab"
-            ## ),
+            #tags$li(
+            #  actionLink("menu_upload_new", "Upload new")
+            #),                     
+            bigdash::navbarDropdownTab(
+              "Upload new",
+              "upload-tab"
+            ),
             bigdash::navbarDropdownTab(
               "Load from library",
               "load-tab"
@@ -334,13 +334,12 @@ app_ui <- function(x) {
                     have been pre-computed and are ready to be used. Select a
                     dataset in the table and load the data set by clicking the 'Analyze dataset' button."
           ),
-          # ,
-          # bigdash::sidebarTabHelp(
-          #   "upload-tab",
-          #   "Upload new",
-          #   "Here you can upload your own transcriptomics and proteomics data into
-          #           the platform and perform computations for the Playground."
-          # ),
+          bigdash::sidebarTabHelp(
+            "upload-tab",
+            "Upload new",
+            "Here you can upload your own transcriptomics and proteomics data into
+                    the platform and perform computations for the Playground."
+          ),
           bigdash::sidebarTabHelp(
             "dataview-tab",
             "DataView",
@@ -465,11 +464,10 @@ app_ui <- function(x) {
             # LoadingInputs("load")
             LoadingUI("load")
           ),
-          # ,
-          # bigdash::bigTabItem(
-          #   "upload-tab",
-          #   UploadUI("upload")
-          # ),
+          bigdash::bigTabItem(
+            "upload-tab",
+            UploadUI("upload")
+          ),
           bigdash::bigTabItem(
             "userprofile-tab",
             UserProfileUI("user_profile")
@@ -483,8 +481,8 @@ app_ui <- function(x) {
             "sharing-tab",
             SharedDatasetsUI("load")
           )
-        ),
-        UploadUI("upload")
+        )
+        ##UploadUI("upload")
       ) ## end of bigPage
     }
 

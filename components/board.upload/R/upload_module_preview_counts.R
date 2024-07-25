@@ -4,7 +4,7 @@
 ##
 
 ## ---------------------------------------------------
-## COUNTS
+## COUNTS UPLOAD (for wizard dialog)
 ## ---------------------------------------------------
 
 upload_table_preview_counts_ui <- function(id) {
@@ -98,6 +98,7 @@ upload_table_preview_counts_server <- function(
           onclick = "window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
         )
       )
+
       div(
         bslib::as_fill_carrier(),
         style = "width: 100%; display: flex; ",
@@ -138,15 +139,19 @@ upload_table_preview_counts_server <- function(
             ),
             bslib::card(
               div(
+                br(),                       
+                plotOutput(ns("histogram")),                       
+                br(), hr(),
                 "Summary:",
                 br(),
                 check_to_html(
                   checklist$counts.csv$checks,
                   pass_msg = tspan("All counts checks passed"),
                   null_msg = tspan("Counts checks not run yet.
-                            Fix any errors with counts first.")
-                ),
-                preview_module_legend
+                            Fix any errors with counts first."),
+                  details = FALSE
+                )
+                ## preview_module_legend
               )
             ),
             action_buttons
@@ -155,6 +160,42 @@ upload_table_preview_counts_server <- function(
       ) ## end of div
     })
 
+    output$histogram <- renderPlot({
+      counts <- checked_matrix()
+      xx <- log2(1 + counts)
+      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
+      suppressWarnings(dc <- data.table::melt(xx))
+      dc$value[dc$value == 0] <- NA
+      tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
+      ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
+        ggplot2::geom_density() +
+        ggplot2::xlab(tspan("counts (log2p1)")) +
+        ggplot2::theme(legend.position = "none") +
+        ggplot2::ggtitle("COUNTS", subtitle = tt2)
+    })
+    
+    # TEST
+    observeEvent( checklist$counts.csv$checks, {
+      dbg("[upload_table_preview_counts_server] CHECK$counts.csv$checks = ",
+          names(checklist$counts.csv$checks))
+      checks <- checklist$counts.csv$checks
+      if(length(checks) > 0) {
+        err.html <- check_to_html(
+          checks,
+          pass_msg = tspan("All counts checks passed"),
+          null_msg = tspan("Counts checks not run yet.
+                            Fix any errors with counts first."),
+          details = TRUE
+        )
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = err.html,
+          html = TRUE
+        )
+      }
+      
+    })
+    
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
@@ -248,8 +289,8 @@ upload_table_preview_counts_server <- function(
 ## --------------------------------------------------------------------------
 ## convert list of checks to html tags for display in the data preview modal
 ## --------------------------------------------------------------------------
-
-check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
+check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "",
+                          details = TRUE) {
   error_list <- playbase::PGX_CHECKS
   if (is.null(check)) {
     tagList(
@@ -260,7 +301,7 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
       span(false_msg, style = "color: orange"), br()
     )
   } else {
-    if (length(check) > 0) {
+    if (details && length(check) > 0) {
       tagList(
         lapply(1:length(check), function(idx) {
           error_id <- names(check)[idx]

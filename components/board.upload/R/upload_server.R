@@ -76,7 +76,7 @@ UploadBoard <- function(id,
 
 <br><br>
 <ol>
-<li>counts.csv: Count/expression file with gene on rows, samples as columns.
+<li>counts.csv: Counts file with gene on rows, samples as columns.
 <li>samples.csv: Samples file with samples on rows, phenotypes as columns.
 <li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
 </ol>
@@ -117,7 +117,6 @@ UploadBoard <- function(id,
       },
       ignoreNULL = FALSE
     )
-
 
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
@@ -167,7 +166,8 @@ UploadBoard <- function(id,
         }
       }
 
-      # reset new_upload to 0, so upload will not trigger when computation is done
+      # reset new_upload to 0, so upload will not trigger when
+      # computation is done
       new_upload(0)
 
       if (uploaded_method == "computed") {
@@ -254,7 +254,7 @@ UploadBoard <- function(id,
             cancelButtonText = "No, keep as is",
             inputId = "logCorrectCounts",
             closeOnEsc = FALSE,
-            immediate = TRUE,
+            immediate = FALSE,
             callbackR = function(x) checked_for_log(TRUE)
           )
           checked_for_log(FALSE)
@@ -289,6 +289,7 @@ UploadBoard <- function(id,
           dbg("[UploadBoard::checked_counts] Converting log-transformed counts!!!")
           res$df <- 2**res$df
           if (min(res$df, na.rm = TRUE) >= 1) res$df <- res$df - 1
+          res$checks[["e29"]] <- NULL  ## remove?
         }
 
         # Any further negative values are not allowed. We will set
@@ -296,7 +297,6 @@ UploadBoard <- function(id,
         if (any(res$df < 0, na.rm = TRUE)) {
           num_neg <- sum(res$df < 0, na.rm = TRUE)
           res$df <- pmax(res$df, 0)
-
           shinyalert::shinyalert(
             title = "Negative values",
             text = paste("We have detected", num_neg, "negative values in your data. Negative values are not allowed and are set to zero. If you wish otherwise, please correct your data manually."),
@@ -883,13 +883,13 @@ UploadBoard <- function(id,
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
 
-    upload_module_initial_settings_server(
-      id = "initial",
-      upload_organism = upload_organism,
-      upload_datatype = upload_datatype,
-      auth = auth,
-      new_upload = new_upload
-    )
+    ## upload_module_initial_settings_server(
+    ##   id = "initial",
+    ##   upload_organism = upload_organism,
+    ##   upload_datatype = upload_datatype,
+    ##   auth = auth,
+    ##   new_upload = new_upload
+    ## )
 
     upload_table_preview_counts_server(
       id = "counts_preview",
@@ -899,7 +899,8 @@ UploadBoard <- function(id,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
       height = c("100%", TABLE_HEIGHT_MODAL),
-      title = ifelse(tolower(upload_datatype()) == "proteomics", "Uploaded Expression", "Uploaded Counts"),
+      ##      title = ifelse(tolower(upload_datatype()) == "proteomics", "Uploaded Expression", "Uploaded Counts"),
+      title = "Uploaded Counts",      
       info.text = "This is the uploaded counts data.",
       upload_datatype = upload_datatype,
       caption = "This is the uploaded counts data."
@@ -935,13 +936,39 @@ UploadBoard <- function(id,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
 
+    ## =================== wizard logic =====================
+
+    # change upload_datatype to selected_datatype
+    observeEvent(input$selected_datatype, {
+      upload_datatype(input$selected_datatype)
+    })
+    
+    # change upload_organism to selected_organism
+    observeEvent(input$selected_organism, {
+      upload_organism(input$selected_organism)
+    })
+
+    observeEvent( input$start_upload, {
+      new_upload(new_upload() + 1)
+    })
+
     # observe show_modal and start modal
     shiny::observeEvent(
-      list(new_upload()),
+      list( new_upload() ),
       {
         shiny::req(auth$options)
-        enable_upload <- auth$options$ENABLE_UPLOAD
-
+        enable_upload <- auth$options$ENABLE_UPLOAD        
+        if (!enable_upload) {
+          shinyalert::shinyalert(
+            title = "Upload disabled",
+            text = "Sorry, upload of new data is disabled for this account.",
+            type = "warning",
+            #
+            closeOnClickOutside = FALSE
+          )
+          return(NULL)
+        }
+        
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
@@ -954,10 +981,10 @@ UploadBoard <- function(id,
         })
 
         reset_upload_text_input(reset_upload_text_input() + 1)
-
         wizardR::reset("upload_wizard")
 
         # skip upload trigger at first startup
+        dbg("new_upload() = ", new_upload())
         if (new_upload() == 0) {
           return(NULL)
         }
