@@ -12,7 +12,8 @@ UploadBoard <- function(id,
                         recompute_pgx,
                         recompute_info,
                         inactivityCounter,
-                        new_upload, session2) {
+                        new_upload,
+                        session2) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -344,7 +345,6 @@ UploadBoard <- function(id,
       }
     )
 
-
     ## --------------------------------------------------------
     ## Check SAMPLES matrix
     ## --------------------------------------------------------
@@ -551,6 +551,15 @@ UploadBoard <- function(id,
       shiny::HTML(upload_info)
     })
 
+    observeEvent( new_upload(), {
+      species <- playbase::SPECIES_TABLE$species_name
+
+      if (!auth$options$ENABLE_ANNOT) {
+        species <- setdiff(species, "No organism")
+      }
+      updateSelectizeInput(session, "selected_organism", choices = species, server = TRUE)
+    })  
+
     ## =====================================================================
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
@@ -722,6 +731,7 @@ UploadBoard <- function(id,
       {
         req(input$upload_wizard == "step_counts")
         chk <- checked_counts()$status
+        dbg("[wizard locking: step_counts] checked_counts()$status = ",chk)
         if (is.null(chk) || chk != "OK") {
           wizardR::lock("upload_wizard")
         } else if (!is.null(chk) && chk == "OK") {
@@ -735,9 +745,11 @@ UploadBoard <- function(id,
       list(uploaded$samples.csv, checked_samples_counts(), input$upload_wizard),
       {
         req(input$upload_wizard == "step_samples")
-        if (is.null(checked_samples_counts()$status) || checked_samples_counts()$status != "OK") {
+        chk <- checked_samples_counts()$status
+        dbg("[wizard locking: step_counts] checked_counts()$status = ",chk)        
+        if (is.null(chk) || chk != "OK") {
           wizardR::lock("upload_wizard")
-        } else if (!is.null(checked_samples_counts()$status) && checked_samples_counts()$status == "OK") {
+        } else if (!is.null(chk) && chk == "OK") {
           wizardR::unlock("upload_wizard")
         }
       }

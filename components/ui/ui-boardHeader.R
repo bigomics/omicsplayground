@@ -10,7 +10,6 @@ boardHeader <- function(title, info_link) {
   div(
     fillRow(
       flex = c(NA, 1, NA),
-      #
       shiny::div(
         id = "navheader-current-section",
         HTML(paste0(title, " &nbsp;")),
@@ -26,6 +25,5 @@ boardHeader <- function(title, info_link) {
         )
       )
     )
-    #
   )
 }

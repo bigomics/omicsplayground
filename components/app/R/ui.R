@@ -245,7 +245,7 @@ app_ui <- function(x) {
               "Shared datasets",
               "sharing-tab"
             )
-         )),
+          )),
           div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
@@ -313,6 +313,13 @@ app_ui <- function(x) {
                 is.checked = FALSE
               )
             )
+          ),
+          ## THIS IS SO WEIRD. if we remove/comment out the
+          ## prettySwitch, the header bar or plotModule f*cks
+          ## up... (IK). HELP!!! we do not need this button...
+          div(
+            style = "visibility: hidden;",
+            shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
           )
         ),
         settings = bigdash::settings(

@@ -65,6 +65,7 @@ upload_table_preview_samples_server <- function(
     }
 
     output$table_samples <- shiny::renderUI({
+      
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
         div(
@@ -117,7 +118,7 @@ upload_table_preview_samples_server <- function(
           )
         } else {
           bslib::layout_columns(
-            col_widths = c(9, 3),
+            col_widths = c(8, 4),
             TableModuleUI(
               ns("samples_datasets"),
               width = width,
@@ -130,20 +131,28 @@ upload_table_preview_samples_server <- function(
             ),
             bslib::card(
               div(
+                br(),                       
+                plotOutput(ns("phenotype_stats")),
+                br(), hr(),                
                 "Summary:",
                 br(),
                 check_to_html(
                   checklist$samples.csv$checks,
                   pass_msg = "All samples checks passed",
                   null_msg = "Samples checks not run yet.
-                            Fix any errors with samples first."
+                            Fix any errors with samples first.",
+                  false_msg = "Samples checks: warning",                  
+                  details = FALSE
                 ),
-                check_to_html(checklist$samples_counts$checks,
-                  pass_msg = "All samples-counts checks passed",
-                  null_msg = "Samples-counts checks not run yet.
-                        Fix any errors with samples or counts first."
-                ),
-                preview_module_legend
+                check_to_html(
+                  checklist$samples_counts$checks,
+                  pass_msg = tspan("All samples-counts checks passed"),
+                  null_msg = tspan("Samples-counts checks not run yet.
+                        Fix any errors with samples or counts first."),
+                  false_msg = tspan("Samples-counts checks: warning"),
+                  details = FALSE                  
+                )
+#                preview_module_legend
               )
             ),
             action_buttons
@@ -152,7 +161,51 @@ upload_table_preview_samples_server <- function(
       )
     })
 
-    # pass counts to uploaded when uploaded
+    output$phenotype_stats <- renderPlot({
+      pheno <- uploaded$samples.csv
+      shiny::req(nrow(pheno))
+      plotPhenoDistribution(data.frame(pheno))       
+    })
+    
+    # error pop-up alert
+    observeEvent({
+      list( checklist$samples.csv$checks,
+           checklist$samples_counts$checks)
+    } , {
+      checks1 <- checklist$samples.csv$checks
+      checks2 <- checklist$samples_counts$checks
+      
+      if(length(checks1) > 0 || length(checks2) > 0) {
+        err.html <- ""
+        if(length(checks1) > 0) {
+          err1 <- check_to_html(
+            checks1,
+            pass_msg = tspan("All samples checks passed"),
+            null_msg = tspan("Samples checks not run yet.
+                            Fix any errors with counts first."),
+            details = TRUE
+          )
+          err.html <- paste(err.html, err1)
+        }
+        if(length(checks2) > 0) {        
+          err2 <- check_to_html(
+            checks2,
+            pass_msg = tspan("All samples-counts checks passed"),
+            null_msg = tspan("Samples-counts checks not run yet.
+                        Fix any errors with samples or counts first."),
+            details = TRUE                  
+            )
+          err.html <- paste(err.html, err2)          
+        }
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = tspan(err.html),
+          html = TRUE
+        )
+      }      
+    })
+
+    ## pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
       # check if samples is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$samples_csv$name)[1]
@@ -179,13 +232,17 @@ upload_table_preview_samples_server <- function(
 
     observeEvent(input$remove_samples, {
       delete_all_files_samples <- function(value) {
-        if (input$alert_delete_samples) {
+        if (value) {
           uploaded$samples.csv <- NULL
           uploaded$contrasts.csv <- NULL
+          checklist$samples.csv$checks <- NULL
+          checklist$contrasts.csv$checks <- NULL
+          checklist$samples_counts$checks <- NULL
+          checklist$samples_contrasts$checks <- NULL          
         }
       }
 
-      # if samples is not null, warn user that it will be deleted
+      # if contrasts is not null, warn user that it will be deleted
       if (!is.null(uploaded$contrasts.csv)) {
         shinyalert::shinyalert(
           inputId = "alert_delete_samples",
@@ -199,7 +256,7 @@ upload_table_preview_samples_server <- function(
           cancelButtonText = "Cancel"
         )
       } else {
-        uploaded$samples.csv <- NULL
+        delete_all_files_samples(TRUE)         
       }
     })
 
