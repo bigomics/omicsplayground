@@ -126,7 +126,7 @@ upload_table_preview_counts_server <- function(
         },
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
-            col_widths = c(9, 3),
+            col_widths = c(8, 4),
             TableModuleUI(
               ns("counts_datasets"),
               width = width,
@@ -139,7 +139,8 @@ upload_table_preview_counts_server <- function(
             ),
             bslib::card(
               div(
-                br(),                       
+                h4("Signal histogram"),
+                br(),
                 plotOutput(ns("histogram")),                       
                 br(), hr(),
                 "Summary:",
@@ -169,9 +170,9 @@ upload_table_preview_counts_server <- function(
       tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
-        ggplot2::xlab(tspan("counts (log2p1)")) +
+        ggplot2::xlab(tspan("counts (log2)")) +
         ggplot2::theme(legend.position = "none") +
-        ggplot2::ggtitle("COUNTS", subtitle = tt2)
+        ggplot2::ggtitle(toupper(tspan("counts")), subtitle = tt2)
     })
     
     # TEST
