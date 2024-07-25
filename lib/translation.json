@@ -27,6 +27,10 @@
             "proteomics": "protein"
         },
         {
+            "RNA-seq": "GENE",
+            "proteomics": "PROTEIN"
+        },
+        {
             "RNA-seq": "counts",
             "proteomics": "abundance"
         },
@@ -35,7 +39,15 @@
             "proteomics": "Abundance"
         },
         {
+            "RNA-seq": "COUNTS",
+            "proteomics": "ABUNDANCE"
+        },
+        {
             "RNA-seq": "logCPM",
+            "proteomics": "log2"
+        },
+        {
+            "RNA-seq": "log2p1",
             "proteomics": "log2"
         }
       ]

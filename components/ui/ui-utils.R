@@ -402,8 +402,9 @@ tspan <- function(text) {
   if(nchar(text)==0) return("")
   if(!grepl("gene|counts|transcriptomics|rna-seq|logcpm",
             text, ignore.case=TRUE)) return(text)
-  keys <- c("gene","Gene","counts","Counts", 
-            "transcriptomics","Transcriptomics","RNA-seq","logCPM")
+  keys <- c("gene","Gene","GENE","counts","Counts","COUNTS", 
+            "transcriptomics","Transcriptomics","RNA-seq",
+            "logCPM","log2p1")
   for(k in keys) {
     tt <- i18n$t(k)
     text <- gsub(k, tt, text, ignore.case = FALSE)
