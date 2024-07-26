@@ -116,7 +116,6 @@ WelcomeBoardUI <- function(id) {
 }
 
 
-
 WelcomeBoard <- function(id, auth, load_example, new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -167,19 +166,7 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
     observeEvent({
       input$btn_upload_data
     } , {
-      shiny::req(auth$options)
-      enable_upload <- auth$options$ENABLE_UPLOAD
-      if (enable_upload) {
-        new_upload(new_upload() + 1)
-      } else {
-        shinyalert::shinyalert(
-          title = "Upload disabled",
-          text = "Sorry, upload of new data is disabled for this account.",
-          type = "warning",
-          #
-          closeOnClickOutside = FALSE
-        )
-      }
+      bigdash.selectTab(session, selected = "upload-tab")
     })
 
     observeEvent(input$btn_load_data, {

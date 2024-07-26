@@ -3,6 +3,80 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+
+## --------------------------------------------------------------------------
+## convert list of checks to html tags for display in the data preview modal
+## --------------------------------------------------------------------------
+check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "",
+                          details = TRUE) {
+  error_list <- playbase::PGX_CHECKS
+  tags <- NULL
+  
+  if (is.null(check)) {
+    tags <- tagList(
+      span(null_msg, style = "color: red"), br()
+    )
+  } else if (isFALSE(check)) {
+    tags <- tagList(
+      span(false_msg, style = "color: orange"), br()
+    )
+  } else {
+    if (length(check) > 0) {
+      hr1 <- shiny::hr(style = "border-top: 1px solid black;")
+      if(!details) hr1 <- NULL
+      
+      tags <- tagList(
+        lapply(1:length(check), function(idx) {
+          error_id <- names(check)[idx]
+          error_log <- check[[idx]]
+          error_detail <- error_list[error_list$error == error_id, ]
+          error_length <- length(error_log)
+          ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
+          if (error_detail$warning_type == "warning") {
+            title_color <- "orange"
+          } else if (error_detail$warning_type == "error") {
+            title_color <- "red"
+          }
+          div(
+            hr1,
+            span(error_detail$title, style = paste("color:", title_color)),
+            shiny::br(),
+            ifelse(
+              !details,
+              "", 
+              paste(error_detail$message, "\n",
+                    paste(error_length, "case(s) identified, examples:"),
+                    paste(error_log, collapse = " "), sep = " ")
+            ),
+            shiny::br()
+          )
+        }),
+        hr1
+      )
+    } else {
+      if (pass_msg != "") {
+        tags <- tagList(
+          span(pass_msg, style = "color: green"), br()
+        )
+      }
+    }
+  }
+  return(tags)
+}
+
+preview_module_legend <- shiny::div(
+  class = "pt-4",
+  style = "margin-top: 150px;",
+  span(style = "color: green", "Green"),
+  span("= data OK. "),
+  br(),
+  span(style = "color: orange", "Orange"),
+  span("= warning but data will still be uploaded. "),
+  br(),
+  span(style = "color:red", "Red"),
+  span("= error and data will not be uploaded.")
+)
+
 error_popup <- function(title, header, message, error, btn_id, onclick) {
   showModal(
     shiny::tagList(

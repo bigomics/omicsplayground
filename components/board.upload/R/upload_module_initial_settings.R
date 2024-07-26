@@ -65,7 +65,7 @@ upload_module_initial_settings_server <- function(
         if (!auth$options$ENABLE_ANNOT) {
           species <- setdiff(species, "No organism")
         }
-        updateSelectInput(session, "selected_organism", choices = species)
+        updateSelectizeInput(session, "selected_organism", choices = species, server = TRUE)
       })  
 
       output$upload_annot <- renderUI({

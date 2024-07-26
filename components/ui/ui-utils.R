@@ -391,9 +391,6 @@ inputLabelDictionary <- function(board_ns, inputId) {
   return(val)
 }
 
-tspan.SAVE <- function(label) {
-  shiny::span(class = "i18n", `data-key` = label, label)
-}
 
 tspan <- function(text) {
   if(is.null(text)) return(NULL)
@@ -410,4 +407,8 @@ tspan <- function(text) {
     text <- gsub(k, tt, text, ignore.case = FALSE)
   }
   text
+}
+
+tspan.SAVE <- function(label) {
+  shiny::span(class = "i18n", `data-key` = label, label)
 }

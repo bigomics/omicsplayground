@@ -26,13 +26,14 @@ upload_module_normalization_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
+
       output$bec_param_text <- renderText({
         pars <- get_model_parameters()
         shiny::req(pars)
         batch.pars <- pars$batch.pars
         paste("Batch parameters:", paste(batch.pars, collapse = "+"), "\n")
       })
-
+      
       get_model_parameters <- eventReactive(
         {
           list(r_X(), r_samples(), r_contrasts())
@@ -44,10 +45,21 @@ upload_module_normalization_server <- function(
           samples <- r_samples()
           contrasts <- r_contrasts()
 
-          shiny::req(ncol(X) == nrow(samples))
-          shiny::req(nrow(contrasts) == ncol(X))
+          shiny::validate(shiny::need(
+              ncol(X) == nrow(samples),
+              "error: ncol(X) not equal nrow(samples)"
+          ))
+          shiny::validate(shiny::need(
+              nrow(contrasts) == ncol(X),
+              "error: nrow(contrasts) == ncol(X)"
+          ))
 
-          pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
+          pars <- playbase::get_model_parameters(
+                              X,
+                              samples,
+                              pheno = NULL,
+                              contrasts = contrasts
+                            )
 
           list(
             batch.pars = pars$batch.pars,
@@ -86,31 +98,25 @@ upload_module_normalization_server <- function(
           prior <- ifelse(m == "CPM", 1, 1e-3) ## NEW
           X <- log2(counts + prior) ## NEED RETHINK
           ## X <- log2(counts + 0.001)
+
+          ## if (input$remove_xxl) {
+          ##     dbg("[normalization_server:imputedX]: Assign NA to outlier features")
+          ##     X[playbase::is.xxl(X, z = 10)] <- NA
+          ## }
           
-          if (input$remove_xxl_features) {
-              dbg("[normalization_server:imputedX]: Assign NA to outlier features")
-              X[playbase::is.xxl(X, z = 10)] <- NA
-          }
-
           nmissing <- sum(is.na(X))
-          m <- input$impute_method
-
-          if (nmissing > 0) {
-              dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
-              if (m != "skip_imputation") {
-                  dbg("[normalization_server:imputedX] Imputing data using ", m)
-                  X <- playbase::imputeMissing(X, method = m)
-                  dbg("[normalization_server:imputedX] dim.imputedX = ", dim(X))            
-              } else {
-                  dbg("[normalization_server:imputedX] Skipping imputation")
-              }
+          dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
+          if (nmissing > 0 && input$impute) {
+            m <- input$impute_method
+            dbg("[normalization_server:imputedX] Imputing data using ", m)
+            X <- playbase::imputeMissing(X, method = m)
+            dbg("[normalization_server:imputedX] dim.imputedX = ", dim(X))            
           } else {
-              dbg("[normalization_server:imputedX] No NAs detected in the data. Not imputing.")
+            dbg("[normalization_server:imputedX] No imputation.")
           }
 
           dbg("[normalization_server:imputedX] Checking for duplicated features")
           X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-
           X
       })
 
@@ -119,26 +125,25 @@ upload_module_normalization_server <- function(
           shiny::req(dim(imputedX()))
           X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
 
-          m <- input$scaling_method
-          if (m == "Skip_normalization") {
-              dbg("[normalization_server:normalizedX] Skipping ormalization")
-              return(X)
+          if (input$normalize) {
+            m <- input$scaling_method            
+            shiny::withProgress(message = "Normalizing the data...", value = 0, {
+              shiny::incProgress(amount = 0.25, "Normalization...")
+              dbg("[normalization_server:normalizedX] Normalizing data using ", m)
+              ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
+              prior <- ifelse(m == "CPM", 1, 1e-3)
+              normCounts <- playbase::pgx.countNormalization(2 ** X - prior, method = m)
+              X <- log2(normCounts + prior)
+              if (input$quantile_norm) {
+                dbg("[normalization_server:normalizedX] Applying quantile normalization")
+                shiny::incProgress(amount = 0.25, "Quantile normalization...")
+                X <- limma::normalizeQuantiles(X)
+              }
+            })
           } else {
-              shiny::withProgress(message = "Normalizing the data...", value = 0, {
-                  shiny::incProgress(amount = 0.25, "Normalization...")
-                  dbg("[normalization_server:normalizedX] Normalizing data using ", m)
-                  prior <- ifelse(m == "CPM", 1, 1e-3) ## NEED RETHINK: generalize??
-                  normCounts <- playbase::pgx.countNormalization(2 ** X - prior, method = m)
-                  X <- log2(normCounts + prior)
-                  if (input$quantile_norm) {
-                      dbg("[normalization_server:normalizedX] Applying quantile normalization")
-                      shiny::incProgress(amount = 0.25, "Quantile normalization...")
-                      X <- limma::normalizeQuantiles(X)
-                  }
-              })
+            dbg("[normalization_server:normalizedX] Skipping normalization")
           }
-
-          X
+          return(X)
       })
 
       ## Remove outliers
@@ -179,12 +184,10 @@ upload_module_normalization_server <- function(
           X1 <- X1[, kk, drop = FALSE]
           contrasts <- contrasts[kk, , drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
-
-          m <- input$bec_method
-          dbg("[normalization_server:correctedX] Batch correction method = ", m)
+          
           nmissing <- sum(is.na(X1))
           
-          if (m == "uncorrected") {
+          if (!input$batchcorrect) {
               dbg("[normalization_server:correctedX] Data not corrected for (potential) batch effects")
               if(nmissing == 0) {
                   cx <- list(X = X1)
@@ -195,21 +198,31 @@ upload_module_normalization_server <- function(
                   cx <- list(X = X1, impX1 = impX1)
               }
           } else {
+              m <- input$bec_method            
+              dbg("[normalization_server:correctedX] Batch correction method = ", m)
               mm <- unique(c("uncorrected", m))
               pars <- get_model_parameters()
               batch <- pars$batch
               pheno <- pars$pheno
               if(nmissing == 0) {
                   dbg("[normalization_server:correctedX] No missing values in X1.")
-                  xlist <- playbase::runBatchCorrectionMethods(X = X1, batch = batch,
-                                                               y = pheno, methods = mm, ntop = Inf)
+                  xlist <- playbase::runBatchCorrectionMethods(
+                    X = X1,
+                    batch = batch,
+                    y = pheno,
+                    methods = mm,
+                    ntop = Inf
+                  )
                   cx <- list(X = xlist[[m]])
               } else {
-                  dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
-                  dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
                   impX1 <- playbase::imputeMissing(X1, method = "SVD2")
-                  xlist <- playbase::runBatchCorrectionMethods(X = impX1, batch = batch,
-                                                               y = pheno, methods = mm, ntop = Inf)
+                  xlist <- playbase::runBatchCorrectionMethods(
+                    X = impX1,
+                    batch = batch,
+                    y = pheno,
+                    methods = mm,
+                    ntop = Inf
+                  )
                   bc_impX1 <- xlist[[m]] ## Batch corrected, imputed
                   jj <- which(is.na(X1), arr.ind = TRUE)
                   xlist[[m]][jj] <- NA ## Batch corrected, with original NAs restored
@@ -217,10 +230,6 @@ upload_module_normalization_server <- function(
               }
           }
           shiny::removeModal()
-          
-          dbg("[normalization_server:correctedX] names.cx = ", names(cx))
-          dbg("[normalization_server:correctedX] length.cx = ", length(cx))
-          dbg("[normalization_server:correctedX] dim.correctedX = ", dim(cx[[1]]))
 
           return(cx)
       })
@@ -243,21 +252,17 @@ upload_module_normalization_server <- function(
           shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
           X0 <- imputedX()
-          X1 <- cleanX()$X
+          X1 <- cleanX()$X  ## normalized+cleaned
           samples <- r_samples()
           contrasts <- r_contrasts()
 
           nmissing <- sum(is.na(X0))
           if (nmissing > 0) {
-              dbg("[normalization_server:results_correction_methods] ", nmissing, " missing values in X0.")
-              dbg("[normalization_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
               X0 <- playbase::imputeMissing(X0, method = "SVD2")
           }
           
           nmissing <- sum(is.na(X1))
           if (nmissing > 0) {
-              dbg("[normalization_server:results_correction_methods] ", nmissing, " missing values in X1.")
-              dbg("[normalization_server:results_correction_methods] Generating an internal, SVD2-imputed matrix")
               X1 <- playbase::imputeMissing(X1, method = "SVD2")
           }
 
@@ -272,16 +277,14 @@ upload_module_normalization_server <- function(
           methods <- c("ComBat", "RUV", "SVA", "NPM")
           xlist.init <- list("uncorrected" = X0, "normalized" = X1)
           shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
-              dbg("[normalization_server:results_correction_methods] ComBat, RUV, SVA, NPM")
-              mm <- c("ComBat", "RUV", "SVA", "NPM")
               res <- playbase::compare_batchcorrection_methods(
-                                   X1, samples,
-                                   pheno = NULL,
-                                   contrasts = contrasts,
-                                   clust.method = "tsne",
-                                   methods = mm,
-                                   evaluate = FALSE,  ## no score computation
-                                   xlist.init = xlist.init)
+                 X1, samples,
+                 pheno = NULL,
+                 contrasts = contrasts,
+                 clust.method = "tsne",
+                 methods = methods,
+                 evaluate = FALSE,  ## no score computation
+                 xlist.init = xlist.init)
           })
 
           ## selected <- res$best.method
@@ -491,7 +494,7 @@ upload_module_normalization_server <- function(
         )
         cex1 <- 3 * as.numeric(as.character(cex1))
         pos <- playbase::uscale(pos)
-
+        
         ## How about plotly??
         plot(pos,
           col = col1, cex = 0.8 * cex1, pch = 20, las = 1,
@@ -521,7 +524,7 @@ upload_module_normalization_server <- function(
         zscore <- res$z.outlier
         Z <- res$Z
         pos <- res$pos[["pca"]]
-        ##        plottype <- input$outlier_plottype
+        ## plottype <- input$outlier_plottype
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
@@ -543,18 +546,25 @@ upload_module_normalization_server <- function(
       }
 
       plot_correction <- function() {
-        if (input$bec_preview_all == FALSE) {
+        if (input$batchcorrect) {
           plot_before_after()
-        }
-        if (input$bec_preview_all == TRUE) {
+        } else {
           plot_all_methods()
         }
       }
 
       plot_all_methods <- function() {
           res <- results_correction_methods()
-          mm <- c("uncorrected", "normalized", "ComBat", "RUV", "SVA", "NPM")
+          out.res <- results_outlier_methods() 
+          shiny::req(res)
+          shiny::req(out.res)
+          
+          mm <- c("ComBat", "RUV", "SVA", "NPM")
           pos.list <- res$pos[mm]
+          ## get same positions as after outlier detection
+          pos0 <- out.res$pos[["pca"]]
+          pos.list <- c( list("uncorrected" = pos0), pos.list )
+
           pheno <- res$pheno
           xdim <- length(res$pheno)
           col1 <- factor(pheno)
@@ -564,18 +574,29 @@ upload_module_normalization_server <- function(
           cex1 <- 2.5 * as.numeric(as.character(cex1))
           par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
           for (i in 1:length(pos.list)) {
-              plot(pos.list[[i]], col = col1, cex = cex1, pch = 20)
-              title(names(pos.list)[i], cex.main = 1.5)
+            plot(
+              pos.list[[i]],
+              col = col1,
+              cex = cex1,
+              pch = 20
+            )
+            title(names(pos.list)[i], cex.main = 1.5)
           }
       }
 
       plot_before_after <- function() {
-          ## out.res <- results_outlier_methods()
+
+          out.res <- results_outlier_methods()
           res <- results_correction_methods()
-          method <- input$bec_method
-          if (method == "uncorrected") method <- "normalized"
-          pos0 <- res$pos[["normalized"]]
-          pos1 <- res$pos[[method]]
+          ## get same positions as after outlier detection
+          ##pos0 <- res$pos[["normalized"]]
+          pos0 <- out.res$pos[["pca"]]
+
+          if (!input$batchcorrect) {
+            pos1 <- pos0
+          } else {
+            pos1 <- res$pos[[input$bec_method]]
+          }
           kk <- intersect(rownames(pos0), rownames(pos1))
           pos0 <- pos0[kk, ]
           pos1 <- pos1[kk, ]
@@ -590,11 +611,11 @@ upload_module_normalization_server <- function(
           cex1 <- 2.7 * as.numeric(as.character(cex1))
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           plot(pos0,
-               col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "before",
-               xlab = "PC1", ylab = "PC2")
+               col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
+               main = "uncorrected", xlab = "PC1", ylab = "PC2")
           plot(pos1,
-               col = col1, pch = 20, cex = 1.0 * cex1, las = 1, main = "after",
-               xlab = "PC1", ylab = "PC2")
+               col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
+               main = method, xlab = "PC1", ylab = "PC2")
       }
 
       ## ------------------------------------------------------------------
@@ -646,80 +667,84 @@ upload_module_normalization_server <- function(
               bslib::accordion_panel(
                 title = "1. Missing values",
                 shiny::p("Replace missing values using an imputation method:\n"),
-                shiny::selectInput(ns("impute_method"), NULL,
-                  choices = c(
-                    "SVDimpute (default)" = "SVD2",
-                    ##                      "Zero" = "zero",
-                    ##                      "MinDet",
-                    ##                      "MinProb",
-                    ##                      "NMF",
-                    "Skip imputation" = "skip_imputation"
-                  ),
-                  selected = "SVD2"
-                  ),
+                shiny::checkboxInput(ns("impute"), label = "Impute missing values", value = TRUE),
+                shiny::conditionalPanel(
+                  "input.impute == true",
+                  ns = ns,
+                  shiny::selectInput(ns("impute_method"), NULL,
+                    choices = c(
+                      "SVDimpute (default)" = "SVD2",
+                      "Zero" = "zero",
+                      "MinDet",
+                      "MinProb"
+                      ## "NMF",
+                      ## "Skip imputation" = "skip_imputation"
+                    ),
+                    selected = "SVD2"
+                  )
+                ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+                ## shiny::checkboxInput(ns("remove_xxl"), label = "Treat XXL as NA", value = FALSE),
                 br()
               ),
               bslib::accordion_panel(
                 title = "2. Normalization",
-                div("Normalize data values:\n"),
-                shiny::selectInput(ns("scaling_method"), NULL,
-                  choices = c(
-                    "LogCPM" = "CPM", ## log2(nC+1)
-                    "LogMaxMedian" = "logMaxMedian",
-                    "LogMaxSum" = "logMaxSum",
-                      "Skip normalization" = "Skip_normalization"
+                shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = TRUE),
+                shiny::conditionalPanel(
+                  "input.normalize == true",
+                  ns = ns,
+                  shiny::selectInput(
+                    ns("scaling_method"), NULL,
+                    choices = c(
+                      "LogCPM" = "CPM", ## log2(nC+1)
+                      "LogMaxMedian" = "logMaxMedian",
+                      "LogMaxSum" = "logMaxSum"
+##                      "Skip normalization" = "Skip_normalization"
+                    ),
+                    selected = ifelse(tolower(upload_datatype()) == "proteomics",
+                                      "logMaxMedian", "CPM")
                   ),
-                  selected = ifelse(tolower(upload_datatype()) == "proteomics", "logMaxMedian", "CPM")
-                  ),
-                shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE),
+                  shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE)
+                ),
                 br()
               ),
               bslib::accordion_panel(
                 title = "3. Remove outliers",
-                shiny::p("Remove outlier features and samples from your data.\n"),
-                shiny::checkboxInput(ns("remove_xxl_features"), label = "Treat outlier features as NA", value = FALSE),
-                shiny::checkboxInput(ns("remove_outliers"), "Remove outlier samples (select threshold)", value = FALSE),
-                shiny::sliderInput(ns("outlier_threshold"), "Threshold:", 1, 12, 6, 1),
+                shiny::p("Automatically detect and remove outlier samples."),
+                shiny::checkboxInput(ns("remove_outliers"), "remove outliers (select threshold)", value = FALSE),
+                shiny::conditionalPanel(
+                  "input.remove_outliers == true",
+                  ns = ns,
+                  shiny::sliderInput(ns("outlier_threshold"), NULL, 1, 12, 6, 1)
+                ),
                 br()
               ),
-              ## bslib::accordion_panel(
-              ##  title = "4. Remove unwanted technical and biogical variation",
-              ##  shiny::p("Correct for technical and biogical factors:\n"),
-              ##  shiny::selectInput(ns("correct_factor"), NULL,
-              ##    choices = c(
-              ##        "library size" = "lib",
-              ##        "ribo", "cellcycle", "gender",
-              ##        "Skip correction (Default)" = "Skip_correction"
-              ##    ),
-              ##    selected = "Skip_correction"
-              ##  ),
-              ##  br()
-              ## ),
               bslib::accordion_panel(
                 title = "4. Batch-effect correction",
-                shiny::p("Remove batch effects from your data:\n"),
-                shiny::selectInput(ns("bec_method"), NULL,
-                  choices = c(
-                    "uncorrected (default)" = "uncorrected",
-                    "ComBat" = "ComBat",
-                    "SVA" = "SVA",
-                    "RUV" = "RUV",
-                    "NPM" = "NPM"
-                  ),
-                  selected = 1
-                ),
+                shiny::checkboxInput(ns("batchcorrect"), label = "Remove batch effects", value = FALSE),
                 shiny::conditionalPanel(
-                  "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
+                  "input.batchcorrect == true",
                   ns = ns,
-                  shiny::textOutput(ns("bec_param_text")),
-                  shiny::br(),
+                  shiny::selectInput(ns("bec_method"), "Select method:",
+                    choices = c(
+##                    "ComBat" = "ComBat",
+                      "SVA" = "SVA",
+                      "RUV" = "RUV",
+                      "NPM" = "NPM"
+                    ),
+                    selected = 1
                   ),
-                shiny::checkboxInput(ns("bec_preview_all"), "Preview all methods", value = TRUE),
+                  shiny::conditionalPanel(
+                    "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
+                    ns = ns,
+                    shiny::textOutput(ns("bec_param_text")),
+                    shiny::br(),
+                  )
+                ),
                 br()
               )
             ),
-              br()
+            br()
           ))
         )
 
@@ -842,6 +867,7 @@ upload_module_normalization_server <- function(
           
       norm_method <- reactive({
           m <- input$scaling_method
+          if(!input$normalize) m <- "skip_normalization"
           dbg("[normalization_server:fCHECK] Normalization method = ", m)
           m
       })

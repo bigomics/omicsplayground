@@ -3,18 +3,76 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
 UploadUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
-
-  initial_panel <- wizardR::wizard_step(
-    step_title = "Start",
-    step_id = "step_initial",
-    shiny::br(), shiny::br(),
-    ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
-    ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
-    upload_module_initial_settings_ui(ns("initial"))
+  ns <- NS(id)
+  
+  body <- div(
+    style = "overflow: auto;",
+    bslib::as_fill_carrier(),
+    bslib::layout_columns(
+      fill = TRUE,
+      div(
+        style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",
+        div(
+          style = "width: 40%;",
+          bs_alert("To upload your own data, you should prepare at least two CSV files: an <b>expression.csv</b> file (containing your RNA-seq data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>.", closable = FALSE, translate = TRUE, html = TRUE)
+        ),
+        br(),
+        div(
+          p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+          shiny::selectInput(
+            ns("selected_datatype"), NULL,
+            choices = c(
+              "RNA-seq",
+              "proteomics",
+              "mRNA microarray",
+              "scRNA-seq",
+              "other"
+            )
+          )
+        ),
+        div(
+          p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+          shiny::selectInput(
+            inputId = ns("selected_organism"),
+            label = NULL,
+            choices = NULL,
+            ## selected = 1,
+            multiple = FALSE
+          )
+        ),
+        br(),
+        shiny::actionButton(
+          ns("start_upload"),
+          "Start upload",
+          class = "btn-primary"),
+        br()
+      )
+    )
   )
+
+  ui <- div(
+    boardHeader(title = "Upload New", info_link = ns("upload_info")),
+    tagList(
+      useUploadWizard(ns),
+      body
+    )
+  )
+
+  return(ui)
+}
+
+
+useUploadWizard <- function(ns) {
+
+  ## initial_panel <- wizardR::wizard_step(
+  ##   step_title = "Start",
+  ##   step_id = "step_initial",
+  ##   shiny::br(), shiny::br(),
+  ##   ##        shinyWidgets::prettySwitch(ns("show_batchcorrection"), "Batch correction"),
+  ##   ##        shinyWidgets::prettySwitch(ns("show_checkoutliers"), "Check outliers (beta)")
+  ##   upload_module_initial_settings_ui(ns("initial"))
+  ## )
 
   counts_ui <- wizardR::wizard_step(
     step_title = tspan("Step 1: Upload counts"),
@@ -79,13 +137,31 @@ UploadUI <- function(id) {
     upload_module_computepgx_ui(ns("compute"))
   )
 
-  div(
+  wizard <- wizardR::wizard(
+    id = ns("upload_wizard"),
+    width = 90,
+    height = 75,
+    modal = TRUE,
+    style = "dots",
+    lock_start = FALSE,
+    ##        initial_panel,
+    counts_ui,
+    samples_ui,
+    contrasts_ui,
+    normalization_panel,
+    compute_panel,
+    options = list(
+      navigation = "buttons",
+      finish = "Compute!"
+    )
+  )
+
+  wizard.save <- div(
     class = "p-0",
-    # board_header,
-    div(
-      style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
-      shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode"),
-    ),
+    ## div(
+    ##   style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
+    ##   shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode")
+    ## ),
     div(
       wizardR::wizard(
         id = ns("upload_wizard"),
@@ -93,12 +169,13 @@ UploadUI <- function(id) {
         height = 75,
         modal = TRUE,
         style = "dots",
-        lock_start = FALSE,
-        initial_panel,
+        lock_start = TRUE,
         counts_ui,
         samples_ui,
         contrasts_ui,
-        normalization_panel,
+        # comparisons_panel,
+        # outliers_panel,
+        # batchcorrect_panel,
         compute_panel,
         options = list(
           navigation = "buttons",
@@ -107,4 +184,6 @@ UploadUI <- function(id) {
       )
     )
   )
+
+  return(wizard)
 }

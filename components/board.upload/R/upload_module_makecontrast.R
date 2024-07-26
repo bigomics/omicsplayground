@@ -9,7 +9,7 @@ upload_module_makecontrast_ui <- function(id) {
   bslib::layout_columns(
     col_widths = 12,
     height = "100%",
-    row_heights = c(3, 2),
+    row_heights = c(3, 3),
     bslib::card(
       full_screen = FALSE,
       bslib::card_body(
@@ -72,12 +72,22 @@ upload_module_makecontrast_ui <- function(id) {
         ) ## end of card-body
       )
     ),
-    bslib::card(
-      full_screen = FALSE,
-      bslib::card_body(
-        style = "padding: 10px 20px;",
-        DT::dataTableOutput(ns("contrastTable"))
-      )
+    bslib::layout_columns(
+       col_widths = c(8, 4),
+       bslib::card(
+         full_screen = FALSE,
+         bslib::card_body(
+           style = "padding: 10px 20px;",
+           DT::dataTableOutput(ns("contrastTable"))
+         )
+       ),
+       bslib::card(
+         full_screen = FALSE,
+         bslib::card_body(
+           style = "padding: 10px 20px;",
+           plotOutput(ns("contrastPlot"))
+         )
+       )       
     )
   )
 }
@@ -427,8 +437,14 @@ upload_module_makecontrast_server <- function(
             DT::formatStyle(0, target = "row", fontSize = "12px", lineHeight = "99%")
         },
         server = FALSE
-      )
-
+        )
+      
+      output$contrastPlot <- renderPlot({
+        ct <- rv_contr()
+        shiny::req(nrow(ct))
+        plotPhenoDistribution(data.frame(ct))       
+      })
+                                    
       ## pointer to reactive
       return(rv_contr)
     } ## end-of-server
