@@ -96,7 +96,7 @@ expression_plot_topgenes_server <- function(id,
       logscale <- input$gx_logscale
       showothers <- input$gx_showothers
 
-      ylab <- ifelse(logscale, "log2CPM", "CPM")
+      ylab <- ifelse(logscale, "Expression (log2)", "Expression")
       ny <- nrow(pgx$samples) ## ???!!
       show.names <- ifelse(!grouped & ny > 25, FALSE, TRUE)
       srt <- 35

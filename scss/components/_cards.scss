@@ -31,3 +31,15 @@ html {
         border-color: #b8ddff;
     }
 }
+
+.nav-pills {
+    .nav-link {
+	color: #888888;
+    }
+
+    .nav-link.active {
+	color: black;
+	background-color: #FFFFFF;
+    }
+    
+}

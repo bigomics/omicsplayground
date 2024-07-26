@@ -1,0 +1,54 @@
+{
+    "cultural_date_format": "%d-%m-%Y",
+    "languages": ["RNA-seq", "proteomics"],
+    "translation": [
+        {
+            "RNA-seq": "transcriptomics",
+            "proteomics": "proteomics"
+        },
+        {
+            "RNA-seq": "Transcriptomics",
+            "proteomics": "Proteomics"
+        },
+        {
+            "RNA-seq": "RNA-seq",
+            "proteomics": "Proteomics"
+        },
+        {
+            "RNA-seq": "rna-seq",
+            "proteomics": "proteomics"
+        },
+        {
+            "RNA-seq": "Gene",
+            "proteomics": "Protein"
+        },
+        {
+            "RNA-seq": "gene",
+            "proteomics": "protein"
+        },
+        {
+            "RNA-seq": "GENE",
+            "proteomics": "PROTEIN"
+        },
+        {
+            "RNA-seq": "counts",
+            "proteomics": "abundance"
+        },
+        {
+            "RNA-seq": "Counts",
+            "proteomics": "Abundance"
+        },
+        {
+            "RNA-seq": "COUNTS",
+            "proteomics": "ABUNDANCE"
+        },
+        {
+            "RNA-seq": "logCPM",
+            "proteomics": "log2"
+        },
+        {
+            "RNA-seq": "log2p1",
+            "proteomics": "log2"
+        }
+      ]
+  }
