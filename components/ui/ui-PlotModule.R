@@ -28,7 +28,8 @@ PlotModuleUI <- function(id,
                          pdf.height = 8,
                          cards = FALSE,
                          card_names = NULL,
-                         header_buttons = NULL) {
+                         header_buttons = NULL,
+                         translate = TRUE) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -44,6 +45,13 @@ PlotModuleUI <- function(id,
   width.2 <- "100%"
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
+
+  if(translate) {
+    info.text = tspan(info.text)
+    title = tspan(title)
+    caption = tspan(caption)
+    caption2 = tspan(caption2)
+  }  
 
   getOutputFunc <- function(plotlib) {
     FUN <- switch(plotlib,

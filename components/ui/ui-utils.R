@@ -391,6 +391,23 @@ inputLabelDictionary <- function(board_ns, inputId) {
   return(val)
 }
 
-tspan <- function(label) {
+tspan.SAVE <- function(label) {
   shiny::span(class = "i18n", `data-key` = label, label)
+}
+
+tspan <- function(text) {
+  if(is.null(text)) return(NULL)
+  if(length(text)==0) return(NULL)
+  text <- paste(text, collapse = " ")
+  if(nchar(text)==0) return("")
+  if(!grepl("gene|counts|transcriptomics|rna-seq|logcpm",
+            text, ignore.case=TRUE)) return(text)
+  keys <- c("gene","Gene","GENE","counts","Counts","COUNTS", 
+            "transcriptomics","Transcriptomics","RNA-seq",
+            "logCPM","log2p1")
+  for(k in keys) {
+    tt <- i18n$t(k)
+    text <- gsub(k, tt, text, ignore.case = FALSE)
+  }
+  text
 }

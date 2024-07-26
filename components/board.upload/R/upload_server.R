@@ -237,7 +237,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
-        shiny::req(df0)
+        if(is.null(df0)) return(NULL)
 
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
@@ -274,9 +274,7 @@ UploadBoard <- function(id,
         ## get uploaded counts
         checked <- NULL
         res <- uploaded_counts()
-        df0 <- res$df
-
-        if (is.null(df0)) {
+        if (is.null(res)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
 
@@ -327,12 +325,12 @@ UploadBoard <- function(id,
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
             ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max contrasts reached
+            # pop up telling user max sample reached
             shinyalert::shinyalert(
-              title = "Maximum counts reached",
+              title = "Maximum samples reached",
               text = paste(
-                "You have reached the maximum number of counts allowed. Please",
-                "upload a new COUNTS file with a maximum of", MAXSAMPLES, "samples."
+                "You have reached the maximum number of samples allowed. Please",
+                tspan("upload a new counts file with a maximum of", MAXSAMPLES, "samples.")
               ),
               type = "error"
             )
@@ -692,7 +690,7 @@ UploadBoard <- function(id,
             )
           } else if (input$upload_wizard == "step_counts") {
             shinyalert::shinyalert(
-              title = "Upload your counts!",
+              title = "Upload your data!",              
               text = "Please finish the current step before proceeding.",
               type = "warning"
             )

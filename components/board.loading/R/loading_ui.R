@@ -86,7 +86,7 @@ LoadingUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
-      bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")),
+      bs_alert(HTML("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."), translate = FALSE),
       bslib::layout_columns(
         col_widths = c(7, 5),
         loading_table_datasets_public_ui(
