@@ -973,7 +973,7 @@ LoginCodeAuthenticationModule <- function(id,
         text = "Biscit yaccepted, thou art granted fri passage...",
         size = "xs",
         timer = 1900,
-        closeOnClickOutside = TRUE        
+        closeOnClickOutside = TRUE
       )
 
       return(USER)
