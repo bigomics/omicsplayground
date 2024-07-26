@@ -316,10 +316,10 @@ app_ui <- function(x) {
             )
           ),
           ## THIS IS SO WEIRD. if we remove/comment out the
-          ## prettySwitch, the header bar or plotModule f*cks
+          ## prettySwitch, the header of all plotModules f*ck
           ## up... (IK). HELP!!! we do not need this button...
           div(
-            style = "visibility: hidden;",
+            style = "visibility: hidden; display: none;",
             shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
           )
         ),
