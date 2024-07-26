@@ -51,7 +51,7 @@ upload_table_preview_samples_server <- function(
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1),
+        selection = list(mode = "single", target = "column", selected = 1),
         options = list(
           dom = "lfrtip",
           scroller = TRUE,
@@ -118,46 +118,69 @@ upload_table_preview_samples_server <- function(
           )
         } else {
           bslib::layout_columns(
-            col_widths = c(8, 4),
-            TableModuleUI(
-              ns("samples_datasets"),
-              width = width,
-              height = height,
-              title = title,
-              info.text = info.text,
-              caption = caption,
-              label = "",
-              show.maximize = FALSE
-            ),
-            bslib::card(
-              div(
-                br(),                       
-                plotOutput(ns("phenotype_stats")),
-                br(), hr(),                
-                "Summary:",
-                br(),
-                check_to_html(
-                  checklist$samples.csv$checks,
-                  pass_msg = "All samples checks passed",
-                  null_msg = "Samples checks not run yet.
-                            Fix any errors with samples first.",
-                  false_msg = "Samples checks: warning",                  
-                  details = FALSE
-                ),
-                check_to_html(
-                  checklist$samples_counts$checks,
-                  pass_msg = tspan("All samples-counts checks passed"),
-                  null_msg = tspan("Samples-counts checks not run yet.
-                        Fix any errors with samples or counts first."),
-                  false_msg = tspan("Samples-counts checks: warning"),
-                  details = FALSE                  
+            col_widths = 12,
+            bslib::layout_columns(
+              col_widths = c(8, 4),
+              TableModuleUI(
+                ns("samples_datasets"),
+                width = width,
+                height = height,
+                title = title,
+                info.text = info.text,
+                caption = caption,
+                label = "",
+                show.maximize = FALSE
+              ),
+              bslib::card(
+                bslib::navset_pill(                       
+                  bslib::nav_panel(
+                    title = "Distribution",
+                    br(),
+                    plotOutput(ns("phenotype_stats"), height = "500px")
+                  ),
+                  bslib::nav_panel(
+                    title = "UMAP",                         
+                    br(),
+                    plotOutput(ns("umap"), height = "500px")
+                  )                  
                 )
-#                preview_module_legend
               )
             ),
-            action_buttons
+            fillRow(
+              fill = c(NA,1,NA),
+              action_buttons,
+              br(),
+              uiOutput(ns("error_summary"))
+            )
           )
         }
+      )
+    })
+    
+    output$error_summary <- renderUI({
+      chk1 <- checklist$samples.csv$checks
+      chk2 <- checklist$samples_counts$checks
+
+      div(
+        style = "display: flex; justify-content: right; vertical-align: text-bottom; margin: 8px;",
+        check_to_html(
+          checklist$samples.csv$checks,
+          ## pass_msg = "All samples checks passed",
+          pass_msg = "Samples matrix OK. ",          
+          null_msg = "Samples checks not run yet.
+                            Fix any errors with samples first. ",
+          false_msg = "Samples checks: warning ",                  
+          details = FALSE
+        ),
+        check_to_html(
+          checklist$samples_counts$checks,
+          ##          pass_msg = tspan("All samples-counts checks passed"),
+          pass_msg = tspan("Samples-counts OK. "),
+          null_msg = tspan("Samples-counts checks not run yet.
+                        Fix any errors with samples or counts first."),
+          false_msg = tspan("Samples-counts checks: warning"),
+          details = FALSE                  
+        )
       )
     })
 
@@ -165,6 +188,25 @@ upload_table_preview_samples_server <- function(
       pheno <- uploaded$samples.csv
       shiny::req(nrow(pheno))
       plotPhenoDistribution(data.frame(pheno))       
+    })
+
+    output$umap <- renderPlot({
+      counts <- uploaded$counts.csv
+      shiny::req(nrow(counts))
+      X <- log2(counts)
+      Y <- uploaded$samples.csv
+      sel <- grep("group|condition",colnames(Y),ignore.case=TRUE)
+      sel <- head(c(sel,1),1)
+      y <- Y[,sel]
+      playbase::pgx.dimPlot(
+          X, y,
+          method = "umap",
+          plotlib = "base",
+          cex = 2.5,
+          xlab = "umap-x",
+          ylab = "umap-y",
+          hilight2 = colnames(X) ## label all points
+      )
     })
     
     # error pop-up alert

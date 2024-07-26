@@ -34,9 +34,9 @@ UploadUI <- function(id) {
             ns("selected_datatype"), NULL,
             choices = c(
               "RNA-seq",
-              "scRNA-seq",
-              "mRNA microarray",
               "proteomics",
+              "mRNA microarray",
+              "scRNA-seq",
               "other"
             )
           )

@@ -126,40 +126,58 @@ upload_table_preview_counts_server <- function(
         },
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
-            col_widths = c(8, 4),
-            TableModuleUI(
-              ns("counts_datasets"),
-              width = width,
-              height = height,
-              title = title,
-              info.text = info.text,
-              caption = caption,
-              label = "",
-              show.maximize = FALSE
-            ),
-            bslib::card(
-              div(
-                br(),
-                plotOutput(ns("histogram")),                       
-                br(), hr(),
-                "Summary:",
-                br(),
-                check_to_html(
-                  checklist$counts.csv$checks,
-                  pass_msg = tspan("All counts checks passed"),
-                  null_msg = tspan("Counts checks not run yet.
-                            Fix any errors with counts first."),
-                  details = FALSE
+            col_widths = 12,
+            bslib::layout_columns(
+              col_widths = c(8, 4),
+              TableModuleUI(
+                ns("counts_datasets"),
+                width = width,
+                height = height,
+                title = title,
+                info.text = info.text,
+                caption = caption,
+                label = "",
+                show.maximize = FALSE
+              ),
+              bslib::card(
+                bslib::navset_pill(                       
+                  bslib::nav_panel(
+                    title = "Histogram",
+                    br(),
+                    plotOutput(ns("histogram"), height = "500px")
+                  ),
+                  bslib::nav_panel(
+                    title = "Box plots",                         
+                    br(),
+                    plotOutput(ns("boxplots"), height = "500px")
+                  )
                 )
-              ## preview_module_legend
               )
             ),
-            action_buttons
+            fillRow(
+              fill = c(NA,1,NA),
+              action_buttons,
+              br(),
+              uiOutput(ns("error_summary"))
+            )
           )
         } ## end of if-else
       ) ## end of div
     })
 
+    output$error_summary <- renderUI({
+      div(
+        style = "display: flex; justify-content: right; vertical-align: text-bottom; margin: 8px;",
+        check_to_html(
+          checklist$counts.csv$checks,
+          pass_msg = tspan("All counts checks passed"),
+          null_msg = tspan("Counts checks not run yet.
+                            Fix any errors with counts first."),
+          details = FALSE
+        )
+      )
+    })
+    
     output$histogram <- renderPlot({
       counts <- checked_matrix()
       shiny::req(counts)
@@ -174,7 +192,14 @@ upload_table_preview_counts_server <- function(
         ggplot2::theme(legend.position = "none") +
         ggplot2::ggtitle(toupper(tspan("Counts")), subtitle = tt2)
     })
-    
+
+    output$boxplots <- renderPlot({
+      counts <- checked_matrix()
+      shiny::req(counts)
+      X <- log2(pmax(counts,0))
+      boxplot(X, ylab=tspan("counts (log2)"))
+    })
+      
     # error pop-up alert
     observeEvent( checklist$counts.csv$checks, {
       checks <- checklist$counts.csv$checks
