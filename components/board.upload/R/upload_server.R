@@ -731,7 +731,6 @@ UploadBoard <- function(id,
       {
         req(input$upload_wizard == "step_counts")
         chk <- checked_counts()$status
-        dbg("[wizard locking: step_counts] checked_counts()$status = ",chk)
         if (is.null(chk) || chk != "OK") {
           wizardR::lock("upload_wizard")
         } else if (!is.null(chk) && chk == "OK") {
@@ -746,7 +745,6 @@ UploadBoard <- function(id,
       {
         req(input$upload_wizard == "step_samples")
         chk <- checked_samples_counts()$status
-        dbg("[wizard locking: step_counts] checked_counts()$status = ",chk)        
         if (is.null(chk) || chk != "OK") {
           wizardR::lock("upload_wizard")
         } else if (!is.null(chk) && chk == "OK") {
@@ -1004,7 +1002,7 @@ UploadBoard <- function(id,
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
-            wizardR::unlock("upload_wizard")
+            wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
               pgx <- recompute_pgx()
