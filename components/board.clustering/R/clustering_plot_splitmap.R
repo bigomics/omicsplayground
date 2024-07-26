@@ -109,7 +109,7 @@ clustering_plot_splitmap_server <- function(id,
     ns <- session$ns
 
     shiny::observeEvent(pgx$Y, {
-      if(nrow(pgx$Y) > 100) { # Put cexCol (heatmap) to 0 if more than 100 samples
+      if (nrow(pgx$Y) > 100) { # Put cexCol (heatmap) to 0 if more than 100 samples
         shiny::updateNumericInput(session, "hm_cexCol", value = 0)
       } else {
         shiny::updateNumericInput(session, "hm_cexCol", value = 1)
@@ -206,7 +206,7 @@ clustering_plot_splitmap_server <- function(id,
         column_names_rot = 45,
         show_rownames = nrownames, rownames_width = 40,
         softmax = 0,
-        na_col = "green", na_text = 'x',
+        na_col = "green", na_text = "x",
         title_cex = cex0, cexCol = cex1, cexRow = cex2,
         col.annot = annot, row.annot = NULL, annot.ht = 2.3,
         key.offset = c(0.89, 1.01),
@@ -289,7 +289,7 @@ clustering_plot_splitmap_server <- function(id,
 
     plotly_splitmap.RENDER <- function() {
       plt <- plotly_splitmap.RENDER_get()$plt
-      if(any(grepl("Iheatmap",class(plt)))) {
+      if (any(grepl("Iheatmap", class(plt)))) {
         plt <- plt %>% iheatmapr::to_plotly_list()
         plt <- plotly::as_widget(plt)
       }

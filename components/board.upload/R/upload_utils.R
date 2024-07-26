@@ -11,7 +11,7 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "",
                           details = TRUE) {
   error_list <- playbase::PGX_CHECKS
   tags <- NULL
-  
+
   if (is.null(check)) {
     tags <- tagList(
       span(null_msg, style = "color: red"), br()
@@ -23,8 +23,8 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "",
   } else {
     if (length(check) > 0) {
       hr1 <- shiny::hr(style = "border-top: 1px solid black;")
-      if(!details) hr1 <- NULL
-      
+      if (!details) hr1 <- NULL
+
       tags <- tagList(
         lapply(1:length(check), function(idx) {
           error_id <- names(check)[idx]
@@ -43,10 +43,12 @@ check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "",
             shiny::br(),
             ifelse(
               !details,
-              "", 
+              "",
               paste(error_detail$message, "\n",
-                    paste(error_length, "case(s) identified, examples:"),
-                    paste(error_log, collapse = " "), sep = " ")
+                paste(error_length, "case(s) identified, examples:"),
+                paste(error_log, collapse = " "),
+                sep = " "
+              )
             ),
             shiny::br()
           )

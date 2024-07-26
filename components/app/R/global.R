@@ -255,4 +255,3 @@ PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 library(shiny.i18n)
 DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
-

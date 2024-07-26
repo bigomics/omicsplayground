@@ -40,7 +40,7 @@ wgcna_plot_correlation_network_server <- function(id,
       dim(out$datExpr)
       xx <- cbind(out$net$MEs[, k, drop = FALSE], out$datExpr[, genes])
       ## rho1 <- cor(xx, out$net$MEs[, k])[, 1]
-      rho1 <- cor(xx, out$net$MEs[, k], use="pairwise.complete.obs")[, 1]
+      rho1 <- cor(xx, out$net$MEs[, k], use = "pairwise.complete.obs")[, 1]
       ntop <- min(nrow(xx) - 1, 20)
       topgg <- names(sort(rho1, decreasing = TRUE))
 

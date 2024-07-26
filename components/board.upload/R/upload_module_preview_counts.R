@@ -26,7 +26,7 @@ upload_table_preview_counts_server <- function(
     caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     table_data <- shiny::reactive({
       shiny::req(!is.null(checked_matrix()))
       dt <- checked_matrix()
@@ -140,14 +140,14 @@ upload_table_preview_counts_server <- function(
                 show.maximize = FALSE
               ),
               bslib::card(
-                bslib::navset_pill(                       
+                bslib::navset_pill(
                   bslib::nav_panel(
                     title = "Histogram",
                     br(),
                     plotOutput(ns("histogram"), height = "500px")
                   ),
                   bslib::nav_panel(
-                    title = "Box plots",                         
+                    title = "Box plots",
                     br(),
                     plotOutput(ns("boxplots"), height = "500px")
                   )
@@ -155,7 +155,7 @@ upload_table_preview_counts_server <- function(
               )
             ),
             fillRow(
-              fill = c(NA,1,NA),
+              fill = c(NA, 1, NA),
               action_buttons,
               br(),
               uiOutput(ns("error_summary"))
@@ -177,7 +177,7 @@ upload_table_preview_counts_server <- function(
         )
       )
     })
-    
+
     output$histogram <- renderPlot({
       counts <- checked_matrix()
       shiny::req(counts)
@@ -196,16 +196,18 @@ upload_table_preview_counts_server <- function(
     output$boxplots <- renderPlot({
       counts <- checked_matrix()
       shiny::req(counts)
-      X <- log2(pmax(counts,0))
-      boxplot(X, ylab=tspan("counts (log2)"))
+      X <- log2(pmax(counts, 0))
+      boxplot(X, ylab = tspan("counts (log2)"))
     })
-      
+
     # error pop-up alert
-    observeEvent( checklist$counts.csv$checks, {
+    observeEvent(checklist$counts.csv$checks, {
       checks <- checklist$counts.csv$checks
-      if(is.null(checks)) return(NULL)
-      
-      if(length(checks) > 0) {
+      if (is.null(checks)) {
+        return(NULL)
+      }
+
+      if (length(checks) > 0) {
         err.html <- check_to_html(
           checks,
           pass_msg = tspan("All counts checks passed"),
@@ -219,9 +221,9 @@ upload_table_preview_counts_server <- function(
           text = err.html,
           html = TRUE
         )
-      }      
+      }
     })
-    
+
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
@@ -266,7 +268,6 @@ upload_table_preview_counts_server <- function(
     })
 
     observeEvent(input$remove_counts, {
-
       delete_all_files_counts <- function(value) {
         if (value) {
           uploaded$counts.csv <- NULL
@@ -276,8 +277,8 @@ upload_table_preview_counts_server <- function(
           checklist$samples.csv$checks <- NULL
           checklist$contrasts.csv$checks <- NULL
           checklist$samples_counts$checks <- NULL
-          checklist$samples_contrasts$checks <- NULL          
-        } 
+          checklist$samples_contrasts$checks <- NULL
+        }
       }
 
       # if samples is not null, warn user that it will be deleted
@@ -292,9 +293,9 @@ upload_table_preview_counts_server <- function(
           callbackR = delete_all_files_counts,
           confirmButtonText = "Remove all files",
           cancelButtonText = "Cancel"
-          )
+        )
       } else {
-        delete_all_files_counts(TRUE)         
+        delete_all_files_counts(TRUE)
       }
     })
 
@@ -310,5 +311,3 @@ upload_table_preview_counts_server <- function(
     )
   }) ## end of moduleServer
 } ## end of server
-
-

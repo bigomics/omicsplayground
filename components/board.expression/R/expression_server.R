@@ -162,10 +162,10 @@ ExpressionBoard <- function(id, pgx) {
       mean0 <- (AveExpr0 + AveExpr1) / 2
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
-      
-      if(all(c("map", "chr") %in% colnames(pgx$genes))) {
-          colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0" 
-          colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
+
+      if (all(c("map", "chr") %in% colnames(pgx$genes))) {
+        colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0"
+        colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
       }
       aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
       gene.annot <- pgx$genes[rownames(mx), aa]

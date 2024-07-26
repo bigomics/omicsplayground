@@ -163,11 +163,14 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
       }
     })
 
-    observeEvent({
-      input$btn_upload_data
-    } , {
-      bigdash.selectTab(session, selected = "upload-tab")
-    })
+    observeEvent(
+      {
+        input$btn_upload_data
+      },
+      {
+        bigdash.selectTab(session, selected = "upload-tab")
+      }
+    )
 
     observeEvent(input$btn_load_data, {
       bigdash.openSettings(lock = TRUE)

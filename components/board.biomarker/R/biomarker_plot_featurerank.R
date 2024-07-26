@@ -66,8 +66,8 @@ biomarker_plot_featurerank_server <- function(id,
       } else {
         features <- pgx$families
         X <- pgx$X
-        if(any(is.na(X))) {
-            X <- pgx$impX
+        if (any(is.na(X))) {
+          X <- pgx$impX
         }
       }
 
@@ -79,7 +79,7 @@ biomarker_plot_featurerank_server <- function(id,
       features <- lapply(features, toupper)
       features <- lapply(features, function(f) intersect(toupper(f), genes))
       features <- features[sapply(features, length) >= 10]
-      
+
       ## ------------ Just to get current samples
       samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
       X <- X[, samples]
@@ -94,14 +94,14 @@ biomarker_plot_featurerank_server <- function(id,
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
       Y <- Y[, kk, drop = FALSE]
       dim(Y)
-      
+
       ## ------------ Note: this takes a while. Maybe better precompute off-line...
       sdx <- apply(X, 1, sd, na.rm = TRUE)
       names(sdx) <- rownames(X)
       S <- matrix(NA, nrow = length(features), ncol = ncol(Y))
       rownames(S) <- names(features)
       colnames(S) <- colnames(Y)
-      
+
       ## ------------ Create a Progress object
       if (!interactive()) {
         progress <- shiny::Progress$new()
@@ -114,26 +114,26 @@ biomarker_plot_featurerank_server <- function(id,
       i <- 1
       for (i in 1:ncol(Y)) {
         if (!interactive()) progress$inc(1 / ncol(Y))
-        
+
         grp <- Y[, i]
         grp <- as.character(grp)
-        
+
         score <- rep(NA, length(features))
         names(score) <- names(features)
         j <- 1
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) {
-              annot <- pgx$genes
-              annot <- annot[match(unique(annot$symbol), annot$symbol), ]
-              rownames(annot) <- annot$symbol
-              pp <- playbase::filterProbes(annot, features[[j]])
-              ## pp <- playbase::filterProbes(pgx$genes, features[[j]])
+            annot <- pgx$genes
+            annot <- annot[match(unique(annot$symbol), annot$symbol), ]
+            rownames(annot) <- annot$symbol
+            pp <- playbase::filterProbes(annot, features[[j]])
+            ## pp <- playbase::filterProbes(pgx$genes, features[[j]])
           }
           pp <- head(pp[order(-sdx[pp])], 1000) ## how many top SD??
           pp <- intersect(pp, rownames(X))
           X1 <- X[pp, , drop = FALSE]
-          
+
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
           if (method %in% c("correlation", "meta")) {
@@ -160,7 +160,7 @@ biomarker_plot_featurerank_server <- function(id,
         S[, i] <- score
       }
       S[is.na(S)] <- 0 ## missing values
-      
+
       return(S)
     })
 

@@ -31,13 +31,13 @@ TableModuleUI <- function(id,
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
-  if(translate) {
-    info.text = tspan(info.text)
-    title = tspan(title)
-    caption = tspan(caption)
-    caption2 = tspan(caption2)
-  }  
-  
+  if (translate) {
+    info.text <- tspan(info.text)
+    title <- tspan(title)
+    caption <- tspan(caption)
+    caption2 <- tspan(caption2)
+  }
+
   options.button <- ""
 
   if (!just.info && !is.null(options) && length(options) > 0) {

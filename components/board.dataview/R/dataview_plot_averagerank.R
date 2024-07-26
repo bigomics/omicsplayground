@@ -56,17 +56,17 @@ dataview_plot_averagerank_server <- function(id,
       if (data_type %in% c("counts", "abundance")) {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         if (data_type == "counts") {
-            ylab <- "Expression"
+          ylab <- "Expression"
         } else {
-            ylab <- "Abundance"
+          ylab <- "Abundance"
         }
       }
       if (data_type %in% c("logCPM", "log2")) {
         mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         if (data_type == "logCPM") {
-            ylab <- "Expression (log2)"
+          ylab <- "Expression (log2)"
         } else {
-            ylab <- "Abundance (log2)"
+          ylab <- "Abundance (log2)"
         }
       }
 

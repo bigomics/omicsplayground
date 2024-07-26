@@ -190,13 +190,13 @@ BiomarkerBoard <- function(id, pgx) {
       ## -------------------------------------------
       if (FALSE && shiny::isolate(input$pdx_level) == "geneset") {
         X <- pgx$gsetX[, names(y)]
-        if(any(is.na(X))) {
-            X <- X[complete.cases(X), , drop = FALSE]
+        if (any(is.na(X))) {
+          X <- X[complete.cases(X), , drop = FALSE]
         }
       } else {
         X <- pgx$X[, names(y)]
-        if(any(is.na(X))) {
-            X <- pgx$impX[, names(y)]
+        if (any(is.na(X))) {
+          X <- pgx$impX[, names(y)]
         }
       }
       X0 <- X

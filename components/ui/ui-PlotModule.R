@@ -46,12 +46,12 @@ PlotModuleUI <- function(id,
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
-  if(translate) {
-    info.text = tspan(info.text)
-##    title = tspan(title)
-    caption = tspan(caption)
-    caption2 = tspan(caption2)
-  }  
+  if (translate) {
+    info.text <- tspan(info.text)
+    ##    title = tspan(title)
+    caption <- tspan(caption)
+    caption2 <- tspan(caption2)
+  }
 
   getOutputFunc <- function(plotlib) {
     FUN <- switch(plotlib,
@@ -256,7 +256,9 @@ PlotModuleUI <- function(id,
           shiny::HTML("<b>References</b><br>"),
           shiny::HTML(html_code)
         )
-      } else {NULL},
+      } else {
+        NULL
+      },
       shiny::HTML("<br>"),
       shiny::actionButton(
         ns("copy_info"),

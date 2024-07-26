@@ -8,7 +8,7 @@
 ##
 
 bs_alert <- function(text, conditional = TRUE, style = "primary", closable = TRUE,
-                     translate = TRUE, html = TRUE ) {
+                     translate = TRUE, html = TRUE) {
   id <- bigdash:::make_id()
   if (conditional) {
     btn.class <- "btn-close btn-close-bs-conditional"
@@ -16,16 +16,16 @@ bs_alert <- function(text, conditional = TRUE, style = "primary", closable = TRU
     btn.class <- "btn-close"
   }
 
-##  text <- list(...)
-  
-  if(translate) {
+  ##  text <- list(...)
+
+  if (translate) {
     text <- tspan(text)
   }
 
-  if(html) {
+  if (html) {
     text <- shiny::HTML(text)
   }
-  
+
   shiny::tags$div(
     id = id,
     class = paste0("alert alert-", style, " alert-dismissible fade show"),
@@ -48,7 +48,6 @@ bs_alert <- function(text, conditional = TRUE, style = "primary", closable = TRU
       )
     }
   )
-
 }
 
 

@@ -46,14 +46,14 @@ featuremap_plot_gset_sig_server <- function(id,
         y <- pgx$samples[, pheno]
         ref <- ref_group()
         if (ref == "<average>") {
-            refX <- rowMeans(pgx$gsetX, na.rm = TRUE)
+          refX <- rowMeans(pgx$gsetX, na.rm = TRUE)
         } else {
           kk <- which(y == ref)
           refX <- rowMeans(pgx$gsetX[, kk], na.rm = TRUE)
         }
         X <- pgx$gsetX - refX
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-            rowMeans(X[, i, drop = FALSE], na.rm = TRUE)
+          rowMeans(X[, i, drop = FALSE], na.rm = TRUE)
         }))
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
@@ -71,11 +71,11 @@ featuremap_plot_gset_sig_server <- function(id,
       F <- dt[[1]]
       pos <- dt[[2]]
       shiny::req(F, pos)
-      
+
       kk <- intersect(rownames(pos), rownames(F))
       F <- F[kk, , drop = FALSE]
       pos <- pos[kk, , drop = FALSE]
-      
+
       ntop <- 15
       nc <- ceiling(sqrt(1.33 * ncol(F)))
       nr <- ceiling(ncol(F) / nc)

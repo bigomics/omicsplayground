@@ -5,7 +5,7 @@
 
 UploadUI <- function(id) {
   ns <- NS(id)
-  
+
   body <- div(
     style = "overflow: auto;",
     bslib::as_fill_carrier(),
@@ -45,7 +45,8 @@ UploadUI <- function(id) {
         shiny::actionButton(
           ns("start_upload"),
           "Start upload",
-          class = "btn-primary"),
+          class = "btn-primary"
+        ),
         br()
       )
     )
@@ -64,7 +65,6 @@ UploadUI <- function(id) {
 
 
 useUploadWizard <- function(ns) {
-
   ## initial_panel <- wizardR::wizard_step(
   ##   step_title = "Start",
   ##   step_id = "step_initial",

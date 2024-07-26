@@ -509,7 +509,7 @@ ClusteringBoard <- function(id, pgx) {
       kk <- grep("sample|patient", colnames(annot), invert = TRUE)
       annot <- annot[, kk, drop = FALSE] ## no group??
       samples <- colnames(zx) ## original sample list
-      
+
       ## ----------------------------------------------------
       ## ------------ calculate group summarized ------------
       ## ----------------------------------------------------

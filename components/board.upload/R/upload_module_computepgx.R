@@ -39,22 +39,27 @@ upload_module_computepgx_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
-      
+
       ## statistical method for GENE level testing
-      GENETEST.METHODS <- shiny::eventReactive({
-        upload_datatype()
-      } , {
-        if (tolower(upload_datatype()) == "proteomics") {
-          mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-        } else {
-          mm <- c("ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-                  "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
+      GENETEST.METHODS <- shiny::eventReactive(
+        {
+          upload_datatype()
+        },
+        {
+          if (tolower(upload_datatype()) == "proteomics") {
+            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          } else {
+            mm <- c(
+              "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
+              "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
+            )
+          }
+          return(mm)
         }
-        return(mm)
-      })
-      
+      )
+
       ## GENETEST.SELECTED <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-      GENETEST.SELECTED <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma") 
+      GENETEST.SELECTED <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
 
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
@@ -95,15 +100,15 @@ upload_module_computepgx_server <- function(
           bslib::as_fill_carrier(),
           bslib::layout_columns(
             width = "100%",
-            col_widths = c(-5,2,-5),
+            col_widths = c(-5, 2, -5),
             fill = FALSE,
             div(
-              ##style = "display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;",
-              style = "display: flex; flex-direction: column; gap: 20px; width: 100%;",              
+              ## style = "display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;",
+              style = "display: flex; flex-direction: column; gap: 20px; width: 100%;",
               shiny::div(
-                style = "margin-left: 0px; text-align: left; width: 100%;",              
+                style = "margin-left: 0px; text-align: left; width: 100%;",
                 shiny::uiOutput(ns("input_recap2"))
-              ),              
+              ),
               div(
                 p("Dataset name:", style = "text-align: left;  margin: 0 0 2px 0; ;  font-weight: bold;"),
                 shiny::textInput(
@@ -322,7 +327,7 @@ upload_module_computepgx_server <- function(
         tagList(
           shiny::HTML("<b>Data type:</b>", upload_datatype()),
           shiny::HTML("<br><b>Organism:</b>", upload_organism()),
-          shiny::HTML("<br><b>Probe type:</b>", probetype())        
+          shiny::HTML("<br><b>Probe type:</b>", probetype())
           ## shiny::HTML("<b>Name:</b><br>", upload_name()),
           ## shiny::HTML("<b>Description:</b><br>", upload_description())
         )
@@ -337,10 +342,10 @@ upload_module_computepgx_server <- function(
             shiny::tags$p("Probes not recognized, please check organism or your probe names.")
           )
         } else {
-#          shiny::div(
-#            style = "display: flex; justify-content: center; align-items: center",
-#            shiny::tags$p("Probe type detected: ", p)
-#          )
+          #          shiny::div(
+          #            style = "display: flex; justify-content: center; align-items: center",
+          #            shiny::tags$p("Probe type detected: ", p)
+          #          )
         }
       })
 
@@ -465,21 +470,20 @@ upload_module_computepgx_server <- function(
       })
 
       shiny::observeEvent(upload_wizard(), {
-        
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
 
         ## bail out if probetype task is not finished or has error
         p <- probetype()
-        if( is.null(p) || grepl("error",tolower(p)) || p == "") {
+        if (is.null(p) || grepl("error", tolower(p)) || p == "") {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
-          shinyalert::shinyalert("ERROR", "probetype detection failed", type="error")
+          shinyalert::shinyalert("ERROR", "probetype detection failed", type = "error")
           return(NULL)
         }
-        shiny::req(!(p %in% c("error","running","")))  ## wait for process??
+        shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
 
-        
+
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         pgxdir <- auth$user_dir
         numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))

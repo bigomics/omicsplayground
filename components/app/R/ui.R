@@ -226,26 +226,27 @@ app_ui <- function(x) {
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
           ),
           left = tags$div(
-            style = "padding: 0 0 0 20px;",                        
+            style = "padding: 0 0 0 20px;",
             bigdash::navbarDropdown(
-            "Datasets",
-            style = "border: 1px; padding: 2px 6px;",
-            #tags$li(
-            #  actionLink("menu_upload_new", "Upload new")
-            #),                     
-            bigdash::navbarDropdownTab(
-              "Upload new",
-              "upload-tab"
-            ),
-            bigdash::navbarDropdownTab(
-              "Load from library",
-              "load-tab"
-            ),
-            bigdash::navbarDropdownTab(
-              "Shared datasets",
-              "sharing-tab"
+              "Datasets",
+              style = "border: 1px; padding: 2px 6px;",
+              # tags$li(
+              #  actionLink("menu_upload_new", "Upload new")
+              # ),
+              bigdash::navbarDropdownTab(
+                "Upload new",
+                "upload-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Load from library",
+                "load-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Shared datasets",
+                "sharing-tab"
+              )
             )
-          )),
+          ),
           div.invitebutton,
           div.chirpbutton,
           bigdash::navbarDropdown(
@@ -489,7 +490,7 @@ app_ui <- function(x) {
             SharedDatasetsUI("load")
           )
         )
-        ##UploadUI("upload")
+        ## UploadUI("upload")
       ) ## end of bigPage
     }
 

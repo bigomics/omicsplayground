@@ -45,10 +45,10 @@ dataview_module_geneinfo_server <- function(id,
       req(gene)
 
       jj <- which(pgx$genes$feature == gene)
-      if(pgx$genes$feature[jj] != pgx$genes$symbol[jj]) { ## Proteomics
-          gene <- pgx$genes$symbol[jj]
+      if (pgx$genes$feature[jj] != pgx$genes$symbol[jj]) { ## Proteomics
+        gene <- pgx$genes$symbol[jj]
       }
-      
+
       gene <- toupper(sub(".*:", "", gene))
       eg <- AnnotationDbi::mget(gene,
         envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,

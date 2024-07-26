@@ -42,13 +42,17 @@ dataview_plot_totalcounts_server <- function(id,
 
       type <- if (data_type == "counts") {
         "counts"
-      } else {"abundance"}
+      } else {
+        "abundance"
+      }
 
       logtype <- if (data_type == "log2") {
         " (log2)"
       } else if (data_type == "logCPM") {
         " (logCPM)"
-      } else ("")
+      } else {
+        ("")
+      }
 
       ylab <- paste0("total ", type, logtype)
       if (data_groupby != "<ungrouped>") {

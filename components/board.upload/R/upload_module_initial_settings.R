@@ -5,7 +5,7 @@
 
 upload_module_initial_settings_ui <- function(id) {
   ns <- shiny::NS(id)
-  ##shiny::uiOutput(ns("UI"), fill = TRUE)
+  ## shiny::uiOutput(ns("UI"), fill = TRUE)
 
   div(
     style = "overflow: auto;",
@@ -42,11 +42,10 @@ upload_module_initial_settings_ui <- function(id) {
             )
           )
         )
-        ##shiny::uiOutput(ns("upload_annot_ui"))
+        ## shiny::uiOutput(ns("upload_annot_ui"))
       )
     )
   )
-
 }
 
 upload_module_initial_settings_server <- function(
@@ -59,14 +58,14 @@ upload_module_initial_settings_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
-      
-      observeEvent( new_upload(), {
+
+      observeEvent(new_upload(), {
         species <- playbase::SPECIES_TABLE$species_name
         if (!auth$options$ENABLE_ANNOT) {
           species <- setdiff(species, "No organism")
         }
         updateSelectizeInput(session, "selected_organism", choices = species, server = TRUE)
-      })  
+      })
 
       output$upload_annot <- renderUI({
         upload_annot_ui <- NULL

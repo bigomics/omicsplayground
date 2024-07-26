@@ -151,7 +151,7 @@ DataViewBoard <- function(id, pgx) {
       last_search_gene(input$search_gene)
       return(input$search_gene)
     })
-    
+
 
     ## ================================================================================
     ## =========================== MODULES ============================================
@@ -171,10 +171,10 @@ DataViewBoard <- function(id, pgx) {
 
     #
     dataview_module_geneinfo_server(
-        "geneinfo",
-        pgx,
-        r.gene = reactive(input$search_gene),
-        watermark = WATERMARK
+      "geneinfo",
+      pgx,
+      r.gene = reactive(input$search_gene),
+      watermark = WATERMARK
     )
 
     ## first tab ---------------------------------------
