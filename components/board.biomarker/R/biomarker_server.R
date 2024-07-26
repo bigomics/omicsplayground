@@ -11,7 +11,6 @@ BiomarkerBoard <- function(id, pgx) {
     rowH <- 320 ## row height of panel
     imgH <- 260
 
-
     pdx_infotext <- strwrap("The <strong>Biomarker Board</strong> performs
     the biomarker selection that can be used for classification or prediction purposes.
     <br><br>To better understand which genes, mutations, or gene sets influence
@@ -191,8 +190,14 @@ BiomarkerBoard <- function(id, pgx) {
       ## -------------------------------------------
       if (FALSE && shiny::isolate(input$pdx_level) == "geneset") {
         X <- pgx$gsetX[, names(y)]
+        if(any(is.na(X))) {
+            X <- X[complete.cases(X), , drop = FALSE]
+        }
       } else {
         X <- pgx$X[, names(y)]
+        if(any(is.na(X))) {
+            X <- pgx$impX[, names(y)]
+        }
       }
       X0 <- X
 
@@ -228,9 +233,9 @@ BiomarkerBoard <- function(id, pgx) {
       }
 
       ## ----------- restrict to top SD -----------
-      X <- head(X[order(-apply(X, 1, sd)), , drop = FALSE], 10 * NFEATURES) ## top 100
+      X <- head(X[order(-apply(X, 1, sd, na.rm = TRUE)), , drop = FALSE], 10 * NFEATURES) ## top 100
       sdx0 <- matrixStats::rowSds(X, na.rm = TRUE)
-      sdx1 <- 0.5 * sdx0 + 0.5 * mean(sdx0)
+      sdx1 <- 0.5 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
       X <- X + 0.25 * sdx1 * matrix(rnorm(length(X)), nrow(X), ncol(X)) ## add some noise
 
       progress$inc(4 / 10, detail = "computing scores")
