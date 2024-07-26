@@ -114,7 +114,7 @@ clustering_plot_genemodule_server <- function(id,
           y = "gx",
           grouped = FALSE,
           fillcolor = plotly.colors[(i - 1) %% 10 + 1],
-          yaxistitle = "avg expr (logCPM)",
+          yaxistitle = "avg expr (log2)",
           xaxistitle = "",
           annotations = anntitle
         ) %>% plotly::layout(

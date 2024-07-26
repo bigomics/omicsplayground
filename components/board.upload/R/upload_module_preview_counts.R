@@ -4,7 +4,7 @@
 ##
 
 ## ---------------------------------------------------
-## COUNTS
+## COUNTS UPLOAD (for wizard dialog)
 ## ---------------------------------------------------
 
 upload_table_preview_counts_ui <- function(id) {
@@ -22,13 +22,12 @@ upload_table_preview_counts_server <- function(
     height,
     title,
     info.text,
+    upload_datatype,
     caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     table_data <- shiny::reactive({
-      ## shiny::req(!is.null(uploaded$counts.csv))
-      ## dt <- uploaded$counts.csv
       shiny::req(!is.null(checked_matrix()))
       dt <- checked_matrix()
       nrow0 <- nrow(dt)
@@ -99,9 +98,9 @@ upload_table_preview_counts_server <- function(
           onclick = "window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
         )
       )
+
       div(
         bslib::as_fill_carrier(),
-        ## style = "width: 100%; display: flex; justify-content: space-between; margin-bottom: 8px;",
         style = "width: 100%; display: flex; ",
         if (is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
@@ -109,13 +108,13 @@ upload_table_preview_counts_server <- function(
             row_heights = list("auto", 11, 1),
             gap = "0.5rem",
             bslib::as_fill_carrier(
-              bs_alert("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample.", closable = FALSE),
+              bs_alert(tspan("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample."), closable = FALSE),
               style = "align-items: end"
             ),
             bslib::card(
               fileInputArea(
                 ns("counts_csv"),
-                shiny::h4("Upload counts.csv", class = "mb-0"),
+                shiny::h4(ifelse(tolower(upload_datatype()) == "proteomics", "Upload abundance.csv", "Upload counts.csv"), class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "100%"
@@ -127,36 +126,102 @@ upload_table_preview_counts_server <- function(
         },
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
-            col_widths = c(9, 3),
-            TableModuleUI(
-              ns("counts_datasets"),
-              width = width,
-              height = height,
-              title = title,
-              info.text = info.text,
-              caption = caption,
-              label = "",
-              show.maximize = FALSE
-            ),
-            bslib::card(
-              div(
-                "Summary:",
-                br(),
-                check_to_html(
-                  checklist$counts.csv$checks,
-                  pass_msg = "All counts checks passed",
-                  null_msg = "Counts checks not run yet.
-                            Fix any errors with counts first."
-                ),
-                preview_module_legend
+            col_widths = 12,
+            bslib::layout_columns(
+              col_widths = c(8, 4),
+              TableModuleUI(
+                ns("counts_datasets"),
+                width = width,
+                height = height,
+                title = title,
+                info.text = info.text,
+                caption = caption,
+                label = "",
+                show.maximize = FALSE
+              ),
+              bslib::card(
+                bslib::navset_pill(                       
+                  bslib::nav_panel(
+                    title = "Histogram",
+                    br(),
+                    plotOutput(ns("histogram"), height = "500px")
+                  ),
+                  bslib::nav_panel(
+                    title = "Box plots",                         
+                    br(),
+                    plotOutput(ns("boxplots"), height = "500px")
+                  )
+                )
               )
             ),
-            action_buttons
+            fillRow(
+              fill = c(NA,1,NA),
+              action_buttons,
+              br(),
+              uiOutput(ns("error_summary"))
+            )
           )
         } ## end of if-else
       ) ## end of div
     })
 
+    output$error_summary <- renderUI({
+      div(
+        style = "display: flex; justify-content: right; vertical-align: text-bottom; margin: 8px;",
+        check_to_html(
+          checklist$counts.csv$checks,
+          pass_msg = tspan("All counts checks passed"),
+          null_msg = tspan("Counts checks not run yet.
+                            Fix any errors with counts first."),
+          details = FALSE
+        )
+      )
+    })
+    
+    output$histogram <- renderPlot({
+      counts <- checked_matrix()
+      shiny::req(counts)
+      xx <- log2(1 + counts)
+      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
+      suppressWarnings(dc <- data.table::melt(xx))
+      dc$value[dc$value == 0] <- NA
+      tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
+      ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
+        ggplot2::geom_density() +
+        ggplot2::xlab(tspan("counts (log2)")) +
+        ggplot2::theme(legend.position = "none") +
+        ggplot2::ggtitle(toupper(tspan("Counts")), subtitle = tt2)
+    })
+
+    output$boxplots <- renderPlot({
+      counts <- checked_matrix()
+      shiny::req(counts)
+      X <- log2(pmax(counts,0))
+      boxplot(X, ylab=tspan("counts (log2)"))
+    })
+      
+    # error pop-up alert
+    observeEvent( checklist$counts.csv$checks, {
+      checks <- checklist$counts.csv$checks
+      if(is.null(checks)) return(NULL)
+      
+      if(length(checks) > 0) {
+        err.html <- check_to_html(
+          checks,
+          pass_msg = tspan("All counts checks passed"),
+          null_msg = tspan("Counts checks not run yet.
+                            Fix any errors with counts first."),
+          false_msg = tspan("Counts checks: warning"),
+          details = TRUE
+        )
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = err.html,
+          html = TRUE
+        )
+      }      
+    })
+    
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
@@ -173,25 +238,21 @@ upload_table_preview_counts_server <- function(
       # if counts not in file name, give warning and return
       if (!grepl("count", input$counts_csv$name, ignore.case = TRUE) && !grepl("expression", input$counts_csv$name, ignore.case = TRUE)) {
         shinyalert::shinyalert(
-          title = "Counts not in filename.",
-          text = "Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.",
+          title = tspan("Counts not in filename."),
+          text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv."),
           type = "error"
         )
         return()
       }
 
-      df0 <- playbase::read_counts(input$counts_csv$datapath)
-      df <- df0
+      df <- playbase::read_counts(input$counts_csv$datapath)
 
       is_expression <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
       is_count <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
 
       if (FALSE && is_expression) {
-        df <- 2**df0
-        # legacy code.. it might not be always the case, maybe we
-        # should ask users if they removed zeros by adding 1 to
-        # counts... /MMM
-        if (min(df0, na.rm = TRUE) >= 1) df <- df - 1
+        df <- 2**df
+        if (min(df, na.rm = TRUE) >= 1) df <- df - 1
 
         # warn user that this is happening in background
         shinyalert::shinyalert(
@@ -205,12 +266,18 @@ upload_table_preview_counts_server <- function(
     })
 
     observeEvent(input$remove_counts, {
+
       delete_all_files_counts <- function(value) {
-        if (input$alert_delete_counts) {
+        if (value) {
           uploaded$counts.csv <- NULL
           uploaded$samples.csv <- NULL
           uploaded$contrasts.csv <- NULL
-        }
+          checklist$counts.csv$checks <- NULL
+          checklist$samples.csv$checks <- NULL
+          checklist$contrasts.csv$checks <- NULL
+          checklist$samples_counts$checks <- NULL
+          checklist$samples_contrasts$checks <- NULL          
+        } 
       }
 
       # if samples is not null, warn user that it will be deleted
@@ -218,20 +285,16 @@ upload_table_preview_counts_server <- function(
         shinyalert::shinyalert(
           inputId = "alert_delete_counts",
           title = "Warning",
-          text = "Removing counts will also remove samples and contrasts. Do you want to proceed?",
+          text = tspan("Removing counts will also remove samples and contrasts. Do you want to proceed?"),
           type = "warning",
           showCancelButton = TRUE,
           closeOnEsc = FALSE,
           callbackR = delete_all_files_counts,
           confirmButtonText = "Remove all files",
           cancelButtonText = "Cancel"
-        )
-
-        uploaded$counts.csv <- NULL
-        uploaded$samples.csv <- NULL
-        uploaded$contrasts.csv <- NULL
+          )
       } else {
-        uploaded$counts.csv <- NULL
+        delete_all_files_counts(TRUE)         
       }
     })
 
@@ -249,65 +312,3 @@ upload_table_preview_counts_server <- function(
 } ## end of server
 
 
-
-## --------------------------------------------------------------------------
-## convert list of checks to html tags for display in the data preview modal
-## --------------------------------------------------------------------------
-
-check_to_html <- function(check, pass_msg = "", null_msg = "", false_msg = "") {
-  error_list <- playbase::PGX_CHECKS
-  if (is.null(check)) {
-    tagList(
-      span(null_msg, style = "color: red"), br()
-    )
-  } else if (isFALSE(check)) {
-    tagList(
-      span(false_msg, style = "color: orange"), br()
-    )
-  } else {
-    if (length(check) > 0) {
-      tagList(
-        lapply(1:length(check), function(idx) {
-          error_id <- names(check)[idx]
-          error_log <- check[[idx]]
-          error_detail <- error_list[error_list$error == error_id, ]
-          error_length <- length(error_log)
-          ifelse(length(error_log) > 5, error_log <- error_log[1:5], error_log)
-          if (error_detail$warning_type == "warning") {
-            title_color <- "orange"
-          } else if (error_detail$warning_type == "error") {
-            title_color <- "red"
-          }
-          div(
-            hr(style = "border-top: 1px solid black;"),
-            span(error_detail$title, style = paste("color:", title_color)),
-            br(),
-            paste(error_detail$message, "\n", paste(error_length, "case(s) identified, examples:"), paste(error_log, collapse = " "), sep = " "),
-            br()
-          )
-        }),
-        hr(style = "border-top: 1px solid black;")
-      )
-    } else {
-      if (pass_msg != "") {
-        tagList(
-          span(pass_msg, style = "color: green"), br()
-        )
-      }
-    }
-  }
-}
-
-
-preview_module_legend <- shiny::div(
-  class = "pt-4",
-  style = "margin-top: 150px;",
-  span(style = "color: green", "Green"),
-  span("= data OK. "),
-  br(),
-  span(style = "color: orange", "Orange"),
-  span("= warning but data will still be uploaded. "),
-  br(),
-  span(style = "color:red", "Red"),
-  span("= error and data will not be uploaded.")
-)

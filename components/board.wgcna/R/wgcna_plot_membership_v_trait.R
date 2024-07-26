@@ -34,13 +34,16 @@ wgcna_plot_membership_v_trait_server <- function(id,
       out <- wgcna.compute()
 
       MEs <- out$net$MEs
-      rho1 <- cor(MEs, out$datExpr, use = "pairwise")
+      ## rho1 <- cor(MEs, out$datExpr, use = "pairwise")
+      rho1 <- cor(MEs, out$datExpr, use = "pairwise.complete.obs")
       rho1[is.na(rho1) | is.infinite(rho1)] <- 0
 
-      rho2 <- cor(out$datTraits, out$datExpr, use = "pairwise")
+      ## rho2 <- cor(out$datTraits, out$datExpr, use = "pairwise")
+      rho2 <- cor(out$datTraits, out$datExpr, use = "pairwise.complete.obs")
       rho2[is.na(rho2) | is.infinite(rho2)] <- 0
 
-      rho3 <- cor(t(rho2), t(rho1), use = "pairwise")
+      ## rho3 <- cor(t(rho2), t(rho1), use = "pairwise")
+      rho3 <- cor(t(rho2), t(rho1), use = "pairwise.complete.obs")
       rho3[is.na(rho3) | is.infinite(rho3)] <- 0
 
       k <- selected_module()

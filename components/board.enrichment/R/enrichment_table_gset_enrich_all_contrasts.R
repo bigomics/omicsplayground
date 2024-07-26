@@ -77,6 +77,18 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       res <- getFilteredGeneSetTable()
       df <- df[intersect(rownames(df), rownames(res)), ] ## take intersection of current comparison
       df <- df[order(-df$rms.ES), ]
+      ## wrap with hyperlink
+      geneset_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
+        rownames(df)
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-info'></i>",
+        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
+      )
+      df$i <- geneset_link
+      new_order <- c(names(df)[1], "i", names(df)[names(df) != "i" & names(df) != names(df)[1]])
+      df <- df[, new_order]
+
       colnames(df) <- gsub("_", " ", colnames(df)) ## so it allows wrap line
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
       qv.cols <- grep("^q", colnames(df))
@@ -98,19 +110,10 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       fc.cols <- td$fc.cols
       F <- td$F
 
-      ## wrap with hyperlink
-      geneset_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-circle-info'></i>", nrow(df)),
-        rownames(df)
-      ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-circle-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-circle-info icon_container'></i><i class='fa fa-ban icon_nested'></i>"
-      )
-
       dt <- DT::datatable(
         df,
-        rownames = geneset_link,
-        escape = -1,
+        rownames = NULL,
+        escape = FALSE,
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",

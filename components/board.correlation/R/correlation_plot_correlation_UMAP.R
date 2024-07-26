@@ -55,8 +55,8 @@ correlation_plot_correlation_UMAP_server <- function(id,
   moduleServer(id, function(input, output, session) {
     # reactive function listeninng for changes in input
     cor_umap.DATA <- shiny::reactive({
-      shiny::req(pgx$X)
-      shiny::req(cor_gene())
+        shiny::req(pgx$X)
+        shiny::req(cor_gene())
 
       if (!"cluster.genes" %in% names(pgx)) {
         par(mfrow = c(1, 1))
@@ -67,18 +67,24 @@ correlation_plot_correlation_UMAP_server <- function(id,
 
       R0 <- getFullGeneCorr()
       R1 <- getGeneCorr()
-
+        
       if (is.null(R1)) {
         return(NULL)
       }
-      pos <- pgx$cluster.genes$pos[["umap2d"]]
-      if (input$umap_param == "cov") {
+
+        pos <- pgx$cluster.genes$pos[["umap2d"]]
+        R0 <- R0[intersect(rownames(pos), rownames(R0)), , drop = FALSE]
+        R1 <- R1[intersect(rownames(pos), rownames(R1)), , drop = FALSE]
+        pos <- pos[intersect(rownames(pos), rownames(R1)), , drop = FALSE]
+        
+        if (input$umap_param == "cov") {
         rho0 <- R0[, "cov"]
         rho1 <- R1[, "cov"]
       } else {
         rho0 <- R0[, "cor"]
         rho1 <- R1[, "cor"]
       }
+        
       rho0 <- rho0[match(rownames(pos), names(rho0))]
       rho1 <- rho1[match(rownames(pos), names(rho1))]
       names(rho0) <- rownames(pos)

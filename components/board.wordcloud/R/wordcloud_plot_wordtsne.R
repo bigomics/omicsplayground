@@ -13,7 +13,7 @@ wordcloud_plot_wordtsne_ui <- function(
 
   wordtsne_options <- shiny::tagList(
     withTooltip(
-      shiny::radioButtons(ns("wordtsne_algo"), "Clustering algorithm:",
+      shiny::radioButtons(ns("tsne_algo"), "Clustering algorithm:",
         choices = c("tsne", "umap"), inline = TRUE
       ),
       "Choose a clustering algorithm: t-SNE or UMAP."
@@ -52,7 +52,7 @@ wordcloud_plot_wordtsne_server <- function(id,
       #
       df$abs.NES <- abs(df$NES)**2
 
-      if (input$wordtsne_algo == "tsne") {
+      if (input$tsne_algo == "tsne") {
         pos <- cbind(x = df$tsne.x, y = df$tsne.y)
       } else {
         pos <- cbind(x = df$umap.x, y = df$umap.y)

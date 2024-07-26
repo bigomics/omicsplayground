@@ -60,23 +60,31 @@ biomarker_plot_featurerank_server <- function(id,
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
         features <- gset_collections
         X <- pgx$gsetX
+        ## if(any(is.na(X))) {
+        ##     X <- X[complete.cases(X), , drop = FALSE]
+        ## }
       } else {
         features <- pgx$families
         X <- pgx$X
+        if(any(is.na(X))) {
+            X <- pgx$impX
+        }
       }
 
       ## ------------ intersect features, set minimum set size
-      rownames(X) <- toupper(rownames(X))
-      genes <- toupper(rownames(X))
+      ## rownames(X) <- toupper(rownames(X))
+      ## genes <- toupper(rownames(X))
+      rownames(X) <- toupper(toupper(pgx$genes$symbol))
+      genes <- toupper(pgx$genes$symbol)
       features <- lapply(features, toupper)
       features <- lapply(features, function(f) intersect(toupper(f), genes))
       features <- features[sapply(features, length) >= 10]
-
+      
       ## ------------ Just to get current samples
-      #
       samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
       X <- X[, samples]
-      # the code below overwrittes user input, and should be removed
+
+      ## the code below overwrittes user input, and should be removed
       cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
       cvar <- grep("sample|patient|years|days|months|gender",
         cvar,
@@ -86,14 +94,14 @@ biomarker_plot_featurerank_server <- function(id,
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
       Y <- Y[, kk, drop = FALSE]
       dim(Y)
-
+      
       ## ------------ Note: this takes a while. Maybe better precompute off-line...
-      sdx <- apply(X, 1, sd)
+      sdx <- apply(X, 1, sd, na.rm = TRUE)
       names(sdx) <- rownames(X)
       S <- matrix(NA, nrow = length(features), ncol = ncol(Y))
       rownames(S) <- names(features)
       colnames(S) <- colnames(Y)
-
+      
       ## ------------ Create a Progress object
       if (!interactive()) {
         progress <- shiny::Progress$new()
@@ -106,28 +114,32 @@ biomarker_plot_featurerank_server <- function(id,
       i <- 1
       for (i in 1:ncol(Y)) {
         if (!interactive()) progress$inc(1 / ncol(Y))
-
+        
         grp <- Y[, i]
         grp <- as.character(grp)
-
+        
         score <- rep(NA, length(features))
         names(score) <- names(features)
         j <- 1
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) {
-            pp <- playbase::filterProbes(pgx$genes, features[[j]])
+              annot <- pgx$genes
+              annot <- annot[match(unique(annot$symbol), annot$symbol), ]
+              rownames(annot) <- annot$symbol
+              pp <- playbase::filterProbes(annot, features[[j]])
+              ## pp <- playbase::filterProbes(pgx$genes, features[[j]])
           }
           pp <- head(pp[order(-sdx[pp])], 1000) ## how many top SD??
           pp <- intersect(pp, rownames(X))
           X1 <- X[pp, , drop = FALSE]
-          dim(X1)
-
+          
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
           if (method %in% c("correlation", "meta")) {
-            mx <- t(apply(X1, 1, function(x) tapply(x, grp, mean)))
+            mx <- t(apply(X1, 1, function(x) tapply(x, grp, mean, na.rm = TRUE)))
             if (nrow(mx) == 0 || ncol(mx) == 0) next
+            ## D <- 1 - cor(mx, use = "pairwise.complete.obs")
             D <- 1 - cor(mx, use = "pairwise")
             diag(D) <- NA
             s1 <- mean(D, na.rm = TRUE)
@@ -148,6 +160,7 @@ biomarker_plot_featurerank_server <- function(id,
         S[, i] <- score
       }
       S[is.na(S)] <- 0 ## missing values
+      
       return(S)
     })
 
@@ -158,7 +171,7 @@ biomarker_plot_featurerank_server <- function(id,
       }
 
       ## top scoring
-      S <- tail(S[order(rowSums(S)), , drop = FALSE], 25)
+      S <- tail(S[order(rowSums(S, na.rm = TRUE)), , drop = FALSE], 25)
       rownames(S) <- paste(substring(rownames(S), 1, 50), "  ")
 
       playbase::pgx.stackedBarplot(

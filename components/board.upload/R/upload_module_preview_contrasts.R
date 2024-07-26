@@ -156,6 +156,74 @@ upload_table_preview_contrasts_server <- function(
         )
       )
 
+      comparison_builder_ui <- 
+        div(
+          bslib::as_fill_carrier(),
+          if (is.null(uploaded$contrasts.csv)) {
+            bslib::layout_columns(
+              col_widths = c(-3, 6, -3),
+              row_heights = list("auto", 11, 1),
+              gap = "0.3rem",
+              bslib::as_fill_carrier(
+                bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE),
+                  style = "align-items: end"
+              ),
+              bslib::card(
+                fileInputArea(
+                  ns("contrasts_csv"),
+                  div(
+                    style = "display: flex; flex-direction: column; gap: 10px;",
+                    shiny::h4("Upload comparisons.csv (optional)", class = "mb-0")
+                  ),
+                  multiple = FALSE,
+                  accept = c(".csv"),
+                  width = "100%"
+                ),
+                style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
+                ),
+              action_buttons2
+            )
+          } else {
+            bslib::layout_columns(
+              col_widths = c(8, 4),
+              TableModuleUI(
+                ns("contrasts_datasets"),
+                width = width,
+                height = height,
+                title = title,
+                info.text = info.text,
+                caption = caption,
+                label = "",
+                show.maximize = FALSE
+              ),
+              bslib::card(
+                div(
+                  br(),                       
+                  plotOutput(ns("contrasts_stats")),
+                  br(), hr(),                
+                  "Summary:",
+                  br(),
+                  check_to_html(
+                    checklist$contrasts.csv$checks,
+                    pass_msg = "All contrasts checks passed",
+                    null_msg = "Contrasts checks not run yet.
+                                  Fix any errors with contrasts first.",
+                    details = FALSE
+                  ),
+                  check_to_html(checklist$samples_contrasts$checks,
+                    pass_msg = "All contrasts-samples checks passed",
+                    null_msg = "Contrasts-samples checks not run yet.
+                              Fix any errors with contrasts or samples first.",
+                    details = FALSE                      
+                    )
+                  ## preview_module_legend
+                )
+              ),
+              action_buttons2
+            )
+         }
+      )      
+      
       div(
         # if run_build_comparisons is clicked, then show the contrasts
         bslib::as_fill_carrier(),
@@ -170,72 +238,57 @@ upload_table_preview_contrasts_server <- function(
           )
         },
         if (!show_comparison_builder()) {
-          div(
-            bslib::as_fill_carrier(),
-            if (is.null(uploaded$contrasts.csv)) {
-              bslib::layout_columns(
-                col_widths = c(-3, 6, -3),
-                row_heights = list("auto", 11, 1),
-                gap = "0.3rem",
-                bslib::as_fill_carrier(
-                  bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE),
-                  style = "align-items: end"
-                ),
-                bslib::card(
-                  fileInputArea(
-                    ns("contrasts_csv"),
-                    div(
-                      style = "display: flex; flex-direction: column; gap: 10px;",
-                      shiny::h4("Upload comparisons.csv (optional)", class = "mb-0")
-                    ),
-                    multiple = FALSE,
-                    accept = c(".csv"),
-                    width = "100%"
-                  ),
-                  style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
-                ),
-                action_buttons2
-              )
-            } else {
-              bslib::layout_columns(
-                col_widths = c(9, 3),
-                TableModuleUI(
-                  ns("contrasts_datasets"),
-                  width = width,
-                  height = height,
-                  title = title,
-                  info.text = info.text,
-                  caption = caption,
-                  label = "",
-                  show.maximize = FALSE
-                ),
-                bslib::card(
-                  div(
-                    "Summary:",
-                    br(),
-                    check_to_html(
-                      checklist$contrasts.csv$checks,
-                      pass_msg = "All contrasts checks passed",
-                      null_msg = "Contrasts checks not run yet.
-                                  Fix any errors with contrasts first."
-                    ),
-                    check_to_html(checklist$samples_contrasts$checks,
-                      pass_msg = "All contrasts-samples checks passed",
-                      null_msg = "Contrasts-samples checks not run yet.
-                              Fix any errors with contrasts or samples first."
-                    ),
-                    preview_module_legend
-                  )
-                ),
-                action_buttons2
-              )
-            }
-          )
+          comparison_builder_ui
         }
       )
       # }
     })
 
+    output$contrasts_stats <- renderPlot({
+      ct <- uploaded$contrasts.csv
+      shiny::req(nrow(ct))
+      plotPhenoDistribution(data.frame(ct))       
+    })
+    
+    # error pop-up alert
+    observeEvent({
+      list( checklist$contrasts.csv$checks,
+           checklist$samples_contrasts$checks)
+    } , {
+      checks1 <- checklist$samples.csv$checks
+      checks2 <- checklist$samples_contrasts$checks
+      
+      if(length(checks1) > 0 || length(checks2) > 0) {
+        err.html <- ""
+        if(length(checks1) > 0) {
+          err1 <- check_to_html(
+            checks1,
+            pass_msg = tspan("All contrasts checks passed"),
+            null_msg = tspan("Contrasts checks not run yet.
+                            Fix any errors with counts first."),
+            details = TRUE
+          )
+          err.html <- paste(err.html, err1)
+        }
+        if(length(checks2) > 0) {        
+          err2 <- check_to_html(
+            checks2,
+            pass_msg = tspan("All samples-contrasts checks passed"),
+            null_msg = tspan("Samples-contrasts checks not run yet.
+                        Fix any errors with samples or contrasts first."),
+            details = TRUE                  
+            )
+          err.html <- paste(err.html, err2)          
+        }
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = tspan(err.html),
+          html = TRUE
+        )
+      }      
+    })
+
+    
     # control state of comparison builder
     observeEvent(input$run_build_comparisons, {
       show_comparison_builder(TRUE)
@@ -279,6 +332,7 @@ upload_table_preview_contrasts_server <- function(
 
     observeEvent(input$remove_contrasts, {
       uploaded$contrasts.csv <- NULL
+      checklist$samples_contrasts$checks <- NULL          
     })
 
     observeEvent(input$load_example, {

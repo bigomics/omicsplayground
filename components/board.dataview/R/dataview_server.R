@@ -34,12 +34,12 @@ DataViewBoard <- function(id, pgx) {
         the total number of counts (abundance) per sample and their distribution among the samples are displayed.
         This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
 
-        The <strong>Gene overview</strong> panel displays figures related to the expression level of the selected gene,
+        The <strong>Overview</strong> panel displays figures related to the expression level of the selected gene,
         correlation, and average expression ranking within the dataset.
         More information about the gene and hyperlinks to external databases are provided. Furthermore,
         it displays the correlation and tissue expression for a selected gene in external reference datasets.
 
-        In <strong>Counts table</strong> panel, the exact expression values across the samples can be looked up,
+        In <strong>Data table</strong> panel, the exact expression values across the samples can be looked up,
         where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression
         of a phenotype sample grouping is also presented in this table.
 
@@ -84,13 +84,18 @@ DataViewBoard <- function(id, pgx) {
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
+      shiny::updateRadioButtons(
+        session = session,
+        "data_type",
+        choices = c("log2", "abundance")
+      )
     })
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Gene overview" = list(disable = NULL),
-      "Sample QC" = list(disable = c("search_gene", "data_type")),
-      "Counts table" = list(disable = NULL),
+      "Overview" = list(disable = NULL),
+      "Sample QC" = list(disable = c("search_gene")),
+      "Data table" = list(disable = NULL),
       "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
       "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type"))
     )
@@ -146,7 +151,7 @@ DataViewBoard <- function(id, pgx) {
       last_search_gene(input$search_gene)
       return(input$search_gene)
     })
-
+    
 
     ## ================================================================================
     ## =========================== MODULES ============================================
@@ -166,9 +171,10 @@ DataViewBoard <- function(id, pgx) {
 
     #
     dataview_module_geneinfo_server(
-      "geneinfo",
-      r.gene = reactive(input$search_gene),
-      watermark = WATERMARK
+        "geneinfo",
+        pgx,
+        r.gene = reactive(input$search_gene),
+        watermark = WATERMARK
     )
 
     ## first tab ---------------------------------------
@@ -221,6 +227,7 @@ DataViewBoard <- function(id, pgx) {
     dataview_plot_totalcounts_server(
       "counts_total",
       getCountStatistics,
+      r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
 
@@ -228,6 +235,7 @@ DataViewBoard <- function(id, pgx) {
       "counts_boxplot",
       input,
       getCountStatistics,
+      r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
 
@@ -314,10 +322,14 @@ DataViewBoard <- function(id, pgx) {
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
-        if (input$data_type == "counts") {
+        if (input$data_type %in% c("counts", "abundance")) {
           counts <- pgx$counts[, samples, drop = FALSE]
         } else {
-          counts <- pmax(2**pgx$X[, samples, drop = FALSE] - 1, 0)
+          if (any(pgx$X[, samples, drop = FALSE] < 0)) {
+            counts <- 2**pgx$X[, samples, drop = FALSE]
+          } else {
+            counts <- pmax(2**pgx$X[, samples, drop = FALSE] - 1, 0)
+          }
         }
 
         grpvar <- input$data_groupby
@@ -386,7 +398,12 @@ DataViewBoard <- function(id, pgx) {
         ss <- names(total.counts)
         prop.counts <- prop.counts[, ss, drop = FALSE]
         counts <- counts[, ss, drop = FALSE]
-        log2counts <- log2(1 + counts)
+        if (any(pgx$X[, samples, drop = FALSE] < 0)) {
+          offset <- 1e-6
+        } else {
+          offset <- 1
+        }
+        log2counts <- log2(offset + counts)
 
         names(total.counts) <- substring(names(total.counts), 1, 30)
         colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
