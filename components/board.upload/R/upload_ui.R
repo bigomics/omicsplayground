@@ -19,16 +19,6 @@ UploadUI <- function(id) {
         ),
         br(),
         div(
-          p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
-          shiny::selectInput(
-            inputId = ns("selected_organism"),
-            label = NULL,
-            choices = NULL,
-            ## selected = 1,
-            multiple = FALSE
-          )
-        ),
-        div(
           p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
           shiny::selectInput(
             ns("selected_datatype"), NULL,
@@ -39,6 +29,16 @@ UploadUI <- function(id) {
               "scRNA-seq",
               "other"
             )
+          )
+        ),
+        div(
+          p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+          shiny::selectInput(
+            inputId = ns("selected_organism"),
+            label = NULL,
+            choices = NULL,
+            ## selected = 1,
+            multiple = FALSE
           )
         ),
         br(),
