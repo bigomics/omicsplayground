@@ -220,36 +220,39 @@ upload_module_makecontrast_server <- function(
       shiny::observeEvent(c(input$group1, input$group2), {
         # make sure group1 and 2 are not NULL or ""
         req(input$group1, input$group2)
-
+        
         # update rv
         rv$condition_group1 <- input$group1
         rv$condition_group2 <- input$group2
-
+        
         # remove selected conditions from the start list
         rv$condition_start <- setdiff(rv$condition_start, c(input$group1, input$group2))
 
-
         # if some input$conditions are not in the start list, add them
-        if (length(input$conditions) > 0 && !input$conditions %in% rv$condition_start) {
+        if (length(input$conditions) > 0 && any(!input$conditions %in% rv$condition_start)) {
           rv$condition_start <- c(rv$condition_start, input$conditions)
         }
 
+        ## create comparison name from group names
         g1 <- gsub("[-_.,<> ]", ".", input$group1)
         g2 <- gsub("[-_.,<> ]", ".", input$group2)
         g1 <- gsub("[.]+", ".", g1)
         g2 <- gsub("[.]+", ".", g2)
         g1 <- paste(g1, collapse = "")
         g2 <- paste(g2, collapse = "")
+        
         if (is.null(g1) || length(g1) == 0) g1 <- ""
         if (is.null(g2) || length(g2) == 0) g2 <- ""
         if (is.na(g1)) g1 <- ""
         if (is.na(g2)) g2 <- ""
+        
         g1 <- substring(g1, 1, 20)
         g2 <- substring(g2, 1, 20)
         prm.name <- paste(input$param, collapse = ".")
         prm.name <- gsub("[-_.,<> ]", "", prm.name)
         tt <- paste0(prm.name, ":", g1, "_vs_", g2)
         if (g1 == "" && g2 == "") tt <- ""
+
         shiny::updateTextInput(session, "newname", value = tt)
       })
 
