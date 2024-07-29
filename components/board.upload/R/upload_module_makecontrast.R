@@ -220,11 +220,11 @@ upload_module_makecontrast_server <- function(
       shiny::observeEvent(c(input$group1, input$group2), {
         # make sure group1 and 2 are not NULL or ""
         req(input$group1, input$group2)
-        
+
         # update rv
         rv$condition_group1 <- input$group1
         rv$condition_group2 <- input$group2
-        
+
         # remove selected conditions from the start list
         rv$condition_start <- setdiff(rv$condition_start, c(input$group1, input$group2))
 
@@ -240,12 +240,12 @@ upload_module_makecontrast_server <- function(
         g2 <- gsub("[.]+", ".", g2)
         g1 <- paste(g1, collapse = "")
         g2 <- paste(g2, collapse = "")
-        
+
         if (is.null(g1) || length(g1) == 0) g1 <- ""
         if (is.null(g2) || length(g2) == 0) g2 <- ""
         if (is.na(g1)) g1 <- ""
         if (is.na(g2)) g2 <- ""
-        
+
         g1 <- substring(g1, 1, 20)
         g2 <- substring(g2, 1, 20)
         prm.name <- paste(input$param, collapse = ".")
