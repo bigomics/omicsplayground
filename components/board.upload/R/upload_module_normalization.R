@@ -31,6 +31,7 @@ upload_module_normalization_server <- function(
         pars <- get_model_parameters()
         shiny::req(pars)
         batch.pars <- pars$batch.pars
+        if(length(batch.pars)==0) batch.pars <- "<none>"
         paste("Batch parameters:", paste(batch.pars, collapse = "+"), "\n")
       })
 
@@ -275,17 +276,20 @@ upload_module_normalization_server <- function(
 
         methods <- c("ComBat", "RUV", "SVA", "NPM")
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
-        shiny::withProgress(message = "Comparing batch-correction methods...", value = 0.3, {
-          res <- playbase::compare_batchcorrection_methods(
-            X1, samples,
-            pheno = NULL,
-            contrasts = contrasts,
-            clust.method = "tsne",
-            methods = methods,
-            evaluate = FALSE, ## no score computation
-            xlist.init = xlist.init
-          )
-        })
+        shiny::withProgress(
+          message = "Comparing batch-correction methods...",
+          value = 0.3, {
+            res <- playbase::compare_batchcorrection_methods(
+              X1, samples,
+              pheno = NULL,
+              contrasts = contrasts,
+              clust.method = "tsne",
+              methods = methods,
+              evaluate = FALSE, ## no score computation
+              xlist.init = xlist.init
+            )
+          }
+        )
 
         ## selected <- res$best.method
         ## dbg("[normalization_server:results_correction_methods] selected.best_method = ", selected)
@@ -569,6 +573,8 @@ upload_module_normalization_server <- function(
         pos0 <- out.res$pos[["pca"]]
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
+        names(pos.list) <- sub("ComBat","auto-ComBat",names(pos.list))
+        
         pheno <- res$pheno
         xdim <- length(res$pheno)
         col1 <- factor(pheno)
@@ -595,11 +601,12 @@ upload_module_normalization_server <- function(
         ## get same positions as after outlier detection
         ## pos0 <- res$pos[["normalized"]]
         pos0 <- out.res$pos[["pca"]]
-
+        method <- input$bec_method
+        
         if (!input$batchcorrect) {
           pos1 <- pos0
         } else {
-          pos1 <- res$pos[[input$bec_method]]
+          pos1 <- res$pos[[method]]
         }
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, ]
@@ -614,6 +621,7 @@ upload_module_normalization_server <- function(
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
+        method <- sub("ComBat","auto-ComBat",method)
         par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
         plot(pos0,
           col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
@@ -719,11 +727,12 @@ upload_module_normalization_server <- function(
               bslib::accordion_panel(
                 title = "3. Remove outliers",
                 shiny::p("Automatically detect and remove outlier samples."),
-                shiny::checkboxInput(ns("remove_outliers"), "remove outliers (select threshold)", value = FALSE),
+                shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
                 shiny::conditionalPanel(
                   "input.remove_outliers == true",
                   ns = ns,
-                  shiny::sliderInput(ns("outlier_threshold"), NULL, 1, 12, 6, 1)
+                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:",
+                                     1, 12, 6, 1)
                 ),
                 br()
               ),
@@ -735,7 +744,7 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(ns("bec_method"), "Select method:",
                     choices = c(
-                      ##                    "ComBat" = "ComBat",
+                      "auto-ComBat" = "ComBat",
                       "SVA" = "SVA",
                       "RUV" = "RUV",
                       "NPM" = "NPM"
