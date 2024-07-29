@@ -89,7 +89,7 @@ signature_plot_volcano_server <- function(id,
       # Get gene selected labels
       if (length(sel)) {
         df <- getEnrichmentGeneTable()
-        sel.gene <- df$gene[sel]
+        sel.gene <- df$feature[sel]
         ## sel.gene <- df$symbol[sel]
         ## # Use symbol/feature if in gset
         ## if (sel.gene %in% gset) {
