@@ -81,7 +81,6 @@ DataViewBoard <- function(id, pgx) {
       },
       {
         shiny::req(input$data_type)
-        dbg("[dataView:observer_data_type] 0: called")
         
         if (input$data_type %in% c("counts", "abundance")) {
           features <- rownames(pgx$counts)
@@ -299,8 +298,6 @@ DataViewBoard <- function(id, pgx) {
         shiny::req(input$data_groupby)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
 
-        dbg("[observe:getCountStatistics] reacted")
-        
         subtt <- NULL
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)

@@ -34,7 +34,6 @@ dataview_plot_expression_server <- function(id,
                                             r.data_groupby = reactive("<ungrouped>"),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    dbg("[dataview_expressionplot_server] created!")
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
