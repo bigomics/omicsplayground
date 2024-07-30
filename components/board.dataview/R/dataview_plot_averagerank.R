@@ -98,7 +98,6 @@ dataview_plot_averagerank_server <- function(id,
 
       mean.fc <- pd$df$mean.fc
       sel <- pd$sel
-      dbg("[dataview::averageRankPlot] length.sel = ", length(sel))
       gene <- pd$gene
       ylab <- pd$ylab
 

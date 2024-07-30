@@ -31,10 +31,6 @@
             "proteomics": "PROTEIN"
         },
         {
-            "RNA-seq": "read counts",
-            "proteomics": "abundance"
-        },
-        {
             "RNA-seq": "counts",
             "proteomics": "abundance"
         },

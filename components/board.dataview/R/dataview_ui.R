@@ -17,7 +17,7 @@ DataViewInputs <- function(id) {
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
-      "Enter a gene/protein of interest.",
+      tspan("Type a gene of interest."),
       placement = "top"
     ),
     withTooltip(
@@ -45,7 +45,7 @@ DataViewInputs <- function(id) {
           ns("data_type"), "Data type:",
           choiceNames = c(tspan("counts"), "log2"),
           choiceValues = c("counts", "log2"),
-          selected = "counts",
+          selected = "log2",
           inline = TRUE
         ),
         "Choose an input data type for the analysis.",
