@@ -30,7 +30,7 @@ plotPhenoDistribution <- function(pheno) {
   px <- head(colnames(pheno), 20) ## show maximum??
   df <- type.convert(pheno[, px, drop = FALSE], as.is = TRUE)
   vt <- df %>% inspectdf::inspect_types()
-  
+
   ## discretized continuous variable into 10 bins
   ii <- unlist(vt$col_name[c("numeric", "integer")])
   if (!is.null(ii) && length(ii)) {
@@ -40,12 +40,12 @@ plotPhenoDistribution <- function(pheno) {
       cut(x, breaks = 10)
     })
   }
-  
+
   p1 <- df %>%
     inspectdf::inspect_cat() %>%
     inspectdf::show_plot()
   tt2 <- paste(nrow(pheno), "samples x", ncol(pheno), "phenotypes")
-                                        #
+  #
   p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle = tt2) +
     ggplot2::theme(
       axis.text.y = ggplot2::element_text(
