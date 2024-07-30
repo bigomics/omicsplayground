@@ -24,32 +24,6 @@ DataViewBoard <- function(id, pgx) {
     ## More Info (pop up window)
     ## ----------------------------------------------------------------------
 
-    data_infotext <- paste0(
-      'The <strong>DataView module</strong> provides information and visualisations of the dataset to quickly lookup a gene,
-        check the counts, or view the data tables.<br><br>
-
-        The <strong>Sample QC</strong> provides an overview of several sample-centric quality control metrics. In this QC tab,
-        the total number of counts (abundance) per sample and their distribution among the samples are displayed.
-        This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
-
-        The <strong>Overview</strong> panel displays figures related to the expression level of the selected gene,
-        correlation, and average expression ranking within the dataset.
-        More information about the gene and hyperlinks to external databases are provided. Furthermore,
-        it displays the correlation and tissue expression for a selected gene in external reference datasets.
-
-        In <strong>Data table</strong> panel, the exact expression values across the samples can be looked up,
-        where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression
-        of a phenotype sample grouping is also presented in this table.
-
-        In the <strong>Sample information</strong> panel, more complete information about samples can be found.
-        Finally, the <strong>Contrasts</strong> panel, shows information about the phenotype comparisons.
-        <br><br><br>
-        <center><iframe width="560" height="315" src="https://www.youtube.com/embed/S32SPINqO8E"
-        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe></center>
-    '
-    )
-
     data_infotext <- HTML('
         <center><iframe width="1120" height="630" src="https://www.youtube.com/embed/S32SPINqO8E"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
@@ -82,11 +56,6 @@ DataViewBoard <- function(id, pgx) {
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
-      shiny::updateRadioButtons(
-        session = session,
-        "data_type",
-        choices = c("abundance", "log2")
-      )
     })
 
     # Observe tabPanel change to update Settings visibility
@@ -112,6 +81,8 @@ DataViewBoard <- function(id, pgx) {
       },
       {
         shiny::req(input$data_type)
+        dbg("[dataView:observer_data_type] 0: called")
+        
         if (input$data_type %in% c("counts", "abundance")) {
           features <- rownames(pgx$counts)
         } else {
@@ -172,7 +143,8 @@ DataViewBoard <- function(id, pgx) {
       samples <- colnames(pgx$X)
 
       if (!is.null(input$data_samplefilter)) {
-        samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
+        samples <- playbase::selectSamplesFromSelectedLevels(
+          pgx$Y, input$data_samplefilter)
       }
       # validate samples
       validate(need(length(samples) > 0, "No samples remaining after filtering."))
@@ -319,29 +291,21 @@ DataViewBoard <- function(id, pgx) {
         list(
           pgx$X,
           input$data_groupby,
-          input$data_samplefilter,
-          input$data_type
+          input$data_samplefilter
         )
       },
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
-        shiny::req(input$data_groupby, input$data_type)
+        shiny::req(input$data_groupby)
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
 
+        dbg("[observe:getCountStatistics] reacted")
+        
         subtt <- NULL
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
-        if (input$data_type %in% c("counts", "abundance")) {
-          counts <- pgx$counts[, samples, drop = FALSE]
-        } else {
-          ### NEED RETHINK HERE!!! what is this??
-          if (any(pgx$X[, samples, drop = FALSE] < 0)) {
-            counts <- 2**pgx$X[, samples, drop = FALSE]
-          } else {
-            counts <- pmax(2**pgx$X[, samples, drop = FALSE] - 1, 0)
-          }
-        }
+        counts <- pgx$counts[, samples, drop = FALSE]
 
         grpvar <- input$data_groupby
         if (grpvar != "<ungrouped>") {

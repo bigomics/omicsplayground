@@ -64,7 +64,6 @@ dataview_plot_expression_server <- function(id,
       }
 
       pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
-      dbg("[DataView:plot_expression_server] data_type = ", data_type)
       if (data_type %in% c("counts", "abundance")) {
         gx <- pgx$counts[pp, samples]
         ylab <- tspan("Counts")
