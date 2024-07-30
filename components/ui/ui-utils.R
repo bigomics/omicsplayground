@@ -391,8 +391,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
   return(val)
 }
 
-
-tspan <- function(text) {
+tspan <- function(text, js=FALSE) {
   if (is.null(text)) {
     return(NULL)
   }
@@ -414,13 +413,23 @@ tspan <- function(text) {
     "transcriptomics", "Transcriptomics", "RNA-seq",
     "logCPM", "log2p1"
   )
+  if(js) {
+    i18n.tr <- function(key) shiny::span(class = "i18n", `data-key` = key, key)
+  } else {
+    i18n.tr <- function(key) i18n$t(key)
+  }                                                    
   for (k in keys) {
-    tt <- i18n$t(k)
-    text <- gsub(k, tt, text, ignore.case = FALSE)
+    tt <- i18n.tr(k)
+    if(grepl(k,text)) text <- gsub(k, tt, text, ignore.case = FALSE)
   }
+  if(js) text <- shiny::HTML(text)
   text
 }
 
+## forced JS version
+jspan <- function(text) tspan(text, js=TRUE)
+
+                  
 tspan.SAVE <- function(label) {
   shiny::span(class = "i18n", `data-key` = label, label)
 }
