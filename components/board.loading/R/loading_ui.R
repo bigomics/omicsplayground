@@ -135,48 +135,6 @@ LoadingUI <- function(id) {
 ## ====================================================================
 
 
-UploadNewUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
-
-  tab_content <- bslib::layout_columns(
-    col_widths = 12,
-    height = "calc(100vh - 180px)",
-    ##    uiOutput(ns("sharing_alert")),
-    bslib::layout_columns(
-      col_widths = c(-5, 2, -5),
-      br(),
-      div(
-        shiny::selectInput(
-          ns("upload_datatype"),
-          "Data type",
-          c("RNA-seq", "Proteomics", "Olink Proteomics")
-        ),
-        shiny::selectInput(
-          ns("upload_organism"),
-          "Organism",
-          c("Human", "Mouse", "Rat")
-        ),
-        br(),
-        shiny::actionButton(
-          ns("newuploadbutton"),
-          label = "Upload new dataset",
-          icon = icon("upload"),
-          class = "btn btn-info",
-          width = NULL
-        )
-      ),
-      br(),
-      br()
-    ) ## end of 7fr-5fr
-  )
-
-  div(
-    class = "row",
-    boardHeader(title = "My Library", info_link = ns("loading_userlibrary")),
-    tab_content
-  ) ## div
-}
-
 SharedDatasetsUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
