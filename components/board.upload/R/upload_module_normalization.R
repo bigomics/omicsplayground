@@ -31,7 +31,7 @@ upload_module_normalization_server <- function(
         pars <- get_model_parameters()
         shiny::req(pars)
         batch.pars <- pars$batch.pars
-        if(length(batch.pars)==0) batch.pars <- "<none>"
+        if (length(batch.pars) == 0) batch.pars <- "<none>"
         paste("Batch parameters:", paste(batch.pars, collapse = "+"), "\n")
       })
 
@@ -278,7 +278,8 @@ upload_module_normalization_server <- function(
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
         shiny::withProgress(
           message = "Comparing batch-correction methods...",
-          value = 0.3, {
+          value = 0.3,
+          {
             res <- playbase::compare_batchcorrection_methods(
               X1, samples,
               pheno = NULL,
@@ -573,8 +574,8 @@ upload_module_normalization_server <- function(
         pos0 <- out.res$pos[["pca"]]
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
-        names(pos.list) <- sub("ComBat","auto-ComBat",names(pos.list))
-        
+        names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
+
         pheno <- res$pheno
         xdim <- length(res$pheno)
         col1 <- factor(pheno)
@@ -602,7 +603,7 @@ upload_module_normalization_server <- function(
         ## pos0 <- res$pos[["normalized"]]
         pos0 <- out.res$pos[["pca"]]
         method <- input$bec_method
-        
+
         if (!input$batchcorrect) {
           pos1 <- pos0
         } else {
@@ -621,7 +622,7 @@ upload_module_normalization_server <- function(
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-        method <- sub("ComBat","auto-ComBat",method)
+        method <- sub("ComBat", "auto-ComBat", method)
         par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
         plot(pos0,
           col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
@@ -731,8 +732,10 @@ upload_module_normalization_server <- function(
                 shiny::conditionalPanel(
                   "input.remove_outliers == true",
                   ns = ns,
-                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:",
-                                     1, 12, 6, 1)
+                  shiny::sliderInput(
+                    ns("outlier_threshold"), "Select threshold:",
+                    1, 12, 6, 1
+                  )
                 ),
                 br()
               ),
