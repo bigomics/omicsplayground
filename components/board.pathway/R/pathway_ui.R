@@ -66,7 +66,15 @@ PathwayUI <- function(id) {
           functional_plot_wikipathway_graph_ui(
             ns("wikipathway_graph"),
             title = "WikiPathway",
-            info.text = "Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below.",
+            info.text = "Visualization of the WikiPathway selected on the Enrichment table.",
+            info.methods = "WikiPathway representation [1]. Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+            info.references = list(
+              list(
+                "Pico, A. R., Kelder, T., Van Iersel, M. P., Hanspers, K., Conklin, B. R., & Evelo, C. (2008). WikiPathways: pathway editing for the people. PLoS biology, 6(7), e184.",
+                "https://doi.org/10.1371/journal.pbio.0060184"
+              )
+            ),
+            info.extra_link = "https://www.wikipathways.org/",
             caption = "Visualisation of the selected WikiPathway with highlighted up- and down-regulated genes.",
             info.width = "350px",
             label = "a",
@@ -108,7 +116,15 @@ PathwayUI <- function(id) {
           functional_plot_reactome_graph_ui(
             ns("reactome_graph"),
             title = "Reactome pathway",
-            info.text = "Reactome (http://reactome.org) is a free, open-source, curated and peer-reviewed knowledge-base of biomolecular pathways. Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below.",
+            info.text = "Visualization of the Reactome selected on the Enrichment table.",
+            info.methods = "Reactome representation [1]. Genes are colored according to their upregulation (red) or downregulation (green) in the contrast profile.",
+            info.references = list(
+              list(
+                "Sidiropoulos, K., Viteri, G., Sevilla, C., Jupe, S., Webber, M., Orlic-Milacic, M., ... & Fabregat, A. (2017). Reactome enhanced pathway visualization. Bioinformatics, 33(21), 3461-3467.",
+                "https://doi.org/10.1093/bioinformatics/btx441"
+              )
+            ),
+            info.extra_link = "https://reactome.org/",
             caption = "Visualisation of the selected Reactome pathway with highlighted up (red) and down (blue) regulated genes.",
             info.width = "350px",
             label = "a",
@@ -147,7 +163,15 @@ PathwayUI <- function(id) {
           functional_plot_go_network_ui(
             id = ns("GO_network"),
             title = "Gene Ontology graph",
-            info.text = "Gene Ontology (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with 'child' terms being more specialized than their 'parent' terms. The graph is interactive. You can move the graph and zoom in using the mouse.",
+            info.text = "Visualization of the Gene Ontology selected on the GO score table.",
+            info.methods = "Gene Ontology representation [1]. Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Gene Ontology (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with 'child' terms being more specialized than their 'parent' terms. The graph is interactive. You can move the graph and zoom in using the mouse.",
+            info.references = list(
+              list(
+                "Ashburner, M., Ball, C. A., Blake, J. A., Botstein, D., Butler, H., Cherry, J. M., ... & Sherlock, G. (2000). Gene ontology: tool for the unification of biology. Nature genetics, 25(1), 25-29.",
+                "https://doi.org/10.1038/75556"
+              )
+            ),
+            info.extra_link = "https://geneontology.org/",
             caption = "The GO graph represents the enrichment of the GO terms as a tree structure.",
             height = c("60%", TABLE_HEIGHT_MODAL),
             width = c("60%", "100%"),
