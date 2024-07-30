@@ -82,7 +82,7 @@ DataViewBoard <- function(id, pgx) {
       {
         shiny::req(input$data_type)
         dbg("[dataView:observer_data_type] 0: called")
-        
+
         if (input$data_type %in% c("counts", "abundance")) {
           features <- rownames(pgx$counts)
         } else {
@@ -144,7 +144,8 @@ DataViewBoard <- function(id, pgx) {
 
       if (!is.null(input$data_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(
-          pgx$Y, input$data_samplefilter)
+          pgx$Y, input$data_samplefilter
+        )
       }
       # validate samples
       validate(need(length(samples) > 0, "No samples remaining after filtering."))
@@ -300,7 +301,7 @@ DataViewBoard <- function(id, pgx) {
         shiny::validate(shiny::need("counts" %in% names(pgx), "no 'counts' in object."))
 
         dbg("[observe:getCountStatistics] reacted")
-        
+
         subtt <- NULL
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
