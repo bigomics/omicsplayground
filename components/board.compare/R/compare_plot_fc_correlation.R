@@ -14,15 +14,20 @@
 #' @export
 compare_plot_fc_correlation_ui <- function(id,
                                            height,
+                                           title,
+                                           info.text,
+                                           info.methods,
+                                           info.extra_link,
                                            width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
 
   PlotModuleUI(ns("plot"),
-    title = "FC Correlation",
+    title = title,
     plotlib = "plotly",
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width

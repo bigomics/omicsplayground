@@ -3,10 +3,14 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
+compare_plot_gene_corr_ui <- function(
+  id,
+  title,
+  info.text,
+  label = "",
+  height = c(600, 800)
+) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
 
   genecorr.opts <- shiny::tagList(
     withTooltip(shiny::selectInput(ns("colorby"), "Color by:", choices = NULL, multiple = FALSE),
@@ -18,9 +22,9 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
   PlotModuleUI(
     ns("plot"),
     plotlib = "plotly",
-    title = "Gene correlation",
+    title = title,
     label = "c",
-    info.text = info_text,
+    info.text = info.text,
     options = genecorr.opts,
     height = height,
     width = c("auto", "100%"),

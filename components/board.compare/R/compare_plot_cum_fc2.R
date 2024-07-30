@@ -15,15 +15,16 @@
 compare_plot_cum_fc2_ui <- function(id,
                                     height,
                                     width,
+                                    title,
+                                    info.text,
                                     label) {
   ns <- shiny::NS(id)
-  info_text <- "Barplot showing the fold changes on dataset 2"
 
   PlotModuleUI(ns("plot"),
-    title = "Foldchange (Dataset 2)",
+    title = title,
     plotlib = "plotly",
     label = label,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
