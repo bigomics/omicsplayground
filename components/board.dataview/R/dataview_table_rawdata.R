@@ -141,13 +141,13 @@ dataview_table_rawdata_server <- function(id,
       dbg("[dataview_rawdata:table_data] create dataframe")
       pp <- rownames(x)
       feature <- pgx$genes[pp, "feature"]
-      symbol <- pgx$genes[pp, "symbol"]      
+      symbol <- pgx$genes[pp, "symbol"]
       gene.title <- pgx$genes[pp, "gene_title"]
       gene.title <- substring(gene.title, 1, 50)
-      
+
       df <- data.frame(
         gene = feature,
-        symbol = symbol,          
+        symbol = symbol,
         title = gene.title,
         rho = rho,
         SD = sdx,
@@ -155,9 +155,9 @@ dataview_table_rawdata_server <- function(id,
         as.matrix(x),
         check.names = FALSE
       )
-      
+
       ## if symbol and feature as same, drop symbol column
-      if(mean(head(df$gene,1000)==head(df$symbol,1000)) > 0.8) {
+      if (mean(head(df$gene, 1000) == head(df$symbol, 1000)) > 0.8) {
         df$symbol <- NULL
       }
 
