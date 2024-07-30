@@ -70,18 +70,15 @@ LoadingUI <- function(id) {
         loading_tsne_ui(
           ns("tsne"),
           title = "Signature t-SNE",
-          info.text = "Each dot corresponds to a specific comparison. Signatures/datasets that are clustered closer together, are more similar.",
-          info.methods = "This are the methods [1] explained with references [2].",
+          info.text = "Scatter plot displaying the t-SNE clustering of the available contrasts. Each dot corresponds to a specific comparison.",
+          info.methods = "t-SNE is a non-linear dimensionality reduction method that enables visualization of high-dimensional data in a low-dimensional space, typically 2D or 3D. Unlike linear dimensionality reduction techniques like PCA, t-SNE may separate data that is not linearly separable. Signatures/datasets that are clustered closer together, are more similar. Performed using the Rtsne R package [1].",
           info.references = list(
             list(
-              "Escriba et al.",
-              "http.google.com"
-            ),
-            list(
-              "Ningu et al.",
-              "test.com"
+              "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17",
+              "https://doi.org/10.32614/CRAN.package.Rtsne"
             )
           ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 340px)", "70vh"),
           width = c("auto", "100%")
@@ -109,7 +106,15 @@ LoadingUI <- function(id) {
         loading_tsne_ui(
           ns("tsne_public"),
           title = "Signature t-SNE",
-          info.text = "Each dot corresponds to a specific comparison/signature. Signatures that are clustered closer together, are more similar.",
+          info.text = "Scatter plot displaying the t-SNE clustering of the available contrasts. Each dot corresponds to a specific comparison.",
+          info.methods = "t-SNE is a non-linear dimensionality reduction method that enables visualization of high-dimensional data in a low-dimensional space, typically 2D or 3D. Unlike linear dimensionality reduction techniques like PCA, t-SNE may separate data that is not linearly separable. Signatures/datasets that are clustered closer together, are more similar. Performed using the Rtsne R package [1].",
+          info.references = list(
+            list(
+              "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17",
+              "https://doi.org/10.32614/CRAN.package.Rtsne"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
           height = c("calc(100vh - 330px)", 700),
           width = c("auto", "100%")

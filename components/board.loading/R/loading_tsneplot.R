@@ -9,6 +9,7 @@ loading_tsne_ui <- function(
     info.text,
     info.references = NULL,
     info.methods = NULL,
+    info.extra_link = NULL,
     caption,
     label = "",
     height,
@@ -22,6 +23,7 @@ loading_tsne_ui <- function(
     info.text = info.text,
     info.references = info.references,
     info.methods = info.methods,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     caption = caption,
@@ -199,7 +201,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             showticklabels = FALSE
           )
         )
-
+      fig <- plotly_default(fig)
       fig
     }
 
@@ -217,6 +219,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           )
         )
       p <- plotly::style(p, marker.size = marker_size)
+      p <- plotly_modal_default(p)
       p
     }
 
