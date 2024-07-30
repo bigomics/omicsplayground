@@ -123,12 +123,12 @@ DataViewBoard <- function(id, pgx) {
         features <- intersect(names(sort(-fc2)), features) ## most var gene??
         sel.feature <- features[1]
         features <- sort(features)
-        p1 <- head(rownames(pgx$genes),1000)
-        p2 <- head(pgx$genes$symbol,1000)
-        by.symbol <- mean(p1 == p2, na.rm=TRUE) > 0.8
-        if(!by.symbol) {
-          gene <- pgx$genes[match(features,rownames(pgx$genes)),"symbol"]
-          feature_gene <- paste0(gene,"_",features)
+        p1 <- head(rownames(pgx$genes), 1000)
+        p2 <- head(pgx$genes$symbol, 1000)
+        by.symbol <- mean(p1 == p2, na.rm = TRUE) > 0.8
+        if (!by.symbol) {
+          gene <- pgx$genes[match(features, rownames(pgx$genes)), "symbol"]
+          feature_gene <- paste0(gene, "_", features)
           names(features) <- feature_gene
           features <- features[order(names(features))]
         }
@@ -140,7 +140,7 @@ DataViewBoard <- function(id, pgx) {
             features[1001:length(features)]
           )
         }
-        
+
         shiny::updateSelectizeInput(
           session, "search_gene",
           choices = features,

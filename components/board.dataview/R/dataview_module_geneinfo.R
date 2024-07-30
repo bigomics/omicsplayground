@@ -46,11 +46,11 @@ dataview_module_geneinfo_server <- function(id,
 
       jj <- match(gene, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-      
+
       dbg("[geneinfo] gene/feature = ", gene)
-      dbg("[geneinfo] jj = ", jj)      
+      dbg("[geneinfo] jj = ", jj)
       dbg("[geneinfo] symbol = ", symbol)
-      
+
       ## eg <- AnnotationDbi::mget(symbol,
       ##   envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,
       ##   ifnotfound = NA
@@ -75,8 +75,10 @@ dataview_module_geneinfo_server <- function(id,
         }
 
         ## reorder
-        nn <- intersect(c("symbol", "name", "map_location", "summary", names(info)),
-                        names(info))
+        nn <- intersect(
+          c("symbol", "name", "map_location", "summary", names(info)),
+          names(info)
+        )
         info <- info[nn]
         info$symbol <- paste0(info$symbol, "<br>")
 
