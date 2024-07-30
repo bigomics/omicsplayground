@@ -230,9 +230,6 @@ app_ui <- function(x) {
             bigdash::navbarDropdown(
               "Datasets",
               style = "border: 1px; padding: 2px 6px;",
-              # tags$li(
-              #  actionLink("menu_upload_new", "Upload new")
-              # ),
               bigdash::navbarDropdownTab(
                 "Upload new",
                 "upload-tab"
