@@ -64,23 +64,13 @@ dataview_plot_expression_server <- function(id,
       }
 
       pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
+      dbg("[DataView:plot_expression_server] data_type = ",data_type)
       if (data_type %in% c("counts", "abundance")) {
         gx <- pgx$counts[pp, samples]
-        if (data_type == "counts") {
-          ylab <- "Expression"
-        } else {
-          ylab <- "Abundance"
-        }
-      } else if (data_type == "CPM") {
-        gx <- 2**pgx$X[pp, samples]
-        ylab <- "Expression (CPM)"
+        ylab <- tspan("Counts")
       } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
-        if (data_type == "logCPM") {
-          ylab <- "Expression (log2)"
-        } else {
-          ylab <- "Abundance (log2)"
-        }
+        ylab <- tspan("Counts (log2)")
       }
 
       geneplot_type <- "barplot"
