@@ -8,6 +8,9 @@ wordcloud_plot_wordtsne_ui <- function(
     height,
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption) {
   ns <- shiny::NS(id)
 
@@ -26,6 +29,9 @@ wordcloud_plot_wordtsne_ui <- function(
     label = "c",
     plotlib = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = wordtsne_options,
     height = height,

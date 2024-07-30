@@ -31,23 +31,47 @@ WordCloudUI <- function(id) {
         wordcloud_plot_enrichment_ui(
           ns("gseaplots"),
           title = "Enrichment plots",
-          info.text = "Select a keyword by clicking a word in the 'Enrichment table'. Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group.",
-          caption = "Keyword enrichment plots for all available contrasts. ",
+          info.text = "Enrichment plots for all available contrasts for genesets that contain the keyword selected on the Enrichment table.",
+          info.methods = "Keyword enrichment is computed by running GSEA [1] on the enrichment score profile for all contrasts. The test is defined as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the keyword in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group.",
+          info.references = list(
+            list(
+              "Shi, J., & Walker, M. G. (2007). Gene set enrichment analysis (GSEA) for interpreting gene expression profiles. Current Bioinformatics, 2(2), 133-137.",
+              "https://doi.org/10.2174/157489307780618231"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
+          caption = "Keyword enrichment plots for all available contrasts.",
           height = halfH
         ),
         wordcloud_plot_wordcloud_ui(
           ns("wordcloud"),
           height = halfH,
           title = "Word cloud",
-          info.text = "In the plot settings, users can exclude certain words from the figure, or choose the color palette. The sizes of the words are relative to the normalized enrichment score (NES) from the GSEA computation. Keyword enrichment is computed by running GSEA on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description.",
+          info.text = "Word cloud of the most enriched keywords for the data set. Word can be excluded using the {Exclude words} plot setting; additionally the color palette of the plot can be selected on the {Colors} plot setting.",
+          info.methods = "Keyword enrichment is computed by running GSEA [1] on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description. The sizes of the words are relative to the normalized enrichment score (NES) from the GSEA computation.",
+          info.references = list(
+            list(
+              "Shi, J., & Walker, M. G. (2007). Gene set enrichment analysis (GSEA) for interpreting gene expression profiles. Current Bioinformatics, 2(2), 133-137.",
+              "https://doi.org/10.2174/157489307780618231"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "Word cloud of the most enriched keywords for the data set. Words are taken from the title/descriptionof the geneset."
         ),
         wordcloud_plot_wordtsne_ui(
           ns("wordtsne"),
           height = halfH,
           title = "Word t-SNE",
-          info.text = "Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword.",
-          caption = "T-SNE plot of keywords that were found in the title/description of gene sets. "
+          info.text = "Clustering plot of the keywords of the genesets. The clustering method can be selected under the {Clustering algorithm} plot setting.",
+          info.methods = "For each keyword enrichment is computed using GSEA [1] on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in blue. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword. Keywords that are often found together in title/descriptions are placed close together on the plot.",
+          info.references = list(
+            list(
+              "Shi, J., & Walker, M. G. (2007). Gene set enrichment analysis (GSEA) for interpreting gene expression profiles. Current Bioinformatics, 2(2), 133-137.",
+              "https://doi.org/10.2174/157489307780618231"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
+          caption = "Clustering plot of keywords that were found in the title/description of gene sets."
         )
       ),
       bslib::layout_columns(
