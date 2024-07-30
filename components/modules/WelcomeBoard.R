@@ -93,7 +93,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-7",
         h3("I'm an existing user..."),
         shiny::actionButton(
-          ns("btn_upload_data"),
+          ns("btn_upload_new"),
           label = "Upload new data",
           class = "btn btn-outline-info welcome-btn"
         ),
@@ -165,7 +165,7 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
 
     observeEvent(
       {
-        input$btn_upload_data
+        input$btn_upload_new
       },
       {
         bigdash.selectTab(session, selected = "upload-tab")
