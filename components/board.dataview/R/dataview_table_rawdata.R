@@ -139,30 +139,35 @@ dataview_table_rawdata_server <- function(id,
       }
 
       dbg("[dataview_rawdata:table_data] create dataframe")
-      xgenes <- pgx$genes[rownames(x), "gene_name"]
-      gene.title <- playdata::GENE_TITLE[toupper(xgenes)]
+      pp <- rownames(x)
+      feature <- pgx$genes[pp, "feature"]
+      symbol <- pgx$genes[pp, "symbol"]      
+      gene.title <- pgx$genes[pp, "gene_title"]
       gene.title <- substring(gene.title, 1, 50)
-      if (is.null(rho)) {
-        x <- data.frame(
-          gene = xgenes, title = gene.title,
-          AVG = avg,
-          as.matrix(x), check.names = FALSE
-        )
-      } else {
-        x <- data.frame(
-          gene = xgenes, title = gene.title,
-          rho = rho, SD = sdx, AVG = avg,
-          as.matrix(x), check.names = FALSE
-        )
+      
+      df <- data.frame(
+        gene = feature,
+        symbol = symbol,          
+        title = gene.title,
+        rho = rho,
+        SD = sdx,
+        AVG = avg,
+        as.matrix(x),
+        check.names = FALSE
+      )
+      
+      ## if symbol and feature as same, drop symbol column
+      if(mean(head(df$gene,1000)==head(df$symbol,1000)) > 0.8) {
+        df$symbol <- NULL
       }
-      x <- x[order(-x$rho, -x$SD), , drop = FALSE]
 
       if (DATATYPEPGX == "proteomics") {
-        colnames(x)[1] <- "protein"
+        colnames(df)[1] <- "protein"
       }
+      df <- df[order(-df$rho, -df$SD), , drop = FALSE]
 
       list(
-        x = x,
+        df = df,
         x95 = x95,
         x99 = x99
       )
@@ -170,13 +175,13 @@ dataview_table_rawdata_server <- function(id,
 
     rawdataTable.RENDER <- function() {
       dt <- table_data()
-      req(dt, dt$x)
+      req(dt, dt$df)
 
-      numcols <- grep("gene|title", colnames(dt$x), value = TRUE, invert = TRUE)
+      numcols <- grep("gene|title", colnames(dt$df), value = TRUE, invert = TRUE)
       tabH <- 700 ## height of table
 
       DT::datatable(
-        dt$x,
+        dt$df,
         rownames = FALSE,
         fillContainer = TRUE, #
         class = "compact hover",
@@ -204,7 +209,7 @@ dataview_table_rawdata_server <- function(id,
 
     rawdataTable.RENDER_modal <- shiny::reactive({
       dt <- rawdataTable.RENDER()
-      dt$x$options$scrollY <- SCROLLY_MODAL
+      dt$df$options$scrollY <- SCROLLY_MODAL
       dt
     })
 
