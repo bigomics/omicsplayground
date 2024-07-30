@@ -553,7 +553,7 @@ UploadBoard <- function(id,
       shiny::HTML(upload_info)
     })
 
-    
+
     ## =====================================================================
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
@@ -965,7 +965,7 @@ UploadBoard <- function(id,
 
     # observe show_modal and start modal
     shiny::observeEvent(
-      list( new_upload() ),
+      list(new_upload()),
       {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
@@ -1007,10 +1007,10 @@ UploadBoard <- function(id,
             #
             closeOnClickOutside = FALSE
           )
-          return(NULL)          
+          return(NULL)
         }
 
-        
+
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
