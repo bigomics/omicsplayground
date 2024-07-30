@@ -61,6 +61,7 @@ enrichment_plot_volcanoall_server <- function(id,
                                               gs_fdr,
                                               gs_lfc,
                                               calcGsetMeta,
+                                              gset_selected,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -102,7 +103,8 @@ enrichment_plot_volcanoall_server <- function(id,
         Q = matQ,
         sel.gsets = sel.gsets,
         fdr = fdr,
-        lfc = lfc
+        lfc = lfc,
+        gset_selected = gset_selected()
       )
       pd
     })
@@ -131,7 +133,10 @@ enrichment_plot_volcanoall_server <- function(id,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down
+        color_up_down = input$color_up_down,
+        by_sig = FALSE,
+        highlight = pd[["gset_selected"]],
+        label = pd[["gset_selected"]]
       )
 
 

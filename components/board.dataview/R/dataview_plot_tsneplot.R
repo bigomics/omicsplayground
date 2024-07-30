@@ -68,15 +68,23 @@ dataview_plot_tsne_server <- function(id,
       gx <- NULL
       ylab <- NULL
 
-      if (data_type == "counts") {
+      if (data_type %in% c("counts", "abundance")) {
         gx <- pgx$counts[pp, samples]
-        ylab <- "expression (counts)"
+        if (data_type == "counts") {
+          ylab <- "expression (counts)"
+        } else {
+          ylab <- "expression (abundance)"
+        }
       } else if (data_type == "CPM") {
         gx <- 2**pgx$X[pp, samples]
         ylab <- "expression (CPM)"
-      } else if (data_type == "logCPM") {
+      } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
-        ylab <- "expression (log2CPM)"
+        if (data_type == "logCPM") {
+          ylab <- "expression (log2CPM)"
+        } else {
+          ylab <- "expression (log2)"
+        }
       }
 
       pos <- pgx$tsne2d[samples, ]

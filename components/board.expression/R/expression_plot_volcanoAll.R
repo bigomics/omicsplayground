@@ -68,18 +68,16 @@ expression_plot_volcanoAll_ui <- function(id,
 expression_plot_volcanoAll_server <- function(id,
                                               pgx,
                                               getAllContrasts,
-                                              features,
                                               fdr,
                                               lfc,
+                                              genes_selected,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::req(features())
 
       # Input variables
-      features <- features()
       ct <- getAllContrasts()
       FC <- ct$F
       Q <- ct$Q
@@ -87,13 +85,6 @@ expression_plot_volcanoAll_server <- function(id,
       lfc <- as.numeric(lfc())
       comp <- names(FC)
       shiny::req(length(comp) > 0)
-
-      # Subset genes if requrired
-      sel.genes <- rownames(pgx$X)
-      if (features != "<all>") {
-        gset <- playdata::getGSETS(features)
-        sel.genes <- unique(unlist(gset))
-      }
 
       ## combined matrix for output
       matF <- do.call(cbind, FC)
@@ -107,9 +98,11 @@ expression_plot_volcanoAll_server <- function(id,
         comp = comp,
         fdr = fdr,
         lfc = lfc,
-        sel.genes = sel.genes,
         FC = FC,
-        Q = Q
+        Q = Q,
+        sel.genes = genes_selected()$sel.genes,
+        lab.genes = genes_selected()$lab.genes,
+        fc.genes = rownames(FQ)
       )
 
       return(pd)
@@ -126,11 +119,13 @@ expression_plot_volcanoAll_server <- function(id,
       ## meta tables
       fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
       q_cols <- grep("q.*", colnames(pd[["FQ"]]))
-      fc <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), fc_cols, drop = FALSE]
-      qv <- pd[["FQ"]][which(rownames(pd[["FQ"]]) %in% sel.genes), q_cols, drop = FALSE]
+      fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
+      qv <- pd[["FQ"]][, q_cols, drop = FALSE]
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
-      rm(pd)
+
+
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,
@@ -143,8 +138,14 @@ expression_plot_volcanoAll_server <- function(id,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down
+        color_up_down = input$color_up_down,
+        names = pd[["fc.genes"]],
+        highlight = pd[["sel.genes"]],
+        label = pd[["lab.genes"]],
+        by_sig = FALSE
       )
+
+      all_plts
 
       return(all_plts)
     }
@@ -164,13 +165,6 @@ expression_plot_volcanoAll_server <- function(id,
 
       return(fig)
     }
-
-    #    shiny::observeEvent(plotly::event_data("plotly_relayout"),{
-    #      shiny::req(modal_plotly.RENDER())
-    #      ns <- session$ns
-    #      print(ns("test"))
-    #      shinyHugePlot::updatePlotlyH(session, "expression-volcanoAll-pltmod-renderfigure", plotly::event_data("plotly_relayout"), ds)
-    #    })
 
     PlotModuleServer(
       "pltmod",

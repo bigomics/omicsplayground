@@ -70,8 +70,8 @@ CorrelationUI <- function(id) {
           col_widths = 12,
           correlation_plot_barplot_ui(
             id = ns("cor_barplot"),
-            title = "Top correlated genes",
-            info.text = "Barplot of the highest correlated genes in respect to the selected {Gene}. The dark grey bars correspond to the 'partial correlation', which relation is computed using the amount of genes specified under Settings > Options {Nr. of genes to compute partial correlation}.",
+            title = "Top correlated features",
+            info.text = "Barplot of the highest correlated features in respect to the selected {Gene}. The dark grey bars correspond to the 'partial correlation', which relation is computed using the amount of genes specified under Settings > Options {Nr. of genes to compute partial correlation}.",
             info.methods = "The barplot displays the Pearson correlation value (computed using the core R stats package). The 'partial correlation' corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction, it does so using the glasso algorithm (from the glasso R package [1]) to estimate a sparse inverse covariance matrix and derive partial correlations.",
             info.references = list(
               list(
@@ -80,7 +80,7 @@ CorrelationUI <- function(id) {
               )
             ),
             info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
-            caption = "Barplot showing the highest correlated genes with respect to the selected gene.",
+            caption = "Barplot showing the highest correlated feature with respect to the selected feature.",
             label = "",
             height = c("50%", "70vh"),
             width = c("auto", "100%")

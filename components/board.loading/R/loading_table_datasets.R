@@ -77,7 +77,6 @@ loading_table_datasets_server <- function(id,
       if (is.null(auth$logged) || !auth$logged) {
         return(NULL)
       }
-      dbg("[loading_table_datasets_server:getPGXINFO] reacted!")
 
       ## upstream trigger
       reload_pgxdir()
@@ -92,7 +91,6 @@ loading_table_datasets_server <- function(id,
 
       ## before reading the info file, we need to update for new files
       if (need_update) {
-        dbg("[loading_server:getPGXINFO] updating pgxdir =", pgxdir)
         pgx.showSmallModal("Updating your library<br>Please wait...")
         shiny::withProgress(message = "Updating your library...", value = 0.33, {
           playbase::pgxinfo.updateDatasetFolder(
@@ -111,8 +109,6 @@ loading_table_datasets_server <- function(id,
     })
 
     getFilteredPGXINFO <- shiny::reactive({
-      dbg("[loading_table_datasets_server:getFilteredPGXINFO] reacted!")
-
       ## get the filtered table of pgx datasets
       df <- getPGXINFO()
       if (is.null(df)) {

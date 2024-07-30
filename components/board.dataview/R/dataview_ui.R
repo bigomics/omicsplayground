@@ -16,8 +16,8 @@ DataViewInputs <- function(id) {
 
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("search_gene"), "Gene:", choices = NULL),
-      "Enter a gene of interest for the analysis.",
+    withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
+      tspan("Type a gene of interest."),
       placement = "top"
     ),
     withTooltip(
@@ -41,8 +41,12 @@ DataViewInputs <- function(id) {
       "input.data_options % 2 == 1",
       ns = ns,
       withTooltip(
-        shiny::radioButtons(ns("data_type"), "Data type:",
-          choices = c("counts", "logCPM"), selected = "logCPM", inline = TRUE
+        shiny::radioButtons(
+          ns("data_type"), "Data type:",
+          choiceNames = c(tspan("counts"), "log2"),
+          choiceValues = c("counts", "log2"),
+          selected = "log2",
+          inline = TRUE
         ),
         "Choose an input data type for the analysis.",
         placement = "bottom"
@@ -68,13 +72,13 @@ DataViewUI <- function(id) {
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
-    # Gene overview tab #####
+    # Overview tab #####
     shiny::tabPanel(
-      "Gene overview",
+      "Overview",
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("This Gene overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
+        bs_alert("The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
         bslib::layout_columns(
           height = "100%",
           col_widths = c(2, 10),
@@ -185,7 +189,7 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes."),
+        bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total counts per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as proportion of ribosomal genes."),
         bslib::layout_columns(
           col_widths = c(4, 4, 4),
           dataview_plot_totalcounts_ui(
@@ -193,7 +197,7 @@ DataViewUI <- function(id) {
             label = "a",
             title = "Total counts",
             info.text = "Average total counts by sample. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot of the average number of counts (abundance) for each group.",
+            caption = "Barplot of the average counts for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
@@ -219,18 +223,18 @@ DataViewUI <- function(id) {
           col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            title = "Dataset abundance of major gene types",
+            title = "Proportion of major gene types",
             info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot showing the dataset relative abundance of counts in terms of major gene types.",
+            caption = "Barplot showing the proportion of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             label = "d"
           ),
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
-            title = "Abundance of major gene types per group",
+            title = "Proportion of major gene types per sample/group",
             info.text = "Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot showing the group or sample relative abundance of counts in terms of major gene types.",
+            caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             label = "e",
             width = c("auto", "100%")
@@ -240,16 +244,16 @@ DataViewUI <- function(id) {
     ),
     # counts table tab #####
     shiny::tabPanel(
-      "Counts table",
+      "Data table",
       bslib::layout_columns(
         col_widths = 12,
         row_heights = list("auto", 1),
         height = fullH,
-        bs_alert("In Counts table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
+        bs_alert(tspan("In Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
-          title = "Gene expression table",
-          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
+          title = tspan("Gene expression table"),
+          info.text = tspan("The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."),
           caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")

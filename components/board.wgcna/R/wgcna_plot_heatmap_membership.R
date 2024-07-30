@@ -39,22 +39,28 @@ wgcna_plot_heatmap_membership_server <- function(id,
 
       MEs <- out$net$MEs
       if (input$eigen_cov) {
-        rho1 <- cov(MEs, out$datExpr, use = "pairwise")
+        ## rho1 <- cov(MEs, out$datExpr, use = "pairwise")
+        rho1 <- cov(MEs, out$datExpr, use = "pairwise.complete.obs")
         rho1[is.na(rho1) | is.infinite(rho1)] <- 0
 
-        rho2 <- cov(out$datTraits, out$datExpr, use = "pairwise")
+        ## rho2 <- cov(out$datTraits, out$datExpr, use = "pairwise")
+        rho2 <- cov(out$datTraits, out$datExpr, use = "pairwise.complete.obs")
         rho2[is.na(rho2) | is.infinite(rho2)] <- 0
 
-        rho3 <- cov(t(rho2), t(rho1), use = "pairwise") ## cor or cov??
+        ## rho3 <- cov(t(rho2), t(rho1), use = "pairwise") ## cor or cov??
+        rho3 <- cov(t(rho2), t(rho1), use = "pairwise.complete.obs")
         rho3[is.na(rho3) | is.infinite(rho3)] <- 0
       } else {
-        rho1 <- cor(MEs, out$datExpr, use = "pairwise")
+        ## rho1 <- cor(MEs, out$datExpr, use = "pairwise")
+        rho1 <- cor(MEs, out$datExpr, use = "pairwise.complete.obs")
         rho1[is.na(rho1) | is.infinite(rho1)] <- 0
 
-        rho2 <- cor(out$datTraits, out$datExpr, use = "pairwise")
+        ## rho2 <- cor(out$datTraits, out$datExpr, use = "pairwise")
+        rho2 <- cor(out$datTraits, out$datExpr, use = "pairwise.complete.obs")
         rho2[is.na(rho2) | is.infinite(rho2)] <- 0
 
-        rho3 <- cor(t(rho2), t(rho1), use = "pairwise")
+        ## rho3 <- cor(t(rho2), t(rho1), use = "pairwise")
+        rho3 <- cor(t(rho2), t(rho1), use = "pairwise.complete.obs")
         rho3[is.na(rho3) | is.infinite(rho3)] <- 0
       }
 

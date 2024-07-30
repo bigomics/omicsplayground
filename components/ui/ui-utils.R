@@ -19,8 +19,6 @@ visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom 
   tmp.html <- paste0(tempfile(), "-visnet.html")
   tmp.png <- paste0(tempfile(), "-webshot.png")
   visNetwork::visSave(vis2, file = tmp.html)
-  dbg("[visPrint] width = ", width)
-  dbg("[visPrint] height = ", height)
   webshot2::webshot(
     url = tmp.html,
     file = tmp.png,
@@ -31,7 +29,6 @@ visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom 
     vwidth = width,
     vheight = height
   )
-  dbg("[visPrint] tmp.png = ", tmp.png)
   if (is.pdf) {
     cmd <- paste("convert", tmp.png, "-density 600", file)
     system(cmd)
@@ -251,13 +248,13 @@ addSettings <- function(ns, session, file) {
   plot_ns <- sub(".*-(.*?)-.*", "\\1", ns(""))
   # Get board inputs
   board_inputs <- names(.subset2(session, "parent")$input)[grepl(board_ns, names(.subset2(session, "parent")$input))]
-  board_inputs <- board_inputs[substr(board_inputs, 1, nchar(board_ns)+1) == paste0(board_ns, "-")]
+  board_inputs <- board_inputs[substr(board_inputs, 1, nchar(board_ns) + 1) == paste0(board_ns, "-")]
   # Get board settings
   board_settings <- board_inputs[grep("^[^-]*-[^-]*$", board_inputs)]
   # Remove `data_options`, `tabs` `board_info`
   board_settings <- board_settings[!grepl("data_options|tabs|info|options|compute|pdx_runbutton", board_settings)]
   # Get settings values
-  board_settings_values <- lapply(board_settings, function(x){
+  board_settings_values <- lapply(board_settings, function(x) {
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
     if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
@@ -275,7 +272,7 @@ addSettings <- function(ns, session, file) {
   # Get plot settings
   plot_settings <- plot_inputs[grep("^[^-]*-[^-]*-[^-]*$", plot_inputs)]
   # Get plot values
-  plot_settings_values <- lapply(plot_settings, function(x){
+  plot_settings_values <- lapply(plot_settings, function(x) {
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
     if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
@@ -290,7 +287,7 @@ addSettings <- function(ns, session, file) {
 
   # Get loaded metadata
   timestamp <- as.character(format(Sys.time(), "%a %b %d %X %Y"))
-  version <-scan(file.path(OPG, "VERSION"), character())[1]
+  version <- scan(file.path(OPG, "VERSION"), character())[1]
   dataset <- LOADEDPGX
   datatype <- DATATYPEPGX
   metadata <- data.frame(
@@ -307,7 +304,7 @@ addSettings <- function(ns, session, file) {
 
   # Correct column names
   df_names <- lapply(df$setting, function(x) {
-  inputLabelDictionary(board_ns, x)
+    inputLabelDictionary(board_ns, x)
   }) |> unlist()
   df$setting <- df_names
 
@@ -316,16 +313,16 @@ addSettings <- function(ns, session, file) {
     colhead = list(
       fg_params = list(
         fontface = "bold", # Bold font for headers
-        hjust = 0,         # Left-align the text
-        x = 0              # Align text to the left within the cell
+        hjust = 0, # Left-align the text
+        x = 0 # Align text to the left within the cell
       )
     ),
     core = list(
       fg_params = list(
         fontface = c(
-          rep("plain", nrow(metadata)+1),
+          rep("plain", nrow(metadata) + 1),
           "bold",
-          rep("plain", nrow(plot_table)+1),
+          rep("plain", nrow(plot_table) + 1),
           "bold",
           rep("plain", nrow(settings_table))
         ),
@@ -447,4 +444,38 @@ inputLabelDictionary <- function(board_ns, inputId) {
   val <- dictionary[[board_ns]][[inputId]]
   if (is.null(val)) val <- inputId
   return(val)
+}
+
+
+tspan <- function(text) {
+  if (is.null(text)) {
+    return(NULL)
+  }
+  if (length(text) == 0) {
+    return(NULL)
+  }
+  text <- paste(text, collapse = " ")
+  if (nchar(text) == 0) {
+    return("")
+  }
+  if (!grepl("gene|counts|transcriptomics|rna-seq|logcpm",
+    text,
+    ignore.case = TRUE
+  )) {
+    return(text)
+  }
+  keys <- c(
+    "gene", "Gene", "GENE", "counts", "Counts", "COUNTS",
+    "transcriptomics", "Transcriptomics", "RNA-seq",
+    "logCPM", "log2p1"
+  )
+  for (k in keys) {
+    tt <- i18n$t(k)
+    text <- gsub(k, tt, text, ignore.case = FALSE)
+  }
+  text
+}
+
+tspan.SAVE <- function(label) {
+  shiny::span(class = "i18n", `data-key` = label, label)
 }

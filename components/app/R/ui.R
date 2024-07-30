@@ -209,6 +209,7 @@ app_ui <- function(x) {
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
+        shiny.i18n::usei18n(i18n),
         header,
         title = "Omics Playground v3",
         theme = big_theme2,
@@ -221,9 +222,30 @@ app_ui <- function(x) {
             height = "30"
             # width = "110",
           ),
-          left = NULL,
           center = tags$div(
             shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+          ),
+          left = tags$div(
+            style = "padding: 0 0 0 20px;",
+            bigdash::navbarDropdown(
+              "Datasets",
+              style = "border: 1px; padding: 2px 6px;",
+              # tags$li(
+              #  actionLink("menu_upload_new", "Upload new")
+              # ),
+              bigdash::navbarDropdownTab(
+                "Upload new",
+                "upload-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Load from library",
+                "load-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Shared datasets",
+                "sharing-tab"
+              )
+            )
           ),
           div.invitebutton,
           div.chirpbutton,
@@ -292,6 +314,13 @@ app_ui <- function(x) {
                 is.checked = FALSE
               )
             )
+          ),
+          ## THIS IS SO WEIRD. if we remove/comment out the
+          ## prettySwitch, the header of all plotModules f*ck
+          ## up... (IK). HELP!!! we do not need this button...
+          div(
+            style = "visibility: hidden; display: none;",
+            shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
           )
         ),
         settings = bigdash::settings(
@@ -313,13 +342,12 @@ app_ui <- function(x) {
                     have been pre-computed and are ready to be used. Select a
                     dataset in the table and load the data set by clicking the 'Analyze dataset' button."
           ),
-          # ,
-          # bigdash::sidebarTabHelp(
-          #   "upload-tab",
-          #   "Upload new",
-          #   "Here you can upload your own transcriptomics and proteomics data into
-          #           the platform and perform computations for the Playground."
-          # ),
+          bigdash::sidebarTabHelp(
+            "upload-tab",
+            "Upload new",
+            "Here you can upload your own transcriptomics and proteomics data into
+                    the platform and perform computations for the Playground."
+          ),
           bigdash::sidebarTabHelp(
             "dataview-tab",
             "DataView",
@@ -444,11 +472,10 @@ app_ui <- function(x) {
             # LoadingInputs("load")
             LoadingUI("load")
           ),
-          # ,
-          # bigdash::bigTabItem(
-          #   "upload-tab",
-          #   UploadUI("upload")
-          # ),
+          bigdash::bigTabItem(
+            "upload-tab",
+            UploadUI("upload")
+          ),
           bigdash::bigTabItem(
             "userprofile-tab",
             UserProfileUI("user_profile")
@@ -457,9 +484,13 @@ app_ui <- function(x) {
             "usersettings-tab",
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
+          ),
+          bigdash::bigTabItem(
+            "sharing-tab",
+            SharedDatasetsUI("load")
           )
-        ),
-        UploadUI("upload")
+        )
+        ## UploadUI("upload")
       ) ## end of bigPage
     }
 
