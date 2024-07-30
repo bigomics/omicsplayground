@@ -143,46 +143,62 @@ error_popup <- function(title, header, message, error, btn_id, onclick) {
   )
 }
 
-sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, error, path_to_creds = "gmail_creds") {
+sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, error, path_to_creds = "hubspot_creds") {
   if (!file.exists(path_to_creds)) {
-    message("[sendErrorMessageToCustomerSuport] WARNING : mail not sent. cannot get mail creds =", path_to_creds)
+    message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get credential =", path_to_creds)
     return(NULL)
   }
 
   user_email <- trimws(user_email)
 
-  blastula::smtp_send(
-    blastula::compose_email(
-      body = blastula::md(
-        glue::glue(
-          "Hello,
-
-          The user <strong>{user_email}</strong> had a dataset that failed to compute and requested help.
-
-          Please find below the log and data path.
-
-          The ds name is: {pgx_name}
+  message <- glue::glue(
+    "The ds name is: {pgx_name}
 
           The ds path is: {pgx_path}
 
           The error is:
 
-          {error}
-
-          Yours,
-
-          BigOmics Developers Team"
-        )
-      ),
-      footer = blastula::md(
-        glue::glue("Email sent on {blastula::add_readable_time()}.")
-      )
-    ),
-    from = "bigomics.app@gmail.com",
-    to = "support@bigomics.ch",
-    subject = paste("Problem with dataset from", user_email),
-    credentials = blastula::creds_file(path_to_creds)
+          {error}"
   )
+
+  user_email <- "mauro.masiero@bigomics.ch"
+  message <- "test from opg"
+  path_to_creds <- file.path(getwd(), "etc/hubspot_creds")
+
+
+  payload <- list(
+    fields = list(
+      list(
+        objectTypeId = "0-1",
+        name = "email",
+        value = user_email
+      ),
+      list(
+        objectTypeId = "0-5",
+        name = "subject",
+        value = "Technical crash"
+      ),
+      list(
+        objectTypeId = "0-5",
+        name = "content",
+        value = message
+      )
+    )
+  )
+
+  json_payload <- jsonlite::toJSON(payload, auto_unbox = TRUE)
+
+  # Send the POST request to HubSpot (send data to form api)
+  response <- httr::POST(
+    url = "https://api.hsforms.com/submissions/v3/integration/secure/submit/24974201/0597a423-f0e4-44b8-bbfc-48d9a6e6309a",
+    httr::add_headers(
+      `Content-Type` = "application/json",
+      `Authorization` = paste("Bearer", readLines(path_to_creds))
+    ),
+    body = json_payload
+  )
+
+  return(response)
 }
 
 sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
