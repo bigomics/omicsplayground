@@ -130,7 +130,7 @@ DataViewUI <- function(id) {
                 ns("tsneplot"),
                 label = "c",
                 title = "t-SNE clustering",
-                info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected.",
+                info.text = "T-SNE clustering of samples (or cells) colored by the expression of the gene selected.",
                 info.methods = "Clustering of the samples using the t-distributed stochastic neighbor embedding (t-SNE) method. Performed using the Rtsne R package [1]. The dark blue color represents an over-expression of the selected gene across samples (or cells).",
                 info.references = list(
                   list(
