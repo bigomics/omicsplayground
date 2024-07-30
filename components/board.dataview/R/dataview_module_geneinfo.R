@@ -46,25 +46,6 @@ dataview_module_geneinfo_server <- function(id,
 
       jj <- match(gene, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-
-      dbg("[geneinfo] gene/feature = ", gene)
-      dbg("[geneinfo] jj = ", jj)
-      dbg("[geneinfo] symbol = ", symbol)
-
-      ## eg <- AnnotationDbi::mget(symbol,
-      ##   envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,
-      ##   ifnotfound = NA
-      ## )[[1]]
-      ## if (isTRUE(is.na(eg))) {
-      ##   eg <- AnnotationDbi::mget(symbol,
-      ##     envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA
-      ##   )[[1]]
-      ## }
-      ## eg <- eg[1]
-      ## if (is.null(eg) || length(eg) == 0) {
-      ##   return(NULL)
-      ## }
-
       info <- playbase::getHSGeneInfo(symbol) ## defined in pgx-functions.R
       res <- "(gene info not available)"
       if (!is.null(info)) {
