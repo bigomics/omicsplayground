@@ -223,7 +223,8 @@ app_ui <- function(x) {
             # width = "110",
           ),
           center = tags$div(
-            shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+            ##shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset")
+            shiny::uiOutput("current_dataset2")
           ),
           left = tags$div(
             style = "padding: 0 0 0 20px;",
@@ -302,7 +303,7 @@ app_ui <- function(x) {
               bslib::input_switch("enable_beta", "Enable beta features")
             ),
             bigdash::navbarDropdownItem(
-              bslib::input_switch("enable_info", "Show info alerts", value = TRUE)
+              bslib::input_switch("enable_info", "Show info boxes", value = TRUE)
             ),
             bigdash::navbarDropdownItem(
               selector_switch(

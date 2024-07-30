@@ -341,13 +341,16 @@ app_server <- function(input, output, session) {
         )
       }
 
-      shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
-        if (ENABLED["dataview"]) {
+      shiny::withProgress(
+        message = "Preparing your dashboard (server)...", value = 0, {
+
+          if (ENABLED["dataview"]) {
           info("[SERVER] calling DataView module")
           insertBigTabItem("dataview") 
           DataViewBoard("dataview", pgx = PGX)
         }
-
+        shiny::incProgress(0.1)
+          
         if (ENABLED["clustersamples"]) {
           info("[SERVER] calling ClusteringBoard module")
           insertBigTabItem("clustersamples")           
@@ -359,7 +362,7 @@ app_server <- function(input, output, session) {
           insertBigTabItem("wordcloud")           
           WordCloudBoard("wordcloud", pgx = PGX)
         }
-        shiny::incProgress(0.2)
+        shiny::incProgress(0.1)
 
         if (ENABLED["diffexpr"]) {
           info("[SERVER] calling ExpressionBoard module")
@@ -372,7 +375,8 @@ app_server <- function(input, output, session) {
           insertBigTabItem("clusterfeatures")           
           FeatureMapBoard("clusterfeatures", pgx = PGX)
         }
-
+        shiny::incProgress(0.1)
+        
         if (ENABLED["enrich"]) {
           info("[SERVER] calling EnrichmentBoard module")
           insertBigTabItem("enrich")
@@ -390,7 +394,7 @@ app_server <- function(input, output, session) {
           )
         }
 
-        shiny::incProgress(0.4)
+        shiny::incProgress(0.1)
 
         if (ENABLED["drug"]) {
           info("[SERVER] calling DrugConnectivityBoard module")
@@ -416,19 +420,20 @@ app_server <- function(input, output, session) {
             selected_gxmethods = env$diffexpr$selected_gxmethods
           )
         }
-
+        shiny::incProgress(0.1)
+        
         if (ENABLED["corr"]) {
           info("[SERVER] calling CorrelationBoard module")
           insertBigTabItem("corr")
           CorrelationBoard("corr", pgx = PGX)
         }
-        shiny::incProgress(0.6)
 
         if (ENABLED["bio"]) {
           info("[SERVER] calling BiomarkerBoard module")
           insertBigTabItem("bio")
           BiomarkerBoard("bio", pgx = PGX)
         }
+        shiny::incProgress(0.1)
 
         if (ENABLED["cmap"]) {
           info("[SERVER] calling ConnectivityBoard module")
@@ -446,7 +451,8 @@ app_server <- function(input, output, session) {
           SingleCellBoard("cell", pgx = PGX)
         }
 
-        shiny::incProgress(0.8)
+        shiny::incProgress(0.1)
+
         if (ENABLED["tcga"]) {
           info("[SERVER] calling TcgaBoard module")
           insertBigTabItem("tcga")
@@ -458,6 +464,8 @@ app_server <- function(input, output, session) {
           insertBigTabItem("wgcna")
           WgcnaBoard("wgcna", pgx = PGX)
         }
+
+        shiny::incProgress(0.1)
 
         if (ENABLED["pcsf"]) {
           info("[SERVER] calling PcsfBoard module")
@@ -545,6 +553,44 @@ app_server <- function(input, output, session) {
     name
   })
 
+  output$current_dataset2 <- shiny::renderUI({
+    shiny::req(auth$logged)
+    has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
+    nav.welcome <- welcome_detector()
+    if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
+      ## trigger on change of dataset
+      pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
+      tag <- shiny::actionButton(
+        "dataset_click", pgx.name, class="quick-button",
+        style="border: none; color: black; font-size: 1em;")
+    } else {
+      tag <- HTML(paste("Omics Playground", VERSION))
+    }
+    tag
+  })
+
+  observeEvent( input$dataset_click, {
+    shiny::req(PGX$name)
+    pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
+    fields <- c("name","datatype","description","date")
+    fields <- intersect(fields, names(PGX))
+    body <- ""
+    for(f in fields) {
+      txt1 <- paste0("<b>",f,":</b>&nbsp; ",PGX[[f]],"<br>")
+      body <- paste(body, txt1)
+    }
+    shiny::showModal( shiny::modalDialog(
+      title = pgx.name,
+      div(HTML(body), style="font-size: 1.1em;"),
+      footer = NULL,
+      size = "l",
+      easyClose = TRUE,
+      fade = FALSE
+    ))
+    
+  })
+
+  
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
   observeEvent(input$nav, {
@@ -965,7 +1011,7 @@ app_server <- function(input, output, session) {
 
   # this function sets 'enable_info' based on the user settings
   # and is used by all the bs_alert functions with conditional=T
-  observeEvent(env$user_settings$enable_info(), {
+  observeEvent( env$user_settings$enable_info(), {
     session$sendCustomMessage(
       "enableInfo",
       list(
