@@ -100,7 +100,7 @@ ExpressionUI <- function(id) {
         ),
         expression_plot_topfoldchange_ui(
           id = ns("plots_topfoldchange"),
-          title = "Gene in comparison",
+          title = "Fold change by comparison",
           info.text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the Table section.",
           caption = "Sorted barplot of the differential expression of the selected gene across all contrasts.",
           label = "d",
