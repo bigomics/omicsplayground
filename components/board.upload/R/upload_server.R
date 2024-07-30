@@ -553,15 +553,7 @@ UploadBoard <- function(id,
       shiny::HTML(upload_info)
     })
 
-    observeEvent(new_upload(), {
-      species <- playbase::SPECIES_TABLE$species_name
-
-      if (!auth$options$ENABLE_ANNOT) {
-        species <- setdiff(species, "No organism")
-      }
-      updateSelectizeInput(session, "selected_organism", choices = species, server = TRUE)
-    })
-
+    
     ## =====================================================================
     ## ========================= SUBMODULES/SERVERS ========================
     ## =====================================================================
@@ -973,7 +965,7 @@ UploadBoard <- function(id,
 
     # observe show_modal and start modal
     shiny::observeEvent(
-      list(new_upload()),
+      list( new_upload() ),
       {
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
@@ -982,7 +974,6 @@ UploadBoard <- function(id,
             title = "Upload disabled",
             text = "Sorry, upload of new data is disabled for this account.",
             type = "warning",
-            #
             closeOnClickOutside = FALSE
           )
           return(NULL)
@@ -1008,6 +999,18 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
+        if (input$selected_organism == "No organism" && !auth$options$ENABLE_ANNOT) {
+          shinyalert::shinyalert(
+            title = "No organism",
+            text = "Sorry, not yet implemented.",
+            type = "warning",
+            #
+            closeOnClickOutside = FALSE
+          )
+          return(NULL)          
+        }
+
+        
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
