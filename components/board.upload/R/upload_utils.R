@@ -192,8 +192,6 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
     ),
     body = json_payload
   )
-
-  return(response)
 }
 
 sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = "gmail_creds") {
