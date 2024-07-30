@@ -81,7 +81,27 @@ SignatureUI <- function(id) {
           signature_plot_volcano_ui(
             ns("volcanoPlots"),
             title = "Volcano plots",
-            info.text = "For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left.",
+            info.text = "Volcano plot of the geneset enrichment. If no contrast is selected on the Enrichment by contrasts table, a volcano for each contrast is shown, if a contrast is selected on the table, then that one contrast alone is displayed. By default, the genes selected on {Genes} settings are highlighted, if a certain gene is to be highlighted, select it from the Genes in signature table. The plot can be colored by using the {Color up/down regulated} plot setting.",
+            info.methods = "Statistical testing of differential enrichment of genesets is performed using an aggregation of multiple statistical methods: Fisher’s exact test, fGSEA [1], Camera [2] and GSVA/limma [3] [4]. The maximum q-value of the selected methods is taken as aggregate meta.q value, which corresponds to taking the intersection of significant genes from all tests. As each method uses different estimation parameters (NES for GSEA, odd-ratio for fisher, etc.) for the effect size, for consistency, the average log fold-change of the genes in the geneset as sentinel value is taken. For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left.",
+            info.references = list(
+              list(
+                "Korotkevich, G., Sukhov, V., Budin, N., Shpak, B., Artyomov, M. N., & Sergushichev, A. (2016). Fast gene set enrichment analysis. biorxiv, 060012.",
+                "https://doi.org/10.1101/060012"
+              ),
+              list(
+                "Wu, D., & Smyth, G. K. (2012). Camera: a competitive gene set test accounting for inter-gene correlation. Nucleic acids research, 40(17), e133-e133.",
+                "https://doi.org/10.1093/nar/gks461"
+              ),
+              list(
+                "Hänzelmann, S., Castelo, R., & Guinney, J. (2013). GSVA: gene set variation analysis for microarray and RNA-seq data. BMC bioinformatics, 14, 1-15.",
+                "https://doi.org/10.1186/1471-2105-14-7"
+              ),
+              list(
+                "Ritchie, M. E., Phipson, B., Wu, D. I., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic acids research, 43(7), e47-e47.",
+                "https://doi.org/10.1093/nar/gkv007"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
             caption = "Volcano plots visualising the test signature in all available contrasts.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
@@ -102,7 +122,27 @@ SignatureUI <- function(id) {
           signature_plot_enplots_ui(
             ns("enplots"),
             title = "Enrichment plots",
-            info.text = "Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.",
+            info.text = "Plot showing the top enriched genes. If nothing is selected on the Enrichment by contrasts table, all contrast plots will be shown, while if a contrast is selected on the table, it will be displayed alone. The genes selected on {Genes} settings are highlighted.",
+            info.methods = "Statistical testing of differential enrichment of genesets is performed using an aggregation of multiple statistical methods: Fisher’s exact test, fGSEA [1], Camera [2] and GSVA/limma [3] [4]. The maximum q-value of the selected methods is taken as aggregate meta.q value, which corresponds to taking the intersection of significant genes from all tests. As each method uses different estimation parameters (NES for GSEA, odd-ratio for fisher, etc.) for the effect size, for consistency, the average log fold-change of the genes in the geneset as sentinel value is taken. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.",
+            info.references = list(
+              list(
+                "Korotkevich, G., Sukhov, V., Budin, N., Shpak, B., Artyomov, M. N., & Sergushichev, A. (2016). Fast gene set enrichment analysis. biorxiv, 060012.",
+                "https://doi.org/10.1101/060012"
+              ),
+              list(
+                "Wu, D., & Smyth, G. K. (2012). Camera: a competitive gene set test accounting for inter-gene correlation. Nucleic acids research, 40(17), e133-e133.",
+                "https://doi.org/10.1093/nar/gks461"
+              ),
+              list(
+                "Hänzelmann, S., Castelo, R., & Guinney, J. (2013). GSVA: gene set variation analysis for microarray and RNA-seq data. BMC bioinformatics, 14, 1-15.",
+                "https://doi.org/10.1186/1471-2105-14-7"
+              ),
+              list(
+                "Ritchie, M. E., Phipson, B., Wu, D. I., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic acids research, 43(7), e47-e47.",
+                "https://doi.org/10.1093/nar/gkv007"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
             caption = "Gene set enrichment plots indicating the type of correlation of the test signature with the available contrast profiles.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("100%", "100%")
@@ -120,7 +160,9 @@ SignatureUI <- function(id) {
         signature_plot_overlap_ui(
           ns("overlapScorePlot"),
           title = "Signature overlap scores",
-          info.text = "The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test.",
+          info.text = "Barplot of the overlap scores for the loaded data against multiple public genesets databases. The plot displays by default the top 60 overlap scores, it can be changed using the {Number of features} plot setting, also the feature names can be toggled with the {Show feature names} plto setting.",
+          info.methods = "The overlap score of the gene set combines the odds ratio and significance (q-value) of the Fisher's test.",
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "The plot shows the gene sets most correlated with the test signature.",
           width = c("auto", "100%"),
           height = c("50%", TABLE_HEIGHT_MODAL)
@@ -148,7 +190,15 @@ SignatureUI <- function(id) {
           signature_plot_markers_ui(
             ns("markers"),
             title = "Markers plot",
-            info.text = "After uploading a gene list, the Markers section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.",
+            info.text = "Scatter plot displaying the expression levels of the tested genes in the dataset samples as a colored t-SNE plot. The plots can be sorted by correlation, probability or name using the {Sort by} plot setting, the layout can also be modified using the {Layout} plot setting.",
+            info.methods = "Using the gene list specified under the settings {Genes}, a t-SNE plot (using the Rtsne R package [1]) is produced of samples for each gene. The samples are colored with respect to the high expression (in red) or low expression (in grey) of that particular gene. The first figure shows the single-sample enrichment of your signature list in red (upregulation) and blue (downregulation).",
+            info.references = list(
+              list(
+                "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17.",
+                "https://doi.org/10.32614/CRAN.package.Rtsne"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
             caption = "t-SNE plot showing the expression levels of the tested genes in each of the dataset samples.",
             height = c("100%", TABLE_HEIGHT_MODAL)
           )
