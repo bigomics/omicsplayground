@@ -42,39 +42,43 @@ dataview_module_geneinfo_server <- function(id,
   moduleServer(id, function(input, output, session) {
     geneinfo_data <- shiny::reactive({
       gene <- r.gene()
-      req(gene)
+      shiny::req(gene)
 
-      jj <- which(pgx$genes$feature == gene)
-      if (pgx$genes$feature[jj] != pgx$genes$symbol[jj]) { ## Proteomics
-        gene <- pgx$genes$symbol[jj]
-      }
+      jj <- match(gene, rownames(pgx$genes))
+      symbol <- pgx$genes$symbol[jj]
 
-      gene <- toupper(sub(".*:", "", gene))
-      eg <- AnnotationDbi::mget(gene,
-        envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,
-        ifnotfound = NA
-      )[[1]]
-      if (isTRUE(is.na(eg))) {
-        eg <- AnnotationDbi::mget(gene,
-          envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA
-        )[[1]]
-      }
-      eg <- eg[1]
-      if (is.null(eg) || length(eg) == 0) {
-        return(NULL)
-      }
+      dbg("[geneinfo] gene/feature = ", gene)
+      dbg("[geneinfo] jj = ", jj)
+      dbg("[geneinfo] symbol = ", symbol)
 
+      ## eg <- AnnotationDbi::mget(symbol,
+      ##   envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,
+      ##   ifnotfound = NA
+      ## )[[1]]
+      ## if (isTRUE(is.na(eg))) {
+      ##   eg <- AnnotationDbi::mget(symbol,
+      ##     envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA
+      ##   )[[1]]
+      ## }
+      ## eg <- eg[1]
+      ## if (is.null(eg) || length(eg) == 0) {
+      ##   return(NULL)
+      ## }
+
+      info <- playbase::getHSGeneInfo(symbol) ## defined in pgx-functions.R
       res <- "(gene info not available)"
-      if (length(eg) > 0 && !is.na(eg)) {
-        info <- playbase::getHSGeneInfo(eg) ## defined in pgx-functions.R
+      if (!is.null(info)) {
         info$summary <- "(no info available)"
-        if (gene %in% names(playdata::GENE_SUMMARY)) {
-          info$summary <- playdata::GENE_SUMMARY[gene]
+        if (symbol %in% names(playdata::GENE_SUMMARY)) {
+          info$summary <- playdata::GENE_SUMMARY[symbol]
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
 
         ## reorder
-        nn <- intersect(c("symbol", "name", "map_location", "summary", names(info)), names(info))
+        nn <- intersect(
+          c("symbol", "name", "map_location", "summary", names(info)),
+          names(info)
+        )
         info <- info[nn]
         info$symbol <- paste0(info$symbol, "<br>")
 

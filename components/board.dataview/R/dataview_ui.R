@@ -111,7 +111,7 @@ DataViewUI <- function(id) {
                 ns("tsneplot"),
                 label = "c",
                 title = "t-SNE clustering",
-                info.text = "T-SNE clustering of samples (or cells) colored by an expression of the gene selected in the search_gene dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).",
+                info.text = "T-SNE clustering of samples (or cells) colored by an expression of the selected gene. The red color represents an over-expression of the selected gene across samples (or cells).",
                 caption = "t-SNE of samples colored by expression of selected gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")

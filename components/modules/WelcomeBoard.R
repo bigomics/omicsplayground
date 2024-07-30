@@ -99,7 +99,7 @@ WelcomeBoardUI <- function(id) {
         ),
         shiny::actionButton(
           ns("btn_load_data"),
-          label = "Use my saved data",
+          label = "Load from library",
           class = "btn btn-outline-primary welcome-btn"
         )
       )
