@@ -179,6 +179,68 @@ sever_disconnected <- function() {
   sever_crash(error = NULL)
 }
 
+sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_creds = "hubspot_creds") {
+  if (!file.exists(path_to_creds)) {
+    message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get credential =", path_to_creds)
+    return(NULL)
+  }
+
+  user_email <- trimws(user_email)
+
+  if (user_email == "") {
+    return(NULL)
+  }
+
+  message <- glue::glue(
+    "
+        The user name is : {user_email}
+
+        The ds name is: {pgx_name}
+
+          The error is:
+
+          {error}"
+  )
+
+  # Define the payload
+  payload <- list(
+    fields = list(
+      list(
+        objectTypeId = "0-1",
+        name = "email",
+        value = user_email
+      ),
+      list(
+        objectTypeId = "0-5",
+        name = "subject",
+        value = "Blue Screen Crash Ticket"
+      ),
+      list(
+        objectTypeId = "0-5",
+        name = "content",
+        value = message
+      )
+    )
+  )
+
+  # Convert the payload to JSON
+  json_payload <- jsonlite::toJSON(payload, auto_unbox = TRUE)
+
+  bearer_token <- readLines(path_to_creds)
+
+  # Send the POST request to HubSpot
+  response <- httr::POST(
+    url = "https://api.hsforms.com/submissions/v3/integration/secure/submit/24974201/9485b387-8cbf-4e1b-b93c-21b0d04956f3",
+    httr::add_headers(
+      `Content-Type` = "application/json",
+      `Authorization` = paste("Bearer", bearer_token)
+    ),
+    body = json_payload,
+    encode = "json"
+  )
+}
+
+
 sever_crash <- function(error = NULL) {
   err_message <- NULL
   err_traceback <- NULL
