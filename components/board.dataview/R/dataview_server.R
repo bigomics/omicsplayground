@@ -85,7 +85,7 @@ DataViewBoard <- function(id, pgx) {
       shiny::updateRadioButtons(
         session = session,
         "data_type",
-        choices = c("log2", "abundance")
+        choices = c("abundance", "log2")
       )
     })
 
@@ -112,7 +112,7 @@ DataViewBoard <- function(id, pgx) {
       },
       {
         shiny::req(input$data_type)
-        if (input$data_type %in% c("counts", "CPM")) {
+        if (input$data_type %in% c("counts", "abundance")) {
           features <- rownames(pgx$counts)
         } else {
           ## log2CPM
