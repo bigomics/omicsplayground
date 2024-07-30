@@ -232,7 +232,7 @@ upload_table_preview_contrasts_server <- function(
             col_widths = 12,
             ## height = "calc(100vh - 340px)",
             heights_equal = "row",
-            bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main' or 'Control' group, give a name and click 'add'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
+            bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main group' or 'Control group' boxes, give a name and click 'add to list'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
             upload_module_makecontrast_ui(ns("makecontrast")),
             action_buttons1
           )

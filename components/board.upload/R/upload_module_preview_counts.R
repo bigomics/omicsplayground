@@ -108,13 +108,13 @@ upload_table_preview_counts_server <- function(
             row_heights = list("auto", 11, 1),
             gap = "0.5rem",
             bslib::as_fill_carrier(
-              bs_alert(tspan("The counts file (counts.csv) contains the measurements (genes, proteins, etc..) for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes or proteins) and each column corresponds to a sample."), closable = FALSE),
+              bs_alert(tspan("The expression file (expression.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."), closable = FALSE),
               style = "align-items: end"
             ),
             bslib::card(
               fileInputArea(
                 ns("counts_csv"),
-                shiny::h4(ifelse(tolower(upload_datatype()) == "proteomics", "Upload abundance.csv", "Upload counts.csv"), class = "mb-0"),
+                shiny::h4("Upload expression.csv", class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "100%"

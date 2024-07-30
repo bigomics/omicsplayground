@@ -752,7 +752,7 @@ upload_module_normalization_server <- function(
                       "RUV" = "RUV",
                       "NPM" = "NPM"
                     ),
-                    selected = 1
+                    selected = "SVA"
                   ),
                   shiny::conditionalPanel(
                     "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
