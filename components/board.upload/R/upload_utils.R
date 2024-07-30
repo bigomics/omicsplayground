@@ -161,11 +161,6 @@ sendErrorMessageToCustomerSuport <- function(user_email, pgx_name, pgx_path, err
           {error}"
   )
 
-  user_email <- "mauro.masiero@bigomics.ch"
-  message <- "test from opg"
-  path_to_creds <- file.path(getwd(), "etc/hubspot_creds")
-
-
   payload <- list(
     fields = list(
       list(

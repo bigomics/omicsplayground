@@ -862,14 +862,14 @@ upload_module_computepgx_server <- function(
         shinyjs::runjs("console.log('send_data_to_support button clicked')")
         message("send_data_to_support button clicked")
 
-        gmail_creds <- file.path(ETC, "gmail_creds")
+        credential <- file.path(ETC, "hubspot_creds")
 
         sendErrorMessageToCustomerSuport(
           user_email = processx_error$user_email,
           pgx_name = processx_error$pgx_name,
           pgx_path = processx_error$pgx_path,
           error = paste0(processx_error$error, collapse = ""),
-          path_to_creds = gmail_creds
+          path_to_creds = credential
         )
 
         # close modal
