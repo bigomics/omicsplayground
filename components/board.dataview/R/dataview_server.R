@@ -143,7 +143,8 @@ DataViewBoard <- function(id, pgx) {
 
       if (!is.null(input$data_samplefilter)) {
         samples <- playbase::selectSamplesFromSelectedLevels(
-          pgx$Y, input$data_samplefilter)
+          pgx$Y, input$data_samplefilter
+        )
       }
       # validate samples
       validate(need(length(samples) > 0, "No samples remaining after filtering."))
