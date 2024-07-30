@@ -42,11 +42,11 @@ DataViewInputs <- function(id) {
       ns = ns,
       withTooltip(
         shiny::radioButtons(
-                 ns("data_type"), "Data type:",
-                 choiceNames = c(tspan("counts"),"log2"),
-                 choiceValues = c("counts","log2"),
-                 selected = "counts",
-                 inline = TRUE
+          ns("data_type"), "Data type:",
+          choiceNames = c(tspan("counts"), "log2"),
+          choiceValues = c("counts", "log2"),
+          selected = "counts",
+          inline = TRUE
         ),
         "Choose an input data type for the analysis.",
         placement = "bottom"
