@@ -159,10 +159,10 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         data = df,
         x = ~x,
         y = ~y,
-        text = ~ paste(
-          ifelse(nrow(df), "Dataset:", "Whoops!"), dataset,
-          ifelse(nrow(df), "<br>Comparison:", ""), comparison
-        ),
+        text = ~ I(paste(
+          ifelse(nrow(df), "<b>Dataset:</b>", "Whoops!"), dataset,
+          ifelse(nrow(df), "<br><b>Comparison:</b>", ""), comparison
+        )),
         color = ~dataset,
         marker = list(
           size = marker_size,
@@ -170,7 +170,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             color = omics_colors("super_dark_grey"),
             width = 1.0
           )
-        )
+        ),
+        hovertemplate = "%{text}<br><b>tsne-x:</b> %{x:.2f}<br><b>tsne-y:</b> %{y:.2f}<extra></extra>"
       )
 
       fig <- fig %>%
