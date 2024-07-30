@@ -235,9 +235,7 @@ app_server <- function(input, output, session) {
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
-
     if (env$load$is_data_loaded() == 1) {
-
       additional_ui_tabs <- tagList(
         dataview = bigdash::bigTabItem(
           "dataview-tab",
@@ -331,7 +329,7 @@ app_server <- function(input, output, session) {
         )
       )
 
-        
+
       insertBigTabItem <- function(tab) {
         shiny::insertUI(
           selector = "#big-tabs",
@@ -344,32 +342,32 @@ app_server <- function(input, output, session) {
       shiny::withProgress(message = "Preparing your dashboard (server)...", value = 0, {
         if (ENABLED["dataview"]) {
           info("[SERVER] calling DataView module")
-          insertBigTabItem("dataview") 
+          insertBigTabItem("dataview")
           DataViewBoard("dataview", pgx = PGX)
         }
 
         if (ENABLED["clustersamples"]) {
           info("[SERVER] calling ClusteringBoard module")
-          insertBigTabItem("clustersamples")           
+          insertBigTabItem("clustersamples")
           ClusteringBoard("clustersamples", pgx = PGX)
         }
 
         if (ENABLED["wordcloud"]) {
           info("[SERVER] calling WordCloudBoard module")
-          insertBigTabItem("wordcloud")           
+          insertBigTabItem("wordcloud")
           WordCloudBoard("wordcloud", pgx = PGX)
         }
         shiny::incProgress(0.2)
 
         if (ENABLED["diffexpr"]) {
           info("[SERVER] calling ExpressionBoard module")
-          insertBigTabItem("diffexpr")           
+          insertBigTabItem("diffexpr")
           ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
         }
 
         if (ENABLED["clusterfeatures"]) {
           info("[SERVER] calling FeatureMapBoard module")
-          insertBigTabItem("clusterfeatures")           
+          insertBigTabItem("clusterfeatures")
           FeatureMapBoard("clusterfeatures", pgx = PGX)
         }
 
@@ -383,7 +381,7 @@ app_server <- function(input, output, session) {
         }
         if (ENABLED["pathway"]) {
           info("[SERVER] calling PathwayBoard module")
-          insertBigTabItem("pathway")          
+          insertBigTabItem("pathway")
           PathwayBoard("pathway",
             pgx = PGX,
             selected_gsetmethods = env$enrich$selected_gsetmethods
@@ -410,7 +408,7 @@ app_server <- function(input, output, session) {
 
         if (ENABLED["sig"]) {
           info("[SERVER] calling SignatureBoard module")
-          insertBigTabItem("sig")          
+          insertBigTabItem("sig")
           SignatureBoard("sig",
             pgx = PGX,
             selected_gxmethods = env$diffexpr$selected_gxmethods
@@ -442,7 +440,7 @@ app_server <- function(input, output, session) {
 
         if (ENABLED["cell"]) {
           info("[SERVER] calling SingleCellBoard module")
-          insertBigTabItem("cell")          
+          insertBigTabItem("cell")
           SingleCellBoard("cell", pgx = PGX)
         }
 
@@ -467,7 +465,7 @@ app_server <- function(input, output, session) {
 
         if (ENABLED["comp"]) {
           info("[SERVER] calling CompareBoard module")
-          insertBigTabItem("comp")                    
+          insertBigTabItem("comp")
           CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
         }
 

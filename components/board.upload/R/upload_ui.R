@@ -9,7 +9,7 @@ UploadUI <- function(id) {
   species1 <- as.character(playbase::SPECIES_TABLE$species_name)
   species2 <- playbase::allSpecies.ORTHOGENE()
   AVAILABLE_SPECIES <- c(species1[1:4], intersect(species1, species2))
-  
+
   body <- div(
     style = "overflow: auto;",
     bslib::as_fill_carrier(),
