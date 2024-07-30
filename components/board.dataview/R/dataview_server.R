@@ -335,7 +335,7 @@ DataViewBoard <- function(id, pgx) {
         if (input$data_type %in% c("counts", "abundance")) {
           counts <- pgx$counts[, samples, drop = FALSE]
         } else {
-          ### NEED RETHINK HERE!!! what is this?? 
+          ### NEED RETHINK HERE!!! what is this??
           if (any(pgx$X[, samples, drop = FALSE] < 0)) {
             counts <- 2**pgx$X[, samples, drop = FALSE]
           } else {

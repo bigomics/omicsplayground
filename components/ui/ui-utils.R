@@ -404,7 +404,8 @@ tspan <- function(text) {
     return("")
   }
   if (!grepl("gene|counts|transcriptomics|rna-seq|logcpm",
-    text, ignore.case = TRUE
+    text,
+    ignore.case = TRUE
   )) {
     return(text)
   }
