@@ -81,7 +81,7 @@ DataViewBoard <- function(id, pgx) {
       },
       {
         shiny::req(input$data_type)
-        
+
         if (input$data_type %in% c("counts", "abundance")) {
           features <- rownames(pgx$counts)
         } else {
