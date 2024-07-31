@@ -108,8 +108,7 @@ upload_module_normalization_server <- function(
         m <- input$scaling_method
         prior <- ifelse(m == "CPM", 1, 1e-4) ## NEW
         X <- log2(counts + prior) ## NEED RETHINK
-        ## X <- log2(counts + 0.001)
-
+        
         ## if (input$remove_xxl) {
         ##     dbg("[normalization_server:imputedX]: Assign NA to outlier features")
         ##     X[playbase::is.xxl(X, z = 10)] <- NA
@@ -141,14 +140,14 @@ upload_module_normalization_server <- function(
             shiny::incProgress(amount = 0.25, "Normalization...")
             dbg("[normalization_server:normalizedX] Normalizing data using ", m)
             ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
-            prior <- ifelse(m == "CPM", 1, 1e-4)
             ref <- NULL
             if (m == "reference") {
               ref <- input$ref_gene
               shiny::validate(shiny::need(!is.null(ref), tspan("Please select reference gene")))
               ## shiny::req(ref)
             }
-            normCounts <- playbase::pgx.countNormalization(2**X - prior, method = m, ref = ref)
+            prior <- ifelse(m == "CPM", 1, 1e-4)
+            normCounts <- playbase::pgx.countNormalization( pmax(2**X - prior,0), method = m, ref = ref)
             X <- log2(normCounts + prior)
             if (input$quantile_norm) {
               dbg("[normalization_server:normalizedX] Applying quantile normalization")
@@ -255,7 +254,7 @@ upload_module_normalization_server <- function(
         X <- correctedX()$X
         prior <- ifelse(input$scaling_method == "CPM", 1, 1e-4)
         dbg("[normalization_server:correctedCounts] Generating correctedCounts matrix. Prior=", prior)
-        counts <- 2**X - prior
+        counts <- pmax(2**X - prior,0)
         dbg("[normalization_server:correctedCounts] dim.correctedCounts = ", dim(counts))
         counts
       })
