@@ -747,7 +747,7 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("scaling_method"), NULL,
                     choices = c(
-                      "CPM", "maxMedian", "maxSum", "TMM",
+                      "CPM", "maxMedian", "maxSum", ## "TMM",
                       "reference"
                     ),
                     selected = ifelse(tolower(upload_datatype()) == "proteomics",
