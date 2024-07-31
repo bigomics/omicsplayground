@@ -223,16 +223,14 @@ app_ui <- function(x) {
             # width = "110",
           ),
           center = tags$div(
-            shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+            ## shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset")
+            shiny::uiOutput("current_dataset2")
           ),
           left = tags$div(
             style = "padding: 0 0 0 20px;",
             bigdash::navbarDropdown(
               "Datasets",
               style = "border: 1px; padding: 2px 6px;",
-              # tags$li(
-              #  actionLink("menu_upload_new", "Upload new")
-              # ),
               bigdash::navbarDropdownTab(
                 "Upload new",
                 "upload-tab"
@@ -305,7 +303,7 @@ app_ui <- function(x) {
               bslib::input_switch("enable_beta", "Enable beta features")
             ),
             bigdash::navbarDropdownItem(
-              bslib::input_switch("enable_info", "Show info alerts", value = TRUE)
+              bslib::input_switch("enable_info", "Show info boxes", value = TRUE)
             ),
             bigdash::navbarDropdownItem(
               selector_switch(

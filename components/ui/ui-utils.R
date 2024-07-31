@@ -257,7 +257,8 @@ addSettings <- function(ns, session, file) {
   board_settings_values <- lapply(board_settings, function(x) {
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
-    if (nchar(val) > 30) val <- paste0(substr(val, 1, 30), "...")
+    if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
+    val <- paste(val, collapse = ", ")
     return(val)
   }) |> unlist()
   # Merge values and input names (without namespacing)
@@ -274,6 +275,8 @@ addSettings <- function(ns, session, file) {
   plot_settings_values <- lapply(plot_settings, function(x) {
     val <- .subset2(session, "parent")$input[[x]]
     if (is.null(val)) val <- ""
+    if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
+    val <- paste(val, collapse = ", ")
     return(val)
   }) |> unlist()
   # Merge values and input names (without namespacing)
@@ -329,10 +332,13 @@ addSettings <- function(ns, session, file) {
     )
   )
 
+  # Compute PDF height using nrow
+  height <- nrow(df) * 0.4
+
   # Print PDF temp table
   df_pdf <- tempfile(fileext = ".pdf")
   final_pdf <- tempfile(fileext = ".pdf")
-  pdf(df_pdf)
+  pdf(df_pdf, height = height, width = 10)
   gridExtra::grid.table(df, rows = NULL, col = c("Metadata", "Value"), theme = table_theme)
   dev.off()
   # Construct the pdftk command
@@ -353,6 +359,55 @@ inputLabelDictionary <- function(board_ns, inputId) {
       data_type = "Data type",
       clustsamples = "cluster samples",
       vars = "show variables"
+    ),
+    clustersamples = list(
+      selected_phenotypes = "Show phenotypes",
+      hm_splitby = "Split samples by",
+      hm_splitvar = "Split samples by (phenotype/gene)",
+      hm_average_group = "Split samples by (phenotype/gene) average by group",
+      hm_samplefilter = "Filter samples",
+      hm_features = "Gene family",
+      hm_customfeatures = "Gene family (<custom>)",
+      hm_contrast = "Gene family (<contrast>)",
+      hm_topmode = "Top mode",
+      hm_ntop = "Top N",
+      hm_clustk = "K modules",
+      hm_scale = "Scale",
+      hm_legend = "Show legend",
+      hm_cexRow = "cexRow",
+      hm_cexCol = "cexCol",
+      xann_level = "Reference level",
+      xann_odds_weighting = "Reference level ('geneset') Fisher test weighting",
+      xann_refset = "Reference level ('geneset') Reference set",
+      pca_label = "Label",
+      all_clustmethods = "Show all methods",
+      plot3d = "Plot 3D",
+      showlabels = "Shoe group labels",
+      hm_pcaverage = "Average by gene module",
+      hm_pcscale = "Scale values",
+      gx_grouped = "Group samples",
+      hm_filterXY = "Exclude X/Y genes",
+      hm_filterMitoRibo = "Exclude mito/ribo genes",
+      hmpca.colvar = "Color/label",
+      hmpca.shapevar = "Shape",
+      hm_clustmethod = "Layout",
+      hm_level = "Level"
+    ),
+    diffexpr = list(
+      gx_contrast = "Contrast",
+      gx_features = "Gene family",
+      gx_fdr = "FDR",
+      gx_lfc = "logFC",
+      gx_statmethod = "Statistical methods",
+      gx_showall = "Show all genes",
+      color_up_down = "Color up/down regulated",
+      barplot_grouped = "Grouped",
+      barplot_logscale = "Log scale",
+      barplot_showothers = "Show others",
+      gx_logscale = "Log scale",
+      gx_grouped = "Group samples",
+      gx_showothers = "Show others",
+      scale_per_plot = "Scale plots"
     ),
     drug = list(
       dsea_contrast = "Contrast",
@@ -391,8 +446,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
   return(val)
 }
 
-
-tspan <- function(text) {
+tspan <- function(text, js = FALSE) {
   if (is.null(text)) {
     return(NULL)
   }
@@ -414,12 +468,22 @@ tspan <- function(text) {
     "transcriptomics", "Transcriptomics", "RNA-seq",
     "logCPM", "log2p1"
   )
-  for (k in keys) {
-    tt <- i18n$t(k)
-    text <- gsub(k, tt, text, ignore.case = FALSE)
+  if (js) {
+    i18n.tr <- function(key) shiny::span(class = "i18n", `data-key` = key, key)
+  } else {
+    i18n.tr <- function(key) i18n$t(key)
   }
+  for (k in keys) {
+    tt <- i18n.tr(k)
+    if (grepl(k, text)) text <- gsub(k, tt, text, ignore.case = FALSE)
+  }
+  if (js) text <- shiny::HTML(text)
   text
 }
+
+## forced JS version
+jspan <- function(text) tspan(text, js = TRUE)
+
 
 tspan.SAVE <- function(label) {
   shiny::span(class = "i18n", `data-key` = label, label)

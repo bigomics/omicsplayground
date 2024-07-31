@@ -11,7 +11,9 @@ dataview_module_geneinfo_ui <- function(
     height,
     width,
     caption,
-    info.text) {
+    info.text,
+    info.methods,
+    info.references) {
   ns <- shiny::NS(id)
 
 
@@ -26,6 +28,8 @@ dataview_module_geneinfo_ui <- function(
     outputFunc = htmlOutput,
     outputFunc2 = htmlOutput,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     caption = caption,
     caption2 = NULL,
     options = NULL,

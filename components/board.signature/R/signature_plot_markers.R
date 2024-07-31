@@ -16,6 +16,9 @@ signature_plot_markers_ui <- function(
     id,
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption,
     height) {
   ns <- shiny::NS(id)
@@ -46,6 +49,9 @@ signature_plot_markers_ui <- function(
     caption = caption,
     options = markers.opts,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf"),
     height = height
   )

@@ -6,7 +6,9 @@
 
 PlotModuleUI <- function(id,
                          info.text = "Figure",
+                         info.methods = NULL,
                          info.references = NULL,
+                         info.extra_link = NULL,
                          title = "",
                          options = NULL,
                          label = "",
@@ -48,7 +50,7 @@ PlotModuleUI <- function(id,
 
   if (translate) {
     info.text <- tspan(info.text)
-    ##    title = tspan(title)
+    title <- tspan(title)
     caption <- tspan(caption)
     caption2 <- tspan(caption2)
   }
@@ -237,7 +239,20 @@ PlotModuleUI <- function(id,
     },
     header_buttons,
     DropdownMenu(
-      shiny::div(class = "plotmodule-info", shiny::HTML(paste0("<b>", as.character(title), ".", "</b>", "&nbsp;", as.character(info.text)))),
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML("<b>Plot info</b><br>"),
+        shiny::HTML(as.character(info.text))
+      ),
+      if (!is.null(info.methods)) {
+        shiny::div(
+          class = "plotmodule-info",
+          shiny::HTML("<b>Methods</b><br>"),
+          shiny::HTML(info.methods)
+        )
+      } else {
+        NULL
+      },
       if (!is.null(info.references)) {
         html_code <- ""
         for (i in seq_along(info.references)) {
@@ -246,15 +261,32 @@ PlotModuleUI <- function(id,
           link <- ref[[2]]
 
           # Create the formatted HTML string
-          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "'>", link, "</a><br>")
+          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
 
           # Append the formatted string to the HTML code
           html_code <- paste0(html_code, formatted_ref)
         }
         shiny::div(
           class = "plotmodule-info",
-          shiny::HTML("<b>References</b><br>"),
-          shiny::HTML(html_code)
+          shiny::HTML("<b>References</b>"),
+          shiny::div(
+            class = "plotmodule-info plotmodule-references",
+            shiny::HTML(html_code)
+          )
+        )
+      } else {
+        NULL
+      },
+      if (!is.null(info.extra_link)) {
+        shiny::div(
+          class = "plotmodule-info",
+          shiny::HTML(
+            paste0(
+              "<b><a href='",
+              info.extra_link,
+              "' target='_blank'>Further information...</a></b>"
+            )
+          )
         )
       } else {
         NULL

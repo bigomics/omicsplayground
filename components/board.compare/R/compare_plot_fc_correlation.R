@@ -14,15 +14,20 @@
 #' @export
 compare_plot_fc_correlation_ui <- function(id,
                                            height,
+                                           title,
+                                           info.text,
+                                           info.methods,
+                                           info.extra_link,
                                            width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
 
   PlotModuleUI(ns("plot"),
-    title = "FC Correlation",
+    title = title,
     plotlib = "plotly",
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
@@ -42,14 +47,20 @@ compare_plot_fc_correlation_server <- function(id,
                                                hilightgenes,
                                                input.contrast1,
                                                input.contrast2,
+                                               compute,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    cum_fc_triggered <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      cum_fc_triggered(cum_fc())
+    })
+
     plot_data <- shiny::reactive({
       # Require inputs
-      shiny::req(cum_fc())
-      out_data <- cum_fc()
+      shiny::req(cum_fc_triggered())
+      out_data <- cum_fc_triggered()
       return(out_data)
     })
 
@@ -161,6 +172,7 @@ compare_plot_fc_correlation_server <- function(id,
     }
 
     fcfcplot.RENDER <- function() {
+      shiny::validate(shiny::need(cum_fc_triggered(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
       p <- plot_interactive_comp_fc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,

@@ -37,6 +37,7 @@ COPY docker/Rprofile .Rprofile
 #------------------------------------------------------------
 RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
 RUN R -e "install.packages(c('ruv','shiny.i18n'))"
+RUN R -e "BiocManager::install(c('MSnbase'))"
 
 
 # check if playbase@{$BRANCH} exists, if it does, install.. other wise install main

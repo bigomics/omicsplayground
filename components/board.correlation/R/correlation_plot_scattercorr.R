@@ -16,6 +16,8 @@ correlation_plot_scattercorr_ui <- function(
     id,
     title,
     info.text,
+    info.methods,
+    info.extra_link,
     caption,
     height,
     width) {
@@ -47,6 +49,8 @@ correlation_plot_scattercorr_ui <- function(
     plotlib = "plotly",
     label = "c",
     info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = cor_scatter.opts,
     download.fmt = c("png", "pdf"),

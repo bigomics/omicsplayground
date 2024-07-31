@@ -42,8 +42,8 @@ DataViewInputs <- function(id) {
       ns = ns,
       withTooltip(
         shiny::radioButtons(
-          ns("data_type"), "Data type:",
-          choiceNames = c(tspan("counts"), "log2"),
+          ns("data_type"), "Scale:",
+          choiceNames = c("linear", "log2"),
           choiceValues = c("counts", "log2"),
           selected = "log2",
           inline = TRUE
@@ -84,8 +84,27 @@ DataViewUI <- function(id) {
           col_widths = c(2, 10),
           dataview_module_geneinfo_ui(
             id = ns("geneinfo"),
-            title = tspan("Gene info"),
-            info.text = tspan("Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases."),
+            title = "Gene info",
+            info.text = "Information about the selected gene and its function from public databases. For more information, follow the hyperlinks to public databases.",
+            info.methods = "The available public databases are OMIM [1], KEGG [2] and GO [3]. The R/bioconductor package used to query them is org.Hs.eg.db [4].",
+            info.references = list(
+              list(
+                "Amberger, J. S., Bocchini, C. A., Schiettecatte, F., Scott, A. F., & Hamosh, A. (2015). OMIM. org: Online Mendelian Inheritance in Man (OMIM®), an online catalog of human genes and genetic disorders. Nucleic acids research, 43(D1), D789-D798.",
+                "https://doi.org/10.1093/nar/gku1205"
+              ),
+              list(
+                "Kanehisa, M., & Goto, S. (2000). KEGG: kyoto encyclopedia of genes and genomes. Nucleic acids research, 28(1), 27-30.",
+                "https://doi.org/10.1093/nar/28.1.27"
+              ),
+              list(
+                "Ashburner, M., Ball, C. A., Blake, J. A., Botstein, D., Butler, H., Cherry, J. M., ... & Sherlock, G. (2000). Gene ontology: tool for the unification of biology. Nature genetics, 25(1), 25-29.",
+                "https://doi.org/10.1038/75556"
+              ),
+              list(
+                "Carlson M (2019). org.Hs.eg.db: Genome wide annotation for Human. R package version 3.8.2.",
+                "https://bioconductor.org/packages/org.Hs.eg.db/"
+              )
+            ),
             caption = "Information about the selected gene and its function from public databases.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
@@ -96,8 +115,8 @@ DataViewUI <- function(id) {
               col_widths = c(4, 4, 4),
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
-                title = tspan("Gene expression"),
-                info.text = "Samples (or cells) in the barplot can be ungrouped by setting the grouped under the main Options.",
+                title = "Gene expression",
+                info.text = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. Also, the type of expression can be selected under {Data type} under Settings > Options.",
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 label = "a"
@@ -106,7 +125,7 @@ DataViewUI <- function(id) {
                 ns("averagerankplot"),
                 label = "b",
                 title = "Average rank",
-                info.text = "Select the gene or feature of interest under the main Options.",
+                info.text = "Rank of the selected gene by decreasing expression. The type of expression can be selected under {Data type} under Settings > Options.",
                 caption = "Ranking of the selected gene by decreasing average expression.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -115,7 +134,15 @@ DataViewUI <- function(id) {
                 ns("tsneplot"),
                 label = "c",
                 title = "t-SNE clustering",
-                info.text = "T-SNE clustering of samples (or cells) colored by an expression of the selected gene. The red color represents an over-expression of the selected gene across samples (or cells).",
+                info.text = "T-SNE clustering of samples (or cells) colored by the expression of the gene selected.",
+                info.methods = "Clustering of the samples using the t-distributed stochastic neighbor embedding (t-SNE) method. Performed using the Rtsne R package [1]. The dark blue color represents an over-expression of the selected gene across samples (or cells).",
+                info.references = list(
+                  list(
+                    "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17",
+                    "https://doi.org/10.32614/CRAN.package.Rtsne"
+                  )
+                ),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
                 caption = "t-SNE of samples colored by expression of selected gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -126,8 +153,10 @@ DataViewUI <- function(id) {
               dataview_plot_correlation_ui(
                 ns("correlationplot"),
                 label = "d",
-                title = tspan("Top correlated genes"),
-                info.text = tspan("Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively."),
+                title = "Top correlated genes",
+                info.text = "Barplot of the top positively and negatively correlated genes with the selected gene.",
+                info.methods = "Correlation between selected gene and top positively and negatively correlated genes performed using Pearson correlation method from the R core stats package. Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
                 caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -138,7 +167,14 @@ DataViewUI <- function(id) {
                 width = c("auto", "100%"),
                 label = "e",
                 title = "Tissue expression (GTEX)",
-                info.text = tspan("Colors correspond to 'tissue clusters' as computed by unsupervised clustering. Select the gene or feature of interest under the main Options."),
+                info.text = "Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, the human ortholog is used to query the GTEX database.",
+                info.methods = "Tissue clusters computed using unsupervised clustering. Perfomed using the hierarchical clustering method from the R core stats package, then queried to the GTEx database [1].",
+                info.references = list(
+                  list(
+                    "GTEx Consortium. (2020). The GTEx Consortium atlas of genetic regulatory effects across human tissues. Science, 369(6509), 1318-1330.",
+                    "https://doi.org/10.1126/science.aaz1776"
+                  )
+                ),
                 caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, we use the human ortholog to query the GTEX database.")
               )
             )
@@ -159,24 +195,24 @@ DataViewUI <- function(id) {
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             label = "a",
-            title = tspan("Total counts"),
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
+            title = "Total counts",
+            info.text = "Average total counts by sample. Samples can be grouped using the {Group by} setting.",
             caption = "Barplot of the average counts for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
           dataview_plot_boxplot_ui(
             ns("counts_boxplot"),
-            title = tspan("Counts boxplots"),
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
+            title = "Counts boxplots",
+            info.text = "Boxplot of counts by sample. Samples can be grouped using the {Group by} setting.",
             caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             label = "b"
           ),
           dataview_plot_histogram_ui(
             ns("counts_histplot"),
-            title = tspan("Density distribution of counts"),
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options.",
+            title = "Density distribution of counts",
+            info.text = "Histogram of the density distribution of total counts per sample. Samples can be grouped using the {Group by} setting.",
             caption = "Density distribution of total counts per sample/group",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
@@ -187,8 +223,8 @@ DataViewUI <- function(id) {
           col_widths = c(5, 7),
           dataview_plot_genetypes_ui(
             ns("counts_genetypes"),
-            title = tspan("Proportion of major gene types"),
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Gene types can be ribosomal genes, kinases or RNA binding motifs, etc..",
+            title = "Proportion of major gene types",
+            info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
             caption = "Barplot showing the proportion of major gene types.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
@@ -197,7 +233,7 @@ DataViewUI <- function(id) {
           dataview_plot_abundance_ui(
             ns("counts_abundance"),
             title = "Proportion of major gene types per sample/group",
-            info.text = "The samples (or cells) can be grouped/ungrouped in the grouped setting under the main Options. Gene types can be ribosomal genes, kinases or RNA binding motifs, etc..",
+            info.text = "Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting.",
             caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             label = "e",
@@ -237,7 +273,8 @@ DataViewUI <- function(id) {
           dataview_plot_phenoheatmap_ui(
             ns("phenoheatmap"),
             title = "Phenotype clustering",
-            info.text = "Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix.",
+            info.text = "Clustering of the available phenotypes across all samples. Samples can be filtered using the {Filter samples} setting.",
+            info.methods = "Column ordering performed using unsupervised clustering on a one-hot encoded matrix. Perfomed using the hierarchical clustering method from the R core stats package.",
             caption = "Clustered heatmap of sample information (i.e. phenotype data)",
             height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
@@ -249,7 +286,9 @@ DataViewUI <- function(id) {
             width = c("auto", "100%"),
             label = "b",
             title = "Phenotype correlation",
-            info.text = "Phenotype correlation matrix. Clustered heatmap of phenotype correlation. Phenotypes are stratified into their conditions. The size of the dots correspond to the absolute correlation between two phenotype conditions. Red corresponds to positive correlation, blue corresponds to negative correlation.",
+            info.text = "Correlation matrix of the phenotypes.",
+            info.methods = "Correlation for categorical vs categorical phenotypes performed using fisher test, categorical vs continuous phenotypes performed using Krusall-Wallace and continuous vs continuous phenotypes performed using pearson correlation (all three done using the core R stats package). The size of the dots correspond to the absolute correlation between two phenotype conditions. Red corresponds to positive correlation, blue corresponds to negative correlation.",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
             caption = "Clustered heatmap of phenotype correlation."
           )
         ),

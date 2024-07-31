@@ -15,15 +15,16 @@
 compare_plot_cum_fc2_ui <- function(id,
                                     height,
                                     width,
+                                    title,
+                                    info.text,
                                     label) {
   ns <- shiny::NS(id)
-  info_text <- "Barplot showing the fold changes on dataset 2"
 
   PlotModuleUI(ns("plot"),
-    title = "Foldchange (Dataset 2)",
+    title = title,
     plotlib = "plotly",
     label = label,
-    info.text = info_text,
+    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width
@@ -41,17 +42,23 @@ compare_plot_cum_fc2_server <- function(id,
                                         pgx,
                                         dataset2,
                                         cum_fc,
+                                        compute,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    cum_fc_triggered <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      cum_fc_triggered(cum_fc())
+    })
+
     cumfcplot.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2)
-      shiny::req(cum_fc)
+      shiny::req(cum_fc_triggered())
 
       # Get the cumulative fold changes for dataset 1
-      FC <- cum_fc()
+      FC <- cum_fc_triggered()
       indexes <- substr(colnames(FC), 1, 1)
       F2 <- FC[, indexes == 2, drop = FALSE]
       ii <- head(order(-rowMeans(FC**2)), 40)

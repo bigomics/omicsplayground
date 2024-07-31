@@ -10,6 +10,7 @@ dataview_plot_phenoheatmap_ui <- function(
     width,
     title,
     info.text,
+    info.methods,
     caption) {
   ns <- shiny::NS(id)
 
@@ -25,6 +26,7 @@ dataview_plot_phenoheatmap_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
+    info.methods = info.methods,
     caption = caption,
     options = opts,
     download.fmt = c("png", "pdf", "csv"),

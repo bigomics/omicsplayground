@@ -2,6 +2,8 @@
 ######################
 libx/
 etc/online/
+etc/
+etc/hubspot_creds
 
 # R data
 ######################

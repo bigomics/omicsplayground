@@ -8,6 +8,8 @@ loading_tsne_ui <- function(
     title,
     info.text,
     info.references = NULL,
+    info.methods = NULL,
+    info.extra_link = NULL,
     caption,
     label = "",
     height,
@@ -20,6 +22,8 @@ loading_tsne_ui <- function(
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
     info.references = info.references,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     caption = caption,
@@ -155,10 +159,10 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
         data = df,
         x = ~x,
         y = ~y,
-        text = ~ paste(
-          ifelse(nrow(df), "Dataset:", "Whoops!"), dataset,
-          ifelse(nrow(df), "<br>Comparison:", ""), comparison
-        ),
+        text = ~ I(paste(
+          ifelse(nrow(df), "<b>Dataset:</b>", "Whoops!"), dataset,
+          ifelse(nrow(df), "<br><b>Comparison:</b>", ""), comparison
+        )),
         color = ~dataset,
         marker = list(
           size = marker_size,
@@ -166,7 +170,8 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             color = omics_colors("super_dark_grey"),
             width = 1.0
           )
-        )
+        ),
+        hovertemplate = "%{text}<br><b>tsne-x:</b> %{x:.2f}<br><b>tsne-y:</b> %{y:.2f}<extra></extra>"
       )
 
       fig <- fig %>%
@@ -197,7 +202,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             showticklabels = FALSE
           )
         )
-
+      fig <- plotly_default(fig)
       fig
     }
 
@@ -215,6 +220,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
           )
         )
       p <- plotly::style(p, marker.size = marker_size)
+      p <- plotly_modal_default(p)
       p
     }
 

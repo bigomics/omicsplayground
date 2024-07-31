@@ -3,10 +3,13 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
+compare_plot_gene_corr_ui <- function(
+    id,
+    title,
+    info.text,
+    label = "",
+    height = c(600, 800)) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
 
   genecorr.opts <- shiny::tagList(
     withTooltip(shiny::selectInput(ns("colorby"), "Color by:", choices = NULL, multiple = FALSE),
@@ -18,9 +21,9 @@ compare_plot_gene_corr_ui <- function(id, label = "", height = c(600, 800)) {
   PlotModuleUI(
     ns("plot"),
     plotlib = "plotly",
-    title = "Gene correlation",
+    title = title,
     label = "c",
-    info.text = info_text,
+    info.text = info.text,
     options = genecorr.opts,
     height = height,
     width = c("auto", "100%"),
@@ -36,11 +39,19 @@ compare_plot_gene_corr_server <- function(id,
                                           hilightgenes,
                                           getOmicsScoreTable,
                                           score_table,
+                                          compute,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    shiny::observeEvent(input.contrast1(), {
-      shiny::req(input.contrast1())
-      ct <- input.contrast1()
+    contrast1 <- shiny::reactiveVal(FALSE)
+    contrast2 <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      contrast1(input.contrast1())
+      contrast2(input.contrast2())
+    })
+
+    shiny::observeEvent(contrast1(), {
+      shiny::req(contrast1())
+      ct <- contrast1()
       shiny::updateSelectInput(session, "colorby", choices = ct, selected = ct[1])
     })
 
@@ -48,14 +59,14 @@ compare_plot_gene_corr_server <- function(id,
       shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
       shiny::req(hilightgenes())
-      shiny::req(input.contrast1())
-      shiny::req(input.contrast2())
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       shiny::req(score_table())
 
       pgx1 <- pgx
       pgx2 <- dataset2()
-      ct1 <- input.contrast1()
-      ct2 <- input.contrast2()
+      ct1 <- contrast1()
+      ct2 <- contrast2()
       gg <- intersect(rownames(pgx1$X), rownames(pgx2$X))
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
 
@@ -139,8 +150,8 @@ compare_plot_gene_corr_server <- function(id,
       shiny::req(getOmicsScoreTable())
       shiny::req(input$colorby)
       shiny::req(hilightgenes())
-      shiny::req(input.contrast1())
-      shiny::req(input.contrast2())
+      shiny::req(contrast1())
+      shiny::req(contrast2())
       shiny::req(score_table())
 
       # Input variables

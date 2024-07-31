@@ -7,6 +7,9 @@ enrichment_plot_compare_ui <- function(
     id,
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption,
     height,
     width) {
@@ -17,6 +20,9 @@ enrichment_plot_compare_ui <- function(
     title = title,
     caption = caption,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     height = height,
     width = width,
     download.fmt = c("png", "pdf")

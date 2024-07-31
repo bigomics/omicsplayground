@@ -47,11 +47,11 @@ wordcloud_table_leading_edge_server <- function(id,
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
       leading.edge_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
         df$leading.edge
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
 
       tbl <- DT::datatable(df,

@@ -9,6 +9,8 @@ featuremap_plot_gene_sig_ui <- function(
     title,
     caption,
     info.text,
+    info.methods,
+    info.extra_link,
     height,
     width) {
   ns <- shiny::NS(id)
@@ -18,6 +20,8 @@ featuremap_plot_gene_sig_ui <- function(
     title = title,
     label = "b",
     info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     caption = caption,
     height = height,
     width = width,

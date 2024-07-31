@@ -8,6 +8,9 @@ featuremap_plot_geneset_map_ui <- function(
     label = "",
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption,
     height,
     width) {
@@ -17,7 +20,7 @@ featuremap_plot_geneset_map_ui <- function(
     shiny::selectInput(ns("gsmap_nlabel"), "nr labels:",
       choices = c(0, 10, 20, 50, 100, 1000), selected = 20
     ),
-    shiny::sliderInput(ns("gsmap_gamma"), "tweak colors:",
+    shiny::sliderInput(ns("gsmap_gamma"), "color gamma:",
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("gsmap_colorby"), "color by:",
@@ -34,6 +37,9 @@ featuremap_plot_geneset_map_ui <- function(
     plotlib = "plotly",
     plotlib2 = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = plot.opts,
     height = height,

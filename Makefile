@@ -10,6 +10,9 @@ run.headless:
 run.tee: 
 	Rscript dev/run_app.R 2>&1 | tee -a run.log
 
+run.profvis:
+	Rscript dev/run_app_profvis.R
+
 sass: FORCE
 	Rscript dev/sass.R
 	Rscript dev/create_source_all.R
@@ -57,7 +60,7 @@ docker.base: FORCE
 	docker build  \
 		--progress plain \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v3 .
+	  	-t bigomics/omicsplayground-base:ub2204_v4rc .
 
 docker.base2: FORCE
 	@echo building docker BASE
@@ -97,7 +100,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta3"
+VERSION = "v3.5.0-beta4"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
