@@ -6,6 +6,10 @@
 UploadUI <- function(id) {
   ns <- NS(id)
 
+  species1 <- as.character(playbase::SPECIES_TABLE$species_name)
+  species2 <- playbase::allSpecies.ORTHOGENE()
+  AVAILABLE_SPECIES <- c(species1[1:4], intersect(species1, species2))
+
   body <- div(
     style = "overflow: auto;",
     bslib::as_fill_carrier(),
@@ -15,7 +19,7 @@ UploadUI <- function(id) {
         style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",
         div(
           style = "width: 40%;",
-          bs_alert("To upload your own data, you should prepare at least two CSV files: an <b>expression.csv</b> file (containing your RNA-seq data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>.", closable = FALSE, translate = TRUE, html = TRUE)
+          bs_alert("To upload your own data, you should prepare at least two CSV files: an <b>expression.csv</b> file (containing your experiment data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>.", closable = FALSE, translate = TRUE, html = TRUE)
         ),
         br(),
         div(
@@ -36,7 +40,7 @@ UploadUI <- function(id) {
           shiny::selectInput(
             inputId = ns("selected_organism"),
             label = NULL,
-            choices = NULL,
+            choices = AVAILABLE_SPECIES,
             ## selected = 1,
             multiple = FALSE
           )

@@ -50,7 +50,7 @@ PlotModuleUI <- function(id,
 
   if (translate) {
     info.text <- tspan(info.text)
-    ##    title = tspan(title)
+    title <- tspan(title)
     caption <- tspan(caption)
     caption2 <- tspan(caption2)
   }

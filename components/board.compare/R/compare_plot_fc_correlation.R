@@ -47,14 +47,20 @@ compare_plot_fc_correlation_server <- function(id,
                                                hilightgenes,
                                                input.contrast1,
                                                input.contrast2,
+                                               compute,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    cum_fc_triggered <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(compute(), {
+      cum_fc_triggered(cum_fc())
+    })
+
     plot_data <- shiny::reactive({
       # Require inputs
-      shiny::req(cum_fc())
-      out_data <- cum_fc()
+      shiny::req(cum_fc_triggered())
+      out_data <- cum_fc_triggered()
       return(out_data)
     })
 
@@ -166,6 +172,7 @@ compare_plot_fc_correlation_server <- function(id,
     }
 
     fcfcplot.RENDER <- function() {
+      shiny::validate(shiny::need(cum_fc_triggered(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
       p <- plot_interactive_comp_fc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,

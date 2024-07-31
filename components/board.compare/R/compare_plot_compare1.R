@@ -48,52 +48,56 @@ compare_plot_compare1_ui <- function(id,
 compare_plot_compare1_server <- function(id,
                                          pgx,
                                          input.contrast1,
-                                         input.contrast2,
+                                         ## input.contrast2,
                                          hilightgenes,
                                          createPlot,
                                          plottype,
                                          dataset2,
+                                         ## compute,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    plot_data <- shiny::reactive({
-      req(input.contrast2())
+    ## ------- no need! trigger on input.contrast1 <- reactiveVal <- button
+    ## contrast1 <- shiny::reactiveVal(FALSE)
+    ## contrast2 <- shiny::reactiveVal(FALSE)
+    ## shiny::observeEvent(compute(), {
+    ##   contrast1(input.contrast1())
+    ##   contrast2(input.contrast2())
+    ## })
+
+    call_createPlot <- function( get_data ) {
+
+      ct1 <- input.contrast1()
+      ##req(ct1)
       pgx1 <- pgx
       pgx2 <- dataset2()
       all.ct <- names(pgx1$gx.meta$meta)
-      ct1 <- input.contrast1()
-      shiny::req(ct1)
-      if (!all(ct1 %in% all.ct)) {
+      ##shiny::req(ct1)
+      if(length(ct1)==0) ct1 <- all.ct[1]
+      if (!any(ct1 %in% all.ct)) {
         return(NULL)
       }
+      ct1 <- intersect(ct1, all.ct)
       higenes <- hilightgenes()
       cex.lab <- 1.0
       ntop <- 9999
       type <- plottype()
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      data <- createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop, TRUE)
+      data <- createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop, get_data )
+      data
+    }
+    
+    plot_data <- shiny::reactive({
+      data <- call_createPlot( get_data = TRUE ) 
       return(data)
     })
 
     scatter1.RENDER <- shiny::reactive({
-      req(input.contrast2())
-      pgx1 <- pgx
-      pgx2 <- dataset2()
-      all.ct <- names(pgx1$gx.meta$meta)
-      ct1 <- input.contrast1()
-      shiny::req(ct1)
-      if (!all(ct1 %in% all.ct)) {
-        return(NULL)
-      }
-      higenes <- hilightgenes()
-      cex.lab <- 1.0
-      ntop <- 9999
-      type <- plottype()
-
-      if (length(higenes) <= 3) cex.lab <- 1.3
-      createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop)
+      dbg("[compare_plot_compare1_server:scatter1.RENDER] reacted! ")
+      ## shiny::validate(shiny::need(input.contrast1(), "Please select contrasts and run 'Compute'"))
+      call_createPlot( get_data = FALSE )      
     })
 
     PlotModuleServer(
