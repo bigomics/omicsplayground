@@ -143,8 +143,8 @@ upload_module_normalization_server <- function(
             ref <- NULL
             if (m == "reference") {
               ref <- input$ref_gene
-              shiny::validate(shiny::need(!is.null(ref), tspan("Please select reference gene")))
-              ## shiny::req(ref)
+              shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene")))
+              shiny::req(ref)
             }
             prior <- ifelse(m == "CPM", 1, 1e-4)
             normCounts <- playbase::pgx.countNormalization(pmax(2**X - prior, 0), method = m, ref = ref)
@@ -355,6 +355,7 @@ upload_module_normalization_server <- function(
         X0 <- imputedX()
         ## X1 <- normalizedX()
         X1 <- cleanX()$X
+        main.tt <- ifelse( input$normalize, norm_method(), "no normalization")
 
         if (input$norm_plottype == "boxplot") {
           if (ncol(X0) > 40) {
@@ -367,29 +368,28 @@ upload_module_normalization_server <- function(
             rX <- rX[ii, jj]
           }
 
-          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+          par(mfrow = c(1, 2), mar = c(6.5, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           boxplot(
             X0,
             main = "raw",
             ylim = range(X0, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X0, na.rm = TRUE)),
             las = 2,
-            ylab = "expression (log2)",
+            ylab = tspan("counts (log2)"),
             xlab = "",
             cex.axis = 0.8,
             cex = 0.5
           )
 
-          rx1 <-
-            boxplot(
-              X1,
-              main = "normalized",
-              ylim = range(X1, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X1, na.rm = TRUE)),
-              las = 2,
-              ylab = "",
-              xlab = "",
-              cex.axis = 0.8,
-              cex = 0.5
-            )
+          boxplot(
+            X1,
+            main = main.tt,
+            ylim = range(X1, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X1, na.rm = TRUE)),
+            las = 2,
+            ylab = "",
+            xlab = "",
+            cex.axis = 0.8,
+            cex = 0.5
+          )
         }
 
         if (input$norm_plottype == "histogram") {
@@ -404,11 +404,11 @@ upload_module_normalization_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = "expression (log2)"
+            las = 1, xlab = tspan("counts (log2)")
           )
           hist(X1,
-            breaks = 60, main = "normalized", xlim = xlim1,
-            las = 1, xlab = "expression (log2)", ylab = ""
+            breaks = 60, main = main.tt, xlim = xlim1,
+            las = 1, xlab = tspan("counts (log2)"), ylab = ""
           )
         }
 
@@ -425,12 +425,12 @@ upload_module_normalization_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           playbase::gx.hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = "expression (log2)"
+            las = 1, xlab = tspan("counts (log2)")
           )
 
           playbase::gx.hist(X1,
-            breaks = 60, main = "normalized", xlim = xlim1,
-            las = 1, xlab = "expression (log2)", ylab = ""
+            breaks = 60, main = main.tt, xlim = xlim1,
+            las = 1, xlab = tspan("counts (log2)"), ylab = ""
           )
         }
       }
@@ -765,7 +765,7 @@ upload_module_normalization_server <- function(
                       )
                     )
                   ),
-                  shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE)
+                  shiny::checkboxInput(ns("quantile_norm"), "Add quantile normalization", value = TRUE)
                 ),
                 br()
               ),
@@ -777,8 +777,7 @@ upload_module_normalization_server <- function(
                   "input.remove_outliers == true",
                   ns = ns,
                   shiny::sliderInput(
-                    ns("outlier_threshold"), "Select threshold:",
-                    1, 12, 6, 1
+                    ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1
                   )
                 ),
                 br()
