@@ -250,7 +250,9 @@ PlotModuleUI <- function(id,
           shiny::HTML("<b>Methods</b><br>"),
           shiny::HTML(info.methods)
         )
-      } else {NULL},
+      } else {
+        NULL
+      },
       if (!is.null(info.references)) {
         html_code <- ""
         for (i in seq_along(info.references)) {
@@ -272,7 +274,9 @@ PlotModuleUI <- function(id,
             shiny::HTML(html_code)
           )
         )
-      } else {NULL},
+      } else {
+        NULL
+      },
       if (!is.null(info.extra_link)) {
         shiny::div(
           class = "plotmodule-info",

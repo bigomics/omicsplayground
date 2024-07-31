@@ -329,9 +329,9 @@ ClusteringUI <- function(id) {
               info.methods = "The modules are computed using the fastcluster R package [1].",
               info.references = list(
                 list(
-                    "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
-                    "https://doi.org/10.18637/jss.v053.i09"
-                  )
+                  "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                  "https://doi.org/10.18637/jss.v053.i09"
+                )
               ),
               info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "",

@@ -174,7 +174,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     getOmicsScoreTable <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2())
-      shiny::req(contrast1())  ## trigger on button
+      shiny::req(contrast1()) ## trigger on button
       shiny::req(contrast2())
       shiny::req(
         contrast2() %in% colnames(playbase::pgx.getMetaMatrix(dataset2())$fc)
@@ -345,7 +345,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     )
 
     # FC Correlation
-    
+
     compare_plot_fc_correlation_server(
       "fcfcplot",
       cum_fc = cum_fc,

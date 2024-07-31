@@ -98,7 +98,7 @@ compare_plot_compare2_server <- function(id,
       ntop <- 9999
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      dbg("[compare_plot_compare1_server:scatter2.RENDER] createPlot")      
+      dbg("[compare_plot_compare1_server:scatter2.RENDER] createPlot")
       createPlot(pgx2, pgx1, pgx2, ct2, type, cex.lab, higenes, ntop)
     })
 

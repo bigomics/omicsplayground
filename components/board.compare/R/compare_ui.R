@@ -29,14 +29,14 @@ CompareInputs <- function(id) {
         ns("compare_button"),
         label = "Compare",
         class = "btn-outline-primary",
-        icon = icon("refresh")        
+        icon = icon("refresh")
       ),
       "Click to start comparison computation.",
       placement = "right"
     ),
     shiny::br(),
     shiny::br(),
-    shiny::br(),        
+    shiny::br(),
     withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "right", options = list(container = "body")

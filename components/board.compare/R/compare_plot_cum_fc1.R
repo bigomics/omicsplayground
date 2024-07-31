@@ -41,7 +41,7 @@ compare_plot_cum_fc1_ui <- function(id,
 compare_plot_cum_fc1_server <- function(id,
                                         pgx,
                                         dataset2,
-                                        cum_fc,   
+                                        cum_fc,
                                         ## compute,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -55,12 +55,12 @@ compare_plot_cum_fc1_server <- function(id,
     cumfcplot.RENDER <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2)
-      ##shiny::req(cum_fc_triggered())
+      ## shiny::req(cum_fc_triggered())
       shiny::req(cum_fc())
 
       # Get the cumulative fold changes for dataset 1
       ##      FC <- cum_fc_triggered()
-      FC <- cum_fc()      
+      FC <- cum_fc()
       indexes <- substr(colnames(FC), 1, 1)
       F1 <- FC[, indexes == 1, drop = FALSE]
       ii <- head(order(-rowMeans(FC**2)), 40)

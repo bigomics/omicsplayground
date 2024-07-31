@@ -4,12 +4,11 @@
 ##
 
 compare_plot_expression_ui <- function(
-  id,
-  label = "",
-  height = c(600, 800),
-  title,
-  info.text
-) {
+    id,
+    label = "",
+    height = c(600, 800),
+    title,
+    info.text) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -43,11 +42,14 @@ compare_plot_expression_server <- function(id,
     })
 
     plotly_multibarplot.RENDER <- shiny::reactive({
-      dt <- tryCatch({
-        getOmicsScoreTable()
-      }, error = function(w) {
-        FALSE
-      })
+      dt <- tryCatch(
+        {
+          getOmicsScoreTable()
+        },
+        error = function(w) {
+          FALSE
+        }
+      )
       shiny::validate(shiny::need(dt, "Please select contrasts and run 'Compute'"))
       shiny::req(contrast1())
       shiny::req(contrast2())

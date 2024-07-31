@@ -24,7 +24,7 @@ compare_plot_compare1_ui <- function(id,
   info_text <- "<b>Expression scatter plot.</b> Scatter plots of gene expression."
 
   PlotModuleUI(ns("plot"),
-    title =  title,
+    title = title,
     plotlib = "base",
     label = "a",
     info.text = info.text,
@@ -66,15 +66,14 @@ compare_plot_compare1_server <- function(id,
     ##   contrast2(input.contrast2())
     ## })
 
-    call_createPlot <- function( get_data ) {
-
+    call_createPlot <- function(get_data) {
       ct1 <- input.contrast1()
-      ##req(ct1)
+      ## req(ct1)
       pgx1 <- pgx
       pgx2 <- dataset2()
       all.ct <- names(pgx1$gx.meta$meta)
-      ##shiny::req(ct1)
-      if(length(ct1)==0) ct1 <- all.ct[1]
+      ## shiny::req(ct1)
+      if (length(ct1) == 0) ct1 <- all.ct[1]
       if (!any(ct1 %in% all.ct)) {
         return(NULL)
       }
@@ -85,19 +84,19 @@ compare_plot_compare1_server <- function(id,
       type <- plottype()
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      data <- createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop, get_data )
+      data <- createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop, get_data)
       data
     }
-    
+
     plot_data <- shiny::reactive({
-      data <- call_createPlot( get_data = TRUE ) 
+      data <- call_createPlot(get_data = TRUE)
       return(data)
     })
 
     scatter1.RENDER <- shiny::reactive({
       dbg("[compare_plot_compare1_server:scatter1.RENDER] reacted! ")
       ## shiny::validate(shiny::need(input.contrast1(), "Please select contrasts and run 'Compute'"))
-      call_createPlot( get_data = FALSE )      
+      call_createPlot(get_data = FALSE)
     })
 
     PlotModuleServer(

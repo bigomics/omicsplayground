@@ -4,12 +4,11 @@
 ##
 
 compare_plot_gene_corr_ui <- function(
-  id,
-  title,
-  info.text,
-  label = "",
-  height = c(600, 800)
-) {
+    id,
+    title,
+    info.text,
+    label = "",
+    height = c(600, 800)) {
   ns <- shiny::NS(id)
 
   genecorr.opts <- shiny::tagList(
@@ -43,7 +42,6 @@ compare_plot_gene_corr_server <- function(id,
                                           compute,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     contrast1 <- shiny::reactiveVal(FALSE)
     contrast2 <- shiny::reactiveVal(FALSE)
     shiny::observeEvent(compute(), {
