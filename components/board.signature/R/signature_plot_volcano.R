@@ -94,7 +94,7 @@ signature_plot_volcano_server <- function(id,
       sel <- enrichmentGeneTable$rows_selected()
       # Get gene selected labels
       if (length(sel)) {
-        sel.gene <- getEnrichmentGeneTable()[sel,1]
+        sel.gene <- getEnrichmentGeneTable()[sel, 1]
       } else {
         sel.gene <- head(gsea$gset, 20)
       }
