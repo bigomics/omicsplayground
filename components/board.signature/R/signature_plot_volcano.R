@@ -88,21 +88,9 @@ signature_plot_volcano_server <- function(id,
       sel <- enrichmentGeneTable$rows_selected()
       # Get gene selected labels
       if (length(sel)) {
-        df <- getEnrichmentGeneTable()
-        sel.gene <- df$gene[sel]
-        ## sel.gene <- df$symbol[sel]
-        ## # Use symbol/feature if in gset
-        ## if (sel.gene %in% gset) {
-        ##   gset <- sel.gene
-        ## } else {
-        ##   sel.gene <- df$feature[sel]
-        ## }
+        sel.gene <- getEnrichmentGeneTable()[sel,1]
       } else {
-        score <- abs(fc) * -log(qv)
-        top_n <- function(x, n = 30) {
-          names(sort(x, decreasing = TRUE))[1:n]
-        }
-        sel.gene <- apply(score, 2, top_n)
+        sel.gene <- head(gsea$gset, 20)
       }
 
       # Call volcano plots
