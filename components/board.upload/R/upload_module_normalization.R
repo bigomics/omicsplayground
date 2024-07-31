@@ -71,6 +71,14 @@ upload_module_normalization_server <- function(
         }
       )
 
+      observeEvent( input$scaling_method, {
+        shiny::req(input$scaling_method=='reference')
+        gg <- sort(rownames(r_X()))
+        updateSelectizeInput(session, "ref_gene", choices = gg,
+                             selected = character(0), server = TRUE)
+      })
+
+      
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
@@ -96,7 +104,7 @@ upload_module_normalization_server <- function(
         }
 
         m <- input$scaling_method
-        prior <- ifelse(m == "CPM", 1, 1e-3) ## NEW
+        prior <- ifelse(m == "CPM", 1, 1e-4) ## NEW
         X <- log2(counts + prior) ## NEED RETHINK
         ## X <- log2(counts + 0.001)
 
@@ -132,8 +140,13 @@ upload_module_normalization_server <- function(
             shiny::incProgress(amount = 0.25, "Normalization...")
             dbg("[normalization_server:normalizedX] Normalizing data using ", m)
             ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
-            prior <- ifelse(m == "CPM", 1, 1e-3)
-            normCounts <- playbase::pgx.countNormalization(2**X - prior, method = m)
+            prior <- ifelse(m == "CPM", 1, 1e-4)
+            ref <- NULL
+            if(m == "reference") {
+              ref <- input$ref_gene
+              shiny::req(ref)
+            }
+            normCounts <- playbase::pgx.countNormalization(2**X - prior, method = m, ref = ref)
             X <- log2(normCounts + prior)
             if (input$quantile_norm) {
               dbg("[normalization_server:normalizedX] Applying quantile normalization")
@@ -238,7 +251,7 @@ upload_module_normalization_server <- function(
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
-        prior <- ifelse(input$scaling_method == "CPM", 1, 1e-3)
+        prior <- ifelse(input$scaling_method == "CPM", 1, 1e-4)
         dbg("[normalization_server:correctedCounts] Generating correctedCounts matrix. Prior=", prior)
         counts <- 2**X - prior
         dbg("[normalization_server:correctedCounts] dim.correctedCounts = ", dim(counts))
@@ -292,10 +305,6 @@ upload_module_normalization_server <- function(
           }
         )
 
-        ## selected <- res$best.method
-        ## dbg("[normalization_server:results_correction_methods] selected.best_method = ", selected)
-        ## shiny::updateSelectInput(session, "bec_method", selected = selected)
-
         return(res)
       })
 
@@ -340,12 +349,6 @@ upload_module_normalization_server <- function(
         ## X1 <- normalizedX()
         X1 <- cleanX()$X
 
-        ## if (input$norm_zero_na) {
-        ##  which.zero <- which(rX == 0)
-        ##  X0[X0 == 0] <- NA
-        ##  X1[X1 == 0] <- NA
-        ## }
-
         if (input$norm_plottype == "boxplot") {
           if (ncol(X0) > 40) {
             jj <- sample(ncol(X0), 40)
@@ -358,14 +361,27 @@ upload_module_normalization_server <- function(
           }
 
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-          boxplot(X0,
-            main = "raw", ylim = c(min(X0, na.rm = TRUE) * 0.8, max(X0, na.rm = TRUE) * 1.2),
-            las = 2, ylab = "expression (log2)", xlab = "", cex.axis = 0.8, cex = 0.5
+          boxplot(
+            X0,
+            main = "raw",
+            ylim = range(X0,na.rm=TRUE) + 0.2*c(-1,1)*diff(range(X0,na.rm=TRUE)),
+            las = 2,
+            ylab = "expression (log2)",
+            xlab = "",
+            cex.axis = 0.8,
+            cex = 0.5
           )
 
-          boxplot(X1,
-            main = "normalized", ylim = c(min(X1, na.rm = TRUE) * 0.8, max(X1, na.rm = TRUE) * 1.2),
-            las = 2, ylab = "", xlab = "", cex.axis = 0.8, cex = 0.5
+          rx1 <- 
+          boxplot(
+            X1,
+            main = "normalized",
+            ylim = range(X1,na.rm=TRUE) + 0.2*c(-1,1)*diff(range(X1,na.rm=TRUE)),
+            las = 2,
+            ylab = "",
+            xlab = "",
+            cex.axis = 0.8,
+            cex = 0.5
           )
         }
 
@@ -658,10 +674,12 @@ upload_module_normalization_server <- function(
         )
 
         norm.options <- tagList(
-          shiny::radioButtons(ns("norm_plottype"), "Plot type:", c("boxplot", "histogram", "density"),
-            selected = "boxplot", inline = TRUE
-          ),
-          shiny::checkboxInput(ns("norm_zero_na"), "zero as NA", FALSE)
+          shiny::radioButtons(
+                   ns("norm_plottype"),
+                   label = "Plot type:",
+                   choices = c("boxplot", "histogram", "density"),
+                   selected = "boxplot", inline = FALSE
+          )
         )
 
         outlier.options <- tagList(
@@ -693,8 +711,7 @@ upload_module_normalization_server <- function(
                       "Zero" = "zero",
                       "MinDet",
                       "MinProb"
-                      ## "NMF",
-                      ## "Skip imputation" = "skip_imputation"
+                      ## "NMF"
                     ),
                     selected = "SVD2"
                   )
@@ -711,15 +728,21 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("scaling_method"), NULL,
-                    choices = c(
-                      "LogCPM" = "CPM", ## log2(nC+1)
-                      "LogMaxMedian" = "logMaxMedian",
-                      "LogMaxSum" = "logMaxSum"
-                      ##                      "Skip normalization" = "Skip_normalization"
-                    ),
+                    choices = c("CPM", "maxMedian", "maxSum", "TMM",
+                                "reference"),
                     selected = ifelse(tolower(upload_datatype()) == "proteomics",
-                      "logMaxMedian", "CPM"
+                      "maxMedian", "CPM"
                     )
+                  ),
+                  shiny::conditionalPanel(
+                    "input.scaling_method == 'reference'",
+                    ns = ns,
+                    shiny::selectizeInput(
+                             ns("ref_gene"), NULL, choices = NULL, multiple=TRUE,
+                             options = list(
+                               placeholder = tspan("Choose gene...")
+                             )
+                           )
                   ),
                   shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE)
                 ),
