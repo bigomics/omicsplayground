@@ -135,7 +135,6 @@ upload_module_normalization_server <- function(
       normalizedX <- reactive({
         shiny::req(dim(imputedX()))
         X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
-
         if (input$normalize) {
           m <- input$scaling_method
           shiny::withProgress(message = "Normalizing the data...", value = 0, {
@@ -146,7 +145,8 @@ upload_module_normalization_server <- function(
             ref <- NULL
             if (m == "reference") {
               ref <- input$ref_gene
-              shiny::req(ref)
+              shiny::validate(shiny::need(!is.null(ref), tspan("Please select reference gene")))
+              ## shiny::req(ref)
             }
             normCounts <- playbase::pgx.countNormalization(2**X - prior, method = m, ref = ref)
             X <- log2(normCounts + prior)
@@ -271,13 +271,13 @@ upload_module_normalization_server <- function(
         samples <- r_samples()
         contrasts <- r_contrasts()
 
-        nmissing <- sum(is.na(X0))
-        if (nmissing > 0) {
+        nmissing0 <- sum(is.na(X0))
+        if (nmissing0 > 0) {
           X0 <- playbase::imputeMissing(X0, method = "SVD2")
         }
 
-        nmissing <- sum(is.na(X1))
-        if (nmissing > 0) {
+        nmissing1 <- sum(is.na(X1))
+        if (nmissing1 > 0) {
           X1 <- playbase::imputeMissing(X1, method = "SVD2")
         }
 
@@ -307,6 +307,12 @@ upload_module_normalization_server <- function(
           }
         )
 
+        ## ## take out failed methods
+        ## xlist.ok <- sapply(res$xlist, function(x) !any(class(x)=="try-error"))
+        ## pos.ok <- sapply(res$pos, function(x) !any(class(x)=="try-error"))
+        ## res$xlist <- res$xlist[which(xlist.ok && pos.ok)]
+        ## res$pos <- res$pos[which(xlist.ok && pos.ok)]
+        
         return(res)
       })
 
@@ -585,13 +591,13 @@ upload_module_normalization_server <- function(
         out.res <- results_outlier_methods()
         shiny::req(res)
         shiny::req(out.res)
-
+                
         mm <- c("ComBat", "RUV", "SVA", "NPM")
+        mm <- intersect(mm, names(res$pos)) 
         pos.list <- res$pos[mm]
         ## get same positions as after outlier detection
         pos0 <- out.res$pos[["pca"]]
         pos.list <- c(list("uncorrected" = pos0), pos.list)
-
         names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
 
         pheno <- res$pheno
@@ -622,11 +628,21 @@ upload_module_normalization_server <- function(
         pos0 <- out.res$pos[["pca"]]
         method <- input$bec_method
 
+        if(!method %in% names(res$pos)) {
+          plot.new()
+          text(0.45,0.5,"method failed")
+          return(NULL)
+        }
+        
         if (!input$batchcorrect) {
           pos1 <- pos0
         } else {
           pos1 <- res$pos[[method]]
         }
+
+        dbg("[UploadModule::plot_before_after] class.pos1 = ", class(pos1))
+
+        
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, ]
         pos1 <- pos1[kk, ]
@@ -743,7 +759,8 @@ upload_module_normalization_server <- function(
                     ns = ns,
                     shiny::selectizeInput(
                       ns("ref_gene"), NULL,
-                      choices = NULL, multiple = TRUE,
+                      choices = NULL,
+                      multiple = FALSE,
                       options = list(
                         placeholder = tspan("Choose gene...")
                       )
