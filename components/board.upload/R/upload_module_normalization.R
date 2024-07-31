@@ -446,7 +446,7 @@ upload_module_normalization_server <- function(
         if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
-        } else if (any(is.na(X0)) && !any(is.na(X1))) {
+        } else if (FALSE && any(is.na(X0)) && !any(is.na(X1))) {
           X0[!is.na(X0)] <- 2
           X0[is.na(X0)] <- 1
           par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.5, 0.5), mgp = c(2.2, 0.85, 0))
@@ -719,22 +719,22 @@ upload_module_normalization_server <- function(
               bslib::accordion_panel(
                 title = "1. Missing values",
                 shiny::p("Replace missing values using an imputation method:\n"),
+                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
                 shiny::checkboxInput(ns("impute"), label = "Impute missing values", value = TRUE),
                 shiny::conditionalPanel(
                   "input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
-                      "SVDimpute (default)" = "SVD2",
-                      "Zero" = "zero",
-                      "MinDet",
-                      "MinProb"
+                      "SVDimpute" = "SVD2"
+#                      "Zero" = "zero",
+#                      "MinDet",
+#                      "MinProb"
                       ## "NMF"
                     ),
                     selected = "SVD2"
                   )
                 ),
-                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
                 ## shiny::checkboxInput(ns("remove_xxl"), label = "Treat XXL as NA", value = FALSE),
                 br()
               ),
