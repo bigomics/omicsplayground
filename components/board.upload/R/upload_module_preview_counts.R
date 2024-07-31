@@ -226,9 +226,12 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
+
+      dbg("length(input$counts_csv$name) = ", length(input$counts_csv$name))
+      
       # check if counts is csv (necessary due to drag and drop of any file)
-      ext <- tools::file_ext(input$counts_csv$name)[1]
-      if (ext != "csv") {
+      ext <- tools::file_ext(input$counts_csv$name)
+      if (!all(ext == "csv")) {
         shinyalert::shinyalert(
           title = "File format not supported.",
           text = "Please make sure the file is a CSV file.",
@@ -238,7 +241,7 @@ upload_table_preview_counts_server <- function(
       }
 
       # if counts not in file name, give warning and return
-      if (!grepl("count", input$counts_csv$name, ignore.case = TRUE) && !grepl("expression", input$counts_csv$name, ignore.case = TRUE)) {
+      if (!any(grepl("count|expression|abundance", tolower(input$counts_csv$name)))) {
         shinyalert::shinyalert(
           title = tspan("Counts not in filename."),
           text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv."),
@@ -247,24 +250,25 @@ upload_table_preview_counts_server <- function(
         return()
       }
 
-      df <- playbase::read_counts(input$counts_csv$datapath)
-
-      is_expression <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
-      is_count <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
-
-      if (FALSE && is_expression) {
-        df <- 2**df
-        if (min(df, na.rm = TRUE) >= 1) df <- df - 1
-
-        # warn user that this is happening in background
-        shinyalert::shinyalert(
-          title = "",
-          text = "Expression counts uploaded. Converting log2 value to intensities.",
-          type = "warning"
-        )
+      sel <- grep("count|expression|abundance", tolower(input$counts_csv$name))
+      if(length(sel)) {
+        df <- playbase::read_counts(input$counts_csv$datapath[sel[1]])
+        uploaded$counts.csv <- df
       }
 
-      uploaded$counts.csv <- df
+      sel <- grep("samples", tolower(input$counts_csv$name))
+      if(length(sel)) {
+        df <- playbase::read_samples(input$counts_csv$datapath[sel[1]])
+        uploaded$samples.csv <- df
+      }
+
+      sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
+      if(length(sel)) {
+        df <- playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
+        uploaded$contrasts.csv <- df
+      }
+      
+      
     })
 
     observeEvent(input$remove_counts, {
