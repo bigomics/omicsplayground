@@ -355,7 +355,7 @@ upload_module_normalization_server <- function(
         X0 <- imputedX()
         ## X1 <- normalizedX()
         X1 <- cleanX()$X
-        main.tt <- ifelse( input$normalize, norm_method(), "no normalization")
+        main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
         if (input$norm_plottype == "boxplot") {
           if (ncol(X0) > 40) {
