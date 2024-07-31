@@ -9,7 +9,7 @@
 if(1) {
   if(!require("org.Hs.eg.db")) BiocManager::install("org.Hs.eg.db")
   if(!require("org.Mm.eg.db")) BiocManager::install("org.Mm.eg.db")
-  if(!require("org.Rn.eg.db")) BiocManager::install("org.Rn.eg.db")
+##  if(!require("org.Rn.eg.db")) BiocManager::install("org.Rn.eg.db")
 }
 
 if(0) {
@@ -18,10 +18,10 @@ if(0) {
   species <- c(
     "Homo sapiens",
     "Mus musculus",
-    "Rattus norvegicus"
-    ##  "Saccharomyces cerevisiae",
-    ##  "Drosophila melanogaster",
-    ##  "Caenorhabditis elegans"
+    ## "Rattus norvegicus"
+    ## "Saccharomyces cerevisiae",
+    ## "Drosophila melanogaster",
+    ## "Caenorhabditis elegans"
   )
   s <- species[1]
   for(s in species) {
