@@ -1007,6 +1007,40 @@ app_server <- function(input, output, session) {
     # not passed to the function called on error
     parent_env <- parent.frame()
     error <- parent_env$e
+    err_traceback <- NULL
+
+    if (!is.null(error)) {
+      err_traceback <- capture.output(
+        printStackTrace(
+          error,
+          full = get_devmode_option(
+            "shiny.fullstacktrace",
+            FALSE
+          ),
+          offset = getOption("shiny.stacktraceoffset", TRUE)
+        ),
+        type = "message"
+      )
+    }
+
+    # clean up and concatenate err_traceback
+
+    err_traceback <- paste(err_traceback, collapse = "\n")
+
+    pgx_name <- NULL
+    user_email <- auth$email
+    user_tab <- input$nav
+
+    if (!is.null(PGX)) {
+      pgx_name <- PGX$name
+    }
+
+    credential <- file.path(ETC, "hubspot_creds")
+
+    # write dbg statement
+    dbg("[SERVER] shiny.error triggered")
+
+    sendErrorLogToCustomerSuport(user_email, pgx_name, error = err_traceback, path_to_creds = credential)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 
