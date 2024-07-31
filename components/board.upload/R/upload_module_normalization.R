@@ -727,9 +727,9 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
                       "SVDimpute" = "SVD2"
-#                      "Zero" = "zero",
-#                      "MinDet",
-#                      "MinProb"
+                      #                      "Zero" = "zero",
+                      #                      "MinDet",
+                      #                      "MinProb"
                       ## "NMF"
                     ),
                     selected = "SVD2"
