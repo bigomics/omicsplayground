@@ -108,11 +108,33 @@ CompareUI <- function(id) {
           height = fullH,
           compare_plot_compare1_ui(
             id = ns("dataset1"),
+            title = "Dataset 1",
+            info.text = "Signature plot for the loaded dataset selected comparison (under {Dataset1}). This plot displays a UMAP clustering by default, however under option settings {Plot type} different methods can be used. Additionally a custom set of genes can be highlighted using {Highlight genes} or the {ntop} scoring. Multiple contrasts can be selected.",
+            info.methods = "Uniform Manifold Approximation and Projection (UMAP) is a non-linear dimensionality reduction method that enables visualization of high-dimensional data in a low-dimensional space (it has been computed using the umap R package [1]). Genes that are correlated are generally positioned close to each other. Red corresponds to positive correlation/covariance, blue for negative. Bland-Altman (MA) plot displays mean intensity versus fold-change. Volcano plot displays fold-change versus significance. Scatter plot displays the expression of the genes for the comparison. The heatmap is generated using the ComplexHeatmap R/Bioconductor package [2] on scaled log-expression values (z-score) using euclidean distance and Ward linkage using the fastcluster R package [3]. ",
+            info.references = list(
+              list(
+                "Konopka T (2023) umap: Uniform Manifold Approximation and Projection",
+                "https://doi.org/10.32614/CRAN.package.umap"
+              ),
+              list(
+                "Gu Z (2016). “Complex heatmaps reveal patterns and correlations in multidimensional genomic data.” Bioinformatics.",
+                "https://doi.org/10.1093/bioinformatics/btw313"
+              ),
+              list(
+                "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+                "https://doi.org/10.18637/jss.v053.i09"
+              )
+            ),
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
             width = c("auto", "100%"),
             height = c("100%", "70vh")
           ),
           compare_plot_compare2_ui(
             id = ns("dataset2"),
+            title = "Dataset 2",
+            info.text = "Signature plot for the selected dataset and comparison (under {Dataset2}). This plot displays a UMAP clustering by default, however under option settings {Plot type} different methods can be used. Additionally a custom set of genes can be highlighted using {Highlight genes} or the {ntop} scoring. Multiple contrasts can be selected.",
+            info.methods = "See Dataset 1.",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
             width = c("auto", "100%"),
             height = c("100%", "70vh")
           )
@@ -130,6 +152,10 @@ CompareUI <- function(id) {
           height = fullH,
           compare_plot_fc_correlation_ui(
             id = ns("fcfcplot"),
+            title = "FC Correlation",
+            info.text = "Scatter plot of the fold-change correlation for the loaded dataset contrast (selected under {Dataset1}) and the second selected dataset and contrast (under {Dataset2}). A custom set of genes can be highlighted using {Highlight genes} or the {ntop} scoring option settings. Multiple contrasts can be selected.",
+            info.methods = "Pearson Pairwise correlation is used to compute the correlation between the datasets (using the base stats R package). Highly correlated logFC signatures suggest similar experiments. Data comparison between datasets of the same species is done via gene symbol and datasets from different species is done using the human ortholog. Scatters that are similar show high correlation, i.e. are close to the diagonal.",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
             width = c("auto", "100%"),
             height = c("100%", "70vh")
           ),
@@ -137,12 +163,16 @@ CompareUI <- function(id) {
             col_widths = 12,
             compare_plot_cum_fc1_ui(
               id = ns("cumfcplot1"),
+              title = "Foldchange (Dataset 1)",
+              info.text = "Barplot showing the cumulative fold changes for the loaded dataset contrast (selected under {Dataset1}). Multiple contrasts can be selected.",
               width = c("auto", "100%"),
               height = c("100%", "70vh"),
               label = "b"
             ),
             compare_plot_cum_fc2_ui(
               id = ns("cumfcplot2"),
+              title = "Foldchange (Dataset 2)",
+              info.text = "Barplot showing the cumulative fold changes for the second selected dataset and contrast (under {Dataset2}). Multiple contrasts can be selected.",
               width = c("auto", "100%"),
               height = c("100%", "70vh"),
               label = "c"
@@ -164,6 +194,8 @@ CompareUI <- function(id) {
             col_widths = 12,
             compare_plot_expression_ui(
               id = ns("multibarplot"),
+              title = "Expression",
+              info.text = "Barplots of expression values for the loaded dataset contrast (selected under {Dataset1}) and the second selected dataset and contrast (under {Dataset2}). Multiple contrasts can be selected.",
               height = c("70%", TABLE_HEIGHT_MODAL)
             ),
             compare_table_corr_score_ui(
@@ -174,6 +206,8 @@ CompareUI <- function(id) {
           ),
           compare_plot_gene_corr_ui(
             id = ns("genecorr"),
+            title = "Gene correlation",
+            info.text = "Scatter plots of gene expression correlation between the loaded dataset contrast (selected under {Dataset1}) and the second selected dataset and contrast (under {Dataset2}). Scatters that are similar show high correlation, i.e. are close to the diagonal.",
             height = c("100%", TABLE_HEIGHT_MODAL)
           )
         )

@@ -23,6 +23,9 @@ wordcloud_plot_wordcloud_ui <- function(
     id,
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption,
     height) {
   ns <- shiny::NS(id)
@@ -49,6 +52,9 @@ wordcloud_plot_wordcloud_ui <- function(
     title = title,
     label = "b",
     info.text = info_text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = wordcloud_opts,
     height = height,

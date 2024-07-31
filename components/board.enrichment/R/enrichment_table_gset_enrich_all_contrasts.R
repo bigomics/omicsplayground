@@ -79,11 +79,11 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       df <- df[order(-df$rms.ES), ]
       ## wrap with hyperlink
       geneset_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
         rownames(df)
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
       df$i <- geneset_link
       new_order <- c(names(df)[1], "i", names(df)[names(df) != "i" & names(df) != names(df)[1]])

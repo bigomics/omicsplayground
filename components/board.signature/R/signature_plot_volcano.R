@@ -16,6 +16,9 @@ signature_plot_volcano_ui <- function(
     id,
     title,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     caption,
     height,
     width) {
@@ -36,6 +39,9 @@ signature_plot_volcano_ui <- function(
   PlotModuleUI(ns("plot"),
     title = title,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     caption = caption,
     download.fmt = c("png", "pdf"),
     plotlib = "plotly",
@@ -89,7 +95,7 @@ signature_plot_volcano_server <- function(id,
       # Get gene selected labels
       if (length(sel)) {
         df <- getEnrichmentGeneTable()
-        sel.gene <- df$gene[sel]
+        sel.gene <- df$feature[sel]
         ## sel.gene <- df$symbol[sel]
         ## # Use symbol/feature if in gset
         ## if (sel.gene %in% gset) {

@@ -17,6 +17,9 @@ correlation_plot_correlation_UMAP_ui <- function(
     title,
     caption,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     height,
     width) {
   ns <- shiny::NS(id)
@@ -31,6 +34,9 @@ correlation_plot_correlation_UMAP_ui <- function(
     plotlib = "plotly",
     label = "b",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     options = cor_umap.opts,
     download.fmt = c("png", "pdf", "csv"),
     height = height,

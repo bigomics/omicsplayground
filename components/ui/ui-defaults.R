@@ -34,6 +34,10 @@ plotly_default <- function(e) {
       margin = list(l = 0, r = 0, t = 0, b = 0), ## remove margins
       legend = list(
         font = list(family = DEFAULT_FONT)
+      ),
+      hoverlabel = list(
+        align = "left",
+        font = list(family = DEFAULT_FONT)
       )
     ) %>%
     ## plotly::config(displayModeBar = FALSE) %>%
@@ -51,6 +55,10 @@ plotly_modal_default <- function(e) {
       margin = list(l = 0, r = 0, t = 0, b = 0), ## remove margins
       legend = list(
         font = list(family = DEFAULT_FONT, size = 18)
+      ),
+      hoverlabel = list(
+        align = "left",
+        font = list(family = DEFAULT_FONT)
       )
     ) %>%
     ## plotly::config(displayModeBar = FALSE) %>%

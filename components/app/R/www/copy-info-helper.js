@@ -6,7 +6,7 @@ function copyPlotModuleInfo() {
             textToCopy += elements[i].innerText + '\n';
         }
     }
-    var tempInput = document.createElement('input');
+    var tempInput = document.createElement('textarea');
     tempInput.value = textToCopy.trim();
     document.body.appendChild(tempInput);
     tempInput.select();

@@ -72,11 +72,11 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
       ## wrap genesets names with known links.
       GS_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-info'></i>", nrow(rpt)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(rpt)),
         rownames(rpt)
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
       selectmode <- "single"
 

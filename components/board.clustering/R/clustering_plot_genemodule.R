@@ -18,25 +18,23 @@ clustering_plot_genemodule_ui <- function(
     title,
     caption,
     info.text,
+    info.methods,
+    info.references,
+    info.extra_link,
     label = "",
     height,
     width) {
   ns <- shiny::NS(id)
-
-  plot_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("gx_grouped"), "group samples", TRUE),
-      "Group samples by phenotype",
-      placement = "right", options = list(container = "body")
-    )
-  )
 
   PlotModuleUI(ns("pltmod"),
     title = title,
     label = label,
     plotlib = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     caption = caption,
-    options = plot_opts,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height

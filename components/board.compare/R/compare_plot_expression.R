@@ -3,17 +3,21 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-compare_plot_expression_ui <- function(id, label = "", height = c(600, 800)) {
+compare_plot_expression_ui <- function(
+  id,
+  label = "",
+  height = c(600, 800),
+  title,
+  info.text
+) {
   ns <- shiny::NS(id)
-
-  info_text <- "<b>Multi barplots.</b> Barplots of expression values for multiple comparisons in the two datasets (blue and green). "
 
   PlotModuleUI(
     ns("plot"),
-    title = "Expression",
+    title = title,
     plotlib = "plotly",
     label = "a",
-    info.text = info_text,
+    info.text = info.text,
     height = height,
     width = c("auto", "100%"),
     download.fmt = c("png", "pdf")

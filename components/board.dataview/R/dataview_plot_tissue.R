@@ -11,7 +11,9 @@ dataview_plot_tissue_ui <- function(
     height,
     width,
     caption,
-    info.text) {
+    info.text,
+    info.methods,
+    info.references) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -20,6 +22,8 @@ dataview_plot_tissue_ui <- function(
     label = label,
     plotlib = "plotly",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),

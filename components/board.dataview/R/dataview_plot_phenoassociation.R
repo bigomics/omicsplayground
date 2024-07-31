@@ -10,6 +10,8 @@ dataview_plot_phenoassociation_ui <- function(
     width,
     title,
     info.text,
+    info.methods,
+    info.extra_link,
     caption) {
   ns <- shiny::NS(id)
 
@@ -26,6 +28,8 @@ dataview_plot_phenoassociation_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     caption = caption,
     options = opts,
     download.fmt = c("png", "pdf", "csv"),

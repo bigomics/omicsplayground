@@ -14,15 +14,23 @@
 #' @export
 compare_plot_compare1_ui <- function(id,
                                      height,
+                                     title,
+                                     info.text,
+                                     info.methods,
+                                     info.references,
+                                     info.extra_link,
                                      width) {
   ns <- shiny::NS(id)
   info_text <- "<b>Expression scatter plot.</b> Scatter plots of gene expression."
 
   PlotModuleUI(ns("plot"),
-    title = "Dataset 1",
+    title =  title,
     plotlib = "base",
     label = "a",
-    info.text = NULL,
+    info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
+    info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
     width = width

@@ -41,11 +41,11 @@ signature_table_overlap_server <- function(id,
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       geneset_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-info'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
         df$geneset
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-info'></i>",
-        SubstituteString = "<i class='fa-solid fa-info blank_icon'></i>"
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
 
       DT::datatable(df,

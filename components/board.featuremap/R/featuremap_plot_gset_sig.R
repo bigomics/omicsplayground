@@ -8,6 +8,8 @@ featuremap_plot_gset_sig_ui <- function(
     label = "",
     title,
     info.text,
+    info.methods,
+    info.extra_link,
     caption,
     height,
     width) {
@@ -20,6 +22,8 @@ featuremap_plot_gset_sig_ui <- function(
     title = title,
     label = "b",
     info.text = info_text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     caption = caption,
     height = height,
     width = width,

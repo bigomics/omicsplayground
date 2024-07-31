@@ -118,7 +118,15 @@ FeatureMapUI <- function(id) {
             featuremap_plot_gene_map_ui(
               ns("geneUMAP"),
               title = "Feature UMAP",
-              info.text = "UMAP clustering of features (e.g., genes, proteins) colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.The colour intensity threshold can be set with the Settings icon.",
+              info.text = "UMAP clustering of features colored by standard-deviation of log-expression or fold-change which can be set using the {color by} plot setting. The color intensity threshold can be set using the {color gamma} plot setting. Additionally it is possible to select the number of labels displayed using the {nr labels} plot setting. By selecting this plot (by drag&drop) the Gene table is subset.",
+              info.methods = "Clustering of genes performed with Uniform Manifold Approximation and Projection (UMAP) using the top 1000 most varying features, then reduced to 50 PCA dimensions before computing the UMAP embedding. Performed using the uwot R package [1]. The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.",
+              info.references = list(
+                list(
+                  "Melville J (2024) uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.",
+                  "https://doi.org/10.32614/CRAN.package.uwot"
+                )
+              ),
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Feature UMAP coloured by level of variance. Shades of red indicate high variance.",
               height = height1,
               width = c("auto", "100%")
@@ -126,7 +134,9 @@ FeatureMapUI <- function(id) {
             featuremap_plot_gene_sig_ui(
               ns("geneSigPlots"),
               title = "Feature signatures",
-              info.text = "UMAP clustering of features colored by relative log-expression of the phenotype group. The distance metric is covariance. Features that are clustered nearby have high covariance.",
+              info.text = "UMAP clustering of features colored by relative log-expression of the phenotype group.",
+              info.methods = "See Gene UMAP",
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Feature signature maps coloured by differential expression.",
               height = height1,
               width = c("auto", "100%")
@@ -153,7 +163,15 @@ FeatureMapUI <- function(id) {
             featuremap_plot_geneset_map_ui(
               ns("gsetUMAP"),
               title = "Geneset UMAP",
-              info.text = "UMAP clustering of genesets colored by standard-deviation of log-expression(sd.X), or standard-deviation of the fold-change (sd.FC). The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance. The colour intensity threshold can be set with the Settings icon.",
+              info.text = "UMAP clustering of genesets colored by standard-deviation of log-expression or fold-change which can be set using the {color by} plot setting. The color intensity threshold can be set using the {color gamma} plot setting. Additionally it is possible to select the number of labels displayed using the {nr labels} plot setting. By selecting this plot (by drag&drop) the Geneset table is subset.",
+              info.methods = "Clustering of genesets performed with Uniform Manifold Approximation and Projection (UMAP) using the top 1000 most varying genesets, then reduced to 50 PCA dimensions before computing the UMAP embedding. Performed using the uwot R package [1]. The distance metric is covariance of the geneset expression. Genesets that are clustered nearby have high covariance.",
+              info.references = list(
+                list(
+                  "Melville J (2024) uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.",
+                  "https://doi.org/10.32614/CRAN.package.uwot"
+                )
+              ),
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Geneset UMAP coloured by level of variance. Shades of red indicate high variance.",
               height = height1,
               width = c("auto", "100%")
@@ -161,7 +179,9 @@ FeatureMapUI <- function(id) {
             featuremap_plot_gset_sig_ui(
               ns("gsetSigPlots"),
               title = "Geneset signatures",
-              info.text = "UMAP clustering of genesets colored by relative log-expression of the phenotype group. The distance metric is covariance. Genesets that are clustered nearby have high covariance.",
+              "UMAP clustering of genesets colored by relative log-expression of the phenotype group.",
+              info.methods = "See Gene UMAP",
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Geneset signature maps coloured by differential expression.",
               height = height1,
               width = c("auto", "100%")

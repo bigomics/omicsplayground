@@ -10,7 +10,9 @@ dataview_plot_correlation_ui <- function(
     height,
     width,
     caption,
-    info.text) {
+    info.text,
+    info.methods,
+    info.extra_link) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -22,6 +24,8 @@ dataview_plot_correlation_ui <- function(
     #
     #
     info.text = info.text,
+    info.methods = info.methods,
+    info.extra_link = info.extra_link,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
