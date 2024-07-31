@@ -60,7 +60,7 @@ docker.base: FORCE
 	docker build  \
 		--progress plain \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v3 .
+	  	-t bigomics/omicsplayground-base:ub2204_v4rc .
 
 docker.base2: FORCE
 	@echo building docker BASE
@@ -100,7 +100,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta3.9001"
+VERSION = "v3.5.0-beta4"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
