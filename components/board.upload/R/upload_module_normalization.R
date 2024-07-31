@@ -71,14 +71,16 @@ upload_module_normalization_server <- function(
         }
       )
 
-      observeEvent( input$scaling_method, {
-        shiny::req(input$scaling_method=='reference')
+      observeEvent(input$scaling_method, {
+        shiny::req(input$scaling_method == "reference")
         gg <- sort(rownames(r_X()))
-        updateSelectizeInput(session, "ref_gene", choices = gg,
-                             selected = character(0), server = TRUE)
+        updateSelectizeInput(session, "ref_gene",
+          choices = gg,
+          selected = character(0), server = TRUE
+        )
       })
 
-      
+
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
@@ -142,7 +144,7 @@ upload_module_normalization_server <- function(
             ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
             prior <- ifelse(m == "CPM", 1, 1e-4)
             ref <- NULL
-            if(m == "reference") {
+            if (m == "reference") {
               ref <- input$ref_gene
               shiny::req(ref)
             }
@@ -364,7 +366,7 @@ upload_module_normalization_server <- function(
           boxplot(
             X0,
             main = "raw",
-            ylim = range(X0,na.rm=TRUE) + 0.2*c(-1,1)*diff(range(X0,na.rm=TRUE)),
+            ylim = range(X0, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X0, na.rm = TRUE)),
             las = 2,
             ylab = "expression (log2)",
             xlab = "",
@@ -372,17 +374,17 @@ upload_module_normalization_server <- function(
             cex = 0.5
           )
 
-          rx1 <- 
-          boxplot(
-            X1,
-            main = "normalized",
-            ylim = range(X1,na.rm=TRUE) + 0.2*c(-1,1)*diff(range(X1,na.rm=TRUE)),
-            las = 2,
-            ylab = "",
-            xlab = "",
-            cex.axis = 0.8,
-            cex = 0.5
-          )
+          rx1 <-
+            boxplot(
+              X1,
+              main = "normalized",
+              ylim = range(X1, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X1, na.rm = TRUE)),
+              las = 2,
+              ylab = "",
+              xlab = "",
+              cex.axis = 0.8,
+              cex = 0.5
+            )
         }
 
         if (input$norm_plottype == "histogram") {
@@ -675,10 +677,10 @@ upload_module_normalization_server <- function(
 
         norm.options <- tagList(
           shiny::radioButtons(
-                   ns("norm_plottype"),
-                   label = "Plot type:",
-                   choices = c("boxplot", "histogram", "density"),
-                   selected = "boxplot", inline = FALSE
+            ns("norm_plottype"),
+            label = "Plot type:",
+            choices = c("boxplot", "histogram", "density"),
+            selected = "boxplot", inline = FALSE
           )
         )
 
@@ -728,8 +730,10 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("scaling_method"), NULL,
-                    choices = c("CPM", "maxMedian", "maxSum", "TMM",
-                                "reference"),
+                    choices = c(
+                      "CPM", "maxMedian", "maxSum", "TMM",
+                      "reference"
+                    ),
                     selected = ifelse(tolower(upload_datatype()) == "proteomics",
                       "maxMedian", "CPM"
                     )
@@ -738,11 +742,12 @@ upload_module_normalization_server <- function(
                     "input.scaling_method == 'reference'",
                     ns = ns,
                     shiny::selectizeInput(
-                             ns("ref_gene"), NULL, choices = NULL, multiple=TRUE,
-                             options = list(
-                               placeholder = tspan("Choose gene...")
-                             )
-                           )
+                      ns("ref_gene"), NULL,
+                      choices = NULL, multiple = TRUE,
+                      options = list(
+                        placeholder = tspan("Choose gene...")
+                      )
+                    )
                   ),
                   shiny::checkboxInput(ns("quantile_norm"), "Quantile normalization", value = TRUE)
                 ),
