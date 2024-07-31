@@ -100,7 +100,7 @@ ExpressionUI <- function(id) {
         ),
         expression_plot_topfoldchange_ui(
           id = ns("plots_topfoldchange"),
-          title = "Gene in comparison",
+          title = "Fold change by comparison",
           info.text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the Table section.",
           caption = "Sorted barplot of the differential expression of the selected gene across all contrasts.",
           label = "d",
@@ -110,13 +110,13 @@ ExpressionUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Top genes",
+      "Top features",
       bslib::layout_columns(
         col_widths = 12,
         height = halfH,
         expression_plot_topgenes_ui(
           id = ns("topgenes"),
-          title = "Expression of top differentially expressed genes",
+          title = "Expression of top differentially expressed features",
           info.text = "Under the plot Settings, users can scale the abundance levels (counts) or ungroup the samples in the plot from the log scale and ungroup samples settings, respectively.",
           caption = "Expression barplots of the top most differentially expressed genes for the selected comparison.",
           label = "a",

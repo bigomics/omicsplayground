@@ -204,8 +204,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
         gsdiff.method <- "fc" ## OLD default
         if (gsdiff.method == "gs") {
-          AveExpr1 <- rowMeans(pgx$gsetX[jj, s1])
-          AveExpr0 <- rowMeans(pgx$gsetX[jj, s0])
+          AveExpr1 <- rowMeans(pgx$gsetX[jj, s1], na.rm = TRUE)
+          AveExpr0 <- rowMeans(pgx$gsetX[jj, s0], na.rm = TRUE)
           meta.fc <- AveExpr1 - AveExpr0
         } else {
           ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(pgx$X)
@@ -238,8 +238,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
 
-          AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp, s1]) / ngenes
-          AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0]) / ngenes
+          AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp, s1], na.rm = TRUE) / ngenes
+          AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0], na.rm = TRUE) / ngenes
           remove(rnaX)
         }
 
@@ -362,6 +362,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
       rpt <- getFilteredGeneSetTable()
       gs <- rownames(rpt)[i]
+
       return(gs)
     })
 
@@ -527,6 +528,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
       calcGsetMeta = calcGsetMeta,
+      gset_selected = gset_selected,
       watermark = WATERMARK
     )
 
@@ -539,6 +541,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
+      gset_selected = gset_selected,
       watermark = WATERMARK
     )
 

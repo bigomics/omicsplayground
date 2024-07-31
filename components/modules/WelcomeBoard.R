@@ -93,13 +93,13 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-7",
         h3("I'm an existing user..."),
         shiny::actionButton(
-          ns("btn_upload_data"),
+          ns("btn_upload_new"),
           label = "Upload new data",
           class = "btn btn-outline-info welcome-btn"
         ),
         shiny::actionButton(
           ns("btn_load_data"),
-          label = "Use my saved data",
+          label = "Load from library",
           class = "btn btn-outline-primary welcome-btn"
         )
       )
@@ -114,7 +114,6 @@ WelcomeBoardUI <- function(id) {
     )
   )
 }
-
 
 
 WelcomeBoard <- function(id, auth, load_example, new_upload) {
@@ -164,21 +163,14 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
       }
     })
 
-    observeEvent(input$btn_upload_data, {
-      shiny::req(auth$options)
-      enable_upload <- auth$options$ENABLE_UPLOAD
-      if (enable_upload) {
-        new_upload(new_upload() + 1)
-      } else {
-        shinyalert::shinyalert(
-          title = "Upload disabled",
-          text = "Sorry, upload of new data is disabled for this account.",
-          type = "warning",
-          #
-          closeOnClickOutside = FALSE
-        )
+    observeEvent(
+      {
+        input$btn_upload_new
+      },
+      {
+        bigdash.selectTab(session, selected = "upload-tab")
       }
-    })
+    )
 
     observeEvent(input$btn_load_data, {
       bigdash.openSettings(lock = TRUE)
