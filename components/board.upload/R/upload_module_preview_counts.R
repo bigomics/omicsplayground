@@ -226,9 +226,8 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-
       dbg("length(input$counts_csv$name) = ", length(input$counts_csv$name))
-      
+
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
       if (!all(ext == "csv")) {
@@ -251,24 +250,22 @@ upload_table_preview_counts_server <- function(
       }
 
       sel <- grep("count|expression|abundance", tolower(input$counts_csv$name))
-      if(length(sel)) {
+      if (length(sel)) {
         df <- playbase::read_counts(input$counts_csv$datapath[sel[1]])
         uploaded$counts.csv <- df
       }
 
       sel <- grep("samples", tolower(input$counts_csv$name))
-      if(length(sel)) {
+      if (length(sel)) {
         df <- playbase::read_samples(input$counts_csv$datapath[sel[1]])
         uploaded$samples.csv <- df
       }
 
       sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
-      if(length(sel)) {
+      if (length(sel)) {
         df <- playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
         uploaded$contrasts.csv <- df
       }
-      
-      
     })
 
     observeEvent(input$remove_counts, {
