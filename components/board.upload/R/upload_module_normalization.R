@@ -312,7 +312,7 @@ upload_module_normalization_server <- function(
         ## pos.ok <- sapply(res$pos, function(x) !any(class(x)=="try-error"))
         ## res$xlist <- res$xlist[which(xlist.ok && pos.ok)]
         ## res$pos <- res$pos[which(xlist.ok && pos.ok)]
-        
+
         return(res)
       })
 
@@ -591,9 +591,9 @@ upload_module_normalization_server <- function(
         out.res <- results_outlier_methods()
         shiny::req(res)
         shiny::req(out.res)
-                
+
         mm <- c("ComBat", "RUV", "SVA", "NPM")
-        mm <- intersect(mm, names(res$pos)) 
+        mm <- intersect(mm, names(res$pos))
         pos.list <- res$pos[mm]
         ## get same positions as after outlier detection
         pos0 <- out.res$pos[["pca"]]
@@ -628,12 +628,12 @@ upload_module_normalization_server <- function(
         pos0 <- out.res$pos[["pca"]]
         method <- input$bec_method
 
-        if(!method %in% names(res$pos)) {
+        if (!method %in% names(res$pos)) {
           plot.new()
-          text(0.45,0.5,"method failed")
+          text(0.45, 0.5, "method failed")
           return(NULL)
         }
-        
+
         if (!input$batchcorrect) {
           pos1 <- pos0
         } else {
@@ -642,7 +642,7 @@ upload_module_normalization_server <- function(
 
         dbg("[UploadModule::plot_before_after] class.pos1 = ", class(pos1))
 
-        
+
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, ]
         pos1 <- pos1[kk, ]
