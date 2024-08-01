@@ -368,7 +368,7 @@ upload_module_normalization_server <- function(
             rX <- rX[ii, jj]
           }
 
-          par(mfrow = c(1, 2), mar = c(6.5, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+          par(mfrow = c(1, 2), mar = c(6, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           boxplot(
             X0,
             main = "raw",
@@ -600,7 +600,7 @@ upload_module_normalization_server <- function(
         names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
 
         pheno <- res$pheno
-        xdim <- length(res$pheno)
+        xdim <- length(pheno)
         col1 <- factor(pheno)
         cex1 <- cut(xdim,
           breaks = c(0, 40, 100, 250, 1000, 999999),
@@ -694,7 +694,7 @@ upload_module_normalization_server <- function(
           shiny::radioButtons(
             ns("norm_plottype"),
             label = "Plot type:",
-            choices = c("boxplot", "histogram", "density"),
+            choices = c("boxplot", "histogram"),
             selected = "boxplot", inline = FALSE
           )
         )

@@ -148,7 +148,7 @@ useUploadWizard <- function(ns) {
     modal = TRUE,
     style = "dots",
     lock_start = FALSE,
-    ##        initial_panel,
+    ## initial_panel,
     counts_ui,
     samples_ui,
     contrasts_ui,

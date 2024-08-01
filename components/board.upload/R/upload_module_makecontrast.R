@@ -41,7 +41,8 @@ upload_module_makecontrast_ui <- function(id) {
                 ),
                 "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
                 placement = "left", options = list(container = "body")
-              )
+              ),
+              shiny::checkboxInput(ns("add_prefix"), "Add prefix", FALSE)
             ),
             br(),
             shiny::HTML("<h6>4. Add my comparison:</h6>"),
@@ -173,11 +174,22 @@ upload_module_makecontrast_server <- function(
             df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
           }
         }
-
+        
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
-        cond <- apply(df[ss, pp, drop = FALSE], 1, paste, collapse = "_")
+        df1 <- df[ss, pp, drop = FALSE]
+        cond <- apply(df1, 1, paste, collapse = "_")
         cond <- gsub("^_|_$", "", cond)
+
+        ## get abbreviated phenotype
+        minlen <- ifelse( length(pp) >= 2, 3, 6)
+        minlen <- ifelse( length(pp) >= 3, 2, minlen)
+        abv.df <- playbase::abbreviate_pheno(df, minlength=minlen, abbrev.colnames=FALSE)        
+        abv.df <- abv.df[ss, pp, drop = FALSE]
+        abv.df <- apply(abv.df, 2, stringr::str_to_title)
+        abv.cond <- apply(abv.df, 1, paste, collapse = "_")        
+        abv.cond <- gsub("^_|_$", "", abv.cond)
+        names(cond) <- abv.cond
         cond
       })
 
@@ -217,7 +229,10 @@ upload_module_makecontrast_server <- function(
         inputs
       }
 
-      shiny::observeEvent(c(input$group1, input$group2), {
+      
+      shiny::observeEvent(
+        list(input$group1, input$group2, input$add_prefix),
+      {
         # make sure group1 and 2 are not NULL or ""
         req(input$group1, input$group2)
 
@@ -234,10 +249,23 @@ upload_module_makecontrast_server <- function(
         }
 
         ## create comparison name from group names
-        g1 <- gsub("[-_.,<> ]", ".", input$group1)
-        g2 <- gsub("[-_.,<> ]", ".", input$group2)
-        g1 <- gsub("[.]+", ".", g1)
-        g2 <- gsub("[.]+", ".", g2)
+        cond <- sel.conditions()
+        g1 <- input$group1
+        g2 <- input$group2
+        g1 <- names(cond)[match(input$group1,cond)]
+        g2 <- names(cond)[match(input$group2,cond)]        
+        ## g1 <- gsub("[-_.,<> ]", ".", g1)
+        ## g2 <- gsub("[-_.,<> ]", ".", g2)
+        ## g1 <- gsub("[.]+", ".", g1)
+        ## g2 <- gsub("[.]+", ".", g2)
+        ## g1 <- paste(g1, collapse = "")
+        ## g2 <- paste(g2, collapse = "")
+        g1 <- gsub("[-.,<> ]", "", g1)
+        g2 <- gsub("[-.,<> ]", "", g2)
+        g1 <- unique(unlist(strsplit(g1, split='_')))
+        g2 <- unique(unlist(strsplit(g2, split='_')))
+        g1 <- stringr::str_to_title(g1)
+        g2 <- stringr::str_to_title(g2)          
         g1 <- paste(g1, collapse = "")
         g2 <- paste(g2, collapse = "")
 
@@ -246,12 +274,22 @@ upload_module_makecontrast_server <- function(
         if (is.na(g1)) g1 <- ""
         if (is.na(g2)) g2 <- ""
 
-        g1 <- substring(g1, 1, 20)
-        g2 <- substring(g2, 1, 20)
-        prm.name <- paste(input$param, collapse = ".")
-        prm.name <- gsub("[-_.,<> ]", "", prm.name)
-        tt <- paste0(prm.name, ":", g1, "_vs_", g2)
-        if (g1 == "" && g2 == "") tt <- ""
+        if (g1 == "" && g2 == "") {
+          tt <- ""
+        } else {
+          g1 <- substring(g1, 1, 20)
+          g2 <- substring(g2, 1, 20)
+          tt <- paste0(g1, "_vs_", g2)
+          if(input$add_prefix) {
+            abv.pheno <- abbreviate(colnames(phenoRT()), minlength=6)
+            sel <- match(input$param, colnames(phenoRT()))
+            prm.name <- gsub("[-_.,<> ]", "", abv.pheno[sel] )
+            prm.name <- stringr::str_to_title(trimws(prm.name))
+            
+            prm.name <- paste(prm.name, collapse = "")
+            tt <- paste0(prm.name, ":", tt)
+          }
+        }
 
         shiny::updateTextInput(session, "newname", value = tt)
       })
@@ -444,7 +482,7 @@ upload_module_makecontrast_server <- function(
 
       output$contrastPlot <- renderPlot({
         ct <- rv_contr()
-        shiny::req(nrow(ct))
+        shiny::req(NCOL(ct))
         plotPhenoDistribution(data.frame(ct))
       })
 
