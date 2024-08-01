@@ -247,69 +247,78 @@ app_ui <- function(x) {
           ),
           div.invitebutton,
           div.chirpbutton,
-          bigdash::navbarDropdown(
-            "Help",
-            bigdash::navbarDropdownItem(
-              "Documentation",
-              link = "https://omicsplayground.readthedocs.io",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Video tutorials",
-              link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Google forum",
-              link = "https://groups.google.com/d/forum/omicsplayground",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Discuss on Reddit",
-              link = "https://www.reddit.com/r/omicsplayground",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Github issues",
-              link = "https://github.com/bigomics/omicsplayground/issues",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Case studies",
-              link = "https://bigomics.ch/blog/category/case-study/",
-              target = "_blank"
+          div(
+            id ="mainmenu_help",
+            bigdash::navbarDropdown(
+              "Help",
+              bigdash::navbarDropdownItem(
+                "Documentation",
+                link = "https://omicsplayground.readthedocs.io",
+                target = "_blank"
+              ),
+              bigdash::navbarDropdownItem(
+                "Video tutorials",
+                link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+                target = "_blank"
+              ),
+              bigdash::navbarDropdownItem(
+                "Google forum",
+                link = "https://groups.google.com/d/forum/omicsplayground",
+                target = "_blank"
+              ),
+              bigdash::navbarDropdownItem(
+                "Discuss on Reddit",
+                link = "https://www.reddit.com/r/omicsplayground",
+                target = "_blank"
+              ),
+              bigdash::navbarDropdownItem(
+                "Github issues",
+                link = "https://github.com/bigomics/omicsplayground/issues",
+                target = "_blank"
+              ),
+              bigdash::navbarDropdownItem(
+                "Case studies",
+                link = "https://bigomics.ch/blog/category/case-study/",
+                target = "_blank"
+              )
             )
           ),
-          bigdash::navbarDropdown(
-            ## "User",
-            shiny::textOutput("current_user", inline = TRUE),
-            bigdash::navbarDropdownTab(
-              "User profile",
-              "userprofile-tab"
-            ),
-            bigdash::navbarDropdownTab(
-              "App settings",
-              "usersettings-tab"
-            ),
-            upgrade.tab,
-            tags$li(
-              actionLink("navbar_about", "About")
-            ),
-            logout.tab
+          div(
+            id ="mainmenu_user",
+            bigdash::navbarDropdown(
+              ## "User",
+              shiny::textOutput("current_user", inline = TRUE),
+              bigdash::navbarDropdownTab(
+                "User profile",
+                "userprofile-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "App settings",
+                "usersettings-tab"
+              ),
+              upgrade.tab,
+              tags$li(
+                actionLink("navbar_about", "About")
+              ),
+              logout.tab
+            )
           ),
-          bigdash::navbarDropdown(
-            shiny::icon("cog"),
-            bigdash::navbarDropdownItem(
-              bslib::input_switch("enable_beta", "Enable beta features")
-            ),
-            bigdash::navbarDropdownItem(
-              bslib::input_switch("enable_info", "Show info boxes", value = TRUE)
-            ),
-            bigdash::navbarDropdownItem(
-              selector_switch(
-                class = "card-footer-checked",
-                label = "show captions",
-                is.checked = FALSE
+          div(
+              id ="mainmenu_appsettings",
+              bigdash::navbarDropdown(
+              shiny::icon("cog"),
+              bigdash::navbarDropdownItem(
+                bslib::input_switch("enable_beta", "Enable beta features")
+              ),
+              bigdash::navbarDropdownItem(
+                bslib::input_switch("enable_info", "Show info boxes", value = TRUE)
+              ),
+              bigdash::navbarDropdownItem(
+                selector_switch(
+                  class = "card-footer-checked",
+                  label = "show captions",
+                  is.checked = FALSE
+                )
               )
             )
           ),

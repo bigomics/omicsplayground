@@ -5,6 +5,22 @@
 .dropdown-menu.show {
     font-size: 1.1em;
     box-shadow: 0px 0px 15px #444;
+    left: -0% !important;
+}
+
+div#mainmenu_help .dropdown-menu.show {
+    left: -120px !important;
+    width: 180px;
+}
+
+div#mainmenu_user .dropdown-menu.show {
+    left: -120px !important;
+    width: 180px;
+}
+
+div#mainmenu_appsettings .dropdown-menu.show {
+    left: -200px !important;
+    width: 240px;
 }
 
 .dropdown-menu .form-group {
