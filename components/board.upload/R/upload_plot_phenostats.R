@@ -27,7 +27,9 @@ upload_plot_phenostats_ui <- function(id,
 }
 
 plotPhenoDistribution <- function(pheno) {
-  if(nrow(pheno)==0 || NCOL(pheno)==0) return(NULL)  
+  if (nrow(pheno) == 0 || NCOL(pheno) == 0) {
+    return(NULL)
+  }
   px <- head(colnames(pheno), 20) ## show maximum??
   df <- type.convert(pheno[, px, drop = FALSE], as.is = TRUE)
   vt <- df %>% inspectdf::inspect_types()

@@ -52,10 +52,10 @@ upload_table_preview_counts_server <- function(
       dt <- table_data()
       req(!is.null(dt))
 
-      dbg("[preview_counts] is.integer(dt) = ",is.integer(dt))
-      is.integer <- is.integer(dt) || all(round(dt)==dt,na.rm=TRUE)
-      digits <- ifelse( is.integer, 0, 2)
-      
+      dbg("[preview_counts] is.integer(dt) = ", is.integer(dt))
+      is.integer <- is.integer(dt) || all(round(dt) == dt, na.rm = TRUE)
+      digits <- ifelse(is.integer, 0, 2)
+
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,

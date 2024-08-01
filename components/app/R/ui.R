@@ -248,7 +248,7 @@ app_ui <- function(x) {
           div.invitebutton,
           div.chirpbutton,
           div(
-            id ="mainmenu_help",
+            id = "mainmenu_help",
             bigdash::navbarDropdown(
               "Help",
               bigdash::navbarDropdownItem(
@@ -284,7 +284,7 @@ app_ui <- function(x) {
             )
           ),
           div(
-            id ="mainmenu_user",
+            id = "mainmenu_user",
             bigdash::navbarDropdown(
               ## "User",
               shiny::textOutput("current_user", inline = TRUE),
@@ -304,8 +304,8 @@ app_ui <- function(x) {
             )
           ),
           div(
-              id ="mainmenu_appsettings",
-              bigdash::navbarDropdown(
+            id = "mainmenu_appsettings",
+            bigdash::navbarDropdown(
               shiny::icon("cog"),
               bigdash::navbarDropdownItem(
                 bslib::input_switch("enable_beta", "Enable beta features")

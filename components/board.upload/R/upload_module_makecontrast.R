@@ -174,7 +174,7 @@ upload_module_makecontrast_server <- function(
             df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
           }
         }
-        
+
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
@@ -182,12 +182,12 @@ upload_module_makecontrast_server <- function(
         cond <- gsub("^_|_$", "", cond)
 
         ## get abbreviated phenotype
-        minlen <- ifelse( length(pp) >= 2, 3, 6)
-        minlen <- ifelse( length(pp) >= 3, 2, minlen)
-        abv.df <- playbase::abbreviate_pheno(df, minlength=minlen, abbrev.colnames=FALSE)        
+        minlen <- ifelse(length(pp) >= 2, 3, 6)
+        minlen <- ifelse(length(pp) >= 3, 2, minlen)
+        abv.df <- playbase::abbreviate_pheno(df, minlength = minlen, abbrev.colnames = FALSE)
         abv.df <- abv.df[ss, pp, drop = FALSE]
         abv.df <- apply(abv.df, 2, stringr::str_to_title)
-        abv.cond <- apply(abv.df, 1, paste, collapse = "_")        
+        abv.cond <- apply(abv.df, 1, paste, collapse = "_")
         abv.cond <- gsub("^_|_$", "", abv.cond)
         names(cond) <- abv.cond
         cond
@@ -229,70 +229,71 @@ upload_module_makecontrast_server <- function(
         inputs
       }
 
-      
+
       shiny::observeEvent(
         list(input$group1, input$group2, input$add_prefix),
-      {
-        # make sure group1 and 2 are not NULL or ""
-        req(input$group1, input$group2)
+        {
+          # make sure group1 and 2 are not NULL or ""
+          req(input$group1, input$group2)
 
-        # update rv
-        rv$condition_group1 <- input$group1
-        rv$condition_group2 <- input$group2
+          # update rv
+          rv$condition_group1 <- input$group1
+          rv$condition_group2 <- input$group2
 
-        # remove selected conditions from the start list
-        rv$condition_start <- setdiff(rv$condition_start, c(input$group1, input$group2))
+          # remove selected conditions from the start list
+          rv$condition_start <- setdiff(rv$condition_start, c(input$group1, input$group2))
 
-        # if some input$conditions are not in the start list, add them
-        if (length(input$conditions) > 0 && any(!input$conditions %in% rv$condition_start)) {
-          rv$condition_start <- c(rv$condition_start, input$conditions)
-        }
-
-        ## create comparison name from group names
-        cond <- sel.conditions()
-        g1 <- input$group1
-        g2 <- input$group2
-        g1 <- names(cond)[match(input$group1,cond)]
-        g2 <- names(cond)[match(input$group2,cond)]        
-        ## g1 <- gsub("[-_.,<> ]", ".", g1)
-        ## g2 <- gsub("[-_.,<> ]", ".", g2)
-        ## g1 <- gsub("[.]+", ".", g1)
-        ## g2 <- gsub("[.]+", ".", g2)
-        ## g1 <- paste(g1, collapse = "")
-        ## g2 <- paste(g2, collapse = "")
-        g1 <- gsub("[-.,<> ]", "", g1)
-        g2 <- gsub("[-.,<> ]", "", g2)
-        g1 <- unique(unlist(strsplit(g1, split='_')))
-        g2 <- unique(unlist(strsplit(g2, split='_')))
-        g1 <- stringr::str_to_title(g1)
-        g2 <- stringr::str_to_title(g2)          
-        g1 <- paste(g1, collapse = "")
-        g2 <- paste(g2, collapse = "")
-
-        if (is.null(g1) || length(g1) == 0) g1 <- ""
-        if (is.null(g2) || length(g2) == 0) g2 <- ""
-        if (is.na(g1)) g1 <- ""
-        if (is.na(g2)) g2 <- ""
-
-        if (g1 == "" && g2 == "") {
-          tt <- ""
-        } else {
-          g1 <- substring(g1, 1, 20)
-          g2 <- substring(g2, 1, 20)
-          tt <- paste0(g1, "_vs_", g2)
-          if(input$add_prefix) {
-            abv.pheno <- abbreviate(colnames(phenoRT()), minlength=6)
-            sel <- match(input$param, colnames(phenoRT()))
-            prm.name <- gsub("[-_.,<> ]", "", abv.pheno[sel] )
-            prm.name <- stringr::str_to_title(trimws(prm.name))
-            
-            prm.name <- paste(prm.name, collapse = "")
-            tt <- paste0(prm.name, ":", tt)
+          # if some input$conditions are not in the start list, add them
+          if (length(input$conditions) > 0 && any(!input$conditions %in% rv$condition_start)) {
+            rv$condition_start <- c(rv$condition_start, input$conditions)
           }
-        }
 
-        shiny::updateTextInput(session, "newname", value = tt)
-      })
+          ## create comparison name from group names
+          cond <- sel.conditions()
+          g1 <- input$group1
+          g2 <- input$group2
+          g1 <- names(cond)[match(input$group1, cond)]
+          g2 <- names(cond)[match(input$group2, cond)]
+          ## g1 <- gsub("[-_.,<> ]", ".", g1)
+          ## g2 <- gsub("[-_.,<> ]", ".", g2)
+          ## g1 <- gsub("[.]+", ".", g1)
+          ## g2 <- gsub("[.]+", ".", g2)
+          ## g1 <- paste(g1, collapse = "")
+          ## g2 <- paste(g2, collapse = "")
+          g1 <- gsub("[-.,<> ]", "", g1)
+          g2 <- gsub("[-.,<> ]", "", g2)
+          g1 <- unique(unlist(strsplit(g1, split = "_")))
+          g2 <- unique(unlist(strsplit(g2, split = "_")))
+          g1 <- stringr::str_to_title(g1)
+          g2 <- stringr::str_to_title(g2)
+          g1 <- paste(g1, collapse = "")
+          g2 <- paste(g2, collapse = "")
+
+          if (is.null(g1) || length(g1) == 0) g1 <- ""
+          if (is.null(g2) || length(g2) == 0) g2 <- ""
+          if (is.na(g1)) g1 <- ""
+          if (is.na(g2)) g2 <- ""
+
+          if (g1 == "" && g2 == "") {
+            tt <- ""
+          } else {
+            g1 <- substring(g1, 1, 20)
+            g2 <- substring(g2, 1, 20)
+            tt <- paste0(g1, "_vs_", g2)
+            if (input$add_prefix) {
+              abv.pheno <- abbreviate(colnames(phenoRT()), minlength = 6)
+              sel <- match(input$param, colnames(phenoRT()))
+              prm.name <- gsub("[-_.,<> ]", "", abv.pheno[sel])
+              prm.name <- stringr::str_to_title(trimws(prm.name))
+
+              prm.name <- paste(prm.name, collapse = "")
+              tt <- paste0(prm.name, ":", tt)
+            }
+          }
+
+          shiny::updateTextInput(session, "newname", value = tt)
+        }
+      )
 
       shiny::observeEvent(c(input$group1, input$group2), {
         if (length(input$group1) && length(input$group2)) {
