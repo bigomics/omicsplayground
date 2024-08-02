@@ -1,0 +1,18 @@
+
+## Install guide for Omics Playground on Ubuntu 24.04 LTS 
+
+## prepare OS
+sudo snap remove --purge -y firefox
+sudo apt purge snapd
+sudo apt install -y git docker.io
+sudo usermod -aG docker $USER
+
+## install ubuntu packages
+sudo sh dev/install_ubuntu.sh
+
+## install R packages
+sudo chmod ugo+rwX -R /usr/local/lib/R
+Rscript dev/requirements.R
+
+R -e "remotes::install_github('bigomics/playbase')"
+
