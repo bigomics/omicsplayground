@@ -123,7 +123,7 @@ enrichment_plot_scatter_server <- function(id,
       tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", gene)
       base::plot(gx, sx,
         col = klr, main = tt,
-        ylab = "gene set enrichment",
+        ylab = tspan("gene set enrichment", js = FALSE),
         xlab = paste(gene, "expression"),
         cex.lab = 1, pch = 19, cex = 1.0 * cex1, cex.main = 0.85
       )
@@ -162,7 +162,7 @@ enrichment_plot_scatter_server <- function(id,
         # Axis
         plotly::layout(
           xaxis = list(title = paste(gene, "expression"), titlefont = 5),
-          yaxis = list(title = "gene set enrichment", titlefont = 5),
+          yaxis = list(title = tspan("gene set enrichment", js = FALSE), titlefont = 5),
           legend = list(
             x = 0.05, y = 1.1, xanchor = "center",
             orientation = "h", bgcolor = "transparent",

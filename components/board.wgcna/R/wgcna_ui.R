@@ -22,7 +22,7 @@ WgcnaInputs <- function(id) {
       "input.options % 2 == 1",
       ns = ns,
       shiny::tagList(
-        shiny::selectInput(ns("ngenes"), "Number genes:",
+        shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
           choices = c(500, 1000, 2000, 4000, 8000),
           selected = 1000
         ),

@@ -10,7 +10,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     rowH <- 660 ## row height of panel
     tabH <- "70vh" ## row height of panel
 
-    fa_infotext <- paste("This module performs specialized pathway analysis.
+    fa_infotext <- tspan(paste("This module performs specialized pathway analysis.
     <br><br>Reactome and WikiPathways are collections of manually curated pathways
     representing the current knowledge of molecular interactions, reactions and
     relation networks as pathway maps. Each pathway is scored for the selected
@@ -32,7 +32,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     <center><iframe width='500' height='333'
     src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
     frameborder='0' allow='accelerometer; autoplay; encrypted-media;
-    gyroscope; picture-in-picture' allowfullscreen></iframe></center>")
+    gyroscope; picture-in-picture' allowfullscreen></iframe></center>"), js = FALSE)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

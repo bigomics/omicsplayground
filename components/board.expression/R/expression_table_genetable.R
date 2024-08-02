@@ -21,7 +21,7 @@ expression_table_genetable_ui <- function(
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("gx_top10"), "top 10 up/down genes", FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_top10"), tspan("top 10 up/down genes"), FALSE),
       "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
       placement = "top", options = list(container = "body")
     ),

@@ -51,7 +51,7 @@ dataview_module_geneinfo_server <- function(id,
       jj <- match(gene, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
       info <- playbase::getHSGeneInfo(symbol) ## defined in pgx-functions.R
-      res <- "(gene info not available)"
+      res <- tspan("(gene info not available)")
       if (!is.null(info)) {
         info$summary <- "(no info available)"
         if (symbol %in% names(playdata::GENE_SUMMARY)) {

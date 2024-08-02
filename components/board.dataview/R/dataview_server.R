@@ -106,7 +106,7 @@ DataViewBoard <- function(id, pgx) {
         features <- c(features[i], features[-i])
         if (length(features) > 1000) {
           features <- c(
-            features[1:1000], "(type for more genes...)",
+            features[1:1000], tspan("(type for more genes...)", js = FALSE),
             features[1001:length(features)]
           )
         }

@@ -64,10 +64,10 @@ dataview_plot_expression_server <- function(id,
       pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
       if (data_type %in% c("counts", "abundance")) {
         gx <- pgx$counts[pp, samples]
-        ylab <- tspan("Counts")
+        ylab <- tspan("Counts", js = FALSE)
       } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
-        ylab <- tspan("Counts (log2)")
+        ylab <- tspan("Counts (log2)", js = FALSE)
       }
 
       geneplot_type <- "barplot"

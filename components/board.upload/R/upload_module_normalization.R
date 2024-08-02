@@ -143,7 +143,7 @@ upload_module_normalization_server <- function(
             ref <- NULL
             if (m == "reference") {
               ref <- input$ref_gene
-              shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene")))
+              shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js = FALSE)))
               shiny::req(ref)
             }
             prior <- ifelse(m == "CPM", 1, 1e-4)
@@ -374,7 +374,7 @@ upload_module_normalization_server <- function(
             main = "raw",
             ylim = range(X0, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X0, na.rm = TRUE)),
             las = 2,
-            ylab = tspan("counts (log2)"),
+            ylab = tspan("counts (log2)", js = FALSE),
             xlab = "",
             cex.axis = 0.8,
             cex = 0.5
@@ -404,11 +404,11 @@ upload_module_normalization_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = tspan("counts (log2)")
+            las = 1, xlab = tspan("counts (log2)", js = FALSE)
           )
           hist(X1,
             breaks = 60, main = main.tt, xlim = xlim1,
-            las = 1, xlab = tspan("counts (log2)"), ylab = ""
+            las = 1, xlab = tspan("counts (log2)", js = FALSE), ylab = ""
           )
         }
 
@@ -425,12 +425,12 @@ upload_module_normalization_server <- function(
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
           playbase::gx.hist(X0,
             breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = tspan("counts (log2)")
+            las = 1, xlab = tspan("counts (log2)", js = FALSE)
           )
 
           playbase::gx.hist(X1,
             breaks = 60, main = main.tt, xlim = xlim1,
-            las = 1, xlab = tspan("counts (log2)"), ylab = ""
+            las = 1, xlab = tspan("counts (log2)", js = FALSE), ylab = ""
           )
         }
       }
@@ -761,7 +761,7 @@ upload_module_normalization_server <- function(
                       choices = NULL,
                       multiple = FALSE,
                       options = list(
-                        placeholder = tspan("Choose gene...")
+                        placeholder = tspan("Choose gene...", js = FALSE)
                       )
                     )
                   ),

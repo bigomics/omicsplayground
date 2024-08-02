@@ -56,7 +56,7 @@ CompareInputs <- function(id) {
       ),
       shiny::br(),
       withTooltip(
-        shiny::radioButtons(ns("hilighttype"), "Highlight genes:",
+        shiny::radioButtons(ns("hilighttype"), tspan("Highlight genes:"),
           choices = c("top scoring", "custom"),
           inline = TRUE
         ),
@@ -70,7 +70,7 @@ CompareInputs <- function(id) {
           shiny::textAreaInput(ns("genelist"), NULL,
             value = NULL,
             height = "100px", width = "100%",
-            rows = 5, placeholder = "Paste your custom gene list"
+            rows = 5
           ),
           "Paste a custom list of genes to highlight.",
           placement = "right"

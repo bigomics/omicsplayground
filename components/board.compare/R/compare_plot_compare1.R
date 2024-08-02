@@ -21,7 +21,6 @@ compare_plot_compare1_ui <- function(id,
                                      info.extra_link,
                                      width) {
   ns <- shiny::NS(id)
-  info_text <- "<b>Expression scatter plot.</b> Scatter plots of gene expression."
 
   PlotModuleUI(ns("plot"),
     title = title,

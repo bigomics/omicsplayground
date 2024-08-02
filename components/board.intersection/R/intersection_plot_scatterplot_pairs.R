@@ -15,7 +15,7 @@ intersection_scatterplot_pairs_ui <- function(
 
   scatterplot_pairs.opts <- shiny::tagList(
     withTooltip(
-      shiny::checkboxInput(ns("splom_highlight"), "Highlight genes", TRUE),
+      shiny::checkboxInput(ns("splom_highlight"), tspan("Highlight genes"), TRUE),
       "Enable highlighting genes on the plots. Users can highlight points by selecting them with the mouse, using the box selection or the lasso selection tool."
     )
   )
