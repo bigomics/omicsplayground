@@ -8,11 +8,10 @@ apt update && apt install -y \
     jags emacs git procps htop \
     python3 python3-pip python-is-python3 \
     pdftk vim-tiny less wget gdebi-core \
-    pandoc pandoc-citeproc imagemagick \ 
-    libcairo2-dev libxt-dev xvfb \
-    libfftw3-dev libglpk-dev librsvg2-dev \
+    pandoc imagemagick libfftw3-dev libglpk-dev \
     libgsl-dev librsvg2-dev libgsl-dev curl \
-    libsodium-dev
+    libsodium-dev cmake
+##libcairo2-dev libxt-dev xvfb \
 
 # Install Chrome
 apt-get update && apt-get install -y wget gnupg2
@@ -27,8 +26,8 @@ apt-get update && apt-get install -y google-chrome-stable
 # export LC_ALL=en_US.UTF-8 
 
 # Install basic stuff and R
-apt install -y r-base r-base-dev r-recommended
+apt install -y r-base r-base-dev 
 
 # remove ugly snaps
-snap remove --purge -y firefox
-sudo apt purge snapd
+#snap remove --purge -y firefox
+#sudo apt purge snapd
