@@ -6,6 +6,7 @@ if (basename(getwd()) != "omicsplayground") {
 if(!require("renv")) install.packages("renv")
 if(!require("BiocManager")) install.packages("BiocManager")
 if(!require("remotes")) install.packages("remotes")
+if(!require("devtools")) install.packages("devtools")
 if(!require("reticulate")) install.packages("reticulate")
 
 ## ---------------------------------------------------------------------
