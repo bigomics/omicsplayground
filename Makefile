@@ -17,8 +17,8 @@ sass: FORCE
 	Rscript dev/sass.R
 	Rscript dev/create_source_all.R
 
-clean:
-	rm `find . -name '.#*' -o -name '*~' -o -name 'LOCK*'`
+clean: rm.locks
+	rm `find . -name '.#*' -o -name '*~' -o -name '#*#' -o -name '*.save' -o -name '*.bak' -o -name '*.SAVE' -o -name '*.BAK'`
 
 rm.locks:
 	find . -name 'LOCK*' -exec rm {} \;

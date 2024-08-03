@@ -41,6 +41,10 @@ add_github("bigomics/bigdash")
 add_github("bigomics/bigLoaders")
 add_github("bigomics/fgsea")
 add_github("bigomics/wizardR")
+add_github("bigomics/biomaRt")
+add_github("JohnCoene/waiter")
+add_github("JohnCoene/firebase@omics")
+add_github("JohnCoene/bsutils")
 add_github("GfellerLab/EPIC")
 add_github("broadinstitute/infercnv")
 add_github("GfellerLab/SuperCell")
@@ -48,13 +52,9 @@ add_github("linxihui/NNLM")
 add_github("Coolgenome/iTALK")
 add_github("wt2015-github/FastGGM")
 add_github("satijalab/azimuth")
-add_github("JohnCoene/waiter")
-add_github("JohnCoene/firebase@omics")
-add_github("JohnCoene/bsutils")
 add_github("ropensci/iheatmapr")
 ##add_github("rstudio/bslib@v0.6.1")
 add_github("rstudio/htmltools")
-add_github("bigomics/biomaRt")
 add_github("Bioconductor/BiocFileCache")
 add_github("cysouw/qlcMatrix")
 add_github("cole-trapnell-lab/leidenbase")
@@ -62,9 +62,6 @@ add_github('cole-trapnell-lab/monocle3')
 add_github('bartongroup/Proteus')
 add_github('cran/riverplot')
 add_github('Ironholds/rgeolocate')
-
-#remotes::install_version("Matrix", version = "1.6.0")
-#install.packages("plsRcox", dependencies = FALSE) # pscRcox requires Matrix >= 1.6.0
 
 pkg.remotes <- sort(remotes.url[names(remotes.url) %in% pkg.used])
 pkg.imports <- sort(setdiff(pkg.used, names(pkg.remotes)))
@@ -159,7 +156,10 @@ BIG.NOTUSED <- c(
     ## "TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
     ## "TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
 )
-## remove.pkgs(BIG.NOTUSED)
+remove.pkg <- function(pkg) {
+    if (pkg %in% rownames(installed.packages())) try(remove.packages(pkg))
+}
+remove.pkgs(BIG.NOTUSED)
 
 
 message("**** FINISHED INSTALLING REQUIREMENTS *****")
