@@ -62,13 +62,6 @@ docker.base: FORCE
 	docker build  \
 		--progress plain \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v4rc .
-
-docker.base2: FORCE
-	@echo building docker BASE
-	docker build --no-cache \
-		--progress plain \
-		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.base.update: FORCE 
