@@ -159,7 +159,7 @@ BIG.NOTUSED <- c(
 remove.pkg <- function(pkg) {
     if (pkg %in% rownames(installed.packages())) try(remove.packages(pkg))
 }
-remove.pkgs(BIG.NOTUSED)
+#remove.pkgs(BIG.NOTUSED)
 
 
 message("**** FINISHED INSTALLING REQUIREMENTS *****")

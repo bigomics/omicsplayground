@@ -47,13 +47,15 @@ docker: FORCE version
 	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
 		--progress plain \
 		-f docker/Dockerfile \
-	  	-t bigomics/omicsplayground:$(BRANCH) .
+	  	-t bigomics/omicsplayground:$(BRANCH) . \
+		2>&1 | tee -a docker.log
 
 docker.alpha: FORCE 
 	@echo building ALPHA docker
-	docker build --no-cache --progress plain \
+	docker build --no-cache  \
 		-f docker/Dockerfile2 \
-	  	-t bigomics/omicsplayground:alpha .
+	  	-t bigomics/omicsplayground:alpha . \
+		2>&1 | tee -a docker.log
 
 docker.base: FORCE
 	@echo building docker BASE
