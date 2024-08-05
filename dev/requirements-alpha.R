@@ -28,8 +28,9 @@ missing.remotes <- pkg.remotes[!names(pkg.remotes) %in% installed.pkg]
 
 print(">>> Checking for ultra-verbose packages...")
 pkg.eigen <- rownames(P)[grep("RcppEigen",as.character(P[,"LinkingTo"]))]
-if(any(c("RccpEigen",pkg.eigen) %in% missing.imports)) {
-  pkg.sel <- intersect(c("RccpEigen",pkg.eigen),missing.imports)
+
+if(any(missing.imports %in% c("RccpEigen",pkg.eigen))) {
+  pkg.sel <- intersect(missing.imports,c("RccpEigen",pkg.eigen))
   message("> Pre-installing ultra-verbose packages: ", paste(pkg.sel,collapse=" "))
   if(!dir.exists("~/.R")) dir.create("~/.R")
   if(!file.exists("~/.R/Makevars")) file.copy("dev/Makevars","~/.R/Makevars.save")
