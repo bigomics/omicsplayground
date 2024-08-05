@@ -161,7 +161,7 @@ upload_table_preview_counts_server <- function(
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)[1]
-      if (ext != "csv") {
+      if (!ext %in% c("csv",'RData')) {
         shinyalert::shinyalert(
           title = "File format not supported.",
           text = "Please make sure the file is a CSV file.",
@@ -171,37 +171,27 @@ upload_table_preview_counts_server <- function(
       }
 
       # if counts not in file name, give warning and return
-      if (!grepl("count", input$counts_csv$name, ignore.case = TRUE) && !grepl("expression", input$counts_csv$name, ignore.case = TRUE)) {
+      if (!any(grepl("count|expression|params.rdata", tolower(input$counts_csv$name)))) {
         shinyalert::shinyalert(
-          title = "Counts not in filename.",
+          title = "Invalid filename.",
           text = "Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.",
           type = "error"
         )
         return()
       }
 
-      df0 <- playbase::read_counts(input$counts_csv$datapath)
-      df <- df0
-
-      is_expression <- grepl("expression", input$counts_csv$name, ignore.case = TRUE)
-      is_count <- grepl("count", input$counts_csv$name, ignore.case = TRUE)
-
-      if (FALSE && is_expression) {
-        df <- 2**df0
-        # legacy code.. it might not be always the case, maybe we
-        # should ask users if they removed zeros by adding 1 to
-        # counts... /MMM
-        if (min(df0, na.rm = TRUE) >= 1) df <- df - 1
-
-        # warn user that this is happening in background
-        shinyalert::shinyalert(
-          title = "",
-          text = "Expression counts uploaded. Converting log2 value to intensities.",
-          type = "warning"
-        )
+      if( grepl("count|expression", tolower(input$counts_csv$name[1]))) {
+        df <- playbase::read_counts(input$counts_csv$datapath[1])
+        uploaded$counts.csv <- df
       }
 
-      uploaded$counts.csv <- df
+      if( input$counts_csv$name[1] == "params.RData" ) {
+        params <- readRDS(input$counts_csv$datapath[1])
+        uploaded$counts.csv <- params$counts
+        uploaded$samples.csv <- params$samples
+        uploaded$contrasts.csv <- params$contrasts
+      }
+      
     })
 
     observeEvent(input$remove_counts, {
