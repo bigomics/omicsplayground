@@ -1,5 +1,6 @@
 BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
+TAG=$(BRANCH)
 
 run: sass version rm.locks
 	Rscript dev/run_app.R
@@ -26,8 +27,6 @@ rm.locks:
 show.branch:
 	@echo $(BRANCH)
 
-
-TAG=$(BRANCH)
 docker.run:
 	@echo running docker *$(TAG)* at port 4000
 	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
@@ -82,6 +81,16 @@ docker.bash:
 	@echo bash into docker $(TAG)
 	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
+docker.squash:
+	@echo squash docker image $(TAG)
+	@if [ -z `command -v pipx &> /dev/null`]; then \
+		echo ERROR: please install docker-squash; \
+		exit 1; \
+	fi
+	docker-squash bigomics/omicsplayground:$(TAG) -t squashed
+	docker build --build-arg TAG=$(TAG) \
+		-f docker/Dockerfile.squash \
+	  	-t bigomics/omicsplayground:$(TAG)-squash .
 
 doc: FORCE
 	Rscript dev/02_doc.R
