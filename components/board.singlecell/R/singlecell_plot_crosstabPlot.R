@@ -33,7 +33,7 @@ singlecell_plot_crosstabPlot_ui <- function(
       "Choose a predefined phenotype group on the y-axis.",
       placement = "top", options = list(container = "body")
     ),
-    withTooltip(shiny::selectInput(parent("crosstabgene"), label = "gene:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(parent("crosstabgene"), label = tspan("gene:"), choices = NULL, multiple = FALSE),
       "Visualize the expression barplot of a gene by specifying the gene name.",
       placement = "top", options = list(container = "body")
     )

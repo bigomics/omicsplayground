@@ -61,7 +61,7 @@ enrichment_plot_volcano_server <- function(id,
       par(mar = subplot.MAR)
 
       shiny::req(pgx$X)
-      shiny::validate(shiny::need(!is.null(gset_selected()), "Please select a geneset."))
+      shiny::validate(shiny::need(!is.null(gset_selected()), tspan("Please select a geneset.", js = FALSE)))
 
       comp <- 1
       gs <- 1

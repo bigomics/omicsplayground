@@ -27,7 +27,7 @@ tcga_plot_survival_ui <- function(id, caption, info.text, height, width) {
       options = list(container = "body")
     ),
     withTooltip(
-      radioButtons(ns("tcga_tcgasurv_ntop"), "N cor genes:", c(25, 100, 250, 1000), selected = 100, inline = TRUE),
+      radioButtons(ns("tcga_tcgasurv_ntop"), tspan("N cor genes:"), c(25, 100, 250, 1000), selected = 100, inline = TRUE),
       "Number of top genes for calculating the correlation.",
       placement = "left",
       options = list(container = "body")

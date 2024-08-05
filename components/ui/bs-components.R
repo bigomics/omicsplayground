@@ -8,7 +8,7 @@
 ##
 
 bs_alert <- function(text, conditional = TRUE, style = "primary", closable = TRUE,
-                     translate = TRUE, html = TRUE) {
+                     translate = TRUE, translate_js = TRUE, html = TRUE) {
   id <- bigdash:::make_id()
   if (conditional) {
     btn.class <- "btn-close btn-close-bs-conditional"
@@ -19,7 +19,7 @@ bs_alert <- function(text, conditional = TRUE, style = "primary", closable = TRU
   ##  text <- list(...)
 
   if (translate) {
-    text <- tspan(text)
+    text <- tspan(text, js = translate_js)
   }
 
   if (html) {

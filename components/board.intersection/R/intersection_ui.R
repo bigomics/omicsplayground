@@ -37,7 +37,7 @@ IntersectionInputs <- function(id) {
         withTooltip(
           shiny::textAreaInput(ns("customlist"), NULL,
             value = NULL,
-            rows = 5, placeholder = "Paste your custom gene list"
+            rows = 5
           ),
           "Paste a custom list of genes to highlight.",
           placement = "bottom"

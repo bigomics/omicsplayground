@@ -11,7 +11,7 @@ EnrichmentInputs <- function(id) {
       "Select a contrast of interest for the analysis.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("gs_features"), "Gene set collection:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("gs_features"), tspan("Gene set collection:"), choices = NULL, multiple = FALSE),
       "Choose a specific gene set collection for the analysis.",
       placement = "top"
     ),
@@ -35,7 +35,7 @@ EnrichmentInputs <- function(id) {
       "input.gs_options % 2 == 1",
       ns = ns,
       shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns("gs_showall"), "Show all genesets", FALSE),
+        withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
           "Enbale significant genes filtering. Display only significant genesets in the table.",
           placement = "top", options = list(container = "body")
         ),
@@ -43,7 +43,7 @@ EnrichmentInputs <- function(id) {
           "Select a method or multiple methos for the statistical test.",
           placement = "right", options = list(container = "body")
         ),
-        withTooltip(shiny::checkboxInput(ns("gs_top10"), "top 10 gene sets", FALSE),
+        withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
           "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
           placement = "top", options = list(container = "body")
         ),

@@ -14,7 +14,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     tabH <- 340 ## row height of panels
     tabH <- "80vh" ## height of tables
 
-    gs_infotext <- paste("Similar to the differential gene expression analysis, users can perform differential
+    gs_infotext <- tspan(paste("Similar to the differential gene expression analysis, users can perform differential
         expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis.
         The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections
         such as ", a_Hallmark, ", ", a_MSigDB, " and ", a_GO, ". Users have to specify which comparison they want to
@@ -32,7 +32,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         significant gene sets at different FDR thresholds for all contrasts.<br><br><br><br>
         <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=4'
         frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
-        allowfullscreen></iframe></center>")
+        allowfullscreen></iframe></center>"), js = FALSE)
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
@@ -326,7 +326,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       res <- data.frame(res)
 
       if (nrow(res) == 0) {
-        shiny::validate(shiny::need(nrow(res) > 0, "No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar."))
+        shiny::validate(shiny::need(nrow(res) > 0, tspan("No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
         return(NULL)
       }
       return(res)

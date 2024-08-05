@@ -46,7 +46,7 @@ FeatureMapInputs <- function(id) {
       "input.tabs == 'Gene'",
       ns = ns,
       withTooltip(
-        shiny::selectInput(ns("filter_genes"), "Filter genes:",
+        shiny::selectInput(ns("filter_genes"), tspan("Filter genes:"),
           choices = NULL, multiple = TRUE
         ),
         "Filter the genes to highlight on the map.",
@@ -59,7 +59,7 @@ FeatureMapInputs <- function(id) {
       withTooltip(
         shiny::textAreaInput(ns("customlist"), NULL,
           value = NULL,
-          rows = 5, placeholder = "Paste your custom gene list"
+          rows = 5
         ),
         "Paste a custom list of genes to highlight.",
         placement = "bottom"
@@ -69,7 +69,7 @@ FeatureMapInputs <- function(id) {
       "input.tabs == 'Geneset'",
       ns = ns,
       withTooltip(
-        shiny::selectInput(ns("filter_gsets"), "Filter genesets:",
+        shiny::selectInput(ns("filter_gsets"), tspan("Filter genesets:"),
           choices = NULL, multiple = TRUE
         ),
         "Filter the genesets to highlight on the map.",

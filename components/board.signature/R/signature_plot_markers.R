@@ -306,7 +306,7 @@ signature_plot_markers_server <- function(id,
       ) %>%
         plotly_default() %>%
         plotly::layout(
-          title = list(text = "genes in signature", size = 12),
+          title = list(text = tspan("genes in signature", js = FALSE), size = 12),
           margin = list(l = 0, r = 0, b = 0, t = 30) # lrbt
         )
       return(fig)

@@ -63,6 +63,17 @@ clustering_plot_clusterannot_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    shiny::observeEvent(pgx$X, {
+      choices <- c("gene", "geneset", "phenotype")
+      choices_names <- c(
+        tspan("gene", js = FALSE),
+        tspan("geneset", js = FALSE),
+        tspan("phenotype", js = FALSE)
+      )
+      names(choices) <- choices_names
+      shiny::updateSelectInput(session, "xann_level", choices = choices)
+    })
+
     shiny::observe({
       shiny::req(pgx$X, pgx$gsetX, pgx$families)
 

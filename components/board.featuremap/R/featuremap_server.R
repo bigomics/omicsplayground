@@ -11,10 +11,10 @@ FeatureMapBoard <- function(id, pgx) {
     rowH1 <- 220 ## row 1 height
     rowH2 <- 460 ## row 2 height
 
-    infotext <- "Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
+    infotext <- tspan("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
 <br><br>The tabs present Gene and Geneset UMAP dimensionality reduction plots and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
 <br><br>The maps can be colored according to the foldchange signature of the group contrasts (i.e. comparisons), or colored by the average relative log-expression according to some phenotype condition. Multiple signatures can then be easily compared by visually inspection of the colors.
-"
+", js = FALSE)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -75,6 +75,7 @@ FeatureMapBoard <- function(id, pgx) {
         shiny::updateSelectInput(session, "filter_gsets",
           choices = gsetcats, selected = sel0
         )
+        shiny::updateTextAreaInput(session, "customlist", placeholder = tspan("Paste your custom gene list", js = FALSE))
       }
     )
 
@@ -278,7 +279,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     filteredGenes <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::validate(need(input$filter_genes, "Please input at least one value in Annotate genes!"))
+      shiny::validate(need(input$filter_genes, tspan("Please input at least one value in Annotate genes!", js = FALSE)))
       sel <- input$filter_genes
       filtgenes <- c()
       if (is.null(pgx$version) | pgx$organism == "Human") {

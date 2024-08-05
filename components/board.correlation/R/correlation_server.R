@@ -10,7 +10,7 @@ CorrelationBoard <- function(id, pgx) {
     fullH <- 800 ## full height of page
     rowH <- 340 ## full height of page
 
-    cor_infotext <- "The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
+    cor_infotext <- tspan("The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation.", js = FALSE)
 
     COL <- RColorBrewer::brewer.pal(12, "Paired")[seq(1, 12, 2)]
     COL <- RColorBrewer::brewer.pal(9, "Set1")[c(2, 1, 3:9)]
@@ -70,6 +70,10 @@ CorrelationBoard <- function(id, pgx) {
       px <- colnames(pgx$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
       shiny::updateSelectInput(session, "cor_group", choices = px, selected = s1)
+    })
+
+    shiny::observeEvent(pgx$X, {
+      shiny::updateTextAreaInput(session, "cor_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
     })
 
 

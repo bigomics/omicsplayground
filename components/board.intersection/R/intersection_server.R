@@ -13,14 +13,14 @@ IntersectionBoard <- function(
     fullH <- 800 # row height of panel
 
     infotext <-
-      "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
+      tspan("The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
 
 <br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles in the <strong>Pairs</strong> panel. Simultaneously, a Venn diagram with the number of intersecting genes between the profiles is plotted in <strong>Venn diagram</strong> panel. Details of intersecting genes are also reported in an interactive table. A more detailed scatter plot of two profiles is possible under the <strong>Two-pairs</strong> panel. Users can check the pairwise correlations of the contrasts under the <b>Contrast heatmap</b> panel. Alternatively, the <strong>Connectivity Map (CMap)</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
 
 <br><br><br><br>
 <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
 
-"
+", js = FALSE)
 
     ## delayed input
     input_comparisons <- shiny::reactive({
@@ -50,6 +50,14 @@ IntersectionBoard <- function(
         choices = comparisons,
         selected = head(comparisons, 3)
       )
+    })
+
+    shiny::observeEvent(pgx$X, {
+      choices <- c("gene", "geneset")
+      choices_names <- c(tspan("gene", js = FALSE), tspan("geneset", js = FALSE))
+      names(choices) <- choices_names
+      shiny::updateRadioButtons(session, "level", choices = choices)
+      shiny::updateTextAreaInput(session, "customlist", placeholder = tspan("Paste your custom gene list", js = FALSE))
     })
 
     ## update choices upon change of feature level
@@ -192,7 +200,7 @@ IntersectionBoard <- function(
       on.exit(progress$close())
 
       ## ------------ UMAP clustering (genes) -----------------
-      progress$inc(0.33, "calculating UMAP for genes...")
+      progress$inc(0.33, tspan("calculating UMAP for genes...", js = FALSE))
       if ("cluster.genes" %in% names(pgx)) {
         pos <- pgx$cluster.genes$pos[["umap2d"]]
       } else {
@@ -206,7 +214,7 @@ IntersectionBoard <- function(
       }
 
       ## ------------ UMAP clustering (genesets) -----------------
-      progress$inc(0.33, "calculating UMAP for genesets...")
+      progress$inc(0.33, tspan("calculating UMAP for genesets...", js = FALSE))
       if ("cluster.gsets" %in% names(pgx)) {
         gsea.pos <- pgx$cluster.gsets$pos[["umap2d"]]
       } else {

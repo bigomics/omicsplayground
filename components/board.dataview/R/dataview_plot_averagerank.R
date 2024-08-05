@@ -55,11 +55,11 @@ dataview_plot_averagerank_server <- function(id,
 
       if (data_type %in% c("counts", "abundance")) {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
-        ylab <- tspan("Counts")
+        ylab <- tspan("Counts", js = FALSE)
       }
       if (data_type %in% c("logCPM", "log2")) {
         mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
-        ylab <- tspan("Counts (log2)")
+        ylab <- tspan("Counts (log2)", js = FALSE)
       }
 
       sel <- which(sub(".*:", "", names(mean.fc)) == gene)
@@ -163,7 +163,7 @@ dataview_plot_averagerank_server <- function(id,
       fig <- fig %>%
         plotly::layout(
           showlegend = FALSE,
-          xaxis = list(title = "Ordered genes"),
+          xaxis = list(title = tspan("Ordered genes", js = FALSE)),
           yaxis = list(title = stringr::str_to_sentence(ylab))
         ) %>%
         plotly_default()

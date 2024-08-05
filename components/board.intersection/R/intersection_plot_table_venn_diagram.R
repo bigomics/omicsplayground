@@ -140,7 +140,7 @@ intersection_plot_venn_diagram_server <- function(id,
 
         if (length(x) == 0 || all(xlen == 0)) {
           frame()
-          text(0.5, 0.5, "Error: no valid genes. Please adjust thresholds.",
+          text(0.5, 0.5, tspan("Error: no valid genes. Please adjust thresholds.", js = FALSE),
             col = "red"
           )
           return(NULL)

@@ -41,14 +41,14 @@ ConnectivityInputs <- function(id) {
       shiny::hr(),
       shiny::tags$head(shiny::tags$style("#cmap-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
       withTooltip(
-        shiny::textAreaInput(ns("genelist"), "Select genes:",
-          rows = 15, placeholder = "Paste your gene list"
+        shiny::textAreaInput(ns("genelist"), tspan("Select genes:"),
+          rows = 15
         ),
         "Paste a list of genes that defines your signature. By default, the top50 most (absolute) differentially expressed genes (by logFC) are chosen for the selected comparison."
       ),
       shiny::radioButtons(
         ns("genelist_ntop"),
-        "ngenes:",
+        tspan("ngenes:"),
         choices = c(10, 50, 100),
         sel = 50, inline = TRUE
       )
