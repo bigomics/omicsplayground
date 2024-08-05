@@ -51,8 +51,8 @@ docker: FORCE version
 
 docker.alpha: FORCE 
 	@echo building ALPHA docker
-	docker build --no-cache  \
-		-f docker/Dockerfile2 \
+	docker build \
+		-f docker/Dockerfile.alpha \
 	  	-t bigomics/omicsplayground:alpha . \
 		2>&1 | tee -a docker.log
 
@@ -82,21 +82,21 @@ docker.bash:
 	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
 docker.squash:
-	@echo squash docker image $(TAG)
 	@if [ -z `command -v pipx &> /dev/null`]; then \
 		echo ERROR: please install docker-squash; \
 		exit 1; \
 	fi
-	docker-squash bigomics/omicsplayground:$(TAG) -t squashed
+	@echo squashing docker image bigomics/omicsplayground:$(TAG)
+	docker-squash bigomics/omicsplayground:alpha -t squashed-$(TAG)
 	docker build --build-arg TAG=$(TAG) \
 		-f docker/Dockerfile.squash \
-	  	-t bigomics/omicsplayground:$(TAG)-squash .
+	  	-t bigomics/omicsplayground:$(TAG)-squashed .
 
 doc: FORCE
 	Rscript dev/02_doc.R
 
 install: FORCE
-	Rscript dev/03_install.R
+	Rscript dev/requirements.R
 
 renv: FORCE
 	R -e "renv::activate();renv::restore()"
@@ -147,4 +147,4 @@ app.test.review:
 	R -e "testthat::snapshot_review('snapshot/')"
 
 update:
-	Rscript dev/update.R
+	Rscript dev/update_packages.R

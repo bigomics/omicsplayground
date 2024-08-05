@@ -68,12 +68,14 @@ pkg.remotes <- sort(remotes.url[names(remotes.url) %in% pkg.used])
 pkg.imports <- sort(setdiff(pkg.used, names(pkg.remotes)))
 
 ## determine packages in playbase
-playbase.imports <- strsplit(packageDescription("playbase")$Imports,split='\\n')[[1]]
-playbase.imports <- gsub(",$","",playbase.imports)
-playbase.remotes <- strsplit(packageDescription("playbase")$Remotes,split='\\n')[[1]]
+playbase.imports <- strsplit(packageDescription("playbase")$Imports,split=',')[[1]]
+playbase.imports <- trimws(gsub("[\n]","",playbase.imports))
+playbase.remotes <- strsplit(packageDescription("playbase")$Remotes,split=',')[[1]]
+playbase.remotes <- gsub("[\n]","",playbase.remotes)
 playbase.remotes <- gsub(".*github.com/|/archive.*","",playbase.remotes)
 playbase.remotes <- gsub(".*contrib/|_[0-9].*$","",playbase.remotes)
-playbase.remotes <- sub(".*/","",playbase.remotes)                    
+playbase.remotes <- gsub(".*/|@.*","",playbase.remotes)
+playbase.remotes <- trimws(playbase.remotes)
 playbase.pkg <- sort(unique(c(playbase.imports, playbase.remotes)))
 
 bigomics.pkg <- c("playbase","playdata","bigdash","bigLoaders","wizardR")

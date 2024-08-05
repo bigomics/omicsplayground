@@ -13,7 +13,7 @@
 FROM bigomics/playbase:latest
 
 ARG BRANCH=master
-RUN echo "Building Docker image from branch $BRANCH"
+RUN echo Building Docker image from branch '$BRANCH'
 
 ENV DEBIAN_FRONTEND noninteractive
 # Set the locale (uncomment UTF8)
@@ -43,8 +43,8 @@ RUN rm -fr /omicsplayground  \
 
 # Run auto-install script
 WORKDIR /omicsplayground
-COPY dev/requirements2.R dev/requirements2.R
-RUN Rscript dev/requirements2.R
+COPY dev/requirements-alpha.R dev/requirements-alpha.R
+RUN Rscript dev/requirements-alpha.R
 
 #------------------------------------------------------------
 # Install fresh playbase (from same BRANCH)

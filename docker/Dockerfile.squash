@@ -1,0 +1,20 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+## Start from base image, update git code and add data
+## folder. Create docker ready to be deployed.
+
+#------------------------------------------------------------
+# Start from playbase image
+#------------------------------------------------------------
+ARG TAG=latest
+FROM squashed-${TAG}
+
+#------------------------------------------------------------
+# Expose port and set entry CMD
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+EXPOSE 3838
+CMD exec Rscript dev/run_app_headless.R 2>&1 | tee -a run.log
