@@ -81,17 +81,6 @@ docker.bash:
 	@echo bash into docker $(TAG)
 	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
 
-docker.squash:
-	@if [ -z `command -v pipx &> /dev/null`]; then \
-		echo ERROR: please install docker-squash; \
-		exit 1; \
-	fi
-	@echo squashing docker image bigomics/omicsplayground:$(TAG)
-	docker-squash bigomics/omicsplayground:alpha -t squashed-$(TAG)
-	docker build --build-arg TAG=$(TAG) \
-		-f docker/Dockerfile.squash \
-	  	-t bigomics/omicsplayground:$(TAG)-squashed .
-
 doc: FORCE
 	Rscript dev/02_doc.R
 
