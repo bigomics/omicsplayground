@@ -29,7 +29,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Add supporting R libraries
 #------------------------------------------------------------
 WORKDIR /
-COPY dev/Rprofile /root/.Rprofile
+COPY dev/Rprofil[e] /root/.Rprofile
 
 #------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
