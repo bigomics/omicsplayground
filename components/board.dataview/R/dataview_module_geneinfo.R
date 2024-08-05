@@ -48,9 +48,10 @@ dataview_module_geneinfo_server <- function(id,
       gene <- r.gene()
       shiny::req(gene)
 
+      feature <- gene
       jj <- match(gene, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-      info <- playbase::getHSGeneInfo(symbol) ## defined in pgx-functions.R
+      info <- playbase::getHSGeneInfo(symbol, feature) ## defined in pgx-functions.R
       res <- tspan("(gene info not available)")
       if (!is.null(info)) {
         info$summary <- "(no info available)"
@@ -61,7 +62,7 @@ dataview_module_geneinfo_server <- function(id,
 
         ## reorder
         nn <- intersect(
-          c("symbol", "name", "map_location", "summary", names(info)),
+          c("feature_name", "gene_symbol", "name", "map_location", "summary", names(info)),
           names(info)
         )
         info <- info[nn]
