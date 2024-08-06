@@ -332,7 +332,30 @@ upload_table_preview_contrasts_server <- function(
         return()
       }
 
-      uploaded$contrasts.csv <- playbase::read.as_matrix(input$contrasts_csv$datapath)
+      ct <- playbase::read.as_matrix(input$contrasts_csv$datapath)
+
+      ## IK: should we do contrasts.convertToLabelMatrix here
+      ## already?  to allow for short/old formats?
+      samples1 <- checked_samples()$SAMPLES
+      samples <- uploaded$samples.csv
+
+      dbg("[UploadServer:preview_contrasts] dim(contrast) = ", dim(ct))      
+      dbg("[UploadServer:preview_contrasts] dim(samples) = ", dim(samples))
+      dbg("[UploadServer:preview_contrasts] dim(samples1) = ", dim(samples1))
+
+      
+      dbg("[UploadServer:preview_contrasts] converting old contrasts format")
+      new.ct <- try( playbase::contrasts.convertToLabelMatrix(
+        contrasts = ct, samples = samples
+      ))
+      if(!"try-error" %in% class(new.ct)) {
+        dbg("[UploadServer:preview_contrasts] ct[,1] = ",ct[,1])        
+        dbg("[UploadServer:preview_contrasts] new.ct[,1] = ",new.ct[,1])
+        ct <- new.ct
+      }
+
+      
+      uploaded$contrasts.csv <- ct
     })
 
     observeEvent(input$remove_contrasts, {
