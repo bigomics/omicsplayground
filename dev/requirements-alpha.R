@@ -18,26 +18,34 @@ if(!require("reticulate")) install.packages("reticulate")
 ## require statements in the r/R source files. The script also sets:
 ## - pgx.imports
 ## - pgx.remotes
+source("dev/functions.R")
 source("dev/write_description.R")
+pkg <- scan_description(path=NULL) 
 
 ## some are perhaps already installed by playbase or other packages
-P <- installed.packages()
-installed.pkg <- sort(as.character(P[,"Package"]))
-missing.imports <- setdiff( pkg.imports, installed.pkg )
-missing.remotes <- pkg.remotes[!names(pkg.remotes) %in% installed.pkg]
+installed.pkgs <- sort(as.character(installed.packages()[,"Package"]))
+pkgs <- c(pkg$imports, names(pkg$remotes))
+message("Total packages (not in playbase): ", length(pkgs))
+message("Packages not yet installed: ", sum(!pkgs %in% installed.pkgs))
 
-print(">>> Checking for ultra-verbose packages...")
+## determine missing packagers
+P <- available.packages()
+missing.imports <- setdiff( pkg$imports, installed.pkgs )
+missing.remotes <- pkg$remotes[!names(pkg$remotes) %in% installed.pkgs]
+
+## suppress ultra-verbose packages that link to RccpEigen
 pkg.eigen <- rownames(P)[grep("RcppEigen",as.character(P[,"LinkingTo"]))]
-
-if(any(missing.imports %in% c("RccpEigen",pkg.eigen))) {
-  pkg.sel <- intersect(missing.imports,c("RccpEigen",pkg.eigen))
-  message("> Pre-installing ultra-verbose packages: ", paste(pkg.sel,collapse=" "))
+pkg.eigen <- c("RccpEigen",pkg.eigen)
+pkg.eigen <- intersect(missing.imports,pkg.eigen)
+if(length(pkg.eigen) > 0) {
+  message("> Pre-installing ultra-verbose packages: ", paste(pkg.eigen,collapse=" "))
   if(!dir.exists("~/.R")) dir.create("~/.R")
   if(!file.exists("~/.R/Makevars")) file.copy("dev/Makevars","~/.R/Makevars.save")
   file.copy("dev/Makevars.no-error","~/.R/Makevars")
-  BiocManager::install(pkg.sel,ask=FALSE)
+  BiocManager::install(pkg.eigen,ask=FALSE)
   file.remove("~/.R/Makevars")
-  if(!file.exists("~/.R/Makevars.save")) file.copy("dev/Makevars.save","~/.R/Makevars")  
+  if(!file.exists("~/.R/Makevars.save")) file.copy("dev/Makevars.save","~/.R/Makevars")
+  missing.imports <- setdiff(missing.imports, pkg.eigen)
 } else {
   print("> No ultra-verbose packages!")
 }
@@ -58,20 +66,6 @@ if(length(missing.remotes>0)) {
   }
 }
 
-## ---------------------------------------------------------------------
-## Install Kaleido for plotly
-## ---------------------------------------------------------------------
-
-if(0) {
-  print(">>> Installing Kaleido/plotly packages...")
-  ## Install a clean reticulate and miniconda
-  # install.packages('reticulate', force=TRUE) # remove reticulate install since its already done.. and we get checksum error for some reason at this step
-  unlink("~/.local/share/r-miniconda", recursive = TRUE)
-  reticulate::install_miniconda()
-  reticulate::conda_install("r-reticulate", "python-kaleido")
-  reticulate::conda_install("r-reticulate", "plotly", channel = "plotly")
-  reticulate::use_miniconda("r-reticulate")
-}
 
 ## ---------------------------------------------------------------------
 ## remove unneccessary big packages??

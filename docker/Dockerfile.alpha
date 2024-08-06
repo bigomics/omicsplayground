@@ -30,6 +30,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #------------------------------------------------------------
 WORKDIR /
 COPY dev/Rprofil[e] /root/.Rprofile
+COPY dev/*.R description* dev/
 
 #------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
@@ -43,7 +44,7 @@ RUN rm -fr /omicsplayground  \
 
 # Run auto-install script
 WORKDIR /omicsplayground
-COPY dev/requirements-alpha.R dev/requirements-alpha.R
+COPY dev/*.R description* dev/
 RUN Rscript dev/requirements-alpha.R
 
 #------------------------------------------------------------
@@ -60,8 +61,7 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.g
 
 # after install non-detected missing packages
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
-#RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
-#RUN R -e "remotes::install_github('JohnCoene/waiter')"
+RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
 #RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 #RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 
