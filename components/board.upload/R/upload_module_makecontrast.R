@@ -16,7 +16,7 @@ upload_module_makecontrast_ui <- function(id) {
         bslib::layout_columns(
           col_widths = c(3, 9),
           shiny::div(
-            shiny::HTML("<h6>1. Choose phenotype:</h6>"),
+            shiny::HTML("<b>1. Choose phenotype:</b>"),
             withTooltip(
               shiny::selectizeInput(
                 inputId = ns("param"),
@@ -30,9 +30,9 @@ upload_module_makecontrast_ui <- function(id) {
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
             ),
-            br(),
             shiny::div(
-              shiny::HTML("<h6>3. Comparison name:</h6>"),
+              style = "padding-top: 5px;",
+              shiny::HTML("<b>3. Comparison name:</b>"),
               withTooltip(
                 shiny::textInput(
                   ns("newname"),
@@ -45,10 +45,12 @@ upload_module_makecontrast_ui <- function(id) {
               ),
               shiny::checkboxInput(ns("add_prefix"), "Add prefix", FALSE)
             ),
-            br(),
-            shiny::HTML("<h6>4. Add my comparison:</h6>"),
             shiny::div(
-              style = "padding-top: 5px;",
+              style = "padding-top: 2px;",
+              shiny::HTML("<b>4. Add my comparison:</b>")
+            ),
+            shiny::div(
+              style = "margin-top: 0px;",
               withTooltip(
                 shiny::actionButton(
                   ns("addcontrast"),
@@ -64,7 +66,7 @@ upload_module_makecontrast_ui <- function(id) {
           ),
           shiny::div(
             style = "overflow: auto; margin-left: 30px;",
-            shiny::HTML("<h6>2. Create comparison:</h6>"),
+            shiny::HTML("<b>2. Create comparison:</b>"),
             withTooltip(
               shiny::uiOutput(ns("createcomparison"), style = "font-size:13px;"),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
