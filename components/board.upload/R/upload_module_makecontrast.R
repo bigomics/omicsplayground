@@ -166,10 +166,6 @@ upload_module_makecontrast_server <- function(
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
-<<<<<<< HEAD
-=======
-        ## shiny::req(input$param)
->>>>>>> 9c4e116cda7cf6a3f9dd4ae1affe6d3f5c647d7a
         shiny::validate(shiny::need(
           length(input$param) > 0,
           "Please select at least one phenotype"
@@ -203,21 +199,8 @@ upload_module_makecontrast_server <- function(
         )
 
         abv.df <- abv.df[ss, pp, drop = FALSE]
-<<<<<<< HEAD
         abv.cond <- apply(abv.df, 1, paste, collapse = ".")
         names(cond) <- abv.cond        
-=======
-        if (length(pp) > 1) {
-          # abv.df <- apply(abv.df, 2, stringr::str_to_title)
-          # abv.df[,1] <- tolower(abv.df[,1])
-          abv.cond <- apply(abv.df, 1, paste, collapse = ".")
-        } else {
-          abv.cond <- abv.df[, 1]
-        }
-        names(cond) <- abv.cond
-        cond <- c(cond, "others" = "<others>")
-
->>>>>>> 9c4e116cda7cf6a3f9dd4ae1affe6d3f5c647d7a
         cond
       })
 
