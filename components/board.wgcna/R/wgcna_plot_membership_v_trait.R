@@ -61,8 +61,8 @@ wgcna_plot_membership_v_trait_server <- function(id,
       for (i in top.px) {
         base::plot(rho1[k, ], rho2[i, ],
           pch = 20, cex = 0.7, col = col1,
-          xlab = "Module membership (eigengene cor)",
-          ylab = "Gene significance (trait cor)"
+          xlab = tspan("Module membership (eigengene cor)", js = FALSE),
+          ylab = tspan("Gene significance (trait cor)", js = FALSE)
         )
         title(paste(k, "vs.", paste(rownames(rho2)[i])), cex = 1)
       }

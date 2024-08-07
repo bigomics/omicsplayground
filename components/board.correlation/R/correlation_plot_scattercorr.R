@@ -195,13 +195,13 @@ correlation_plot_scattercorr_server <- function(id,
           plotly::layout(
             annotations = list(
               list(
-                x = axis_title_pos[1], y = 0.5, text = glue::glue("<b> Gene {ylab} Expression </b>"),
+                x = axis_title_pos[1], y = 0.5, text = glue::glue(tspan("<b> Gene {ylab} Expression </b>", js = FALSE)),
                 font = list(size = 13),
                 textangle = 270,
                 showarrow = FALSE, xref = "paper", yref = "paper"
               ),
               list(
-                x = 0.5, y = axis_title_pos[2], text = glue::glue("<b> Gene {xlab} expression </b>"),
+                x = 0.5, y = axis_title_pos[2], text = glue::glue(tspan("<b> Gene {xlab} Expression </b>", js = FALSE)),
                 font = list(size = 13),
                 showarrow = FALSE, xref = "paper", yref = "paper"
               )

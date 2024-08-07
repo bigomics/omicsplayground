@@ -21,7 +21,7 @@ contrast_correlation_ui <- function(
     ),
     ##       "Fix heatmap layout when changing number of top genes"),
     withTooltip(
-      shiny::radioButtons(ns("ntop"), "number of top genes",
+      shiny::radioButtons(ns("ntop"), tspan("number of top genes"),
         c("100", "1000", "all"),
         selected = "1000", inline = TRUE
       ),

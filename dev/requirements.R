@@ -127,13 +127,13 @@ pkg.extra <- c(
     "svgPanZoom", "rhdf5", "monocle", "mygene",
     "iheatmapr", "RcppZiggurat", "Rfast", "BH", "topGO", "survcomp",
     "blastula", "shinytest2", "sodium", "cookies", "shinyvalidate", "sparsesvd",
-    "recount", "sf", "shiny.i18n"
+    "recount", "sf", "shiny.i18n", "orthogene"
 )
 
 pkg.used <- c(pkg.used, pkg.extra)
 pkg.used <- sort(unique(pkg.used))
 
-## We install these later because some want dependencies alreay
+## We install these later because some want dependencies already
 ## installed.
 pkg.later <- c(
     "gputools", "Seurat", "EPIC", "NNLM", "iTALK",
@@ -143,13 +143,11 @@ pkg.later <- c(
     "mygene", "diptest", "edgeR", "DESeq2", "GSVA", "ruv"
 )
 
-print(" installing required packages...  3")
-
-
 ## ---------------------------------------------------------------------
 ## start install
 ## ---------------------------------------------------------------------
 
+print(" installing required packages...  3")
 install.pkgs(base.pkg, force = FALSE)
 install.pkgs(setdiff(pkg.used, pkg.later))
 
@@ -164,11 +162,6 @@ install.pkgs(c(
     "gridGraphics", "Rgraphviz", "fastcluster", "mygene",
     "diptest", "fpc"
 ))
-## install webshot and phantomjs (do we need it?)
-# install.pkg("webshot")
-# webshot::install_phantomjs(force=TRUE)  ## cp to /usr/local/bin !!
-# file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
-# file.copy("/root/bin/phantomjs","/usr/local/bin") ## inside docker we are root
 
 print(" installing required packages...  4")
 
@@ -201,8 +194,8 @@ install.github("bigomics/biomaRt", dependencies = FALSE)
 install.github("Bioconductor/BiocFileCache", dependencies = FALSE)
 install.github("renozao/xbioc", dependencies = TRUE)
 install.github("cysouw/qlcMatrix", dependencies = FALSE)
-remotes::install_github("cran/Matrix", ref = "2b05c7bd06c47eeb5939180938513da91d94b01b") # install Matrix 1.6.0 (pscRcox requires Matrix > 1.6.0)
-install.packages("plsRcox", dependencies = FALSE) # pscRcox requires Matrix > 1.6.0
+remotes::install_version("Matrix", version = "1.6.0")
+install.packages("plsRcox", dependencies = FALSE) # pscRcox requires Matrix >= 1.6.0
 
 
 
@@ -269,7 +262,6 @@ BIG.NOTUSED <- c(
     ## "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
     ## "RSpectra",  ## ???
-    ## "org.Mm.eg.db",
     "tximportData"
     ## "EnsDb.Hsapiens.v86",
     ## "EnsDb.Mmusculus.v79",

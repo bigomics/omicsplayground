@@ -39,10 +39,10 @@ BiomarkerInputs <- function(id) {
             shiny::textAreaInput(ns("pdx_select"), "Custom features:",
               value = NULL,
               height = "100px", width = "100%",
-              rows = 5, placeholder = "Paste your gene list"
+              rows = 5
             )
           ),
-          "Paste a custom gene list to be used as features.",
+          "Paste a custom list to be used as features.",
           placement = "top"
         )
       ),

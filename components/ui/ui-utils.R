@@ -304,7 +304,7 @@ addSettings <- function(ns, session, file) {
 
   # Correct column names
   df_names <- lapply(df$setting, function(x) {
-    inputLabelDictionary(board_ns, x)
+    tspan(inputLabelDictionary(board_ns, x), js = FALSE)
   }) |> unlist()
   df$setting <- df_names
 
@@ -446,7 +446,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
   return(val)
 }
 
-tspan <- function(text, js = FALSE) {
+tspan <- function(text, js = TRUE) {
   if (is.null(text)) {
     return(NULL)
   }
@@ -477,7 +477,10 @@ tspan <- function(text, js = FALSE) {
     tt <- i18n.tr(k)
     if (grepl(k, text)) text <- gsub(k, tt, text, ignore.case = FALSE)
   }
-  if (js) text <- shiny::HTML(text)
+  if (js) {
+    text <- paste0("<span>", text, "</span>")
+    text <- shiny::HTML(text)
+  }
   text
 }
 

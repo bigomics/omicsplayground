@@ -1,5 +1,7 @@
 BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
+TAG=$(BRANCH)
+ARG=
 
 run: sass version rm.locks
 	Rscript dev/run_app.R
@@ -17,8 +19,8 @@ sass: FORCE
 	Rscript dev/sass.R
 	Rscript dev/create_source_all.R
 
-clean:
-	rm `find . -name '.#*' -o -name '*~' -o -name 'LOCK*'`
+clean: rm.locks
+	rm `find . -name '.#*' -o -name '*~' -o -name '#*#' -o -name '*.save' -o -name '*.bak' -o -name '*.SAVE' -o -name '*.BAK'`
 
 rm.locks:
 	find . -name 'LOCK*' -exec rm {} \;
@@ -26,8 +28,6 @@ rm.locks:
 show.branch:
 	@echo $(BRANCH)
 
-
-TAG=$(BRANCH)
 docker.run:
 	@echo running docker *$(TAG)* at port 4000
 	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
@@ -44,34 +44,29 @@ docker.run2:
 
 docker: FORCE version
 	@echo building docker $(BRANCH)
-	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+	docker build $(ARG) --build-arg BRANCH=$(BRANCH) \
 		--progress plain \
 		-f docker/Dockerfile \
-	  	-t bigomics/omicsplayground:$(BRANCH) .
-docker2: FORCE 
-	@echo building docker $(BRANCH)
-	docker build --build-arg BRANCH=$(BRANCH) \
-		--progress plain \
-		-f docker/Dockerfile \
-	  	-t bigomics/omicsplayground:$(BRANCH) .
+	  	-t bigomics/omicsplayground:$(BRANCH) . \
+		2>&1 | tee docker.log
+
+docker.alpha: FORCE 
+	@echo building ALPHA docker
+	docker build $(ARG) \
+		-f docker/Dockerfile.alpha \
+	  	-t bigomics/omicsplayground:alpha . \
+		2>&1 | tee docker.log
 
 docker.base: FORCE
 	@echo building docker BASE
 	docker build  \
 		--progress plain \
 		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v4rc .
-
-docker.base2: FORCE
-	@echo building docker BASE
-	docker build --no-cache \
-		--progress plain \
-		-f docker/Dockerfile.base \
 	  	-t bigomics/omicsplayground-base:ub2204_v3 .
 
 docker.base.update: FORCE 
 	@echo building docker
-	docker build --no-cache \
+	docker build $(ARG) \
 		--progress plain \
 		-f docker/Dockerfile.base.update \
 	  	-t bigomics/omicsplayground-base:ub2204_v3_upd .
@@ -85,14 +80,13 @@ docker.test: FORCE
 
 docker.bash:
 	@echo bash into docker $(TAG)
-	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
-
+	docker run -it bigomics/omicsplayground:$(TAG) /bin/bash
 
 doc: FORCE
 	Rscript dev/02_doc.R
 
 install: FORCE
-	Rscript dev/03_install.R
+	Rscript dev/requirements.R
 
 renv: FORCE
 	R -e "renv::activate();renv::restore()"
@@ -100,7 +94,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta4"
+VERSION = "v3.5.0-beta5.9001"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
@@ -143,4 +137,4 @@ app.test.review:
 	R -e "testthat::snapshot_review('snapshot/')"
 
 update:
-	Rscript dev/update.R
+	Rscript dev/update_packages.R

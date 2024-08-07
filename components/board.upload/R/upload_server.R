@@ -72,7 +72,7 @@ UploadBoard <- function(id,
       ))
     })
 
-    module_infotext <- paste0(
+    module_infotext <- tspan(paste0(
       'Under the <b>Upload data</b> panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
 
 <br><br>
@@ -84,7 +84,7 @@ UploadBoard <- function(id,
 
 <br><br><br>
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
-    )
+    ), js = FALSE)
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
@@ -333,7 +333,7 @@ UploadBoard <- function(id,
               title = "Maximum samples reached",
               text = paste(
                 "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", MAXSAMPLES, "samples.")
+                tspan("upload a new counts file with a maximum of", MAXSAMPLES, "samples.", js = FALSE)
               ),
               type = "error"
             )

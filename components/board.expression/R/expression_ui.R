@@ -12,7 +12,7 @@ ExpressionInputs <- function(id) {
       "Select a contrast of interest for the analysis.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("gx_features"), "Gene family:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("gx_features"), tspan("Gene family:"), choices = NULL, multiple = FALSE),
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
@@ -41,7 +41,7 @@ ExpressionInputs <- function(id) {
       "input.gx_options % 2 == 1",
       ns = ns,
       shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns("gx_showall"), "show all genes", FALSE),
+        withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
           placement = "top", options = list(container = "body")
         ),

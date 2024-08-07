@@ -14,5 +14,12 @@ sudo sh dev/install_ubuntu.sh
 sudo chmod ugo+rwX -R /usr/local/lib/R
 Rscript dev/requirements.R
 
-R -e "remotes::install_github('bigomics/playbase')"
+sudo apt-get install -y libhdf5-dev libfftw3-dev cmake
+BioManager::install("orthogene")
+
+remotes::install_github('UBod/msa')
+remotes::install_github('bigomics/wizardR')
+
+remotes::install_local('.',dependencies=TRUE)
+remotes::install_github('bigomics/playbase')
 

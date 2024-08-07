@@ -13,7 +13,7 @@ ExpressionBoard <- function(id, pgx) {
     tabV <- "70vh" ## height of tables
     tabH <- 320 ## row height of panels
 
-    gx_infotext <- "The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control),
+    gx_infotext <- tspan("The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control),
      which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called \'contrast\'),
      the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.<br><br>
      The <strong>Plots</strong> panel shows volcano and MA plots for the chosen contrast. It also shows the so-called \'signature\',
@@ -25,7 +25,7 @@ ExpressionBoard <- function(id, pgx) {
      <br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods.
      The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
      <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3'
-     frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+     frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>", js = FALSE)
 
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
@@ -273,7 +273,7 @@ ExpressionBoard <- function(id, pgx) {
       }
 
       if (nrow(res) == 0) {
-        shiny::validate(shiny::need(nrow(res) > 0, "No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar."))
+        shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
         return(NULL)
       }
 
@@ -283,7 +283,7 @@ ExpressionBoard <- function(id, pgx) {
 
     genes_in_sel_geneset <- shiny::reactive({
       req(pgx$X, pgx$name)
-      if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == "No geneset for selected gene.") {
+      if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == tspan("No geneset for selected gene.", js = FALSE)) {
         sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
         return(sel_gene)
       }
@@ -507,7 +507,7 @@ ExpressionBoard <- function(id, pgx) {
       }
 
       if (length(gset) == 0) {
-        return("No geneset for selected gene.")
+        return(tspan("No geneset for selected gene.", js = FALSE))
       }
 
       fx <- pgx$gset.meta$meta[[contr]]$meta.fx

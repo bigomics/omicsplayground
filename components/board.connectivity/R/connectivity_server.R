@@ -63,6 +63,10 @@ ConnectivityBoard <- function(
       shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
     })
 
+    shiny::observeEvent(pgx$X, {
+      shiny::updateTextAreaInput(session, "genelist", placeholder = tspan("Paste your gene list", js = FALSE))
+    })
+
 
     getCurrentContrast <- shiny::reactive({
       shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)

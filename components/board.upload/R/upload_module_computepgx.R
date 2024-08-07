@@ -171,7 +171,7 @@ upload_module_computepgx_server <- function(
                       ## "Exclude immunogenes",
                     ),
                   selected = c(
-                    "only.hugo",
+                    ## "only.hugo",
                     "only.proteincoding",
                     "remove.unknown",
                     "remove.notexpressed"

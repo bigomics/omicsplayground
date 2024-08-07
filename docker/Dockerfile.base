@@ -62,7 +62,7 @@ RUN rm -fr /omicsplayground && mkdir -p /omicsplayground
 WORKDIR /omicsplayground
 COPY components /omicsplayground/components
 COPY dev /omicsplayground/dev
-COPY dev/Rprofile .Rprofile
+COPY dev/Rprofil[e] .Rprofile
 RUN Rscript dev/requirements.R
 
 ## add any missing packages manually------------------------

@@ -58,7 +58,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       tx <- tissue.klr <- grp <- NULL
       is.summary.available <- hgnc.gene %in% rownames(playdata::TISSUE)
 
-      shiny::validate(shiny::need(is.summary.available, "No tissue data available for this gene."))
+      shiny::validate(shiny::need(is.summary.available, tspan("No tissue data available for this gene.", js = FALSE)))
 
       if (is.summary.available) {
         tx <- playdata::TISSUE[hgnc.gene, ]

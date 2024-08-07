@@ -1,0 +1,84 @@
+Package: omicsplayground
+Type: just code (not a package!)
+Title: OmicsPlayground
+Version: {VERSION}
+Author: BigOmics Analytics SA
+Maintainer: The package maintainer <support@bigomics.ch>
+Description: Visual self-service analytics platform for big omics data.
+License: Dual Commercial and Non-Commercial
+URL: https://github.com/bigomics/omicsplayground
+BugReports: https://github.com/bigomics/omicsplayground/issues
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+RoxygenNote: 7.3.2
+Depends: 
+    R (>= 3.0)
+biocViews:
+Imports:
+    ape,
+    base64enc,
+    beepr,
+    blastula,
+    bslib,
+    cookies,
+    cowplot,
+    DBI,
+    forcats,
+    future,
+    ggforce,
+    ggVennDiagram,
+    heatmaply,
+    htmltools,
+    htmlwidgets,
+    httr,
+    inspectdf,
+    jpeg,
+    jsonlite,
+    magrittr,
+    markdown,
+    miniUI,
+    pairsD3,
+    partykit,
+    patchwork,
+    processx,
+    promises,
+    qgraph,
+    R6,
+    rpart,
+    RSQLite,
+    rworldmap,
+    SBGNview,
+    sever,
+    shiny,
+    shiny.i18n,
+    shinyalert,
+    shinybrowser,
+    shinyBS,
+    shinybusy,
+    shinycssloaders,
+    shinydashboardPlus,
+    shinyjqui,
+    shinyjs,
+    shinyvalidate,
+    shinyWidgets,
+    sodium,
+    sortable,
+    svgPanZoom,
+    tools,
+    waiter,
+    webshot2,
+    withr,
+    xfun,
+    xml2,
+    zip,
+Remotes:
+    url::https://github.com/bigomics/bigdash/archive/HEAD.zip,
+    url::https://github.com/bigomics/bigLoaders/archive/HEAD.zip,
+    url::https://github.com/bigomics/playdata/archive/HEAD.zip,
+    url::https://github.com/bigomics/wizardR/archive/HEAD.zip,
+    url::https://github.com/Ironholds/rgeolocate/archive/HEAD.zip,
+    url::https://github.com/JohnCoene/bsutils/archive/HEAD.zip,
+    url::https://github.com/JohnCoene/firebase/archive/refs/heads/omics.zip,

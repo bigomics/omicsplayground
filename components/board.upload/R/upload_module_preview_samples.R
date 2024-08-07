@@ -174,10 +174,10 @@ upload_table_preview_samples_server <- function(
         check_to_html(
           checklist$samples_counts$checks,
           ##          pass_msg = tspan("All samples-counts checks passed"),
-          pass_msg = tspan("Samples-counts OK. "),
+          pass_msg = tspan("Samples-counts OK.", js = FALSE),
           null_msg = tspan("Samples-counts checks not run yet.
-                        Fix any errors with samples or counts first."),
-          false_msg = tspan("Samples-counts checks: warning"),
+                        Fix any errors with samples or counts first.", js = FALSE),
+          false_msg = tspan("Samples-counts checks: warning", js = FALSE),
           details = FALSE
         )
       )
@@ -225,9 +225,9 @@ upload_table_preview_samples_server <- function(
           if (length(checks1) > 0) {
             err1 <- check_to_html(
               checks1,
-              pass_msg = tspan("All samples checks passed"),
+              pass_msg = tspan("All samples checks passed", js = FALSE),
               null_msg = tspan("Samples checks not run yet.
-                            Fix any errors with counts first."),
+                            Fix any errors with counts first.", js = FALSE),
               details = TRUE
             )
             err.html <- paste(err.html, err1)
@@ -235,16 +235,16 @@ upload_table_preview_samples_server <- function(
           if (length(checks2) > 0) {
             err2 <- check_to_html(
               checks2,
-              pass_msg = tspan("All samples-counts checks passed"),
+              pass_msg = tspan("All samples-counts checks passed", js = FALSE),
               null_msg = tspan("Samples-counts checks not run yet.
-                        Fix any errors with samples or counts first."),
+                        Fix any errors with samples or counts first.", js = FALSE),
               details = TRUE
             )
             err.html <- paste(err.html, err2)
           }
           shinyalert::shinyalert(
             title = "Warning",
-            text = tspan(err.html),
+            text = err.html,
             html = TRUE
           )
         }

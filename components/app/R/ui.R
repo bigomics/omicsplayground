@@ -358,23 +358,23 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "dataview-tab",
             "DataView",
-            "Information and descriptive statistics to quickly lookup a gene,
-                    check your experiment QC, view the raw data, sample or contrast tables."
+            tspan("Information and descriptive statistics to quickly lookup a gene,
+                    check your experiment QC, view the raw data, sample or contrast tables.")
           ),
           bigdash::sidebarTabHelp(
             "clustersamples-tab",
             "Clustering Analysis",
-            "Discover clusters of similar genes or samples using unsupervised
-                    machine learning."
+            tspan("Discover clusters of similar genes or samples using unsupervised
+                    machine learning.")
           ),
           bigdash::sidebarTabHelp(
             "wgcna-tab",
             "Weighted Correlation",
-            "Weighted correlation network analysis (WGCNA) is a gene-level cluster
+            tspan("Weighted correlation network analysis (WGCNA) is a gene-level cluster
                     analysis method based on pairwise correlations between genes. It
                     allows one to define modules (clusters), intramodular hubs, and
                     network nodes with regard to module membership, to study the
-                    relationships between co-expression modules."
+                    relationships between co-expression modules.")
           ),
           bigdash::sidebarTabHelp(
             "pcsf-tab",
@@ -387,19 +387,19 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "diffexpr-tab",
             "Expression Analysis",
-            "Compare expression between two conditions. Determine which genes are
-                    significantly downregulated or overexpressed in one of the groups."
+            tspan("Compare expression between two conditions. Determine which genes are
+                    significantly downregulated or overexpressed in one of the groups.")
           ),
           bigdash::sidebarTabHelp(
             "corr-tab",
             "Correlation Analysis",
-            "Compute the correlation between genes and find coregulated modules."
+            tspan("Compute the correlation between genes and find coregulated modules.")
           ),
           bigdash::sidebarTabHelp(
             "enrich-tab",
             "Geneset Enrichment",
-            "Perform differential expression analysis on a geneset level,
-                    also called geneset enrichment analysis."
+            tspan("Perform differential expression analysis on a geneset level,
+                    also called geneset enrichment analysis.")
           ),
           bigdash::sidebarTabHelp(
             "pathway-tab",
@@ -410,9 +410,9 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "wordcloud-tab",
             "Wordcloud",
-            "WordCloud analysis or 'keyword enrichment' analysis computes the
+            tspan("WordCloud analysis or 'keyword enrichment' analysis computes the
                     enrichment of keywords for the contrasts. The set of words frequently appearing in the top ranked
-                    gene sets form an unbiased description of the contrast."
+                    genesets form an unbiased description of the contrast.")
           ),
           bigdash::sidebarTabHelp(
             "drug-tab",
@@ -425,16 +425,16 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "isect-tab",
             "Compare Signatures",
-            "Find genes that are commonly up/down regulated
-                    between two or more signatures. Compute similarity between contrasts."
+            tspan("Find genes that are commonly up/down regulated
+                    between two or more signatures. Compute similarity between contrasts.")
           ),
           bigdash::sidebarTabHelp(
             "sig-tab",
             "Signature Analysis",
-            "Users can test their gene signature by
+            tspan("Users can test their gene signature by
                     calculating an enrichment score. Upload your own gene list, or select
                     a contrast which then takes the top differentially expressed genes as
-                    signature."
+                    signature.")
           ),
           bigdash::sidebarTabHelp(
             "bio-tab",
@@ -446,9 +446,9 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "cmap-tab",
             "Similar Experiments",
-            "Find similar experiments by correlating their signatures.
+            tspan("Find similar experiments by correlating their signatures.
                     The main goal is to identify experiments showing similar signatures and find genes
-                    that are commonly up/down regulated between experiments."
+                    that are commonly up/down regulated between experiments.")
           ),
           bigdash::sidebarTabHelp(
             "comp-tab",
@@ -464,8 +464,8 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "cell-tab",
             "Single-Cell Profiling",
-            "Visualize the distribution of (inferred)
-                    immune cell types, expressed genes and pathway activation."
+            tspan("Visualize the distribution of (inferred)
+                    immune cell types, expressed genes and pathway activation.")
           )
         ),
         bigdash::bigTabs(

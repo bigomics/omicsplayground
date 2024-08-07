@@ -72,7 +72,7 @@ compare_plot_gene_corr_server <- function(id,
 
       shiny::validate(shiny::need(
         length(kk) > 0,
-        "No common samples between datasets, need at least 10 samples to compute gene correlations."
+        tspan("No common samples between datasets, need at least 10 samples to compute gene correlations.", js = FALSE)
       ))
 
 
@@ -164,7 +164,7 @@ compare_plot_gene_corr_server <- function(id,
 
       shiny::validate(shiny::need(
         length(kk) > 0,
-        "No common samples between datasets, need at least 10 samples to compute gene correlations."
+        tspan("No common samples between datasets, need at least 10 samples to compute gene correlations.", js = FALSE)
       ))
 
       ## conform matrices

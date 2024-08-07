@@ -49,15 +49,15 @@ expression_table_gsettable_server <- function(id,
     gsettable.RENDER <- shiny::reactive({
       df <- gx_related_genesets()
       shiny::validate(
-        shiny::need(!is.null(df), "Please select a gene in the table.")
+        shiny::need(!is.null(df), tspan("Please select a gene in the table.", js = FALSE))
       )
       shiny::validate(
-        shiny::need(df != "No geneset for selected gene.", "No genesets passed filter and/or enrichment cutoffs for this gene.")
+        shiny::need(df != tspan("No geneset for selected gene.", js = FALSE), tspan("No genesets passed filter and/or enrichment cutoffs for this gene.", js = FALSE))
       )
 
       shiny::validate(shiny::need(
         !is.null(df),
-        "Please select a gene in the table."
+        tspan("Please select a gene in the table.", js = FALSE)
       ))
 
       external_links <- playbase::wrapHyperLink(

@@ -40,11 +40,7 @@ dataview_plot_totalcounts_server <- function(id,
       tbl <- getCountStatistics()
       req(tbl)
 
-      type <- if (data_type == "counts") {
-        "counts"
-      } else {
-        "abundance"
-      }
+      type <- tspan("counts", js = FALSE)
 
       logtype <- if (data_type == "log2") {
         " (log2)"

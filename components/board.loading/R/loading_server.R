@@ -221,7 +221,7 @@ LoadingBoard <- function(id,
       ))
     })
 
-    module_infotext <- paste0(
+    module_infotext <- tspan(paste0(
       "This panel shows the available datasets within the platform. The table
         reports a brief description as well as the total number of samples,
         genes, gene sets (or pathways), corresponding phenotypes and the creation
@@ -233,7 +233,7 @@ LoadingBoard <- function(id,
         title='YouTube video player' frameborder='0'
         allow='accelerometer; autoplay; clipboard-write; encrypted-media;
         gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
-    )
+    ), js = FALSE)
     module_infotext <- paste0(
       "<center><iframe width='1120' height='630'
         src='https://www.youtube.com/embed/elwT6ztt3Fo'

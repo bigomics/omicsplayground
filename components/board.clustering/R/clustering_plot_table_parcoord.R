@@ -22,7 +22,7 @@ clustering_plot_parcoord_ui <- function(
 
   parcoord_opts <- shiny::tagList(
     withTooltip(
-      shiny::checkboxInput(ns("hm_pcaverage"), "Average by gene module", FALSE),
+      shiny::checkboxInput(ns("hm_pcaverage"), tspan("Average by gene module"), FALSE),
       "Average gene by gene module"
     ),
     withTooltip(

@@ -19,7 +19,7 @@ foldchange_heatmap_ui <- function(
       "Show all contrasts or just the selected ones."
     ),
     withTooltip(
-      shiny::checkboxInput(ns("cluster"), "cluster genes", FALSE),
+      shiny::checkboxInput(ns("cluster"), tspan("cluster genes"), FALSE),
       "Cluster genes (columns)."
     )
   )

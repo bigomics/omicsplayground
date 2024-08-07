@@ -96,7 +96,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       shiny::req(pgx$X)
       shiny::validate(shiny::need(
         filter_gsets(),
-        "Please input at least one value in Annotate genesets!"
+        tspan("Please input at least one value in Annotate genesets!", js = FALSE)
       ))
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
