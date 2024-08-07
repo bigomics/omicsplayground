@@ -36,10 +36,10 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     # add task to detect probetype using annothub
-    ah_task <- ExtendedTask$new(function(organism, probes) {
+    ah_task <- ExtendedTask$new(function(organism, probes, datatype) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        probetype0 <- playbase::detect_probetype(organism, probes)
+        probetype0 <- playbase::detect_probetype(organism, probes, datatype=datatype)
         dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
         if (is.null(probetype0)) probetype0 <- "error"
         probetype0
@@ -838,7 +838,7 @@ UploadBoard <- function(id,
         dbg("[UploadBoard] Invoking probetype ExtendedTask")
         probes <- rownames(uploaded$counts.csv)
         probetype("running")
-        ah_task$invoke(upload_organism(), probes)
+        ah_task$invoke(upload_organism(), probes, upload_datatype())
       }
     )
 
