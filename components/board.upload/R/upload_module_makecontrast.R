@@ -119,25 +119,27 @@ upload_module_makecontrast_server <- function(
         rv_contr(contrRT())
       })
 
-      observeEvent(
-        {
-          list(input$param, input$addcontrast)
-        },
-        {
+      reset_bucket <- function() {
           # update the rv values when the param changes
-          cond <- sel.conditions()
           rv$condition_start <- NULL
           rv$condition_group1 <- NULL
           rv$condition_group2 <- NULL
           shiny::updateTextInput(session, "newname", value = "")
-          
+          cond <- sel.conditions()
           if (length(cond) == 0 || is.null(cond)) {
             return(NULL)
           }
-
-          ##items <- c("<others>"="<others>", sort(unique(cond)))
+          ##items <- c("others"="<others>", sort(unique(cond)))
           items <- sort(unique(cond))          
           rv$condition_start <- items
+      }
+      
+      observeEvent(
+        {
+          list(input$param)          
+        },
+        {
+          reset_bucket()
         }
       )
 
@@ -163,7 +165,6 @@ upload_module_makecontrast_server <- function(
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
-        ##shiny::req(input$param)
         shiny::validate(shiny::need(
           length(input$param) > 0,
           "Please select at least one phenotype"
@@ -195,16 +196,8 @@ upload_module_makecontrast_server <- function(
           df, minlength = minlen, abbrev.colnames = FALSE)
         
         abv.df <- abv.df[ss, pp, drop = FALSE]
-        if(length(pp)>1) {
-          #abv.df <- apply(abv.df, 2, stringr::str_to_title)
-          #abv.df[,1] <- tolower(abv.df[,1])
-          abv.cond <- apply(abv.df, 1, paste, collapse = ".")
-        } else {
-          abv.cond <- abv.df[,1]
-        }
-        names(cond) <- abv.cond
-        cond <- c(cond, "others"="<others>")
-        
+        abv.cond <- apply(abv.df, 1, paste, collapse = ".")
+        names(cond) <- abv.cond        
         cond
       })
 
@@ -268,10 +261,12 @@ upload_module_makecontrast_server <- function(
 
           ## create comparison name from group names
           cond <- sel.conditions()
+          ##cond <- c("others" = "<others>", cond)
           g1 <- input$group1
           g2 <- input$group2
-          g1 <- names(cond)[match(input$group1, cond)]
-          g2 <- names(cond)[match(input$group2, cond)]
+          ##if("<others>" %in% g2) g2 <- "<others>"
+          g1 <- names(cond)[match(g1, cond)]
+          g2 <- names(cond)[match(g2, cond)]
           g1 <- unique(unlist(strsplit(g1, split = "[.]")))
           g2 <- unique(unlist(strsplit(g2, split = "[.]")))
           g1 <- paste(g1, collapse = ".")
@@ -325,24 +320,27 @@ upload_module_makecontrast_server <- function(
         }
       })
 
-      shiny::observeEvent(input$addcontrast, {
+      shiny::observeEvent( input$addcontrast, {
         cond <- sel.conditions()
         if (length(cond) == 0 || is.null(cond)) {
           return(NULL)
         }
-
+        
         group1 <- input$group1
         group2 <- input$group2
         in.main <- 1 * (cond %in% group1)
-        in.ref1 <- 1 * (cond %in% group2)
-        in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
-        in.ref <- in.ref1 | in.ref2
+        in.ref  <- 1 * (cond %in% group2)
+        #in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
+        #in.ref <- in.ref1 | in.ref2
 
         ct.name <- input$newname
         gr1 <- gsub(".*:|_vs_.*", "", ct.name) ## first is MAIN group!!!
         gr2 <- gsub(".*_vs_|@.*", "", ct.name)
         ctx <- c(NA, gr1, gr2)[1 + 1 * in.main + 2 * in.ref]
 
+        dbg("length(ctx) = ", length(ctx))
+        dbg("ctx = ", ctx)
+        
         if (sum(in.main) == 0 || sum(in.ref) == 0) {
           shinyalert::shinyalert("ERROR", "Both groups must have samples")
           return(NULL)
@@ -351,16 +349,19 @@ upload_module_makecontrast_server <- function(
           shinyalert::shinyalert("ERROR", "You must give the comparison a name")
           return(NULL)
         }
-        if (1 && gr1 == gr2) {
+        if (gr1 == gr2) {
           shinyalert::shinyalert("ERROR", "Invalid comparison name")
+          shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
         if (!is.null(rv_contr()) && ct.name %in% colnames(rv_contr())) {
           shinyalert::shinyalert("ERROR", "Comparison name already exists.")
+          shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
         if (!grepl("_vs_", ct.name)) {
           shinyalert::shinyalert("ERROR", "Comparison must include _vs_ in name")
+          shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
 
@@ -372,8 +373,10 @@ upload_module_makecontrast_server <- function(
         } else {
           rv_contr(cbind(rv_contr(), ctx1))
         }
+
         # reset text input
-        shiny::updateTextInput(session, "newname", value = "")
+        reset_bucket()
+        
       })
 
       shiny::observeEvent(autocontrast(), {
