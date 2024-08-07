@@ -184,17 +184,10 @@ ExpressionBoard <- function(id, pgx) {
 
       if (add.pq) {
         ## add extra columns
-<<<<<<< HEAD
           mx.q <- mx.q[rownames(mx), , drop = FALSE]
           mx.p <- mx.p[rownames(mx), , drop = FALSE]
           res <- cbind(res, mx.q)
           res <- cbind(res, mx.p)
-=======
-        mx.q <- mx.q[rownames(mx), , drop = FALSE]
-        mx.p <- mx.p[rownames(mx), , drop = FALSE] ## AZ
-        res <- cbind(res, mx.q)
-        res <- cbind(res, mx.p) ## AZ
->>>>>>> 229d801eaa6355178bfbbb9aaf4b1db70fdcae9a
       }
 
       return(res)
