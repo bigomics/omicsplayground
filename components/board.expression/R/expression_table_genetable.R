@@ -66,10 +66,10 @@ expression_table_genetable_server <- function(id,
       }
 
       if ("gene_title" %in% colnames(res)) {
-          res$gene_title <- playbase::shortstring(res$gene_title, 50)
+        res$gene_title <- playbase::shortstring(res$gene_title, 50)
       }
       rownames(res) <- sub(".*:", "", rownames(res))
-      
+
       if (!DEV) {
         kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
         res <- res[, kk, drop = FALSE]
