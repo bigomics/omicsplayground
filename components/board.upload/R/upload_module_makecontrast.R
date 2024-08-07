@@ -130,13 +130,13 @@ upload_module_makecontrast_server <- function(
           rv$condition_group1 <- NULL
           rv$condition_group2 <- NULL
           shiny::updateTextInput(session, "newname", value = "")
-          
+
           if (length(cond) == 0 || is.null(cond)) {
             return(NULL)
           }
 
-          ##items <- c("<others>"="<others>", sort(unique(cond)))
-          items <- sort(unique(cond))          
+          ## items <- c("<others>"="<others>", sort(unique(cond)))
+          items <- sort(unique(cond))
           rv$condition_start <- items
         }
       )
@@ -163,14 +163,14 @@ upload_module_makecontrast_server <- function(
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
-        ##shiny::req(input$param)
+        ## shiny::req(input$param)
         shiny::validate(shiny::need(
           length(input$param) > 0,
           "Please select at least one phenotype"
         ))
-        
+
         df <- phenoRT()
-        
+
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
@@ -182,7 +182,7 @@ upload_module_makecontrast_server <- function(
             df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
           }
         }
-        
+
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
@@ -192,19 +192,21 @@ upload_module_makecontrast_server <- function(
         minlen <- ifelse(length(pp) >= 2, 4, 8)
         minlen <- ifelse(length(pp) >= 3, 3, minlen)
         abv.df <- playbase::abbreviate_pheno(
-          df, minlength = minlen, abbrev.colnames = FALSE)
-        
+          df,
+          minlength = minlen, abbrev.colnames = FALSE
+        )
+
         abv.df <- abv.df[ss, pp, drop = FALSE]
-        if(length(pp)>1) {
-          #abv.df <- apply(abv.df, 2, stringr::str_to_title)
-          #abv.df[,1] <- tolower(abv.df[,1])
+        if (length(pp) > 1) {
+          # abv.df <- apply(abv.df, 2, stringr::str_to_title)
+          # abv.df[,1] <- tolower(abv.df[,1])
           abv.cond <- apply(abv.df, 1, paste, collapse = ".")
         } else {
-          abv.cond <- abv.df[,1]
+          abv.cond <- abv.df[, 1]
         }
         names(cond) <- abv.cond
-        cond <- c(cond, "others"="<others>")
-        
+        cond <- c(cond, "others" = "<others>")
+
         cond
       })
 
@@ -248,7 +250,6 @@ upload_module_makecontrast_server <- function(
       shiny::observeEvent(
         list(input$group1, input$group2, input$add_prefix),
         {
-
           shiny::updateTextInput(session, "newname", value = "")
 
           # make sure group1 and 2 are not NULL or ""
@@ -291,8 +292,8 @@ upload_module_makecontrast_server <- function(
               abv.pheno <- abbreviate(colnames(phenoRT()), minlength = 10)
               sel <- match(input$param, colnames(phenoRT()))
               prm.name <- gsub("[-_.,<> ]", "", abv.pheno[sel])
-              #prm.name <- stringr::str_to_title(trimws(prm.name))
-              #prm.name[1] <- tolower(prm.name[1])
+              # prm.name <- stringr::str_to_title(trimws(prm.name))
+              # prm.name[1] <- tolower(prm.name[1])
               prm.name <- paste(prm.name, collapse = ".")
               tt <- paste0(prm.name, ":", tt)
             }
