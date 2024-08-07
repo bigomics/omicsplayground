@@ -18,13 +18,14 @@ upload_module_makecontrast_ui <- function(id) {
           shiny::div(
             shiny::HTML("<h6>1. Choose phenotype:</h6>"),
             withTooltip(
-              shiny::selectInput(
+              shiny::selectizeInput(
                 inputId = ns("param"),
                 NULL,
                 width = "100%",
                 choices = "<samples>",
                 selected = "<samples>",
-                multiple = TRUE
+                multiple = TRUE,
+                options = list(maxItems = 2)
               ),
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
@@ -128,13 +129,14 @@ upload_module_makecontrast_server <- function(
           rv$condition_start <- NULL
           rv$condition_group1 <- NULL
           rv$condition_group2 <- NULL
-
+          shiny::updateTextInput(session, "newname", value = "")
+          
           if (length(cond) == 0 || is.null(cond)) {
             return(NULL)
           }
 
-          items <- c("<others>", sort(unique(cond)))
-
+          ##items <- c("<others>"="<others>", sort(unique(cond)))
+          items <- sort(unique(cond))          
           rv$condition_start <- items
         }
       )
@@ -161,35 +163,48 @@ upload_module_makecontrast_server <- function(
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
+        ##shiny::req(input$param)
+        shiny::validate(shiny::need(
+          length(input$param) > 0,
+          "Please select at least one phenotype"
+        ))
+        
         df <- phenoRT()
-
+        
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
         df <- type.convert(df, as.is = TRUE)
-        ii <- which(sapply(type.convert(df, as.is = TRUE), class) %in% c("numeric", "integer"))
+        ii <- which(sapply(df, class) %in% c("numeric", "integer"))
         if (length(ii)) {
           for (i in ii) {
             x <- df[, i]
             df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
           }
         }
-
+        
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
-        cond <- apply(df1, 1, paste, collapse = "_")
-        cond <- gsub("^_|_$", "", cond)
+        cond <- apply(df1, 1, paste, collapse = ".")
 
         ## get abbreviated phenotype
-        minlen <- ifelse(length(pp) >= 2, 3, 6)
-        minlen <- ifelse(length(pp) >= 3, 2, minlen)
-        abv.df <- playbase::abbreviate_pheno(df, minlength = minlen, abbrev.colnames = FALSE)
+        minlen <- ifelse(length(pp) >= 2, 4, 8)
+        minlen <- ifelse(length(pp) >= 3, 3, minlen)
+        abv.df <- playbase::abbreviate_pheno(
+          df, minlength = minlen, abbrev.colnames = FALSE)
+        
         abv.df <- abv.df[ss, pp, drop = FALSE]
-        abv.df <- apply(abv.df, 2, stringr::str_to_title)
-        abv.cond <- apply(abv.df, 1, paste, collapse = "_")
-        abv.cond <- gsub("^_|_$", "", abv.cond)
+        if(length(pp)>1) {
+          #abv.df <- apply(abv.df, 2, stringr::str_to_title)
+          #abv.df[,1] <- tolower(abv.df[,1])
+          abv.cond <- apply(abv.df, 1, paste, collapse = ".")
+        } else {
+          abv.cond <- abv.df[,1]
+        }
         names(cond) <- abv.cond
+        cond <- c(cond, "others"="<others>")
+        
         cond
       })
 
@@ -233,6 +248,9 @@ upload_module_makecontrast_server <- function(
       shiny::observeEvent(
         list(input$group1, input$group2, input$add_prefix),
         {
+
+          shiny::updateTextInput(session, "newname", value = "")
+
           # make sure group1 and 2 are not NULL or ""
           req(input$group1, input$group2)
 
@@ -245,7 +263,7 @@ upload_module_makecontrast_server <- function(
 
           # if some input$conditions are not in the start list, add them
           if (length(input$conditions) > 0 && any(!input$conditions %in% rv$condition_start)) {
-            rv$condition_start <- c(rv$condition_start, input$conditions)
+            rv$condition_start <- sort(union(rv$condition_start, input$conditions))
           }
 
           ## create comparison name from group names
@@ -254,26 +272,15 @@ upload_module_makecontrast_server <- function(
           g2 <- input$group2
           g1 <- names(cond)[match(input$group1, cond)]
           g2 <- names(cond)[match(input$group2, cond)]
-          ## g1 <- gsub("[-_.,<> ]", ".", g1)
-          ## g2 <- gsub("[-_.,<> ]", ".", g2)
-          ## g1 <- gsub("[.]+", ".", g1)
-          ## g2 <- gsub("[.]+", ".", g2)
-          ## g1 <- paste(g1, collapse = "")
-          ## g2 <- paste(g2, collapse = "")
-          g1 <- gsub("[-.,<> ]", "", g1)
-          g2 <- gsub("[-.,<> ]", "", g2)
-          g1 <- unique(unlist(strsplit(g1, split = "_")))
-          g2 <- unique(unlist(strsplit(g2, split = "_")))
-          g1 <- stringr::str_to_title(g1)
-          g2 <- stringr::str_to_title(g2)
-          g1 <- paste(g1, collapse = "")
-          g2 <- paste(g2, collapse = "")
+          g1 <- unique(unlist(strsplit(g1, split = "[.]")))
+          g2 <- unique(unlist(strsplit(g2, split = "[.]")))
+          g1 <- paste(g1, collapse = ".")
+          g2 <- paste(g2, collapse = ".")
 
           if (is.null(g1) || length(g1) == 0) g1 <- ""
           if (is.null(g2) || length(g2) == 0) g2 <- ""
           if (is.na(g1)) g1 <- ""
           if (is.na(g2)) g2 <- ""
-
           if (g1 == "" && g2 == "") {
             tt <- ""
           } else {
@@ -281,12 +288,12 @@ upload_module_makecontrast_server <- function(
             g2 <- substring(g2, 1, 20)
             tt <- paste0(g1, "_vs_", g2)
             if (input$add_prefix) {
-              abv.pheno <- abbreviate(colnames(phenoRT()), minlength = 6)
+              abv.pheno <- abbreviate(colnames(phenoRT()), minlength = 10)
               sel <- match(input$param, colnames(phenoRT()))
               prm.name <- gsub("[-_.,<> ]", "", abv.pheno[sel])
-              prm.name <- stringr::str_to_title(trimws(prm.name))
-
-              prm.name <- paste(prm.name, collapse = "")
+              #prm.name <- stringr::str_to_title(trimws(prm.name))
+              #prm.name[1] <- tolower(prm.name[1])
+              prm.name <- paste(prm.name, collapse = ".")
               tt <- paste0(prm.name, ":", tt)
             }
           }
