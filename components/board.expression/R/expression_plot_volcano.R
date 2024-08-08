@@ -33,6 +33,15 @@ expression_plot_volcano_ui <- function(id,
       ),
       "Color up/down regulated features.",
       placement = "left", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("show_p_values"),
+        label = "Plot nominal p-values on the y-axis",
+        value = FALSE
+      ),
+      "Plot nominal p-values on the y-axis.",
+      placement = "left", options = list(container = "body")
     )
   )
 
@@ -93,13 +102,20 @@ expression_plot_volcano_server <- function(id,
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
+      pval <- res[, grep("pvalue|meta.p|pval|p|p_value", colnames(res))[1]]
+      pval <- pmax(pval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
-
+      y.lab <- "Significance (-log10q)"
+      if (input$show_p_values) {
+        y <- -log10(pval + 1e-12)
+        y.lab <- "Significance (-log10p)"
+      }
 
       return(list(
         x = x,
         y = y,
+        y.lab = y.lab,
         fc.genes = fc.genes,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
@@ -126,7 +142,7 @@ expression_plot_volcano_server <- function(id,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
-        ylab = "Significance (-log10q)",
+        ylab = pd[["y.lab"]],
         marker.size = 3,
         showlegend = FALSE,
         color_up_down = input$color_up_down
