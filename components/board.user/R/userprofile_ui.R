@@ -19,7 +19,12 @@ UserProfileUI <- function(id) {
           wellPanel(
             shiny::h4("Subscription"),
             uiOutput(ns("plan")),
-            shiny::tableOutput(ns("userdata"))
+            shiny::tableOutput(ns("userdata")),
+            shiny::actionButton(
+              ns("open_pay"),
+              "Academic plan upgrade",
+              onclick ="window.open('https://buy.stripe.com/test_eVa6rh7YsgDE0H64gg', '_blank')"
+            )
           ),
           bslib::layout_columns(
             col_widths = 12,
