@@ -96,7 +96,7 @@ DataViewBoard <- function(id, pgx) {
         p1 <- head(rownames(pgx$genes), 1000)
         p2 <- head(pgx$genes$symbol, 1000)
         by.symbol <- mean(p1 == p2, na.rm = TRUE) > 0.8
-        if (!by.symbol) {
+        if (0 && !by.symbol) {
           gene <- pgx$genes[match(features, rownames(pgx$genes)), "symbol"]
           feature_gene <- paste0(gene, "_", features)
           names(features) <- feature_gene
