@@ -16,22 +16,23 @@ upload_module_makecontrast_ui <- function(id) {
         bslib::layout_columns(
           col_widths = c(3, 9),
           shiny::div(
-            shiny::HTML("<h6>1. Choose phenotype:</h6>"),
+            shiny::HTML("<b>1. Choose phenotype:</b>"),
             withTooltip(
-              shiny::selectInput(
+              shiny::selectizeInput(
                 inputId = ns("param"),
                 NULL,
                 width = "100%",
                 choices = "<samples>",
                 selected = "<samples>",
-                multiple = TRUE
+                multiple = TRUE,
+                options = list(maxItems = 2)
               ),
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
             ),
-            br(),
             shiny::div(
-              shiny::HTML("<h6>3. Comparison name:</h6>"),
+              style = "padding-top: 5px;",
+              shiny::HTML("<b>3. Comparison name:</b>"),
               withTooltip(
                 shiny::textInput(
                   ns("newname"),
@@ -44,10 +45,12 @@ upload_module_makecontrast_ui <- function(id) {
               ),
               shiny::checkboxInput(ns("add_prefix"), "Add prefix", FALSE)
             ),
-            br(),
-            shiny::HTML("<h6>4. Add my comparison:</h6>"),
             shiny::div(
-              style = "padding-top: 5px;",
+              style = "padding-top: 2px;",
+              shiny::HTML("<b>4. Add my comparison:</b>")
+            ),
+            shiny::div(
+              style = "margin-top: 0px;",
               withTooltip(
                 shiny::actionButton(
                   ns("addcontrast"),
@@ -63,7 +66,7 @@ upload_module_makecontrast_ui <- function(id) {
           ),
           shiny::div(
             style = "overflow: auto; margin-left: 30px;",
-            shiny::HTML("<h6>2. Create comparison:</h6>"),
+            shiny::HTML("<b>2. Create comparison:</b>"),
             withTooltip(
               shiny::uiOutput(ns("createcomparison"), style = "font-size:13px;"),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
@@ -118,24 +121,28 @@ upload_module_makecontrast_server <- function(
         rv_contr(contrRT())
       })
 
+      reset_bucket <- function() {
+        # update the rv values when the param changes
+        rv$condition_start <- NULL
+        rv$condition_group1 <- NULL
+        rv$condition_group2 <- NULL
+        shiny::updateTextInput(session, "newname", value = "")
+
+        cond <- sel.conditions()
+        if (length(cond) == 0 || is.null(cond)) {
+          return(NULL)
+        }
+        ## items <- c("others"="<others>", sort(unique(cond)))
+        items <- sort(unique(cond))
+        rv$condition_start <- items
+      }
+
       observeEvent(
         {
-          list(input$param, input$addcontrast)
+          list(input$param)
         },
         {
-          # update the rv values when the param changes
-          cond <- sel.conditions()
-          rv$condition_start <- NULL
-          rv$condition_group1 <- NULL
-          rv$condition_group2 <- NULL
-
-          if (length(cond) == 0 || is.null(cond)) {
-            return(NULL)
-          }
-
-          items <- c("<others>", sort(unique(cond)))
-
-          rv$condition_start <- items
+          reset_bucket()
         }
       )
 
@@ -161,13 +168,18 @@ upload_module_makecontrast_server <- function(
 
       sel.conditions <- shiny::reactive({
         shiny::req(phenoRT(), countsRT())
+        shiny::validate(shiny::need(
+          length(input$param) > 0,
+          "Please select at least one phenotype"
+        ))
+
         df <- phenoRT()
 
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
         df <- type.convert(df, as.is = TRUE)
-        ii <- which(sapply(type.convert(df, as.is = TRUE), class) %in% c("numeric", "integer"))
+        ii <- which(sapply(df, class) %in% c("numeric", "integer"))
         if (length(ii)) {
           for (i in ii) {
             x <- df[, i]
@@ -178,17 +190,18 @@ upload_module_makecontrast_server <- function(
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
-        cond <- apply(df1, 1, paste, collapse = "_")
-        cond <- gsub("^_|_$", "", cond)
+        cond <- apply(df1, 1, paste, collapse = ".")
 
         ## get abbreviated phenotype
-        minlen <- ifelse(length(pp) >= 2, 3, 6)
-        minlen <- ifelse(length(pp) >= 3, 2, minlen)
-        abv.df <- playbase::abbreviate_pheno(df, minlength = minlen, abbrev.colnames = FALSE)
+        minlen <- ifelse(length(pp) >= 2, 4, 8)
+        minlen <- ifelse(length(pp) >= 3, 3, minlen)
+        abv.df <- playbase::abbreviate_pheno(
+          df,
+          minlength = minlen, abbrev.colnames = FALSE
+        )
+
         abv.df <- abv.df[ss, pp, drop = FALSE]
-        abv.df <- apply(abv.df, 2, stringr::str_to_title)
-        abv.cond <- apply(abv.df, 1, paste, collapse = "_")
-        abv.cond <- gsub("^_|_$", "", abv.cond)
+        abv.cond <- apply(abv.df, 1, paste, collapse = ".")
         names(cond) <- abv.cond
         cond
       })
@@ -233,6 +246,8 @@ upload_module_makecontrast_server <- function(
       shiny::observeEvent(
         list(input$group1, input$group2, input$add_prefix),
         {
+          shiny::updateTextInput(session, "newname", value = "")
+
           # make sure group1 and 2 are not NULL or ""
           req(input$group1, input$group2)
 
@@ -245,35 +260,26 @@ upload_module_makecontrast_server <- function(
 
           # if some input$conditions are not in the start list, add them
           if (length(input$conditions) > 0 && any(!input$conditions %in% rv$condition_start)) {
-            rv$condition_start <- c(rv$condition_start, input$conditions)
+            rv$condition_start <- sort(union(rv$condition_start, input$conditions))
           }
 
           ## create comparison name from group names
           cond <- sel.conditions()
+          ## cond <- c("others" = "<others>", cond)
           g1 <- input$group1
           g2 <- input$group2
-          g1 <- names(cond)[match(input$group1, cond)]
-          g2 <- names(cond)[match(input$group2, cond)]
-          ## g1 <- gsub("[-_.,<> ]", ".", g1)
-          ## g2 <- gsub("[-_.,<> ]", ".", g2)
-          ## g1 <- gsub("[.]+", ".", g1)
-          ## g2 <- gsub("[.]+", ".", g2)
-          ## g1 <- paste(g1, collapse = "")
-          ## g2 <- paste(g2, collapse = "")
-          g1 <- gsub("[-.,<> ]", "", g1)
-          g2 <- gsub("[-.,<> ]", "", g2)
-          g1 <- unique(unlist(strsplit(g1, split = "_")))
-          g2 <- unique(unlist(strsplit(g2, split = "_")))
-          g1 <- stringr::str_to_title(g1)
-          g2 <- stringr::str_to_title(g2)
-          g1 <- paste(g1, collapse = "")
-          g2 <- paste(g2, collapse = "")
+          ## if("<others>" %in% g2) g2 <- "<others>"
+          g1 <- names(cond)[match(g1, cond)]
+          g2 <- names(cond)[match(g2, cond)]
+          g1 <- unique(unlist(strsplit(g1, split = "[.]")))
+          g2 <- unique(unlist(strsplit(g2, split = "[.]")))
+          g1 <- paste(g1, collapse = ".")
+          g2 <- paste(g2, collapse = ".")
 
           if (is.null(g1) || length(g1) == 0) g1 <- ""
           if (is.null(g2) || length(g2) == 0) g2 <- ""
           if (is.na(g1)) g1 <- ""
           if (is.na(g2)) g2 <- ""
-
           if (g1 == "" && g2 == "") {
             tt <- ""
           } else {
@@ -281,12 +287,12 @@ upload_module_makecontrast_server <- function(
             g2 <- substring(g2, 1, 20)
             tt <- paste0(g1, "_vs_", g2)
             if (input$add_prefix) {
-              abv.pheno <- abbreviate(colnames(phenoRT()), minlength = 6)
+              abv.pheno <- abbreviate(colnames(phenoRT()), minlength = 10)
               sel <- match(input$param, colnames(phenoRT()))
               prm.name <- gsub("[-_.,<> ]", "", abv.pheno[sel])
-              prm.name <- stringr::str_to_title(trimws(prm.name))
-
-              prm.name <- paste(prm.name, collapse = "")
+              # prm.name <- stringr::str_to_title(trimws(prm.name))
+              # prm.name[1] <- tolower(prm.name[1])
+              prm.name <- paste(prm.name, collapse = ".")
               tt <- paste0(prm.name, ":", tt)
             }
           }
@@ -327,14 +333,17 @@ upload_module_makecontrast_server <- function(
         group1 <- input$group1
         group2 <- input$group2
         in.main <- 1 * (cond %in% group1)
-        in.ref1 <- 1 * (cond %in% group2)
-        in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
-        in.ref <- in.ref1 | in.ref2
+        in.ref <- 1 * (cond %in% group2)
+        # in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
+        # in.ref <- in.ref1 | in.ref2
 
         ct.name <- input$newname
         gr1 <- gsub(".*:|_vs_.*", "", ct.name) ## first is MAIN group!!!
         gr2 <- gsub(".*_vs_|@.*", "", ct.name)
         ctx <- c(NA, gr1, gr2)[1 + 1 * in.main + 2 * in.ref]
+
+        dbg("length(ctx) = ", length(ctx))
+        dbg("ctx = ", ctx)
 
         if (sum(in.main) == 0 || sum(in.ref) == 0) {
           shinyalert::shinyalert("ERROR", "Both groups must have samples")
@@ -344,16 +353,19 @@ upload_module_makecontrast_server <- function(
           shinyalert::shinyalert("ERROR", "You must give the comparison a name")
           return(NULL)
         }
-        if (1 && gr1 == gr2) {
+        if (gr1 == gr2) {
           shinyalert::shinyalert("ERROR", "Invalid comparison name")
+          shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
         if (!is.null(rv_contr()) && ct.name %in% colnames(rv_contr())) {
           shinyalert::shinyalert("ERROR", "Comparison name already exists.")
+          shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
         if (!grepl("_vs_", ct.name)) {
           shinyalert::shinyalert("ERROR", "Comparison must include _vs_ in name")
+          shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
 
@@ -365,8 +377,9 @@ upload_module_makecontrast_server <- function(
         } else {
           rv_contr(cbind(rv_contr(), ctx1))
         }
+
         # reset text input
-        shiny::updateTextInput(session, "newname", value = "")
+        reset_bucket()
       })
 
       shiny::observeEvent(autocontrast(), {
