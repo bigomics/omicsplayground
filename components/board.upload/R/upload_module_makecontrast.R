@@ -45,8 +45,10 @@ upload_module_makecontrast_ui <- function(id) {
               ),
               div(
                 style = "padding-top: -2px;",
-                shiny::checkboxInput(ns("add_prefix"), "Add phenotype prefix",
-                                     FALSE)
+                shiny::checkboxInput(
+                  ns("add_prefix"), "Add phenotype prefix",
+                  FALSE
+                )
               ),
             ),
             shiny::div(
@@ -74,7 +76,8 @@ upload_module_makecontrast_ui <- function(id) {
             withTooltip(
               shiny::uiOutput(
                 ns("createcomparison"),
-                style = "font-size:13px; margin-top: 0px;"),
+                style = "font-size:13px; margin-top: 0px;"
+              ),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
               placement = "top", options = list(container = "body")
             )
@@ -219,7 +222,7 @@ upload_module_makecontrast_server <- function(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
           shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: -5px 0 0 -5px;}")),
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-title {margin-bottom: 0px;}")),
-          shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-container {margin-top: 0px;}")),          
+          shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-container {margin-top: 0px;}")),
           sortable::bucket_list(
             header = NULL,
             sortable::add_rank_list(
