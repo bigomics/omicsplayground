@@ -52,8 +52,8 @@ PlotModuleUI <- function(id,
   if (translate) {
     info.text <- tspan(info.text)
     title <- tspan(title, js = translate_js)
-    caption <- tspan(caption, js = translate_js)
     caption2 <- tspan(caption2, js = translate_js)
+    caption <- tspan(caption, js = translate_js)
   }
 
   getOutputFunc <- function(plotlib) {
