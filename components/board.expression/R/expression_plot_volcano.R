@@ -39,12 +39,12 @@ expression_plot_volcano_ui <- function(id,
         inputId = ns("show_p_values"),
         label = "Plot nominal p-values on the y-axis",
         value = FALSE
-        ),
+      ),
       "Plot nominal p-values on the y-axis.",
       placement = "left", options = list(container = "body")
     )
   )
-  
+
   PlotModuleUI(
     ns("pltmod"),
     label = label,
@@ -107,9 +107,9 @@ expression_plot_volcano_server <- function(id,
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       y.lab <- "Significance (-log10q)"
-      if(input$show_p_values) {
-          y <- -log10(pval + 1e-12)
-          y.lab <- "Significance (-log10p)"
+      if (input$show_p_values) {
+        y <- -log10(pval + 1e-12)
+        y.lab <- "Significance (-log10p)"
       }
 
       return(list(
