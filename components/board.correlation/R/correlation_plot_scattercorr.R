@@ -132,10 +132,10 @@ correlation_plot_scattercorr_server <- function(id,
 
       nplots <- n_row * n_cols
       rho <- head(rho, nplots)
-      if(length(rho) < nplots) {
+      if (length(rho) < nplots) {
         n_row <- ceiling(sqrt(length(rho)))
       }
-      
+
       # Assemble subplots
       sub_plots <- vector("list", length(rho))
       for (i in 1:length(rho)) {
@@ -152,7 +152,7 @@ correlation_plot_scattercorr_server <- function(id,
           ylab <- gene2
         }
         dx <- diff(range(x))
-        dy <- diff(range(y))        
+        dy <- diff(range(y))
         title_i <- gene2
         title_loc <- max(y) - 0.1 * dy
         # Make regression line
@@ -186,17 +186,17 @@ correlation_plot_scattercorr_server <- function(id,
           plotly::layout(
             legend = list(orientation = "h", bgcolor = "transparent"),
             xaxis = list(
-              title = list(text = xlab, font = list(size = 11), standoff=5),
-              range = list(min(x)-0.05*dx, max(x)+0.05*dx)              
+              title = list(text = xlab, font = list(size = 11), standoff = 5),
+              range = list(min(x) - 0.05 * dx, max(x) + 0.05 * dx)
             ),
             yaxis = list(
-              title = list(text = ylab, font = list(size = 11), standoff=0),
-              range = list(min(y)-0.05*dx,max(y)+0.05*dy)
+              title = list(text = ylab, font = list(size = 11), standoff = 0),
+              range = list(min(y) - 0.05 * dx, max(y) + 0.05 * dy)
             )
           ) %>%
           # Plot title
           plotly::add_annotations(
-            #text = paste("<b>", title_i, "</b>"),
+            # text = paste("<b>", title_i, "</b>"),
             text = "",
             font = list(size = 10),
             showarrow = FALSE,
@@ -223,8 +223,8 @@ correlation_plot_scattercorr_server <- function(id,
               list(
                 x = 0.5,
                 y = axis_title_pos[2],
-                text = glue::glue(tspan("gene expression (log2)",js = FALSE)),
-                #text = xlab,
+                text = glue::glue(tspan("gene expression (log2)", js = FALSE)),
+                # text = xlab,
                 font = list(size = 15),
                 showarrow = FALSE,
                 xref = "paper",
@@ -233,14 +233,14 @@ correlation_plot_scattercorr_server <- function(id,
               list(
                 y = 0.5,
                 x = axis_title_pos[1],
-                text = glue::glue(tspan("gene expression (log2)",js = FALSE)),
-                #text = xlab,
+                text = glue::glue(tspan("gene expression (log2)", js = FALSE)),
+                # text = xlab,
                 textangle = 270,
                 font = list(size = 15),
                 showarrow = FALSE,
                 xref = "paper",
                 yref = "paper"
-              )              
+              )
             ),
             margin = list(
               l = margin_l,
@@ -265,7 +265,8 @@ correlation_plot_scattercorr_server <- function(id,
         axis_title_pos = c(-0.12, -0.1),
         interplot_margin = 0.04,
         margin_l = 65,
-        margin_b = 60)
+        margin_b = 60
+      )
     }
 
     cor_scatter.PLOTFUN2 <- function() {
@@ -285,7 +286,8 @@ correlation_plot_scattercorr_server <- function(id,
         axis_title_pos = c(-0.05, -0.11),
         interplot_margin = 0.045,
         margin_l = 90,
-        margin_b = 80)
+        margin_b = 80
+      )
     }
 
     PlotModuleServer(

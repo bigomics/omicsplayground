@@ -61,7 +61,9 @@ CorrelationBoard <- function(id, pgx) {
       sel <- genes[1] ## most var gene
       ## sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
       shiny::updateSelectizeInput(
-        session, "gene", choices = genes, selected = sel, server = TRUE)
+        session, "gene",
+        choices = genes, selected = sel, server = TRUE
+      )
 
       fam <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
       fam <- sort(c("<custom>", fam))
@@ -100,7 +102,8 @@ CorrelationBoard <- function(id, pgx) {
       } else if (ft != "<all>" && ft %in% names(playdata::iGSETS)) {
         ft <- input$cor_filter
         psel <- playbase::filterProbes(
-          pgx$genes, c(gene, unlist(playdata::getGSETS(ft))))
+          pgx$genes, c(gene, unlist(playdata::getGSETS(ft)))
+        )
         #
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -118,14 +121,14 @@ CorrelationBoard <- function(id, pgx) {
       zx <- filterExpression(X, gene)
       zx
     })
-    
+
     getFilteredImpExpression <- shiny::reactive({
       shiny::req(pgx$impX, input$gene)
       X <- pgx$impX
       gene <- input$gene
-      filterExpression(X, gene) 
+      filterExpression(X, gene)
     })
-    
+
     getPartialCorrelationMatrix <- shiny::reactive({
       shiny::req(pgx$X, input$gene)
 
@@ -186,7 +189,7 @@ CorrelationBoard <- function(id, pgx) {
       }
       cm <- intersect(rownames(R), rownames(zx))
       R <- R[cm, , drop = FALSE]
-      zx <- zx[cm,]
+      zx <- zx[cm, ]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2))
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
@@ -206,8 +209,8 @@ CorrelationBoard <- function(id, pgx) {
       zx <- pgx$X
       xref <- list(
         "cor" = 2**zx
-##        "cor.HPA" = as.matrix(playdata::TISSUE),
-##        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
+        ##        "cor.HPA" = as.matrix(playdata::TISSUE),
+        ##        "cor.ImmProt" = as.matrix(playdata::IMMPROT)
       )
       R <- playbase::pgx.getGeneCorrelation(gene, xref = xref)
       if (is.null(R)) {
