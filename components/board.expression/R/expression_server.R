@@ -174,6 +174,7 @@ ExpressionBoard <- function(id, pgx) {
         logFC = logFC,
         stars = stars,
         meta.q = mx$meta.q,
+        meta.p = mx$meta.p,
         AveExpr0,
         AveExpr1,
         check.names = FALSE
@@ -320,8 +321,11 @@ ExpressionBoard <- function(id, pgx) {
       sel.genes <- res$symbol[setdiff(jj, NA)]
 
       fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
+      pval <- res[, grep("pvalue|meta.p|pval|p|p_value", colnames(res))[1]]
+      pval <- pmax(pval, 1e-20)
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       scaled.x <- scale(x, center = FALSE)
