@@ -560,10 +560,10 @@ upload_module_computepgx_server <- function(
           countsX = countsX,
           impX = impX,
           contrasts = contrasts,
+          probe_type = probetype(),
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
-
           # Options
           batch.correct = FALSE,
           norm_method = norm_method,
