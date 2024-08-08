@@ -39,7 +39,7 @@ UploadBoard <- function(id,
     ah_task <- ExtendedTask$new(function(organism, probes, datatype) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        probetype0 <- playbase::detect_probetype(organism, probes, datatype=datatype)
+        probetype0 <- playbase::detect_probetype(organism, probes, datatype = datatype, probe_type = input$selected_probe)
         dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
         if (is.null(probetype0)) probetype0 <- "error"
         probetype0
@@ -510,6 +510,19 @@ UploadBoard <- function(id,
         shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
         shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
       )
+    })
+
+    output$probe_type_ui <- shiny::renderUI({
+      if (input$selected_datatype == "metabolomics") {
+        div(
+          p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+          shiny::selectInput(
+            ns("selected_probe"),
+            label = NULL,
+            choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
+          )
+        )
+      }
     })
 
 
