@@ -851,7 +851,7 @@ UploadBoard <- function(id,
         dbg("[UploadBoard] Invoking probetype ExtendedTask")
         probes <- rownames(uploaded$counts.csv)
         probetype("running")
-        ah_task$invoke(upload_organism(), probes, upload_datatype(), input$selected_probe())
+        ah_task$invoke(upload_organism(), probes, upload_datatype(), input$selected_probe)
       }
     )
 
