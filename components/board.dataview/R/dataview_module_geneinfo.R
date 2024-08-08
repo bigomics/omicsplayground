@@ -67,10 +67,10 @@ dataview_module_geneinfo_server <- function(id,
           names(info)
         )
         info <- info[nn]
-        ##info$symbol <- paste0(info$symbol, "<br>")
-        names(info) <- sub("gene_symbol","symbol",names(info))
-        names(info) <- sub("map_location","genome location",names(info))        
-        
+        ## info$symbol <- paste0(info$symbol, "<br>")
+        names(info) <- sub("gene_symbol", "symbol", names(info))
+        names(info) <- sub("map_location", "genome location", names(info))
+
         res <- c()
         for (i in 1:length(info)) {
           xx <- paste(info[[i]], collapse = ", ")

@@ -31,7 +31,6 @@ dataview_table_rawdata_server <- function(id,
                                           r.groupby = reactive(""),
                                           scrollY = "auto") {
   moduleServer(id, function(input, output, session) {
-
     table_data <- shiny::reactive({
       ## get current view of raw_counts
 
@@ -101,13 +100,13 @@ dataview_table_rawdata_server <- function(id,
       }
       x0 <- x
 
-      k <- which(rownames(x) == gene)      
-      rho <- cor(t(logx), logx[k,], use = "pairwise")[, 1]
-      rho <- rho[match(rownames(x),names(rho))]
+      k <- which(rownames(x) == gene)
+      rho <- cor(t(logx), logx[k, ], use = "pairwise")[, 1]
+      rho <- rho[match(rownames(x), names(rho))]
       rho <- round(rho, digits = 3)
-      sdx <- round( matrixStats::rowSds(x, na.rm = TRUE), digits = 3)
-      avg <- round( rowMeans(x, na.rm = TRUE), digits = 3)
-      
+      sdx <- round(matrixStats::rowSds(x, na.rm = TRUE), digits = 3)
+      avg <- round(rowMeans(x, na.rm = TRUE), digits = 3)
+
       group <- NULL
       if (groupby %in% colnames(pgx$Y)) {
         group <- pgx$Y[colnames(x), groupby]
@@ -139,7 +138,7 @@ dataview_table_rawdata_server <- function(id,
       dbg("[dataview_rawdata:table_data] create dataframe")
       pp <- rownames(x)
       feature <- pgx$genes[pp, "feature"]
-      symbol  <- pgx$genes[pp, "symbol"]
+      symbol <- pgx$genes[pp, "symbol"]
       gene.title <- pgx$genes[pp, "gene_title"]
       gene.title <- substring(gene.title, 1, 50)
 
