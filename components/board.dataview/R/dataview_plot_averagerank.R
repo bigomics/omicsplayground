@@ -159,7 +159,7 @@ dataview_plot_averagerank_server <- function(id,
         plotly::add_annotations(
           x = sel,
           y = mean.fc[sel],
-          ax = ifelse(sel < length(mean.fc)/2, 40, -40),
+          ax = ifelse(sel < length(mean.fc) / 2, 40, -40),
           ay = -40,
           xanchor = xanchor,
           text = gene

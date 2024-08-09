@@ -39,9 +39,7 @@ dataview_plot_correlation_server <- function(id,
                                              r.samples = reactive(NULL),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     getTopCorrelatedGenes <- function(pgx, gene, n, samples) {
-
       ## precompute
       if (is.null(samples)) samples <- colnames(pgx$X)
       if (!all(samples %in% colnames(pgx$X))) {
@@ -53,7 +51,7 @@ dataview_plot_correlation_server <- function(id,
 
       samples <- intersect(samples, colnames(pgx$X))
       probe <- gene
-      
+
       ## corr always in log.scale and restricted to selected samples subset
       ## should match exactly the rawtable!!
       if (probe %in% rownames(pgx$X)) {
@@ -174,7 +172,7 @@ dataview_plot_correlation_server <- function(id,
       df <- pd[[1]]
       df$genes <- factor(df$genes, levels = df$genes)
       df$gene_title <- stringr::str_extract(df$annot, "(?<=gene_title: <b>)[^<]+")
-      df$gene_name  <- stringr::str_extract(df$annot, "(?<=gene_name: <b>)[^<]+")
+      df$gene_name <- stringr::str_extract(df$annot, "(?<=gene_name: <b>)[^<]+")
       df$color <- NULL
       df$annot <- NULL
       return(df)

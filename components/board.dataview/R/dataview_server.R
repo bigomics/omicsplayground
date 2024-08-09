@@ -284,8 +284,8 @@ DataViewBoard <- function(id, pgx) {
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-##    getCountStatistics <- reactiveVal()
-##    observeEvent(
+    ##    getCountStatistics <- reactiveVal()
+    ##    observeEvent(
     getCountStatistics <- eventReactive(
       {
         list(
@@ -389,9 +389,11 @@ DataViewBoard <- function(id, pgx) {
           prop.counts = prop.counts,
           gset.genes = gset.genes
         )
-        ##getCountStatistics(res)
+        ## getCountStatistics(res)
         return(res)
-      }, ignoreNULL = TRUE)
+      },
+      ignoreNULL = TRUE
+    )
 
     ## ================================================================================
     ## ================================= END ====================================
