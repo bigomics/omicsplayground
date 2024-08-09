@@ -55,7 +55,8 @@ dataview_plot_averagerank_server <- function(id,
 
       if (data_type %in% c("counts", "abundance")) {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE),
-                        decreasing = TRUE)
+          decreasing = TRUE
+        )
         ylab <- tspan("average counts", js = FALSE)
       }
       if (data_type %in% c("logCPM", "log2")) {
@@ -102,9 +103,9 @@ dataview_plot_averagerank_server <- function(id,
       gene <- pd$gene
       ylab <- pd$ylab
       xanchor <- "center"
-      if(sel < length(mean.fc)/5) xanchor <- "left"
-      if(sel > length(mean.fc)*4/5) xanchor <- "right"
-      
+      if (sel < length(mean.fc) / 5) xanchor <- "left"
+      if (sel > length(mean.fc) * 4 / 5) xanchor <- "right"
+
       ## subsample for speed
       ii <- 1:length(mean.fc)
       if (length(ii) > 200) {
