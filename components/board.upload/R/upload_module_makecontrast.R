@@ -43,7 +43,13 @@ upload_module_makecontrast_ui <- function(id) {
                 "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
                 placement = "left", options = list(container = "body")
               ),
-              shiny::checkboxInput(ns("add_prefix"), "Add prefix", FALSE)
+              div(
+                style = "padding-top: -2px;",
+                shiny::checkboxInput(
+                  ns("add_prefix"), "Add phenotype prefix",
+                  FALSE
+                )
+              ),
             ),
             shiny::div(
               style = "padding-top: 2px;",
@@ -68,7 +74,10 @@ upload_module_makecontrast_ui <- function(id) {
             style = "overflow: auto; margin-left: 30px;",
             shiny::HTML("<b>2. Create comparison:</b>"),
             withTooltip(
-              shiny::uiOutput(ns("createcomparison"), style = "font-size:13px;"),
+              shiny::uiOutput(
+                ns("createcomparison"),
+                style = "font-size:13px; margin-top: 0px;"
+              ),
               "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
               placement = "top", options = list(container = "body")
             )
@@ -211,7 +220,9 @@ upload_module_makecontrast_server <- function(
 
         shiny::tagList(
           shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
-          shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: 0 0 0 -5px;}")),
+          shiny::tags$head(shiny::tags$style(".default-sortable.bucket-list-container {padding: 0px 0px;margin: -5px 0 0 -5px;}")),
+          shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-title {margin-bottom: 0px;}")),
+          shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-container {margin-top: 0px;}")),
           sortable::bucket_list(
             header = NULL,
             sortable::add_rank_list(

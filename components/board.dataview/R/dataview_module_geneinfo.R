@@ -51,7 +51,7 @@ dataview_module_geneinfo_server <- function(id,
       feature <- gene
       jj <- match(gene, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-      info <- playbase::getHSGeneInfo(symbol, feature) ## defined in pgx-functions.R
+      info <- playbase::getHSGeneInfo(symbol) ## defined in pgx-functions.R
       res <- tspan("(gene info not available)")
       if (!is.null(info)) {
         info$summary <- "(no info available)"
@@ -61,12 +61,15 @@ dataview_module_geneinfo_server <- function(id,
         }
 
         ## reorder
+        info$feature <- feature
         nn <- intersect(
-          c("feature_name", "gene_symbol", "name", "map_location", "summary", names(info)),
+          c("feature", "gene_symbol", "name", "map_location", "summary", "databases", names(info)),
           names(info)
         )
         info <- info[nn]
-        info$symbol <- paste0(info$symbol, "<br>")
+        ## info$symbol <- paste0(info$symbol, "<br>")
+        names(info) <- sub("gene_symbol", "symbol", names(info))
+        names(info) <- sub("map_location", "genome location", names(info))
 
         res <- c()
         for (i in 1:length(info)) {
