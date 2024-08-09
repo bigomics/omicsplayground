@@ -54,7 +54,8 @@ dataview_plot_averagerank_server <- function(id,
       nsamples <- length(samples)
 
       if (data_type %in% c("counts", "abundance")) {
-        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
+        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE),
+                        decreasing = TRUE)
         ylab <- tspan("Counts", js = FALSE)
       }
       if (data_type %in% c("logCPM", "log2")) {
@@ -155,7 +156,7 @@ dataview_plot_averagerank_server <- function(id,
         plotly::add_annotations(
           x = sel,
           y = mean.fc[sel],
-          ax = 20,
+          ax = ifelse(sel < length(mean.fc)/2, 40, -40),
           ay = -40,
           text = gene
         )

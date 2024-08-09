@@ -39,9 +39,8 @@ dataview_plot_correlation_server <- function(id,
                                              r.samples = reactive(NULL),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    getTopCorrelatedGenes <- function(pgx, gene, n = 30, samples = NULL) {
-      samples <- r.samples()
-      gene <- r.gene()
+    
+    getTopCorrelatedGenes <- function(pgx, gene, n, samples) {
 
       ## precompute
       if (is.null(samples)) samples <- colnames(pgx$X)
@@ -53,15 +52,15 @@ dataview_plot_correlation_server <- function(id,
       }
 
       samples <- intersect(samples, colnames(pgx$X))
-      pp <- rownames(pgx$genes)[match(gene, pgx$genes$gene_name)]
-
+      probe <- gene
+      
       ## corr always in log.scale and restricted to selected samples subset
       ## should match exactly the rawtable!!
-      if (pp %in% rownames(pgx$X)) {
-        rho <- cor(t(pgx$X[, samples]), pgx$X[pp, samples], use = "pairwise")[, 1]
-      } else if (pp %in% rownames(pgx$counts)) {
+      if (probe %in% rownames(pgx$X)) {
+        rho <- cor(t(pgx$X[, samples]), pgx$X[probe, samples], use = "pairwise")[, 1]
+      } else if (probe %in% rownames(pgx$counts)) {
         x0 <- playbase::logCPM(pgx$counts[, samples])
-        x1 <- x0[pp, ]
+        x1 <- x0[probe, ]
         rho <- cor(t(x0), x1, use = "pairwise")[, 1]
       } else {
         rho <- rep(0, nrow(pgx$genes))
@@ -175,7 +174,7 @@ dataview_plot_correlation_server <- function(id,
       df <- pd[[1]]
       df$genes <- factor(df$genes, levels = df$genes)
       df$gene_title <- stringr::str_extract(df$annot, "(?<=gene_title: <b>)[^<]+")
-      df$gene_name <- stringr::str_extract(df$annot, "(?<=gene_name: <b>)[^<]+")
+      df$gene_name  <- stringr::str_extract(df$annot, "(?<=gene_name: <b>)[^<]+")
       df$color <- NULL
       df$annot <- NULL
       return(df)

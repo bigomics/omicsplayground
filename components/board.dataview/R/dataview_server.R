@@ -284,9 +284,9 @@ DataViewBoard <- function(id, pgx) {
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    getCountStatistics <- reactiveVal()
-
-    observeEvent(
+##    getCountStatistics <- reactiveVal()
+##    observeEvent(
+    getCountStatistics <- eventReactive(
       {
         list(
           pgx$X,
@@ -327,7 +327,7 @@ DataViewBoard <- function(id, pgx) {
         colnames(counts) <- substring(colnames(counts), 1, 24)
 
         gset <- list()
-        gg <- pgx$genes[rownames(counts), ]$gene_name
+        gg <- pgx$genes[rownames(counts), ]$symbol
         tt <- pgx$genes[rownames(counts), ]$gene_title
         g1 <- gg[grep("^rpl|^rps", gg, ignore.case = TRUE)]
         g2 <- gg[grep("^mrpl|^mrps", gg, ignore.case = TRUE)]
@@ -389,10 +389,9 @@ DataViewBoard <- function(id, pgx) {
           prop.counts = prop.counts,
           gset.genes = gset.genes
         )
-        getCountStatistics(res)
-      },
-      ignoreNULL = TRUE
-    )
+        ##getCountStatistics(res)
+        return(res)
+      }, ignoreNULL = TRUE)
 
     ## ================================================================================
     ## ================================= END ====================================
