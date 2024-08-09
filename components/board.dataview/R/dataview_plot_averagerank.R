@@ -56,11 +56,11 @@ dataview_plot_averagerank_server <- function(id,
       if (data_type %in% c("counts", "abundance")) {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE),
                         decreasing = TRUE)
-        ylab <- tspan("Counts", js = FALSE)
+        ylab <- tspan("average counts", js = FALSE)
       }
       if (data_type %in% c("logCPM", "log2")) {
         mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
-        ylab <- tspan("Counts (log2)", js = FALSE)
+        ylab <- tspan("average counts (log2)", js = FALSE)
       }
 
       sel <- which(sub(".*:", "", names(mean.fc)) == gene)
@@ -101,7 +101,10 @@ dataview_plot_averagerank_server <- function(id,
       sel <- pd$sel
       gene <- pd$gene
       ylab <- pd$ylab
-
+      xanchor <- "center"
+      if(sel < length(mean.fc)/5) xanchor <- "left"
+      if(sel > length(mean.fc)*4/5) xanchor <- "right"
+      
       ## subsample for speed
       ii <- 1:length(mean.fc)
       if (length(ii) > 200) {
@@ -158,6 +161,7 @@ dataview_plot_averagerank_server <- function(id,
           y = mean.fc[sel],
           ax = ifelse(sel < length(mean.fc)/2, 40, -40),
           ay = -40,
+          xanchor = xanchor,
           text = gene
         )
 
