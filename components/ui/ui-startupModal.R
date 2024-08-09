@@ -15,7 +15,7 @@ ui.startupModal <- function(id, messages, title = NULL) {
   for (i in 1:length(messages)) {
     tag1 <- bsutils::carouselItem(
       div(
-        style = "height: 360px;",
+        style = "height: 380px; margin-top: 0px;",
         class = "d-flex align-items-center justify-content-center",
         HTML(paste0(
           "<div><h4 class='modal-title text-center'>",
@@ -33,7 +33,7 @@ ui.startupModal <- function(id, messages, title = NULL) {
     footer = NULL,
     bsutils::modalHeader(
       bsutils::modalTitle(""),
-      style = "background-color: #f0f9fd; margin-bottom: 0px;"
+      style = "background-color: #f0f9fd; margin-bottom: 0px; padding: 0px;"
     ),
     do.call(
       function(...) {
