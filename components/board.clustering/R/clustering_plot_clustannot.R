@@ -19,8 +19,7 @@ clustering_plot_clusterannot_ui <- function(
   clustannot_plots.opts <- shiny::tagList(
     withTooltip(
       shiny::selectInput(ns("xann_level"), "Reference level:",
-        choices = c("gene", "geneset", "phenotype"),
-        selected = "geneset", width = "80%"
+        choices = NULL, width = "80%"
       ),
       "Select the level of an anotation analysis.",
       placement = "left", options = list(container = "body")
@@ -63,7 +62,7 @@ clustering_plot_clusterannot_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    shiny::observeEvent(pgx$X, {
+    shiny::observeEvent( pgx$X, {
       choices <- c("gene", "geneset", "phenotype")
       choices_names <- c(
         tspan("gene", js = FALSE),
@@ -71,7 +70,8 @@ clustering_plot_clusterannot_server <- function(id,
         tspan("phenotype", js = FALSE)
       )
       names(choices) <- choices_names
-      shiny::updateSelectInput(session, "xann_level", choices = choices)
+      shiny::updateSelectInput(session, "xann_level", choices = choices,
+        selected = "geneset" )
     })
 
     shiny::observe({
