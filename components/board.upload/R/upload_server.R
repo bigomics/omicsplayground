@@ -36,10 +36,10 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     # add task to detect probetype using annothub
-    ah_task <- ExtendedTask$new(function(organism, probes) {
+    ah_task <- ExtendedTask$new(function(organism, probes, datatype, probe_type) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        probetype0 <- playbase::detect_probetype(organism, probes)
+        probetype0 <- playbase::detect_probetype(organism, probes, datatype = datatype, probe_type = probe_type)
         dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
         if (is.null(probetype0)) probetype0 <- "error"
         probetype0
@@ -512,6 +512,19 @@ UploadBoard <- function(id,
       )
     })
 
+    output$probe_type_ui <- shiny::renderUI({
+      if (input$selected_datatype == "metabolomics") {
+        div(
+          p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+          shiny::selectInput(
+            ns("selected_probe"),
+            label = NULL,
+            choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
+          )
+        )
+      }
+    })
+
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
@@ -838,7 +851,7 @@ UploadBoard <- function(id,
         dbg("[UploadBoard] Invoking probetype ExtendedTask")
         probes <- rownames(uploaded$counts.csv)
         probetype("running")
-        ah_task$invoke(upload_organism(), probes)
+        ah_task$invoke(upload_organism(), probes, upload_datatype(), input$selected_probe)
       }
     )
 

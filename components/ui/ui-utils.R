@@ -466,7 +466,7 @@ tspan <- function(text, js = TRUE) {
   keys <- c(
     "gene", "Gene", "GENE", "counts", "Counts", "COUNTS",
     "transcriptomics", "Transcriptomics", "RNA-seq",
-    "logCPM", "log2p1"
+    "logCPM", "log2p1", "expression", "Expression"
   )
   if (js) {
     i18n.tr <- function(key) shiny::span(class = "i18n", `data-key` = key, key)

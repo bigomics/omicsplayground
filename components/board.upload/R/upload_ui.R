@@ -29,12 +29,14 @@ UploadUI <- function(id) {
             choices = c(
               "RNA-seq",
               "proteomics",
+              "metabolomics",
               "mRNA microarray",
               "scRNA-seq",
               "other"
             )
           )
         ),
+        shiny::uiOutput(ns("probe_type_ui")),
         div(
           p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
           shiny::selectInput(
@@ -162,10 +164,6 @@ useUploadWizard <- function(ns) {
 
   wizard.save <- div(
     class = "p-0",
-    ## div(
-    ##   style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
-    ##   shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode")
-    ## ),
     div(
       wizardR::wizard(
         id = ns("upload_wizard"),

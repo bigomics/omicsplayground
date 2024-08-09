@@ -34,6 +34,7 @@ pgx <- playbase::pgx.createPGX(
   contrasts = params$contrasts,
   name = params$name,
   datatype = params$datatype,
+  probe_type = params$probe_type,
   description = params$description,
   creator = params$creator,
   batch.correct = params$batch.correct,

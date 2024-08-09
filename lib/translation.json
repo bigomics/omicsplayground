@@ -1,54 +1,80 @@
 {
     "cultural_date_format": "%d-%m-%Y",
-    "languages": ["RNA-seq", "proteomics"],
+    "languages": [
+        "RNA-seq",
+        "proteomics",
+        "metabolomics"
+    ],
     "translation": [
         {
             "RNA-seq": "transcriptomics",
-            "proteomics": "proteomics"
+            "proteomics": "proteomics",
+            "metabolomics": "metabolomics"
         },
         {
             "RNA-seq": "Transcriptomics",
-            "proteomics": "Proteomics"
+            "proteomics": "Proteomics",
+            "metabolomics": "Metabolomics"
         },
         {
             "RNA-seq": "RNA-seq",
-            "proteomics": "Proteomics"
+            "proteomics": "Proteomics",
+            "metabolomics": "Metabolomics"
         },
         {
             "RNA-seq": "rna-seq",
-            "proteomics": "proteomics"
+            "proteomics": "proteomics",
+            "metabolomics": "metabolomics"
         },
         {
             "RNA-seq": "Gene",
-            "proteomics": "Protein"
+            "proteomics": "Protein",
+            "metabolomics": "Metabolite"
         },
         {
             "RNA-seq": "gene",
-            "proteomics": "protein"
+            "proteomics": "protein",
+            "metabolomics": "metabolite"
         },
         {
             "RNA-seq": "GENE",
-            "proteomics": "PROTEIN"
+            "proteomics": "PROTEIN",
+            "metabolomics": "METABOLITE"
         },
         {
             "RNA-seq": "counts",
-            "proteomics": "abundance"
+            "proteomics": "abundance",
+            "metabolomics": "concentration"
         },
         {
             "RNA-seq": "Counts",
-            "proteomics": "Abundance"
+            "proteomics": "Abundance",
+            "metabolomics": "Concentration"
         },
         {
             "RNA-seq": "COUNTS",
-            "proteomics": "ABUNDANCE"
+            "proteomics": "ABUNDANCE",
+            "metabolomics": "CONCENTRATION"
         },
         {
             "RNA-seq": "logCPM",
-            "proteomics": "log2"
+            "proteomics": "log2",
+            "metabolomics": "log2"
         },
         {
             "RNA-seq": "log2p1",
-            "proteomics": "log2"
+            "proteomics": "log2",
+            "metabolomics": "log2"
+        },
+        {
+            "RNA-seq": "expression",
+            "proteomics": "abundance",
+            "metabolomics": "concentration"
+        },
+        {
+            "RNA-seq": "Expression",
+            "proteomics": "Abundance",
+            "metabolomics": "Concentration"
         }
-      ]
-  }
+    ]
+}
