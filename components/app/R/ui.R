@@ -223,8 +223,7 @@ app_ui <- function(x) {
             # width = "110",
           ),
           center = tags$div(
-            ## shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset")
-            shiny::uiOutput("current_dataset2")
+            shiny::div(shiny::uiOutput("current_dataset"), class = "current-dataset")
           ),
           left = tags$div(
             style = "padding: 0 0 0 20px;",
