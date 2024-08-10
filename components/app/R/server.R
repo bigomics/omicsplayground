@@ -1081,7 +1081,7 @@ app_server <- function(input, output, session) {
         ## read startup messages
         msg <- readLines(file.path(ETC, "MESSAGES"))
         msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
-        msg <- c( msg[[1]], sample(msg, 4) )
+        msg <- c(msg[[1]], sample(msg, 4))
         STARTUP_MESSAGES <- msg
         shiny::showModal(
           ui.startupModal(
