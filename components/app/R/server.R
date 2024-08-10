@@ -1077,10 +1077,11 @@ app_server <- function(input, output, session) {
   dbg("[MAIN] showing startup modal")
   observeEvent(auth$logged, {
     if (auth$logged) {
-      shinyjs::delay(1200, {
+      shinyjs::delay(500, {
         ## read startup messages
         msg <- readLines(file.path(ETC, "MESSAGES"))
         msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+        msg <- c( msg[[1]], sample(msg, 4) )
         STARTUP_MESSAGES <- msg
         shiny::showModal(
           ui.startupModal(
