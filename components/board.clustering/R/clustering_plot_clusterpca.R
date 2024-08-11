@@ -105,7 +105,7 @@ clustering_plot_clustpca_server <- function(id,
       if (shapevar %in% colnames(df)) shapevar <- factor(df[, shapevar])
       ann.text <- rep(" ", nrow(df))
 
-      label.samples <- (label == "sample")
+      label.samples <- (label == "<b>Sample</b>")
 
       if (!do3d && label.samples) ann.text <- rownames(df)
       if (!is.null(colvar)) {
@@ -118,8 +118,8 @@ clustering_plot_clustpca_server <- function(id,
       )
 
       Y <- cbind("sample" = rownames(pos), pgx$Y[sel, ])
-      tt.info <- apply(Y, 1, function(y) paste0(colnames(Y), ": ", y, "</br>", collapse = ""))
-      tt.info <- as.character(tt.info)
+      tt.info <- apply(Y, 1, function(y) paste0(colnames(Y), ": <b>", y, "</b></br>", collapse = ""))
+      tt.info <- I(as.character(tt.info))
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
 
       if (do3d) {
@@ -167,7 +167,8 @@ clustering_plot_clustpca_server <- function(id,
         ## 2D plot
         plt <- plotly::plot_ly(
           df,
-          mode = "markers"
+          mode = "markers",
+          hovertemplate = "</br>%{text}<extra></extra>"
         ) %>%
           plotly::add_markers(
             x = df[, 1],

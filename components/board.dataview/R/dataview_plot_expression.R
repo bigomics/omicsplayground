@@ -12,11 +12,20 @@ dataview_plot_expression_ui <- function(
     info.text) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    shiny::radioButtons(
+      inputId = ns("geneplot_type"),
+      label = "Plot type (only available when {Group by} setting is in use)",
+      choices = c("barplot", "box", "violin")
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     title = title,
     label = label,
     caption = caption,
+    options = options,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
@@ -70,7 +79,8 @@ dataview_plot_expression_server <- function(id,
         ylab <- tspan("Counts (log2)", js = FALSE)
       }
 
-      geneplot_type <- "barplot"
+      # geneplot_type <- "barplot"
+      geneplot_type <- input$geneplot_type
       pd <- list(
         df = data.frame(
           x = gx,
@@ -105,7 +115,7 @@ dataview_plot_expression_server <- function(id,
         ngrp <- length(unique(df$group))
         cx1 <- ifelse(ngrp < 10, 1, 0.8)
         cx1 <- ifelse(ngrp > 20, 0.6, cx1)
-        if (pd$geneplot_type == "bar") {
+        if (pd$geneplot_type == "barplot") {
           playbase::gx.b3plot(
             df$x,
             df$group,
@@ -210,7 +220,7 @@ dataview_plot_expression_server <- function(id,
         cx1 <- ifelse(ngrp < 10, 1, 0.8)
         cx1 <- ifelse(ngrp > 20, 0.6, cx1)
 
-        if (pd$geneplot_type == "bar") {
+        if (pd$geneplot_type == "barplot") {
           data_mean <- tapply(df$x, df$group, mean)
           data_sd <- tapply(df$x, df$group, sd)
           data <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
@@ -264,8 +274,14 @@ dataview_plot_expression_server <- function(id,
         }
       } else {
         ## plot as regular bar plot
-        fig <- plotly::plot_ly(df, x = ~samples, y = ~x, type = "bar", name = pd$gene)
-
+        fig <- plotly::plot_ly(
+          df,
+          x = ~samples,
+          y = ~x,
+          type = "bar",
+          name = pd$gene,
+          hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y}<extra></extra>"
+        )
         pd$groupby <- ""
         ## fig
       }
