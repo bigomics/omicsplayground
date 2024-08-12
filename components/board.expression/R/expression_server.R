@@ -390,7 +390,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_features = reactive(input$gx_features),
       res = fullDiffExprTable,
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),      
+      labeltype = shiny::reactive(input$labeltype),
       watermark = WATERMARK
     )
 

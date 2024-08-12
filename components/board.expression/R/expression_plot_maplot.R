@@ -112,14 +112,14 @@ expression_plot_maplot_server <- function(id,
       shiny::req(pd)
 
 
-      if(labeltype() == "symbol") {
+      if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
-      
+
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -159,7 +159,7 @@ expression_plot_maplot_server <- function(id,
     plot_data_csv <- function() {
       dt <- plot_data()
       df <- data.frame(dt$features, dt$symbols, dt$x, dt$y)
-      colnames(df) <- c("feature","symbol","x", "y")
+      colnames(df) <- c("feature", "symbol", "x", "y")
       return(df)
     }
 

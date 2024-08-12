@@ -53,7 +53,7 @@ ExpressionInputs <- function(id) {
         shiny::radioButtons(ns("labeltype"), "Plot labels:",
           c("symbol", "probe"),
           inline = TRUE
-        ),        
+        ),
         withTooltip(
           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
             choices = NULL, inline = TRUE

@@ -94,8 +94,8 @@ expression_plot_volcanoAll_server <- function(id,
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
-      symbols <- pgx$genes[rownames(FQ),"symbol"]
-      
+      symbols <- pgx$genes[rownames(FQ), "symbol"]
+
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
@@ -129,14 +129,14 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(qv) <- gsub("q.", "", colnames(qv))
 
 
-      if(labeltype() == "symbol") {
+      if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
-      
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,

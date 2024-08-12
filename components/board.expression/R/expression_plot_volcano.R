@@ -93,7 +93,8 @@ expression_plot_volcano_server <- function(id,
       res <- res()
 
       symbols <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+        probes = rownames(res), res, query = "symbol", fill_na = TRUE
+      )
 
       qval <- pmax(res$meta.q, 1e-20)
       pval <- pmax(res$meta.p, 1e-20)
@@ -124,14 +125,14 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      if(labeltype() == "symbol") {
+      if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
-      
+
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
