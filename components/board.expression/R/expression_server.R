@@ -172,27 +172,25 @@ ExpressionBoard <- function(id, pgx) {
       gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
       res <- data.frame(gene.annot,
         logFC = logFC,
-        stars = stars,
-        meta.q = mx$meta.q,
-        meta.p = mx$meta.p,
         AveExpr0,
         AveExpr1,
+        stars = stars,
+        meta.q = mx$meta.q,
         check.names = FALSE
       )
-
+      
       colnames(mx.q) <- paste0(colnames(mx.q), ".q")
       colnames(mx.p) <- paste0(colnames(mx.p), ".p")
 
       if (add.pq) {
-        ## add extra columns
         mx.q <- mx.q[rownames(mx), , drop = FALSE]
         res <- cbind(res, mx.q)
         if (input$show_pv) {
           mx.p <- mx.p[rownames(mx), , drop = FALSE]
-          res <- cbind(res, mx.p)
+          res <- cbind(res, meta.p = mx$meta.p, mx.p)
         }
       }
-
+      
       return(res)
     }
 

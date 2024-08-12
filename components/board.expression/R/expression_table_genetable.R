@@ -65,8 +65,9 @@ expression_table_genetable_server <- function(id,
         res$gene_title <- playbase::shortstring(res$gene_title, 50)
       }
       rownames(res) <- sub(".*:", "", rownames(res))
-
-      kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
+      
+      ## kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
+      kk <- grep("meta.fx|meta.fc", colnames(res), invert = TRUE)
       res <- res[, kk, drop = FALSE]
 
       if (input$gx_top10) {
