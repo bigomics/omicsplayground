@@ -668,7 +668,7 @@ app_server <- function(input, output, session) {
   inviteCallback <- function() {
     ## After succesful invite, we extend the session
     dbg("[MAIN] inviteCB called!")
-    if (isTRUE(TIMEOUT > 0)) {
+    if (isTRUE(opt$TIMEOUT > 0)) {
       session_timer$reset()
       shinyalert::shinyalert(
         text = "Thanks! We have invited your friend and your session has been extended.",
@@ -683,15 +683,15 @@ app_server <- function(input, output, session) {
   }
 
   session_timer <- NULL
-  if (isTRUE(TIMEOUT > 0)) {
+  if (isTRUE(opt$TIMEOUT > 0)) {
     #' Session timer. Closes session after TIMEOUT (seconds) This
     #' is acitve for free users. Set TIMEOUT=0 to disable session
     #' timer.
     session_timer <- TimerModule(
       "session_timer",
       condition = reactive(auth$logged),
-      timeout = TIMEOUT,
-      warn_before = round(0.2 * TIMEOUT),
+      timeout = opt$TIMEOUT,
+      warn_before = round(0.2 * opt$TIMEOUT),
       max_warn = 1,
       warn_callback = warn_timeout,
       timeout_callback = session_timeout
