@@ -24,13 +24,8 @@ expression_plot_maplot_ui <- function(
     height,
     width) {
   ns <- shiny::NS(id)
-  options <- tagList(
-    shiny::checkboxInput(
-      inputId = ns("color_up_down"),
-      label = "Color up/down regulated",
-      value = TRUE
-    )
-  )
+
+  options <- tagList()
 
   PlotModuleUI(ns("pltmod"),
     title = title,
@@ -40,7 +35,7 @@ expression_plot_maplot_ui <- function(
     info.methods = info.methods,
     info.extra_link = info.extra_link,
     caption = caption,
-    options = options,
+    options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -73,6 +68,7 @@ expression_plot_maplot_server <- function(id,
                                           gx_features,
                                           res,
                                           genes_selected,
+                                          labeltype = reactive("symbol"),
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
@@ -95,7 +91,7 @@ expression_plot_maplot_server <- function(id,
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
-      fc.genes <- res$symbol
+      symbols <- res$symbol
 
       return(list(
         x = x,
@@ -103,7 +99,8 @@ expression_plot_maplot_server <- function(id,
         ylim = ylim,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
-        fc.genes = fc.genes,
+        symbols = symbols,
+        features = rownames(res),
         lab.cex = 1,
         fdr = fdr,
         lfc = lfc
@@ -114,21 +111,35 @@ expression_plot_maplot_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      par(mfrow = c(1, 1), mar = c(4, 3, 1, 1.5), mgp = c(2, 0.8, 0), oma = c(0, 0, 0, 0))
 
+      if(labeltype() == "symbol") {
+        names <- pd[["features"]]
+        label.names <- pd[["symbols"]]
+      } else {
+        names <- pd[["symbols"]]
+        label.names <- pd[["features"]]
+      }
+      
       plt <- playbase::plotlyMA(
-        x = pd[["x"]], y = pd[["y"]], names = pd[["fc.genes"]],
-        source = "plot1", marker.type = "scattergl",
+        x = pd[["x"]],
+        y = pd[["y"]],
+        ## names = pd[["symbols"]],
+        names = names,
+        label.names = label.names,
         highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]], label.cex = pd[["lab.cex"]],
+        label = pd[["lab.genes"]],
+        label.cex = pd[["lab.cex"]],
         group.names = c("group1", "group0"),
-        psig = pd[["fdr"]], lfc = pd[["lfc"]],
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
         xlab = "Average expression (log2)",
-        ylab = "Effect size (log2.FC)",
+        ylab = "Effect size (log2FC)",
         marker.size = 4,
         displayModeBar = FALSE,
         showlegend = FALSE,
-        color_up_down = input$color_up_down
+        source = "plot1",
+        marker.type = "scattergl",
+        color_up_down = TRUE
       )
       plt
     }
@@ -147,8 +158,8 @@ expression_plot_maplot_server <- function(id,
 
     plot_data_csv <- function() {
       dt <- plot_data()
-      df <- data.frame(dt$x, dt$y)
-      colnames(df) <- c("x", "y")
+      df <- data.frame(dt$features, dt$symbols, dt$x, dt$y)
+      colnames(df) <- c("feature","symbol","x", "y")
       return(df)
     }
 
