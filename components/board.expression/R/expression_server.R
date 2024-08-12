@@ -178,7 +178,7 @@ ExpressionBoard <- function(id, pgx) {
         meta.q = mx$meta.q,
         check.names = FALSE
       )
-      
+
       colnames(mx.q) <- paste0(colnames(mx.q), ".q")
       colnames(mx.p) <- paste0(colnames(mx.p), ".p")
 
@@ -190,7 +190,7 @@ ExpressionBoard <- function(id, pgx) {
           res <- cbind(res, meta.p = mx$meta.p, mx.p)
         }
       }
-      
+
       return(res)
     }
 
