@@ -336,16 +336,16 @@ upload_table_preview_contrasts_server <- function(
 
       ## IK: should we do contrasts.convertToLabelMatrix here
       ## already?  to allow for short/old formats?
-      ##samples <- checked_samples()$SAMPLES
+      ## samples <- checked_samples()$SAMPLES
       samples <- uploaded$samples.csv
-      new.ct <- try( playbase::contrasts.convertToLabelMatrix(
+      new.ct <- try(playbase::contrasts.convertToLabelMatrix(
         contrasts = ct, samples = samples
       ))
-      if(!"try-error" %in% class(new.ct)) {
+      if (!"try-error" %in% class(new.ct)) {
         ct <- new.ct
       }
 
-      
+
       uploaded$contrasts.csv <- ct
     })
 

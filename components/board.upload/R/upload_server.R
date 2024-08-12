@@ -438,7 +438,7 @@ UploadBoard <- function(id,
         if (is.null(df0)) {
           return(list(status = "Missing contrasts.csv", matrix = NULL))
         }
-        
+
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
         # store check and data regardless of it errors
