@@ -42,7 +42,7 @@ expression_plot_volcano_ui <- function(id,
     ##  ),
     ##  "Plot nominal p-values on the y-axis.",
     ##  placement = "left", options = list(container = "body")
-    )
+  )
 
   PlotModuleUI(
     ns("pltmod"),

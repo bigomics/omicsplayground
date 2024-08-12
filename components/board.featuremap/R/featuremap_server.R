@@ -90,9 +90,9 @@ FeatureMapBoard <- function(id, pgx) {
         cvar <- colnames(pgx$model.parameters$contr.matrix)
         sel.cvar <- head(cvar, 8)
         shiny::updateSelectizeInput(session, "selcomp",
-                                    choices = cvar,
-                                    selected = sel.cvar
-                                    )
+          choices = cvar,
+          selected = sel.cvar
+        )
       }
     )
 
