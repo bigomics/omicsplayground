@@ -11,7 +11,8 @@ FeatureMapInputs <- function(id) {
     withTooltip(
       shiny::selectizeInput(
         ns("selcomp"), "Show comparisons:",
-        choices = NULL, multiple = TRUE),
+        choices = NULL, multiple = TRUE
+      ),
       "Select the comparisons to show in the signatures plot.",
       placement = "top"
     ),

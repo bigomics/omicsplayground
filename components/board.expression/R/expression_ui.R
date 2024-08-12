@@ -55,7 +55,8 @@ ExpressionInputs <- function(id) {
           placement = "right", options = list(container = "body")
         ),
         withTooltip(shiny::checkboxInput(ns("gx_p_values"), "show p-values", FALSE),
-          "Display nominal p-values in the table.",
+          "Show p-values in the table.
+                     WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
           placement = "top", options = list(container = "body")
         )
       )
