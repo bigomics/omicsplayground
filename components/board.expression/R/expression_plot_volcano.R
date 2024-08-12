@@ -82,6 +82,7 @@ expression_plot_volcano_server <- function(id,
                                            comp1,
                                            fdr,
                                            lfc,
+                                           pv,
                                            res,
                                            genes_selected,
                                            watermark = FALSE) {
@@ -95,6 +96,7 @@ expression_plot_volcano_server <- function(id,
       comp1 <- comp1()
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
+      pv <- as.logical(pv())
       res <- res()
 
       fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
@@ -106,10 +108,10 @@ expression_plot_volcano_server <- function(id,
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       y.lab <- "Significance (-log10q)"
-      ## if (input$show_p_values) {
-      ##  y <- -log10(pval + 1e-12)
-      ##  y.lab <- "Significance (-log10p)"
-      ## }
+      if (pv) {
+          y <- -log10(pval + 1e-12)
+          y.lab <- "Significance (-log10p)"
+      }
 
       return(list(
         x = x,
