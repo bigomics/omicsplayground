@@ -66,10 +66,8 @@ expression_table_genetable_server <- function(id,
       }
       rownames(res) <- sub(".*:", "", rownames(res))
 
-      if (!DEV) {
-        kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
-        res <- res[, kk, drop = FALSE]
-      }
+      kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
+      res <- res[, kk, drop = FALSE]
 
       if (input$gx_top10) {
         res <- res[!is.na(res$logFC), ]

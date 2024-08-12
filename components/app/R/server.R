@@ -652,8 +652,6 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
-      ## DEVELOPER only tabs (still too alpha)
-      info("[SERVER] disabling alpha features")
       info("[SERVER] trigger on change dataset done!")
     }
   )

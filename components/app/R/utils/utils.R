@@ -102,24 +102,10 @@ tipifyB <- function(...) {
   withTooltip(..., placement = "bottom", options = list(container = "body"))
 }
 
-# TODO: this function isn't being used
-premium.feature <- function(...) {
-  message("[premium.feature] USER_MODE = ", USER_MODE)
-  message("[premium.feature] DEV = ", DEV)
-  el <- list(...)
-  if (USER_MODE %in% c("pro", "premium", "dev")) {
-    return(el)
-  }
-  tipify(
-    disabled(...),
-    "This is a Premium feature. Upgrade to enable this feature."
-  )
-}
-
 # TODO: this function can be a variable
-in.shinyproxy <- function() {
-  return(Sys.getenv("SHINYPROXY_USERNAME") != "")
-}
+## in.shinyproxy <- function() {
+##   return(Sys.getenv("SHINYPROXY_USERNAME") != "")
+## }
 
 tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
   has.slot <- (slot %in% names(pgx))
