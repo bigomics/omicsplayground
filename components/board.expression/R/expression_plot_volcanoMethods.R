@@ -97,21 +97,21 @@ expression_plot_volcanoMethods_server <- function(id,
       lab.genes <- pd[["lab.genes"]]
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
-      
+
       ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       fc <- mx[, "fc", drop = FALSE]
       qv <- mx[, "q", drop = FALSE]
       mx.features <- rownames(mx)
-      mx.symbols <- pgx$genes[mx.features,"symbol"]
-      
-      if(labeltype() == "symbol") {
+      mx.symbols <- pgx$genes[mx.features, "symbol"]
+
+      if (labeltype() == "symbol") {
         label.names <- mx.symbols
       } else {
         label.names <- mx.features
       }
-      
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,
