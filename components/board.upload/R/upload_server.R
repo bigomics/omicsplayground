@@ -19,7 +19,6 @@ UploadBoard <- function(id,
 
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
-    ##    checked   <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <- reactiveVal(NULL)
@@ -503,14 +502,14 @@ UploadBoard <- function(id,
       }
     )
 
-    output$input_recap <- renderUI({
-      shiny::fluidRow(
-        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
-        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
-        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
-        shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
-      )
-    })
+    ## output$input_recap <- renderUI({
+    ##   shiny::fluidRow(
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
+    ##   )
+    ## })
 
 
     output$downloadExampleData <- shiny::downloadHandler(
@@ -614,7 +613,6 @@ UploadBoard <- function(id,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
-      ## ah_task = ah_task,
       probetype = probetype
     )
 
