@@ -81,7 +81,6 @@ featuremap_plot_gene_map_server <- function(id,
     }
 
     plot_data <- shiny::reactive({
-
       pos <- getUMAP()
       hilight <- filteredGenes()
       nlabel <- as.integer(input$umap_nlabel)
@@ -90,22 +89,22 @@ featuremap_plot_gene_map_server <- function(id,
       F <- playbase::pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
       fc <- sqrt(rowMeans(F**2))
-      
+
       ## conform (NEED RETHINK when multiple symbols!)
       ## pos <- playbase::rename_by(pos, pgx$genes, "symbol")
       ## names(fc) <- pgx$genes$symbol[match(names(fc), rownames(pgx$genes), nomatch = 0)]
       ## fc <- fc[!duplicated(names(fc))]
       ## pos <- pos[!duplicated(rownames(pos)), , drop = FALSE]
-      
+
       gg <- intersect(rownames(pos), names(fc))
       pos <- pos[gg, ]
       fc <- fc[gg]
-      F <- F[gg,]
-      
-      hilight.probes <- playbase::map_probes( pgx$genes, hilight )
+      F <- F[gg, ]
+
+      hilight.probes <- playbase::map_probes(pgx$genes, hilight)
       dbg("[featuremap:getUMAP] head(hilight) = ", head(hilight))
       dbg("[featuremap:getUMAP] head(hilight.probes) = ", head(hilight.probes))
-      
+
       pd <- list(
         df = data.frame(pos, fc = fc),
         pos = pos,
@@ -131,7 +130,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA
       }
-      
+
       p <- plotUMAP(
         pos,
         fc,
@@ -184,7 +183,6 @@ featuremap_plot_gene_map_server <- function(id,
     # ================================================================================
 
     geneTable.RENDER <- shiny::reactive({
-
       pd <- plot_data()
       shiny::req(pd, pgx$genes)
 
@@ -192,27 +190,27 @@ featuremap_plot_gene_map_server <- function(id,
       fc <- pd$fc
       F <- pd$F
       annot <- pgx$genes
-            
+
       # Retreive gene table with rownames (symbols)
-      annot_cols <- c("feature", "symbol", "human_ortholog", "gene_title")      
-      annot_cols <- intersect( annot_cols, colnames(annot))
+      annot_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
+      annot_cols <- intersect(annot_cols, colnames(annot))
       rowids <- match(rownames(F), rownames(annot))
       annot <- annot[rowids, annot_cols, drop = FALSE]
       annot <- apply(annot, MARGIN = 2, playbase::shortstring, n = 60)
-      
+
       F <- cbind(rms.FC = fc, F)
       F <- round(F, digits = 3)
       df <- data.frame(annot, F, check.names = FALSE)
-      df <- df[order(F[,1], decreasing=TRUE),]
-      
+      df <- df[order(F[, 1], decreasing = TRUE), ]
+
       # Remove feature column if it is the same as symbol column
-      if ( mean(df$feature %in% df$symbol, na.rm=TRUE) > 0.9) {
+      if (mean(df$feature %in% df$symbol, na.rm = TRUE) > 0.9) {
         df$feature <- NULL
       }
-      if( mean(df$symbol == df$human_ortholog, na.rm=TRUE) > 0.9) {
+      if (mean(df$symbol == df$human_ortholog, na.rm = TRUE) > 0.9) {
         df$human_ortholog <- NULL
       }
-      
+
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
