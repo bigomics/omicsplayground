@@ -280,7 +280,7 @@ dataview_plot_expression_server <- function(id,
           y = ~x,
           type = "bar",
           name = pd$gene,
-          hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y.2f}<extra></extra>"
+          hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"
         )
         pd$groupby <- ""
         ## fig
