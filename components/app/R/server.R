@@ -539,21 +539,7 @@ app_server <- function(input, output, session) {
     welcome_detector(input$nav == "welcome-tab")
   })
 
-  output$current_dataset <- shiny::renderText({
-    shiny::req(auth$logged)
-    has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
-    nav.welcome <- welcome_detector()
-
-    if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
-      ## trigger on change of dataset
-      name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    } else {
-      name <- paste("Omics Playground", VERSION)
-    }
-    name
-  })
-
-  output$current_dataset2 <- shiny::renderUI({
+  output$current_dataset <- shiny::renderUI({
     shiny::req(auth$logged)
     has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
     nav.welcome <- welcome_detector()
