@@ -354,12 +354,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       score <- round(score, digits = 3)
       df <- cbind(db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A, common.genes = commongenes)
 
-      if (DEV) {
-        df <- df[, c("db", "geneset", "score", "k/K", "ratio", "odds.ratio", "log.OR", "q.fisher", "common.genes")]
-      } else {
-        df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
-      }
-
+      df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
       df <- df[order(-df$score), ]
       return(df)
     })

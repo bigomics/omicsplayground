@@ -542,21 +542,7 @@ app_server <- function(input, output, session) {
     welcome_detector(input$nav == "welcome-tab")
   })
 
-  output$current_dataset <- shiny::renderText({
-    shiny::req(auth$logged)
-    has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
-    nav.welcome <- welcome_detector()
-
-    if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
-      ## trigger on change of dataset
-      name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    } else {
-      name <- paste("Omics Playground", VERSION)
-    }
-    name
-  })
-
-  output$current_dataset2 <- shiny::renderUI({
+  output$current_dataset <- shiny::renderUI({
     shiny::req(auth$logged)
     has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
     nav.welcome <- welcome_detector()
@@ -675,8 +661,6 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
-      ## DEVELOPER only tabs (still too alpha)
-      info("[SERVER] disabling alpha features")
       info("[SERVER] trigger on change dataset done!")
     }
   )
@@ -693,7 +677,7 @@ app_server <- function(input, output, session) {
   inviteCallback <- function() {
     ## After succesful invite, we extend the session
     dbg("[MAIN] inviteCB called!")
-    if (isTRUE(TIMEOUT > 0)) {
+    if (isTRUE(opt$TIMEOUT > 0)) {
       session_timer$reset()
       shinyalert::shinyalert(
         text = "Thanks! We have invited your friend and your session has been extended.",
@@ -708,15 +692,15 @@ app_server <- function(input, output, session) {
   }
 
   session_timer <- NULL
-  if (isTRUE(TIMEOUT > 0)) {
+  if (isTRUE(opt$TIMEOUT > 0)) {
     #' Session timer. Closes session after TIMEOUT (seconds) This
     #' is acitve for free users. Set TIMEOUT=0 to disable session
     #' timer.
     session_timer <- TimerModule(
       "session_timer",
       condition = reactive(auth$logged),
-      timeout = TIMEOUT,
-      warn_before = round(0.2 * TIMEOUT),
+      timeout = opt$TIMEOUT,
+      warn_before = round(0.2 * opt$TIMEOUT),
       max_warn = 1,
       warn_callback = warn_timeout,
       timeout_callback = session_timeout
@@ -1086,10 +1070,11 @@ app_server <- function(input, output, session) {
   dbg("[MAIN] showing startup modal")
   observeEvent(auth$logged, {
     if (auth$logged) {
-      shinyjs::delay(1200, {
+      shinyjs::delay(500, {
         ## read startup messages
         msg <- readLines(file.path(ETC, "MESSAGES"))
         msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+        msg <- c(msg[[1]], sample(msg, 4))
         STARTUP_MESSAGES <- msg
         shiny::showModal(
           ui.startupModal(

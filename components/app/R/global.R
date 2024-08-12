@@ -83,13 +83,10 @@ pgx.system.file <- function(file = ".", package) {
 
 AUTHENTICATION <- "none"
 WATERMARK <- FALSE
-DEV <- FALSE
-DEBUG <- TRUE
-TIMEOUT <- 0
+DEVMODE <- FALSE
 
 ## Allow API like calls
 ALLOW_URL_QUERYSTRING <- FALSE
-
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY <- (Sys.getenv("SHINYPROXY_USERNAME") != "" && "omicsplayground" %in% dir("/"))
@@ -97,10 +94,6 @@ USERNAME <- "anonymous"
 if (SHINYPROXY) USERNAME <- Sys.getenv("SHINYPROXY_USERNAME")
 
 main.start_time <- Sys.time()
-
-if (DEV) {
-  message("!!!!!!!!!!!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!!!!!!!!!!!")
-}
 
 WORKDIR <- getwd()
 message(">>>>> working directory = ", WORKDIR)
@@ -165,7 +158,7 @@ opt.default <- list(
   USE_CREDENTIALS = FALSE,
   DOMAIN = NULL,
   BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
-  ##  ENABLE_CHIRP         = TRUE,
+  ## ENABLE_CHIRP         = TRUE,
   ENABLE_DELETE = TRUE,
   ENABLE_PGX_DOWNLOAD = TRUE,
   ENABLE_PUBLIC_SHARE = TRUE,
@@ -185,7 +178,8 @@ opt.default <- list(
   MAX_SESSIONS = 2,
   TIMEOUT = 0,
   WATERMARK = TRUE,
-  APACHE_COOKIE_PATH = OPG
+  APACHE_COOKIE_PATH = OPG,
+  DEVMODE = FALSE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
@@ -206,11 +200,16 @@ if (Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH") != "") {
 
 ## copy to global.R environment
 WATERMARK <<- opt$WATERMARK
-TIMEOUT <<- as.integer(opt$TIMEOUT) ## in seconds
+## TIMEOUT <<- as.integer(opt$TIMEOUT) ## in seconds
 PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
+if (opt$DEVMODE) {
+  message("!!!!!!!!!!!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!!!!!!!!!!!")
+}
 
 ## show options
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
+
+
 
 ## ------------------------------------------------
 ## ENABLE/DISABLE BOARDS

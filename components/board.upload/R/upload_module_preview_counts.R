@@ -233,7 +233,7 @@ upload_table_preview_counts_server <- function(
 
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
-      if (!all(ext == "csv")) {
+      if (!all(ext %in% c("csv", "RData"))) {
         shinyalert::shinyalert(
           title = "File format not supported.",
           text = "Please make sure the file is a CSV file.",
@@ -243,7 +243,7 @@ upload_table_preview_counts_server <- function(
       }
 
       # if counts not in file name, give warning and return
-      if (!any(grepl("count|expression|abundance", tolower(input$counts_csv$name)))) {
+      if (!any(grepl("count|expression|abundance|params.rdata", tolower(input$counts_csv$name)))) {
         shinyalert::shinyalert(
           title = tspan("Counts not in filename.", js = FALSE),
           text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.", js = FALSE),
@@ -269,7 +269,29 @@ upload_table_preview_counts_server <- function(
         df <- playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
         uploaded$contrasts.csv <- df
       }
-    })
+
+
+      sel <- grep("params.RData", input$counts_csv$name)
+      if (length(sel)) {
+        if (opt$DEVMODE) {
+          params <- readRDS(input$counts_csv$datapath[sel[1]])
+          uploaded$samples.csv <- params$samples
+          uploaded$contrasts.csv <- params$contrasts
+          uploaded$counts.csv <- params$counts
+          ## recompute_info(
+          ##   list(
+          ##     "name" = params$name,
+          ##     "description" = params$description
+          ##   )
+          ## )
+        } else {
+          shinyalert::shinyalert(
+            title = "Error",
+            text = "Invalid file: params.RData"
+          )
+        }
+      }
+    }) ## end observeEvent
 
     observeEvent(input$remove_counts, {
       delete_all_files_counts <- function(value) {
