@@ -84,8 +84,6 @@ pgx.system.file <- function(file = ".", package) {
 AUTHENTICATION <- "none"
 WATERMARK <- FALSE
 DEVMODE <- FALSE
-## DEBUG <- TRUE
-TIMEOUT <- 0
 
 ## Allow API like calls
 ALLOW_URL_QUERYSTRING <- FALSE
@@ -202,10 +200,9 @@ if (Sys.getenv("PLAYGROUND_APACHE_COOKIE_PATH") != "") {
 
 ## copy to global.R environment
 WATERMARK <<- opt$WATERMARK
-TIMEOUT <<- as.integer(opt$TIMEOUT) ## in seconds
+## TIMEOUT <<- as.integer(opt$TIMEOUT) ## in seconds
 PLOTLY_EDITOR <<- opt$PLOTLY_EDITOR
-DEVMODE <<- opt$DEVMODE
-if (DEVMODE) {
+if (opt$DEVMODE) {
   message("!!!!!!!!!!!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!!!!!!!!!!!")
 }
 

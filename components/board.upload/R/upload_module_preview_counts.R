@@ -269,23 +269,30 @@ upload_table_preview_counts_server <- function(
         df <- playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
         uploaded$contrasts.csv <- df
       }
+      
 
       sel <- grep("params.RData", input$counts_csv$name)
       if (length(sel)) {
-        params <- readRDS(input$counts_csv$datapath[sel[1]])
-        uploaded$samples.csv <- params$samples
-        uploaded$contrasts.csv <- params$contrasts
-        uploaded$counts.csv <- params$counts
-        ## recompute_info(
-        ##   list(
-        ##     "name" = params$name,
-        ##     "description" = params$description
-        ##   )
-        ## )
+        if(opt$DEVMODE) {
+          params <- readRDS(input$counts_csv$datapath[sel[1]])
+          uploaded$samples.csv <- params$samples
+          uploaded$contrasts.csv <- params$contrasts
+          uploaded$counts.csv <- params$counts
+          ## recompute_info(
+          ##   list(
+          ##     "name" = params$name,
+          ##     "description" = params$description
+          ##   )
+          ## )
+        } else {
+          shinyalert::shinyalert(
+            title = "Error",
+            text = "Invalid file: params.RData"
+          )          
+        }
       }
 
-      
-    })
+    }) ## end observeEvent
 
     observeEvent(input$remove_counts, {
       delete_all_files_counts <- function(value) {
