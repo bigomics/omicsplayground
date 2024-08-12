@@ -44,7 +44,8 @@ expression_plot_volcano_ui <- function(id,
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
-    options = plot_opts,
+    ##    options = plot_opts,
+    options = NULL,
     title = title,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
@@ -77,6 +78,7 @@ expression_plot_volcano_server <- function(id,
                                            show_pv,
                                            res,
                                            genes_selected,
+                                           labeltype = reactive("symbol"),
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
@@ -90,30 +92,25 @@ expression_plot_volcano_server <- function(id,
       lfc <- as.numeric(lfc())
       res <- res()
 
-      fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+      symbols <- playbase::probe2symbol(
+        probes = rownames(res), res, query = "symbol", fill_na = TRUE)
 
-      ## dbg("MONITORING: ", colnames(res))
-      ## qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
-      qval <- res$meta.q
-      qval <- pmax(qval, 1e-20)
-      ## pval <- res[, grep("pvalue|meta.p|pval|p|p_value", colnames(res))[1]]
-      pval <- res$meta.p
-      pval <- pmax(pval, 1e-20)
-      ## x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
+      qval <- pmax(res$meta.q, 1e-20)
+      pval <- pmax(res$meta.p, 1e-20)
       x <- res$logFC
       y <- -log10(qval + 1e-12)
-      y.lab <- "Significance (-log10q)"
+      ylab <- "Significance (-log10q)"
       if (show_pv()) {
         y <- -log10(pval + 1e-12)
-        ## dbg("----MONITOR: ", range(pval))
-        y.lab <- "Significance (-log10p)"
+        ylab <- "Significance (-log10p)"
       }
 
       return(list(
         x = x,
         y = y,
-        y.lab = y.lab,
-        fc.genes = fc.genes,
+        ylab = ylab,
+        symbols = symbols,
+        features = rownames(res),
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
         lab.cex = 1,
@@ -126,10 +123,20 @@ expression_plot_volcano_server <- function(id,
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
+
+      if(labeltype() == "symbol") {
+        names <- pd[["features"]]
+        label.names <- pd[["symbols"]]
+      } else {
+        names <- pd[["symbols"]]
+        label.names <- pd[["features"]]
+      }
+      
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
-        names = pd[["fc.genes"]],
+        names = names,
+        label.names = label.names,
         source = "plot1",
         marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
@@ -139,10 +146,10 @@ expression_plot_volcano_server <- function(id,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
-        ylab = pd[["y.lab"]],
+        ylab = pd[["ylab"]],
         marker.size = 3,
         showlegend = FALSE,
-        color_up_down = input$color_up_down
+        color_up_down = TRUE
       )
       plt
     }
@@ -165,7 +172,7 @@ expression_plot_volcano_server <- function(id,
       dt <- plot_data()
       df <- data.frame(dt$x, dt$y)
       colnames(df) <- c("x", "y")
-      rownames(df) <- dt$fc.genes
+      rownames(df) <- dt$symbols
       return(df)
     }
 

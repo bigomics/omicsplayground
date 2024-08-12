@@ -185,10 +185,8 @@ ExpressionBoard <- function(id, pgx) {
       if (add.pq) {
         mx.q <- mx.q[rownames(mx), , drop = FALSE]
         res <- cbind(res, mx.q)
-        if (input$show_pv) {
-          mx.p <- mx.p[rownames(mx), , drop = FALSE]
-          res <- cbind(res, meta.p = mx$meta.p, mx.p)
-        }
+        mx.p <- mx.p[rownames(mx), , drop = FALSE]
+        res <- cbind(res, meta.p = mx$meta.p, mx.p)
       }
 
       return(res)
@@ -378,8 +376,9 @@ ExpressionBoard <- function(id, pgx) {
       lfc = shiny::reactive(input$gx_lfc),
       show_pv = shiny::reactive(input$show_pv),
       res = fullDiffExprTable,
-      watermark = WATERMARK,
-      genes_selected = genes_selected
+      genes_selected = genes_selected,
+      labeltype = shiny::reactive(input$labeltype),
+      watermark = WATERMARK
     )
 
     expression_plot_maplot_server(
@@ -391,6 +390,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_features = reactive(input$gx_features),
       res = fullDiffExprTable,
       genes_selected = genes_selected,
+      labeltype = shiny::reactive(input$labeltype),      
       watermark = WATERMARK
     )
 
@@ -474,6 +474,7 @@ ExpressionBoard <- function(id, pgx) {
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
       genes_selected = genes_selected,
+      labeltype = shiny::reactive(input$labeltype),
       watermark = WATERMARK
     )
 
@@ -486,6 +487,7 @@ ExpressionBoard <- function(id, pgx) {
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
       genes_selected = genes_selected,
+      labeltype = shiny::reactive(input$labeltype),
       watermark = WATERMARK
     )
 

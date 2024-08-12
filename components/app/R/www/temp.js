@@ -114,7 +114,6 @@ $(function(){
 		$('.sidebar-menu')
 			.first()
 			.trigger('click');
-
 		$('.tab-sidebar')
 			.first()
 			.trigger('click');
