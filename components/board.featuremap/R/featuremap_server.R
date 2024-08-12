@@ -102,29 +102,29 @@ FeatureMapBoard <- function(id, pgx) {
     ## ================================================================================
 
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
-                         zlim = NULL, cex = 0.9, cex.label = 1, source = "",
-                         plotlib = "base") {
+                         labels = NULL, zlim = NULL, cex = 0.9, cex.label = 1,
+                         source = "", plotlib = "base") {
       opc.low <- 1
       if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
       }
 
-      if (!is.null(hilight)) {
-        ## map any case to the correct cased symbol
-        sel <- match(toupper(hilight), toupper(names(var)))
-        sel <- sel[!is.na(sel)]
-        hilight <- names(var)[sel]
-        hilight <- hilight[order(-abs(var[hilight]))]
+      dbg("[featuremap:getUMAP] 1: head(hilight) = ", head(hilight))
+      dbg("[featuremap:getUMAP] 1: head(names.hilight) = ", head(names(hilight)))
 
+      hilight2 <- NULL
+      if (!is.null(hilight)) {
+        hilight <- hilight[hilight %in% names(var)]
+        hilight <- hilight[order(-abs(var[hilight]))]
         if (min(var, na.rm = TRUE) < 0) {
           hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
-          hilight2 <- unique(hilight2)
+          hilight2 <- hilight2[!duplicated(hilight2)]
         } else {
           hilight2 <- head(hilight, nlabel)
         }
       }
 
-      if (length(hilight) > 0.33 * length(var)) hilight <- hilight2
+      if (length(hilight) > 0.33 * length(var)) hilight <- hilight2 ## ??? IK
       if (length(hilight) == 0) {
         hilight <- NULL
         hilight2 <- NULL
@@ -149,7 +149,7 @@ FeatureMapBoard <- function(id, pgx) {
         hilight.lwd = 0.8,
         hilight = hilight,
         hilight2 = hilight2,
-        # opc.low = opc.low,
+        labels = labels,
         title = title,
         source = source,
         key = rownames(pos)
