@@ -187,7 +187,7 @@ ExpressionBoard <- function(id, pgx) {
         ## add extra columns
         mx.q <- mx.q[rownames(mx), , drop = FALSE]
         res <- cbind(res, mx.q)
-        if (input$gx_p_values) {
+        if (input$show_pv) {
           mx.p <- mx.p[rownames(mx), , drop = FALSE]
           res <- cbind(res, mx.p)
         }
