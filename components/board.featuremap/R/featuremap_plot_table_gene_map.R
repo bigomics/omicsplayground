@@ -18,7 +18,9 @@ featuremap_plot_gene_map_ui <- function(
 
   plot.opts <- shiny::tagList(
     shiny::radioButtons(ns("labeltype"), "label type:",
-      c("feature","symbol"), inline = TRUE ),
+      c("feature", "symbol"),
+      inline = TRUE
+    ),
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
       c(0, 10, 20, 50, 100, 1000),
       selected = 50
@@ -105,10 +107,10 @@ featuremap_plot_gene_map_server <- function(id,
 
       hilight.probes <- playbase::map_probes(pgx$genes, hilight)
       labels <- NULL
-      if(input$labeltype == "symbol") {
+      if (input$labeltype == "symbol") {
         labels <- pgx$genes[rownames(pos), "symbol"]
       }
-      
+
       pd <- list(
         df = data.frame(pos, fc = fc),
         pos = pos,
@@ -136,7 +138,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA
       }
-      
+
       p <- plotUMAP(
         pos,
         fc,

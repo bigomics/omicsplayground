@@ -114,7 +114,7 @@ FeatureMapBoard <- function(id, pgx) {
 
       hilight2 <- NULL
       if (!is.null(hilight)) {
-        hilight <- hilight[hilight %in%  names(var)]
+        hilight <- hilight[hilight %in% names(var)]
         hilight <- hilight[order(-abs(var[hilight]))]
         if (min(var, na.rm = TRUE) < 0) {
           hilight2 <- c(head(hilight, nlabel / 2), tail(hilight, nlabel / 2))
@@ -123,8 +123,8 @@ FeatureMapBoard <- function(id, pgx) {
           hilight2 <- head(hilight, nlabel)
         }
       }
-      
-      if (length(hilight) > 0.33 * length(var)) hilight <- hilight2  ## ??? IK
+
+      if (length(hilight) > 0.33 * length(var)) hilight <- hilight2 ## ??? IK
       if (length(hilight) == 0) {
         hilight <- NULL
         hilight2 <- NULL
@@ -133,7 +133,7 @@ FeatureMapBoard <- function(id, pgx) {
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
-      
+
       p <- playbase::pgx.scatterPlotXY(
         pos,
         var = var,
