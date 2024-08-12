@@ -54,7 +54,7 @@ ExpressionInputs <- function(id) {
            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
         ),
-        withTooltip(shiny::checkboxInput(ns("gx_p_values"), "show p-values", FALSE),
+        withTooltip(shiny::checkboxInput(ns("show_pv"), "show p-values", FALSE),
           "Show p-values in the table.
                      WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
           placement = "top", options = list(container = "body")

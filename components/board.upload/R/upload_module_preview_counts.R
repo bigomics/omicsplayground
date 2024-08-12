@@ -233,7 +233,7 @@ upload_table_preview_counts_server <- function(
 
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
-      if (!all(ext %in% c("csv","RData"))) {
+      if (!all(ext %in% c("csv", "RData"))) {
         shinyalert::shinyalert(
           title = "File format not supported.",
           text = "Please make sure the file is a CSV file.",
@@ -269,11 +269,11 @@ upload_table_preview_counts_server <- function(
         df <- playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
         uploaded$contrasts.csv <- df
       }
-      
+
 
       sel <- grep("params.RData", input$counts_csv$name)
       if (length(sel)) {
-        if(opt$DEVMODE) {
+        if (opt$DEVMODE) {
           params <- readRDS(input$counts_csv$datapath[sel[1]])
           uploaded$samples.csv <- params$samples
           uploaded$contrasts.csv <- params$contrasts
@@ -288,10 +288,9 @@ upload_table_preview_counts_server <- function(
           shinyalert::shinyalert(
             title = "Error",
             text = "Invalid file: params.RData"
-          )          
+          )
         }
       }
-
     }) ## end observeEvent
 
     observeEvent(input$remove_counts, {
