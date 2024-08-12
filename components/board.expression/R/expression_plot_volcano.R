@@ -109,8 +109,8 @@ expression_plot_volcano_server <- function(id,
       y <- -log10(qval + 1e-12)
       y.lab <- "Significance (-log10q)"
       if (pv) {
-          y <- -log10(pval + 1e-12)
-          y.lab <- "Significance (-log10p)"
+        y <- -log10(pval + 1e-12)
+        y.lab <- "Significance (-log10p)"
       }
 
       return(list(
