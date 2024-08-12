@@ -48,9 +48,6 @@ functional_table_wikipathway_server <- function(id,
       df <- res$df
       comparison <- res$fa_contrast
 
-      if (is.null(pgx$meta.go)) {
-        return(NULL)
-      }
       if (is.null(comparison)) {
         return(NULL)
       }
