@@ -53,6 +53,7 @@ drugconnectivity_plot_moa_ui <- function(
 #' @return
 #' @export
 drugconnectivity_plot_moa_server <- function(id,
+                                             pgx,
                                              getActiveDSEA,
                                              getMOA.target,
                                              getMOA.class,
@@ -69,6 +70,13 @@ drugconnectivity_plot_moa_server <- function(id,
           res <- NULL
         }
         res
+      })
+
+      shiny::observeEvent(pgx$X, {
+        choices <- c("drug class", "target gene")
+        names_choies <- c("drug class", tspan("target gene", js = FALSE))
+        names(choices) <- names_choies
+        shiny::updateRadioButtons(session, "dsea_moatype", choices = choices)
       })
 
       plotTopBarplot <- function(ntop, return_csv = FALSE) {

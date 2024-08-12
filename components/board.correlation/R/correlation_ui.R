@@ -9,24 +9,24 @@ CorrelationInputs <- function(id) {
     shiny::hr(), shiny::br(),
 
     ## data set parameters
-    withTooltip(shiny::selectInput(ns("cor_gene"), "Gene:", choices = NULL),
+    withTooltip(shiny::selectInput(ns("gene"), tspan("Gene:"), choices = NULL),
       "Choose a gene for the correlation analysis.",
       placement = "top"
     ),
     shiny::br(),
-    withTooltip(shiny::selectInput(ns("cor_features"), "Filter genes:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("cor_filter"), tspan("Filter genes:"), choices = NULL, multiple = FALSE),
       "Filter gene features.",
       placement = "top"
     ),
     shiny::conditionalPanel(
-      "input.cor_features == '<custom>'",
+      "input.cor_filter == '<custom>'",
       ns = ns,
       withTooltip(
         shiny::textAreaInput(ns("cor_customfeatures"),
           NULL,
           value = NULL,
           height = "100px", width = "100%",
-          rows = 5, placeholder = "Paste your custom gene list"
+          rows = 5
         ),
         "Paste a custom list of genes to be used as features.",
         placement = "top"
@@ -42,7 +42,7 @@ CorrelationInputs <- function(id) {
       "input.adv_options % 2 == 1",
       ns = ns,
       withTooltip(
-        shiny::radioButtons(ns("pcor_ntop"), "Nr. of genes to compute partial correlation.",
+        shiny::radioButtons(ns("pcor_ntop"), tspan("Nr. of genes to compute partial correlation."),
           c(50, 100, 250),
           selected = 100, inline = TRUE
         ),
@@ -98,7 +98,7 @@ CorrelationUI <- function(id) {
         correlation_plot_scattercorr_ui(
           ns("cor_scatter"),
           title = "Correlation scatter plots",
-          info.text = "Scatter plots of the co-expression of correlated gene pairs between the selected {Gene} and the top genes correlated to it (as seen on Top correlated genes plot) across the samples. The straight line correspond to the (linear) regression fit. The samples can be colored using the {Color by} plot setting and the layout of the scatter plots can be configured by using the {Layout} and {Sway XY-axes} plot settings.",
+          info.text = "Scatter plots of the co-expression of correlated gene pairs between the selected {Gene} and the top genes correlated to it (as seen on Top correlated genes plot) across the samples. The straight line correspond to the (linear) regression fit. The samples can be colored using the {Color by} plot setting and the layout of the scatter plots can be configured by using the {Layout} and {Swap XY-axes} plot settings.",
           info.methods = "See Top correlated genes",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
           caption = "Scatter plots of gene expression of top correlated genes.",

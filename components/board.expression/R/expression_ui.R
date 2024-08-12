@@ -12,7 +12,7 @@ ExpressionInputs <- function(id) {
       "Select a contrast of interest for the analysis.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("gx_features"), "Gene family:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("gx_features"), tspan("Gene family:"), choices = NULL, multiple = FALSE),
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
@@ -40,8 +40,8 @@ ExpressionInputs <- function(id) {
     shiny::conditionalPanel(
       "input.gx_options % 2 == 1",
       ns = ns,
-      shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns("gx_showall"), "show all genes", FALSE),
+      shiny::tagList( ## gx_showall does not work??
+        withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
           placement = "top", options = list(container = "body")
         ),
@@ -53,6 +53,11 @@ ExpressionInputs <- function(id) {
            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
+        ),
+        withTooltip(shiny::checkboxInput(ns("gx_p_values"), "show p-values", FALSE),
+          "Show p-values in the table.
+                     WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
+          placement = "top", options = list(container = "body")
         )
       )
     )

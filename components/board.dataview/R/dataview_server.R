@@ -96,7 +96,7 @@ DataViewBoard <- function(id, pgx) {
         p1 <- head(rownames(pgx$genes), 1000)
         p2 <- head(pgx$genes$symbol, 1000)
         by.symbol <- mean(p1 == p2, na.rm = TRUE) > 0.8
-        if (!by.symbol) {
+        if (0 && !by.symbol) {
           gene <- pgx$genes[match(features, rownames(pgx$genes)), "symbol"]
           feature_gene <- paste0(gene, "_", features)
           names(features) <- feature_gene
@@ -106,7 +106,7 @@ DataViewBoard <- function(id, pgx) {
         features <- c(features[i], features[-i])
         if (length(features) > 1000) {
           features <- c(
-            features[1:1000], "(type for more genes...)",
+            features[1:1000], tspan("(type for more genes...)", js = FALSE),
             features[1001:length(features)]
           )
         }
@@ -284,9 +284,9 @@ DataViewBoard <- function(id, pgx) {
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    getCountStatistics <- reactiveVal()
-
-    observeEvent(
+    ##    getCountStatistics <- reactiveVal()
+    ##    observeEvent(
+    getCountStatistics <- eventReactive(
       {
         list(
           pgx$X,
@@ -327,7 +327,7 @@ DataViewBoard <- function(id, pgx) {
         colnames(counts) <- substring(colnames(counts), 1, 24)
 
         gset <- list()
-        gg <- pgx$genes[rownames(counts), ]$gene_name
+        gg <- pgx$genes[rownames(counts), ]$symbol
         tt <- pgx$genes[rownames(counts), ]$gene_title
         g1 <- gg[grep("^rpl|^rps", gg, ignore.case = TRUE)]
         g2 <- gg[grep("^mrpl|^mrps", gg, ignore.case = TRUE)]
@@ -389,7 +389,8 @@ DataViewBoard <- function(id, pgx) {
           prop.counts = prop.counts,
           gset.genes = gset.genes
         )
-        getCountStatistics(res)
+        ## getCountStatistics(res)
+        return(res)
       },
       ignoreNULL = TRUE
     )

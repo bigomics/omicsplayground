@@ -539,21 +539,7 @@ app_server <- function(input, output, session) {
     welcome_detector(input$nav == "welcome-tab")
   })
 
-  output$current_dataset <- shiny::renderText({
-    shiny::req(auth$logged)
-    has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
-    nav.welcome <- welcome_detector()
-
-    if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
-      ## trigger on change of dataset
-      name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    } else {
-      name <- paste("Omics Playground", VERSION)
-    }
-    name
-  })
-
-  output$current_dataset2 <- shiny::renderUI({
+  output$current_dataset <- shiny::renderUI({
     shiny::req(auth$logged)
     has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
     nav.welcome <- welcome_detector()
@@ -666,8 +652,6 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
-      ## DEVELOPER only tabs (still too alpha)
-      info("[SERVER] disabling alpha features")
       info("[SERVER] trigger on change dataset done!")
     }
   )
@@ -1077,10 +1061,11 @@ app_server <- function(input, output, session) {
   dbg("[MAIN] showing startup modal")
   observeEvent(auth$logged, {
     if (auth$logged) {
-      shinyjs::delay(1200, {
+      shinyjs::delay(500, {
         ## read startup messages
         msg <- readLines(file.path(ETC, "MESSAGES"))
         msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+        msg <- c(msg[[1]], sample(msg, 4))
         STARTUP_MESSAGES <- msg
         shiny::showModal(
           ui.startupModal(

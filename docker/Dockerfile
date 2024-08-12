@@ -29,7 +29,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra (forgotten...) R packages since base
 #------------------------------------------------------------
 WORKDIR /
-COPY dev/Rprofile .Rprofile
+COPY dev/Rprofil[e] .Rprofile
 #RUN pip3 install umap-learn
 
 #------------------------------------------------------------

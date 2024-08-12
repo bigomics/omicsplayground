@@ -1,5 +1,7 @@
 BRANCH:=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 BRANCH:=$(strip $(BRANCH))
+TAG=$(BRANCH)
+ARG=
 
 run: sass version rm.locks
 	Rscript dev/run_app.R
@@ -26,8 +28,6 @@ rm.locks:
 show.branch:
 	@echo $(BRANCH)
 
-
-TAG=$(BRANCH)
 docker.run:
 	@echo running docker *$(TAG)* at port 4000
 	docker run --rm -it -p 4000:3838 bigomics/omicsplayground:$(TAG)
@@ -44,18 +44,18 @@ docker.run2:
 
 docker: FORCE version
 	@echo building docker $(BRANCH)
-	docker build --no-cache --build-arg BRANCH=$(BRANCH) \
+	docker build $(ARG) --build-arg BRANCH=$(BRANCH) \
 		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
-		2>&1 | tee -a docker.log
+		2>&1 | tee docker.log
 
 docker.alpha: FORCE 
 	@echo building ALPHA docker
-	docker build --no-cache  \
-		-f docker/Dockerfile2 \
+	docker build $(ARG) \
+		-f docker/Dockerfile.alpha \
 	  	-t bigomics/omicsplayground:alpha . \
-		2>&1 | tee -a docker.log
+		2>&1 | tee docker.log
 
 docker.base: FORCE
 	@echo building docker BASE
@@ -66,7 +66,7 @@ docker.base: FORCE
 
 docker.base.update: FORCE 
 	@echo building docker
-	docker build --no-cache \
+	docker build $(ARG) \
 		--progress plain \
 		-f docker/Dockerfile.base.update \
 	  	-t bigomics/omicsplayground-base:ub2204_v3_upd .
@@ -80,14 +80,13 @@ docker.test: FORCE
 
 docker.bash:
 	@echo bash into docker $(TAG)
-	docker run -it -p 3838:3838 bigomics/omicsplayground:$(TAG) /bin/bash
-
+	docker run -it bigomics/omicsplayground:$(TAG) /bin/bash
 
 doc: FORCE
 	Rscript dev/02_doc.R
 
 install: FORCE
-	Rscript dev/03_install.R
+	Rscript dev/requirements.R
 
 renv: FORCE
 	R -e "renv::activate();renv::restore()"
@@ -95,7 +94,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta4.9001"
+VERSION = "v3.5.0-beta5.9002"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
@@ -138,4 +137,4 @@ app.test.review:
 	R -e "testthat::snapshot_review('snapshot/')"
 
 update:
-	Rscript dev/update.R
+	Rscript dev/update_packages.R

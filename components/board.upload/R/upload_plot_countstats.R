@@ -56,7 +56,7 @@ upload_plot_countstats_server <- function(id, checkTables, countsRT, watermark =
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- data.table::melt(xx))
       dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
+      tt2 <- paste(nrow(counts), tspan("genes x", js = FALSE), ncol(counts), "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
         ggplot2::xlab("log2(1+counts)") +

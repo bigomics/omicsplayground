@@ -267,9 +267,9 @@ upload_table_preview_contrasts_server <- function(
           if (length(checks1) > 0) {
             err1 <- check_to_html(
               checks1,
-              pass_msg = tspan("All contrasts checks passed"),
+              pass_msg = tspan("All contrasts checks passed", js = FALSE),
               null_msg = tspan("Contrasts checks not run yet.
-                            Fix any errors with counts first."),
+                            Fix any errors with counts first.", js = FALSE),
               details = TRUE
             )
             err.html <- paste(err.html, err1)
@@ -277,16 +277,16 @@ upload_table_preview_contrasts_server <- function(
           if (length(checks2) > 0) {
             err2 <- check_to_html(
               checks2,
-              pass_msg = tspan("All samples-contrasts checks passed"),
+              pass_msg = tspan("All samples-contrasts checks passed", js = FALSE),
               null_msg = tspan("Samples-contrasts checks not run yet.
-                        Fix any errors with samples or contrasts first."),
+                        Fix any errors with samples or contrasts first.", js = FALSE),
               details = TRUE
             )
             err.html <- paste(err.html, err2)
           }
           shinyalert::shinyalert(
             title = "Warning",
-            text = tspan(err.html),
+            text = err.html,
             html = TRUE
           )
         }
@@ -332,7 +332,21 @@ upload_table_preview_contrasts_server <- function(
         return()
       }
 
-      uploaded$contrasts.csv <- playbase::read.as_matrix(input$contrasts_csv$datapath)
+      ct <- playbase::read.as_matrix(input$contrasts_csv$datapath)
+
+      ## IK: should we do contrasts.convertToLabelMatrix here
+      ## already?  to allow for short/old formats?
+      ## samples <- checked_samples()$SAMPLES
+      samples <- uploaded$samples.csv
+      new.ct <- try(playbase::contrasts.convertToLabelMatrix(
+        contrasts = ct, samples = samples
+      ))
+      if (!"try-error" %in% class(new.ct)) {
+        ct <- new.ct
+      }
+
+
+      uploaded$contrasts.csv <- ct
     })
 
     observeEvent(input$remove_contrasts, {

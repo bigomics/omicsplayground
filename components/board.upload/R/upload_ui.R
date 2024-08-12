@@ -79,7 +79,7 @@ useUploadWizard <- function(ns) {
   ## )
 
   counts_ui <- wizardR::wizard_step(
-    step_title = tspan("Step 1: Upload counts"),
+    step_title = tspan("Step 1: Upload counts", js = FALSE),
     step_id = "step_counts",
     upload_table_preview_counts_ui(
       ns("counts_preview")

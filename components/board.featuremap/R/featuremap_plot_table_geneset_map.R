@@ -24,7 +24,6 @@ featuremap_plot_geneset_map_ui <- function(
       min = 0.1, max = 1.2, value = 0.4, step = 0.1
     ),
     shiny::radioButtons(ns("gsmap_colorby"), "color by:",
-      #
       choices = c("sd.X", "rms.FC"),
       selected = "sd.X", inline = TRUE
     )
@@ -96,7 +95,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       shiny::req(pgx$X)
       shiny::validate(shiny::need(
         filter_gsets(),
-        "Please input at least one value in Annotate genesets!"
+        tspan("Please input at least one value in Annotate genesets!", js = FALSE)
       ))
       db <- filter_gsets()
       gsets <- rownames(pgx$gsetX)
@@ -115,16 +114,10 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       hilight <- filteredGsets()
       nlabel <- as.integer(input$gsmap_nlabel)
-      colorby <- input$gsmap_colorby
 
       F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
-      if (colorby == "rms.FC") {
-        fc <- (rowMeans(F**2))**0.5
-      } else {
-        cX <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
-        fc <- sqrt(rowMeans(cX**2))
-      }
+      fc <- sqrt(rowMeans(F**2))
 
       ## conform
       gg <- intersect(rownames(pos), names(fc))
@@ -136,8 +129,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         fc = fc,
         pos = pos,
         hilight = hilight,
-        nlabel = nlabel,
-        colorby = colorby
+        nlabel = nlabel
       )
     })
 
@@ -147,7 +139,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
       fc <- pd$fc
       hilight <- pd$hilight
       nlabel <- pd$nlabel
-      colorby <- pd$colorby
       colgamma <- as.numeric(input$gsmap_gamma)
       fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
       if (length(setdiff(names(fc), hilight))) {
@@ -160,7 +151,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
         fc,
         hilight,
         nlabel = nlabel,
-        title = colorby,
+        title = "rms.FC",
         cex = cex,
         cex.label = cex.label,
         source = ns("geneset_umap"),
@@ -218,45 +209,18 @@ featuremap_plot_table_geneset_map_server <- function(id,
         sel.gsets <- rownames(pos)
       }
 
-      if (!r_fulltable()) {
-        if (!is.null(sel.gsets)) {
-          filt.gsets <- filteredGsets()
-          sel.gsets <- intersect(sel.gsets, filt.gsets)
-        } else {
-          sel.gsets <- filteredGsets()
-        }
+      if (!is.null(sel.gsets)) {
+        filt.gsets <- filteredGsets()
+        sel.gsets <- intersect(sel.gsets, filt.gsets)
       }
 
-      pheno <- "tissue"
-      pheno <- sigvar()
-      is.fc <- FALSE
-      if (any(pheno %in% colnames(pgx$samples))) {
-        gg <- intersect(sel.gsets, rownames(pgx$gsetX))
-        X <- pgx$gsetX[gg, , drop = FALSE]
-        X <- X - rowMeans(X, na.rm = TRUE)
-        y <- pgx$samples[, pheno]
-        if (nrow(X) == 1) {
-          F <- tapply(1:ncol(X), y, function(i) {
-            rowMeans(X[, c(i, i), drop = FALSE])
-          })
-          F <- data.frame(t(F))
-          rownames(F) <- gg
-        } else {
-          F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-            rowMeans(X[, c(i, i), drop = FALSE])
-          }))
-        }
-        is.fc <- FALSE
-      } else {
-        F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
-        gg <- intersect(sel.gsets, rownames(F))
-        F <- F[gg, , drop = FALSE]
-        is.fc <- TRUE
-      }
+      contrasts <- sigvar()
+      F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
+      gg <- intersect(sel.gsets, rownames(F))
+      F <- F[gg, contrasts, drop = FALSE]
 
       F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
-      if (is.fc) colnames(F)[1] <- "rms.FC"
+      F <- cbind(rms.FC = sqrt(rowMeans(F**2)), F)
       F <- round(F, digits = 3)
       gs.db <- sub(":.*", "", rownames(F))
       gs <- sub(".*[:]", "", rownames(F))

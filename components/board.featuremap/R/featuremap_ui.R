@@ -9,44 +9,19 @@ FeatureMapInputs <- function(id) {
     shiny::br(),
     ## data set parameters
     withTooltip(
-      shiny::radioButtons(
-        ns("showvar"), "Show:",
-        inline = TRUE,
-        choices = c("phenotype", "comparisons")
+      shiny::selectizeInput(
+        ns("selcomp"), "Show comparisons:",
+        choices = NULL, multiple = TRUE
       ),
-      "Show gene signatures colored by phenotype conditions (relative expression)
-       or by comparisons (logFC).",
-      placement = "right", options = list(container = "body")
-    ),
-    shiny::conditionalPanel(
-      "input.showvar == 'phenotype'",
-      ns = ns,
-      withTooltip(
-        shiny::selectInput(ns("sigvar"), NULL, choices = NULL, multiple = FALSE),
-        "Select the phenotype conditions to show in the signatures plot.",
-        placement = "top"
-      ),
-      withTooltip(
-        shiny::selectInput(ns("ref_group"), "Reference:", choices = NULL),
-        "Reference group. If no group is selected the average is used as reference.",
-        placement = "right", options = list(container = "body")
-      )
-    ),
-    shiny::conditionalPanel(
-      "input.showvar == 'comparisons'",
-      ns = ns,
-      withTooltip(
-        shiny::selectizeInput(ns("selcomp"), NULL, choices = NULL, multiple = TRUE),
-        "Select the comparisons to show in the signatures plot.",
-        placement = "top"
-      )
+      "Select the comparisons to show in the signatures plot.",
+      placement = "top"
     ),
     hr(),
     shiny::conditionalPanel(
       "input.tabs == 'Gene'",
       ns = ns,
       withTooltip(
-        shiny::selectInput(ns("filter_genes"), "Filter genes:",
+        shiny::selectInput(ns("filter_genes"), tspan("Filter genes:"),
           choices = NULL, multiple = TRUE
         ),
         "Filter the genes to highlight on the map.",
@@ -59,7 +34,7 @@ FeatureMapInputs <- function(id) {
       withTooltip(
         shiny::textAreaInput(ns("customlist"), NULL,
           value = NULL,
-          rows = 5, placeholder = "Paste your custom gene list"
+          rows = 5
         ),
         "Paste a custom list of genes to highlight.",
         placement = "bottom"
@@ -69,17 +44,12 @@ FeatureMapInputs <- function(id) {
       "input.tabs == 'Geneset'",
       ns = ns,
       withTooltip(
-        shiny::selectInput(ns("filter_gsets"), "Filter genesets:",
+        shiny::selectInput(ns("filter_gsets"), tspan("Filter genesets:"),
           choices = NULL, multiple = TRUE
         ),
         "Filter the genesets to highlight on the map.",
         placement = "right", options = list(container = "body")
       )
-    ),
-    shiny::hr(),
-    withTooltip(
-      shiny::checkboxInput(ns("show_fulltable"), "Show full table", FALSE),
-      "Show full table. Not filtered."
     )
     ## shiny::br(),
     ## shiny::br(),

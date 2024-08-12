@@ -79,6 +79,15 @@ ClusteringBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.colvar"), choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.shapevar"), choices = var.types1, selected = "<none>")
       shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
+      choices <- c("none", "phenotype", "gene")
+      choices_names <- c("none", "phenotype", tspan("gene", js = FALSE))
+      names(choices) <- choices_names
+      shiny::updateRadioButtons(session, "hm_splitby", choices = choices)
+      shiny::updateTextAreaInput(session, "hm_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
+      hm_level_choices <- c("gene", "geneset")
+      hm_level_choices_names <- c(tspan("gene", js = FALSE), tspan("geneset", js = FALSE))
+      names(hm_level_choices) <- hm_level_choices_names
+      shiny::updateSelectInput(session, "hm_level", choices = hm_level_choices)
     })
 
     ## update filter choices upon change of data set

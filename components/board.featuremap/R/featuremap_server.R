@@ -11,10 +11,10 @@ FeatureMapBoard <- function(id, pgx) {
     rowH1 <- 220 ## row 1 height
     rowH2 <- 460 ## row 2 height
 
-    infotext <- "Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
+    infotext <- tspan("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
 <br><br>The tabs present Gene and Geneset UMAP dimensionality reduction plots and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
 <br><br>The maps can be colored according to the foldchange signature of the group contrasts (i.e. comparisons), or colored by the average relative log-expression according to some phenotype condition. Multiple signatures can then be easily compared by visually inspection of the colors.
-"
+", js = FALSE)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -75,70 +75,24 @@ FeatureMapBoard <- function(id, pgx) {
         shiny::updateSelectInput(session, "filter_gsets",
           choices = gsetcats, selected = sel0
         )
+        shiny::updateTextAreaInput(session, "customlist", placeholder = tspan("Paste your custom gene list", js = FALSE))
       }
     )
 
     observeEvent(
       {
-        list(input$sigvar, pgx$samples)
-      },
-      {
-        shiny::req(pgx$samples, input$sigvar)
-        if (input$sigvar %in% colnames(pgx$samples)) {
-          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-          y <- c("<average>", sort(unique(y)))
-          shiny::updateSelectInput(session, "ref_group", choices = y)
-        }
-      }
-    )
-
-    observeEvent(
-      {
-        list(pgx$samples, pgx$X, input$showvar)
+        list(pgx$samples, pgx$X)
       },
       {
         shiny::req(pgx$samples)
         shiny::req(pgx$X)
-        shiny::req(input$showvar)
 
-        if (input$showvar == "phenotype") {
-          cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
-          cvar0 <- head(grep("^[.]", cvar, invert = TRUE, value = TRUE), 1)
-          shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
-        }
-        if (input$showvar == "comparisons") {
-          cvar <- colnames(pgx$model.parameters$contr.matrix)
-          sel.cvar <- head(cvar, 8)
-          shiny::updateSelectizeInput(session, "selcomp",
-            choices = cvar,
-            selected = sel.cvar
-          )
-          shiny::updateSelectInput(session, "ref_group", choices = "  ")
-        }
-      }
-    )
-
-    observeEvent(
-      {
-        list(pgx$samples, input$showvar, input$sigvar)
-      },
-      {
-        shiny::req(pgx$samples, input$sigvar, input$showvar)
-        if (input$sigvar %in% colnames(pgx$samples)) {
-          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
-          y <- c("<average>", sort(unique(y)))
-          shiny::updateSelectInput(session, "ref_group", choices = y)
-        }
-      }
-    )
-
-    observeEvent(
-      {
-        list(input$selcomp)
-      },
-      {
-        ## shiny::req(pgx$samples, input$sigvar, input$showvar)
-        shiny::updateSelectInput(session, "ref_group", choices = " ")
+        cvar <- colnames(pgx$model.parameters$contr.matrix)
+        sel.cvar <- head(cvar, 8)
+        shiny::updateSelectizeInput(session, "selcomp",
+          choices = cvar,
+          selected = sel.cvar
+        )
       }
     )
 
@@ -278,7 +232,7 @@ FeatureMapBoard <- function(id, pgx) {
 
     filteredGenes <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::validate(need(input$filter_genes, "Please input at least one value in Annotate genes!"))
+      shiny::validate(need(input$filter_genes, tspan("Please input at least one value in Annotate genes!", js = FALSE)))
       sel <- input$filter_genes
       filtgenes <- c()
       if (is.null(pgx$version) | pgx$organism == "Human") {
@@ -307,23 +261,13 @@ FeatureMapBoard <- function(id, pgx) {
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    sigvar2 <- shiny::reactive({
-      if (input$showvar == "phenotype") {
-        return(input$sigvar)
-      }
-      if (input$showvar == "comparisons") {
-        return(input$selcomp)
-      }
-    })
-
     # Gene Map
     featuremap_plot_gene_map_server(
       "geneUMAP",
       pgx = pgx,
       plotUMAP = plotUMAP,
-      sigvar = sigvar2,
+      sigvar = reactive(input$selcomp),
       filteredGenes = filteredGenes,
-      r_fulltable = shiny::reactive(input$show_fulltable),
       watermark = WATERMARK
     )
 
@@ -331,7 +275,7 @@ FeatureMapBoard <- function(id, pgx) {
     featuremap_plot_gene_sig_server(
       "geneSigPlots",
       pgx = pgx,
-      sigvar = sigvar2,
+      sigvar = reactive(input$selcomp),
       ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark = WATERMARK
@@ -343,8 +287,7 @@ FeatureMapBoard <- function(id, pgx) {
       pgx = pgx,
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
-      sigvar = sigvar2,
-      r_fulltable = shiny::reactive(input$show_fulltable),
+      sigvar = reactive(input$selcomp),
       watermark = WATERMARK
     )
 
@@ -352,7 +295,7 @@ FeatureMapBoard <- function(id, pgx) {
     featuremap_plot_gset_sig_server(
       "gsetSigPlots",
       pgx = pgx,
-      sigvar = sigvar2,
+      sigvar = reactive(input$selcomp),
       ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark = WATERMARK

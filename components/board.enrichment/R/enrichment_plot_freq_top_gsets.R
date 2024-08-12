@@ -25,7 +25,7 @@ enrichment_plot_freq_top_gsets_ui <- function(
     withTooltip(
       shiny::checkboxInput(
         ns("gs_enrichfreq_gsetweight"),
-        "Weight by geneset size", TRUE
+        tspan("Weight by geneset size"), TRUE
       ),
       "Weight by (inverse) gene set size."
     ),

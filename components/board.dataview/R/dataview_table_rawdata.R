@@ -50,64 +50,66 @@ dataview_table_rawdata_server <- function(id,
         gene <- rownames(pgx$X)[1]
       }
 
-      if (data_type %in% c("counts", "abundance")) {
-        x <- parse_sample(pgx$counts)
-        x_cpm <- parse_sample(pgx$X)
-      } else if (data_type == "CPM") {
-        x <- edgeR::cpm(pgx$counts, log = FALSE)
-      } else {
-        ## log2CPM
-        x <- parse_sample(pgx$X)
-      }
+      ## if (data_type %in% c("counts", "abundance","linear")) {
+      ##   x <- parse_sample(pgx$counts)
+      ##   x_cpm <- parse_sample(pgx$X)
+      ## } else {
+      ##   ## log2CPM
+      ##   x <- parse_sample(pgx$X)
+      ## }
+      ## x0 <- x
+      ## ## Quickly (?) calculated correlation to selected gene
+      ## ## compute statistics
+      ## rho <- sdx <- avg <- NULL
+      ## if (data_type == "counts") {
+      ##   xgenes <- pgx$genes[rownames(x), "gene_name"]
+      ##   k <- which(xgenes == gene)
+      ##   xgenes_cpm <- pgx$genes[rownames(x_cpm), "gene_name"]
+      ##   k_cpm <- which(xgenes_cpm == gene)
+      ## } else {
+      ##   ## log2CPM
+      ##   xgenes <- pgx$genes[rownames(x), "gene_name"]
+      ##   k <- which(xgenes == gene)
+      ## }
+      ## if (data_type == "counts") {
+      ##   # compute the geometric mean, exp(mean(log(x+1)))
+      ##   logx <- log(x[rownames(x), ] + 1)
+      ##   # correlation should be equal between counts and logCPM, use logCPM
+      ##   rho <- cor(t(x_cpm[, colnames(x)]), x_cpm[k_cpm, colnames(x)], use = "pairwise")[, 1]
+      ##   rho <- round(rho[rownames(x_cpm)], digits = 3)
+      ##   rho <- rho[match(rownames(x), names(rho))]
+      ##   names(rho) <- rownames(x)
+      ##   # geometric std deviation
+      ##   sdx <- round(exp(apply(logx[, samples], 1, sd, na.rm = TRUE)), digits = 3)
+      ##   # geometric mean
+      ##   avg <- round(exp(rowMeans(logx, na.rm = TRUE)), digits = 3)
+      ## } else {
+      ##   # compute the geometric mean, mean(x)
+      ##   logx <- x
+      ##   rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
+      ##   rho <- round(rho[rownames(logx)], digits = 3)
+      ##   sdx <- round(apply(logx[, samples], 1, sd, na.rm = TRUE), digits = 3)
+      ##   avg <- round(rowMeans(logx, na.rm = TRUE), digits = 3)
+      ## }
 
+      logx <- parse_sample(pgx$X)
+      if (data_type == "counts") {
+        x <- parse_sample(pgx$counts)
+      } else {
+        x <- logx
+      }
       x0 <- x
 
-      ## ------------------ select samples
-
-
-      ## Quickly (?) calculated correlation to selected gene
-
-      ## compute statistics
-      rho <- sdx <- avg <- NULL
-
-      if (data_type == "counts") {
-        xgenes <- pgx$genes[rownames(x), "gene_name"]
-        k <- which(xgenes == gene)
-
-        xgenes_cpm <- pgx$genes[rownames(x_cpm), "gene_name"]
-        k_cpm <- which(xgenes_cpm == gene)
-      } else {
-        ## log2CPM
-        xgenes <- pgx$genes[rownames(x), "gene_name"]
-        k <- which(xgenes == gene)
-      }
-
-      if (data_type == "counts") {
-        # compute the geometric mean, exp(mean(log(x+1)))
-        logx <- log(x[rownames(x), ] + 1)
-
-        # correlation should be equal between counts and logCPM, use logCPM
-        rho <- cor(t(x_cpm[, colnames(x)]), x_cpm[k_cpm, colnames(x)], use = "pairwise")[, 1]
-        rho <- round(rho[rownames(x_cpm)], digits = 3)
-        rho <- rho[match(rownames(x), names(rho))]
-        names(rho) <- rownames(x)
-
-        # geometric std deviation
-        sdx <- round(exp(apply(logx[, samples], 1, sd, na.rm = TRUE)), digits = 3)
-        # geometric mean
-        avg <- round(exp(rowMeans(logx, na.rm = TRUE)), digits = 3)
-      } else {
-        # compute the geometric mean, mean(x)
-        logx <- x
-        rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
-        rho <- round(rho[rownames(logx)], digits = 3)
-        sdx <- round(apply(logx[, samples], 1, sd, na.rm = TRUE), digits = 3)
-        avg <- round(rowMeans(logx, na.rm = TRUE), digits = 3)
-      }
+      k <- which(rownames(x) == gene)
+      rho <- cor(t(logx), logx[k, ], use = "pairwise")[, 1]
+      rho <- rho[match(rownames(x), names(rho))]
+      rho <- round(rho, digits = 3)
+      sdx <- round(matrixStats::rowSds(x, na.rm = TRUE), digits = 3)
+      avg <- round(rowMeans(x, na.rm = TRUE), digits = 3)
 
       group <- NULL
       if (groupby %in% colnames(pgx$Y)) {
-        group <- pgx$Y[colnames(logx), groupby]
+        group <- pgx$Y[colnames(x), groupby]
       }
       if (length(samples) > 500 && groupby == "<ungrouped>") {
         group <- pgx$model.parameters$group
@@ -117,15 +119,10 @@ dataview_table_rawdata_server <- function(id,
         allgroups <- sort(unique(group))
         newx <- c()
         for (gr in allgroups) {
-          if (data_type == "counts") {
-            mx <- exp(rowMeans(logx[, which(group == gr), drop = FALSE], na.rm = TRUE))
-          } else {
-            mx <- rowMeans(logx[, which(group == gr), drop = FALSE], na.rm = TRUE)
-          }
-
+          mx <- rowMeans(x[, which(group == gr), drop = FALSE], na.rm = TRUE)
           newx <- cbind(newx, mx)
         }
-        rownames(newx) <- rownames(logx)
+        rownames(newx) <- rownames(x)
         colnames(newx) <- paste0("avg.", allgroups, "")
         x <- newx
       }
@@ -146,7 +143,7 @@ dataview_table_rawdata_server <- function(id,
       gene.title <- substring(gene.title, 1, 50)
 
       df <- data.frame(
-        gene = feature,
+        feature = feature,
         symbol = symbol,
         title = gene.title,
         rho = rho,
@@ -157,12 +154,8 @@ dataview_table_rawdata_server <- function(id,
       )
 
       ## if symbol and feature as same, drop symbol column
-      if (mean(head(df$gene, 1000) == head(df$symbol, 1000)) > 0.8) {
+      if (mean(head(df$feature, 1000) == head(df$symbol, 1000)) > 0.8) {
         df$symbol <- NULL
-      }
-
-      if (DATATYPEPGX == "proteomics") {
-        colnames(df)[1] <- "protein"
       }
       df <- df[order(-df$rho, -df$SD), , drop = FALSE]
 

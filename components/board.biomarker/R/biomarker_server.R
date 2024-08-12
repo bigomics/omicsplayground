@@ -11,7 +11,7 @@ BiomarkerBoard <- function(id, pgx) {
     rowH <- 320 ## row height of panel
     imgH <- 260
 
-    pdx_infotext <- strwrap("The <strong>Biomarker Board</strong> performs
+    pdx_infotext <- tspan("The <strong>Biomarker Board</strong> performs
     the biomarker selection that can be used for classification or prediction purposes.
     <br><br>To better understand which genes, mutations, or gene sets influence
     the final phenotype the most, Playground calculates a variable importance
@@ -23,11 +23,11 @@ BiomarkerBoard <- function(id, pgx) {
     survival data. Instead of choosing a phenotype, users can also specify a particular
     contrast from the analysis and perform biomarker selection. The platform also
     provides a heatmap of samples based on identified top features.
-    <br><br>In addition, it generates a classification tree using top features and
+    <br><br>In addition, it creates a classification tree using top features and
     provides expression boxplots by phenotype classes for features present in the
     tree. The platform can also provide a survival tree analysis using top features
     and provides expression boxplots by phenotype classes for features present in
-    the tree.")
+    the tree.", js = FALSE)
 
     ## ================================================================================
     ## ======================= REACTIVE/OBSERVE FUNCTIONS =============================
@@ -111,6 +111,11 @@ BiomarkerBoard <- function(id, pgx) {
       ft <- sort(ft)
       ft <- sort(c("<custom>", ft))
       shiny::updateSelectInput(session, "pdx_filter", choices = ft, selected = "<all>")
+      shiny::updateTextAreaInput(
+        session = session,
+        inputId = "pdx_select",
+        placeholder = tspan("Paste your gene list", js = FALSE)
+      )
     })
 
     # Enable or disable the run button in the UI

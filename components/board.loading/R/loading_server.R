@@ -221,7 +221,7 @@ LoadingBoard <- function(id,
       ))
     })
 
-    module_infotext <- paste0(
+    module_infotext <- tspan(paste0(
       "This panel shows the available datasets within the platform. The table
         reports a brief description as well as the total number of samples,
         genes, gene sets (or pathways), corresponding phenotypes and the creation
@@ -233,7 +233,7 @@ LoadingBoard <- function(id,
         title='YouTube video player' frameborder='0'
         allow='accelerometer; autoplay; clipboard-write; encrypted-media;
         gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
-    )
+    ), js = FALSE)
     module_infotext <- paste0(
       "<center><iframe width='1120' height='630'
         src='https://www.youtube.com/embed/elwT6ztt3Fo'
@@ -391,7 +391,21 @@ LoadingBoard <- function(id,
       shiny::req(pgx_info)
       ndatasets <- nrow(pgx_info)
       nsamples <- sum(as.integer(pgx_info$nsamples), na.rm = TRUE)
-      paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")
+      FC.file <- file.path(auth$user_dir, "datasets-allFC.csv")
+      if (file.exists(FC.file)) {
+        contrast_names <- read.csv(FC.file, nrows = 1, header = TRUE, check.names = FALSE) |> colnames()
+        data_names <- gsub("^\\[|\\].*", "", contrast_names[-1])
+        pgx.files <- pgxtable$data()$dataset
+        data_names <- data_names[data_names %in% pgx.files]
+        ncontrasts <- length(data_names)
+        return(
+          paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples &nbsp;&nbsp;&nbsp;", ncontrasts, "Comparisons")
+        )
+      } else {
+        return(
+          paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples")
+        )
+      }
     })
 
     output$pgx_stats_ui <- shiny::renderUI(HTML(pgx_stats()))

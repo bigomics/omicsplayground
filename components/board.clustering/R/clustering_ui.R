@@ -65,7 +65,7 @@ ClusteringInputs <- function(id) {
       placement = "top", options = list(container = "body")
     ),
     withTooltip(
-      shiny::selectInput(ns("hm_features"), "Gene family:",
+      shiny::selectInput(ns("hm_features"), tspan("Gene family:"),
         choices = NULL, multiple = FALSE
       ),
       "Select a gene family for filtering which genes to show in the heatmap."
@@ -77,7 +77,7 @@ ClusteringInputs <- function(id) {
         shiny::textAreaInput(ns("hm_customfeatures"), NULL,
           value = NULL,
           height = "150px", width = "100%",
-          rows = 5, placeholder = "Paste your custom gene list"
+          rows = 5
         ),
         "Paste a custom list of genes to be used as features.",
         placement = "bottom"
@@ -122,14 +122,14 @@ ClusteringInputs <- function(id) {
           placement = "top", options = list(container = "body")
         ),
         hr(),
-        withTooltip(shiny::checkboxInput(ns("hm_filterXY"), "exclude X/Y genes", FALSE),
+        withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
           "Exclude genes on X/Y chromosomes.",
           placement = "top", options = list(container = "body")
         ),
         withTooltip(
           shiny::checkboxInput(
             ns("hm_filterMitoRibo"),
-            "exclude mito/ribo genes", FALSE
+            tspan("exclude mito/ribo genes"), FALSE
           ),
           "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.",
           placement = "top", options = list(container = "body")

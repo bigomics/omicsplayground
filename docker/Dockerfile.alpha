@@ -13,7 +13,7 @@
 FROM bigomics/playbase:latest
 
 ARG BRANCH=master
-RUN echo "Building Docker image from branch $BRANCH"
+RUN echo Building Docker image from branch '$BRANCH'
 
 ENV DEBIAN_FRONTEND noninteractive
 # Set the locale (uncomment UTF8)
@@ -29,7 +29,8 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Add supporting R libraries
 #------------------------------------------------------------
 WORKDIR /
-COPY dev/Rprofile /root/.Rprofile
+COPY dev/Rprofil[e] /root/.Rprofile
+COPY dev/*.R description* dev/
 
 #------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
@@ -43,8 +44,8 @@ RUN rm -fr /omicsplayground  \
 
 # Run auto-install script
 WORKDIR /omicsplayground
-COPY dev/requirements2.R dev/requirements2.R
-RUN Rscript dev/requirements2.R
+COPY dev/*.R description* dev/
+RUN Rscript dev/requirements-alpha.R
 
 #------------------------------------------------------------
 # Install fresh playbase (from same BRANCH)
@@ -60,8 +61,7 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.g
 
 # after install non-detected missing packages
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
-#RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
-#RUN R -e "remotes::install_github('JohnCoene/waiter')"
+RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
 #RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 #RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 

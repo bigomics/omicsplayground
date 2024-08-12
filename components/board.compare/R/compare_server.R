@@ -10,12 +10,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     tabH <- "70vh"
 
     infotext <-
-      "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
+      tspan("The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
          This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots.
          It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets.
         <br><br><br><br>
         <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
-        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>", js = FALSE)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -83,6 +83,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         gsub("[ ]", "", genes)
       })
       shiny::updateTextAreaInput(session, "genelist", value = higenes)
+    })
+
+    shiny::observeEvent(pgx$X, {
+      shiny::updateTextAreaInput(session, "genelist", placeholder = tspan("Paste your custom gene list", js = FALSE))
     })
 
     ## allow trigger on explicit compare button

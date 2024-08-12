@@ -21,12 +21,8 @@ expression_table_genetable_ui <- function(
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("gx_top10"), "top 10 up/down genes", FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_top10"), tspan("top 10 up/down genes"), FALSE),
       "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
-      placement = "top", options = list(container = "body")
-    ),
-    withTooltip(shiny::checkboxInput(ns("gx_showqvalues"), "show indivivual q-values", FALSE),
-      "Show q-values of each indivivual statistical method in the table.",
       placement = "top", options = list(container = "body")
     )
   )
@@ -65,16 +61,18 @@ expression_table_genetable_server <- function(id,
         return(NULL)
       }
 
-      if ("gene_title" %in% colnames(res)) res$gene_title <- playbase::shortstring(res$gene_title, 50)
+      if ("gene_title" %in% colnames(res)) {
+        res$gene_title <- playbase::shortstring(res$gene_title, 50)
+      }
       rownames(res) <- sub(".*:", "", rownames(res))
 
-      if (!DEV) {
-        kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
-        res <- res[, kk, drop = FALSE]
-      }
-      if (!input$gx_showqvalues) {
-        kk <- grep("^q[.]", colnames(res), invert = TRUE)
-        res <- res[, kk, drop = FALSE]
+      kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
+      res <- res[, kk, drop = FALSE]
+
+      if (input$gx_top10) {
+        res <- res[!is.na(res$logFC), ]
+        res <- res[order(res$logFC, decreasing = TRUE), ]
+        res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
       }
 
       numeric.cols <- which(sapply(res, is.numeric))

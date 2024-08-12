@@ -61,21 +61,21 @@ correlation_plot_cor_graph_ui <- function(
 #' @export
 correlation_plot_cor_graph_server <- function(
     id,
-    cor_gene,
+    gene,
     getPartialCorrelationMatrix,
     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     plot_data <- shiny::reactive({
-      shiny::req(cor_gene())
+      shiny::req(gene())
 
       res <- getPartialCorrelationMatrix()
       gene <- "XIST"
       rho.min <- 0.3
       layout <- "kk"
 
-      gene <- cor_gene()
+      gene <- gene()
       rho.min <- input$cor_graph_threshold
       layout <- input$cor_graph_layout
       numnodes <- nrow(res$cor)

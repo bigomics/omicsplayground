@@ -31,7 +31,8 @@ PlotModuleUI <- function(id,
                          cards = FALSE,
                          card_names = NULL,
                          header_buttons = NULL,
-                         translate = TRUE) {
+                         translate = TRUE,
+                         translate_js = TRUE) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -50,9 +51,9 @@ PlotModuleUI <- function(id,
 
   if (translate) {
     info.text <- tspan(info.text)
-    title <- tspan(title)
-    caption <- tspan(caption)
-    caption2 <- tspan(caption2)
+    title <- tspan(title, js = translate_js)
+    caption2 <- tspan(caption2, js = translate_js)
+    caption <- tspan(caption, js = translate_js)
   }
 
   getOutputFunc <- function(plotlib) {

@@ -11,7 +11,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     tabH <- "70vh"
 
     infotext <-
-      "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
+      tspan("In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
 
 <br><br>After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.
 
@@ -21,7 +21,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
 <br><br><br><br>
 <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=7' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
-"
+", js = FALSE)
 
     ## ================================================================================
     ## ========================= INPUTS UI ============================================
@@ -151,7 +151,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
         # if length(genes) == 0, return validate message
         validate(need(
-          length(genes) > 0, "No genes found in the signature. Please check the gene list."
+          length(genes) > 0, tspan("No genes found in the signature. Please check the gene list.", js = FALSE)
         ))
 
         fx <- fx[genes]
@@ -354,12 +354,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       score <- round(score, digits = 3)
       df <- cbind(db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A, common.genes = commongenes)
 
-      if (DEV) {
-        df <- df[, c("db", "geneset", "score", "k/K", "ratio", "odds.ratio", "log.OR", "q.fisher", "common.genes")]
-      } else {
-        df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
-      }
-
+      df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
       df <- df[order(-df$score), ]
       return(df)
     })

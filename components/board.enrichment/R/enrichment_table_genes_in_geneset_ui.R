@@ -32,7 +32,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       if (is.null(rpt) || nrow(rpt) == 0) {
         shiny::validate(shiny::need(
           nrow(rpt) > 0,
-          "Please select a geneset from the table on the left to view genes."
+          tspan("Please select a geneset from the table on the left to view genes.", js = FALSE)
         ))
         return(NULL)
       }

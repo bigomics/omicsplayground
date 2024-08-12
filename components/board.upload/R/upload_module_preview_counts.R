@@ -112,8 +112,7 @@ upload_table_preview_counts_server <- function(
             row_heights = list("auto", 11, 1),
             gap = "0.5rem",
             bslib::as_fill_carrier(
-              bs_alert(tspan("The expression file (expression.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."), closable = FALSE),
-              style = "align-items: end"
+              bs_alert("The expression file (expression.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample.", closable = FALSE, translate_js = FALSE)
             ),
             bslib::card(
               fileInputArea(
@@ -174,9 +173,9 @@ upload_table_preview_counts_server <- function(
         style = "display: flex; justify-content: right; vertical-align: text-bottom; margin: 8px;",
         check_to_html(
           checklist$counts.csv$checks,
-          pass_msg = tspan("All counts checks passed"),
+          pass_msg = tspan("All counts checks passed", js = FALSE),
           null_msg = tspan("Counts checks not run yet.
-                            Fix any errors with counts first."),
+                            Fix any errors with counts first.", js = FALSE),
           details = FALSE
         )
       )
@@ -189,19 +188,19 @@ upload_table_preview_counts_server <- function(
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- data.table::melt(xx))
       dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), "genes x", ncol(counts), "samples")
+      tt2 <- paste(nrow(counts), tspan("genes x", js = FALSE), ncol(counts), "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
-        ggplot2::xlab(tspan("counts (log2)")) +
+        ggplot2::xlab(tspan("counts (log2)", js = FALSE)) +
         ggplot2::theme(legend.position = "none") +
-        ggplot2::ggtitle(toupper(tspan("Counts")), subtitle = tt2)
+        ggplot2::ggtitle(toupper(tspan("Counts", js = FALSE)), subtitle = tt2)
     })
 
     output$boxplots <- renderPlot({
       counts <- checked_matrix()
       shiny::req(counts)
       X <- log2(pmax(counts, 0))
-      boxplot(X, ylab = tspan("counts (log2)"))
+      boxplot(X, ylab = tspan("counts (log2)", js = FALSE))
     })
 
     # error pop-up alert
@@ -214,10 +213,10 @@ upload_table_preview_counts_server <- function(
       if (length(checks) > 0) {
         err.html <- check_to_html(
           checks,
-          pass_msg = tspan("All counts checks passed"),
+          pass_msg = tspan("All counts checks passed", js = FALSE),
           null_msg = tspan("Counts checks not run yet.
-                            Fix any errors with counts first."),
-          false_msg = tspan("Counts checks: warning"),
+                            Fix any errors with counts first.", js = FALSE),
+          false_msg = tspan("Counts checks: warning", js = FALSE),
           details = TRUE
         )
         shinyalert::shinyalert(
@@ -246,8 +245,8 @@ upload_table_preview_counts_server <- function(
       # if counts not in file name, give warning and return
       if (!any(grepl("count|expression|abundance|params.rdata", tolower(input$counts_csv$name)))) {
         shinyalert::shinyalert(
-          title = tspan("Counts not in filename."),
-          text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv."),
+          title = tspan("Counts not in filename.", js = FALSE),
+          text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.", js = FALSE),
           type = "error"
         )
         return()
@@ -307,7 +306,7 @@ upload_table_preview_counts_server <- function(
         shinyalert::shinyalert(
           inputId = "alert_delete_counts",
           title = "Warning",
-          text = tspan("Removing counts will also remove samples and contrasts. Do you want to proceed?"),
+          text = tspan("Removing counts will also remove samples and contrasts. Do you want to proceed?", js = FALSE),
           type = "warning",
           showCancelButton = TRUE,
           closeOnEsc = FALSE,

@@ -25,7 +25,7 @@ pcsf_plot_heatmap_ui <- function(id, caption, info.text, height, width) {
       options = list(container = "body")
     ),
     withTooltip(
-      radioButtons(ns("pcsf_option2"), "N cor genes:",
+      radioButtons(ns("pcsf_option2"), tspan("N cor genes:"),
         c(25, 100, 250, 1000),
         selected = 100, inline = TRUE
       ),

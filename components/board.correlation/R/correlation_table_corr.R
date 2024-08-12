@@ -77,6 +77,7 @@ correlation_table_corr_server <- function(id,
         df$feature <- NULL
       }
 
+      if ("human_ortholog" %in% colnames(df)) df$human_ortholog <- NULL
       numeric.cols <- which(!colnames(df) %in% char_cols)
 
       DT::datatable(

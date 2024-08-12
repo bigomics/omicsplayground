@@ -31,7 +31,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
     ),
     hr(),
     withTooltip(
-      shiny::checkboxInput(ns("clusterx"), "Cluster genes"),
+      shiny::checkboxInput(ns("clusterx"), tspan("Cluster genes")),
       "Cluster genes or sort by expression.."
     ),
     withTooltip(shiny::checkboxInput(ns("cumFCplot_absfc"), "Use absolute foldchange", FALSE),

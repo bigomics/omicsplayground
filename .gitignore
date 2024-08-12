@@ -21,6 +21,7 @@ renv/sandbox/
 *~
 *_
 *#
+.#*
 *.BAK
 *.bak
 *.SAVE

@@ -17,7 +17,7 @@ DataViewInputs <- function(id) {
   bigdash::tabSettings(
     shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
-      tspan("Type a gene of interest."),
+      "Type a gene of interest.",
       placement = "top"
     ),
     withTooltip(
@@ -249,11 +249,11 @@ DataViewUI <- function(id) {
         col_widths = 12,
         row_heights = list("auto", 1),
         height = fullH,
-        bs_alert(tspan("In Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.")),
+        bs_alert("In Data table panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the selected gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table."),
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
-          title = tspan("Gene expression table"),
-          info.text = tspan("The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells)."),
+          title = "Gene expression table",
+          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
           caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")

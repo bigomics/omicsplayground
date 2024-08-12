@@ -179,6 +179,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## ---------- DSEA Activation map plotting module
     drugconnectivity_plot_moa_server(
       "dsea_moaplot",
+      pgx,
       getActiveDSEA,
       getMOA.target,
       getMOA.class,

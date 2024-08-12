@@ -54,7 +54,7 @@ correlation_plot_correlation_UMAP_ui <- function(
 #' @export
 correlation_plot_correlation_UMAP_server <- function(id,
                                                      pgx,
-                                                     cor_gene,
+                                                     gene,
                                                      getFullGeneCorr,
                                                      getGeneCorr,
                                                      watermark = FALSE) {
@@ -62,7 +62,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
     # reactive function listeninng for changes in input
     cor_umap.DATA <- shiny::reactive({
       shiny::req(pgx$X)
-      shiny::req(cor_gene())
+      shiny::req(gene())
 
       if (!"cluster.genes" %in% names(pgx)) {
         par(mfrow = c(1, 1))
@@ -108,7 +108,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
       rho0 <- dt[, 3]
       rho1 <- dt[, 4]
 
-      gene <- cor_gene()
+      gene <- gene()
       higenes <- c(gene)
       higenes <- names(tail(sort(rho1**2), 20))
       higenes <- unique(names(c(head(sort(rho1), 10), tail(sort(rho1), 10))))
