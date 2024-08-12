@@ -110,7 +110,7 @@ app_ui <- function(x) {
           welcome = "Welcome"
         ),
         "Datasets" = c(
-          load = "My Datasets"
+          load = "Home"
         ),
         "DataView" = c(
           dataview = "DataView"
