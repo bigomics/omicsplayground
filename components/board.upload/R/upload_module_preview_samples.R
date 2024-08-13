@@ -136,7 +136,7 @@ upload_table_preview_samples_server <- function(
                     title = "UMAP",
                     br(),
                     plotOutput(ns("umap"), height = "500px")
-                  ),                  
+                  ),
                   bslib::nav_panel(
                     title = "Distribution",
                     br(),
