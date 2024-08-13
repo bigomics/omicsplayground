@@ -96,7 +96,6 @@ upload_module_normalization_server <- function(
 
         negs <- sum(counts < 0, na.rm = TRUE)
         if (negs > 0) {
-          dbg("[normalization_server:imputedX] Counts data have ", negs, " negative values.")
           counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX)
         }
 
@@ -143,7 +142,8 @@ upload_module_normalization_server <- function(
             ref <- NULL
             if (m == "reference") {
               ref <- input$ref_gene
-              shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js = FALSE)))
+              shiny::validate(shiny::need(isTruthy(ref),
+                tspan("Please select reference gene", js = FALSE)))
               shiny::req(ref)
             }
             prior <- ifelse(m == "CPM", 1, 1e-4)
@@ -784,7 +784,9 @@ upload_module_normalization_server <- function(
               ),
               bslib::accordion_panel(
                 title = "4. Batch-effect correction",
-                shiny::checkboxInput(ns("batchcorrect"), label = "Remove batch effects", value = FALSE),
+                shiny::p("Automatically remove unwanted variation from your data."),
+                shiny::checkboxInput( ns("batchcorrect"), label = "Remove batch effects",
+                  value = FALSE),
                 shiny::conditionalPanel(
                   "input.batchcorrect == true",
                   ns = ns,
