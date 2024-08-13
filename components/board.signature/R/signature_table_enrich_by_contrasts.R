@@ -35,10 +35,8 @@ signature_table_enrich_by_contrasts_server <- function(id,
       output <- as.matrix(gsea$output)
       output <- round(output, digits = 4)
       output <- data.frame(contrast = rownames(output), output)
-      if (!DEV) {
-        output$p <- NULL
-        output$rho <- NULL
-      }
+      output$p <- NULL
+      output$rho <- NULL
 
       color_fx <- as.numeric(output[, "NES"])
       color_fx[is.na(color_fx)] <- 0 ## yikes...
