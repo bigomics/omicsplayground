@@ -185,8 +185,10 @@ ExpressionBoard <- function(id, pgx) {
       if (add.pq) {
         mx.q <- mx.q[rownames(mx), , drop = FALSE]
         res <- cbind(res, mx.q)
-        mx.p <- mx.p[rownames(mx), , drop = FALSE]
-        res <- cbind(res, meta.p = mx$meta.p, mx.p)
+        if (input$show_pv) {
+          mx.p <- mx.p[rownames(mx), , drop = FALSE]
+          res <- cbind(res, meta.p = mx$meta.p, mx.p)
+        }
       }
 
       return(res)
