@@ -116,7 +116,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
 
       p <- playbase::pgx.plotGeneUMAP(
         pgx,
-        pos = pos, #
+        pos = pos,
         value = rho0,
         title = "",
         cex = 0.9,
