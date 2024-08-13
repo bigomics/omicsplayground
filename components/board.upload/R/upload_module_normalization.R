@@ -142,8 +142,10 @@ upload_module_normalization_server <- function(
             ref <- NULL
             if (m == "reference") {
               ref <- input$ref_gene
-              shiny::validate(shiny::need(isTruthy(ref),
-                tspan("Please select reference gene", js = FALSE)))
+              shiny::validate(shiny::need(
+                isTruthy(ref),
+                tspan("Please select reference gene", js = FALSE)
+              ))
               shiny::req(ref)
             }
             prior <- ifelse(m == "CPM", 1, 1e-4)
@@ -785,8 +787,10 @@ upload_module_normalization_server <- function(
               bslib::accordion_panel(
                 title = "4. Batch-effect correction",
                 shiny::p("Automatically remove unwanted variation from your data."),
-                shiny::checkboxInput( ns("batchcorrect"), label = "Remove batch effects",
-                  value = FALSE),
+                shiny::checkboxInput(ns("batchcorrect"),
+                  label = "Remove batch effects",
+                  value = FALSE
+                ),
                 shiny::conditionalPanel(
                   "input.batchcorrect == true",
                   ns = ns,
