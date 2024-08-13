@@ -94,12 +94,12 @@ featuremap_plot_gene_map_server <- function(id,
       F <- scale(F, center = FALSE)
       fc <- sqrt(rowMeans(F**2, na.rm = TRUE))
       names(fc) <- rownames(F)
-      
+
       gg <- intersect(rownames(pos), names(fc))
       pos <- pos[gg, , drop = FALSE]
       fc <- fc[gg]
       F <- F[gg, , drop = FALSE]
-      
+
       hilight.probes <- playbase::map_probes(pgx$genes, hilight)
       labels <- NULL
       if (input$labeltype == "symbol") {
