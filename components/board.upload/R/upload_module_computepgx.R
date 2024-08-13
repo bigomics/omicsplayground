@@ -83,6 +83,27 @@ upload_module_computepgx_server <- function(
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
 
+      ## Probe filtering defaults
+      PROBE_FILTER_SELECTED <- shiny::eventReactive(
+        {
+          upload_datatype()
+        },
+        {
+          if (tolower(upload_datatype()) == "proteomics") {
+            mm <- c()
+          } else {
+            mm <- c(
+              "remove.notexpressed",
+              "remove.unknown",
+              "only.proteincoding"
+            )
+          }
+          return(mm)
+        }
+      )
+
+
+
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
@@ -170,12 +191,7 @@ upload_module_computepgx_server <- function(
                       ## "Skip normalization"
                       ## "Exclude immunogenes",
                     ),
-                  selected = c(
-                    ## "only.hugo",
-                    "remove.notexpressed",
-                    "remove.unknown",
-                    "only.proteincoding"
-                  )
+                  selected = PROBE_FILTER_SELECTED()
                 )
               ),
               bslib::card(
