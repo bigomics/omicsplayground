@@ -92,18 +92,13 @@ featuremap_plot_gene_map_server <- function(id,
       ## select on table filter
       F <- playbase::pgx.getMetaMatrix(pgx)$fc
       F <- scale(F, center = FALSE)
-      fc <- sqrt(rowMeans(F**2))
-
-      ## conform (NEED RETHINK when multiple symbols!)
-      ## pos <- playbase::rename_by(pos, pgx$genes, "symbol")
-      ## names(fc) <- pgx$genes$symbol[match(names(fc), rownames(pgx$genes), nomatch = 0)]
-      ## fc <- fc[!duplicated(names(fc))]
-      ## pos <- pos[!duplicated(rownames(pos)), , drop = FALSE]
+      fc <- sqrt(rowMeans(F**2, na.rm = TRUE))
+      names(fc) <- rownames(F)
 
       gg <- intersect(rownames(pos), names(fc))
-      pos <- pos[gg, ]
+      pos <- pos[gg, , drop = FALSE]
       fc <- fc[gg]
-      F <- F[gg, ]
+      F <- F[gg, , drop = FALSE]
 
       hilight.probes <- playbase::map_probes(pgx$genes, hilight)
       labels <- NULL
@@ -200,12 +195,13 @@ featuremap_plot_gene_map_server <- function(id,
       F <- pd$F
       annot <- pgx$genes
 
-      # Retreive gene table with rownames (symbols)
+      ## Retrieve gene table with rownames (symbols)
       annot_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
       annot_cols <- intersect(annot_cols, colnames(annot))
       rowids <- match(rownames(F), rownames(annot))
       annot <- annot[rowids, annot_cols, drop = FALSE]
       annot <- apply(annot, MARGIN = 2, playbase::shortstring, n = 60)
+      annot <- as.data.frame(annot)
 
       F <- cbind(rms.FC = fc, F)
       F <- round(F, digits = 3)
