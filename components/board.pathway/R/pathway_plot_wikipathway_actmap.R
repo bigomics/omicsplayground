@@ -129,9 +129,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           mar = c(15, 30),
           tl.cex = 0.85,
           row.nchar = 50,
-          showscale = TRUE) 
-
-        
+          showscale = TRUE
+        )
       }
 
       plot_RENDER2 <- function() {
@@ -141,7 +140,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
-        
+
         playbase::pgx.plotActivation(
           pgx,
           features = df$pathway,
@@ -158,9 +157,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           mar = c(15, 30),
           tl.cex = 1.1,
           row.nchar = ifelse(input$rotate, 60, 200),
-          showscale = TRUE) 
-
-        
+          showscale = TRUE
+        )
       }
 
       PlotModuleServer(

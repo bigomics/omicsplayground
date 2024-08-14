@@ -117,8 +117,7 @@ functional_plot_go_actmap_server <- function(id,
           tl.cex = 1.05,
           row.nchar = 60,
           showscale = TRUE
-        ) 
-
+        )
       }
 
       plot_RENDER2 <- function() {
@@ -143,7 +142,7 @@ functional_plot_go_actmap_server <- function(id,
           tl.cex = 1.1,
           row.nchar = ifelse(input$rotate, 60, 200),
           showscale = TRUE
-        ) 
+        )
 
         ## plotGOactmap(
         ##   score = pathscore,

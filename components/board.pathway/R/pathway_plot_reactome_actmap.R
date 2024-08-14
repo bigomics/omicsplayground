@@ -126,8 +126,7 @@ functional_plot_reactome_actmap_server <- function(id,
           tl.cex = 0.85,
           row.nchar = 50,
           showscale = TRUE
-        ) 
-        
+        )
       }
 
       plot_RENDER2 <- function() {
@@ -155,9 +154,7 @@ functional_plot_reactome_actmap_server <- function(id,
           tl.cex = 1.1,
           row.nchar = ifelse(input$rotate, 60, 200),
           showscale = TRUE
-        ) 
-
-        
+        )
       }
 
       PlotModuleServer(
