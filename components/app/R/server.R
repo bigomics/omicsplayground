@@ -523,6 +523,10 @@ app_server <- function(input, output, session) {
     shinyjs::runjs("settingsClose()")
   })
 
+  observeEvent(input$menu_createreport, {
+    shinyjs::click("load-generate_report-show_report_modal")
+  })
+
   output$current_user <- shiny::renderText({
     ## trigger on change of user
     shiny::req(auth$logged)

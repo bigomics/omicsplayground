@@ -158,7 +158,15 @@ enrichment_plot_scatter_server <- function(id,
       fit <- lm(sx ~ gx)
       newdata <- data.frame(gx = range(gx))
       newdata$sx <- predict(fit, newdata)
-      plt <- plotly::plot_ly() %>%
+      plt <- plotly::plot_ly(
+        hovertemplate = paste0(
+          "<b>%{fullData.name}<br>",
+          gene,
+          " Expression:</b> %{x}<br><b>",
+          tspan("Geneset", js = FALSE),
+          " Enrichment:</b> %{y}<extra></extra>"
+        )
+      ) %>%
         # Axis
         plotly::layout(
           xaxis = list(title = paste(gene, "expression"), titlefont = 5),

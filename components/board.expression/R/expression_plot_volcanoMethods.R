@@ -30,15 +30,6 @@ expression_plot_volcanoMethods_ui <- function(
     withTooltip(shiny::checkboxInput(ns("scale_per_plot"), "scale plots", FALSE),
       "Scale each volcano plot individually.",
       placement = "right", options = list(container = "body")
-    ),
-    withTooltip(
-      shiny::checkboxInput(
-        inputId = ns("color_up_down"),
-        label = "Color up/down regulated",
-        value = TRUE
-      ),
-      "Color up/down regulated features.",
-      placement = "left", options = list(container = "body")
     )
   )
 
@@ -73,6 +64,7 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   fdr, # input$gx_fdr
                                                   lfc, # input$gx_lfc
                                                   genes_selected,
+                                                  labeltype = reactive("symbol"),
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -105,11 +97,20 @@ expression_plot_volcanoMethods_server <- function(id,
       lab.genes <- pd[["lab.genes"]]
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
+
       ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       fc <- mx[, "fc", drop = FALSE]
       qv <- mx[, "q", drop = FALSE]
+      mx.features <- rownames(mx)
+      mx.symbols <- pgx$genes[mx.features, "symbol"]
+
+      if (labeltype() == "symbol") {
+        label.names <- mx.symbols
+      } else {
+        label.names <- mx.features
+      }
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
@@ -118,15 +119,18 @@ expression_plot_volcanoMethods_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
+        ## names = names,
+        ## label.names = label.names,
         title_y = "significance (-log10q)",
         title_x = "effect size (log2FC)",
-        share_axis = input$scale_per_plot,
+        share_axis = !input$scale_per_plot,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down,
+        color_up_down = TRUE,
         names = rownames(fc),
+        label.names = label.names,
         highlight = sel.genes,
         label = lab.genes,
         by_sig = FALSE

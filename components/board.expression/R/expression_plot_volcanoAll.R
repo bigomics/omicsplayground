@@ -19,6 +19,7 @@ expression_plot_volcanoAll_ui <- function(id,
                                           info.methods,
                                           info.references,
                                           info.extra_link,
+                                          ## labeltype,
                                           label = "",
                                           height,
                                           width) {
@@ -28,16 +29,16 @@ expression_plot_volcanoAll_ui <- function(id,
     withTooltip(shiny::checkboxInput(ns("scale_per_plot"), "scale per plot", FALSE),
       "Scale each volcano plots individually.",
       placement = "right", options = list(container = "body")
-    ),
-    withTooltip(
-      shiny::checkboxInput(
-        inputId = ns("color_up_down"),
-        label = "Color up/down regulated",
-        value = TRUE
-      ),
-      "Color up/down regulated features.",
-      placement = "left", options = list(container = "body")
     )
+    ## withTooltip(
+    ##   shiny::checkboxInput(
+    ##     inputId = ns("color_up_down"),
+    ##     label = "Color up/down regulated",
+    ##     value = TRUE
+    ##   ),
+    ##   "Color up/down regulated features.",
+    ##   placement = "left", options = list(container = "body")
+    ## )
   )
 
   PlotModuleUI(
@@ -71,6 +72,7 @@ expression_plot_volcanoAll_server <- function(id,
                                               fdr,
                                               lfc,
                                               genes_selected,
+                                              labeltype = reactive("symbol"),
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -92,6 +94,7 @@ expression_plot_volcanoAll_server <- function(id,
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
+      symbols <- pgx$genes[rownames(FQ), "symbol"]
 
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
@@ -100,9 +103,10 @@ expression_plot_volcanoAll_server <- function(id,
         lfc = lfc,
         FC = FC,
         Q = Q,
+        symbols = symbols,
+        features = rownames(FQ),
         sel.genes = genes_selected()$sel.genes,
-        lab.genes = genes_selected()$lab.genes,
-        fc.genes = rownames(FQ)
+        lab.genes = genes_selected()$lab.genes
       )
 
       return(pd)
@@ -125,6 +129,13 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(qv) <- gsub("q.", "", colnames(qv))
 
 
+      if (labeltype() == "symbol") {
+        names <- pd[["features"]]
+        label.names <- pd[["symbols"]]
+      } else {
+        names <- pd[["symbols"]]
+        label.names <- pd[["features"]]
+      }
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
@@ -133,13 +144,14 @@ expression_plot_volcanoAll_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        share_axis = input$scale_per_plot,
+        names = names,
+        label.names = label.names,
+        share_axis = !input$scale_per_plot,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down,
-        names = pd[["fc.genes"]],
+        color_up_down = TRUE,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         by_sig = FALSE

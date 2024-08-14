@@ -110,7 +110,7 @@ app_ui <- function(x) {
           welcome = "Welcome"
         ),
         "Datasets" = c(
-          load = "My Datasets"
+          load = "Home"
         ),
         "DataView" = c(
           dataview = "DataView"
@@ -227,22 +227,36 @@ app_ui <- function(x) {
           ),
           left = tags$div(
             style = "padding: 0 0 0 20px;",
-            bigdash::navbarDropdown(
-              "Datasets",
-              style = "border: 1px; padding: 2px 6px;",
-              bigdash::navbarDropdownTab(
-                "Upload new",
-                "upload-tab"
-              ),
-              bigdash::navbarDropdownTab(
-                "Load from library",
-                "load-tab"
-              ),
-              bigdash::navbarDropdownTab(
-                "Shared datasets",
-                "sharing-tab"
+            div(
+              style = "display: inline-block; ",
+              bigdash::navbarDropdown(
+                "Datasets",
+                style = "border: 1px; padding: 2px 6px;",
+                bigdash::navbarDropdownTab(
+                  "Upload new",
+                  "upload-tab"
+                ),
+                bigdash::navbarDropdownTab(
+                  "Load from library",
+                  "load-tab"
+                ),
+                bigdash::navbarDropdownTab(
+                  "Shared datasets",
+                  "sharing-tab"
+                )
               )
             )
+            ## div(style = "display: inline-block; ",
+            ## bigdash::navbarDropdown(
+            ##   "Actions",
+            ##   style = "display: inline-block; border: 1px; padding: 2px 6px;",
+            ##   tags$li(
+            ##     actionLink("menu_createreport", "Create report")
+            ##   ),
+            ##   tags$li(
+            ##     actionLink("menu_reanalyze", "Reanalyze")
+            ##   )
+            ## ))
           ),
           div.invitebutton,
           div.chirpbutton,

@@ -159,7 +159,15 @@ correlation_plot_scattercorr_server <- function(id,
         fit <- lm(y ~ x)
         newdata <- data.frame(x = range(x))
         newdata$y <- predict(fit, newdata)
-        plt <- plotly::plot_ly() %>%
+        plt <- plotly::plot_ly(
+          hovertemplate = paste0(
+            "<b>%{fullData.name}<br>",
+            xlab,
+            " Expression:</b> %{x}<br><b>",
+            gene2,
+            " Expression:</b> %{y}<extra></extra>"
+          )
+        ) %>%
           # Add the points
           plotly::add_trace(
             x = x,
