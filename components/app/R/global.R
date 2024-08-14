@@ -186,6 +186,14 @@ opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- playbase::pgx.readOptions(file = opt.file, default = opt.default) ## global!
 
+message("\n************************************************")
+message("************* SETTING DEFAULTS ***************")
+message("************************************************")
+
+defaults.file <- file.path(ETC, "DEFAULTS.yml")
+if (!file.exists(defaults.file)) stop("FATAL ERROR: cannot find DEFAULTS.yml file")
+DEFAULTS <<- yaml::read_yaml(defaults.file)
+
 ## Check and set authentication method
 if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
   auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")

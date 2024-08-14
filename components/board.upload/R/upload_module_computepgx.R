@@ -90,13 +90,9 @@ upload_module_computepgx_server <- function(
         },
         {
           if (tolower(upload_datatype()) == "proteomics") {
-            mm <- c()
+            mm <- DEFAULTS$computation_options$probe_filtering$proteomics
           } else {
-            mm <- c(
-              "remove.notexpressed",
-              "remove.unknown",
-              "only.proteincoding"
-            )
+            mm <- DEFAULTS$computation_options$probe_filtering$default
           }
           return(mm)
         }
