@@ -13,8 +13,9 @@ ExpressionInputs <- function(id) {
       placement = "top"
     ),
     withTooltip(
-        shiny::selectInput(ns("gx_features"), tspan("Gene family:"),
-          choices = NULL, multiple = FALSE),
+      shiny::selectInput(ns("gx_features"), tspan("Gene family:"),
+        choices = NULL, multiple = FALSE
+      ),
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
@@ -30,7 +31,7 @@ ExpressionInputs <- function(id) {
       withTooltip(
         shiny::selectInput(ns("gx_fdr"), "FDR",
           choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2
-       ),
+        ),
         "Set the false discovery rate (FDR) threshold.",
         placement = "top"
       )
