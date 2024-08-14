@@ -78,8 +78,8 @@ contrast_correlation_server <- function(id,
       ntop <- as.integer(ntop)
 
       R.full <- cor(apply(fc0, 2, rank), use = "pairwise")
-      jj <- head(order(-rowMeans(fc0**2)), ntop)
-      R <- cor(apply(fc0[jj, ], 2, rank), use = "pairwise")
+      jj <- head(order(-rowMeans(fc0**2, na.rm = TRUE)), ntop)
+      R <- cor(apply(fc0[jj, ], 2, rank, na.rm = TRUE), use = "pairwise")
       R <- round(R, digits = 2)
       return(R)
     })

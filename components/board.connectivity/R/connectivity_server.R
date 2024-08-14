@@ -192,7 +192,7 @@ ConnectivityBoard <- function(
       ## multiply with sign of enrichment
       rho1 <- df$rho[match(colnames(F), df$pathway)]
       F <- t(t(F) * sign(rho1))
-      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+      F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
 
       ## add current contrast
       contr <- getCurrentContrast()

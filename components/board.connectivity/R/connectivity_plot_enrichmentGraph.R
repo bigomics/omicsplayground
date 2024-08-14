@@ -104,7 +104,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         rownames(A) <- rownames(F)
 
         ## create graph
-        A <- head(A[order(-rowMeans(A)), , drop = FALSE], 100)
+        A <- head(A[order(-rowMeans(A, na.rm = TRUE)), , drop = FALSE], 100)
         adjM <- (A %*% t(A))
         adjM <- adjM / max(adjM, na.rm = TRUE)
 
@@ -154,7 +154,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         if (sizevar == "centrality") {
           vsize <- log(1 + igraph::betweenness(gr))
         } else if (sizevar == "cumFC") {
-          fc1 <- rowMeans(cumFC)
+          fc1 <- rowMeans(cumFC, na.rm = TRUE)
           vsize <- abs(fc1[match(igraph::V(gr)$name, names(fc1))])**2
         } else if (sizevar == "FC") {
           vsize <- abs(fc[match(igraph::V(gr)$name, names(fc))])**2

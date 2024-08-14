@@ -292,7 +292,7 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       ## fold change just for ranking of genes
       FC <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
       rownames(FC) <- rownames(pgx$gx.meta$meta[[1]])
-      fx <- rowMeans(FC**2)
+      fx <- rowMeans(FC**2, na.rm = TRUE)
 
       ## fisher test
       ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
@@ -302,8 +302,8 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
         ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
       }
       N <- cbind(
-        k1 = Matrix::rowSums(playdata::GSETxGENE != 0), n1 = ncol(playdata::GSETxGENE),
-        k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(playdata::GSETxGENE != 0, na.rm = TRUE), n1 = ncol(playdata::GSETxGENE),
+        k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0, na.rm = TRUE), n2 = length(ii)
       )
       rownames(N) <- rownames(playdata::GSETxGENE)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]

@@ -51,12 +51,12 @@ PcsfBoard <- function(id, pgx) {
         NTOP <- 4000
         data(STRING, package = "PCSF")
         meta <- playbase::pgx.getMetaMatrix(pgx)$fc
-        mx <- rowMeans(meta**2)**0.5
+        mx <- rowMeans(meta**2, na.rm = TRUE)**0.5
         genes <- head(names(mx)[order(-abs(mx))], NTOP)
         gsmeta <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
-        rx <- rowMeans(gsmeta**2)**0.5
+        rx <- rowMeans(gsmeta**2, na.rm = TRUE)**0.5
         top.gs <- head(names(sort(-abs(rx))), 1000)
-        ngmt <- Matrix::rowSums(pgx$GMT[, top.gs] != 0)
+        ngmt <- Matrix::rowSums(pgx$GMT[, top.gs] != 0, na.rm = TRUE)
         ngmt <- log(1 + ngmt)
 
         ## ------------ find gene clusters --------------

@@ -160,7 +160,7 @@ signature_plot_markers_server <- function(id,
       ## expression by group
       grp <- pgx$model.parameters$group
       groups <- unique(grp)
-      gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE]))
+      gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE], na.rm = TRUE))
       colnames(gX) <- groups
 
       ## for large datasets pre-grouping is faster
@@ -201,7 +201,7 @@ signature_plot_markers_server <- function(id,
       gx <- gx - min(gx, na.rm = TRUE) + 0.001 ## subtract background
       grp <- pgx$model.parameters$group
       zx <- t(apply(gx, 1, function(x) tapply(x, as.character(grp), mean)))
-      gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
+      gx <- gx[order(-apply(zx, 1, sd, na.rm = TRUE)), , drop = FALSE]
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
       ## get GSVA values and make some non-linear value fc1
@@ -229,7 +229,7 @@ signature_plot_markers_server <- function(id,
         top.gx <- top.gx[order(rownames(top.gx)), , drop = FALSE]
       }
       if (input$markers_sortby == "probability") {
-        top.gx <- top.gx[order(-rowMeans(top.gx)), , drop = FALSE]
+        top.gx <- top.gx[order(-rowMeans(top.gx, na.rm = TRUE)), , drop = FALSE]
       }
       if (input$markers_sortby == "correlation") {
         rho <- cor(t(top.gx), fc1)[, 1]
@@ -249,7 +249,7 @@ signature_plot_markers_server <- function(id,
         } else {
           klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
           colvar <- pmax(top.gx[i, ], 0)
-          colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
+          colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar, na.rm = TRUE) + 0.3 * max(top.gx, na.rm = TRUE))))
           klr1 <- klrpal[colvar]
           gene <- substring(sub(".*:", "", rownames(top.gx)[i]), 1, 80)
           tt <- playbase::breakstring(gene, n = 20, force = TRUE)

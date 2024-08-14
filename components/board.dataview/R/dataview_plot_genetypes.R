@@ -98,7 +98,7 @@ dataview_plot_genetypes_server <- function(id,
       res <- plot_data()
       shiny::req(res)
 
-      avg.prop <- head(rowMeans(res$prop.counts), 15)
+      avg.prop <- head(rowMeans(res$prop.counts, na.rm = TRUE), 15)
       genes <- head(res$gset.genes, 15)
       family <- paste0(names(avg.prop), "  ")
       family <- factor(family, levels = family)

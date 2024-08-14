@@ -205,7 +205,7 @@ IntersectionBoard <- function(
         pos <- pgx$cluster.genes$pos[["umap2d"]]
       } else {
         X1 <- pgx$X
-        X1 <- (X1 - rowMeans(X1)) / mean(apply(X1, 1, sd, na.rm = TRUE))
+        X1 <- (X1 - rowMeans(X1, na.rm = TRUE)) / mean(apply(X1, 1, sd, na.rm = TRUE))
         pos <- playbase::pgx.clusterBigMatrix(
           t(X1),
           methods = "umap", dims = 2, reduce.sd = -1
@@ -219,7 +219,7 @@ IntersectionBoard <- function(
         gsea.pos <- pgx$cluster.gsets$pos[["umap2d"]]
       } else {
         X2 <- pgx$gsetX
-        X2 <- (X2 - rowMeans(X2)) / mean(apply(X2, 1, sd, na.rm = TRUE))
+        X2 <- (X2 - rowMeans(X2, na.rm = TRUE)) / mean(apply(X2, 1, sd, na.rm = TRUE))
         gsea.pos <- playbase::pgx.clusterBigMatrix(
           t(X2),
           methods = "umap", dims = 2, reduce.sd = -1
@@ -237,14 +237,14 @@ IntersectionBoard <- function(
       ii <- intersect(rownames(pos), rownames(f.score))
       sig <- f.score[ii, , drop = FALSE]
       pos <- pos[ii, ]
-      ii <- order(-rowMeans(sig))
+      ii <- order(-rowMeans(sig, na.rm = TRUE))
       sig <- sig[ii, , drop = FALSE]
       pos <- pos[ii, ]
 
       ii <- intersect(rownames(gsea.pos), rownames(g.score))
       gsea <- g.score[ii, , drop = FALSE]
       gsea.pos <- gsea.pos[ii, ]
-      ii <- order(-rowMeans(gsea))
+      ii <- order(-rowMeans(gsea, na.rm = TRUE))
       gsea <- gsea[ii, , drop = FALSE]
       gsea.pos <- gsea.pos[ii, ]
 
