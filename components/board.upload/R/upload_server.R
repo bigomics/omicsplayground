@@ -39,7 +39,8 @@ UploadBoard <- function(id,
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
         detected <- playbase::detect_species_probetype(probes,
-          test_species = unique(c(organism, c("Human","Mouse","Rat"))) )
+          test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
+        )
         dbg("[UploadBoard:ExtendedTask.new] finished!")
         detected
       })
@@ -228,7 +229,7 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     checked_for_log <- reactiveVal(FALSE)
     organism_checked <- reactiveVal(FALSE)
-    
+
     uploaded_counts <- shiny::eventReactive(
       {
         list(uploaded$counts.csv, upload_organism())
@@ -245,7 +246,7 @@ UploadBoard <- function(id,
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
-        
+
         # check if error 29 exists (log2 transform detected), give
         # action to user revert to intensities or skip correction.
         if ("e29" %in% names(res$checks)) {
@@ -834,8 +835,10 @@ UploadBoard <- function(id,
     observeEvent(
       checkprobes_task$status(),
       {
-        dbg("[observeEvent:checkprobes_task$result] task status = ",
-          checkprobes_task$status())
+        dbg(
+          "[observeEvent:checkprobes_task$result] task status = ",
+          checkprobes_task$status()
+        )
         if (checkprobes_task$status() != "success") {
           return(NULL)
         }
@@ -851,21 +854,21 @@ UploadBoard <- function(id,
         dbg("[UploadBoard:ExtendedTask.new] upload_organism = ", organism)
         dbg("[UploadBoard:ExtendedTask.new] detect$species = ", detected$species)
         dbg("[UploadBoard:ExtendedTask.new] detect$probetype = ", detected$probetype)
-        
-        if(!organism %in% detected$species) {
+
+        if (!organism %in% detected$species) {
           detected_probetype <- "error"
-          alt.species <- paste( detected$species, collapse=" or ")
-          if(length(alt.species)) {
-            alt.species <- paste0("<b>",alt.species,"</b>")
-            alt.text <- paste0("Are these perhaps ",alt.species,"?")
+          alt.species <- paste(detected$species, collapse = " or ")
+          if (length(alt.species)) {
+            alt.species <- paste0("<b>", alt.species, "</b>")
+            alt.text <- paste0("Are these perhaps ", alt.species, "?")
           }
         } else {
           detected_probetype <- "error"
-          if(organism %in% names(detected$probetype)) {
+          if (organism %in% names(detected$probetype)) {
             detected_probetype <- detected$probetype[organism]
           }
-        }        
-        ##detected_probetype <- detected$probetype
+        }
+        ## detected_probetype <- detected$probetype
         probetype(detected_probetype) ## set RV
 
         if (detected_probetype == "error") {
@@ -881,12 +884,12 @@ UploadBoard <- function(id,
             size = "s",
             html = TRUE
           )
-        } 
+        }
 
         ## wrong datatype. just give warning. or should we change datatype?
-        if(detected_probetype != "error" &&
-             any(grepl("PROT",detected_probetype)) &&
-             !(upload_datatype() %in% c("proteomics"))) {
+        if (detected_probetype != "error" &&
+          any(grepl("PROT", detected_probetype)) &&
+          !(upload_datatype() %in% c("proteomics"))) {
           shinyalert::shinyalert(
             title = "Is this proteomics data?",
             text = paste0(
@@ -896,10 +899,8 @@ UploadBoard <- function(id,
             type = "warning",
             size = "s",
             html = TRUE
-          )          
+          )
         }
-        
-        
       }
     )
 

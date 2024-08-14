@@ -6,11 +6,11 @@
 UploadUI <- function(id) {
   ns <- NS(id)
 
-  ##species1 <- as.character(playbase::SPECIES_TABLE$species_name)
+  ## species1 <- as.character(playbase::SPECIES_TABLE$species_name)
   species1 <- playbase::allSpecies.ANNOTHUB()
-  species1 <- sort(unique(c(species1,"Plasmodium falciparum")))
-  AVAILABLE_SPECIES <- c("Human","Mouse","Rat","No organism",species1)
-  AVAILABLE_SPECIES <- c("Human","Mouse","Rat",species1)
+  species1 <- sort(unique(c(species1, "Plasmodium falciparum")))
+  AVAILABLE_SPECIES <- c("Human", "Mouse", "Rat", "No organism", species1)
+  AVAILABLE_SPECIES <- c("Human", "Mouse", "Rat", species1)
 
   body <- div(
     style = "overflow: auto;",

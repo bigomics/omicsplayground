@@ -227,7 +227,6 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
       if (!all(ext %in% c("csv", "RData"))) {
@@ -281,10 +280,9 @@ upload_table_preview_counts_server <- function(
           )
         }
       }
-      
     }) ## end observeEvent input$counts.csv
 
-    
+
     observeEvent(input$remove_counts, {
       delete_all_files_counts <- function(value) {
         if (value) {
