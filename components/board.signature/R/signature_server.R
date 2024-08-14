@@ -273,11 +273,11 @@ SignatureBoard <- function(id, pgx,
 
       markers <- getCurrentMarkers()
       genes <- markers$symbols
-
+      
       ## fisher test
-      G <- t(pgx$GMT)
+      G <- Matrix::t(pgx$GMT)
       ii <- setdiff(match(genes, colnames(G)), NA)
-
+      
       N <- cbind(
         k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
         k2 = Matrix::rowSums(G[, ii] != 0), n2 = length(ii)
@@ -285,14 +285,14 @@ SignatureBoard <- function(id, pgx,
       rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
-
+      
       ## WOW THIS IS FAST!!!!!!!
       pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
       names(pv) <- rownames(N)
       pv <- pv[match(names(odds.ratio), names(pv))]
       qv <- p.adjust(pv, method = "bonferroni")
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
-
+      
       ## get shared genes
       aa <- rownames(A)
       y <- 1 * (colnames(G) %in% genes)
@@ -308,6 +308,7 @@ SignatureBoard <- function(id, pgx,
       gg <- colnames(G)
       fx <- fx[match(gg, names(fx))]
       names(fx) <- gg
+
       gset <- names(y)[which(y != 0)]
       G1 <- G[aa, which(y != 0)]
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
@@ -321,7 +322,7 @@ SignatureBoard <- function(id, pgx,
         commongenes[[i]] <- paste(gg, collapse = ",")
       }
       commongenes <- unlist(commongenes)
-
+      
       ## construct results dataframe
       gset.names <- substring(rownames(A), 1, 72)
       A$ratio <- round(A$ratio, digits = 3)
@@ -334,7 +335,7 @@ SignatureBoard <- function(id, pgx,
         db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A,
         common.genes = commongenes
       )
-
+      
       df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
       df <- df[order(-df$score), ]
       return(df)
