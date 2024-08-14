@@ -107,7 +107,7 @@ expression_plot_volcanoMethods_server <- function(id,
       mx.symbols <- pgx$genes[mx.features, "symbol"]
 
       if (labeltype() == "symbol") {
-        names <- mx.feautures
+        names <- mx.features
         label.names <- mx.symbols
       } else {
         names <- mx.symbol
