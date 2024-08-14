@@ -31,7 +31,7 @@ WgcnaBoard <- function(id, pgx) {
       },
       {
         require(WGCNA)
-        
+
         if (input$compute == 0 && "wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
           me <- names(pgx$wgcna$me.genes)
