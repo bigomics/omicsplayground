@@ -13,9 +13,9 @@ wgcna_plot_MTrelationships_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  moduleTrait_opts <- shiny::tagList(
-    shiny::checkboxInput(ns("traits_binarize"), "binarize continuous vars", FALSE)
-  )
+  ## moduleTrait_opts <- shiny::tagList(
+  ##  shiny::checkboxInput(ns("traits_binarize"), "binarize continuous vars", FALSE)
+  ## )
 
   PlotModuleUI(
     ns("plot"),
