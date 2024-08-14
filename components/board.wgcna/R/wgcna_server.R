@@ -27,25 +27,19 @@ WgcnaBoard <- function(id, pgx) {
     ## wgcna.compute <- shiny::reactive({
     wgcna.compute <- shiny::eventReactive(
       {
-        input$compute
-        1
+        list(input$compute)
       },
       {
         require(WGCNA)
-
-        if ("wgcna" %in% names(pgx)) {
+        
+        if (input$compute == 0 && "wgcna" %in% names(pgx)) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
-          if (input$selected_module == "") {
-            shiny::updateSelectInput(
-              session, "selected_module",
-              choices = names(pgx$wgcna$me.genes),
-              selected = "ME1"
-            )
-          }
+          me <- names(pgx$wgcna$me.genes)
+          shiny::updateSelectInput(session, "selected_module", choices = me, selected = "ME1")
           return(pgx$wgcna)
         }
 
-        pgx.showSmallModal("Calculating WGCNA...<br>please wait")
+        pgx.showSmallModal("Calculating WGCNA using new parameters...<br>please wait")
         progress <- shiny::Progress$new()
         on.exit(progress$close())
         progress$set(message = "Calculating WGCNA...", value = 0)
@@ -55,16 +49,17 @@ WgcnaBoard <- function(id, pgx) {
 
         out <- playbase::pgx.wgcna(
           pgx = pgx,
-          ngenes = input$ngenes,
+          ngenes = as.integer(input$ngenes),
           minmodsize = as.integer(input$minmodsize),
           power = as.numeric(input$power),
           cutheight = as.numeric(input$cutheight),
           deepsplit = as.integer(input$deepsplit)
         )
 
-        shiny::updateSelectInput(session, "selected_module", choices = names(out$me.genes), sel = "ME1")
+        me <- names(out$me.genes)
+        shiny::updateSelectInput(session, "selected_module", choices = me, sel = "ME1")
 
-        beepr::beep(2) ## short beep
+        beepr::beep(2)
         shiny::removeModal()
 
         out
