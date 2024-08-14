@@ -24,7 +24,16 @@ signature_plot_volcano_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  plot_opts <- shiny::tagList(
+  plot_opts <- shiny::tagList(    
+    withTooltip(
+      shiny::checkboxInput(
+        inputId = ns("share_axis"),
+        label = "Share X/Y axis",
+        value = TRUE
+      ),
+      "Share X/Y axis between plots so they show the same range. Easier to compare.",
+      placement = "left", options = list(container = "body")
+    ),
     withTooltip(
       shiny::checkboxInput(
         inputId = ns("color_up_down"),
@@ -68,7 +77,13 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
+
+    ##
+    plotly_plots <- function(cex = 3,
+                             yrange = 0.5, 
+                             n_rows = 2,
+                             margin_l = 70,
+                             margin_b = 50) {
       shiny::req(sigCalculateGSEA())
 
       ## filter with table selection/search
@@ -77,7 +92,7 @@ signature_plot_volcano_server <- function(id,
         ii <- enrichmentContrastTable$rows_all()
       }
       shiny::req(ii)
-
+      
       # Input vars
       gsea <- sigCalculateGSEA()
       ct <- rownames(gsea$output)[ii]
@@ -86,27 +101,33 @@ signature_plot_volcano_server <- function(id,
       fc <- meta$fc[, ct, drop = FALSE]
       qv <- meta$qv[, ct, drop = FALSE]
 
-      score <- abs(F) * -log(qv)
-      gset <- data.table::chmatch(toupper(gsea$gset), toupper(pgx$genes[, "gene_name"]))
-      gset <- pgx$genes[gset, "gene_name"]
-      gset <- intersect(gset, rownames(F))
-
-      sel <- enrichmentGeneTable$rows_selected()
+      features <- rownames(fc)
+      symbols <- pgx$genes[rownames(fc),"symbol"]
+      
       # Get gene selected labels
-      if (length(sel)) {
-        sel.gene <- getEnrichmentGeneTable()[sel, 1]
+      if(length(ct)==1) {
+        sel.gene <- getEnrichmentGeneTable()$symbol
+        row <- enrichmentGeneTable$rows_selected()
+        if (length(row)) {
+          sel.gene <- sel.gene[row]
+        }
       } else {
-        sel.gene <- head(gsea$gset, 20)
+        sel.gene <- gsea$gset
       }
 
+      share_axis <- input$share_axis
+      
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,
         Q = qv,
+        names = features,
+        label.names = symbols,
         cex = cex,
         by_sig = FALSE,
-        gset = gsea$gset,
+        highlight = gsea$gset,
         label = sel.gene,
+        share_axis = share_axis,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
@@ -120,18 +141,30 @@ signature_plot_volcano_server <- function(id,
         plotly::layout(
           annotations = list(
             list(
-              x = -0.04, y = 0.5, text = "significance (-log10q)",
+              x = -0.0,
+              xshift = -26,
+              xanchor = "right",
+              y = 0.5,
+              text = "significance (-log10q)",
               font = list(size = 16),
               textangle = 270,
-              showarrow = FALSE, xref = "paper", yref = "paper"
+              showarrow = FALSE,
+              xref = "paper",
+              yref = "paper"
             ),
             list(
-              x = 0.5, y = -0.06, text = "effect size (log2FC)",
+              x = 0.5,
+              y = 0.0,
+              yshift = -20,
+              yanchor = "top",
+              text = "effect size (log2FC)",
               font = list(size = 16),
-              showarrow = FALSE, xref = "paper", yref = "paper"
+              showarrow = FALSE,
+              xref = "paper",
+              yref = "paper"
             )
           )
-        )
+        ) 
 
       return(all_plts)
     }
@@ -139,7 +172,13 @@ signature_plot_volcano_server <- function(id,
     big_plotly.RENDER <- function() {
       nr <- length(enrichmentContrastTable$rows_all())
       n_rows <- floor(sqrt(nr))
-      fig <- plotly_plots(yrange = 0.02, n_rows = n_rows, margin_b = 45, margin_l = 40) %>%
+      fig <- plotly_plots(
+        cex = 5,
+        yrange = 0.02,
+        n_rows = n_rows,
+        margin_b = 45,
+        margin_l = 70
+      ) %>%
         plotly::style(
           marker.size = 6
         ) %>%
@@ -152,7 +191,7 @@ signature_plot_volcano_server <- function(id,
       plotlib = "plotly",
       func = big_plotly.RENDER,
       res = c(90, 130), ## resolution of plots
-      pdf.width = 6,
+      pdf.width = 10,
       pdf.height = 6,
       add.watermark = watermark
     )
