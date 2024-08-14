@@ -86,7 +86,7 @@ connectivity_plot_cumFCplot_server <- function(id,
         if (input$cumFCplot_absfc) {
           F <- abs(F)
         }
-        F <- F[order(-rowMeans(F**2)), , drop = FALSE]
+        F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
         F
       })
 
@@ -104,7 +104,7 @@ connectivity_plot_cumFCplot_server <- function(id,
           F1 <- F1[order(F1[, 1]), , drop = FALSE]
         } else {
           F1 <- head(F, ngenes)
-          F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
+          F1 <- F1[order(rowMeans(F1, na.rm = TRUE)), , drop = FALSE]
         }
 
         playbase::pgx.stackedBarplot(
