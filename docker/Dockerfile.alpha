@@ -15,7 +15,7 @@ FROM bigomics/playbase:latest
 ARG BRANCH=master
 RUN echo Building Docker image from branch '$BRANCH'
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
