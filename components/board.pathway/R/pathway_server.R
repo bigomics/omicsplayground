@@ -3,7 +3,9 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
+PathwayBoard <- function(id,
+                         pgx,
+                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750
@@ -68,70 +70,7 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================
     ## ================================================================================
-
-    plotActivationMatrix <- function(meta, df, normalize = 1, nterms = 40, rotate = 0,
-                                     nfc = 10, tl.cex = 1.0, row.nchar = 50, colorbar = FALSE) {
-      fx <- sapply(meta, function(x) x$meta.fx)
-      qv <- sapply(meta, function(x) x$meta.q)
-      rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
-
-      kk <- rownames(fx)
-      kk <- as.character(df$pathway)
-
-      if (length(kk) < 3) {
-        return(NULL)
-      }
-
-      if (mean(is.na(qv)) < 0.01) {
-        score <- fx[kk, , drop = FALSE] * (1 - qv[kk, , drop = FALSE])**2
-      } else {
-        score <- fx[kk, , drop = FALSE]
-      }
-
-      score <- score[head(order(-rowSums(score**2)), nterms), , drop = FALSE] ## nr gene sets
-      score <- score[, head(order(-colSums(score**2)), nfc), drop = FALSE] ## max comparisons/FC
-      score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
-      d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
-      d2 <- as.dist(1 - cor(score, use = "pairwise"))
-      d1[is.na(d1)] <- 1
-      d2[is.na(d2)] <- 1
-      ii <- 1:nrow(score)
-      jj <- 1:ncol(score)
-      if (NCOL(score) == 1) {
-        score <- score[order(-score[, 1]), 1, drop = FALSE]
-      } else {
-        ii <- hclust(d1)$order
-        jj <- hclust(d2)$order
-        score <- score[ii, jj, drop = FALSE]
-      }
-
-      ## fudged score just for visualization
-      score2 <- score
-      if (normalize) score2 <- t(t(score2) / apply(abs(score2), 2, max))
-      score2 <- sign(score2) * abs(score2 / max(abs(score2)))**1 ## fudging
-      rownames(score2) <- tolower(gsub(".*:|wikipathway_|_Homo.*$", "",
-        rownames(score2),
-        ignore.case = TRUE
-      ))
-      rownames(score2) <- gsub("(_.*$)", "", rownames(score2))
-      rownames(score2) <- playbase::shortstring(rownames(score2), row.nchar)
-      colnames(score2) <- playbase::shortstring(colnames(score2), 30)
-      colnames(score2) <- paste0(colnames(score2), " ")
-
-      if (rotate) score2 <- t(score2)
-      bluered.pal <- colorRamp(colors = c("royalblue3", "#ebeffa", "white", "#faeeee", "indianred3"))
-      score2 <- score2[nrow(score2):1, , drop = FALSE]
-      x_axis <- colnames(score2)
-      y_axis <- rownames(score2)
-      fig <- plotly::plot_ly(
-        x = x_axis, y = y_axis,
-        z = score2, type = "heatmap",
-        colors = bluered.pal,
-        showscale = colorbar
-      )
-      return(fig)
-    }
-
+    
 
     ## =========================================================================
     ## Get Reactome table
@@ -213,7 +152,6 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       reactive(pgx$gset.meta$meta),
       getReactomeTable,
       pgx = pgx,
-      plotActivationMatrix,
       WATERMARK
     )
 
@@ -334,7 +272,6 @@ PathwayBoard <- function(id, pgx, selected_gsetmethods = reactive(colnames(pgx$g
       "wikipathway_actmap",
       pgx,
       getWikiPathwayTable,
-      plotActivationMatrix,
       WATERMARK
     )
 

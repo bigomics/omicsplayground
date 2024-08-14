@@ -70,7 +70,6 @@ functional_plot_reactome_actmap_server <- function(id,
                                                    r_meta,
                                                    pgx,
                                                    getReactomeTable,
-                                                   plotActivationMatrix,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -78,7 +77,7 @@ functional_plot_reactome_actmap_server <- function(id,
         shiny::req(pgx$X)
         ct <- colnames(pgx$model.parameters$contr.matrix)
         ct <- sort(ct)
-        selected_ct <- head(ct, 7)
+        selected_ct <- head(ct, 8)
         shiny::updateSelectInput(
           session,
           "selected_contrasts",
@@ -109,15 +108,26 @@ functional_plot_reactome_actmap_server <- function(id,
         df <- res$df
         meta <- res$meta
         rotate <- input$rotate
-        plotActivationMatrix(
-          meta, df,
+
+        playbase::pgx.plotActivation(
+          pgx,
+          features = df$pathway,
+          contrasts = input$selected_contrasts,
+          what = "geneset",
+          plotlib = "plotly",
+          filter = NULL,
+          cexCol = 1.4,
+          cexRow = 1,
           normalize = input$normalize,
-          rotate = rotate,
-          nterms = 50,
-          nfc = 20,
-          tl.cex = 0.9,
-          row.nchar = 60
-        )
+          rotate = input$rotate,
+          maxterm = 30,
+          maxfc = 20,
+          mar = c(15, 30),
+          tl.cex = 0.85,
+          row.nchar = 50,
+          showscale = TRUE
+        ) 
+        
       }
 
       plot_RENDER2 <- function() {
@@ -127,17 +137,27 @@ functional_plot_reactome_actmap_server <- function(id,
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
-        rotate <- input$rotate
-        plotActivationMatrix(
-          meta, df,
+
+        playbase::pgx.plotActivation(
+          pgx,
+          features = df$pathway,
+          contrasts = input$selected_contrasts,
+          what = "geneset",
+          plotlib = "plotly",
+          filter = NULL,
+          cexCol = 1.4,
+          cexRow = 1,
           normalize = input$normalize,
-          rotate = rotate,
-          nterms = 50,
-          nfc = 100,
+          rotate = input$rotate,
+          maxterm = 40,
+          maxfc = 100,
+          mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(rotate, 60, 200),
-          colorbar = TRUE
-        )
+          row.nchar = ifelse(input$rotate, 60, 200),
+          showscale = TRUE
+        ) 
+
+        
       }
 
       PlotModuleServer(
