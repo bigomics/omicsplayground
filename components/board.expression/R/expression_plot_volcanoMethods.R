@@ -107,8 +107,10 @@ expression_plot_volcanoMethods_server <- function(id,
       mx.symbols <- pgx$genes[mx.features, "symbol"]
 
       if (labeltype() == "symbol") {
+        names <- mx.feautures
         label.names <- mx.symbols
       } else {
+        names <- mx.symbol
         label.names <- mx.features
       }
 
@@ -119,8 +121,8 @@ expression_plot_volcanoMethods_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        ## names = names,
-        ## label.names = label.names,
+        names = names,
+        label.names = label.names,
         title_y = "significance (-log10q)",
         title_x = "effect size (log2FC)",
         share_axis = !input$scale_per_plot,
@@ -130,7 +132,6 @@ expression_plot_volcanoMethods_server <- function(id,
         margin_b = margin_b,
         color_up_down = TRUE,
         names = rownames(fc),
-        label.names = label.names,
         highlight = sel.genes,
         label = lab.genes,
         by_sig = FALSE
