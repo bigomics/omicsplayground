@@ -141,14 +141,16 @@ expression_plot_volcanoMethods_server <- function(id,
 
     modal_plotly.RENDER <- function() {
       fig <- plotly_plots(
-        cex = 3, yrange = 0.05, n_rows = 2, margin_b = 50, margin_l = 70) %>%
+        cex = 3, yrange = 0.05, n_rows = 2, margin_b = 50, margin_l = 70
+      ) %>%
         playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
       fig <- plotly_plots(
-        yrange = 0.02, n_rows = 3, margin_b = 70, margin_l = 70) %>%
+        yrange = 0.02, n_rows = 3, margin_b = 70, margin_l = 70
+      ) %>%
         plotly::style(
           marker.size = 6
         ) %>%
