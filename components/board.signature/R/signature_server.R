@@ -80,12 +80,16 @@ SignatureBoard <- function(id, pgx,
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
         gsets <- sort(names(playdata::iGSETS))
-        shiny::updateSelectizeInput(session, "feature", choices = gsets,
-          selected = gsets[1], server = TRUE)
+        shiny::updateSelectizeInput(session, "feature",
+          choices = gsets,
+          selected = gsets[1], server = TRUE
+        )
       } else {
         ## custom
-        shiny::updateSelectInput(session, "feature", choices = "<custom>",
-          selected = "<custom>")
+        shiny::updateSelectInput(session, "feature",
+          choices = "<custom>",
+          selected = "<custom>"
+        )
       }
     })
 
@@ -94,14 +98,19 @@ SignatureBoard <- function(id, pgx,
     ## ======================= REACTIVE FUNCTIONS =====================================
     ## ================================================================================
 
-    input_genelist <- shiny::eventReactive({
-      list( pgx$X, input$compute_button )
-    }, {
-      shiny::req(input$genelist)
-      gg <- input$genelist
-      gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
-      trimws(gg)
-    }, ignoreInit = FALSE, ignoreNULL = TRUE )
+    input_genelist <- shiny::eventReactive(
+      {
+        list(pgx$X, input$compute_button)
+      },
+      {
+        shiny::req(input$genelist)
+        gg <- input$genelist
+        gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
+        trimws(gg)
+      },
+      ignoreInit = FALSE,
+      ignoreNULL = TRUE
+    )
 
     getCurrentMarkers <- shiny::reactive({
       shiny::req(pgx)
@@ -109,7 +118,7 @@ SignatureBoard <- function(id, pgx,
 
       ## Get current selection of markers/genes
       type <- input$type
-      symbols  <- toupper(pgx$genes[rownames(pgx$X), "symbol"])
+      symbols <- toupper(pgx$genes[rownames(pgx$X), "symbol"])
 
       features <- NULL
       if (input$feature == "<custom>") {
@@ -117,23 +126,23 @@ SignatureBoard <- function(id, pgx,
         if (is.null(genes) || length(genes) == 0 || genes[1] == "") {
           return(NULL)
         }
-        
+
         if (any(grepl("[*]", genes))) {
-          gene.patterns <- grep("[*]", genes, value=TRUE)
+          gene.patterns <- grep("[*]", genes, value = TRUE)
 
           rx.genes <- c()
-          for(rx in gene.patterns) {
+          for (rx in gene.patterns) {
             ## select other genes with grep-like match
-            rx <- paste0("^",sub("[*]",".*",rx))
+            rx <- paste0("^", sub("[*]", ".*", rx))
             gg <- unique(grep(rx, symbols, value = TRUE, ignore.case = TRUE))
             rx.genes <- c(rx.genes, gg)
           }
           genes <- union(genes, rx.genes)
         }
         ## map to probes
-        features <- playbase::map_probes(pgx$genes, genes, column=NULL, ignore.case=TRUE)
-      } else if ( input$type == "contrast" &&
-                    input$feature[1] %in% playbase::pgx.getContrasts(pgx)) {
+        features <- playbase::map_probes(pgx$genes, genes, column = NULL, ignore.case = TRUE)
+      } else if (input$type == "contrast" &&
+        input$feature[1] %in% playbase::pgx.getContrasts(pgx)) {
         contr <- input$feature
         fx <- pgx$gx.meta$meta[[contr]]$meta.fx
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
@@ -141,23 +150,21 @@ SignatureBoard <- function(id, pgx,
         top.genes <- fx[order(-abs(fx))]
         top.genes <- head(top.genes, 100)
         features <- names(top.genes)
-      } else if (input$type %in% c("hallmark","KEGG","geneset") &&
-                   input$feature[1] %in% colnames(pgx$GMT)) {
+      } else if (input$type %in% c("hallmark", "KEGG", "geneset") &&
+        input$feature[1] %in% colnames(pgx$GMT)) {
         sel <- input$feature
-        features <- rownames(pgx$GMT)[which(pgx$GMT[,sel]!=0)]
+        features <- rownames(pgx$GMT)[which(pgx$GMT[, sel] != 0)]
       } else {
         return(NULL)
       }
 
       ## convert to genes symbols
-      symbols = pgx$genes[features,"symbol"]
+      symbols <- pgx$genes[features, "symbol"]
 
       list(
         features = unique(features),
         symbols = unique(symbols)
       )
-      
-
     })
 
     sigCalculateGSEA <- shiny::reactive({
@@ -169,7 +176,7 @@ SignatureBoard <- function(id, pgx,
       ## observe input list
       markers <- getCurrentMarkers()
       genes <- markers$symbols
-      
+
       if (is.null(genes) || length(genes) == 0) {
         cat("FATAL:: sigCalculateGSEA : gset empty!\n")
         return(NULL)
@@ -184,10 +191,10 @@ SignatureBoard <- function(id, pgx,
       F <- F[, which(!duplicated(colnames(F))), drop = FALSE]
 
       ## convert to symbol
-      fsymbol <- pgx$genes[rownames(F),"symbol"]
+      fsymbol <- pgx$genes[rownames(F), "symbol"]
       F <- playbase::rowmean(F, fsymbol)
       F[is.na(F)] <- 0
-      
+
       ## prioritize with quick correlation restrict to top 100
       ## comparisons (fgsea is otherwise to slow) but we do not expect
       ## many with so many comparisons
@@ -242,10 +249,10 @@ SignatureBoard <- function(id, pgx,
       }
 
       ## make nice table
-      nes  <- res1[, "NES"]
+      nes <- res1[, "NES"]
       pval <- res1[, "pval"]
       qval <- p.adjust(pval, method = "fdr")
-      rho  <- rho[colnames(F)]
+      rho <- rho[colnames(F)]
 
       output <- as.matrix(cbind(NES = nes, p = pval, q = qval, rho = rho))
       rownames(output) <- colnames(F)
@@ -263,14 +270,14 @@ SignatureBoard <- function(id, pgx,
     getOverlapTable <- shiny::reactive({
       shiny::req(pgx)
       shiny::req(getCurrentMarkers())
-      
+
       markers <- getCurrentMarkers()
       genes <- markers$symbols
 
       ## fisher test
       G <- t(pgx$GMT)
       ii <- setdiff(match(genes, colnames(G)), NA)
-      
+
       N <- cbind(
         k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
         k2 = Matrix::rowSums(G[, ii] != 0), n2 = length(ii)
@@ -285,7 +292,7 @@ SignatureBoard <- function(id, pgx,
       pv <- pv[match(names(odds.ratio), names(pv))]
       qv <- p.adjust(pv, method = "bonferroni")
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
-      
+
       ## get shared genes
       aa <- rownames(A)
       y <- 1 * (colnames(G) %in% genes)
@@ -294,12 +301,12 @@ SignatureBoard <- function(id, pgx,
       ntotal <- Matrix::rowSums(G[aa, , drop = FALSE] != 0)
       A$ratio <- ncommon / ntotal
       ratio.kk <- paste0(ncommon, "/", ntotal)
-      
+
       ## determine top genes
       meta <- playbase::pgx.getMetaMatrix(pgx)
-      fx <- sqrt(rowMeans(meta$fc**2,na.rm=TRUE))
+      fx <- sqrt(rowMeans(meta$fc**2, na.rm = TRUE))
       gg <- colnames(G)
-      fx <- fx[match(gg,names(fx))]
+      fx <- fx[match(gg, names(fx))]
       names(fx) <- gg
       gset <- names(y)[which(y != 0)]
       G1 <- G[aa, which(y != 0)]
@@ -314,7 +321,7 @@ SignatureBoard <- function(id, pgx,
         commongenes[[i]] <- paste(gg, collapse = ",")
       }
       commongenes <- unlist(commongenes)
-      
+
       ## construct results dataframe
       gset.names <- substring(rownames(A), 1, 72)
       A$ratio <- round(A$ratio, digits = 3)
@@ -323,9 +330,11 @@ SignatureBoard <- function(id, pgx,
       db <- sub(":.*", "", gset.names)
       score <- (log10(A$odds.ratio) * -log10(A$q.fisher + 1e-40))**0.5
       score <- round(score, digits = 3)
-      df <- cbind(db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A,
-        common.genes = commongenes)
-      
+      df <- cbind(
+        db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A,
+        common.genes = commongenes
+      )
+
       df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
       df <- df[order(-df$score), ]
       return(df)
@@ -345,7 +354,7 @@ SignatureBoard <- function(id, pgx,
       markers <- getCurrentMarkers()
       gset <- markers$symbols
       features <- markers$features
-      
+
       i <- enrichmentContrastTable$rows_selected()
       if (is.null(i) || length(i) == 0) {
         return(NULL)
@@ -356,15 +365,15 @@ SignatureBoard <- function(id, pgx,
       meta <- playbase::pgx.getMetaMatrix(pgx)
       fc <- meta$fc
       qv <- meta$qv
-     
+
       # Get contrasts, FC, and gene info
       fc <- fc[features, contr]
       qv <- qv[features, contr]
       gene.info <- pgx$genes[features, c("feature", "symbol")]
-      
-      # Return df      
-      df <- data.frame(gene.info, log2FC=fc, q.value=qv, check.names = FALSE)
-      df <- df[order(-df$log2FC),]
+
+      # Return df
+      df <- data.frame(gene.info, log2FC = fc, q.value = qv, check.names = FALSE)
+      df <- df[order(-df$log2FC), ]
 
       return(df)
     })

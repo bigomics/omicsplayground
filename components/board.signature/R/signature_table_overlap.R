@@ -35,7 +35,6 @@ signature_table_overlap_server <- function(id,
     })
 
     overlapTable.RENDER <- shiny::reactive({
-
       df <- table_data()
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
@@ -48,10 +47,10 @@ signature_table_overlap_server <- function(id,
       )
 
       ## strip class, add link
-      df$geneset <- sub(".*[:]", "", df$geneset) 
-      df$geneset <- paste( df$geneset, geneset_link )
+      df$geneset <- sub(".*[:]", "", df$geneset)
+      df$geneset <- paste(df$geneset, geneset_link)
       rownames(df) <- 1:nrow(df)
-      
+
       DT::datatable(
         df,
         rownames = FALSE,

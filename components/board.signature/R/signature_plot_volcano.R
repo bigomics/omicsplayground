@@ -24,7 +24,7 @@ signature_plot_volcano_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  plot_opts <- shiny::tagList(    
+  plot_opts <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
         inputId = ns("share_axis"),
@@ -77,10 +77,9 @@ signature_plot_volcano_server <- function(id,
                                           getEnrichmentGeneTable,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ##
     plotly_plots <- function(cex = 3,
-                             yrange = 0.5, 
+                             yrange = 0.5,
                              n_rows = 2,
                              margin_l = 70,
                              margin_b = 50) {
@@ -92,7 +91,7 @@ signature_plot_volcano_server <- function(id,
         ii <- enrichmentContrastTable$rows_all()
       }
       shiny::req(ii)
-      
+
       # Input vars
       gsea <- sigCalculateGSEA()
       ct <- rownames(gsea$output)[ii]
@@ -102,10 +101,10 @@ signature_plot_volcano_server <- function(id,
       qv <- meta$qv[, ct, drop = FALSE]
 
       features <- rownames(fc)
-      symbols <- pgx$genes[rownames(fc),"symbol"]
-      
+      symbols <- pgx$genes[rownames(fc), "symbol"]
+
       # Get gene selected labels
-      if(length(ct)==1) {
+      if (length(ct) == 1) {
         sel.gene <- getEnrichmentGeneTable()$symbol
         row <- enrichmentGeneTable$rows_selected()
         if (length(row)) {
@@ -116,7 +115,7 @@ signature_plot_volcano_server <- function(id,
       }
 
       share_axis <- input$share_axis
-      
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = fc,
@@ -164,7 +163,7 @@ signature_plot_volcano_server <- function(id,
               yref = "paper"
             )
           )
-        ) 
+        )
 
       return(all_plts)
     }
