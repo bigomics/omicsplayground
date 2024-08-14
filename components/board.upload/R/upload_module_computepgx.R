@@ -596,11 +596,6 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
-        ## Test check dim(counts) & dim(X)
-        dbg("[compute PGX process]: dim.X: ", dim(params$counts)[1], ",", dim(params$counts)[2])
-        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX)[1], ",", dim(params$countsX)[2])
-        dbg("[compute PGX process]: dim.impX: ", dim(params$impX)[1], ",", dim(params$impX)[2])
-
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
