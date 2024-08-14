@@ -54,11 +54,17 @@ wgcna_plot_correlation_network_server <- function(id,
       size1 <- c(7, 10)[1 + 1 * (colnames(rho) == k)]
 
       qgraph::qgraph(rho,
-        graph = "glasso", layout = "spring", sampleSize = nrow(xx),
-        labels = rownames(rho), color = color1,
+        graph = "glasso",
+        layout = "spring",
+        sampleSize = nrow(xx),
+        labels = rownames(rho),
+        color = color1,
         tuning = 0, ## gamma for EBIClasso. 0.5=default, 0=BIC
-        vsize = size1, cut = 0, maximum = .45,
-        border.width = 1.5
+        vsize = size1,
+        cut = 0,
+        maximum = .45,
+        border.width = 1.5,
+        threshold = TRUE
       )
       p <- grDevices::recordPlot()
       p
