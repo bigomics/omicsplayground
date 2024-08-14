@@ -45,16 +45,15 @@ dataview_module_geneinfo_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneinfo_data <- shiny::reactive({
-
       feature <- r.gene()
       shiny::req(feature)
 
       organism <- pgx$organism
-      if(is.null(organism) || organism == "") organism <- "Human"
+      if (is.null(organism) || organism == "") organism <- "Human"
       jj <- match(feature, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
       ## symbol <- pgx$genes$human_ortholog[jj]
-      ## info <- playbase::getHSGeneInfo(symbol) 
+      ## info <- playbase::getHSGeneInfo(symbol)
       info <- playbase::getOrgGeneInfo(organism, symbol)
       res <- tspan("(gene info not available)")
       if (!is.null(info)) {
@@ -63,16 +62,18 @@ dataview_module_geneinfo_server <- function(id,
           info$summary <- playdata::GENE_SUMMARY[symbol]
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
-        if( feature != symbol ) {
+        if (feature != symbol) {
           info[["feature"]] <- feature
         }
-        ##info$organism <- NULL
-        ##info$databases <- NULL
-        
+        ## info$organism <- NULL
+        ## info$databases <- NULL
+
         ## reorder
         nn <- intersect(
-          c("feature", "gene_symbol", "uniprot", "organism", "name", "map_location",
-            "databases", "summary", names(info)),
+          c(
+            "feature", "gene_symbol", "uniprot", "organism", "name", "map_location",
+            "databases", "summary", names(info)
+          ),
           names(info)
         )
         info <- info[nn]
