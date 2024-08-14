@@ -191,7 +191,7 @@ CorrelationBoard <- function(id, pgx) {
       R <- R[cm, , drop = FALSE]
       zx <- zx[cm, ]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
-      sdx <- sqrt(rowMeans(zx**2))
+      sdx <- sqrt(rowMeans(zx**2, na.rm = TRUE))
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
       R
@@ -221,7 +221,7 @@ CorrelationBoard <- function(id, pgx) {
       R <- R[gg, , drop = FALSE]
       zx <- zx[gg, , drop = FALSE]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
-      sdx <- sqrt(rowMeans(zx**2))
+      sdx <- sqrt(rowMeans(zx**2, na.rm = TRUE))
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
       R <- R[order(R[, "cor"], decreasing = TRUE), , drop = FALSE]
       R
