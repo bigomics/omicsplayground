@@ -234,7 +234,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           }
 
           G <- Matrix::t(pgx$GMT[pp, jj] != 0)
-          ngenes <- Matrix::rowSums(G)
+          ngenes <- Matrix::rowSums(G, na.rm = TRUE)
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
 
