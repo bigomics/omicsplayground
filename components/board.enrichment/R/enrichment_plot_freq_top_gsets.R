@@ -126,10 +126,10 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       # sum duplicated rows
       F <- rowsum(F, row.names(F))
 
-      F <- head(F[order(-Matrix::rowSums(abs(F))), , drop = FALSE], ngenes)
-      F <- F[order(-Matrix::rowSums(F)), , drop = FALSE]
+      F <- head(F[order(-Matrix::rowSums(abs(F), na.rm = TRUE)), , drop = FALSE], ngenes)
+      F <- F[order(-Matrix::rowSums(F, na.rm = TRUE)), , drop = FALSE]
 
-      sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
+      sel.zero <- which(Matrix::rowSums(abs(F), na.rm = TRUE) < 1e-4)
       if (length(sel.zero)) rownames(F)[sel.zero] <- ""
 
       if (return_csv) {

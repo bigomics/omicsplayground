@@ -146,10 +146,10 @@ pcsf_plot_network_server <- function(id,
           fx <- res$meta[, .contrast]
           fx <- fx[vv]
         } else {
-          fx <- rowMeans(res$meta**2)
+          fx <- rowMeans(res$meta**2, na.rm = TRUE)
           fx <- fx[vv]
         }
-        label_cex <- 30 + 80 * (abs(fx) / max(abs(fx)))**2
+        label_cex <- 30 + 80 * (abs(fx) / max(abs(fx), na.rm = TRUE))**2
       }
 
       visnet <- visplot.PCSF( ## from playbase or util_pcsf.R??? (IK)

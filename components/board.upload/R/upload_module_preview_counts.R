@@ -22,7 +22,6 @@ upload_table_preview_counts_server <- function(
     height,
     title,
     info.text,
-    upload_datatype,
     caption) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -52,7 +51,6 @@ upload_table_preview_counts_server <- function(
       dt <- table_data()
       req(!is.null(dt))
 
-      dbg("[preview_counts] is.integer(dt) = ", is.integer(dt))
       is.integer <- is.integer(dt) || all(round(dt) == dt, na.rm = TRUE)
       digits <- ifelse(is.integer, 0, 2)
 
@@ -229,8 +227,6 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-      dbg("length(input$counts_csv$name) = ", length(input$counts_csv$name))
-
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
       if (!all(ext %in% c("csv", "RData"))) {
@@ -270,7 +266,6 @@ upload_table_preview_counts_server <- function(
         uploaded$contrasts.csv <- df
       }
 
-
       sel <- grep("params.RData", input$counts_csv$name)
       if (length(sel)) {
         if (opt$DEVMODE) {
@@ -278,12 +273,6 @@ upload_table_preview_counts_server <- function(
           uploaded$samples.csv <- params$samples
           uploaded$contrasts.csv <- params$contrasts
           uploaded$counts.csv <- params$counts
-          ## recompute_info(
-          ##   list(
-          ##     "name" = params$name,
-          ##     "description" = params$description
-          ##   )
-          ## )
         } else {
           shinyalert::shinyalert(
             title = "Error",
@@ -291,7 +280,8 @@ upload_table_preview_counts_server <- function(
           )
         }
       }
-    }) ## end observeEvent
+    }) ## end observeEvent input$counts.csv
+
 
     observeEvent(input$remove_counts, {
       delete_all_files_counts <- function(value) {

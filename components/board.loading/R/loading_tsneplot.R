@@ -77,7 +77,7 @@ loading_tsne_server <- function(id, pgx.dirRT, info.table, r_selected,
             F[is.na(F)] <- 0 ## really??
 
             ## get top 2000
-            sel <- head(order(-rowMeans(F**2)), 2000)
+            sel <- head(order(-rowMeans(F**2, na.rm = TRUE)), 2000)
             F <- F[sel, ]
 
             if (NCOL(F) == 1) {

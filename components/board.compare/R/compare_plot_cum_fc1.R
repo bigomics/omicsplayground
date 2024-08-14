@@ -63,8 +63,8 @@ compare_plot_cum_fc1_server <- function(id,
       FC <- cum_fc()
       indexes <- substr(colnames(FC), 1, 1)
       F1 <- FC[, indexes == 1, drop = FALSE]
-      ii <- head(order(-rowMeans(FC**2)), 40)
-      ii <- ii[order(rowMeans(FC[ii, ]))]
+      ii <- head(order(-rowMeans(FC**2, na.rm = TRUE)), 40)
+      ii <- ii[order(rowMeans(FC[ii, ], na.rm = TRUE))]
       F1 <- F1[ii, , drop = FALSE]
 
       # Prepare input for the plot

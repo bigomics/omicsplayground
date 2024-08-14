@@ -209,10 +209,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
         X1 <- scale(t(X1[gg, kk]))
         X2 <- scale(t(X2[gg, kk]))
-        rho <- colSums(X1 * X2) / (nrow(X1) - 1)
+        rho <- colSums(X1 * X2, na.rm = TRUE) / (nrow(X1) - 1)
       }
-      fc1 <- sqrt(rowMeans(F1**2))
-      fc2 <- sqrt(rowMeans(F2**2))
+      fc1 <- sqrt(rowMeans(F1**2, na.rm = TRUE))
+      fc2 <- sqrt(rowMeans(F2**2, na.rm = TRUE))
       score <- rho * fc1 * fc2
 
       # TODO: get teh gene_title

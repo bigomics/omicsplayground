@@ -278,7 +278,7 @@ BiomarkerBoard <- function(id, pgx) {
       R <- P
       if (nrow(R) > 1) {
         R <- (apply(P, 2, rank) / nrow(P))**4
-        R <- R[order(-rowSums(R)), , drop = FALSE]
+        R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
       }
 
       progress$inc(3 / 10, detail = "drawing tree")
@@ -287,7 +287,7 @@ BiomarkerBoard <- function(id, pgx) {
       ## create partition tree
       ## ------------------------------
 
-      R <- R[order(-rowSums(R)), , drop = FALSE]
+      R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
       sel <- head(rownames(R), 100)
       sel <- intersect(sel, rownames(X))
       sel <- head(rownames(R), NFEATURES) ## top50 features

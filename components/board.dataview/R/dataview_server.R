@@ -89,7 +89,7 @@ DataViewBoard <- function(id, pgx) {
           features <- rownames(pgx$X)
         }
         ## gene filter.
-        fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2)
+        fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2, na.rm = TRUE)
         features <- intersect(names(sort(-fc2)), features) ## most var gene??
         sel.feature <- features[1]
         features <- sort(features)

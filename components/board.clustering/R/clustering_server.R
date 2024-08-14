@@ -454,7 +454,7 @@ ClusteringBoard <- function(id, pgx) {
       grp.zx <- NULL
       if (topmode == "pca") {
         NPCA <- 5
-        svdres <- irlba::irlba(zx - rowMeans(zx), nv = NPCA)
+        svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
         gg <- rownames(zx)
@@ -478,7 +478,7 @@ ClusteringBoard <- function(id, pgx) {
         grp.dx <- grp.zx * 0
         nc <- ncol(grp.dx)
         for (i in 1:nc) {
-          grp.dx[, i] <- grp.zx[, i] - rowMeans(grp.zx[, -i, drop = FALSE])
+          grp.dx[, i] <- grp.zx[, i] - rowMeans(grp.zx[, -i, drop = FALSE], na.rm = TRUE)
         }
         gg <- rownames(zx)
         ntop <- 12
@@ -662,7 +662,7 @@ ClusteringBoard <- function(id, pgx) {
       ## -----------  restrict to top??
       dim(ref)
       if (nrow(ref) > 1000) {
-        ref <- head(ref[order(-apply(ref, 1, sd)), ], 1000)
+        ref <- head(ref[order(-apply(ref, 1, sd, na.rm = TRUE)), ], 1000)
       }
 
       ## -----------  get original data level

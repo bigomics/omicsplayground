@@ -77,9 +77,9 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons = NULL, hilight = NULL,
   F <- out$fc
   Q <- out$qv
 
-  ii <- Matrix::head(order(-rowMeans(F**2)), 60)
+  ii <- Matrix::head(order(-rowMeans(F**2, na.rm = TRUE)), 60)
   F1 <- F[ii, ]
-  F1 <- F1[order(rowMeans(F1)), ]
+  F1 <- F1[order(rowMeans(F1, na.rm = TRUE)), ]
 
   hm <- ComplexHeatmap::Heatmap(t(F1),
     cluster_rows = TRUE,
@@ -949,8 +949,8 @@ viz.VHVLusage <- function(pgx, by.pheno = "isotype", ng = 30, nmin = 1,
     stop("ERROR:: unknown phenotype=", by.pheno)
   }
 
-  VH.avg <- tapply(1:ncol(VH), y, function(i) rowMeans(VH[, i, drop = FALSE]))
-  VL.avg <- tapply(1:ncol(VL), y, function(i) rowMeans(VL[, i, drop = FALSE]))
+  VH.avg <- tapply(1:ncol(VH), y, function(i) rowMeans(VH[, i, drop = FALSE], na.rm = TRUE))
+  VL.avg <- tapply(1:ncol(VL), y, function(i) rowMeans(VL[, i, drop = FALSE], na.rm = TRUE))
   VH.avg <- do.call(cbind, VH.avg)
   VL.avg <- do.call(cbind, VL.avg)
   VH.avg <- VH.avg[order(-rowSums(abs(VH.avg))), ]
@@ -1046,11 +1046,11 @@ viz.GeneFamilies <- function(pgx, by.pheno = NULL, gset = NULL, ntop = 20, srt =
 
   if (!is.null(by.pheno) && sort == "diff") {
     y <- pgx$samples[, by.pheno]
-    mx <- tapply(1:ncol(fx), y, function(i) rowMeans(fx[, i, drop = FALSE]))
+    mx <- tapply(1:ncol(fx), y, function(i) rowMeans(fx[, i, drop = FALSE], na.rm = TRUE))
     mx <- do.call(cbind, mx)
     fx <- fx[order(-apply(mx, 1, function(x) diff(range(x)))), ]
   } else {
-    fx <- fx[order(-rowSums(fx)), ]
+    fx <- fx[order(-rowSums(fx, na.rm = TRUE)), ]
   }
 
 
@@ -1322,17 +1322,17 @@ viz.System <- function(pgx, contrast, umap, gs.umap) {
   ## ----------------------------------------------
   ## Setup multi-layer network
   ## ----------------------------------------------
-  X1 <- pgx$X - rowMeans(pgx$X)
-  X2 <- pgx$gsetX - rowMeans(pgx$gsetX)
-  X1 <- X1 / apply(X1, 1, sd) ## scale SD -> 1
-  X2 <- X2 / apply(X2, 1, sd) ## scale SD -> 1
+  X1 <- pgx$X - rowMeans(pgx$X, na.rm = TRUE)
+  X2 <- pgx$gsetX - rowMeans(pgx$gsetX, na.rm = TRUE)
+  X1 <- X1 / apply(X1, 1, sd, na.rm = TRUE) ## scale SD -> 1
+  X2 <- X2 / apply(X2, 1, sd, na.rm = TRUE) ## scale SD -> 1
 
   M1 <- playbase::matGroupMeans(X1, group = cl1, dir = 2)
   M2 <- playbase::matGroupMeans(X2, group = cl2, dir = 2)
-  M1 <- M1 - rowMeans(M1)
-  M2 <- M2 - rowMeans(M2)
-  M1 <- M1 / apply(M1, 1, sd)
-  M2 <- M2 / apply(M2, 1, sd)
+  M1 <- M1 - rowMeans(M1, na.rm = TRUE)
+  M2 <- M2 - rowMeans(M2, na.rm = TRUE)
+  M1 <- M1 / apply(M1, 1, sd, na.rm = TRUE)
+  M2 <- M2 / apply(M2, 1, sd, na.rm = TRUE)
 
   y1 <- pgx$samples$cluster
   P1 <- t(model.matrix(~ 0 + y1))
@@ -1345,9 +1345,9 @@ viz.System <- function(pgx, contrast, umap, gs.umap) {
   rownames(P2) <- sub("^y2", "", rownames(P2))
   colnames(P2) <- rownames(pgx$samples)
 
-  M1.top <- tapply(rownames(X1), cl1, function(i) Matrix::head(names(sort(rowMeans(-X1[i, ])))))
+  M1.top <- tapply(rownames(X1), cl1, function(i) Matrix::head(names(sort(rowMeans(-X1[i, ], na.rm = TRUE)))))
   M2.top <- tapply(rownames(X2), cl2, function(i) {
-    Matrix::head(grep("HALLMARK", names(sort(rowMeans(-X2[i, ]))), value = TRUE))
+    Matrix::head(grep("HALLMARK", names(sort(rowMeans(-X2[i, ], na.rm = TRUE))), value = TRUE))
   })
   M2.top <- lapply(M2.top, function(s) gsub(".*:|.*HALLMARK_", "", s))
   M1.top <- as.character(sapply(M1.top, paste, collapse = "\n"))
@@ -1367,10 +1367,10 @@ viz.System <- function(pgx, contrast, umap, gs.umap) {
 
   fc.plots <- function(contrast, dir) {
     y0 <- pgx$model.parameters$exp.matrix[, contrast]
-    fc1 <- rowMeans(X1[, y0 > 0]) - rowMeans(X1[, y0 < 0])
-    fc2 <- rowMeans(X2[, y0 > 0]) - rowMeans(X2[, y0 < 0])
-    fc3 <- rowMeans(P1[, y0 > 0]) - rowMeans(P1[, y0 < 0])
-    fc4 <- rowMeans(P2[, y0 > 0]) - rowMeans(P2[, y0 < 0])
+    fc1 <- rowMeans(X1[, y0 > 0], na.rm = TRUE) - rowMeans(X1[, y0 < 0], na.rm = TRUE)
+    fc2 <- rowMeans(X2[, y0 > 0], na.rm = TRUE) - rowMeans(X2[, y0 < 0], na.rm = TRUE)
+    fc3 <- rowMeans(P1[, y0 > 0], na.rm = TRUE) - rowMeans(P1[, y0 < 0], na.rm = TRUE)
+    fc4 <- rowMeans(P2[, y0 > 0], na.rm = TRUE) - rowMeans(P2[, y0 < 0], na.rm = TRUE)
 
     fc2 <- fc2[grep("HALLMARK", names(fc2))]
     names(fc2) <- gsub(".*HALLMARK_", "", names(fc2))

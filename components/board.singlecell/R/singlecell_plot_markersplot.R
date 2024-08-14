@@ -169,7 +169,7 @@ singlecell_plot_markersplot_server <- function(id,
       if (mrk_sortby == "name") {
         top.gx <- top.gx[order(rownames(top.gx)), , drop = FALSE]
       } else {
-        top.gx <- top.gx[order(-rowMeans(top.gx)), , drop = FALSE]
+        top.gx <- top.gx[order(-rowMeans(top.gx, na.rm = TRUE)), , drop = FALSE]
       }
       top.gx <- pmax(top.gx, 0)
 

@@ -35,13 +35,14 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     # add task to detect probetype using annothub
-    ah_task <- ExtendedTask$new(function(organism, probes) {
+    checkprobes_task <- ExtendedTask$new(function(organism, probes) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        probetype0 <- playbase::detect_probetype(organism, probes)
-        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
-        if (is.null(probetype0)) probetype0 <- "error"
-        probetype0
+        detected <- playbase::detect_species_probetype(probes,
+          test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
+        )
+        dbg("[UploadBoard:ExtendedTask.new] finished!")
+        detected
       })
     })
 
@@ -227,10 +228,11 @@ UploadBoard <- function(id,
     ## Check COUNTS matrix
     ## --------------------------------------------------------
     checked_for_log <- reactiveVal(FALSE)
+    organism_checked <- reactiveVal(FALSE)
 
     uploaded_counts <- shiny::eventReactive(
       {
-        list(uploaded$counts.csv)
+        list(uploaded$counts.csv, upload_organism())
       },
       {
         ## --------------------------------------------------------
@@ -501,16 +503,6 @@ UploadBoard <- function(id,
         list(status = status, matrix = checked)
       }
     )
-
-    ## output$input_recap <- renderUI({
-    ##   shiny::fluidRow(
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
-    ##   )
-    ## })
-
 
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
@@ -836,53 +828,78 @@ UploadBoard <- function(id,
         dbg("[UploadBoard] Invoking probetype ExtendedTask")
         probes <- rownames(uploaded$counts.csv)
         probetype("running")
-        ah_task$invoke(upload_organism(), probes)
+        checkprobes_task$invoke(upload_organism(), probes)
       }
     )
 
     observeEvent(
-      ah_task$status(),
+      checkprobes_task$status(),
       {
-        dbg("[observeEvent:ah_task$result] task status = ", ah_task$status())
-        if (ah_task$status() != "success") {
+        dbg(
+          "[observeEvent:checkprobes_task$result] task status = ",
+          checkprobes_task$status()
+        )
+        if (checkprobes_task$status() != "success") {
           return(NULL)
         }
-        if (ah_task$status() == "error") {
+        if (checkprobes_task$status() == "error") {
           probetype("error")
           return(NULL)
         }
 
-        detected_probetype <- ah_task$result()
+        ## inspect ExtendedTask results
+        detected <- checkprobes_task$result()
         organism <- upload_organism()
+        alt.text <- ""
+        dbg("[UploadBoard:ExtendedTask.new] upload_organism = ", organism)
+        dbg("[UploadBoard:ExtendedTask.new] detect$species = ", detected$species)
+        dbg("[UploadBoard:ExtendedTask.new] detect$probetype = ", detected$probetype)
+
+        if (!organism %in% detected$species) {
+          detected_probetype <- "error"
+          alt.species <- paste(detected$species, collapse = " or ")
+          if (length(alt.species)) {
+            alt.species <- paste0("<b>", alt.species, "</b>")
+            alt.text <- paste0("Are these perhaps ", alt.species, "?")
+          }
+        } else {
+          detected_probetype <- "error"
+          if (organism %in% names(detected$probetype)) {
+            detected_probetype <- detected$probetype[organism]
+          }
+        }
+        ## detected_probetype <- detected$probetype
         probetype(detected_probetype) ## set RV
+
         if (detected_probetype == "error") {
           dbg("[UploadBoard] ExtendedTask result has ERROR")
           shinyalert::shinyalert(
             title = "Probes not recognized!",
-            text = paste(
-              "Your probes do not match any probe type for organism <b>",
-              organism, "</b>. Please correct organism or check",
-              "your probe names."
+            text = paste0(
+              "Error. Your probes do not match any probe type for <b>",
+              organism, "</b>. Please check your probe names and select ",
+              "another organism. ", alt.text
             ),
             type = "error",
             size = "s",
             html = TRUE
           )
-        } else {
-          dbg("[UploadBoard] ExtendedTask result SUCCESFUL: detected_probetype = ", detected_probetype)
-          if (0) {
-            shinyalert::shinyalert(
-              title = "Probes OK!",
-              text = paste(
-                "Probe type has been detected successfully.",
-                "\n\nSelected organism: ", organism,
-                "\nDetected probe type: ", detected_probetype
-              ),
-              type = "info",
-              size = "xs"
-            )
-          }
-          dbg()
+        }
+
+        ## wrong datatype. just give warning. or should we change datatype?
+        if (detected_probetype != "error" &&
+          any(grepl("PROT", detected_probetype)) &&
+          !(upload_datatype() %in% c("proteomics"))) {
+          shinyalert::shinyalert(
+            title = "Is this proteomics data?",
+            text = paste0(
+              "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
+              "<b>", upload_datatype(), "</b> as data type."
+            ),
+            type = "warning",
+            size = "s",
+            html = TRUE
+          )
         }
       }
     )
@@ -892,14 +909,6 @@ UploadBoard <- function(id,
     ## ===================== PLOTS AND TABLES ==============================
     ## =====================================================================
 
-    ## upload_module_initial_settings_server(
-    ##   id = "initial",
-    ##   upload_organism = upload_organism,
-    ##   upload_datatype = upload_datatype,
-    ##   auth = auth,
-    ##   new_upload = new_upload
-    ## )
-
     upload_table_preview_counts_server(
       id = "counts_preview",
       uploaded = uploaded,
@@ -908,10 +917,8 @@ UploadBoard <- function(id,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
       height = c("100%", TABLE_HEIGHT_MODAL),
-      ##      title = ifelse(tolower(upload_datatype()) == "proteomics", "Uploaded Expression", "Uploaded Counts"),
       title = "Uploaded Counts",
       info.text = "This is the uploaded counts data.",
-      upload_datatype = upload_datatype,
       caption = "This is the uploaded counts data."
     )
 
@@ -992,7 +999,6 @@ UploadBoard <- function(id,
         wizardR::reset("upload_wizard")
 
         # skip upload trigger at first startup
-        dbg("new_upload() = ", new_upload())
         if (new_upload() == 0) {
           return(NULL)
         }

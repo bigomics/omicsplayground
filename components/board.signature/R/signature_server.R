@@ -266,9 +266,8 @@ SignatureBoard <- function(id, pgx,
       
       markers <- getCurrentMarkers()
       genes <- markers$symbols
-      
+
       ## fisher test
-      ##G <- playdata::GSETxGENE
       G <- t(pgx$GMT)
       ii <- setdiff(match(genes, colnames(G)), NA)
       

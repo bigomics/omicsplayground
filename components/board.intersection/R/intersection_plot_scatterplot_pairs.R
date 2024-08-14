@@ -51,8 +51,8 @@ intersection_scatterplot_pairs_server <- function(id,
         return(NULL)
       }
 
-      fc0 <- fc0[order(-apply(abs(fc0), 1, max)), ]
-      fc0 <- fc0[order(-rowMeans(abs(fc0**2))), ]
+      fc0 <- fc0[order(-apply(abs(fc0), 1, max, na.rm = TRUE)), ]
+      fc0 <- fc0[order(-rowMeans(abs(fc0**2), na.rm = TRUE)), ]
 
       ## selected genes
       sel.genes <- grep("^CD", rownames(fc0), value = TRUE)
