@@ -23,7 +23,7 @@ wgcna_plot_MTrelationships_ui <- function(
     label = label,
     info.text = info.text,
     caption = caption,
-    options = moduleTrait_opts,
+    ## options = moduleTrait_opts,
     height = height,
     width = width,
     download.fmt = NULL # FIXME png and pdf is not working, to avoid crashing other things, we decided to remove it
@@ -62,11 +62,11 @@ wgcna_plot_MTrelationships_server <- function(id,
       sel1 <- 1:nrow(moduleTraitCor)
       sel2 <- 1:ncol(moduleTraitCor)
 
-      sel2 <- sort(head(order(-colMeans(abs(moduleTraitCor))), 40)) ## conditions
-      sel1 <- sort(head(order(-rowMeans(abs(moduleTraitCor[, sel2]))), 12)) ## eigenvectors
+      sel2 <- sort(head(order(-colMeans(abs(moduleTraitCor), na.rm = TRUE)), 40)) ## conditions
+      sel1 <- sort(head(order(-rowMeans(abs(moduleTraitCor[, sel2]), na.rm = TRUE)), 12)) ## eigenvectors
 
-      sel2 <- sort(head(order(-colMeans(pmax(moduleTraitCor, 0))), 40)) ## conditions
-      sel1 <- sort(head(order(-rowMeans(pmax(moduleTraitCor[, sel2], 0))), 12)) ## eigenv
+      sel2 <- sort(head(order(-colMeans(pmax(moduleTraitCor, 0), na.rm = TRUE)), 40)) ## conditions
+      sel1 <- sort(head(order(-rowMeans(pmax(moduleTraitCor[, sel2], 0), na.rm = TRUE)), 12)) ## eigenv
 
       message("[moduleTrait.RENDER] sel1 = ", paste(sel1, collapse = " "))
       message("[moduleTrait.RENDER] sel2 = ", paste(sel2, collapse = " "))
