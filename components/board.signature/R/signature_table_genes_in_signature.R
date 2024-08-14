@@ -27,27 +27,25 @@ signature_table_genes_in_signature_server <- function(id,
                                                       organism,
                                                       getEnrichmentGeneTable) {
   moduleServer(id, function(input, output, session) {
-
     enrichmentGeneTable.RENDER <- shiny::reactive({
-
-      df <- getEnrichmentGeneTable()      
+      df <- getEnrichmentGeneTable()
       if (is.null(df)) {
         shiny::validate(shiny::need(!is.null(df), "Please select a contrast"))
         return(NULL)
       }
-      
+
       if (organism %in% c("Human", "human")) {
         df$human_ortholog <- NULL
       }
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
         df$feature <- NULL
       }
-      
+
       num_cols <- sapply(df, is.numeric)
-      color_fx <- df[, num_cols]      
+      color_fx <- df[, num_cols]
       color_fx[is.na(color_fx)] <- 0 ## yikes...
       numeric.cols <- colnames(df)[num_cols]
-      
+
       DT::datatable(df,
         class = "compact cell-border stripe",
         rownames = FALSE,

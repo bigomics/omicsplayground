@@ -27,7 +27,6 @@ signature_table_enrich_by_contrasts_server <- function(id,
                                                        sigCalculateGSEA) {
   moduleServer(id, function(input, output, session) {
     enrichmentContrastTable.RENDER <- shiny::reactive({
-
       gsea <- sigCalculateGSEA()
       if (is.null(gsea)) {
         return(NULL)
@@ -38,7 +37,7 @@ signature_table_enrich_by_contrasts_server <- function(id,
       output <- data.frame(contrast = rownames(output), output)
       output$q <- NULL
       output$rho <- NULL
-      
+
       color_fx <- as.numeric(output[, "NES"])
       color_fx[is.na(color_fx)] <- 0 ## yikes...
       numeric.cols <- which(sapply(output, is.numeric))

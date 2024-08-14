@@ -151,17 +151,17 @@ signature_plot_markers_server <- function(id,
         return(NULL)
       }
 
-      xsymbol <- pgx$genes[rownames(pgx$X),"symbol"]
-      X <- playbase::rowmean( pgx$X, xsymbol )
+      xsymbol <- pgx$genes[rownames(pgx$X), "symbol"]
+      X <- playbase::rowmean(pgx$X, xsymbol)
       y <- 1 * (rownames(X) %in% this.gset)
       names(y) <- rownames(X)
-      
+
       ## expression by group
       grp <- pgx$model.parameters$group
       groups <- unique(grp)
       gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE], na.rm = TRUE))
       colnames(gX) <- groups
-      
+
       ## for large datasets pre-grouping is faster
       ss.bygroup <- calcSingleSampleValues(gX, y, method = c("rho", "gsva"))
       do.rho <- TRUE
@@ -169,7 +169,7 @@ signature_plot_markers_server <- function(id,
       ## by sample is slow... so no gsva
       ss1 <- calcSingleSampleValues(X[, ], y, method = c("rho"))
       ss.bysample <- cbind(rho = ss1)
-      
+
       res <- list(
         by.sample = ss.bysample,
         by.group  = ss.bygroup
