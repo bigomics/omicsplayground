@@ -121,6 +121,5 @@ WordCloudBoard <- function(id, pgx) {
       wordcloud_enrichmentTable = wordcloud_enrichmentTable,
       getCurrentWordEnrichment = getCurrentWordEnrichment
     )
-    
   })
 }
