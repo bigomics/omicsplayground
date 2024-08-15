@@ -70,7 +70,8 @@ enrichment_plot_volcanomethods_server <- function(id,
 
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
-      gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+      gset_collections <- playbase::pgx.getGeneSetCollections(
+        gsets = rownames(pgx$gsetX))
       sel.gsets <- gset_collections[[gs_features()]]
       nlq <- -log10(1e-99 + unlist(Q))
 
@@ -85,7 +86,8 @@ enrichment_plot_volcanomethods_server <- function(id,
       pd
     })
 
-    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
+    plotly_plots <- function(cex = 3, yrange = 0.5, n_rows = 2,
+                             margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -95,17 +97,18 @@ enrichment_plot_volcanomethods_server <- function(id,
       highlight <- pd[["gset_selected"]]
       label <- pd[["gset_selected"]]
       ## meta tables
-      fc <- pd$FC
-      qv <- pd$Q
+      F <- pd$FC
+      Q <- pd$Q
       sel.gsets <- pd$sel.gsets
       rm(pd)
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
+        FC = F,
+        Q = Q,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
+        names = rownames(F),
         title_y = "significance (-log10q)",
         title_x = "effect size (log2FC)",
         share_axis = !input$scale_per_method,

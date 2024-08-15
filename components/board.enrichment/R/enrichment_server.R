@@ -419,21 +419,23 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     gene_selected <- shiny::reactive({
       shiny::req(pgx$X)
       i <- as.integer(genetable$rows_selected())
-      if (is.null(i) || is.na(i) || length(i) == 0) i <- 1
       rpt <- geneDetails()
-      if (is.null(rpt) || nrow(rpt) == 0) {
-        return(list(gene = NA, probe = NA))
+      not.i <- (is.null(i) || is.na(i) || length(i) == 0) 
+      if ( not.i || is.null(rpt) || nrow(rpt) == 0) {
+        ##return(list(gene = NA, probe = NA))
+        return(NULL)
       }
-      sel.gene <- rownames(rpt)[i]
-      res <- unlist(pgx$genes[sel.gene, c("gene_name", "feature", "symbol")])
-      return(list(rn = res["gene_name"], gene = res["symbol"], probe = res["feature"]))
+      sel.row <- rownames(rpt)[i]
+##      res <- unlist(pgx$genes[sel.row, c("symbol", "feature")])
+##      return(list(rn = sel.row, gene = res["symbol"], probe = res["feature"]))
+      symbol <- pgx$genes[sel.row, "symbol"]
+      return(list(rn = sel.row, gene = symbol ))
     })
 
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    subplot.MAR <- c(3, 3.5, 1.5, 0.5)
     subplot.MAR <- c(2.8, 4, 4, 0.8)
 
     # Top enriched gene sets

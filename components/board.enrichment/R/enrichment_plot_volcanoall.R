@@ -114,17 +114,18 @@ enrichment_plot_volcanoall_server <- function(id,
       shiny::req(pd)
 
       # Input vars
-      fc <- pd$FC
-      qv <- pd$Q
+      F <- pd$FC
+      Q <- pd$Q
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
+        FC = F,
+        Q = Q,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
+        names = rownames(F),
         source = "enrich_volcanoall",
         title_y = "significance (-log10q)",
         title_x = "effect size (log2FC)",

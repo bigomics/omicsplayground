@@ -103,9 +103,13 @@ enrichment_plot_scatter_server <- function(id,
       gset <- gset_selected()
       shiny::req(sel, gset)
 
+      not.selected <- (is.null(sel) || length(sel) == 0)
+      shiny::validate(shiny::need(
+        not.selected == FALSE, tspan("Please select a gene", js = FALSE)))
+      
       gene <- sel$gene
       gset <- gset[1]
-      gx <- pgx$X[sel$probe, ]
+      gx <- pgx$X[sel$rn, ]
       sx <- pgx$gsetX[gset, ]
       if (length(gx) == 0 || length(sx) == 0 ||
         length(gx) != length(sx)) {
@@ -138,7 +142,7 @@ enrichment_plot_scatter_server <- function(id,
       shiny::req(sel, gset)
       gene <- sel$gene
       gset <- gset[1]
-      gx <- pgx$X[sel$probe, ]
+      gx <- pgx$X[sel$rn, ]
       sx <- pgx$gsetX[gset, ]
       if (length(gx) == 0 || length(sx) == 0 ||
         length(gx) != length(sx)) {
