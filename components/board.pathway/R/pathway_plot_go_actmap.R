@@ -101,10 +101,8 @@ functional_plot_go_actmap_server <- function(id,
 
         playbase::pgx.plotActivation(
           pgx,
-          features = NULL,
           contrasts = input$selected_contrasts,
           what = "matrix",
-          matrix = res$score,
           plotlib = "plotly",
           filter = NULL,
           cexCol = 1.4,
@@ -115,8 +113,7 @@ functional_plot_go_actmap_server <- function(id,
           maxfc = 20,
           mar = c(15, 30),
           tl.cex = 1.05,
-          row.nchar = 60,
-          showscale = TRUE
+          row.nchar = 60
         )
       }
 
@@ -126,10 +123,8 @@ functional_plot_go_actmap_server <- function(id,
 
         playbase::pgx.plotActivation(
           pgx,
-          features = NULL,
           contrasts = input$selected_contrasts,
           what = "matrix",
-          matrix = res$score,
           plotlib = "plotly",
           filter = NULL,
           cexCol = 1.4,
@@ -140,8 +135,7 @@ functional_plot_go_actmap_server <- function(id,
           maxfc = 100,
           mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200),
-          showscale = TRUE
+          row.nchar = ifelse(input$rotate, 60, 200)
         )
 
         ## plotGOactmap(
