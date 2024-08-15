@@ -70,7 +70,7 @@ functional_table_wikipathway_server <- function(id,
       )
       df$pathway <- paste(df$pathway, pathway.id_link)
       df$pathway.id <- NULL
-      
+
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
       DT::datatable(df,

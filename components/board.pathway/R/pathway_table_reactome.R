@@ -59,7 +59,7 @@ functional_table_reactome_server <- function(id,
       )
       df$pathway <- paste(df$pathway, reactome.id_link)
       df$reactome.id <- NULL
-      
+
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
 
       DT::datatable(df,
