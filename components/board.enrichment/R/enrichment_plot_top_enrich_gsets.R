@@ -136,13 +136,12 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     })
 
     get_plotly_plots <- function(cex.text) {
-
       res <- get_TopEnriched()
       shiny::req(res)
 
       rnk0 <- res$rnk0
-      # gsea.enplotly cannot deal with duplicated names. 
-      rnk0 <- rnk0[!duplicated(names(rnk0))] 
+      # gsea.enplotly cannot deal with duplicated names.
+      rnk0 <- rnk0[!duplicated(names(rnk0))]
       gmt.genes <- res$gmt.genes
       fc <- res$fx
       qv <- res$qv

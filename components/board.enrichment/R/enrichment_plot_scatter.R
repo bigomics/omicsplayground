@@ -105,8 +105,9 @@ enrichment_plot_scatter_server <- function(id,
 
       not.selected <- (is.null(sel) || length(sel) == 0)
       shiny::validate(shiny::need(
-        not.selected == FALSE, tspan("Please select a gene", js = FALSE)))
-      
+        not.selected == FALSE, tspan("Please select a gene", js = FALSE)
+      ))
+
       gene <- sel$gene
       gset <- gset[1]
       gx <- pgx$X[sel$rn, ]

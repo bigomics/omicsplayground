@@ -420,16 +420,16 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       shiny::req(pgx$X)
       i <- as.integer(genetable$rows_selected())
       rpt <- geneDetails()
-      not.i <- (is.null(i) || is.na(i) || length(i) == 0) 
-      if ( not.i || is.null(rpt) || nrow(rpt) == 0) {
-        ##return(list(gene = NA, probe = NA))
+      not.i <- (is.null(i) || is.na(i) || length(i) == 0)
+      if (not.i || is.null(rpt) || nrow(rpt) == 0) {
+        ## return(list(gene = NA, probe = NA))
         return(NULL)
       }
       sel.row <- rownames(rpt)[i]
-##      res <- unlist(pgx$genes[sel.row, c("symbol", "feature")])
-##      return(list(rn = sel.row, gene = res["symbol"], probe = res["feature"]))
+      ##      res <- unlist(pgx$genes[sel.row, c("symbol", "feature")])
+      ##      return(list(rn = sel.row, gene = res["symbol"], probe = res["feature"]))
       symbol <- pgx$genes[sel.row, "symbol"]
-      return(list(rn = sel.row, gene = symbol ))
+      return(list(rn = sel.row, gene = symbol))
     })
 
     ## ================================================================================

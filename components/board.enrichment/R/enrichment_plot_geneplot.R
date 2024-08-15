@@ -75,7 +75,8 @@ enrichment_plot_geneplot_server <- function(id,
 
       not.selected <- (is.null(sel) || length(sel) == 0)
       shiny::validate(shiny::need(
-        not.selected == FALSE, tspan("Please select a gene", js = FALSE)))
+        not.selected == FALSE, tspan("Please select a gene", js = FALSE)
+      ))
 
       if (not.selected) {
         return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
@@ -89,7 +90,7 @@ enrichment_plot_geneplot_server <- function(id,
         grouped <- !input$gs_ungroup2
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)
         if (!grouped && ncol(pgx$X) > 15) srt <- 60
-        
+
         playbase::pgx.plotExpression(
           pgx,
           probe,

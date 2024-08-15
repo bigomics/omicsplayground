@@ -71,7 +71,8 @@ enrichment_plot_volcanomethods_server <- function(id,
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
       gset_collections <- playbase::pgx.getGeneSetCollections(
-        gsets = rownames(pgx$gsetX))
+        gsets = rownames(pgx$gsetX)
+      )
       sel.gsets <- gset_collections[[gs_features()]]
       nlq <- -log10(1e-99 + unlist(Q))
 
