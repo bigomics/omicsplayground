@@ -155,7 +155,8 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  shiny::HTML("<h4>Probe filtering:</h4>"),
+                  ## shiny::HTML("<h4>Probe filtering:</h4>"),
+                  shiny::HTML("<h4>Feature filtering:</h4>"),
                   choiceValues =
                     c(
                       "append.symbol",
