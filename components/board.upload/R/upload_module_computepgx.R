@@ -84,21 +84,7 @@ upload_module_computepgx_server <- function(
       DEV.SELECTED <- c()
 
       ## Probe filtering defaults
-      PROBE_FILTER_SELECTED <- shiny::eventReactive(
-        {
-          upload_datatype()
-        },
-        {
-          if (tolower(upload_datatype()) == "proteomics") {
-            mm <- DEFAULTS$computation_options$probe_filtering$proteomics
-          } else {
-            mm <- DEFAULTS$computation_options$probe_filtering$default
-          }
-          return(mm)
-        }
-      )
-
-
+      PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
@@ -172,11 +158,10 @@ upload_module_computepgx_server <- function(
                   shiny::HTML("<h4>Probe filtering:</h4>"),
                   choiceValues =
                     c(
-                      "only.hugo",
+                      "append.symbol",
                       "remove.notexpressed",
                       "remove.unknown",
                       "only.proteincoding"
-                      ## "skip.normalization"
                     ),
                   choiceNames =
                     c(
@@ -184,10 +169,8 @@ upload_module_computepgx_server <- function(
                       "Remove not-expressed",
                       "Remove features without symbol",
                       "Remove Rik/ORF/LOC genes"
-                      ## "Skip normalization"
-                      ## "Exclude immunogenes",
                     ),
-                  selected = PROBE_FILTER_SELECTED()
+                  selected = PROBE_FILTER_SELECTED
                 )
               ),
               bslib::card(
@@ -540,7 +523,7 @@ upload_module_computepgx_server <- function(
         use.design <- TRUE
         prune.samples <- FALSE
         flt <- input$filter_methods
-        only.hugo <- ("only.hugo" %in% flt)
+        append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
         ## do.normalization <- !("skip.normalization" %in% flt)
@@ -584,8 +567,8 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           only.known = !remove.unknown,
           only.proteincoding = only.proteincoding,
-          only.hugo = only.hugo,
-          convert.hugo = only.hugo,
+          only.hugo = append.symbol,  ## DEPRECATED
+          convert.hugo = append.symbol,  ## should be renamed
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
