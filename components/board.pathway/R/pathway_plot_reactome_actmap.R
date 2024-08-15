@@ -111,7 +111,6 @@ functional_plot_reactome_actmap_server <- function(id,
 
         playbase::pgx.plotActivation(
           pgx,
-          features = df$pathway,
           contrasts = input$selected_contrasts,
           what = "geneset",
           plotlib = "plotly",
@@ -124,8 +123,7 @@ functional_plot_reactome_actmap_server <- function(id,
           maxfc = 20,
           mar = c(15, 30),
           tl.cex = 0.85,
-          row.nchar = 50,
-          showscale = TRUE
+          row.nchar = 50
         )
       }
 
@@ -139,7 +137,6 @@ functional_plot_reactome_actmap_server <- function(id,
 
         playbase::pgx.plotActivation(
           pgx,
-          features = df$pathway,
           contrasts = input$selected_contrasts,
           what = "geneset",
           plotlib = "plotly",
@@ -152,8 +149,7 @@ functional_plot_reactome_actmap_server <- function(id,
           maxfc = 100,
           mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200),
-          showscale = TRUE
+          row.nchar = ifelse(input$rotate, 60, 200)
         )
       }
 
