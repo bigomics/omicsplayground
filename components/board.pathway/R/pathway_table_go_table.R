@@ -80,15 +80,17 @@ functional_table_go_table_server <- function(id,
 
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink
       id_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
-                nrow(dt)),
+        rep_len(
+          "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
+          nrow(dt)
+        ),
         id2
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
       dt$term <- paste(dt$term, id_link)
-      
+
       numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
 
       DT::datatable(dt,

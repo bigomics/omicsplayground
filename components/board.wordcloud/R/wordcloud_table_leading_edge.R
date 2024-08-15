@@ -29,7 +29,6 @@ wordcloud_table_leading_edge_server <- function(id,
                                                 wordcloud_enrichmentTable,
                                                 getCurrentWordEnrichment) {
   moduleServer(id, function(input, output, session) {
-
     wordcloud_leadingEdgeTable.RENDER <- shiny::reactive({
       shiny::req(pgx$gset.meta, wc_contrast())
 
@@ -54,14 +53,14 @@ wordcloud_table_leading_edge_server <- function(id,
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
 
-      le.class <- sub("[:].*","",df$leading.edge)
-      df$leading.edge <- sub(".*[:]","",df$leading.edge)
-      df$leading.edge <- paste( df$leading.edge, leading.edge_link )
-      df <- cbind( class = le.class, df )
-      colnames(df) <- c("class",tspan("LE gene set", js=FALSE),"logFC")
+      le.class <- sub("[:].*", "", df$leading.edge)
+      df$leading.edge <- sub(".*[:]", "", df$leading.edge)
+      df$leading.edge <- paste(df$leading.edge, leading.edge_link)
+      df <- cbind(class = le.class, df)
+      colnames(df) <- c("class", tspan("LE gene set", js = FALSE), "logFC")
 
       numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
-      
+
       tbl <- DT::datatable(df,
         rownames = FALSE,
         escape = c(-1, -2),
