@@ -43,7 +43,7 @@ PcsfInputs <- function(id) {
     ),
     hr(),
     withTooltip(
-      shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -5, 5, -3, 0.5),
+      shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -4, 4, -2, 1),
       "Select contrast.",
       placement = "right"
     ),

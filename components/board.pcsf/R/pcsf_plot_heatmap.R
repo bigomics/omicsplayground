@@ -69,9 +69,9 @@ pcsf_plot_heatmap_server <- function(id,
 
       idx <- res$idx
       genes <- res$genes
-      pgx_input <- pgx$X[res$genes_raw, ]
+      pp <- playbase::map_probes( pgx$genes, genes, column=NULL )
+      pgx_input <- pgx$X[pp, ]
 
-      rownames(pgx_input) <- toupper(rownames(pgx_input))
       playbase::gx.splitmap(
         pgx_input,
         col.annot = pgx$samples,
