@@ -78,9 +78,7 @@ biomarker_plot_featurerank_server <- function(id,
       }
 
       ## ------------ intersect features, set minimum set size
-      ## rownames(X) <- toupper(rownames(X))
-      ## genes <- toupper(rownames(X))
-      rownames(X) <- toupper(toupper(pgx$genes$symbol))
+
       genes <- toupper(pgx$genes$symbol)
       features <- lapply(features, toupper)
       features <- lapply(features, function(f) intersect(toupper(f), genes))
@@ -117,9 +115,11 @@ biomarker_plot_featurerank_server <- function(id,
 
       gene.level <- TRUE
       gene.level <- (ft_level == "gene")
-      i <- 1
+
       for (i in 1:ncol(Y)) {
         if (!interactive()) progress$inc(1 / ncol(Y))
+
+
 
         grp <- Y[, i]
         grp <- as.character(grp)
