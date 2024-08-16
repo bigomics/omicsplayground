@@ -39,30 +39,28 @@ compare_plot_cum_fc1_ui <- function(id,
 #'
 #' @export
 compare_plot_cum_fc1_server <- function(id,
-                                        pgx,
-                                        dataset2,
-                                        cum_fc,
-                                        ## compute,
+                                        #pgx,
+                                        #dataset2,
+                                        getMatrices,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    ## cum_fc_triggered <- shiny::reactiveVal(FALSE)
-    ## shiny::observeEvent(compute(), {
-    ##   cum_fc_triggered(cum_fc())
-    ## })
-
-    cumfcplot.RENDER <- shiny::reactive({
-      shiny::req(pgx$X)
-      shiny::req(dataset2)
-      ## shiny::req(cum_fc_triggered())
-      shiny::req(cum_fc())
+    plot_data <- reactive({
+      res <- getMatrices()
+      FC <- cbind( res$F1, res$F2 )
+      FC
+    })
+    
+    plot.RENDER <- shiny::reactive({
+      #shiny::req(pgx$X)
+      #shiny::req(dataset2)
+      shiny::req(getMatrices())
 
       # Get the cumulative fold changes for dataset 1
-      ##      FC <- cum_fc_triggered()
-      FC <- cum_fc()
-      indexes <- substr(colnames(FC), 1, 1)
-      F1 <- FC[, indexes == 1, drop = FALSE]
+      res <- getMatrices()
+      FC <- cbind( res$F1, res$F2 )
+      F1 <- res$F1
       ii <- head(order(-rowMeans(FC**2, na.rm = TRUE)), 40)
       ii <- ii[order(rowMeans(FC[ii, ], na.rm = TRUE))]
       F1 <- F1[ii, , drop = FALSE]
@@ -96,8 +94,8 @@ compare_plot_cum_fc1_server <- function(id,
     PlotModuleServer(
       "plot",
       plotlib = "plotly",
-      func = cumfcplot.RENDER,
-      csvFunc = cum_fc,
+      func = plot.RENDER,
+      csvFunc = plot_data,
       res = c(80, 98), ## resolution of plots
       pdf.width = 10, pdf.height = 6,
       add.watermark = watermark
