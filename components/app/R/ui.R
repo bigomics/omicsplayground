@@ -138,7 +138,7 @@ app_ui <- function(x) {
         "SystemsBio" = c(
           drug = "Drug connectivity",
           cell = "Cell profiling",
-          pcsf = "PCSF",          
+          pcsf = "PCSF",
           wgcna = "WGCNA",
           tcga = "TCGA survival (beta)"
         )

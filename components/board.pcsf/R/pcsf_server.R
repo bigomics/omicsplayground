@@ -71,17 +71,19 @@ PcsfBoard <- function(id, pgx) {
 
         ## GMT has organism specific symbol, but we need to map to
         ## human ortholog
-        G <- pgx$GMT[, top.gs]        
-        G <- playbase::rename_by(G, pgx$genes, from_id="symbol",
-                                 new_id = "human_ortholog")
+        G <- pgx$GMT[, top.gs]
+        G <- playbase::rename_by(G, pgx$genes,
+          from_id = "symbol",
+          new_id = "human_ortholog"
+        )
         ngmt <- Matrix::rowSums(G != 0, na.rm = TRUE)
         ngmt <- log(1 + ngmt)
 
         ## ------------ find gene clusters --------------
 
         ## also X needs to be in human ortholog
-        X <- playbase::rename_by(pgx$X, pgx$genes, "human_ortholog")        
-        X <- X[genes,]
+        X <- playbase::rename_by(pgx$X, pgx$genes, "human_ortholog")
+        X <- X[genes, ]
         clust <- playbase::pgx.FindClusters(
           X = scale(t(X)),
           method = c("kmeans"),
@@ -89,17 +91,17 @@ PcsfBoard <- function(id, pgx) {
         )
 
         ## take the minimum level that has at least 2 clusters
-        nclust <- apply( clust[["kmeans"]], 2, function(x) length(table(x)))
+        nclust <- apply(clust[["kmeans"]], 2, function(x) length(table(x)))
         sel <- min(which(nclust > 1))
         idx <- clust[["kmeans"]][, sel]
         names(idx) <- genes
         idx <- idx[!duplicated(names(idx))]
-        
+
         ## balance number of gene per group??
         genes <- unlist(tapply(names(idx), idx, function(gg) head(gg, 800)))
         genes <- as.vector(genes)
         idx <- idx[genes]
-        
+
         ## ------------ create edge table --------------
         sel <- (STRING$from %in% genes & STRING$to %in% genes)
         ee <- STRING[sel, ]
@@ -107,16 +109,16 @@ PcsfBoard <- function(id, pgx) {
 
         # Create cost matrix from correlation
         rho <- cor(t(X[genes, ]))
-        rho.ee <- pmax( rho[cbind(ee$from, ee$to)], 1e-4)
+        rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 1e-4)
         ee$cost <- ee$cost**1 / rho.ee ## balance PPI with experiment
 
         ## ------------ create igraph network --------------
         ppi <- PCSF::construct_interactome(ee)
         ## gene set weighting. give more weight to genes that are in
         ## many gene sets.
-        gset.wt <- (ngmt[genes] / max(ngmt[genes])) 
+        gset.wt <- (ngmt[genes] / max(ngmt[genes]))
         terminals <- abs(mx[genes])**1 * (0.1 + gset.wt)**1
-        
+
         out <- list(
           genes = genes,
           meta = meta,
@@ -127,7 +129,7 @@ PcsfBoard <- function(id, pgx) {
           terminals = terminals
         )
         dbg("[pcsf_server.R:pcsf_compute] done!")
-        
+
         return(out)
       }
     )
