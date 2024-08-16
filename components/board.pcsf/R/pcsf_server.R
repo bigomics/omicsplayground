@@ -70,14 +70,7 @@ PcsfBoard <- function(id, pgx) {
 
         # Genes in STRING are based in human genome, thus use ortholog
         genes_raw <- genes
-        if (!pgx$organism %in% c("Human", "human")) {
-          genes_unique <- playbase::probe2symbol(unique(genes), pgx$genes, "human_ortholog")
-          names(genes_unique) <- genes
-          genes <- genes_unique[genes]
-          genes <- genes[genes != ""]
-        }
-
-        genes <- toupper(genes)
+        genes <- playbase::probe2symbol(unique(genes), pgx$genes, "human_ortholog")
         names(idx) <- genes
 
         ## balance number of gene per group??
@@ -89,12 +82,10 @@ PcsfBoard <- function(id, pgx) {
         genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
         rho <- cor(t(pgx$X[genes_raw, ]))
         # Rename cor matrix according to human orthologs
-        if (!pgx$organism %in% c("Human", "human")) {
-          human_gnames <- pgx$genes[rownames(rho), "human_ortholog"]
-          rownames(rho) <- toupper(human_gnames)
-          colnames(rho) <- toupper(human_gnames)
-          rho <- rho[!rownames(rho) == "", !colnames(rho) == ""]
-        }
+        human_gnames <- pgx$genes[rownames(rho), "human_ortholog"]
+        rownames(rho) <- human_gnames
+        colnames(rho) <- human_gnames
+        rho <- rho[!rownames(rho) == "", !colnames(rho) == ""]
         rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 0.001)
         ee$cost <- ee$cost**1 / rho.ee ## balance PPI with experiment
 
