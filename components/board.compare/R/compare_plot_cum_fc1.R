@@ -39,8 +39,8 @@ compare_plot_cum_fc1_ui <- function(id,
 #'
 #' @export
 compare_plot_cum_fc1_server <- function(id,
-                                        #pgx,
-                                        #dataset2,
+                                        # pgx,
+                                        # dataset2,
                                         getMatrices,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -48,18 +48,18 @@ compare_plot_cum_fc1_server <- function(id,
 
     plot_data <- reactive({
       res <- getMatrices()
-      FC <- cbind( res$F1, res$F2 )
+      FC <- cbind(res$F1, res$F2)
       FC
     })
-    
+
     plot.RENDER <- shiny::reactive({
-      #shiny::req(pgx$X)
-      #shiny::req(dataset2)
+      # shiny::req(pgx$X)
+      # shiny::req(dataset2)
       shiny::req(getMatrices())
 
       # Get the cumulative fold changes for dataset 1
       res <- getMatrices()
-      FC <- cbind( res$F1, res$F2 )
+      FC <- cbind(res$F1, res$F2)
       F1 <- res$F1
       ii <- head(order(-rowMeans(FC**2, na.rm = TRUE)), 40)
       ii <- ii[order(rowMeans(FC[ii, ], na.rm = TRUE))]

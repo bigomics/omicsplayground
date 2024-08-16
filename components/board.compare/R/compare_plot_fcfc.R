@@ -13,12 +13,12 @@
 #'
 #' @export
 compare_plot_fcfc_ui <- function(id,
-                                           height,
-                                           title,
-                                           info.text,
-                                           info.methods,
-                                           info.extra_link,
-                                           width) {
+                                 height,
+                                 title,
+                                 info.text,
+                                 info.methods,
+                                 info.extra_link,
+                                 width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(ns("plot"),
@@ -43,9 +43,9 @@ compare_plot_fcfc_ui <- function(id,
 #' @return
 #' @export
 compare_plot_fcfc_server <- function(id,
-                                            getMatrices,
-                                            hilightgenes,
-                                            watermark = FALSE) {
+                                     getMatrices,
+                                     hilightgenes,
+                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -54,8 +54,8 @@ compare_plot_fcfc_server <- function(id,
       shiny::req(getMatrices())
       res <- getMatrices()
       F1 <- res$F1
-      F2 <- res$F2      
-      out_data <- cbind( F1, F2 )
+      F2 <- res$F2
+      out_data <- cbind(F1, F2)
       return(out_data)
     })
 
@@ -74,14 +74,14 @@ compare_plot_fcfc_server <- function(id,
       genes <- sample(rownames(FC), sample_size)
       genes <- c(hilight, genes)
       genes <- unique(genes)
-      
+
       ## Get data ready
       data_1 <- mat$F1
       data_2 <- mat$F2
       ncol_d1 <- ncol(data_1)
       ncol_d2 <- ncol(data_2)
       nplots <- ncol_d1 * ncol_d2
-      
+
       # Prepare collection list
       sub_plots <- vector("list", nplots)
       counter <- 1

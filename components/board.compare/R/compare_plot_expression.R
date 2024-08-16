@@ -32,13 +32,12 @@ compare_plot_expression_server <- function(id,
                                            getMatrices,
                                            getScoreTable,
                                            selected,
-                                           ##compute,
+                                           ## compute,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plotly_multibarplot.RENDER <- shiny::reactive({
       dt <- tryCatch(
-      {
+        {
           getScoreTable()
         },
         error = function(w) {
@@ -65,13 +64,13 @@ compare_plot_expression_server <- function(id,
       mat <- getMatrices()
       X1 <- mat$X1
       X2 <- mat$X2
-      
+
       df <- getScoreTable()
       sel.genes <- selected()
       xgenes <- intersect(rownames(X1), rownames(X2))
       sel.genes <- head(intersect(sel.genes, xgenes), 8)
       e1 <- playbase::pgx.getContrastMatrix(pgx1)[, ct1, drop = FALSE]
-      e2 <- playbase::pgx.getContrastMatrix(pgx1)[, ct2, drop = FALSE]      
+      e2 <- playbase::pgx.getContrastMatrix(pgx1)[, ct2, drop = FALSE]
 
       # Build plots
       sub_plots <- vector("list", length(sel.genes))
@@ -83,17 +82,17 @@ compare_plot_expression_server <- function(id,
         x2 <- X2[gene_i, ]
         m1 <- apply(e1, 2, function(y) tapply(x1, y, mean))
         m2 <- apply(e2, 2, function(y) tapply(x2, y, mean))
-        mm <- cbind(m1, m2)        
-        
+        mm <- cbind(m1, m2)
+
         # Assemble barplots
-        title_y <- 1.1 * max(mm, na.rm=TRUE) 
+        title_y <- 1.1 * max(mm, na.rm = TRUE)
         rn <- rownames(mm)
         plt <- plotly::plot_ly()
         for (i in seq_len(NCOL(mm))) {
           col_i <- mm[, i, drop = FALSE]
           name_i <- gsub(pattern = "_vs_", replacement = " vs\n", x = colnames(col_i))
           show_legend1 <- (i == 1 && gene_i == sel.genes[1])
-          
+
           # Add bars
           plt <- plotly::add_trace(
             plt,
@@ -114,7 +113,7 @@ compare_plot_expression_server <- function(id,
               barmode = "group"
             )
         }
-        
+
         plt <- plotly::add_annotations(plt,
           text = paste("<b>", gene_i, "</b>"),
           font = list(size = 9),
