@@ -126,7 +126,8 @@ PcsfBoard <- function(id, pgx) {
           ppi = ppi,
           terminals = terminals
         )
-
+        dbg("[pcsf_server.R:pcsf_compute] done!")
+        
         return(out)
       }
     )
