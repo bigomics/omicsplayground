@@ -115,42 +115,48 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## allow trigger on explicit compare button
     contrast1 <- shiny::reactiveVal()
     contrast2 <- shiny::reactiveVal()
-    shiny::observeEvent({
-      list(pgx$X, input$compare_button)
-    }, {
-      shiny::req(pgx$X)
-      shiny::req(dataset2()$X)
-      
-      ## check if contrast1 is NULL or invalid (e.g. from previous
-      ## used dataset), if invalid, force update
-      ct1 <- input$contrast1
-      all.ct1 <- playbase::pgx.getContrasts(pgx)
-      valid.ct1 <- !is.null(ct1) && all(ct1 %in% all.ct1)
-      if(!valid.ct1) {
-        ct1 <- all.ct1[1]
-        shiny::updateSelectInput(session, "contrast1",
-                                 choices = all.ct1,
-                                 selected = ct1)        
-      }
-      contrast1( ct1 )
+    shiny::observeEvent(
+      {
+        list(pgx$X, input$compare_button)
+      },
+      {
+        shiny::req(pgx$X)
+        shiny::req(dataset2()$X)
 
-      ## check if contrast2 is NULL or invalid (e.g. from previous
-      ## used dataset), if invalid, force update
-      ct2 <- input$contrast2
-      pgx2 <- dataset2()
-      all.ct2 <- playbase::pgx.getContrasts(pgx2)
-      valid.ct2 <- !is.null(ct2) && all(ct2 %in% all.ct2)
-      if(!valid.ct2) {
-        ct2 <- tail(head(all.ct2,2),1)
-        shiny::updateSelectInput(session, "contrast2",
-                                 choices = all.ct2,
-                                 selected = ct2)
-      }
-      contrast2( ct2 )
-      
-    }, ignoreInit = FALSE, ignoreNULL = FALSE)
+        ## check if contrast1 is NULL or invalid (e.g. from previous
+        ## used dataset), if invalid, force update
+        ct1 <- input$contrast1
+        all.ct1 <- playbase::pgx.getContrasts(pgx)
+        valid.ct1 <- !is.null(ct1) && all(ct1 %in% all.ct1)
+        if (!valid.ct1) {
+          ct1 <- all.ct1[1]
+          shiny::updateSelectInput(session, "contrast1",
+            choices = all.ct1,
+            selected = ct1
+          )
+        }
+        contrast1(ct1)
 
-    
+        ## check if contrast2 is NULL or invalid (e.g. from previous
+        ## used dataset), if invalid, force update
+        ct2 <- input$contrast2
+        pgx2 <- dataset2()
+        all.ct2 <- playbase::pgx.getContrasts(pgx2)
+        valid.ct2 <- !is.null(ct2) && all(ct2 %in% all.ct2)
+        if (!valid.ct2) {
+          ct2 <- tail(head(all.ct2, 2), 1)
+          shiny::updateSelectInput(session, "contrast2",
+            choices = all.ct2,
+            selected = ct2
+          )
+        }
+        contrast2(ct2)
+      },
+      ignoreInit = FALSE,
+      ignoreNULL = FALSE
+    )
+
+
     # Retrieve the 2nd dataset
     dataset2 <- shiny::eventReactive(
       {
