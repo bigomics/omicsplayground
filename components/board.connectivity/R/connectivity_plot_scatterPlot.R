@@ -122,7 +122,7 @@ connectivity_plot_scatterPlot_server <- function(id,
           na.zero <- rownames(df)[rowSums(df == 0) > 0] ## probably was missing
           sel.genes <- setdiff(sel.genes, c(na.fc, na.zero))
         }
-        
+
         ## Result object. Remember the first element of the list must
         ## be a dataframe for CSV download from the plotmodule UI.
         res <- list(
