@@ -150,7 +150,7 @@ CompareUI <- function(id) {
         bslib::layout_columns(
           col_widths = c(6, 6),
           height = fullH,
-          compare_plot_fc_correlation_ui(
+          compare_plot_fcfc_ui(
             id = ns("fcfcplot"),
             title = "FC Correlation",
             info.text = "Scatter plot of the fold-change correlation for the loaded dataset contrast (selected under {Dataset1}) and the second selected dataset and contrast (under {Dataset2}). A custom set of genes can be highlighted using {Highlight genes} or the {ntop} scoring option settings. Multiple contrasts can be selected.",
@@ -204,7 +204,7 @@ CompareUI <- function(id) {
               width = c("auto", "100%")
             )
           ),
-          compare_plot_gene_corr_ui(
+          compare_plot_genecorr_ui(
             id = ns("genecorr"),
             title = "Gene correlation",
             info.text = "Scatter plots of gene expression correlation between the loaded dataset contrast (selected under {Dataset1}) and the second selected dataset and contrast (under {Dataset2}). Scatters that are similar show high correlation, i.e. are close to the diagonal.",

@@ -44,67 +44,51 @@ compare_plot_compare2_ui <- function(id,
 #' @export
 compare_plot_compare2_server <- function(id,
                                          pgx,
-                                         input.contrast2,
-                                         input.contrast1,
+                                         contrast2,
+                                         ## contrast1,
                                          hilightgenes,
                                          createPlot,
                                          plottype,
                                          dataset2,
-                                         compute,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    contrast1 <- shiny::reactiveVal(FALSE)
-    contrast2 <- shiny::reactiveVal(FALSE)
-    shiny::observeEvent(compute(), {
-      contrast1(input.contrast1())
-      contrast2(input.contrast2())
-    })
-
-    plot_data <- shiny::reactive({
+    call_createPlot <- function(get_data) {
+      ct <- contrast2()
+      shiny::req(ct)
       pgx1 <- pgx
       pgx2 <- dataset2()
-      ct2 <- contrast2()
-      shiny::req(ct2)
-      shiny::req(contrast1())
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
+      all.ct <- names(pgx2$gx.meta$meta)
+      ## if (length(ct) == 0) ct <- all.ct[2]
+      if (!any(ct %in% all.ct)) {
         return(NULL)
       }
-      type <- plottype()
+      ct <- intersect(ct, all.ct)
       higenes <- hilightgenes()
       cex.lab <- 1.0
       ntop <- 9999
+      type <- plottype()
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      data <- createPlot(pgx2, pgx1, pgx2, ct2, type, cex.lab, higenes, ntop, TRUE)
+      data <- createPlot(pgx2, pgx1, pgx2, ct, type, cex.lab, higenes, ntop, get_data)
+      data
+    }
+
+    plot_data <- shiny::reactive({
+      data <- call_createPlot(get_data = TRUE)
       return(data)
     })
 
-    scatter2.RENDER <- shiny::reactive({
-      pgx1 <- pgx
-      pgx2 <- dataset2()
-      ct2 <- contrast2()
-      shiny::req(ct2)
-      # shiny::req(input.contrast1())
-      shiny::req(contrast1())
-      if (!all(ct2 %in% names(pgx2$gx.meta$meta))) {
-        return(NULL)
-      }
-      type <- plottype()
-      higenes <- hilightgenes()
-      cex.lab <- 1.0
-      ntop <- 9999
-
-      if (length(higenes) <= 3) cex.lab <- 1.3
-      dbg("[compare_plot_compare1_server:scatter2.RENDER] createPlot")
-      createPlot(pgx2, pgx1, pgx2, ct2, type, cex.lab, higenes, ntop)
+    plot.RENDER <- shiny::reactive({
+      call_createPlot(get_data = FALSE)
     })
+
 
     PlotModuleServer(
       "plot",
       plotlib = "base",
-      func = scatter2.RENDER,
+      func = plot.RENDER,
       csvFunc = plot_data,
       res = c(90, 110), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
