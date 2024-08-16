@@ -44,65 +44,110 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         disable = c("plottype", "ntop", "hilighttype", "genelist")
       )
     )
-
+    
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
-    score_table <- reactiveVal(NULL)
-
-    shiny::observe({
-      shiny::req(score_table_temp$rows_all())
-      score_table(score_table_temp$rows_all())
+    score_table_rows <- reactive({
+      score_table$rownames_all()
     })
 
-    shiny::observe({
+    ## upon new pgx upload
+    shiny::observeEvent({
+      list(pgx$X)
+    }, {
       comparisons1 <- names(pgx$gx.meta$meta)
       sel1 <- comparisons1[1]
-      shiny::updateSelectInput(session, "contrast1", choices = comparisons1, selected = sel1)
+      shiny::updateSelectInput(session, "contrast1", choices = comparisons1,
+                               selected = sel1)
+      contrast1(sel1)
+      
       pgx.files <- sort(dir(pgx_dir(), pattern = "pgx$"))
-      shiny::updateSelectInput(session, "dataset2", choices = c("<this>", pgx.files))
-    })
-    hilightgenes <- reactiveVal(NULL)
+      shiny::updateSelectInput(session, "dataset2", choices = c("<this>", pgx.files),
+                               sel = "<this>")
 
+      sel2 <- rev(head(comparisons1,2))[1]
+      shiny::updateSelectInput(session, "contrast2", choices = comparisons1,
+                               selected = sel2)
+      contrast2(sel2)
+
+      shiny::updateTextAreaInput(
+        session, "genelist",
+        placeholder = tspan("Paste your custom gene list", js = FALSE))
+
+    })
+
+    ## keep a list of highlighted/selected features
+    hilightgenes <- reactiveVal(NULL)
     shiny::observe({
       shiny::req(contrast1())
       shiny::req(contrast2())
 
-      df <- getOmicsScoreTable()
+      df <- getScoreTable()
       req(df)
       ntop <- as.integer(input$ntop)
-      higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
-      higenes <- head(higenes, ntop)
-      higenes <- paste(higenes, collapse = " ")
+      higenes <- NULL
+      if (input$hilighttype == "top scoring") {
+        higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
+        higenes <- head(higenes, ntop)
+        ##higenes0 <- paste(higenes, collapse = " ")      
+        ##shiny::updateTextAreaInput(session, "genelist", value = higenes0)
+      }
       if (input$hilighttype == "custom") {
         higenes <- input$genelist
+        higenes <- strsplit(higenes, split = "[\t, \n]")[[1]]
+        higenes <- trimws(gsub("[ ]", "", higenes))
       }
-      hilightgenes({
-        genes <- strsplit(higenes, split = "[\t, \n]")[[1]]
-        gsub("[ ]", "", genes)
-      })
-      shiny::updateTextAreaInput(session, "genelist", value = higenes)
+      hilightgenes(higenes)
     })
 
-    shiny::observeEvent(pgx$X, {
-      shiny::updateTextAreaInput(session, "genelist", placeholder = tspan("Paste your custom gene list", js = FALSE))
-    })
 
     ## allow trigger on explicit compare button
     contrast1 <- shiny::reactiveVal()
     contrast2 <- shiny::reactiveVal()
-    shiny::observeEvent(input$compare_button, {
-      contrast1(input$contrast1)
-      contrast2(input$contrast2)
-    })
+    shiny::observeEvent({
+      list(pgx$X, input$compare_button)
+    }, {
+      shiny::req(pgx$X)
+      shiny::req(dataset2()$X)
+      
+      ## check if contrast1 is NULL or invalid (e.g. from previous
+      ## used dataset), if invalid, force update
+      ct1 <- input$contrast1
+      all.ct1 <- playbase::pgx.getContrasts(pgx)
+      valid.ct1 <- !is.null(ct1) && (ct1 %in% all.ct1)
+      if(!valid.ct1) {
+        ct1 <- all.ct1[1]
+        shiny::updateSelectInput(session, "contrast1",
+                                 choices = all.ct1,
+                                 selected = ct1)        
+      }
+      contrast1( ct1 )
 
-    ## ================================================================================
-    ## ========================= REACTIVE FUNCTIONS ===================================
-    ## ================================================================================
+      ## check if contrast2 is NULL or invalid (e.g. from previous
+      ## used dataset), if invalid, force update
+      ct2 <- input$contrast2
+      pgx2 <- dataset2()
+      all.ct2 <- playbase::pgx.getContrasts(pgx2)
+      valid.ct2 <- !is.null(ct2) && (ct2 %in% all.ct2)
+      if(!valid.ct2) {
+        ct2 <- tail(head(all.ct2,2),1)
+        shiny::updateSelectInput(session, "contrast2",
+                                 choices = all.ct2,
+                                 selected = ct2)
+      }
+      contrast2( ct2 )
+      
+    }, ignoreInit = FALSE, ignoreNULL = FALSE)
 
-    # Retreive the 2nd dataset
-    dataset2 <- shiny::reactive({
+
+
+    # Retrieve the 2nd dataset
+    dataset2 <- shiny::eventReactive({
+      list(pgx$X, input$dataset2)
+    }, {
+      
       shiny::req(input$dataset2)
       if (input$dataset2 == "<this>") {
         pgx <- pgx
@@ -113,116 +158,148 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       }
       comparisons2 <- names(pgx$gx.meta$meta)
       sel2 <- tail(head(comparisons2, 2), 1)
-      shiny::updateSelectInput(session, "contrast2", choices = comparisons2, selected = sel2)
+      shiny::updateSelectInput(
+        session, "contrast2", choices = comparisons2,
+        selected = sel2)
+      contrast2(sel2)
+
       return(pgx)
     })
+    
+    ## ================================================================================
+    ## ========================= REACTIVE FUNCTIONS ===================================
+    ## ================================================================================
 
     # Cummulative FC
-    cum_fc <- shiny::reactive({
-      shiny::req(pgx$X)
-      shiny::req(dataset2())
-      shiny::req(contrast1())
-      shiny::req(contrast2())
+    getMatrices <- shiny::reactive({
+
       pgx1 <- pgx
       pgx2 <- dataset2()
-      org1 <- playbase::pgx.getOrganism(pgx1)
-      org2 <- playbase::pgx.getOrganism(pgx2)
+      shiny::req(pgx1$X)
+      shiny::req(pgx2$X)
 
-      ct1 <- head(names(pgx1$gx.meta$meta), 2)
-      ct2 <- head(names(pgx2$gx.meta$meta), 2)
       ct1 <- contrast1()
       ct2 <- contrast2()
-
-      shiny::validate(shiny::need(all(ct1 %in% names(pgx1$gx.meta$meta)), "Warning: No common contrasts."))
-      shiny::validate(shiny::need(all(ct2 %in% names(pgx2$gx.meta$meta)), "Warning: No common contrasts."))
-
+      
+      valid.ct1 <- !is.null(ct1) && all(ct1 %in% playbase::pgx.getContrasts(pgx1))
+      valid.ct2 <- !is.null(ct2) && all(ct2 %in% playbase::pgx.getContrasts(pgx2))     
+      if( !valid.ct1 || !valid.ct2) {
+        ## if NULL refresh
+        dbg("[getMatrices] contrast RV not valid! force update! ")
+        contrast1(input$contrast1)
+        contrast2(input$contrast2)        
+        shinyjs::click('compare_button')
+        shinyjs::click(ns('compare_button'))
+        return(NULL)
+      }
+      
+      org1 <- playbase::pgx.getOrganism(pgx1)
+      org2 <- playbase::pgx.getOrganism(pgx2)
+      
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
-      gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
-
+      
+      target_col <- "rownames"
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
-        gg <- intersect(toupper(rownames(F1)), toupper(rownames(F2)))
-        g1 <- rownames(F1)[match(gg, toupper(rownames(F1)))]
-        g2 <- rownames(F2)[match(gg, toupper(rownames(F2)))]
+        # For old versions
+        target_col <- "rownames"
+        rownames(F1) <- toupper(rownames(F1))
+        rownames(F2) <- toupper(rownames(F2))        
+      } else if (pgx1$name == pgx2$name && nrow(pgx1$X) == nrow(pgx2$X)) {
+        # For same dataset. we compare on rownames
+        target_col <- "rownames"                
       } else if (org1 == org2) {
         # For same org. we ensure compare on symbol
+        target_col <- "symbol"        
         F1 <- playbase::rename_by(F1, pgx1$genes, "symbol")
         F2 <- playbase::rename_by(F2, pgx2$genes, "symbol")
-        gg <- intersect(rownames(F1), rownames(F2))
-        g1 <- g2 <- gg
       } else if (org1 != org2) {
         # For different org. we ensure compare on human_ortholog
         # If it is not present, use gene_name
-        target_col1 <- target_col2 <- "human_ortholog"
-        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
-        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
-        F1 <- playbase::rename_by(F1, pgx1$genes, target_col1)
-        F2 <- playbase::rename_by(F2, pgx2$genes, target_col2)
-        gg <- intersect(rownames(F1), rownames(F2))
-        g1 <- g2 <- gg
+        target_col <- "human_ortholog"
+        if (!"human_ortholog" %in% colnames(pgx1$genes)) target_col <- "gene_name"
+        if (!"human_ortholog" %in% colnames(pgx2$genes)) target_col <- "gene_name"
+      }
+      
+      if( target_col != "rownames" ) {
+        F1 <- playbase::rename_by(F1, pgx1$genes, target_col)
+        F2 <- playbase::rename_by(F2, pgx2$genes, target_col)
       }
 
-      F1 <- F1[g1, , drop = FALSE]
-      F2 <- F2[g2, , drop = FALSE]
-
-      # TODO: implement average or sum
-      F1 <- F1[!duplicated(rownames(F1)), , drop = FALSE]
-      F2 <- F2[!duplicated(rownames(F2)), , drop = FALSE]
-
+      F1 <- playbase::rowmean(F1, rownames(F1))
+      F2 <- playbase::rowmean(F2, rownames(F2))      
+      gg <- intersect(rownames(F1), rownames(F2))
+      F1 <- F1[gg, , drop = FALSE]
+      F2 <- F2[gg, , drop = FALSE]      
       colnames(F1) <- paste0("1:", colnames(F1))
       colnames(F2) <- paste0("2:", colnames(F2))
 
-      return(cbind(F1, F2))
-    })
+      
+      ## ---------- X matrices ---------------
+      X1 <- pgx1$X
+      X2 <- pgx2$X
+      if( target_col != "rownames" ) {
+        X1 <- playbase::rename_by(X1, pgx1$genes, target_col)
+        X2 <- playbase::rename_by(X2, pgx2$genes, target_col)      
+      }
+      
+      X1 <- playbase::rowmean(X1, rownames(X1))
+      X2 <- playbase::rowmean(X2, rownames(X2))      
+      X1 <- X1[match(rownames(F1), rownames(X1)), ]
+      X2 <- X2[match(rownames(F2), rownames(X2)), ]      
 
-    getOmicsScoreTable <- shiny::reactive({
+      rho <- NULL
+      kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
+      if (length(kk) >= 10) {
+        scaled_X1 <- scale(Matrix::t(X1[,kk]))
+        scaled_X2 <- scale(Matrix::t(X2[,kk]))        
+        rho <- colSums(scaled_X1 * scaled_X2, na.rm = TRUE) / (nrow(X1) - 1)
+      }
+      
+      list(
+        F1 = F1,
+        F2 = F2,
+        X1 = X1,
+        X2 = X2,        
+        rho = rho
+      )
+    })
+    
+    getScoreTable <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(dataset2())
       shiny::req(contrast1()) ## trigger on button
       shiny::req(contrast2())
-      shiny::req(
-        contrast2() %in% colnames(playbase::pgx.getMetaMatrix(dataset2())$fc)
-      )
+
+      valid.ct1 <- all(contrast1() %in% playbase::pgx.getContrasts(pgx))
+      valid.ct2 <- all(contrast2() %in% playbase::pgx.getContrasts(dataset2()))      
+      shiny::req( valid.ct1 && valid.ct2 )
+
       pgx1 <- pgx
       pgx2 <- dataset2()
       org1 <- playbase::pgx.getOrganism(pgx1)
       org2 <- playbase::pgx.getOrganism(pgx2)
-
-      F1_2 <- cum_fc()
-      F1 <- F1_2[, 1, drop = FALSE]
-      F2 <- F1_2[, 2, drop = FALSE]
-      rho <- 1
-      gg <- rownames(F1_2)
-
-      if (is.null(pgx1$version) && is.null(pgx2$version)) {
-        target_col1 <- target_col2 <- "gene_name"
-      } else if (org1 == org2) {
-        target_col1 <- target_col2 <- "symbol"
-      } else if (org1 != org2) {
-        target_col1 <- target_col2 <- "human_ortholog"
-        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
-        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
-      }
-      kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
-      if (length(kk) >= 10) {
-        X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)
-        X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
-        X1 <- scale(t(X1[gg, kk]))
-        X2 <- scale(t(X2[gg, kk]))
-        rho <- colSums(X1 * X2, na.rm = TRUE) / (nrow(X1) - 1)
-      }
+      
+      res <- getMatrices()
+      F1 <- res$F1
+      F2 <- res$F2
+      rho <- res$rho
+      
+      ## compute score
       fc1 <- sqrt(rowMeans(F1**2, na.rm = TRUE))
       fc2 <- sqrt(rowMeans(F2**2, na.rm = TRUE))
-      score <- rho * fc1 * fc2
-
-      # TODO: get teh gene_title
-      # mii <- which(pgx1$genes[ , target_col1] %in% gg)
-      # ii <- ii[!duplicated(ii)]
-      title <- pgx1$genes[gg, "gene_title"]
+      if(!is.null(rho)) {
+        score <- rho * fc1 * fc2
+      } else {
+        score <- fc1 * fc2        
+      }
+      
+      # get gene_title
+      pp <- playbase::map_probes( pgx1$genes, rownames(F1), column=NULL )
+      title <- pgx1$genes[pp, "gene_title"]
       title <- substring(title, 1, 60)
-
       df <- data.frame(title, score, rho, F1, F2, check.names = FALSE)
-      df <- df[order(-df$score), ]
+      rownames(df) <- rownames(F1)
 
       return(df)
     })
@@ -230,7 +307,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ============================================================================
     ## ScatterPlot 1
     ## ============================================================================
-
 
     createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop, get_data = FALSE) {
       p <- NULL
@@ -323,14 +399,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     compare_plot_compare1_server(
       "dataset1",
       pgx = pgx,
-      ## input.contrast1 = shiny::reactive(input$contrast1),
-      input.contrast1 = contrast1,
-      ## input.contrast2 = shiny::reactive(input$contrast2),
+      contrast1 = contrast1,
       hilightgenes = hilightgenes,
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
-      ## compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -338,25 +411,21 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     compare_plot_compare2_server(
       "dataset2",
       pgx = pgx,
-      input.contrast2 = shiny::reactive(input$contrast2),
-      input.contrast1 = shiny::reactive(input$contrast1),
+      contrast2 = contrast2,
+      ##contrast1 = contrast1,
       hilightgenes = hilightgenes,
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
-      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
     # FC Correlation
 
-    compare_plot_fc_correlation_server(
+    compare_plot_fcfc_server(
       "fcfcplot",
-      cum_fc = cum_fc,
+      getMatrices = getMatrices,
       hilightgenes = hilightgenes,
-      input.contrast1 = reactive(input$contrast1),
-      input.contrast2 = reactive(input$contrast2),
-      compute = shiny::reactive(input$compare_button),
       watermark = WATERMARK
     )
 
@@ -364,27 +433,21 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
     compare_plot_cum_fc1_server(
       "cumfcplot1",
-      pgx = pgx,
-      dataset2 = dataset2,
-      cum_fc = cum_fc,
-      ## compute = shiny::reactive(input$compare_button),
+      getMatrices = getMatrices,
       watermark = WATERMARK
     )
 
     compare_plot_cum_fc2_server(
       "cumfcplot2",
-      pgx = pgx,
-      dataset2 = dataset2,
-      cum_fc = cum_fc,
-      compute = shiny::reactive(input$compare_button),
+      getMatrices = getMatrices,
       watermark = WATERMARK
     )
 
     # Correlation score
 
-    score_table_temp <- compare_table_corr_score_server(
+    score_table <- compare_table_corr_score_server(
       "score_table",
-      getOmicsScoreTable = getOmicsScoreTable,
+      getScoreTable = getScoreTable,
       watermark = WATERMARK
     )
 
@@ -394,27 +457,26 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       "multibarplot",
       pgx = pgx,
       dataset2 = dataset2,
-      input.contrast1 = shiny::reactive(input$contrast1),
-      input.contrast2 = shiny::reactive(input$contrast2),
+      contrast1 = contrast1,
+      contrast2 = contrast2,
       hilightgenes = hilightgenes,
-      getOmicsScoreTable = getOmicsScoreTable,
-      score_table = score_table,
-      compute = shiny::reactive(input$compare_button),
+      getMatrices = getMatrices,
+      getScoreTable = getScoreTable,
+      selected = score_table_rows,
       watermark = WATERMARK
     )
 
     # Gene correlation
 
-    compare_plot_gene_corr_server(
+    compare_plot_genecorr_server(
       "genecorr",
       pgx = pgx,
       dataset2 = dataset2,
-      input.contrast1 = shiny::reactive(input$contrast1),
-      input.contrast2 = shiny::reactive(input$contrast2),
-      hilightgenes = hilightgenes,
-      getOmicsScoreTable = getOmicsScoreTable,
-      score_table = score_table,
-      compute = shiny::reactive(input$compare_button),
+      contrast1 = contrast1,
+      contrast2 = contrast2,
+      getMatrices = getMatrices,
+      getScoreTable = getScoreTable,
+      selected = score_table_rows,
       watermark = WATERMARK
     )
   })

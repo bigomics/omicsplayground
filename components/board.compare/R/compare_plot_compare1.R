@@ -46,44 +46,33 @@ compare_plot_compare1_ui <- function(id,
 #' @export
 compare_plot_compare1_server <- function(id,
                                          pgx,
-                                         input.contrast1,
-                                         ## input.contrast2,
+                                         contrast1,
                                          hilightgenes,
                                          createPlot,
                                          plottype,
                                          dataset2,
-                                         ## compute,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    ## ------- no need! trigger on input.contrast1 <- reactiveVal <- button
-    ## contrast1 <- shiny::reactiveVal(FALSE)
-    ## contrast2 <- shiny::reactiveVal(FALSE)
-    ## shiny::observeEvent(compute(), {
-    ##   contrast1(input.contrast1())
-    ##   contrast2(input.contrast2())
-    ## })
-
     call_createPlot <- function(get_data) {
-      ct1 <- input.contrast1()
-      ## req(ct1)
+      ct <- contrast1()
+      shiny::req(ct)
       pgx1 <- pgx
       pgx2 <- dataset2()
       all.ct <- names(pgx1$gx.meta$meta)
-      ## shiny::req(ct1)
-      if (length(ct1) == 0) ct1 <- all.ct[1]
-      if (!any(ct1 %in% all.ct)) {
+      ## if (length(ct) == 0) ct <- all.ct[1]
+      if (!any(ct %in% all.ct)) {
         return(NULL)
       }
-      ct1 <- intersect(ct1, all.ct)
+      ct <- intersect(ct, all.ct)
       higenes <- hilightgenes()
       cex.lab <- 1.0
       ntop <- 9999
       type <- plottype()
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      data <- createPlot(pgx1, pgx1, pgx2, ct1, type, cex.lab, higenes, ntop, get_data)
+      data <- createPlot(pgx1, pgx1, pgx2, ct, type, cex.lab, higenes, ntop, get_data)
       data
     }
 
@@ -92,16 +81,15 @@ compare_plot_compare1_server <- function(id,
       return(data)
     })
 
-    scatter1.RENDER <- shiny::reactive({
-      dbg("[compare_plot_compare1_server:scatter1.RENDER] reacted! ")
-      ## shiny::validate(shiny::need(input.contrast1(), "Please select contrasts and run 'Compute'"))
+    plot.RENDER <- shiny::reactive({
+      ## shiny::validate(shiny::need(contrast1(), "Please select contrasts and run 'Compute'"))
       call_createPlot(get_data = FALSE)
     })
 
     PlotModuleServer(
       "plot",
       plotlib = "base",
-      func = scatter1.RENDER,
+      func = plot.RENDER,
       csvFunc = plot_data,
       res = c(90, 110), ## resolution of plots
       pdf.width = 6, pdf.height = 6,

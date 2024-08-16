@@ -12,7 +12,7 @@
 #' @param height
 #'
 #' @export
-compare_plot_fc_correlation_ui <- function(id,
+compare_plot_fcfc_ui <- function(id,
                                            height,
                                            title,
                                            info.text,
@@ -42,32 +42,30 @@ compare_plot_fc_correlation_ui <- function(id,
 #'
 #' @return
 #' @export
-compare_plot_fc_correlation_server <- function(id,
-                                               cum_fc,
-                                               hilightgenes,
-                                               input.contrast1,
-                                               input.contrast2,
-                                               compute,
-                                               watermark = FALSE) {
+compare_plot_fcfc_server <- function(id,
+                                            getMatrices,
+                                            hilightgenes,
+                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    cum_fc_triggered <- shiny::reactiveVal(FALSE)
-    shiny::observeEvent(compute(), {
-      cum_fc_triggered(cum_fc())
-    })
-
     plot_data <- shiny::reactive({
       # Require inputs
-      shiny::req(cum_fc_triggered())
-      out_data <- cum_fc_triggered()
+      shiny::req(getMatrices())
+      res <- getMatrices()
+      F1 <- res$F1
+      F2 <- res$F2      
+      out_data <- cbind( F1, F2 )
       return(out_data)
     })
 
-    plot_interactive_comp_fc <- function(plot_data, hilight = NULL, marker_size = 6, label_size = 6, cex.axis = 12) {
+    interactive_fcfc <- function(plot_data, hilight = NULL,
+                                 marker_size = 6, label_size = 6, cex.axis = 12) {
       shiny::req(plot_data())
       FC <- plot_data()
+      mat <- getMatrices()
 
+      ## subsample for speed
       ncol_FC <- ncol(FC)
       nrow_FC <- nrow(FC)
       sample_size <- floor(30000 / ncol_FC)
@@ -76,14 +74,14 @@ compare_plot_fc_correlation_server <- function(id,
       genes <- sample(rownames(FC), sample_size)
       genes <- c(hilight, genes)
       genes <- unique(genes)
-
+      
       ## Get data ready
-      data_1 <- FC[, grep("^1:", colnames(FC)), drop = FALSE]
-      data_2 <- FC[, grep("^2:", colnames(FC)), drop = FALSE]
+      data_1 <- mat$F1
+      data_2 <- mat$F2
       ncol_d1 <- ncol(data_1)
       ncol_d2 <- ncol(data_2)
       nplots <- ncol_d1 * ncol_d2
-
+      
       # Prepare collection list
       sub_plots <- vector("list", nplots)
       counter <- 1
@@ -92,15 +90,18 @@ compare_plot_fc_correlation_server <- function(id,
       for (j in ncol_d2:1) {
         for (i in seq_len(ncol_d1)) {
           ## Get the data for the current plot
-          FC_i <- cbind(data_1[genes, i, drop = FALSE], data_2[genes, j, drop = FALSE])
+          F <- cbind(
+            data_1[genes, i, drop = FALSE],
+            data_2[genes, j, drop = FALSE]
+          )
           xlab <- ifelse(j == 1, colnames(data_1)[i], "")
           ylab <- ifelse(i == 1, colnames(data_2)[j], "")
 
           ## Plot the points
           plot_i <- plotly::plot_ly(
-            x = FC_i[, 1],
-            y = FC_i[, 2],
-            text = rownames(FC_i),
+            x = F[, 1],
+            y = F[, 2],
+            text = rownames(F),
             type = "scattergl",
             mode = "markers",
             marker = list(
@@ -117,11 +118,11 @@ compare_plot_fc_correlation_server <- function(id,
 
           # Add the text to hilighted points
           if (length(hilight) > 1) {
-            hilight1 <- intersect(rownames(FC_i), hilight)
+            hilight1 <- intersect(rownames(F), hilight)
             plot_i <- plot_i %>%
               plotly::add_trace(
-                x = FC_i[hilight1, 1],
-                y = FC_i[hilight1, 2],
+                x = F[hilight1, 1],
+                y = F[hilight1, 2],
                 text = hilight1,
                 key = hilight1,
                 type = "scattergl",
@@ -172,9 +173,9 @@ compare_plot_fc_correlation_server <- function(id,
     }
 
     fcfcplot.RENDER <- function() {
-      shiny::validate(shiny::need(cum_fc_triggered(), "Please select contrasts and run 'Compute'"))
+      shiny::validate(shiny::need(getMatrices(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
-      p <- plot_interactive_comp_fc(
+      p <- interactive_fcfc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,
         hilight = higenes
       ) %>%

@@ -19,11 +19,11 @@ compare_table_corr_score_ui <- function(id, width, height) {
 }
 
 compare_table_corr_score_server <- function(id,
-                                            getOmicsScoreTable,
+                                            getScoreTable,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     score_table.RENDER <- shiny::reactive({
-      df <- getOmicsScoreTable()
+      df <- getScoreTable()
 
       shiny::req(df)
       numeric.cols <- 2:ncol(df)
