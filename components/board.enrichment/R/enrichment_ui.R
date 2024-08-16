@@ -15,17 +15,23 @@ EnrichmentInputs <- function(id) {
       "Choose a specific gene set collection for the analysis.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("gs_fdr"), "FDR", c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2),
-      "Set the false discovery rate (FDR) threshold.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::selectInput(ns("gs_lfc"), "logFC threshold",
-        choices = c(0, 0.05, 0.1, 0.2, 0.5, 1, 2), selected = 0
+    shiny::fillRow(
+      flex = c(1, 1),
+      withTooltip(
+        shiny::selectInput(ns("gs_fdr"), "FDR", c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2),
+        "Set the false discovery rate (FDR) threshold.",
+        placement = "top"
       ),
-      "Set the logarithmic fold change (logFC) threshold.",
-      placement = "top"
+      withTooltip(
+        shiny::selectInput(ns("gs_lfc"), "logFC",
+          choices = c(0, 0.05, 0.1, 0.2, 0.5, 1, 2), selected = 0
+          ),
+        "Set the logarithmic fold change (logFC) threshold.",
+        placement = "top"
+      )
     ),
+    shiny::br(), shiny::br(),
+    shiny::br(), shiny::br(),    
     withTooltip(shiny::actionLink(ns("gs_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
