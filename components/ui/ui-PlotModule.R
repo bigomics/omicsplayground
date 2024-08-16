@@ -231,7 +231,7 @@ PlotModuleUI <- function(id,
     shiny::div(
       class = "plotmodule-title",
       style = "white-space: nowrap; overflow: hidden; text-overflow: clip;",
-      title = title, title
+      title
     ),
     if (cards) {
       plot_cards$navList
