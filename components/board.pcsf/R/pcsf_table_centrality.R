@@ -62,11 +62,11 @@ pcsf_table_centrality__server <- function(id,
       }
       df <- data.frame()
       ## try(pcsf <- playbase::pgx.computePCSF(pgx, contrast = ct, ntop = 250))
-      
-      ##df <- playbase::pgx.getPCSFcentrality(
+
+      ## df <- playbase::pgx.getPCSFcentrality(
       ##  pgx, contrast=ct, pcsf=pcsf, n=10, plot=FALSE))
 
-      
+
       dt <- DT::datatable(df,
         rownames = FALSE,
         extensions = c("Scroller"),

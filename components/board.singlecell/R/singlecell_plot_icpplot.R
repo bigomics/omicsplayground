@@ -156,8 +156,8 @@ singlecell_plot_icpplot_server <- function(id,
         sel <- sel[order(colnames(pd[["score"]])[sel])]
       }
 
-      cmin <- min(pd[["score"]],na.rm=TRUE)
-      cmax <- max(pd[["score"]],na.rm=TRUE)
+      cmin <- min(pd[["score"]], na.rm = TRUE)
+      cmax <- max(pd[["score"]], na.rm = TRUE)
 
       plt <- list()
       for (i in 1:length(sel)) {
@@ -180,8 +180,8 @@ singlecell_plot_icpplot_server <- function(id,
           xlab = "",
           ylab = "",
           zlim = c(cmin, cmax),
-#          cmin = cmin,
-#          cmax = cmax,
+          #          cmin = cmin,
+          #          cmax = cmax,
           xlim = 1.2 * range(pd[["pos"]][, 1]),
           ylim = 1.2 * range(pd[["pos"]][, 2]),
           axis = FALSE,
@@ -209,8 +209,8 @@ singlecell_plot_icpplot_server <- function(id,
       klrpal <- colorRampPalette(c("grey95", "grey65", "red3"))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
-      cmin <- min(pd[["score"]],na.rm=TRUE)
-      cmax <- max(pd[["score"]],na.rm=TRUE)
+      cmin <- min(pd[["score"]], na.rm = TRUE)
+      cmax <- max(pd[["score"]], na.rm = TRUE)
 
       ntop <- 25
       if (pd[["layout"]] == "4x4") ntop <- 16
