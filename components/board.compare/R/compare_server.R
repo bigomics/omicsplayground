@@ -116,7 +116,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ## used dataset), if invalid, force update
       ct1 <- input$contrast1
       all.ct1 <- playbase::pgx.getContrasts(pgx)
-      valid.ct1 <- !is.null(ct1) && (ct1 %in% all.ct1)
+      valid.ct1 <- !is.null(ct1) && all(ct1 %in% all.ct1)
       if(!valid.ct1) {
         ct1 <- all.ct1[1]
         shiny::updateSelectInput(session, "contrast1",
@@ -130,7 +130,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ct2 <- input$contrast2
       pgx2 <- dataset2()
       all.ct2 <- playbase::pgx.getContrasts(pgx2)
-      valid.ct2 <- !is.null(ct2) && (ct2 %in% all.ct2)
+      valid.ct2 <- !is.null(ct2) && all(ct2 %in% all.ct2)
       if(!valid.ct2) {
         ct2 <- tail(head(all.ct2,2),1)
         shiny::updateSelectInput(session, "contrast2",
