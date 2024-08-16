@@ -14,7 +14,7 @@ PcsfInputs <- function(id) {
         ns("colorby"),
         "Color nodes by:",
         choices = c("gene.cluster", "contrast"),
-        selected = "gene.cluster",
+        selected = "contrast",
         inline = TRUE
       ),
       "Choose how to color the nodes",
@@ -43,7 +43,7 @@ PcsfInputs <- function(id) {
     ),
     hr(),
     withTooltip(
-      shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -5, 5, -3, 0.5),
+      shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -4, 4, 0, 1),
       "Select contrast.",
       placement = "right"
     ),
@@ -106,6 +106,14 @@ PcsfUI <- function(id) {
               height = c("100%", "75vh"),
               width = c("auto", "100%")
             )
+            ## pcsf_table_centrality_ui(
+            ##   ns("centrality_table"),
+            ##   title = tspan("Gene centrality"),
+            ##   info.text = "",
+            ##   caption = "Table showing the centrality score of genes.",
+            ##   width = c("100%", "100%"),
+            ##   height = c("100%", TABLE_HEIGHT_MODAL)
+            ## )
           )
         )
       )
