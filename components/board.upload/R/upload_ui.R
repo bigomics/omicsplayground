@@ -6,12 +6,6 @@
 UploadUI <- function(id) {
   ns <- NS(id)
 
-  ## species1 <- as.character(playbase::SPECIES_TABLE$species_name)
-  species1 <- playbase::allSpecies.ANNOTHUB()
-  species1 <- sort(unique(c(species1, "Plasmodium falciparum")))
-  AVAILABLE_SPECIES <- c("Human", "Mouse", "Rat", "No organism", species1)
-  AVAILABLE_SPECIES <- c("Human", "Mouse", "Rat", species1)
-
   body <- div(
     style = "overflow: auto;",
     bslib::as_fill_carrier(),
@@ -42,8 +36,7 @@ UploadUI <- function(id) {
           shiny::selectInput(
             inputId = ns("selected_organism"),
             label = NULL,
-            choices = AVAILABLE_SPECIES,
-            ## selected = 1,
+            choices = NULL,
             multiple = FALSE
           )
         ),
@@ -159,35 +152,6 @@ useUploadWizard <- function(ns) {
     options = list(
       navigation = "buttons",
       finish = "Compute!"
-    )
-  )
-
-  wizard.save <- div(
-    class = "p-0",
-    ## div(
-    ##   style = "position: fixed; right: 0px; width: 160px; margin-top: 10px;",
-    ##   shinyWidgets::prettySwitch(ns("expert_mode"), "Expert mode")
-    ## ),
-    div(
-      wizardR::wizard(
-        id = ns("upload_wizard"),
-        width = 90,
-        height = 75,
-        modal = TRUE,
-        style = "dots",
-        lock_start = TRUE,
-        counts_ui,
-        samples_ui,
-        contrasts_ui,
-        # comparisons_panel,
-        # outliers_panel,
-        # batchcorrect_panel,
-        compute_panel,
-        options = list(
-          navigation = "buttons",
-          finish = "Compute!"
-        )
-      )
     )
   )
 
