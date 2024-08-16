@@ -25,13 +25,13 @@ EnrichmentInputs <- function(id) {
       withTooltip(
         shiny::selectInput(ns("gs_lfc"), "logFC",
           choices = c(0, 0.05, 0.1, 0.2, 0.5, 1, 2), selected = 0
-          ),
+        ),
         "Set the logarithmic fold change (logFC) threshold.",
         placement = "top"
       )
     ),
     shiny::br(), shiny::br(),
-    shiny::br(), shiny::br(),    
+    shiny::br(), shiny::br(),
     withTooltip(shiny::actionLink(ns("gs_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
       placement = "top"
