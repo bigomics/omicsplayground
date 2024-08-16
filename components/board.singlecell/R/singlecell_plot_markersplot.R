@@ -87,7 +87,7 @@ singlecell_plot_markersplot_server <- function(id,
       shiny::req(pgx$X)
       shiny::req(pfGetClusterPositions())
       shiny::req(mrk_features())
-
+      
       mrk_level <- mrk_level()
       mrk_features <- mrk_features()
       mrk_search <- mrk_search()
@@ -100,7 +100,7 @@ singlecell_plot_markersplot_server <- function(id,
       if (all(gene_table$gene_name == gene_table$feature)) {
         X <- playbase::rename_by(X, gene_table, "symbol")
       }
-
+      
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
 
       term <- ""
@@ -117,18 +117,20 @@ singlecell_plot_markersplot_server <- function(id,
         } else {
           markers <- gene_table$symbol
         }
-
+        
         # TODO: This should be remove once we rename pgx$families
         total_h_matches <- sum(markers %in% gene_table$human_ortholog, na.rm = TRUE)
         total_s_matches <- sum(markers %in% gene_table$symbol, na.rm = TRUE)
         if (total_h_matches > total_s_matches) {
           markers <- gene_table$symbol[match(markers, gene_table$human_ortholog)]
-        }
+        }        
         markers <- intersect(toupper(markers), toupper(gene_table$symbol))
         jj <- match(markers, toupper(gene_table$symbol))
-        pmarkers <- intersect(gene_table$symbol[jj], rownames(X))
+        pmarkers <- rownames(gene_table)[jj]
         gx <- X[pmarkers, rownames(pos), drop = FALSE]
+
       } else if (mrk_level == "geneset") {
+
         markers <- gset_collections[[1]]
         if (is.null(mrk_features)) {
           return(NULL)
@@ -155,14 +157,13 @@ singlecell_plot_markersplot_server <- function(id,
       if (!"group" %in% names(pgx$model.parameters)) {
         stop("[markers.plotFUNC] FATAL: no group in model.parameters")
       }
-
+      
       ## prioritize gene with large variance (groupwise)
-      grp <- pgx$model.parameters$group[rownames(pos)]
-      zx <- t(apply(gx, 1, function(x) tapply(x, grp, mean)))
-      gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
+      grp <- pgx$model.parameters$group[rownames(pos)]      
+      zx <- t(apply(gx, 1, function(x) tapply(x, grp, mean, na.rm=TRUE)))
+      gx <- gx[order(-apply(zx, 1, sd, na.rm=TRUE)), , drop = FALSE]
       gx <- gx - min(gx, na.rm = TRUE) + 0.01 ## subtract background??
-      rownames(gx) <- sub(".*:", "", rownames(gx))
-
+      
       NP <- 25
       if (mrk_level == "geneset") NP <- 16
       top.gx <- head(gx, NP) ## match number of plot below!
@@ -172,7 +173,7 @@ singlecell_plot_markersplot_server <- function(id,
         top.gx <- top.gx[order(-rowMeans(top.gx, na.rm = TRUE)), , drop = FALSE]
       }
       top.gx <- pmax(top.gx, 0)
-
+      
       pd <- list(
         top.gx = top.gx,
         pos = pos,
@@ -194,13 +195,14 @@ singlecell_plot_markersplot_server <- function(id,
       cex1 <- 0.95 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
-      klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
       klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       plt <- list()
       i <- 1
       for (i in 1:nrow(top.gx)) {
+
+        ## NEED RETHINK
         colvar <- pmax(top.gx[i, ], 0)
         colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
         klr0 <- klrpal[colvar]
