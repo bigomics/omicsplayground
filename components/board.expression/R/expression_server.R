@@ -463,7 +463,7 @@ ExpressionBoard <- function(id, pgx) {
       comp = shiny::reactive(input$gx_contrast),
       pgx = pgx,
       res = filteredDiffExprTable,
-      ii = genetable$rows_current,
+      rows_current = genetable$rows_current,
       watermark = WATERMARK
     )
 
