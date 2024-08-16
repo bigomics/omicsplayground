@@ -64,9 +64,11 @@ ConnectivityBoard <- function(
     })
 
     shiny::observeEvent(pgx$X, {
-      shiny::updateTextAreaInput(session, "genelist", placeholder = tspan("Paste your gene list", js = FALSE))
+      shiny::updateTextAreaInput(
+        session,
+        inputId = "genelist",
+        placeholder = tspan("Paste your gene list", js = FALSE))
     })
-
 
     getCurrentContrast <- shiny::reactive({
       shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)
@@ -83,18 +85,17 @@ ConnectivityBoard <- function(
         return(NULL)
       }
 
+      ## convert to human symbols so we can match different organism
       fc <- meta1[[ct]]$meta.fx
       names(fc) <- rownames(meta1[[ct]])
+      fc <- playbase::rename_by_humansymbol(fc, pgx$genes)      
+      
       gs <- meta2[[ct]]$meta.fx
       names(gs) <- rownames(meta2[[ct]])
-      names(fc) <- toupper(names(fc)) ## de-MOUSE
+
       list(name = ct, fc = fc, gs = gs)
     })
 
-    ##    observeEvent({
-    ##        getCurrentContrast()
-    ##        input$genelist_ntop
-    ##    },{
     observe({
       contr <- getCurrentContrast()
       shiny::req(contr)
