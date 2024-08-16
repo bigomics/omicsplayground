@@ -155,7 +155,8 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  shiny::HTML("<h4>Probe filtering:</h4>"),
+                  ## shiny::HTML("<h4>Probe filtering:</h4>"),
+                  shiny::HTML("<h4>Feature filtering:</h4>"),
                   choiceValues =
                     c(
                       "append.symbol",
@@ -567,8 +568,8 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           only.known = !remove.unknown,
           only.proteincoding = only.proteincoding,
-          only.hugo = append.symbol,  ## DEPRECATED
-          convert.hugo = append.symbol,  ## should be renamed
+          only.hugo = append.symbol, ## DEPRECATED
+          convert.hugo = append.symbol, ## should be renamed
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
