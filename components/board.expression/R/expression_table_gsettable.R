@@ -67,10 +67,10 @@ expression_table_gsettable_server <- function(id,
         NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
-      gset.group <- sub("[:].*","",df$geneset)
+      gset.group <- sub("[:].*", "", df$geneset)
       df$geneset <- paste(df$geneset, external_links)
-      df <- cbind( group=gset.group, df )
-      
+      df <- cbind(group = gset.group, df)
+
       DT::datatable(df,
         rownames = FALSE,
         escape = c(-1, -2),

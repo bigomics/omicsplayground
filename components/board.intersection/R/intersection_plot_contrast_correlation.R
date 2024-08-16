@@ -50,7 +50,6 @@ contrast_correlation_server <- function(id,
                                         input_comparisons,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
 
@@ -58,11 +57,11 @@ contrast_correlation_server <- function(id,
       if (is.null(res)) {
         return(NULL)
       }
-      
+
       allfc <- input$allfc
       F <- res$fc
       Q <- res$qv
-      
+
       if (!allfc) {
         F <- F[, input_comparisons(), drop = FALSE]
         Q <- Q[, input_comparisons(), drop = FALSE]
@@ -70,7 +69,7 @@ contrast_correlation_server <- function(id,
 
       dbg("[contrast_correlation_server:plot_data] 1: dim(F) = ", dim(F))
       dbg("[contrast_correlation_server:plot_data] 1: dim(Q) = ", dim(Q))
-      
+
       # module can only run with at least two comparisons
       validate(need(
         dim(F)[2] >= 2,
@@ -81,10 +80,10 @@ contrast_correlation_server <- function(id,
       ntop <- input$ntop
       if (ntop == "all") ntop <- 999999
       ntop <- as.integer(ntop)
-      
+
       F[is.na(F)] <- 0
       jj <- head(order(-rowMeans(F**2, na.rm = TRUE)), ntop)
-      F <- apply( F[jj, , drop=FALSE], 2, rank, na.last = "keep")      
+      F <- apply(F[jj, , drop = FALSE], 2, rank, na.last = "keep")
       R <- cor(F, use = "pairwise")
       R <- round(R, digits = 2)
       return(R)
