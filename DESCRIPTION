@@ -73,6 +73,7 @@ Imports:
     withr,
     xfun,
     xml2,
+    yaml,
     zip,
 Remotes:
     url::https://github.com/bigomics/bigdash/archive/HEAD.zip,
