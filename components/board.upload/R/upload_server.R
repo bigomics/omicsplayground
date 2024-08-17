@@ -12,8 +12,7 @@ UploadBoard <- function(id,
                         recompute_pgx,
                         recompute_info,
                         inactivityCounter,
-                        new_upload
-                        ) {
+                        new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -88,20 +87,21 @@ UploadBoard <- function(id,
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
-    observeEvent( new_upload(), {
+    observeEvent(new_upload(), {
       ## species1 <- as.character(playbase::SPECIES_TABLE$species_name)
       all_species <- playbase::allSpecies()
       all_species <- sort(c(all_species, "Plasmodium falciparum"))
-      ##all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
+      ## all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
       all_species <- c("Human", "Mouse", "Rat", all_species)
       if (!auth$options$ENABLE_ANNOT) {
         all_species <- setdiff(all_species, "No organism")
       }
       shiny::updateSelectizeInput(session, "selected_organism",
-                                  choices = all_species, server = TRUE)
+        choices = all_species, server = TRUE
+      )
     })
-    
-    
+
+
     ## ================================================================================
     ## ====================== NEW DATA UPLOAD =========================================
     ## ================================================================================
