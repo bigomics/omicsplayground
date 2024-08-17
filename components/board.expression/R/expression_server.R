@@ -81,7 +81,7 @@ ExpressionBoard <- function(id, pgx) {
           shinyalert::shinyalert(
             title = "",
             text = "WARNING: Nominal p-values are NOT corrected for multiple testing. We do not advice their use.",
-            type = NULL
+            type = ""
           )
         }
       }
