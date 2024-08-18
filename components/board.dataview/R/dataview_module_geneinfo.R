@@ -55,11 +55,13 @@ dataview_module_geneinfo_server <- function(id,
       ## symbol <- pgx$genes$human_ortholog[jj]
       ## info <- playbase::getHSGeneInfo(symbol)
       datatype <- pgx$datatype
-      info <- playbase::getOrgGeneInfo(organism = organism,
-                                       gene = symbol,
-                                       feature = feature,
-                                       datatype = datatype,
-                                       as.link = TRUE)
+      info <- playbase::getOrgGeneInfo(
+        organism = organism,
+        gene = symbol,
+        feature = feature,
+        datatype = datatype,
+        as.link = TRUE
+      )
       res <- tspan("(gene info not available)")
       if (!is.null(info)) {
         info$summary <- "(no info available)"
