@@ -16,6 +16,7 @@ upload_module_computepgx_server <- function(
     norm_method,
     samplesRT,
     contrastsRT,
+    annotRT = reactive(NULL),
     raw_dir,
     metaRT,
     lib.dir,
@@ -407,7 +408,6 @@ upload_module_computepgx_server <- function(
       PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
       custom_geneset <- list(gmt = NULL, info = NULL)
-      annot_table <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
@@ -501,6 +501,11 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
+        annot_table <- annotRT()
+
+        dbg("[upload_module_computepgx_server] dim(annot_table) = ", dim(annot_table))
+        
+        ## annot_table <- NULL  ## DISABLED FOR NOW
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
@@ -559,7 +564,6 @@ upload_module_computepgx_server <- function(
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
-
           # Options
           batch.correct = FALSE,
           norm_method = norm_method,
