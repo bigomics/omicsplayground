@@ -101,7 +101,7 @@ upload_table_preview_counts_server <- function(
         )
       )
 
-      
+
       div(
         bslib::as_fill_carrier(),
         style = "width: 100%; display: flex; ",
@@ -116,7 +116,7 @@ upload_table_preview_counts_server <- function(
             bslib::card(
               fileInputArea(
                 ns("counts_csv"),
-                shiny::h4(tspan("Upload counts.csv", js=FALSE), class = "mb-0"),
+                shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "100%"
