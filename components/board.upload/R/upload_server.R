@@ -86,13 +86,15 @@ UploadBoard <- function(id,
     ), js = FALSE)
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
-    
+
     ## observeEvent( new_upload(), {
-    observeEvent( auth$logged, {    
+    observeEvent(auth$logged, {
       all_species <- playbase::allSpecies()
       all_species <- sort(c(all_species, "Plasmodium falciparum"))
       all_species <- all_species[grep("Homo sapiens|Mus musculus|Rattus norvegicus",
-                                      all_species,invert=TRUE)]
+        all_species,
+        invert = TRUE
+      )]
       all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
       if (!auth$options$ENABLE_ANNOT) {
         all_species <- setdiff(all_species, "No organism")
@@ -233,7 +235,7 @@ UploadBoard <- function(id,
     uploaded_counts <- shiny::eventReactive(
       {
         # list(uploaded$counts.csv, upload_organism())
-        list(uploaded$counts.csv)        
+        list(uploaded$counts.csv)
       },
       {
         ## --------------------------------------------------------
@@ -845,8 +847,8 @@ UploadBoard <- function(id,
     ## check probetypes we have counts and every time upload_species changes
     observeEvent(
       {
-        ##list(uploaded$counts.csv, upload_organism())
-        list(uploaded$counts.csv)        
+        ## list(uploaded$counts.csv, upload_organism())
+        list(uploaded$counts.csv)
       },
       {
         shiny::req(uploaded$counts.csv, upload_organism())
@@ -1023,7 +1025,7 @@ UploadBoard <- function(id,
         if (new_upload() == 0) {
           return(NULL)
         }
-        
+
         if (input$selected_organism == "No organism" && !auth$options$ENABLE_ANNOT) {
           shinyalert::shinyalert(
             title = "No organism",
