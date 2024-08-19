@@ -72,8 +72,8 @@ PcsfBoard <- function(id, pgx) {
         ## GMT has organism specific symbol, but we need to map to
         ## human ortholog
         G <- pgx$GMT[, top.gs]
-        G <- playbase::rename_by(G, pgx$genes,
-          from_id = "symbol",
+        G <- playbase::rename_by2(G, pgx$genes,
+          ## from_id = "symbol",
           new_id = "human_ortholog"
         )
         ngmt <- Matrix::rowSums(G != 0, na.rm = TRUE)

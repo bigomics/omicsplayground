@@ -10,12 +10,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     tabH <- "70vh"
 
     infotext <-
-      tspan("The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
-         This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots.
-         It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets.
-        <br><br><br><br>
-        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
-        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>", js = FALSE)
+      tspan("The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets. This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots. It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets. <br><br><br><br>
+        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>",
+        js = FALSE
+      )
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -184,9 +182,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       }
     )
 
-    ## ================================================================================
-    ## ========================= REACTIVE FUNCTIONS ===================================
-    ## ================================================================================
+    ## ============================================================================
+    ## ========================= REACTIVE FUNCTIONS ===============================
+    ## ============================================================================
 
     # Cummulative FC
     getMatrices <- shiny::reactive({
@@ -197,12 +195,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       ct1 <- contrast1()
       ct2 <- contrast2()
-
       valid.ct1 <- !is.null(ct1) && all(ct1 %in% playbase::pgx.getContrasts(pgx1))
       valid.ct2 <- !is.null(ct2) && all(ct2 %in% playbase::pgx.getContrasts(pgx2))
       if (!valid.ct1 || !valid.ct2) {
         ## if NULL refresh
-        dbg("[getMatrices] contrast RV not valid! force update! ")
+        dbg("[getMatrices] WARNING contrast RV not valid! force update! ")
         contrast1(input$contrast1)
         contrast2(input$contrast2)
         shinyjs::click("compare_button")
@@ -210,8 +207,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         return(NULL)
       }
 
-      org1 <- playbase::pgx.getOrganism(pgx1)
-      org2 <- playbase::pgx.getOrganism(pgx2)
+      org1 <- tolower(playbase::pgx.getOrganism(pgx1))
+      org2 <- tolower(playbase::pgx.getOrganism(pgx2))
 
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
@@ -228,15 +225,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       } else if (org1 == org2) {
         # For same org. we ensure compare on symbol
         target_col <- "symbol"
-        F1 <- playbase::rename_by(F1, pgx1$genes, "symbol")
-        F2 <- playbase::rename_by(F2, pgx2$genes, "symbol")
       } else if (org1 != org2) {
         # For different org. we ensure compare on human_ortholog
         # If it is not present, use gene_name
         target_col <- "human_ortholog"
-        if (!"human_ortholog" %in% colnames(pgx1$genes)) target_col <- "gene_name"
-        if (!"human_ortholog" %in% colnames(pgx2$genes)) target_col <- "gene_name"
       }
+      target_col
 
       if (target_col != "rownames") {
         F1 <- playbase::rename_by(F1, pgx1$genes, target_col)
@@ -251,7 +245,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       colnames(F1) <- paste0("1:", colnames(F1))
       colnames(F2) <- paste0("2:", colnames(F2))
 
-
       ## ---------- X matrices ---------------
       X1 <- pgx1$X
       X2 <- pgx2$X
@@ -260,11 +253,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         X2 <- playbase::rename_by(X2, pgx2$genes, target_col)
       }
 
+      ## collapse duplicates
       X1 <- playbase::rowmean(X1, rownames(X1))
       X2 <- playbase::rowmean(X2, rownames(X2))
       X1 <- X1[match(rownames(F1), rownames(X1)), ]
       X2 <- X2[match(rownames(F2), rownames(X2)), ]
 
+      ## compute correlation if we have enough common samples
       rho <- NULL
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
       if (length(kk) >= 10) {
@@ -273,12 +268,39 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         rho <- colSums(scaled_X1 * scaled_X2, na.rm = TRUE) / (nrow(X1) - 1)
       }
 
+      ## get gene_title
+      if (target_col == "rownames") {
+        match.target <- rownames(pgx1$genes)
+      } else {
+        match.target <- pgx1$genes[, target_col]
+      }
+      gene_title <- pgx1$genes[match(rownames(F1), match.target), "gene_title"]
+
+      pos1 <- pos2 <- NULL
+      if (0) {
+        ## we also need collapsed/aligned UMAP positions
+        pos1 <- pgx1$cluster.genes$pos[["umap2d"]]
+        pos2 <- pgx2$cluster.genes$pos[["umap2d"]]
+        if (target_col != "rownames") {
+          pos1 <- playbase::rename_by(pos1, pgx1$genes, target_col)
+          pos2 <- playbase::rename_by(pos2, pgx2$genes, target_col)
+        }
+        pos1 <- playbase::rowmean(pos1, rownames(pos1))
+        pos2 <- playbase::rowmean(pos2, rownames(pos2))
+        pos1 <- pos1[match(rownames(F1), rownames(pos1)), ]
+        pos2 <- pos1[match(rownames(F2), rownames(pos2)), ]
+      }
+
       list(
         F1 = F1,
         F2 = F2,
         X1 = X1,
         X2 = X2,
-        rho = rho
+        pos1 = pos1,
+        pos2 = pos2,
+        rho = rho,
+        gene_title = gene_title,
+        target_col = target_col
       )
     })
 
@@ -294,8 +316,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       pgx1 <- pgx
       pgx2 <- dataset2()
-      org1 <- playbase::pgx.getOrganism(pgx1)
-      org2 <- playbase::pgx.getOrganism(pgx2)
 
       res <- getMatrices()
       F1 <- res$F1
@@ -310,11 +330,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       } else {
         score <- fc1 * fc2
       }
+      if (is.null(rho)) rho <- rep(NA, nrow(F1))
 
       # get gene_title
-      pp <- playbase::map_probes(pgx1$genes, rownames(F1), column = NULL)
-      title <- pgx1$genes[pp, "gene_title"]
-      title <- substring(title, 1, 60)
+      title <- res$gene_title
+
       df <- data.frame(title, score, rho, F1, F2, check.names = FALSE)
       rownames(df) <- rownames(F1)
 
@@ -325,83 +345,74 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ScatterPlot 1
     ## ============================================================================
 
-    createPlot <- function(pgx, pgx1, pgx2, ct, type, cex.lab, higenes, ntop, get_data = FALSE) {
+    createPlot <- function(pgx, pgx1, pgx2, ct, target_col, type, cex.lab,
+                           higenes, ntop, get_data = FALSE) {
       p <- NULL
-      genes1 <- rownames(pgx$X)
-      higenes1 <- genes1[match(toupper(higenes), toupper(genes1))]
+      ## map hilighted genes to pgx probes
+      hilight <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
+
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- pgx1$cluster.genes$pos[["umap2d"]]
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
         }
+        posx <- playbase::rename_by(pos, pgx1$genes, new_id = target_col)
+        mapped.pos <- playbase::rename_by2(posx, pgx$genes,
+          new_id = "rownames",
+          unique = FALSE
+        )
+        mapped.pos <- mapped.pos[match(rownames(pgx$X), rownames(mapped.pos)), ]
+        rownames(mapped.pos) <- rownames(pgx$X)
 
-        gg <- intersect(toupper(rownames(pgx$X)), toupper(rownames(pos)))
-        jj <- match(gg, toupper(rownames(pos)))
-        pos <- pos[jj, ]
-        ii <- match(toupper(rownames(pos)), toupper(rownames(pgx$X)))
-        rownames(pos) <- rownames(pgx$X)[ii]
-        if (get_data) {
-          return(
-            playbase::pgx.plotGeneUMAP(
-              pgx,
-              contrast = ct, pos = pos,
-              cex = 0.9, cex.lab = cex.lab,
-              hilight = higenes1, ntop = ntop,
-              zfix = TRUE, par.sq = TRUE,
-              plotlib = "base", data = TRUE
-            )
-          )
-        }
         p <- playbase::pgx.plotGeneUMAP(
           pgx,
-          contrast = ct, pos = pos,
-          cex = 0.9, cex.lab = cex.lab,
-          hilight = higenes1, ntop = ntop,
-          zfix = TRUE, par.sq = TRUE,
-          plotlib = "base"
+          contrast = ct,
+          pos = mapped.pos,
+          cex = 0.9,
+          cex.lab = cex.lab,
+          hilight = hilight,
+          ntop = ntop,
+          zfix = TRUE,
+          par.sq = TRUE,
+          plotlib = "base",
+          data = get_data
         )
-      } else if (type == "heatmap") {
-        gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
-        if (length(gg) > 1) {
-          jj <- match(gg, toupper(rownames(pgx$X)))
-          X1 <- pgx$X[jj, , drop = FALSE]
-          Y1 <- pgx$samples
-          if (get_data) {
-            return(
-              playbase::gx.splitmap(X1,
-                nmax = 40, col.annot = Y1,
-                softmax = TRUE, show_legend = FALSE,
-                data = TRUE
-              )
-            )
-          }
-          playbase::gx.splitmap(X1,
-            nmax = 40, col.annot = Y1,
-            softmax = TRUE, show_legend = FALSE
-          )
-        }
+        ## } else if (type == "heatmap") {
+        ##   gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
+        ##     if (length(gg) > 1) {
+        ##       jj <- match(gg, toupper(rownames(pgx$X)))
+        ##       X1 <- pgx$X[jj, , drop = FALSE]
+        ##       Y1 <- pgx$samples
+        ##       if (get_data) {
+        ##         return(
+        ##           playbase::gx.splitmap(X1,
+        ##             nmax = 40, col.annot = Y1,
+        ##             softmax = TRUE, show_legend = FALSE,
+        ##             data = TRUE
+        ##           )
+        ##         )
+        ##       }
+        ##       playbase::gx.splitmap(X1,
+        ##         nmax = 40, col.annot = Y1,
+        ##         softmax = TRUE, show_legend = FALSE
+        ##       )
+        ##     }
       } else {
-        genes1 <- rownames(pgx$X)
-        gg <- intersect(toupper(higenes), toupper(genes1))
-        higenes1 <- genes1[match(gg, toupper(genes1))]
-        if (get_data) {
-          return(
-            playbase::pgx.plotContrast(
-              pgx,
-              contrast = ct, hilight = higenes1,
-              ntop = ntop, cex.lab = cex.lab, #
-              par.sq = TRUE, type = type, plotlib = "base",
-              data = TRUE
-            )
-          )
-        }
         p <- playbase::pgx.plotContrast(
           pgx,
-          contrast = ct, hilight = higenes1,
-          ntop = ntop, cex.lab = cex.lab, #
-          par.sq = TRUE, type = type, plotlib = "base"
+          contrast = ct,
+          hilight = hilight,
+          ntop = ntop,
+          cex.lab = cex.lab, #
+          par.sq = TRUE,
+          type = type,
+          plotlib = "base",
+          data = get_data
         )
+      }
+      if (get_data) {
+        return(p)
       }
       p <- grDevices::recordPlot()
       p
@@ -421,6 +432,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
+      getMatrices = getMatrices,
       watermark = WATERMARK
     )
 
@@ -434,11 +446,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       createPlot = createPlot,
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
+      getMatrices = getMatrices,
       watermark = WATERMARK
     )
 
     # FC Correlation
-
     compare_plot_fcfc_server(
       "fcfcplot",
       getMatrices = getMatrices,
@@ -447,7 +459,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     )
 
     # Cumulative FC
-
     compare_plot_cum_fc1_server(
       "cumfcplot1",
       getMatrices = getMatrices,

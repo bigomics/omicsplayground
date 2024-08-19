@@ -48,7 +48,7 @@ CompareInputs <- function(id) {
       shiny::br(),
       withTooltip(
         shiny::radioButtons(ns("plottype"), "Plot type:",
-          choices = c("volcano", "MA", "scatter", "UMAP1", "UMAP2", "heatmap"),
+          choices = c("volcano", "MA", "scatter", "UMAP1", "UMAP2"),
           selected = "UMAP1", inline = TRUE
         ),
         "Select plot type.",
