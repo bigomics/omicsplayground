@@ -89,7 +89,7 @@ ConnectivityBoard <- function(
       ## convert to human symbols so we can match different organism
       fc <- meta1[[ct]]$meta.fx
       names(fc) <- rownames(meta1[[ct]])
-      fc <- playbase::rename_by_humansymbol(fc, pgx$genes)
+      fc <- playbase::collapse_by_humansymbol(fc, pgx$genes)
 
       gs <- meta2[[ct]]$meta.fx
       names(gs) <- rownames(meta2[[ct]])
