@@ -101,6 +101,7 @@ upload_table_preview_counts_server <- function(
         )
       )
 
+      
       div(
         bslib::as_fill_carrier(),
         style = "width: 100%; display: flex; ",
@@ -110,12 +111,12 @@ upload_table_preview_counts_server <- function(
             row_heights = list("auto", 11, 1),
             gap = "0.5rem",
             bslib::as_fill_carrier(
-              bs_alert("The expression file (expression.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample.", closable = FALSE, translate_js = FALSE)
+              bs_alert(tspan("The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."), closable = FALSE, translate_js = FALSE)
             ),
             bslib::card(
               fileInputArea(
                 ns("counts_csv"),
-                shiny::h4("Upload expression.csv", class = "mb-0"),
+                shiny::h4(tspan("Upload counts.csv", js=FALSE), class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
                 width = "100%"
