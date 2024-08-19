@@ -1,0 +1,241 @@
+---
+title: |
+  Release Notes: \
+  Omics Playground v3.5.0 
+subtitle: ""
+author: "BigOmics Analytics Inc."
+date: today
+date-format: "MMMM YYYY"
+license: "Dual Licensed"
+copyright: 
+  holder: BigOmics Analytics
+  year: 2024
+format:
+  pdf:
+    documentclass: scrreprt
+    papersize: a4
+    fontsize: 10pt
+    toc: true
+    number-sections: true
+    colorlinks: true	
+execute:
+  echo: false
+  error: false
+  warning: false
+---
+
+```{r, echo = FALSE}
+library(knitr)
+library(playbase)
+library(kableExtra)
+kbl <- function(...) {
+  data.frame(...) %>%
+    kable( row.names = FALSE ) %>%
+    kable_styling(font_size = 9) %>%
+    kable_minimal()
+}
+opg.version <- sub("-.*","",readLines("../VERSION"))
+```
+
+
+
+
+# Overview {-}
+
+#### Scope {-}
+
+The purpose of this document is to provide a list of configurations
+for OmicsPlayground Enterprise and subsystems. The specification
+consists of baseline configurations required to be set up at site
+level as well as project level configurations to meet the requirements
+defined in User Requirement Specification (URS).
+
+Scope of this Configuration Specification is not limited to the below:
+
+- OmicsPlayground configuration,
+- ShinyProxy configuration,
+- Operating System (OS) configuration,
+- AWS EC2 configuration
+
+
+#### Contact {-}
+
+| BigOmics Analytics SA
+| Via Serafino Balestra 12 
+| 6900 Lugano 
+| Switzerland 
+
+#### Website {-}
+www.bigomics.ch 
+
+#### Registered {-}
+CHE-299.736.565
+
+
+#### Support {-}
+
+Connect with BigOmics by calling our 24/7 customer service line at
+1-800-555-5555. For questions, concerns or comments, please email our
+support team at support@bigomics.ch.
+
+
+What's new in OmicsPlayground `{r} opg.version`
+===============================================
+
+## Full Proteomics Support
+
+- Missing value imputation using `SVDimpute`
+- New normalization methods: `maxMedian` and `maxSum`
+- Text and labels are adapted for proteomics terminologies
+- UNIPROT id's are detected and annotated automatically
+- Reference links to UniProtKB and PhosphoSite databases
+
+## Extended species support
+
+OmicsPlayground `{r} opg.version` now supports annotation of well over 200
+different species.
+
+- Automatic annotation from ENSEMBL, symbol, UNIPROT or accession number.
+- Automatic annotation to human ortholog gene/protein.
+- Automatic annotation of organism-specific Gene Ontology 
+
+## Automatic Reports
+
+Also new in v3.5 is the ability to create automatic visual reports in
+PDF format.
+
+## New modules/boards
+
+- The Prize-Collection Steiner Tree (PCSF) module (previously in beta)
+  is now standard included under "SystemBio" in the main menu.
+
+## Improved information on methods
+
+We have much improved the information about the methods including
+references for each plot or table. Click on the 'i' button on the top
+right of each plot to see this. This information can be copy and
+pasted for your paper submission.
+
+## Improved information on plot settings
+
+For improved reproducibility, when downloading plots, you have now the
+possibility to include the plot settings in the PDF. In this way, you
+can remember what settings you used to create the plot.
+
+
+## Other new features
+
+\AddToHookNext{env/Highlighting/begin}{\tiny}
+```{r new-features}
+feat <- sub("\\[view\\].*","",readLines("../CHANGELOG.md"))
+feat <- feat[ grep("feat[:]|new[:]",feat,ignore.case=TRUE) ]
+cat(paste(c(feat,'\n'), collapse="\n"))
+```
+
+What has been fixed in `{r} opg.version`
+========================================
+
+Bug fixes improve security and stability of our application. Our team
+is continuously resolving bugs and errors. If you find a bug, please
+contact us or report this as an Issue at our GitHub page.
+
+\AddToHookNext{env/Highlighting/begin}{\tiny}
+```{r bug-fixes}
+feat <- sub("\\[view\\].*","",readLines("../CHANGELOG.md"))
+feat <- feat[ grep("fix[:]|fixed[:]|bug[:]|improve",feat,ignore.case=TRUE) ]
+cat(paste(c(feat,'\n'), collapse="\n"))
+```
+
+External Databases
+====================================
+
+## Genomic annotation
+
+For the major organism (Human, Mouse and Rat) we have manually
+included the most up-to-date annotation databases as provided by the
+latest `org.Xx.eg.db` packages in BioConductor.
+
+### Homo Sapiens (Human)
+
+```{r orgdb-human-version}
+info <- org.Hs.eg.db::org.Hs.eg_dbInfo()
+info <- info[!grepl("KEGG",info$name),]
+kbl(info)
+```
+
+### Mus Musculus (Mouse)
+
+```{r orgdb-mouse-version}
+info <- org.Mm.eg.db::org.Mm.eg_dbInfo()
+info <- info[!grepl("KEGG",info$name),]
+kbl(info)
+```
+
+### Rattus Norvegicus (Rat)
+
+```{r orgdb-rat-version}
+info <- org.Rn.eg.db::org.Rn.eg_dbInfo()
+info <- info[!grepl("KEGG",info$name),]
+kbl(info)
+```
+
+### Other supported species
+
+```{r ah, echo = FALSE}
+library(AnnotationHub)
+ah <- AnnotationHub()
+ah.date <- snapshotDate(ah)
+species = playbase::allSpecies()
+```
+
+OmicsPlayground `{r} opg.version` supports annotation of a total of
+`{r} length(species)` species. For these organisms, we use the
+`AnnotationHub` package with snapshot date `{r} ah.date`. For
+annotation to human ortholog we use `orthogene` package.
+
+
+```{r orgdb-species}
+kbl( organism_id = names(species), species = species )
+```
+
+System and R Version
+====================================
+
+## Operating System
+
+```{r ubuntu-version}
+os.version <- system("lsb_release -a", intern=TRUE)[-1]
+cat(paste(os.version,collapse="\n"))
+```
+
+## R version
+
+```{r r-version}
+sys.version <- base::version
+sys.version$Bioconductor <- as.character(BiocManager::version())
+kbl( "name"=names(sys.version), version=unlist(sys.version) )
+```
+
+## R packages
+
+```{r r-packages}
+rpkgs <- read.table("../RPackageLicenses.txt", sep="\t", header=TRUE)
+rpkgs <- rpkgs[!grepl("KEGG",rpkgs$Package),]
+kbl(rpkgs)
+```
+
+## OmicsPlayground configuration (OPTIONS)
+
+```{r options-file}
+opt <- readLines("../etc/OPTIONS")
+opt <- grep("^#",opt,invert=TRUE,value=TRUE)
+cat(paste(c(opt,'\n'), collapse="\n"))
+```
+
+## OmicsPlayground default settings (DEFAULTS)
+
+```{r defaults-file}
+opt <- readLines("../etc/DEFAULTS.yml")
+opt <- grep("^#",opt,invert=TRUE,value=TRUE)
+cat(paste(c(opt,'\n'), collapse="\n"))
+```
