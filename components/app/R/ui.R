@@ -117,8 +117,7 @@ app_ui <- function(x) {
         ),
         "Clustering" = c(
           clustersamples = "Samples",
-          clusterfeatures = "Features",
-          pcsf = "PCSF (beta)"
+          clusterfeatures = "Features"
         ),
         "Expression" = c(
           diffexpr = "Differential expression",
@@ -139,6 +138,7 @@ app_ui <- function(x) {
         "SystemsBio" = c(
           drug = "Drug connectivity",
           cell = "Cell profiling",
+          pcsf = "PCSF",
           wgcna = "WGCNA",
           tcga = "TCGA survival (beta)"
         )

@@ -117,7 +117,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
       F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
       F <- scale(F, center = FALSE)
-      fc <- sqrt(rowMeans(F**2))
+      fc <- sqrt(rowMeans(F**2, na.rm = TRUE))
 
       ## conform
       gg <- intersect(rownames(pos), names(fc))
@@ -219,8 +219,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gg <- intersect(sel.gsets, rownames(F))
       F <- F[gg, contrasts, drop = FALSE]
 
-      F <- F[order(-rowMeans(F**2)), , drop = FALSE]
-      F <- cbind(rms.FC = sqrt(rowMeans(F**2)), F)
+      F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
+      F <- cbind(rms.FC = sqrt(rowMeans(F**2, na.rm = TRUE)), F)
       F <- round(F, digits = 3)
       gs.db <- sub(":.*", "", rownames(F))
       gs <- sub(".*[:]", "", rownames(F))

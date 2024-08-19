@@ -50,27 +50,6 @@ docker: FORCE version
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
 		2>&1 | tee docker.log
 
-docker.alpha: FORCE 
-	@echo building ALPHA docker
-	docker build $(ARG) \
-		-f docker/Dockerfile.alpha \
-	  	-t bigomics/omicsplayground:alpha . \
-		2>&1 | tee docker.log
-
-docker.base: FORCE
-	@echo building docker BASE
-	docker build  \
-		--progress plain \
-		-f docker/Dockerfile.base \
-	  	-t bigomics/omicsplayground-base:ub2204_v3 .
-
-docker.base.update: FORCE 
-	@echo building docker
-	docker build $(ARG) \
-		--progress plain \
-		-f docker/Dockerfile.base.update \
-	  	-t bigomics/omicsplayground-base:ub2204_v3_upd .
-
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
@@ -94,7 +73,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta5.9002"
+VERSION = "v3.5.0-beta7"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE

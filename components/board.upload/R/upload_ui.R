@@ -6,10 +6,6 @@
 UploadUI <- function(id) {
   ns <- NS(id)
 
-  species1 <- as.character(playbase::SPECIES_TABLE$species_name)
-  species2 <- playbase::allSpecies.ORTHOGENE()
-  AVAILABLE_SPECIES <- c(species1[1:4], intersect(species1, species2))
-
   body <- div(
     style = "overflow: auto;",
     bslib::as_fill_carrier(),
@@ -42,8 +38,7 @@ UploadUI <- function(id) {
           shiny::selectInput(
             inputId = ns("selected_organism"),
             label = NULL,
-            choices = AVAILABLE_SPECIES,
-            ## selected = 1,
+            choices = NULL,
             multiple = FALSE
           )
         ),
@@ -159,31 +154,6 @@ useUploadWizard <- function(ns) {
     options = list(
       navigation = "buttons",
       finish = "Compute!"
-    )
-  )
-
-  wizard.save <- div(
-    class = "p-0",
-    div(
-      wizardR::wizard(
-        id = ns("upload_wizard"),
-        width = 90,
-        height = 75,
-        modal = TRUE,
-        style = "dots",
-        lock_start = TRUE,
-        counts_ui,
-        samples_ui,
-        contrasts_ui,
-        # comparisons_panel,
-        # outliers_panel,
-        # batchcorrect_panel,
-        compute_panel,
-        options = list(
-          navigation = "buttons",
-          finish = "Compute!"
-        )
-      )
     )
   )
 

@@ -72,6 +72,22 @@ ExpressionBoard <- function(id, pgx) {
       shiny::updateCheckboxInput(session, "gx_grouped", value = (ncol(pgx$X) <= 8))
     })
 
+    observeEvent(
+      {
+        input$show_pv
+      },
+      {
+        if (input$show_pv) {
+          shinyalert::shinyalert(
+            title = "",
+            text = "WARNING: Nominal p-values are NOT corrected for multiple testing. We do not advice their use.",
+            type = ""
+          )
+        }
+      }
+    )
+
+
 
     # observe functions to project DT from invalidating equal row_select
 
@@ -463,7 +479,7 @@ ExpressionBoard <- function(id, pgx) {
       comp = shiny::reactive(input$gx_contrast),
       pgx = pgx,
       res = filteredDiffExprTable,
-      ii = genetable$rows_current,
+      rows_current = genetable$rows_current,
       watermark = WATERMARK
     )
 

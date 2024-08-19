@@ -112,7 +112,8 @@ expression_plot_volcanoAll_server <- function(id,
       return(pd)
     })
 
-    plotly_plots <- function(cex = 2, yrange = 0.5, n_rows = 2, margin_l = 50, margin_b = 50) {
+    plotly_plots <- function(cex = 2, yrange = 0.5, n_rows = 2,
+                             margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
       sel.genes <- pd[["sel.genes"]]
@@ -163,13 +164,17 @@ expression_plot_volcanoAll_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+      fig <- plotly_plots(
+        cex = 3, yrange = 0.05, n_rows = 2, margin_b = 40, margin_l = 50
+      ) %>%
         playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
-      fig <- plotly_plots(yrange = 0.2, n_rows = 3, margin_b = 85) %>%
+      fig <- plotly_plots(
+        yrange = 0.02, n_rows = 3, margin_b = 70, margin_l = 70
+      ) %>%
         plotly::style(
           marker.size = 6
         ) %>%

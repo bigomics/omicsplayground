@@ -93,7 +93,7 @@ compute_enrichmentmap <- function(pgx, qsig = 0.05, ntop = 120, wt = 1, contrast
 
   ## marker genes for each cluster
   gset <- V(graph)$name
-  gs.genes <- tapply(V(graph)$name, cl$membership, function(s) names(which(colMeans(G[s, ] != 0) > 0.2)))
+  gs.genes <- tapply(gset, cl$membership, function(s) names(which(Matrix::colMeans(G[s, ] != 0) > 0.2)))
   unique.genes <- names(which(table(unlist(gs.genes)) == 1))
   marker.genes <- lapply(gs.genes, function(gg) intersect(gg, unique.genes))
 
@@ -319,8 +319,8 @@ plot_enrichmentmap <- function(res, contrast = NULL, qsig = 0.05,
     top.genes <- names(which(fc.qv > 0.2))
   } else {
     fc.qv <- abs(gx.meta$fc * (gx.meta$qv < qsig))
-    fc.qv <- fc.qv[order(-rowMeans(fc.qv)), ]
-    top.genes <- names(which(apply(fc.qv, 1, max) > 0.2))
+    fc.qv <- fc.qv[order(-rowMeans(fc.qv, na.rm = TRUE)), ]
+    top.genes <- names(which(apply(fc.qv, 1, max, na.rm = TRUE) > 0.2))
   }
   ## intersection of marker genes and top DE
   marker.genes2 <- lapply(marker.genes, function(g) intersect(top.genes, g))

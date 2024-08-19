@@ -27,7 +27,7 @@ SignatureInputs <- function(id) {
         withTooltip(
           shiny::textAreaInput(ns("genelist"), tspan("Genes:"),
             value = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA",
-            rows = 15, placeholder = "Paste your gene list"
+            rows = 12, placeholder = "Paste your gene list"
           ),
           "Paste a list of genes that defines your signature.",
           placement = "top",
@@ -45,6 +45,16 @@ SignatureInputs <- function(id) {
         withTooltip(
           shiny::actionButton(ns("example1"), "[immune_chkpt] ", style = style0),
           "Use the list of genes involved in immune checkpoint as a signature."
+        ),
+        withTooltip(
+          shiny::actionButton(
+            ns("compute_button"),
+            label = "Compute",
+            class = "btn-outline-primary",
+            icon = icon("refresh")
+          ),
+          "Click to compute.",
+          placement = "right"
         )
       )
     ),
@@ -165,14 +175,14 @@ SignatureUI <- function(id) {
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "The plot shows the gene sets most correlated with the test signature.",
           width = c("auto", "100%"),
-          height = c("50%", TABLE_HEIGHT_MODAL)
+          height = c("40%", TABLE_HEIGHT_MODAL)
         ),
         signature_table_overlap_ui(
           ns("overlapTable"),
           title = "Overlap with other signatures",
           info.text = "Under the Overlap/similarity tab, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
           caption = "The table indicates the gene sets available in the platform that are most correlated with the tested signature.",
-          height = c("50%", TABLE_HEIGHT_MODAL),
+          height = c("60%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
       )

@@ -26,25 +26,19 @@ compare_plot_expression_ui <- function(
 compare_plot_expression_server <- function(id,
                                            pgx,
                                            dataset2,
-                                           input.contrast1,
-                                           input.contrast2,
+                                           contrast1,
+                                           contrast2,
                                            hilightgenes,
-                                           getOmicsScoreTable,
-                                           score_table,
-                                           compute,
+                                           getMatrices,
+                                           getScoreTable,
+                                           selected,
+                                           ## compute,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    contrast1 <- shiny::reactiveVal(FALSE)
-    contrast2 <- shiny::reactiveVal(FALSE)
-    shiny::observeEvent(compute(), {
-      contrast1(input.contrast1())
-      contrast2(input.contrast2())
-    })
-
     plotly_multibarplot.RENDER <- shiny::reactive({
       dt <- tryCatch(
         {
-          getOmicsScoreTable()
+          getScoreTable()
         },
         error = function(w) {
           FALSE
@@ -53,9 +47,9 @@ compare_plot_expression_server <- function(id,
       shiny::validate(shiny::need(dt, "Please select contrasts and run 'Compute'"))
       shiny::req(contrast1())
       shiny::req(contrast2())
-      shiny::req(getOmicsScoreTable())
+      shiny::req(getScoreTable())
       shiny::req(hilightgenes())
-      shiny::req(score_table())
+      shiny::req(selected())
       pgx1 <- pgx
       pgx2 <- dataset2()
 
@@ -66,53 +60,42 @@ compare_plot_expression_server <- function(id,
       ct2 <- head(names(pgx2$gx.meta$meta), 3)
       ct1 <- contrast1()
       ct2 <- contrast2()
-      if (is.null(pgx1$version) && is.null(pgx2$version)) {
-        target_col1 <- target_col2 <- "gene_name"
-      } else if (org1 == org2) {
-        target_col1 <- target_col2 <- "symbol"
-      } else if (org1 != org2) {
-        target_col1 <- target_col2 <- "human_ortholog"
-        if (!target_col1 %in% colnames(pgx1$genes)) target_col1 <- "gene_name"
-        if (!target_col2 %in% colnames(pgx2$genes)) target_col2 <- "gene_name"
-      }
 
-      X1 <- playbase::rename_by(pgx1$X, pgx1$genes, target_col1)
-      X2 <- playbase::rename_by(pgx2$X, pgx2$genes, target_col2)
+      mat <- getMatrices()
+      X1 <- mat$X1
+      X2 <- mat$X2
 
-      genes <- rownames(X1)
-      genes <- hilightgenes()
-
-      df <- getOmicsScoreTable()
-
-      sel <- score_table() ## from module
-      genes <- rownames(df)[sel]
-
+      df <- getScoreTable()
+      sel.genes <- selected()
       xgenes <- intersect(rownames(X1), rownames(X2))
-      genes <- head(intersect(genes, xgenes), 8)
-      e1 <- playbase::contrastAsLabels(pgx1$model.parameters$exp.matrix[, ct1, drop = FALSE])
-      e2 <- playbase::contrastAsLabels(pgx2$model.parameters$exp.matrix[, ct2, drop = FALSE])
+      sel.genes <- head(intersect(sel.genes, xgenes), 8)
+      e1 <- playbase::pgx.getContrastMatrix(pgx1)[, ct1, drop = FALSE]
+      e2 <- playbase::pgx.getContrastMatrix(pgx1)[, ct2, drop = FALSE]
 
       # Build plots
-      sub_plots <- vector("list", length(genes))
-      names(sub_plots) <- genes
-      for (gene_i in genes) {
+      sub_plots <- vector("list", length(sel.genes))
+      names(sub_plots) <- sel.genes
+
+      for (gene_i in sel.genes) {
         # Get data
-        x1 <- pgx1$X[gene_i, ]
-        x2 <- pgx2$X[gene_i, ]
-        m1 <- lapply(e1, function(y) tapply(x1, y, mean))
-        m2 <- lapply(e2, function(y) tapply(x2, y, mean))
-        mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
+        x1 <- X1[gene_i, ]
+        x2 <- X2[gene_i, ]
+        m1 <- apply(e1, 2, function(y) tapply(x1, y, mean))
+        m2 <- apply(e2, 2, function(y) tapply(x2, y, mean))
+        mm <- cbind(m1, m2)
 
         # Assemble barplots
-        title_y <- max(mm) + max(mm) * .1
+        title_y <- 1.1 * max(mm, na.rm = TRUE)
         rn <- rownames(mm)
-        # Add bars
         plt <- plotly::plot_ly()
-        for (i in seq_len(ncol(mm))) {
+        for (i in seq_len(NCOL(mm))) {
           col_i <- mm[, i, drop = FALSE]
           name_i <- gsub(pattern = "_vs_", replacement = " vs\n", x = colnames(col_i))
-          show_legend1 <- (i == 1 && gene_i == genes[1])
-          plt <- plotly::add_trace(plt,
+          show_legend1 <- (i == 1 && gene_i == sel.genes[1])
+
+          # Add bars
+          plt <- plotly::add_trace(
+            plt,
             x = name_i,
             y = col_i[, 1] + 0.00001, # We add 0.00001 so that columns don't get ignored
             name = rn,
@@ -130,6 +113,7 @@ compare_plot_expression_server <- function(id,
               barmode = "group"
             )
         }
+
         plt <- plotly::add_annotations(plt,
           text = paste("<b>", gene_i, "</b>"),
           font = list(size = 9),

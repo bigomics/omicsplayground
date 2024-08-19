@@ -69,7 +69,7 @@ expression_plot_topgenes_server <- function(id,
                                             comp,
                                             pgx,
                                             res,
-                                            ii,
+                                            rows_current,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
@@ -79,15 +79,12 @@ expression_plot_topgenes_server <- function(id,
       shiny::req(pgx$X)
 
       res <- res()
-      dbg("[expression_plot_topgenes.R] nrow.res = ", nrow(res))
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
 
       ## filter on active rows (using search)
-      ii <- ii()
-      dbg("[expression_plot_topgenes.R] head.ii = ", head(ii))
-      res <- res[ii, , drop = FALSE]
+      res <- res[rows_current(), , drop = FALSE]
       if (nrow(res) == 0) {
         return(NULL)
       }

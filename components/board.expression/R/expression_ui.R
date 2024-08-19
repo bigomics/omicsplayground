@@ -12,13 +12,19 @@ ExpressionInputs <- function(id) {
       "Select a contrast of interest for the analysis.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("gx_features"), tspan("Gene family:"), choices = NULL, multiple = FALSE),
+    withTooltip(
+      shiny::selectInput(ns("gx_features"), tspan("Gene family:"),
+        choices = NULL, multiple = FALSE
+      ),
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
     shiny::fillRow(
       flex = c(1, 1),
-      withTooltip(shiny::selectInput(ns("gx_fdr"), "FDR", choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2),
+      withTooltip(
+        shiny::selectInput(ns("gx_fdr"), "FDR",
+          choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2
+        ),
         "Set the false discovery rate (FDR) threshold.",
         placement = "top"
       ),
@@ -30,7 +36,7 @@ ExpressionInputs <- function(id) {
         placement = "top"
       )
     ),
-    shiny::br(), shiny::br(), shiny::br(), shiny::br(),
+    shiny::br(), shiny::br(),
     shiny::br(), shiny::br(),
     withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
       "Toggle advanced options.",
@@ -41,13 +47,12 @@ ExpressionInputs <- function(id) {
       "input.gx_options % 2 == 1",
       ns = ns,
       shiny::tagList( ## gx_showall does not work??
-        withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("show all genes"), FALSE),
+        withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
           placement = "top", options = list(container = "body")
         ),
         withTooltip(shiny::checkboxInput(ns("show_pv"), "Show p-values", FALSE),
-          "Show p-values in the table.
-                     WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
+          "Show p-values in the table. WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
           placement = "top", options = list(container = "body")
         ),
         shiny::radioButtons(ns("labeltype"), "Plot labels:",

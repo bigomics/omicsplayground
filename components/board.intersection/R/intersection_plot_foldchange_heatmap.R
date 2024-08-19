@@ -63,11 +63,11 @@ foldchange_heatmap_server <- function(id,
         )
       )
 
-      FC <- FC[order(-rowMeans(FC**2)), , drop = FALSE]
-      FC <- FC[order(-abs(rowMeans(FC))), , drop = FALSE]
+      FC <- FC[order(-rowMeans(FC**2, na.rm = TRUE)), , drop = FALSE]
+      FC <- FC[order(-abs(rowMeans(FC, na.rm = TRUE))), , drop = FALSE]
 
       F1 <- head(FC, 80)
-      F1 <- F1[order(rowMeans(F1)), , drop = FALSE]
+      F1 <- F1[order(rowMeans(F1, na.rm = TRUE)), , drop = FALSE]
       F1
     })
 

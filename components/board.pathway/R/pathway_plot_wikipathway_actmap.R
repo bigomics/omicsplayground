@@ -70,7 +70,6 @@ functional_plot_wikipathway_actmap_ui <- function(
 functional_plot_wikipathway_actmap_server <- function(id,
                                                       pgx,
                                                       getWikiPathwayTable,
-                                                      plotActivationMatrix,
                                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -78,7 +77,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
         shiny::req(pgx$X)
         ct <- colnames(pgx$model.parameters$contr.matrix)
         ct <- sort(ct)
-        selected_ct <- head(ct, 7)
+        selected_ct <- head(ct, 8)
         shiny::updateSelectInput(
           session,
           "selected_contrasts",
@@ -113,15 +112,22 @@ functional_plot_wikipathway_actmap_server <- function(id,
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
-        plotActivationMatrix(
-          meta,
-          df,
+
+        playbase::pgx.plotActivation(
+          pgx,
+          contrasts = input$selected_contrasts,
+          what = "geneset",
+          plotlib = "plotly",
+          filter = NULL,
+          cexCol = 1.4,
+          cexRow = 1,
           normalize = input$normalize,
           rotate = input$rotate,
-          nterms = 50,
-          nfc = 20,
-          tl.cex = 0.95,
-          row.nchar = 60
+          maxterm = 30,
+          maxfc = 20,
+          mar = c(15, 30),
+          tl.cex = 0.85,
+          row.nchar = 50
         )
       }
 
@@ -132,16 +138,22 @@ functional_plot_wikipathway_actmap_server <- function(id,
         if (is.null(df) || nrow(df) == 0) {
           return(NULL)
         }
-        plotActivationMatrix(
-          meta,
-          df,
+
+        playbase::pgx.plotActivation(
+          pgx,
+          contrasts = input$selected_contrasts,
+          what = "geneset",
+          plotlib = "plotly",
+          filter = NULL,
+          cexCol = 1.4,
+          cexRow = 1,
           normalize = input$normalize,
           rotate = input$rotate,
-          nterms = 50,
-          nfc = 100,
+          maxterm = 40,
+          maxfc = 100,
+          mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200),
-          colorbar = TRUE
+          row.nchar = ifelse(input$rotate, 60, 200)
         )
       }
 

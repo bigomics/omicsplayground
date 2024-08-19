@@ -36,21 +36,25 @@ signature_table_overlap_server <- function(id,
 
     overlapTable.RENDER <- shiny::reactive({
       df <- table_data()
-
-      numeric.cols <- which(sapply(df, is.numeric))
       numeric.cols <- intersect(c("p.fisher", "q.fisher"), colnames(df))
 
       geneset_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>", nrow(df)),
         df$geneset
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
 
-      DT::datatable(df,
-        rownames = geneset_link,
-        escape = c(-1, -2),
+      ## strip class, add link
+      df$geneset <- sub(".*[:]", "", df$geneset)
+      df$geneset <- paste(df$geneset, geneset_link)
+      rownames(df) <- 1:nrow(df)
+
+      DT::datatable(
+        df,
+        rownames = FALSE,
+        escape = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = "none",

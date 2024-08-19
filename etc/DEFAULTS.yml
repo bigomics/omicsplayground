@@ -1,0 +1,7 @@
+computation_options: 
+  probe_filtering:
+#    - append.symbol
+    - remove.notexpressed    
+    - remove.unknown
+    - only.proteincoding
+

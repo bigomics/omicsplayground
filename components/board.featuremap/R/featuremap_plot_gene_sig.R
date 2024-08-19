@@ -45,15 +45,15 @@ featuremap_plot_gene_sig_server <- function(id,
       if (any(pheno %in% colnames(pgx$samples))) {
         y <- pgx$samples[, pheno]
         if (ref == "<average>") {
-          refX <- rowMeans(pgx$X)
+          refX <- rowMeans(pgx$X, na.rm = TRUE)
         } else {
           kk <- which(y == ref)
-          refX <- rowMeans(pgx$X[, kk])
+          refX <- rowMeans(pgx$X[, kk], na.rm = TRUE)
         }
         X <- pgx$X - refX
         y <- pgx$samples[, pheno]
         F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
-          rowMeans(X[, i, drop = FALSE])
+          rowMeans(X[, i, drop = FALSE], na.rm = TRUE)
         }))
       } else {
         F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc

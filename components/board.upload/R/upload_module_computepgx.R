@@ -83,6 +83,9 @@ upload_module_computepgx_server <- function(
       DEV.NAMES <- c("noLM + prune")
       DEV.SELECTED <- c()
 
+      ## Probe filtering defaults
+      PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
+
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
@@ -152,14 +155,14 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  shiny::HTML("<h4>Probe filtering:</h4>"),
+                  ## shiny::HTML("<h4>Probe filtering:</h4>"),
+                  shiny::HTML("<h4>Feature filtering:</h4>"),
                   choiceValues =
                     c(
-                      "only.hugo",
+                      "append.symbol",
                       "remove.notexpressed",
                       "remove.unknown",
                       "only.proteincoding"
-                      ## "skip.normalization"
                     ),
                   choiceNames =
                     c(
@@ -167,15 +170,8 @@ upload_module_computepgx_server <- function(
                       "Remove not-expressed",
                       "Remove features without symbol",
                       "Remove Rik/ORF/LOC genes"
-                      ## "Skip normalization"
-                      ## "Exclude immunogenes",
                     ),
-                  selected = c(
-                    ## "only.hugo",
-                    "remove.notexpressed",
-                    "remove.unknown",
-                    "only.proteincoding"
-                  )
+                  selected = PROBE_FILTER_SELECTED
                 )
               ),
               bslib::card(
@@ -528,7 +524,7 @@ upload_module_computepgx_server <- function(
         use.design <- TRUE
         prune.samples <- FALSE
         flt <- input$filter_methods
-        only.hugo <- ("only.hugo" %in% flt)
+        append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
         ## do.normalization <- !("skip.normalization" %in% flt)
@@ -572,8 +568,8 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           only.known = !remove.unknown,
           only.proteincoding = only.proteincoding,
-          only.hugo = only.hugo,
-          convert.hugo = only.hugo,
+          only.hugo = append.symbol, ## DEPRECATED
+          convert.hugo = append.symbol, ## should be renamed
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
@@ -595,11 +591,6 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-
-        ## Test check dim(counts) & dim(X)
-        dbg("[compute PGX process]: dim.X: ", dim(params$counts)[1], ",", dim(params$counts)[2])
-        dbg("[compute PGX process]: dim.countsX: ", dim(params$countsX)[1], ",", dim(params$countsX)[2])
-        dbg("[compute PGX process]: dim.impX: ", dim(params$impX)[1], ",", dim(params$impX)[2])
 
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)

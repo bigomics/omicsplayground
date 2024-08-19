@@ -144,28 +144,29 @@ signature_plot_markers_server <- function(id,
         return(NULL)
       }
 
-      ## select samples
-      X <- pgx$X
-
       ## get the signature
-      gset <- getCurrentMarkers()
-      if (is.null(gset)) {
+      markers <- getCurrentMarkers()
+      this.gset <- markers$symbols
+      if (is.null(this.gset)) {
         return(NULL)
       }
 
-      xgene <- pgx$genes[rownames(X), "gene_name"]
-      y <- 1 * (toupper(xgene) %in% toupper(gset))
+      xsymbol <- pgx$genes[rownames(pgx$X), "symbol"]
+      X <- playbase::rowmean(pgx$X, xsymbol)
+      y <- 1 * (rownames(X) %in% this.gset)
       names(y) <- rownames(X)
 
       ## expression by group
       grp <- pgx$model.parameters$group
       groups <- unique(grp)
-      gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE]))
+      gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE], na.rm = TRUE))
       colnames(gX) <- groups
 
       ## for large datasets pre-grouping is faster
       ss.bygroup <- calcSingleSampleValues(gX, y, method = c("rho", "gsva"))
       do.rho <- TRUE
+
+      ## by sample is slow... so no gsva
       ss1 <- calcSingleSampleValues(X[, ], y, method = c("rho"))
       ss.bysample <- cbind(rho = ss1)
 
@@ -185,12 +186,8 @@ signature_plot_markers_server <- function(id,
       res <- getSingleSampleEnrichment()
       shiny::req(res)
 
-      level <- "gene"
-      xgene <- pgx$genes[rownames(pgx$X), ]$gene_name
-      jj <- match(toupper(markers), toupper(xgene))
-      jj <- setdiff(jj, NA)
-      gx <- pgx$X[jj, , drop = FALSE]
-
+      features <- markers$features
+      gx <- pgx$X[features, , drop = FALSE]
       if (nrow(gx) == 0) {
         cat("WARNING:: Markers:: markers do not match!!\n")
         return(NULL)
@@ -201,7 +198,7 @@ signature_plot_markers_server <- function(id,
       gx <- gx - min(gx, na.rm = TRUE) + 0.001 ## subtract background
       grp <- pgx$model.parameters$group
       zx <- t(apply(gx, 1, function(x) tapply(x, as.character(grp), mean)))
-      gx <- gx[order(-apply(zx, 1, sd)), , drop = FALSE]
+      gx <- gx[order(-apply(zx, 1, sd, na.rm = TRUE)), , drop = FALSE]
       rownames(gx) <- sub(".*:", "", rownames(gx))
 
       ## get GSVA values and make some non-linear value fc1
@@ -218,7 +215,6 @@ signature_plot_markers_server <- function(id,
 
       cex1 <- 1.2
       cex1 <- 0.7 * c(1.6, 1.2, 0.8, 0.5)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
-      cex2 <- ifelse(level == "gene", 1, 0.8)
 
       nmax <- NULL
       if (input$markers_layout == "6x6") nmax <- 35
@@ -229,7 +225,7 @@ signature_plot_markers_server <- function(id,
         top.gx <- top.gx[order(rownames(top.gx)), , drop = FALSE]
       }
       if (input$markers_sortby == "probability") {
-        top.gx <- top.gx[order(-rowMeans(top.gx)), , drop = FALSE]
+        top.gx <- top.gx[order(-rowMeans(top.gx, na.rm = TRUE)), , drop = FALSE]
       }
       if (input$markers_sortby == "correlation") {
         rho <- cor(t(top.gx), fc1)[, 1]
@@ -249,7 +245,7 @@ signature_plot_markers_server <- function(id,
         } else {
           klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
           colvar <- pmax(top.gx[i, ], 0)
-          colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar) + 0.3 * max(top.gx))))
+          colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar, na.rm = TRUE) + 0.3 * max(top.gx, na.rm = TRUE))))
           klr1 <- klrpal[colvar]
           gene <- substring(sub(".*:", "", rownames(top.gx)[i]), 1, 80)
           tt <- playbase::breakstring(gene, n = 20, force = TRUE)
@@ -258,17 +254,6 @@ signature_plot_markers_server <- function(id,
         klr1 <- paste0(gplots::col2hex(klr1), "99")
 
         ## ------- start plot ----------
-        ## base::plot(pos[jj, ],
-        ##   pch = 19, cex = cex1, col = klr1[jj],
-        ##   xlim = 1.2 * range(pos[, 1]), ylim = 1.2 * range(pos[, 2]),
-        ##   fg = gray(ifelse(i == 0, 0.1, 0.8)), bty = "o",
-        ##   xaxt = "n", yaxt = "n", xlab = "tSNE1", ylab = "tSNE2"
-        ## )
-        ## legend("topleft", tt,
-        ##   cex = cex2, col = "grey30", text.font = ifelse(i == 0, 2, 1),
-        ##   inset = c(-0.1, -0.05), bty = "n"
-        ## )
-
         p <- playbase::pgx.scatterPlotXY.PLOTLY(
           pos[jj, ],
           var = colvar[jj],

@@ -107,8 +107,10 @@ expression_plot_volcanoMethods_server <- function(id,
       mx.symbols <- pgx$genes[mx.features, "symbol"]
 
       if (labeltype() == "symbol") {
+        names <- mx.features
         label.names <- mx.symbols
       } else {
+        names <- mx.symbol
         label.names <- mx.features
       }
 
@@ -119,20 +121,18 @@ expression_plot_volcanoMethods_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        ## names = names,
-        ## label.names = label.names,
-        title_y = "significance (-log10q)",
-        title_x = "effect size (log2FC)",
+        names = names,
+        label.names = label.names,
+        highlight = sel.genes,
+        label = lab.genes,
+        title_y = "Significance (-log10q)",
+        title_x = "Effect size (log2FC)",
         share_axis = !input$scale_per_plot,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        names = rownames(fc),
-        label.names = label.names,
-        highlight = sel.genes,
-        label = lab.genes,
         by_sig = FALSE
       )
       return(all_plts)
@@ -140,13 +140,17 @@ expression_plot_volcanoMethods_server <- function(id,
 
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly_plots(cex = 3, yrange = 0.05, n_rows = 2, margin_b = 20, margin_l = 50) %>%
+      fig <- plotly_plots(
+        cex = 3, yrange = 0.05, n_rows = 2, margin_b = 50, margin_l = 70
+      ) %>%
         playbase::plotly_build_light(.)
       return(fig)
     }
 
     big_plotly.RENDER <- function() {
-      fig <- plotly_plots(yrange = 0.02, n_rows = 3, margin_b = 20, margin_l = 20) %>%
+      fig <- plotly_plots(
+        yrange = 0.02, n_rows = 3, margin_b = 70, margin_l = 70
+      ) %>%
         plotly::style(
           marker.size = 6
         ) %>%

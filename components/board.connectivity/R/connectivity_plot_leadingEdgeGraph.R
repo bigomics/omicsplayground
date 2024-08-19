@@ -112,7 +112,7 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         A <- 1 * sapply(df$leadingEdge, function(g) le.genes %in% g)
         rownames(A) <- le.genes
 
-        A <- head(A[order(-rowMeans(A)), , drop = FALSE], 100)
+        A <- head(A[order(-rowMeans(A, na.rm = TRUE)), , drop = FALSE], 100)
         adjM <- (A %*% t(A))
         adjM <- adjM / max(adjM, na.rm = TRUE)
 

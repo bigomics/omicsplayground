@@ -7,74 +7,77 @@
 ## folder. Create docker ready to be deployed.
 
 #------------------------------------------------------------
-# Start from lastest base image
+# Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground-base:ub2204_v4
+FROM bigomics/playbase:latest
 
 ARG BRANCH=master
-RUN echo "Building Docker image from branch $BRANCH"
+RUN echo Building Docker image from branch '$BRANCH'
 
-#------------------------------------------------------------
-# Install any extra (forgotten...) Ubuntu libs
-#------------------------------------------------------------
-ENV DEBIAN_FRONTEND noninteractive
-
-#RUN sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+ENV DEBIAN_FRONTEND=noninteractive
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
 #------------------------------------------------------------
-# Install any extra (forgotten...) R packages since base
+# Install any extra (forgotten...) Ubuntu libs
+#------------------------------------------------------------
+# apt install nano
+
+#------------------------------------------------------------
+# Add supporting R libraries
 #------------------------------------------------------------
 WORKDIR /
-COPY dev/Rprofil[e] .Rprofile
-#RUN pip3 install umap-learn
+COPY dev/Rprofil[e] /root/.Rprofile
+COPY dev/*.R description* dev/
 
 #------------------------------------------------------------
-# Install supporting libraries
+# Download fresh omicsplayground code from GitHub
 #------------------------------------------------------------
-RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
-RUN R -e "install.packages(c('ruv','shiny.i18n'))"
-RUN R -e "BiocManager::install(c('MSnbase'))"
 
-
-# check if playbase@{$BRANCH} exists, if it does, install.. other wise install main
-WORKDIR /
-RUN echo "Checking playbase branch ${BRANCH}"
-RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l) && \
-    if [ $BRANCH_EXISTS -eq 1 ]; then \
-    R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
-    else \
-    R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
-    fi
-RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
-RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE, force=TRUE)"
-RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE, force=TRUE)"
-
-
-#------------------------------------------------------------
-# Download fresh code from GitHub (not an R package)
-#------------------------------------------------------------
-WORKDIR /
 RUN echo Downloading $BRANCH branch
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
     https://github.com/bigomics/omicsplayground.git \   
     && chmod -R ugo+rwX /omicsplayground 
 
-## initialize AnnotationHub
+# Run auto-install script
 WORKDIR /omicsplayground
-RUN Rscript dev/init_annothub.R
+COPY dev/*.R description* dev/
+RUN Rscript dev/requirements.R
+
+#------------------------------------------------------------
+# Install fresh playbase (from same BRANCH)
+#------------------------------------------------------------
+# check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
+RUN echo "Checking playbase branch ${BRANCH}"
+RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l) && \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+        R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
+    else \
+        R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
+    fi
+
+# after install non-detected missing packages
+#RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
+RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
+#RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
+#RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
 #------------------------------------------------------------
+
+## initialize
 WORKDIR /omicsplayground
-RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
-RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
+#RUN Rscript dev/init_annothub.R
+
+## disable Rprofile and Renv 
+RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
+RUN if test -f .Renviron; then mv .Renviron .Renviron.DISABLED; fi
+RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 
 #------------------------------------------------------------
 # Expose port and set entry CMD

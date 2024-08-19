@@ -64,7 +64,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
                                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     get_TopEnriched <- reactive({
-      dbg("[enrichment_plot_top_enrich_gsets_server] reacted!")
       shiny::req(pgx$X)
       rpt <- getFilteredGeneSetTable()
 
@@ -127,8 +126,6 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
         gmt.genes[[gs]] <- genes
       }
 
-      dbg("[enrichment_plot_top_enrich_gsets_server] done!")
-
       res <- list(
         rnk0 = rnk0,
         gmt.genes = gmt.genes,
@@ -139,13 +136,12 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
     })
 
     get_plotly_plots <- function(cex.text) {
-      dbg("[enrichment_plot_top_enrich_gsets_server] plotly.RENDER called!")
-
       res <- get_TopEnriched()
       shiny::req(res)
 
       rnk0 <- res$rnk0
-      rnk0 <- rnk0[!duplicated(names(rnk0))] # df within gsea.enplotly cannot deal with duplicated names
+      # gsea.enplotly cannot deal with duplicated names.
+      rnk0 <- rnk0[!duplicated(names(rnk0))]
       gmt.genes <- res$gmt.genes
       fc <- res$fx
       qv <- res$qv

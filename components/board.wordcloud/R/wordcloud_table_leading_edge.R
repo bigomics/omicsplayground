@@ -45,17 +45,24 @@ wordcloud_table_leading_edge_server <- function(id,
       df <- df[order(-abs(df$fx)), ]
       rownames(df) <- ee
 
-      numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
       leading.edge_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>", nrow(df)),
         df$leading.edge
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
 
+      le.class <- sub("[:].*", "", df$leading.edge)
+      df$leading.edge <- sub(".*[:]", "", df$leading.edge)
+      df$leading.edge <- paste(df$leading.edge, leading.edge_link)
+      df <- cbind(class = le.class, df)
+      colnames(df) <- c("class", tspan("LE gene set", js = FALSE), "logFC")
+
+      numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
+
       tbl <- DT::datatable(df,
-        rownames = leading.edge_link,
+        rownames = FALSE,
         escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
@@ -73,8 +80,8 @@ wordcloud_table_leading_edge_server <- function(id,
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatStyle("fx",
-          background = color_from_middle(df[, "fx"], "lightblue", "#f5aeae"),
+        DT::formatStyle("logFC",
+          background = color_from_middle(df[, "logFC"], "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )

@@ -50,77 +50,85 @@ PcsfBoard <- function(id, pgx) {
 
         NTOP <- 4000
         data(STRING, package = "PCSF")
+
+        ## get foldchanges
         meta <- playbase::pgx.getMetaMatrix(pgx)$fc
-        mx <- rowMeans(meta**2)**0.5
+
+        ## Genes in STRING are based in human genome, thus use
+        ## ortholog. For now we collapse to human gene. maybe in
+        ## future we may keep original features and use map features
+        ## to symbol when creating STRING edges. For now this is
+        ## simpler...
+        meta <- playbase::rename_by(meta, pgx$genes, "human_ortholog")
+        mx <- rowMeans(meta**2, na.rm = TRUE)**0.5
         genes <- head(names(mx)[order(-abs(mx))], NTOP)
+
+        ## compute gene weight for number of gene sets that they are
+        ## in. this is used to prioritize genes later.
         gsmeta <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
-        rx <- rowMeans(gsmeta**2)**0.5
+        rx <- rowMeans(gsmeta**2, na.rm = TRUE)**0.5
         top.gs <- head(names(sort(-abs(rx))), 1000)
-        ngmt <- Matrix::rowSums(pgx$GMT[, top.gs] != 0)
+
+        ## GMT has organism specific symbol, but we need to map to
+        ## human ortholog
+        G <- pgx$GMT[, top.gs]
+        G <- playbase::rename_by(G, pgx$genes,
+          from_id = "symbol",
+          new_id = "human_ortholog"
+        )
+        ngmt <- Matrix::rowSums(G != 0, na.rm = TRUE)
         ngmt <- log(1 + ngmt)
 
         ## ------------ find gene clusters --------------
+
+        ## also X needs to be in human ortholog
+        X <- playbase::rename_by(pgx$X, pgx$genes, "human_ortholog")
+        X <- X[genes, ]
         clust <- playbase::pgx.FindClusters(
-          X = scale(t(pgx$X[genes, ])),
+          X = scale(t(X)),
           method = c("kmeans"),
           top.sd = 1000, npca = 40
         )
 
-        idx <- clust[["kmeans"]][, 3]
-
-        # Genes in STRING are based in human genome, thus use ortholog
-        genes_raw <- genes
-        if (!pgx$organism %in% c("Human", "human")) {
-          genes_unique <- playbase::probe2symbol(unique(genes), pgx$genes, "human_ortholog")
-          names(genes_unique) <- genes
-          genes <- genes_unique[genes]
-          genes <- genes[genes != ""]
-        }
-
-        genes <- toupper(genes)
+        ## take the minimum level that has at least 2 clusters
+        nclust <- apply(clust[["kmeans"]], 2, function(x) length(table(x)))
+        sel <- min(which(nclust > 1))
+        idx <- clust[["kmeans"]][, sel]
         names(idx) <- genes
+        idx <- idx[!duplicated(names(idx))]
 
         ## balance number of gene per group??
-        genes <- unlist(tapply(genes, idx[genes], function(gg) head(gg, 800)))
+        genes <- unlist(tapply(names(idx), idx, function(gg) head(gg, 800)))
+        genes <- as.vector(genes)
+        idx <- idx[genes]
 
         ## ------------ create edge table --------------
         sel <- (STRING$from %in% genes & STRING$to %in% genes)
         ee <- STRING[sel, ]
         genes <- genes[which(genes %in% c(STRING$from, STRING$to))]
-        rho <- cor(t(pgx$X[genes_raw, ]))
-        # Rename cor matrix according to human orthologs
-        if (!pgx$organism %in% c("Human", "human")) {
-          human_gnames <- pgx$genes[rownames(rho), "human_ortholog"]
-          rownames(rho) <- toupper(human_gnames)
-          colnames(rho) <- toupper(human_gnames)
-          rho <- rho[!rownames(rho) == "", !colnames(rho) == ""]
-        }
-        rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 0.001)
+
+        # Create cost matrix from correlation
+        rho <- cor(t(X[genes, ]))
+        rho.ee <- pmax(rho[cbind(ee$from, ee$to)], 1e-4)
         ee$cost <- ee$cost**1 / rho.ee ## balance PPI with experiment
 
         ## ------------ create igraph network --------------
         ppi <- PCSF::construct_interactome(ee)
-        if (!pgx$organism %in% c("Human", "human")) {
-          gene_symbols <- playbase::probe2symbol(genes_raw, pgx$genes, "symbol")
-          gset.wt <- (ngmt[gene_symbols] / max(ngmt[gene_symbols], na.rm = TRUE))
-          terminals <- abs(mx[genes_raw])**1 * (0.1 + gset.wt)**1
-        } else {
-          gset.wt <- (ngmt[genes_raw] / max(ngmt[genes_raw])) ## gene set weighting
-          terminals <- abs(mx[genes_raw])**1 * (0.1 + gset.wt)**1
-        }
-        meta <- meta[genes_raw, , drop = FALSE]
-        rownames(meta) <- toupper(rownames(meta))
-        names(terminals) <- toupper(names(terminals))
+        ## gene set weighting. give more weight to genes that are in
+        ## many gene sets.
+        gset.wt <- (ngmt[genes] / max(ngmt[genes]))
+        terminals <- abs(mx[genes])**1 * (0.1 + gset.wt)**1
 
         out <- list(
           genes = genes,
-          genes_raw = genes_raw,
           meta = meta,
-          idx = idx[genes],
+          X = X,
+          idx = idx,
           clust = clust,
           ppi = ppi,
           terminals = terminals
         )
+        dbg("[pcsf_server.R:pcsf_compute] done!")
 
         return(out)
       }

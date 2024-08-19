@@ -3,7 +3,8 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
+SignatureBoard <- function(id, pgx,
+                           selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -79,10 +80,16 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
         gsets <- sort(names(playdata::iGSETS))
-        shiny::updateSelectizeInput(session, "feature", choices = gsets, selected = gsets[1], server = TRUE)
+        shiny::updateSelectizeInput(session, "feature",
+          choices = gsets,
+          selected = gsets[1], server = TRUE
+        )
       } else {
         ## custom
-        shiny::updateSelectInput(session, "feature", choices = "<custom>", selected = "<custom>")
+        shiny::updateSelectInput(session, "feature",
+          choices = "<custom>",
+          selected = "<custom>"
+        )
       }
     })
 
@@ -91,15 +98,19 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ======================= REACTIVE FUNCTIONS =====================================
     ## ================================================================================
 
-    input_genelist <- shiny::reactive({
-      shiny::req(input$genelist)
-
-      gg <- input$genelist
-      gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
-      if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
-      return(gg)
-    }) %>% shiny::debounce(1000)
-
+    input_genelist <- shiny::eventReactive(
+      {
+        list(pgx$X, input$compute_button)
+      },
+      {
+        shiny::req(input$genelist)
+        gg <- input$genelist
+        gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
+        trimws(gg)
+      },
+      ignoreInit = FALSE,
+      ignoreNULL = TRUE
+    )
 
     getCurrentMarkers <- shiny::reactive({
       shiny::req(pgx)
@@ -107,68 +118,53 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
       ## Get current selection of markers/genes
       type <- input$type
-      level <- "gene"
-      features <- toupper(pgx$genes$gene_name)
-      xfeatures <- toupper(pgx$genes[rownames(pgx$X), "gene_name"])
-      gset <- NULL
+      symbols <- toupper(pgx$genes[rownames(pgx$X), "symbol"])
+
+      features <- NULL
       if (input$feature == "<custom>") {
-        gset <- input_genelist()
-        if (is.null(gset) || length(gset) == 0 || gset[1] == "") {
+        genes <- input_genelist()
+        if (is.null(genes) || length(genes) == 0 || genes[1] == "") {
           return(NULL)
         }
-        if (length(gset) == 1) {
-          gene <- sub("^[@#]", "", gset[1])
-          if (grepl("^@", gset[1]) && gene %in% xfeatures) {
-            ## most correlated with this genes
-            jj <- match(gene, xfeatures) ## single gene
-            if (any(is.na(pgx$X))) {
-              rho <- cor(t(pgx$impX), pgx$impX[jj, ])[, 1]
-            } else {
-              rho <- cor(t(pgx$X), pgx$X[jj, ])[, 1]
-            }
-            gset <- head(names(sort(abs(rho), decreasing = TRUE)), 36) ## how many?
-          } else {
-            ## grep-like match
-            rx <- toupper(gset[1])
-            rx <- grep(rx, xfeatures, value = TRUE, ignore.case = TRUE)
-            gset <- rownames(pgx$X)[which(xfeatures %in% rx)] ## all probes matching gene
+
+        if (any(grepl("[*]", genes))) {
+          gene.patterns <- grep("[*]", genes, value = TRUE)
+
+          rx.genes <- c()
+          for (rx in gene.patterns) {
+            ## select other genes with grep-like match
+            rx <- paste0("^", sub("[*]", ".*", rx))
+            gg <- unique(grep(rx, symbols, value = TRUE, ignore.case = TRUE))
+            rx.genes <- c(rx.genes, gg)
           }
+          genes <- union(genes, rx.genes)
         }
-      } else if (type == "contrast" &&
-        input$feature %in% names(pgx$gx.meta$meta)) {
+        ## map to probes
+        features <- playbase::map_probes(pgx$genes, genes, column = NULL, ignore.case = TRUE)
+      } else if (input$type == "contrast" &&
+        input$feature[1] %in% playbase::pgx.getContrasts(pgx)) {
         contr <- input$feature
         fx <- pgx$gx.meta$meta[[contr]]$meta.fx
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
-        probes <- rownames(pgx$gx.meta$meta[[contr]])
-
-        match_input_genes <- any(input_genelist() %in% probes)
-
-        if (!match_input_genes) {
-          # use human ortholog in case no matched found in proves
-          probes <- pgx$genes[pgx$genes$human_ortholog %in% input_genelist(), "gene_name"]
-        }
-        genes <- pgx$genes[probes, "gene_name"]
-
-        # if length(genes) == 0, return validate message
-        validate(need(
-          length(genes) > 0, tspan("No genes found in the signature. Please check the gene list.", js = FALSE)
-        ))
-
-        fx <- fx[genes]
+        ## take top 100 features
         top.genes <- fx[order(-abs(fx))]
         top.genes <- head(top.genes, 100)
-        top.genes0 <- paste(top.genes, collapse = " ")
-        # shiny::updateTextAreaInput(session, "genelist", value = top.genes0)
-        gset <- names(top.genes)
-      } else if (input$feature %in% names(playdata::iGSETS)) {
-        gset <- toupper(unlist(playdata::getGSETS(input$feature)))
-        gset0 <- paste(gset, collapse = " ")
-        shiny::updateTextAreaInput(session, "genelist", value = gset0)
+        features <- names(top.genes)
+      } else if (input$type %in% c("hallmark", "KEGG", "geneset") &&
+        input$feature[1] %in% colnames(pgx$GMT)) {
+        sel <- input$feature
+        features <- rownames(pgx$GMT)[which(pgx$GMT[, sel] != 0)]
       } else {
         return(NULL)
       }
 
-      return(gset)
+      ## convert to genes symbols
+      symbols <- pgx$genes[features, "symbol"]
+
+      list(
+        features = unique(features),
+        symbols = unique(symbols)
+      )
     })
 
     sigCalculateGSEA <- shiny::reactive({
@@ -177,55 +173,43 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       if (is.null(pgx)) {
         return(NULL)
       }
-
       ## observe input list
-      gset <- head(rownames(pgx$X), 100)
-      gset <- getCurrentMarkers()
-      if (is.null(gset)) {
+      markers <- getCurrentMarkers()
+      genes <- markers$symbols
+
+      if (is.null(genes) || length(genes) == 0) {
+        cat("FATAL:: sigCalculateGSEA : gset empty!\n")
         return(NULL)
       }
 
       ## get all logFC of this dataset
-      meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+      meta <- playbase::pgx.getMetaMatrix(pgx)
       F <- meta$fc
-      rownames(F) <- toupper(rownames(F))
 
       ## cleanup matrix
       F <- as.matrix(F)
       F <- F[, which(!duplicated(colnames(F))), drop = FALSE]
 
-      ## cleanup names and uppercase for mouse genes
-      rownames(F) <- toupper(sub(".*:", "", rownames(F)))
-      gset <- toupper(sub(".*:", "", gset))
-      gset <- intersect(toupper(gset), rownames(F))
+      ## convert to symbol
+      fsymbol <- pgx$genes[rownames(F), "symbol"]
+      F <- playbase::rowmean(F, fsymbol)
+      F[is.na(F)] <- 0
 
-      if (length(gset) == 0) {
-        cat("FATAL:: sigCalculateGSEA : gset empty!\n")
-        return(NULL)
-      }
-
-      ## ------------ prioritize with quick correlation
-      y <- 1 * (toupper(rownames(F)) %in% toupper(gset))
+      ## prioritize with quick correlation restrict to top 100
+      ## comparisons (fgsea is otherwise to slow) but we do not expect
+      ## many with so many comparisons
+      y <- 1 * (rownames(F) %in% genes)
       ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)[, 1]
       rho <- cor(apply(F, 2, ss.rank), y, use = "pairwise")[, 1]
       rho[is.na(rho)] <- 0
       names(rho) <- colnames(F)
-
-      ## ------- restrict to top 100 comparisons (fgsea is otherwise to
-      ## ------- slow) but we do not expect many with so many
-      ## ------- comparisons
       ntop <- 100
       jj <- head(order(-abs(rho)), ntop)
       F <- F[, jj, drop = FALSE]
-      F <- F[!duplicated(rownames(F)), , drop = FALSE]
       F <- F + 1e-4 * matrix(rnorm(length(F)), nrow(F), ncol(F))
 
-      if (any(is.na(F))) {
-        F <- F[complete.cases(F), , drop = FALSE]
-      }
-
       ## ------------- do fast GSEA
-      gmt <- list("gset" = unique(gset))
+      gmt <- list("gset" = unique(genes))
       res <- NULL
       enrich_method <- "fgsea"
 
@@ -259,9 +243,9 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       res1 <- res1[match(colnames(F), rownames(res1)), , drop = FALSE]
 
       if (nrow(res1) != ncol(F)) {
-        cat("WARNING sigCalculateGSEA:: fgsea results are corrupted?\n")
-        cat("WARNING sigCalculateGSEA:: got contrasts: ", res$contrast, "\n")
-        cat("WARNING sigCalculateGSEA:: colnames.F= ", colnames(F), "\n")
+        message("WARNING sigCalculateGSEA:: fgsea results are corrupted?\n")
+        message("WARNING sigCalculateGSEA:: got contrasts: ", res$contrast, "\n")
+        message("WARNING sigCalculateGSEA:: colnames.F= ", colnames(F), "\n")
       }
 
       ## make nice table
@@ -274,13 +258,13 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       rownames(output) <- colnames(F)
       output <- output[order(-abs(output[, "NES"])), , drop = FALSE]
       F <- F[, rownames(output), drop = FALSE]
-      gsea <- list(F = as.matrix(F), gset = gset, output = output)
 
+      gsea <- list(F = as.matrix(F), gset = genes, output = output)
       return(gsea)
     })
 
     ## ================================================================================
-    #
+    ## Compute overlap and statistics of given list of genes and known genesets
     ## ================================================================================
 
     getOverlapTable <- shiny::reactive({
@@ -288,24 +272,17 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       shiny::req(getCurrentMarkers())
 
       markers <- getCurrentMarkers()
-
-      ## fold change just for ranking of genes
-      FC <- sapply(pgx$gx.meta$meta, function(x) x$meta.fx)
-      rownames(FC) <- rownames(pgx$gx.meta$meta[[1]])
-      fx <- rowMeans(FC**2)
+      genes <- markers$symbols
 
       ## fisher test
-      ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
+      G <- Matrix::t(pgx$GMT)
+      ii <- setdiff(match(genes, colnames(G)), NA)
 
-      if (length(ii) == 0) {
-        markers <- pgx$genes[markers, "symbol"]
-        ii <- setdiff(match(toupper(markers), colnames(playdata::GSETxGENE)), NA)
-      }
       N <- cbind(
-        k1 = Matrix::rowSums(playdata::GSETxGENE != 0), n1 = ncol(playdata::GSETxGENE),
-        k2 = Matrix::rowSums(playdata::GSETxGENE[, ii] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
+        k2 = Matrix::rowSums(G[, ii] != 0), n2 = length(ii)
       )
-      rownames(N) <- rownames(playdata::GSETxGENE)
+      rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
 
@@ -316,22 +293,24 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       qv <- p.adjust(pv, method = "bonferroni")
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
 
-      ## limit the list??
-      A <- A[which(A$q.fisher < 0.999), ]
-
       ## get shared genes
       aa <- rownames(A)
-
-      y <- 1 * (colnames(playdata::GSETxGENE) %in% toupper(markers))
-      names(y) <- colnames(playdata::GSETxGENE)
-      ncommon <- Matrix::colSums(Matrix::t(playdata::GSETxGENE[aa, , drop = FALSE]) * as.vector(y) != 0)
-      ntotal <- Matrix::rowSums(playdata::GSETxGENE[aa, , drop = FALSE] != 0)
+      y <- 1 * (colnames(G) %in% genes)
+      names(y) <- colnames(G)
+      ncommon <- Matrix::colSums(Matrix::t(G[aa, , drop = FALSE]) * as.vector(y) != 0)
+      ntotal <- Matrix::rowSums(G[aa, , drop = FALSE] != 0)
       A$ratio <- ncommon / ntotal
       ratio.kk <- paste0(ncommon, "/", ntotal)
 
-      gg <- colnames(playdata::GSETxGENE)
+      ## determine top genes
+      meta <- playbase::pgx.getMetaMatrix(pgx)
+      fx <- sqrt(rowMeans(meta$fc**2, na.rm = TRUE))
+      gg <- colnames(G)
+      fx <- fx[match(gg, names(fx))]
+      names(fx) <- gg
+
       gset <- names(y)[which(y != 0)]
-      G1 <- playdata::GSETxGENE[aa, which(y != 0)]
+      G1 <- G[aa, which(y != 0)]
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
@@ -352,7 +331,10 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
       db <- sub(":.*", "", gset.names)
       score <- (log10(A$odds.ratio) * -log10(A$q.fisher + 1e-40))**0.5
       score <- round(score, digits = 3)
-      df <- cbind(db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A, common.genes = commongenes)
+      df <- cbind(
+        db = db, geneset = gset.names, score = score, "k/K" = ratio.kk, A,
+        common.genes = commongenes
+      )
 
       df <- df[, c("db", "geneset", "score", "k/K", "odds.ratio", "q.fisher", "common.genes")]
       df <- df[order(-df$score), ]
@@ -370,45 +352,30 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
 
       # Input vars
       gsea <- sigCalculateGSEA()
-      gset <- getCurrentMarkers()
+      markers <- getCurrentMarkers()
+      gset <- markers$symbols
+      features <- markers$features
+
       i <- enrichmentContrastTable$rows_selected()
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
+      contr <- rownames(gsea$output)[i]
 
       # Get metaFC mat
-      meta <- playbase::pgx.getMetaFoldChangeMatrix(pgx, what = "meta")
+      meta <- playbase::pgx.getMetaMatrix(pgx)
       fc <- meta$fc
       qv <- meta$qv
 
-      # Convert to upper for old pgx
-      if (is.null(pgx$version)) {
-        rownames(fc) <- toupper(rownames(fc))
-        rownames(qv) <- toupper(rownames(qv))
-        gset <- setdiff(toupper(gset), c("", NA))
-      } else {
-        gset <- setdiff(gset, c("", NA))
-      }
-
       # Get contrasts, FC, and gene info
-      contr <- rownames(gsea$output)[i]
-      fc <- fc[, contr, drop = FALSE]
-      genes <- data.table::chmatch(toupper(gset), toupper(pgx$genes[, "gene_name"]))
-      genes <- pgx$genes[genes, "gene_name"]
-      # Convert to upper for old pgx and intersect with FC
-      if (is.null(pgx$version)) {
-        gg <- intersect(rownames(fc), toupper(genes))
-      } else {
-        gg <- intersect(rownames(fc), genes)
-      }
-      fc <- fc[gg, , drop = FALSE]
-      qv <- qv[gg, , drop = FALSE]
-      gene.info <- pgx$genes[gg, c("feature", "symbol", "gene_title")]
-      fc <- fc[gg, , drop = FALSE]
-      gene.info$gene_title <- substring(gene.info$gene_title, 1, 40)
+      fc <- fc[features, contr]
+      qv <- qv[features, contr]
+      gene.info <- pgx$genes[features, c("feature", "symbol")]
 
       # Return df
-      df <- data.frame(gene.info, fc, check.names = FALSE)
+      df <- data.frame(gene.info, log2FC = fc, q.value = qv, check.names = FALSE)
+      df <- df[order(-df$log2FC), ]
+
       return(df)
     })
 
@@ -417,7 +384,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     ## ================================================================================
 
     # Enrichment plots
-
     signature_plot_enplots_server(
       "enplots",
       pgx = pgx,
@@ -427,7 +393,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     )
 
     # Volcano plots
-
     signature_plot_volcano_server(
       "volcanoPlots",
       pgx = pgx,
@@ -440,7 +405,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     )
 
     # Signature overlap scores
-
     signature_plot_overlap_server(
       "overlapScorePlot",
       getOverlapTable = getOverlapTable,
@@ -449,7 +413,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     )
 
     # Overlap with other signatures
-
     overlapTable <- signature_table_overlap_server(
       "overlapTable",
       getOverlapTable = getOverlapTable,
@@ -458,7 +421,6 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     )
 
     # Markers plot
-
     signature_plot_markers_server(
       "markers",
       pgx = pgx,
@@ -467,14 +429,12 @@ SignatureBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$g
     )
 
     # Enrichment by contrasts
-
     enrichmentContrastTable <- signature_table_enrich_by_contrasts_server(
       "enrichmentContrastTable",
       sigCalculateGSEA = sigCalculateGSEA
     )
 
     # Genes in signature
-
     enrichmentGeneTable <- signature_table_genes_in_signature_server(
       "enrichmentGeneTable",
       organism = pgx$organism,

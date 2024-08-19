@@ -76,7 +76,7 @@ functional_plot_go_actmap_server <- function(id,
         shiny::req(pgx$X)
         ct <- colnames(pgx$model.parameters$contr.matrix)
         ct <- sort(ct)
-        selected_ct <- head(ct, 7)
+        selected_ct <- head(ct, 8)
         shiny::updateSelectInput(
           session,
           "selected_contrasts",
@@ -85,96 +85,34 @@ functional_plot_go_actmap_server <- function(id,
         )
       })
 
-
-      plotGOactmap <- function(score, go, normalize, rotate, maxterm, maxfc,
-                               tl.cex = 0.85, row.nchar = 60, colorbar = FALSE) {
-        rownames(score) <- igraph::V(go)[rownames(score)]$Term
-
-        ## avoid errors!!!
-        score[is.na(score) | is.infinite(score)] <- 0
-        score[is.na(score)] <- 0
-
-        shiny::validate(
-          shiny::need(
-            !is.null(input$selected_contrasts),
-            "Please select at least one comparison."
-          )
-        )
-        score <- score[, input$selected_contrasts, drop = FALSE]
-
-        ## reduce score matrix
-        score <- score[head(order(-rowSums(score**2, na.rm = TRUE)), maxterm), , drop = FALSE] ## max number terms
-        score <- score[, head(order(-colSums(score**2, na.rm = TRUE)), maxfc), drop = FALSE] ## max comparisons/FC
-        score <- score + 1e-3 * matrix(rnorm(length(score)), nrow(score), ncol(score))
-
-        ## normalize colums
-        if (normalize) {
-          ## column scale???
-          score <- t(t(score) / (1e-8 + sqrt(colMeans(score**2, na.rm = TRUE))))
-        }
-        score <- score / max(abs(score), na.rm = TRUE) ## global normalize
-        score <- sign(score) * abs(score)**0.5 ## fudging for better colors
-
-        d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
-        d2 <- as.dist(1 - cor(score, use = "pairwise"))
-        d1 <- dist(score)
-        d2 <- dist(t(score))
-        d1[is.na(d1)] <- 1
-        d2[is.na(d2)] <- 1
-        ii <- 1:nrow(score)
-        jj <- 1:ncol(score)
-        if (NCOL(score) == 1) {
-          score <- score[order(-score[, 1]), 1, drop = FALSE]
-        } else {
-          ii <- hclust(d1)$order
-          jj <- hclust(d2)$order
-          score <- score[ii, jj, drop = FALSE]
-        }
-
-        colnames(score) <- substring(colnames(score), 1, 30)
-        rownames(score) <- substring(rownames(score), 1, row.nchar)
-        colnames(score) <- paste0(colnames(score), " ")
-
-        par(mfrow = c(1, 1), mar = c(1, 1, 1, 1), oma = c(0, 1.5, 0, 0.5))
-
-        if (rotate) score <- t(score)
-
-        bluered.pal <- colorRamp(colors = c("royalblue3", "#ebeffa", "white", "#faeeee", "indianred3"))
-        score <- score[nrow(score):1, ]
-        x_axis <- colnames(score)
-        y_axis <- rownames(score)
-        fig <- plotly::plot_ly(
-          x = x_axis, y = y_axis,
-          z = score, type = "heatmap",
-          colors = bluered.pal,
-          showscale = colorbar
-        )
-        return(fig)
-      }
-
       plot_data <- shiny::reactive({
         shiny::req(pgx$meta.go)
-        pathscore <- pgx$meta.go$pathscore
+        score <- pgx$meta.go$pathscore
         graph <- pgx$meta.go$graph
+        rownames(score) <- igraph::V(graph)[rownames(score)]$Term
         res <- list(
-          pathscore = pathscore,
-          graph = graph
+          score = score
         )
       })
 
       plot_RENDER <- function() {
         res <- plot_data()
         shiny::req(res)
-        pathscore <- res$pathscore
-        graph <- res$graph
 
-        fig <- plotGOactmap(
-          score = pathscore,
-          go = graph,
+        playbase::pgx.plotActivation(
+          pgx,
+          contrasts = input$selected_contrasts,
+          what = "matrix",
+          matrix = res$score,
+          plotlib = "plotly",
+          filter = NULL,
+          cexCol = 1.4,
+          cexRow = 1,
           normalize = input$normalize,
           rotate = input$rotate,
-          maxterm = 50,
-          maxfc = 25,
+          maxterm = 30,
+          maxfc = 20,
+          mar = c(15, 30),
           tl.cex = 1.05,
           row.nchar = 60
         )
@@ -184,21 +122,35 @@ functional_plot_go_actmap_server <- function(id,
         res <- plot_data()
         shiny::req(res)
 
-        pathscore <- res$pathscore
-        graph <- res$graph
-        rotate <- input$rotate
-
-        plotGOactmap(
-          score = pathscore,
-          go = graph,
+        playbase::pgx.plotActivation(
+          pgx,
+          contrasts = input$selected_contrasts,
+          what = "matrix",
+          matrix = res$score,
+          plotlib = "plotly",
+          filter = NULL,
+          cexCol = 1.4,
+          cexRow = 1,
           normalize = input$normalize,
-          rotate = rotate,
-          maxterm = 50,
+          rotate = input$rotate,
+          maxterm = 40,
           maxfc = 100,
+          mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(rotate, 60, 200),
-          colorbar = TRUE
+          row.nchar = ifelse(input$rotate, 60, 200)
         )
+
+        ## plotGOactmap(
+        ##   score = pathscore,
+        ##   go = graph,
+        ##   normalize = input$normalize,
+        ##   rotate = rotate,
+        ##   maxterm = 50,
+        ##   maxfc = 100,
+        ##   tl.cex = 1.1,
+        ##   row.nchar = ifelse(rotate, 60, 200),
+        ##   colorbar = TRUE
+        ## )
       }
 
       PlotModuleServer(

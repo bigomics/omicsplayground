@@ -70,14 +70,15 @@ enrichment_plot_geneplot_server <- function(id,
 
       shiny::req(pgx$X)
 
-      comp0 <- colnames(pgx$model.parameters$contr.matrix)[1]
       comp0 <- gs_contrast()
-
-      has.design <- !is.null(pgx$model.parameters$design)
-      collapse.others <- ifelse(has.design, FALSE, TRUE)
-
       sel <- gene_selected()
-      if (is.null(sel) || is.na(sel) || length(sel) == 0) {
+
+      not.selected <- (is.null(sel) || length(sel) == 0)
+      shiny::validate(shiny::need(
+        not.selected == FALSE, tspan("Please select a gene", js = FALSE)
+      ))
+
+      if (not.selected) {
         return(plotly::plotly_empty(type = "scatter", mode = "markers") %>%
           plotly::config(
             displayModeBar = FALSE
@@ -85,21 +86,18 @@ enrichment_plot_geneplot_server <- function(id,
       } else {
         probe <- sel$rn
         gene <- sel$gene
-        if (length(probe) > 1) {
-          probe <- grep("\\[gx|\\[mrna", probe, value = TRUE)
-        }
         ngrp <- length(unique(pgx$samples$group))
-        grouped <- TRUE
         grouped <- !input$gs_ungroup2
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)
         if (!grouped && ncol(pgx$X) > 15) srt <- 60
+
         playbase::pgx.plotExpression(
           pgx,
           probe,
           comp = comp0,
           logscale = TRUE,
           level = "gene",
-          collapse.others = collapse.others,
+          collapse.others = FALSE,
           grouped = grouped,
           srt = srt,
           main = "",

@@ -45,13 +45,23 @@ dataview_module_geneinfo_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     geneinfo_data <- shiny::reactive({
-      gene <- r.gene()
-      shiny::req(gene)
+      feature <- r.gene()
+      shiny::req(feature)
 
-      feature <- gene
-      jj <- match(gene, rownames(pgx$genes))
+      organism <- pgx$organism
+      if (is.null(organism) || organism == "") organism <- "Human"
+      jj <- match(feature, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-      info <- playbase::getHSGeneInfo(symbol) ## defined in pgx-functions.R
+      ## symbol <- pgx$genes$human_ortholog[jj]
+      ## info <- playbase::getHSGeneInfo(symbol)
+      datatype <- pgx$datatype
+      info <- playbase::getOrgGeneInfo(
+        organism = organism,
+        gene = symbol,
+        feature = feature,
+        datatype = datatype,
+        as.link = TRUE
+      )
       res <- tspan("(gene info not available)")
       if (!is.null(info)) {
         info$summary <- "(no info available)"
@@ -59,16 +69,23 @@ dataview_module_geneinfo_server <- function(id,
           info$summary <- playdata::GENE_SUMMARY[symbol]
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
+        if (feature != symbol) {
+          info[["feature"]] <- feature
+        }
+        ## info$organism <- NULL
+        ## info$databases <- NULL
 
         ## reorder
-        info$feature <- feature
         nn <- intersect(
-          c("feature", "gene_symbol", "name", "map_location", "summary", "databases", names(info)),
+          c(
+            "feature", "gene_symbol", "uniprot", "organism", "name", "map_location",
+            "databases", "summary", names(info)
+          ),
           names(info)
         )
         info <- info[nn]
-        ## info$symbol <- paste0(info$symbol, "<br>")
         names(info) <- sub("gene_symbol", "symbol", names(info))
+        names(info) <- sub("uniprot", "protein", names(info))
         names(info) <- sub("map_location", "genome location", names(info))
 
         res <- c()
@@ -104,74 +121,3 @@ dataview_module_geneinfo_server <- function(id,
     )
   }) ## end of moduleServer
 }
-
-## dataview_module_geneinfo_server <- function(id,
-##                                             r.gene = reactive(""),
-##                                             watermark = FALSE) {
-##   moduleServer(id, function(input, output, session) {
-##     geneinfo_data <- shiny::reactive({
-##       gene <- r.gene()
-##       req(gene)
-
-##       gene <- toupper(sub(".*:", "", gene))
-##       eg <- AnnotationDbi::mget(gene,
-##         envir = org.Hs.eg.db::org.Hs.egSYMBOL2EG,
-##         ifnotfound = NA
-##       )[[1]]
-##       if (isTRUE(is.na(eg))) {
-##         eg <- AnnotationDbi::mget(gene,
-##           envir = org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound = NA
-##         )[[1]]
-##       }
-##       eg <- eg[1]
-##       if (is.null(eg) || length(eg) == 0) {
-##         return(NULL)
-##       }
-
-##       res <- "(gene info not available)"
-##       if (length(eg) > 0 && !is.na(eg)) {
-##         info <- playbase::getHSGeneInfo(eg) ## defined in pgx-functions.R
-##         info$summary <- "(no info available)"
-##         if (gene %in% names(playdata::GENE_SUMMARY)) {
-##           info$summary <- playdata::GENE_SUMMARY[gene]
-##           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
-##         }
-
-##         ## reorder
-##         nn <- intersect(c("symbol", "name", "map_location", "summary", names(info)), names(info))
-##         info <- info[nn]
-##         info$symbol <- paste0(info$symbol, "<br>")
-
-##         res <- c()
-##         for (i in 1:length(info)) {
-##           xx <- paste(info[[i]], collapse = ", ")
-##           res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
-##         }
-##         res <- paste(res, collapse = "<p>")
-##       }
-##       res
-##     })
-
-
-##     info.RENDER <- function() {
-##       res <- geneinfo_data()
-##       div(shiny::HTML(res), class = "gene-info")
-##     }
-
-##     modal_info.RENDER <- function() {
-##       res <- geneinfo_data()
-##       div(shiny::HTML(res), class = "gene-info", style = "font-size:1.3em;")
-##     }
-
-##     PlotModuleServer(
-##       "mod",
-##       plotlib = "generic",
-##       plotlib2 = "generic",
-##       func = info.RENDER,
-##       func2 = modal_info.RENDER,
-##       ## csvFunc = geneinfo_data,   ##  *** downloadable data as CSV
-##       renderFunc = shiny::renderUI,
-##       renderFunc2 = shiny::renderUI
-##     )
-##   }) ## end of moduleServer
-## }

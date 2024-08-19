@@ -272,7 +272,7 @@ intersection_plot_venn_diagram_server <- function(id,
         fc1 <- fc0
       } else {
         ## only genes at least significant in one group
-        jj <- which(rowSums(dt[, 2:ncol(dt), drop = FALSE] != 0) > 0)
+        jj <- which(rowSums(dt[, 2:ncol(dt), drop = FALSE] != 0, na.rm = TRUE) > 0)
         if (length(jj) == 0) {
           return(NULL)
         }
@@ -285,8 +285,8 @@ intersection_plot_venn_diagram_server <- function(id,
           kk <- intersect(kk, 1:ncol(dt))
 
           dt1 <- dt[, kk, drop = FALSE]
-          jj <- which(rowMeans(sign(dt1) == +1) == 1 |
-            (rowMeans(sign(dt1) == -1) == 1))
+          jj <- which(rowMeans(sign(dt1) == +1, na.rm = TRUE) == 1 |
+            (rowMeans(sign(dt1) == -1, na.rm = TRUE) == 1))
           dt <- dt[jj, , drop = FALSE]
           remove(dt1)
         }
@@ -319,7 +319,7 @@ intersection_plot_venn_diagram_server <- function(id,
       fc1 <- fc1[, kk, drop = FALSE]
 
       ## order
-      fc1 <- fc1[order(-rowMeans(fc1)), , drop = FALSE]
+      fc1 <- fc1[order(-rowMeans(fc1, na.rm = TRUE)), , drop = FALSE]
       fc1 <- round(fc1, digits = 3)
       colnames(fc1) <- LETTERS[1:ncol(fc1)]
 

@@ -145,8 +145,7 @@ upload_table_preview_samples_server <- function(
                 )
               )
             ),
-            fillRow(
-              fill = c(NA, 1, NA),
+            bslib::layout_columns(
               action_buttons,
               br(),
               uiOutput(ns("error_summary"))
