@@ -98,8 +98,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       if (input$hilighttype == "top scoring") {
         higenes <- rownames(df)[order(df$score, decreasing = TRUE)]
         higenes <- head(higenes, ntop)
-        ## higenes0 <- paste(higenes, collapse = " ")
-        ## shiny::updateTextAreaInput(session, "genelist", value = higenes0)
       }
       if (input$hilighttype == "custom") {
         higenes <- input$genelist
