@@ -508,17 +508,18 @@ UploadBoard <- function(id,
     ## Check annotation matrix
     ## --------------------------------------------------------
     checked_annot <- shiny::eventReactive(
-    {
+      {
         list(uploaded$annot.csv, uploaded$counts.csv)
-      }, {
+      },
+      {
+        shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
 
-        shiny::req(nrow(uploaded$annot.csv) &&  nrow(uploaded$counts.csv))
-        
         status <- "OK"
         checked <- uploaded$annot.csv
-        
+
         list(status = status, matrix = checked)
-      })
+      }
+    )
 
     ## --------------------------------------------------------
     ## Download example data

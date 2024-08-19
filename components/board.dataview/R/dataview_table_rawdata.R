@@ -24,7 +24,7 @@ dataview_table_rawdata_ui <- function(
       "Show full table. Show all feature annotation columns."
     )
   )
-  
+
   TableModuleUI(
     ns("datasets"),
     info.text = info.text,
@@ -108,9 +108,9 @@ dataview_table_rawdata_server <- function(id,
 
       ## create final dataframe
       pp <- rownames(x)
-      annot <- pgx$genes[pp,]
-      if(!input$show_full_table) {
-        annot <- annot[,c("feature","symbol","gene_title")]
+      annot <- pgx$genes[pp, ]
+      if (!input$show_full_table) {
+        annot <- annot[, c("feature", "symbol", "gene_title")]
       }
       annot$gene_title <- substring(annot$gene_title, 1, 50)
       if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000)) > 0.8) {
@@ -125,7 +125,7 @@ dataview_table_rawdata_server <- function(id,
         as.matrix(x),
         check.names = FALSE
       )
-      
+
       ## if symbol and feature as same, drop symbol column
       df <- df[order(-df$rho, -df$SD), , drop = FALSE]
 
