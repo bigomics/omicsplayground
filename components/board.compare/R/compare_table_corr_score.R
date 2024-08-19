@@ -27,6 +27,7 @@ compare_table_corr_score_server <- function(id,
 
       shiny::req(df)
       numeric.cols <- 2:ncol(df)
+      if("title" %in% colnames(df)) df$title <- substring(df$title, 1, 60)
 
       DT::datatable(
         df,
