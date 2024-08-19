@@ -73,9 +73,9 @@ PcsfBoard <- function(id, pgx) {
         ## human ortholog
         G <- pgx$GMT[, top.gs]
         G <- playbase::rename_by2(G, pgx$genes,
-                                  ## from_id = "symbol",
-                                  new_id = "human_ortholog"
-                                  )
+          ## from_id = "symbol",
+          new_id = "human_ortholog"
+        )
         ngmt <- Matrix::rowSums(G != 0, na.rm = TRUE)
         ngmt <- log(1 + ngmt)
 
