@@ -251,6 +251,10 @@ upload_table_preview_counts_server <- function(
       if (length(sel)) {
         df <- playbase::read_counts(input$counts_csv$datapath[sel[1]])
         uploaded$counts.csv <- df
+
+        ## if counts file contains annotation
+        af <- playbase::read_annot(input$counts_csv$datapath[sel[1]])
+        uploaded$annot.csv <- af
       }
 
       sel <- grep("samples", tolower(input$counts_csv$name))
