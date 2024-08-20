@@ -106,9 +106,9 @@ UploadBoard <- function(id,
     })
 
 
-    ## ================================================================================
-    ## ====================== NEW DATA UPLOAD =========================================
-    ## ================================================================================
+    ## ============================================================================
+    ## ================== NEW DATA UPLOAD =========================================
+    ## ============================================================================
 
     ## keeps track of how pgx was obtained: uploaded or computed. NEED
     ## RETHINK: is this robust to multiple users on same R process?
@@ -121,20 +121,6 @@ UploadBoard <- function(id,
       ignoreNULL = TRUE
     )
 
-
-    shiny::observeEvent(
-      {
-        list(uploaded, input$tabs)
-      },
-      {
-        dbg("[upload_server:observeEvent(names.uploaded)] names(uploaded) = ", names(uploaded))
-        dbg("[upload_server:observeEvent(names.uploaded)] input$tabs = ", input$tabs)
-        if (is.null(uploaded$counts.csv) && is.null(uploaded$samples.csv)) {
-          dbg("[upload_server:observeEvent(names.uploaded)] *** UPLOADED EMPTY *** ")
-        }
-      },
-      ignoreNULL = FALSE
-    )
 
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
@@ -544,6 +530,27 @@ UploadBoard <- function(id,
     })
 
 
+    ## --------------------------------------------------------
+    ## Check annotation matrix
+    ## --------------------------------------------------------
+    checked_annot <- shiny::eventReactive(
+      {
+        list(uploaded$annot.csv, uploaded$counts.csv)
+      },
+      {
+        shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
+
+        status <- "OK"
+        checked <- uploaded$annot.csv
+
+        list(status = status, matrix = checked)
+      }
+    )
+
+    ## --------------------------------------------------------
+    ## Download example data
+    ## --------------------------------------------------------
+
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
       content = function(file) {
@@ -627,6 +634,7 @@ UploadBoard <- function(id,
       norm_method = corrected1$norm_method(),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
+      annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       upload_organism = upload_organism,
@@ -677,7 +685,7 @@ UploadBoard <- function(id,
         result_alert <- NULL
 
         if (summary_check_content > 0) {
-          # chekc which checks have error results
+          # check which checks have error results
           find_content <- !sapply(
             summary_checks,
             function(x) is.null(x) || length(x) == 0

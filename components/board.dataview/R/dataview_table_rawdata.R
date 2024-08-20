@@ -13,10 +13,23 @@ dataview_table_rawdata_ui <- function(
     info.text) {
   ns <- shiny::NS(id)
 
+
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_full_table"),
+        "show full annotation",
+        FALSE
+      ),
+      "Show full table. Show all feature annotation columns."
+    )
+  )
+
   TableModuleUI(
     ns("datasets"),
     info.text = info.text,
     caption = caption,
+    options = options,
     width = width,
     height = height,
     title = title
@@ -49,48 +62,6 @@ dataview_table_rawdata_server <- function(id,
       if (is.null(gene) || gene == "" || is.na(gene)) {
         gene <- rownames(pgx$X)[1]
       }
-
-      ## if (data_type %in% c("counts", "abundance","linear")) {
-      ##   x <- parse_sample(pgx$counts)
-      ##   x_cpm <- parse_sample(pgx$X)
-      ## } else {
-      ##   ## log2CPM
-      ##   x <- parse_sample(pgx$X)
-      ## }
-      ## x0 <- x
-      ## ## Quickly (?) calculated correlation to selected gene
-      ## ## compute statistics
-      ## rho <- sdx <- avg <- NULL
-      ## if (data_type == "counts") {
-      ##   xgenes <- pgx$genes[rownames(x), "gene_name"]
-      ##   k <- which(xgenes == gene)
-      ##   xgenes_cpm <- pgx$genes[rownames(x_cpm), "gene_name"]
-      ##   k_cpm <- which(xgenes_cpm == gene)
-      ## } else {
-      ##   ## log2CPM
-      ##   xgenes <- pgx$genes[rownames(x), "gene_name"]
-      ##   k <- which(xgenes == gene)
-      ## }
-      ## if (data_type == "counts") {
-      ##   # compute the geometric mean, exp(mean(log(x+1)))
-      ##   logx <- log(x[rownames(x), ] + 1)
-      ##   # correlation should be equal between counts and logCPM, use logCPM
-      ##   rho <- cor(t(x_cpm[, colnames(x)]), x_cpm[k_cpm, colnames(x)], use = "pairwise")[, 1]
-      ##   rho <- round(rho[rownames(x_cpm)], digits = 3)
-      ##   rho <- rho[match(rownames(x), names(rho))]
-      ##   names(rho) <- rownames(x)
-      ##   # geometric std deviation
-      ##   sdx <- round(exp(apply(logx[, samples], 1, sd, na.rm = TRUE)), digits = 3)
-      ##   # geometric mean
-      ##   avg <- round(exp(rowMeans(logx, na.rm = TRUE)), digits = 3)
-      ## } else {
-      ##   # compute the geometric mean, mean(x)
-      ##   logx <- x
-      ##   rho <- cor(t(logx[, samples]), logx[k, samples], use = "pairwise")[, 1]
-      ##   rho <- round(rho[rownames(logx)], digits = 3)
-      ##   sdx <- round(apply(logx[, samples], 1, sd, na.rm = TRUE), digits = 3)
-      ##   avg <- round(rowMeans(logx, na.rm = TRUE), digits = 3)
-      ## }
 
       logx <- parse_sample(pgx$X)
       if (data_type == "counts") {
@@ -135,17 +106,19 @@ dataview_table_rawdata_server <- function(id,
         return(NULL)
       }
 
-      dbg("[dataview_rawdata:table_data] create dataframe")
+      ## create final dataframe
       pp <- rownames(x)
-      feature <- pgx$genes[pp, "feature"]
-      symbol <- pgx$genes[pp, "symbol"]
-      gene.title <- pgx$genes[pp, "gene_title"]
-      gene.title <- substring(gene.title, 1, 50)
+      annot <- pgx$genes[pp, ]
+      if (!input$show_full_table) {
+        annot <- annot[, c("feature", "symbol", "gene_title")]
+      }
+      annot$gene_title <- substring(annot$gene_title, 1, 50)
+      if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000)) > 0.8) {
+        annot$symbol <- NULL
+      }
 
       df <- data.frame(
-        feature = feature,
-        symbol = symbol,
-        title = gene.title,
+        annot,
         rho = rho,
         SD = sdx,
         AVG = avg,
@@ -154,9 +127,6 @@ dataview_table_rawdata_server <- function(id,
       )
 
       ## if symbol and feature as same, drop symbol column
-      if (mean(head(df$feature, 1000) == head(df$symbol, 1000)) > 0.8) {
-        df$symbol <- NULL
-      }
       df <- df[order(-df$rho, -df$SD), , drop = FALSE]
 
       list(
