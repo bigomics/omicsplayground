@@ -540,13 +540,13 @@ UploadBoard <- function(id,
         list(uploaded$annot.csv, uploaded$counts.csv)
       },
       {
- ##     shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
+        ##     shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
 
         status <- "OK"
         checked <- uploaded$annot.csv
-        dbg("[UploadServer:checked_annot] isnull.checked = ",is.null(checked))
-        dbg("[UploadServer:checked_annot] dim.checked = ",dim(checked))
-            
+        dbg("[UploadServer:checked_annot] isnull.checked = ", is.null(checked))
+        dbg("[UploadServer:checked_annot] dim.checked = ", dim(checked))
+
         list(status = status, matrix = checked)
       }
     )
