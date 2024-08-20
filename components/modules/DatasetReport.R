@@ -25,7 +25,7 @@ DatasetReportServer <- function(
     if (quarto_file_path == "") {
       ## default to parent of OPG
       path1 <- file.path(OPG, "../pgx-visreport")
-      path2 <- file.path(OPG, "./libx/pgx-visreport")      
+      path2 <- file.path(OPG, "./libx/pgx-visreport")
       if (dir.exists(path1)) quarto_file_path <- path1
       if (dir.exists(path2)) quarto_file_path <- path2
     }
