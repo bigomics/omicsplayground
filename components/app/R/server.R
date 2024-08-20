@@ -615,7 +615,7 @@ app_server <- function(input, output, session) {
       DATATYPEPGX <<- tolower(PGX$datatype)
 
       ## change language
-      if(DATATYPEPGX == "proteomics") {
+      if (DATATYPEPGX == "proteomics") {
         lang <- "proteomics"
       } else if (DATATYPEPGX == "metabolomics") {
         lang <- "metabolomics"
