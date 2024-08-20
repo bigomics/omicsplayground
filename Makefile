@@ -45,7 +45,7 @@ docker.run2:
 
 docker: FORCE version
 	@echo building docker $(BRANCH)
-	docker build $(ARG) --build-arg BRANCH=$(BRANCH) \
+	docker build $(ARG) --no-cache --build-arg BRANCH=$(BRANCH) \
 		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
