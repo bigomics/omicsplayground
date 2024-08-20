@@ -21,9 +21,9 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
 #------------------------------------------------------------
-# Install any extra Ubuntu libs
+# Install any extra Ubuntu libs (should be moved to playbase)
 #------------------------------------------------------------
-# RUN apt install nano
+RUN apt update && apt install -y fonts-lato
 
 WORKDIR /tmp
 RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-amd64.deb && dpkg -i quarto-1.5.56-linux-amd64.deb
@@ -34,6 +34,8 @@ RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/
 WORKDIR /
 COPY dev/Rprofil[e] /root/.Rprofile
 COPY dev/*.R description* dev/
+
+# RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
