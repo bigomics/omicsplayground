@@ -131,14 +131,25 @@ functional_plot_reactome_graph_server <- function(id,
           progress$set(message = "Rendering pathway...", value = 0.33)
         }
 
-        obj <- try(SBGNview::SBGNview(
-          gene.data = fc,
-          gene.id.type = "SYMBOL",
-          sbgn.dir = sbgn.dir,
-          input.sbgn = pathway.id,
-          output.file = "reactome",
-          output.formats = c("png")
-        ))
+        obj <- tryCatch({
+          SBGNview::SBGNview(
+            gene.data = fc,
+            gene.id.type = "SYMBOL",
+            sbgn.dir = sbgn.dir,
+            input.sbgn = pathway.id,
+            output.file = "reactome",
+            output.formats = c("png")
+          )
+        }, error = function(w){
+          SBGNview::SBGNview(
+            gene.data = NULL,
+            gene.id.type = "SYMBOL",
+            sbgn.dir = sbgn.dir,
+            input.sbgn = pathway.id,
+            output.file = "reactome",
+            output.formats = c("png")
+          )
+        })
         if (class(obj) == "SBGNview") {
           try(print(obj))
         }

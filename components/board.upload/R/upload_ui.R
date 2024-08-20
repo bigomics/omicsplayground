@@ -25,12 +25,14 @@ UploadUI <- function(id) {
             choices = c(
               "RNA-seq",
               "proteomics",
+              "metabolomics",
               "mRNA microarray",
               "scRNA-seq",
               "other"
             )
           )
         ),
+        shiny::uiOutput(ns("probe_type_ui")),
         div(
           p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
           shiny::selectInput(

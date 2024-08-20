@@ -224,9 +224,12 @@ app_server <- function(input, output, session) {
       new_upload = new_upload
     )
 
+
     shiny::observeEvent(upload_datatype(), {
       if (tolower(upload_datatype()) == "proteomics") {
         shiny.i18n::update_lang("proteomics", session)
+      } else if (tolower(upload_datatype()) == "metabolomics") {
+        shiny.i18n::update_lang("metabolomics", session)
       } else {
         shiny.i18n::update_lang("RNA-seq", session)
       }
@@ -612,7 +615,13 @@ app_server <- function(input, output, session) {
       DATATYPEPGX <<- tolower(PGX$datatype)
 
       ## change language
-      lang <- ifelse(DATATYPEPGX == "proteomics", "proteomics", "RNA-seq")
+      if(DATATYPEPGX == "proteomics") {
+        lang <- "proteomics"
+      } else if (DATATYPEPGX == "metabolomics") {
+        lang <- "metabolomics"
+      } else {
+        lang <- "RNA-seq"
+      }
       dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
 

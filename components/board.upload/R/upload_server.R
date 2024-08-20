@@ -34,14 +34,18 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     # add task to detect probetype using annothub
-    checkprobes_task <- ExtendedTask$new(function(organism, probes) {
+    checkprobes_task <- ExtendedTask$new(function(organism, probes, datatype, probe_type) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        detected <- playbase::detect_species_probetype(probes,
+        probetype0 <- playbase::detect_species_probetype(
+          probes = probes,
+          datatype = datatype,
+          probe_type = probe_type,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
         )
-        dbg("[UploadBoard:ExtendedTask.new] finished!")
-        detected
+        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
+        if (is.null(probetype0)) probetype0 <- "error"
+        probetype0
       })
     })
 
@@ -507,6 +511,28 @@ UploadBoard <- function(id,
       }
     )
 
+    ## output$input_recap <- renderUI({
+    ##   shiny::fluidRow(
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
+    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
+    ##   )
+    ## })
+
+    output$probe_type_ui <- shiny::renderUI({
+      if (input$selected_datatype == "metabolomics") {
+        div(
+          p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+          shiny::selectInput(
+            ns("selected_probe"),
+            label = NULL,
+            choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
+          )
+        )
+      }
+    })
+
 
     ## --------------------------------------------------------
     ## Check annotation matrix
@@ -854,7 +880,13 @@ UploadBoard <- function(id,
         shiny::req(uploaded$counts.csv, upload_organism())
         probes <- rownames(uploaded$counts.csv)
         probetype("running")
-        checkprobes_task$invoke(upload_organism(), probes)
+
+        checkprobes_task$invoke(
+          organism = upload_organism(),
+          datatype = upload_datatype(),
+          probes = probes,
+          probe_type = input$selected_probe
+        )
       }
     )
 
