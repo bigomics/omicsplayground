@@ -93,11 +93,11 @@ UploadBoard <- function(id,
 
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
-      all_species <- playbase::allSpecies(col="species_name")
-#      all_species <- sort(unique(c(all_species, "Plasmodium falciparum")))
-#      all_species <- all_species[grep("Homo sapiens|Mus musculus|Rattus norvegicus",
-#        all_species, invert = TRUE )]
-#      all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
+      all_species <- playbase::allSpecies(col = "species_name")
+      #      all_species <- sort(unique(c(all_species, "Plasmodium falciparum")))
+      #      all_species <- all_species[grep("Homo sapiens|Mus musculus|Rattus norvegicus",
+      #        all_species, invert = TRUE )]
+      #      all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
       if (!auth$options$ENABLE_ANNOT) {
         all_species <- setdiff(all_species, "No organism")
       }
