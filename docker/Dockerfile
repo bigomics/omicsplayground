@@ -21,9 +21,12 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
 #------------------------------------------------------------
-# Install any extra (forgotten...) Ubuntu libs
+# Install any extra Ubuntu libs
 #------------------------------------------------------------
-# apt install nano
+# RUN apt install nano
+
+WORKDIR /tmp
+RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-amd64.deb && dpkg -i quarto-1.5.56-linux-amd64.deb
 
 #------------------------------------------------------------
 # Add supporting R libraries

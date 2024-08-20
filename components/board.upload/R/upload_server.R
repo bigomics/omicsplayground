@@ -91,12 +91,15 @@ UploadBoard <- function(id,
 
     module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
 
-    observeEvent(new_upload(), {
-      ## species1 <- as.character(playbase::SPECIES_TABLE$species_name)
+    ## observeEvent( new_upload(), {
+    observeEvent(auth$logged, {
       all_species <- playbase::allSpecies()
       all_species <- sort(c(all_species, "Plasmodium falciparum"))
-      ## all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
-      all_species <- c("Human", "Mouse", "Rat", all_species)
+      all_species <- all_species[grep("Homo sapiens|Mus musculus|Rattus norvegicus",
+        all_species,
+        invert = TRUE
+      )]
+      all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
       if (!auth$options$ENABLE_ANNOT) {
         all_species <- setdiff(all_species, "No organism")
       }
@@ -235,7 +238,8 @@ UploadBoard <- function(id,
 
     uploaded_counts <- shiny::eventReactive(
       {
-        list(uploaded$counts.csv, upload_organism())
+        # list(uploaded$counts.csv, upload_organism())
+        list(uploaded$counts.csv)
       },
       {
         ## --------------------------------------------------------
@@ -805,7 +809,7 @@ UploadBoard <- function(id,
         upload_name(),
         upload_datatype(),
         upload_description(),
-        upload_organism(),
+        ## upload_organism(),
         upload_gset_methods(),
         upload_gx_methods(),
         probetype()
@@ -869,11 +873,11 @@ UploadBoard <- function(id,
     ## check probetypes we have counts and every time upload_species changes
     observeEvent(
       {
-        list(uploaded$counts.csv, upload_organism())
+        ## list(uploaded$counts.csv, upload_organism())
+        list(uploaded$counts.csv)
       },
       {
         shiny::req(uploaded$counts.csv, upload_organism())
-        dbg("[UploadBoard] Invoking probetype ExtendedTask")
         probes <- rownames(uploaded$counts.csv)
         probetype("running")
 
@@ -905,9 +909,6 @@ UploadBoard <- function(id,
         detected <- checkprobes_task$result()
         organism <- upload_organism()
         alt.text <- ""
-        dbg("[UploadBoard:ExtendedTask.new] upload_organism = ", organism)
-        dbg("[UploadBoard:ExtendedTask.new] detect$species = ", detected$species)
-        dbg("[UploadBoard:ExtendedTask.new] detect$probetype = ", detected$probetype)
 
         if (!organism %in% detected$species) {
           detected_probetype <- "error"

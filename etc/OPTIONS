@@ -31,5 +31,5 @@ WATERMARK            = TRUE
 APACHE_COOKIE_PATH   = /app/omicsplayground/
 DEVMODE              = FALSE
 
-#BOARDS_ENABLED = welcome;load;upload;view;clustersamples;clusterfeatures;wgcna;diffexpr;corr;enrich;pathway;wordcloud;drug;isect;sig;bio;cmap;comp;tcga;cell
-#BOARDS_ENABLED = load;dataview
+#BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
+#BOARDS_ENABLED = welcome;load;upload;cmap

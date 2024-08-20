@@ -571,7 +571,7 @@ upload_module_computepgx_server <- function(
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
-          only.known = !remove.unknown,
+          only.known = remove.unknown,
           only.proteincoding = only.proteincoding,
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
