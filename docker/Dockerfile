@@ -33,8 +33,6 @@ RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/
 #------------------------------------------------------------
 WORKDIR /
 COPY dev/Rprofil[e] /root/.Rprofile
-COPY dev/*.R description* dev/
-
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
@@ -49,7 +47,7 @@ RUN rm -fr /omicsplayground  \
 
 # Run auto-install script
 WORKDIR /omicsplayground
-COPY dev/*.R description* dev/
+COPY dev/*.R dev/description* dev/
 RUN Rscript dev/requirements.R
 
 #------------------------------------------------------------
