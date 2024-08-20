@@ -1,6 +1,6 @@
 computation_options: 
   probe_filtering:
-#    - append.symbol
+    - append.symbol
     - remove.notexpressed    
     - remove.unknown
     - only.proteincoding
