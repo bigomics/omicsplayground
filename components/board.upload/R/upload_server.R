@@ -546,9 +546,9 @@ UploadBoard <- function(id,
         checked <- uploaded$annot.csv
         dbg("[UploadServer:checked_annot] isnull.checked = ", is.null(checked))
         dbg("[UploadServer:checked_annot] dim.checked = ", dim(checked))
-        if(!is.null(checked)) {
+        if (!is.null(checked)) {
           dbg("[UploadServer:checked_annot] colnames.checked = ", colnames(checked))
-          dbg("[UploadServer:checked_annot] head.checked[,1] = ", head(checked[,1]))
+          dbg("[UploadServer:checked_annot] head.checked[,1] = ", head(checked[, 1]))
           dbg("[UploadServer:checked_annot] head.rownames.checked = ", head(rownames(checked)))
         }
 
@@ -1025,12 +1025,11 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
-
       ## check number of datasets
-      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$")) 
+      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
         ## count also deleted files...
-        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$")) 
+        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
       }
       max.datasets <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= max.datasets) {
