@@ -4,4 +4,4 @@ computation_options:
     - remove.notexpressed    
     - remove.unknown
     - only.proteincoding
-datatype: proteomics
+datatype: RNA-seq
