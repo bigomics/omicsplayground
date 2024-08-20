@@ -51,6 +51,13 @@ docker: FORCE version
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
 		2>&1 | tee docker.log
 
+docker.update: FORCE
+	@echo building update docker 
+	docker build --no-cache \
+		--progress plain \
+		-f docker/Dockerfile.update \
+	  	-t bigomics/omicsplayground:update .
+
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
