@@ -24,12 +24,13 @@ UploadUI <- function(id) {
             ns("selected_datatype"), NULL,
             choices = c(
               "RNA-seq",
-              "proteomics",
-              "metabolomics (beta)" = "metabolomics",
               "mRNA microarray",
-              "scRNA-seq",
-              "other"
-            )
+              "proteomics",
+              "metabolomics (beta)" = "metabolomics"
+              ## "scRNA-seq",
+              ## "other"
+            ),
+            selected = DEFAULTS$datatype
           )
         ),
         shiny::uiOutput(ns("probe_type_ui")),
