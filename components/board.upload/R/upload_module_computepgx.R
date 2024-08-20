@@ -474,11 +474,12 @@ upload_module_computepgx_server <- function(
         p <- probetype()
         dbg("[computepgx_server:upload_wizard] start compute PGX!!!")
         dbg("[computepgx_server:upload_wizard] probetype = ", p)
-        
+
         if (is.null(p) || grepl("error", tolower(p)) || p == "") {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
           shinyalert::shinyalert("ERROR", "probetype detection failed",
-                                 type = "error")
+            type = "error"
+          )
           return(NULL)
         }
         shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
