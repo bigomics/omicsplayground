@@ -540,10 +540,13 @@ UploadBoard <- function(id,
         list(uploaded$annot.csv, uploaded$counts.csv)
       },
       {
-        shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
+        ##     shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
 
         status <- "OK"
         checked <- uploaded$annot.csv
+        if (!is.null(checked)) {
+          dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
+        }
 
         list(status = status, matrix = checked)
       }
@@ -601,7 +604,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and replace user contrast file
       modct <- modified_ct()
-      dbg("[UploadBoard:modified_ct] contrasts has been modified")
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
@@ -1018,6 +1020,19 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
+      ## check number of datasets
+      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
+      if (!auth$options$ENABLE_DELETE) {
+        ## count also deleted files...
+        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
+      }
+      max.datasets <- as.integer(auth$options$MAX_DATASETS)
+      if (numpgx >= max.datasets) {
+        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        return(NULL)
+      }
+
+      ## start upload wizard
       new_upload(new_upload() + 1)
     })
 

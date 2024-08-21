@@ -472,25 +472,29 @@ upload_module_computepgx_server <- function(
 
         ## bail out if probetype task is not finished or has error
         p <- probetype()
+        dbg("[computepgx_server:upload_wizard] start compute PGX!!!")
+        dbg("[computepgx_server:upload_wizard] probetype = ", p)
+
         if (is.null(p) || grepl("error", tolower(p)) || p == "") {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
-          shinyalert::shinyalert("ERROR", "probetype detection failed", type = "error")
+          shinyalert::shinyalert("ERROR", "probetype detection failed",
+            type = "error"
+          )
           return(NULL)
         }
         shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
 
 
-        max.datasets <- as.integer(auth$options$MAX_DATASETS)
-        pgxdir <- auth$user_dir
-        numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-
-        if (!auth$options$ENABLE_DELETE) {
-          numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
-        }
-        if (numpgx >= max.datasets) {
-          shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
-          return(NULL)
-        }
+        ## max.datasets <- as.integer(auth$options$MAX_DATASETS)
+        ## pgxdir <- auth$user_dir
+        ## numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
+        ## if (!auth$options$ENABLE_DELETE) {
+        ##   numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
+        ## }
+        ## if (numpgx >= max.datasets) {
+        ##   shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        ##   return(NULL)
+        ## }
 
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values

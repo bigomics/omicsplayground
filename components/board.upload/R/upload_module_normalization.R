@@ -71,8 +71,8 @@ upload_module_normalization_server <- function(
         }
       )
 
-      observeEvent(input$scaling_method, {
-        shiny::req(input$scaling_method == "reference")
+      observeEvent(input$normalization_method, {
+        shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_X()))
         updateSelectizeInput(session, "ref_gene",
           choices = gg,
@@ -104,8 +104,8 @@ upload_module_normalization_server <- function(
           counts[which(counts == 0)] <- NA
         }
 
-        m <- input$scaling_method
-        prior <- ifelse(m == "CPM", 1, 1e-4) ## NEW
+        m <- input$normalization_method
+        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
         X <- log2(counts + prior) ## NEED RETHINK
 
         ## if (input$remove_xxl) {
@@ -134,29 +134,31 @@ upload_module_normalization_server <- function(
         shiny::req(dim(imputedX()))
         X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
         if (input$normalize) {
-          m <- input$scaling_method
-          shiny::withProgress(message = "Normalizing the data...", value = 0, {
-            shiny::incProgress(amount = 0.25, "Normalization...")
-            dbg("[normalization_server:normalizedX] Normalizing data using ", m)
-            ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
-            ref <- NULL
-            if (m == "reference") {
-              ref <- input$ref_gene
-              shiny::validate(shiny::need(
-                isTruthy(ref),
-                tspan("Please select reference gene", js = FALSE)
-              ))
-              shiny::req(ref)
-            }
-            prior <- ifelse(m == "CPM", 1, 1e-4)
-            normCounts <- playbase::pgx.countNormalization(pmax(2**X - prior, 0), method = m, ref = ref)
-            X <- log2(normCounts + prior)
-            if (input$quantile_norm) {
-              dbg("[normalization_server:normalizedX] Applying quantile normalization")
-              shiny::incProgress(amount = 0.25, "Quantile normalization...")
-              X <- limma::normalizeQuantiles(X)
-            }
-          })
+          m <- input$normalization_method
+          dbg("[normalization_server:normalizedX] Normalizing data using ", m)
+          ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
+          ref <- NULL
+          if (m == "reference") {
+            ref <- input$ref_gene
+            shiny::validate(shiny::need(
+              isTruthy(ref),
+              tspan("Please select reference gene", js = FALSE)
+            ))
+            shiny::req(ref)
+          }
+          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+          m0 <- m
+          if (m == "CPM+quantile") m0 <- "CPM"
+          normCounts <- playbase::pgx.countNormalization(
+            pmax(2**X - prior, 0),
+            method = m0, ref = ref
+          )
+          X <- log2(normCounts + prior)
+          ## if (FALSE && input$quantile_norm) {
+          if (m == "CPM+quantile") {
+            dbg("[normalization_server:normalizedX] Applying quantile normalization")
+            X <- limma::normalizeQuantiles(X)
+          }
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
@@ -254,7 +256,7 @@ upload_module_normalization_server <- function(
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
-        prior <- ifelse(input$scaling_method == "CPM", 1, 1e-4)
+        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
         dbg("[normalization_server:correctedCounts] Generating correctedCounts matrix. Prior=", prior)
         counts <- pmax(2**X - prior, 0)
         dbg("[normalization_server:correctedCounts] dim.correctedCounts = ", dim(counts))
@@ -746,9 +748,10 @@ upload_module_normalization_server <- function(
                   "input.normalize == true",
                   ns = ns,
                   shiny::selectInput(
-                    ns("scaling_method"), NULL,
+                    ns("normalization_method"), NULL,
                     choices = c(
-                      "CPM", "maxMedian", "maxSum", ## "TMM",
+                      "CPM", "CPM+quantile", ## "quantile",
+                      "maxMedian", "maxSum", ## "TMM",
                       "reference"
                     ),
                     selected = ifelse(tolower(upload_datatype()) == "proteomics",
@@ -756,7 +759,7 @@ upload_module_normalization_server <- function(
                     )
                   ),
                   shiny::conditionalPanel(
-                    "input.scaling_method == 'reference'",
+                    "input.normalization_method == 'reference'",
                     ns = ns,
                     shiny::selectizeInput(
                       ns("ref_gene"), NULL,
@@ -766,8 +769,8 @@ upload_module_normalization_server <- function(
                         placeholder = tspan("Choose gene...", js = FALSE)
                       )
                     )
-                  ),
-                  shiny::checkboxInput(ns("quantile_norm"), "Add quantile normalization", value = TRUE)
+                  )
+                  ## shiny::checkboxInput(ns("quantile_norm"), "Add quantile normalization", value = TRUE)
                 ),
                 br()
               ),
@@ -935,7 +938,7 @@ upload_module_normalization_server <- function(
       })
 
       norm_method <- reactive({
-        m <- input$scaling_method
+        m <- input$normalization_method
         if (!input$normalize) m <- "skip_normalization"
         dbg("[normalization_server:fCHECK] Normalization method = ", m)
         m

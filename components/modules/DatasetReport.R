@@ -24,8 +24,10 @@ DatasetReportServer <- function(
     quarto_file_path <- Sys.getenv("QUARTO_FILE_PATH")
     if (quarto_file_path == "") {
       ## default to parent of OPG
-      quarto_file_path <- file.path(OPG, "../pgx-visreport")
-      if (!dir.exists(quarto_file_path)) quarto_file_path <- NULL
+      path1 <- file.path(OPG, "../pgx-visreport")
+      path2 <- file.path(OPG, "./libx/pgx-visreport")
+      if (dir.exists(path1)) quarto_file_path <- path1
+      if (dir.exists(path2)) quarto_file_path <- path2
     }
 
     dbg("[DatasetReportServer] quarto_file_path = ", quarto_file_path)

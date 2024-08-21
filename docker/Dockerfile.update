@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/playbase:latest
+FROM bigomics/omicsplayground:master
 
 ARG BRANCH=master
 RUN echo Building Docker image from branch '$BRANCH'
@@ -23,16 +23,14 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #------------------------------------------------------------
 # Install any extra Ubuntu libs (should be moved to playbase)
 #------------------------------------------------------------
-RUN apt update && apt install -y fonts-lato
-
-WORKDIR /tmp
-RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-amd64.deb && dpkg -i quarto-1.5.56-linux-amd64.deb
+# RUN apt update && apt install -y fonts-lato
 
 #------------------------------------------------------------
 # Add supporting R libraries
 #------------------------------------------------------------
 WORKDIR /
 COPY dev/Rprofil[e] /root/.Rprofile
+
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
@@ -46,9 +44,8 @@ RUN rm -fr /omicsplayground  \
     && chmod -R ugo+rwX /omicsplayground 
 
 # Run auto-install script
-WORKDIR /omicsplayground
-COPY dev/*.R dev/description* dev/
-RUN Rscript dev/requirements.R
+#WORKDIR /omicsplayground
+#RUN Rscript dev/requirements.R
 
 #------------------------------------------------------------
 # Install fresh playbase (from same BRANCH)
@@ -64,7 +61,7 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.g
 
 # after install non-detected missing packages
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
-RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
+#RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
 #RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
 #RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 
