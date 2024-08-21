@@ -824,11 +824,8 @@ UploadBoard <- function(id,
       ),
       {
         req(input$upload_wizard == "step_compute")
-
-        dbg("[UploadServer:observe] LOCKING observer")
         
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
-
         if (!is.null(upload_name()) && upload_name() %in% pgx_files$dataset) {
           shinyalert::shinyalert(
             title = "Invalid name",
