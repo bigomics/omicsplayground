@@ -26,7 +26,16 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 RUN apt update && apt install -y fonts-lato
 
 WORKDIR /tmp
-RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-amd64.deb && dpkg -i quarto-1.5.56-linux-amd64.deb
+
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "arm64" ]; then \
+        wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-arm64.deb; \
+    elif [ "$ARCH" = "amd64" ]; then \
+        wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-amd64.deb; \
+    else \
+        echo "Unsupported architecture: $ARCH"; exit 1; \
+    fi && \
+    dpkg -i quarto-1.5.56-linux-*.deb
 
 #------------------------------------------------------------
 # Add supporting R libraries
