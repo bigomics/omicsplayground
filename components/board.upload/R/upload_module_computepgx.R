@@ -484,22 +484,16 @@ upload_module_computepgx_server <- function(
         }
         shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
 
-
-        ## max.datasets <- as.integer(auth$options$MAX_DATASETS)
-        ## pgxdir <- auth$user_dir
-        ## numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
-        ## if (!auth$options$ENABLE_DELETE) {
-        ##   numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$")) ## count deleted...
-        ## }
-        ## if (numpgx >= max.datasets) {
-        ##   shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
-        ##   return(NULL)
-        ## }
-
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
+
+        dbg("[UploadBoard:observe.upload_wizard] 1: !!!!")
+
         counts <- countsRT()
+
+        dbg("[UploadBoard:observe.upload_wizard] 2: !!!!")
+        
         countsX <- countsX()
         impX <- impX()
         samples <- samplesRT()
@@ -571,7 +565,7 @@ upload_module_computepgx_server <- function(
           custom.geneset = custom_geneset,
           # Options
           batch.correct = FALSE,
-          norm_method = norm_method,
+          norm_method = norm_method(),
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
