@@ -488,22 +488,13 @@ upload_module_computepgx_server <- function(
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
 
-        dbg("[UploadBoard:observe.upload_wizard] 1: !!!!")
-
         counts <- countsRT()
-
-        dbg("[UploadBoard:observe.upload_wizard] 2: !!!!")
-        
         countsX <- countsX()
         impX <- impX()
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
         annot_table <- annotRT()
-
-        dbg("[upload_module_computepgx_server] dim(annot_table) = ", dim(annot_table))
-
-        ## annot_table <- NULL  ## DISABLED FOR NOW
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
