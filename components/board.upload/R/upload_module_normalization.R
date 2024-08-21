@@ -105,7 +105,7 @@ upload_module_normalization_server <- function(
         }
 
         m <- input$normalization_method
-        prior <- ifelse(m %in% c("CPM","CPM+quantile"), 1, 1e-4) ## NEW
+        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
         X <- log2(counts + prior) ## NEED RETHINK
 
         ## if (input$remove_xxl) {
@@ -146,14 +146,16 @@ upload_module_normalization_server <- function(
             ))
             shiny::req(ref)
           }
-          prior <- ifelse(m %in% c("CPM","CPM+quantile"), 1, 1e-4)
+          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
           m0 <- m
-          if(m == "CPM+quantile") m0 <- "CPM"
+          if (m == "CPM+quantile") m0 <- "CPM"
           normCounts <- playbase::pgx.countNormalization(
-            pmax(2**X - prior, 0), method = m0, ref = ref)
+            pmax(2**X - prior, 0),
+            method = m0, ref = ref
+          )
           X <- log2(normCounts + prior)
-          ##if (FALSE && input$quantile_norm) {
-          if (m == "CPM+quantile") {            
+          ## if (FALSE && input$quantile_norm) {
+          if (m == "CPM+quantile") {
             dbg("[normalization_server:normalizedX] Applying quantile normalization")
             X <- limma::normalizeQuantiles(X)
           }
@@ -254,7 +256,7 @@ upload_module_normalization_server <- function(
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
-        prior <- ifelse(input$normalization_method %in% c("CPM","CPM+quantile"), 1, 1e-4)
+        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
         dbg("[normalization_server:correctedCounts] Generating correctedCounts matrix. Prior=", prior)
         counts <- pmax(2**X - prior, 0)
         dbg("[normalization_server:correctedCounts] dim.correctedCounts = ", dim(counts))
