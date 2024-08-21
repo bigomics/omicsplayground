@@ -36,7 +36,6 @@ RUN ARCH=$(dpkg --print-architecture) && \
         echo "Unsupported architecture: $ARCH"; exit 1; \
     fi && \
     dpkg -i quarto-1.5.56-linux-*.deb
-# RUN wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-arm64.deb && dpkg -i quarto-1.5.56-linux-arm64.deb
 
 #------------------------------------------------------------
 # Add supporting R libraries
