@@ -544,12 +544,8 @@ UploadBoard <- function(id,
 
         status <- "OK"
         checked <- uploaded$annot.csv
-        dbg("[UploadServer:checked_annot] isnull.checked = ", is.null(checked))
-        dbg("[UploadServer:checked_annot] dim.checked = ", dim(checked))
         if (!is.null(checked)) {
-          dbg("[UploadServer:checked_annot] colnames.checked = ", colnames(checked))
-          dbg("[UploadServer:checked_annot] head.checked[,1] = ", head(checked[, 1]))
-          dbg("[UploadServer:checked_annot] head.rownames.checked = ", head(rownames(checked)))
+          dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
         }
 
         list(status = status, matrix = checked)
@@ -608,7 +604,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and replace user contrast file
       modct <- modified_ct()
-      dbg("[UploadBoard:modified_ct] contrasts has been modified")
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
