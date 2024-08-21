@@ -632,14 +632,14 @@ UploadBoard <- function(id,
     observe({
       corrected2$counts <- corrected1$counts()
       corrected2$X <- corrected1$X()
-      corrected2$impX <- corrected1$impX()       
+      corrected2$impX <- corrected1$impX()
     })
-        
+
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-#      countsRT = corrected1$counts,
-#      countsX = corrected1$X,
-#      impX = corrected1$impX,
+      #      countsRT = corrected1$counts,
+      #      countsX = corrected1$X,
+      #      impX = corrected1$impX,
       countsRT = reactive(corrected2$counts),
       countsX = reactive(corrected2$X),
       impX = reactive(corrected2$impX),
@@ -824,7 +824,7 @@ UploadBoard <- function(id,
       ),
       {
         req(input$upload_wizard == "step_compute")
-        
+
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
         if (!is.null(upload_name()) && upload_name() %in% pgx_files$dataset) {
           shinyalert::shinyalert(
