@@ -88,8 +88,8 @@ FeatureMapUI <- function(id) {
             featuremap_plot_gene_map_ui(
               ns("geneUMAP"),
               title = "Feature UMAP",
-              info.text = "UMAP clustering of features colored by standard-deviation of log-expression or fold-change which can be set using the {color by} plot setting. The color intensity threshold can be set using the {color gamma} plot setting. Additionally it is possible to select the number of labels displayed using the {nr labels} plot setting. By selecting this plot (by drag&drop) the Gene table is subset.",
-              info.methods = "Clustering of genes performed with Uniform Manifold Approximation and Projection (UMAP) using the top 1000 most varying features, then reduced to 50 PCA dimensions before computing the UMAP embedding. Performed using the uwot R package [1]. The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.",
+              info.text = "UMAP clustering of features colored by standard-deviation of log-expression or fold-change which can be set using the {color by} plot setting. The color intensity threshold can be set using the {color gamma} plot setting. Additionally it is possible to select the number of labels displayed using the {nr labels} plot setting. By selecting this plot (by drag&drop) the Feature table is subset.",
+              info.methods = "Clustering of features performed with Uniform Manifold Approximation and Projection (UMAP) using the top 1000 most varying features, then reduced to 50 PCA dimensions before computing the UMAP embedding. Performed using the uwot R package [1]. The distance metric is covariance of the feature expression. Features that are clustered nearby have high covariance.",
               info.references = list(
                 list(
                   "Melville J (2024) uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.",
@@ -105,7 +105,7 @@ FeatureMapUI <- function(id) {
               ns("geneSigPlots"),
               title = "Feature signatures",
               info.text = "UMAP clustering of features colored by relative log-expression of the phenotype group.",
-              info.methods = "See Gene UMAP",
+              info.methods = "See Feature UMAP",
               info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Feature signature maps coloured by differential expression.",
               height = height1,
@@ -115,7 +115,7 @@ FeatureMapUI <- function(id) {
           featuremap_table_gene_map_ui(
             ns("geneUMAP"),
             title = "Feature table",
-            info.text = "The contents of this table can be subsetted by selecting (by click&drag) on the Feature map plot.",
+            info.text = "The contents of this table can be subsetted by selecting (by click&drag) on the Feature UMAP plot.",
             caption = "",
             height = height2,
             width = c("auto", "100%")
@@ -150,7 +150,7 @@ FeatureMapUI <- function(id) {
               ns("gsetSigPlots"),
               title = "Geneset signatures",
               "UMAP clustering of genesets colored by relative log-expression of the phenotype group.",
-              info.methods = "See Gene UMAP",
+              info.methods = "See Geneset UMAP",
               info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
               caption = "Geneset signature maps coloured by differential expression.",
               height = height1,
@@ -160,7 +160,7 @@ FeatureMapUI <- function(id) {
           featuremap_table_geneset_map_ui(
             ns("gsetUMAP"),
             title = "Geneset table",
-            info.text = "The contents of this table can be subsetted by selecting an area (by click&drag) on the Geneset map plot.",
+            info.text = "The contents of this table can be subsetted by selecting an area (by click&drag) on the Geneset UMAP plot.",
             caption = "",
             height = height2,
             width = c("auto", "100%")
