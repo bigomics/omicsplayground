@@ -30,15 +30,6 @@ expression_plot_volcanoAll_ui <- function(id,
       "Scale each volcano plots individually.",
       placement = "right", options = list(container = "body")
     )
-    ## withTooltip(
-    ##   shiny::checkboxInput(
-    ##     inputId = ns("color_up_down"),
-    ##     label = "Color up/down regulated",
-    ##     value = TRUE
-    ##   ),
-    ##   "Color up/down regulated features.",
-    ##   placement = "left", options = list(container = "body")
-    ## )
   )
 
   PlotModuleUI(

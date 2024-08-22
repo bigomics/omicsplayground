@@ -89,7 +89,7 @@ ExpressionUI <- function(id) {
         expression_plot_volcano_ui(ns("plots_volcano"),
           label = "a",
           title = "Volcano plot",
-          info.text = "Volcano plot of genes for the selected {Contrast} displaying fold-change versus significance. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted. The plot can be colored by using the {Color up/down regulated} plot setting.",
+          info.text = "Volcano plot of genes for the selected {Contrast} displaying fold-change versus significance. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted.",
           info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests.",
           info.references = list(
             list(
@@ -113,7 +113,7 @@ ExpressionUI <- function(id) {
         expression_plot_maplot_ui(
           id = ns("plots_maplot"),
           title = "MA plot",
-          info.text = "MA plot of genes for the selected {Contrast} displaying fold-change (M-values) versus the mean intensity (A-values). By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted. The plot can be colored by using the {Color up/down regulated} plot setting.",
+          info.text = "MA plot of genes for the selected {Contrast} displaying fold-change (M-values) versus the mean intensity (A-values). By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted.",
           info.methods = "See Volcano plot",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "MA-plot displaying signal intensity versus fold-change.",

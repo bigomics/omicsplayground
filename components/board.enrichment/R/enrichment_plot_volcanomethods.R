@@ -20,15 +20,6 @@ enrichment_plot_volcanomethods_ui <- function(
     withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", TRUE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
-    ),
-    withTooltip(
-      shiny::checkboxInput(
-        inputId = ns("color_up_down"),
-        label = "Color up/down regulated",
-        value = TRUE
-      ),
-      "Color up/down regulated features.",
-      placement = "left", options = list(container = "body")
     )
   )
 
@@ -117,7 +108,7 @@ enrichment_plot_volcanomethods_server <- function(id,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
-        color_up_down = input$color_up_down,
+        color_up_down = TRUE,
         label = label,
         highlight = highlight,
         by_sig = FALSE
