@@ -540,10 +540,13 @@ UploadBoard <- function(id,
         list(uploaded$annot.csv, uploaded$counts.csv)
       },
       {
-        shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
+        ##     shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
 
         status <- "OK"
         checked <- uploaded$annot.csv
+        if (!is.null(checked)) {
+          dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
+        }
 
         list(status = status, matrix = checked)
       }
@@ -601,7 +604,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(modified_ct(), {
       ## Monitor for changes in the contrast matrix and replace user contrast file
       modct <- modified_ct()
-      dbg("[UploadBoard:modified_ct] contrasts has been modified")
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
@@ -626,31 +628,39 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
+    corrected2 <- reactiveValues()
+    observe({
+      corrected2$counts <- corrected1$counts()
+      corrected2$X <- corrected1$X()
+      corrected2$impX <- corrected1$impX()
+    })
+
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      ## countsRT = shiny::reactive(checked_samples_counts()$COUNTS),
-      ## countsRT = corrected1$counts,
-      countsRT = corrected1$counts,
-      countsX = corrected1$X,
-      impX = corrected1$impX,
-      norm_method = corrected1$norm_method(),
+      #      countsRT = corrected1$counts,
+      #      countsX = corrected1$X,
+      #      impX = corrected1$impX,
+      countsRT = reactive(corrected2$counts),
+      countsX = reactive(corrected2$X),
+      impX = reactive(corrected2$impX),
+      norm_method = shiny::reactive(corrected1$norm_method()),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
-      upload_organism = upload_organism,
-      alertready = FALSE,
       lib.dir = FILES,
       auth = auth,
       create_raw_dir = create_raw_dir,
+      alertready = FALSE,
       height = "100%",
       recompute_info = recompute_info,
       inactivityCounter = inactivityCounter,
       upload_wizard = reactive(input$upload_wizard),
-      upload_datatype = upload_datatype,
       upload_name = upload_name,
       upload_description = upload_description,
+      upload_datatype = upload_datatype,
+      upload_organism = upload_organism,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
@@ -816,7 +826,6 @@ UploadBoard <- function(id,
         req(input$upload_wizard == "step_compute")
 
         pgx_files <- playbase::pgxinfo.read(auth$user_dir, file = "datasets-info.csv")
-
         if (!is.null(upload_name()) && upload_name() %in% pgx_files$dataset) {
           shinyalert::shinyalert(
             title = "Invalid name",
@@ -1018,6 +1027,19 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
+      ## check number of datasets
+      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
+      if (!auth$options$ENABLE_DELETE) {
+        ## count also deleted files...
+        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
+      }
+      max.datasets <- as.integer(auth$options$MAX_DATASETS)
+      if (numpgx >= max.datasets) {
+        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        return(NULL)
+      }
+
+      ## start upload wizard
       new_upload(new_upload() + 1)
     })
 

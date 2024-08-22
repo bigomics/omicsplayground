@@ -327,8 +327,8 @@ ExpressionBoard <- function(id, pgx) {
       res <- fullDiffExprTable()
       features <- input$gx_features
       fam.genes <- res$symbol
-      fdr <- input$gx_fdr
-      lfc <- input$gx_lfc
+      fdr <- as.numeric(input$gx_fdr)
+      lfc <- as.numeric(input$gx_lfc)
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))

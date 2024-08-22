@@ -24,17 +24,6 @@ expression_plot_volcano_ui <- function(id,
                                        height,
                                        width) {
   ns <- shiny::NS(id)
-  plot_opts <- shiny::tagList(
-    withTooltip(
-      shiny::checkboxInput(
-        inputId = ns("color_up_down"),
-        label = "Color up/down regulated",
-        value = TRUE
-      ),
-      "Color up/down regulated features.",
-      placement = "left", options = list(container = "body")
-    )
-  )
 
   PlotModuleUI(
     ns("pltmod"),
@@ -44,8 +33,6 @@ expression_plot_volcano_ui <- function(id,
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
-    ##    options = plot_opts,
-    options = NULL,
     title = title,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),

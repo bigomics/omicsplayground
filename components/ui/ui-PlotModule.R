@@ -50,7 +50,8 @@ PlotModuleUI <- function(id,
   height.2 <- ifnotchar.int(height[2])
 
   if (translate) {
-    info.text <- tspan(info.text)
+    info.text <- tspan(info.text, js = translate_js)
+    info.methods <- tspan(info.methods, js = translate_js)
     title <- tspan(title, js = translate_js)
     caption2 <- tspan(caption2, js = translate_js)
     caption <- tspan(caption, js = translate_js)

@@ -51,6 +51,13 @@ docker: FORCE version
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
 		2>&1 | tee docker.log
 
+docker.update: FORCE
+	@echo building update docker 
+	docker build --no-cache \
+		--progress plain \
+		-f docker/Dockerfile.update \
+	  	-t bigomics/omicsplayground:update .
+
 docker.test: FORCE
 	@echo building test docker 
 	docker build --no-cache \
@@ -74,7 +81,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta8"
+VERSION = "v3.5.0-beta10"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
