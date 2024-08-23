@@ -135,7 +135,6 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       if (return_csv) {
         return(F)
       }
-      browser()
 
       playbase::pgx.stackedBarplot(
         x = F,

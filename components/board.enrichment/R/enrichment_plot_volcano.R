@@ -66,7 +66,9 @@ enrichment_plot_volcano_server <- function(id,
 
       gset <- geneDetails()$feature
 
-      jj <- match(toupper(gset), toupper(limma$gene_name))
+      gset <- playbase::probe2symbol(gset, pgx$genes, "gene_name")
+
+      jj <- match(gset, limma$gene_name)
       sel.genes <- setdiff(limma$gene_name[jj], c(NA, "", " "))
 
       fdr <- 1
@@ -88,6 +90,7 @@ enrichment_plot_volcano_server <- function(id,
         x = fx,
         y = -log10(qval),
         names = fc.genes,
+        label.names = fc.genes,
         source = "plot1",
         marker.type = "scattergl",
         highlight = sel.genes,
