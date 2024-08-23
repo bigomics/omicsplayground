@@ -127,7 +127,7 @@ EnrichmentUI <- function(id) {
         enrichment_plot_volcano_ui(
           ns("subplot_volcano"),
           title = "Volcano plot",
-          info.text = "Volcano-plot showing significance versus fold-change for the selected {Contrast}. By selecting a geneset on the Enrichment analysis table, the genes from it will be highlighted. The plot can be colored by using the {Color up/down regulated} plot setting.",
+          info.text = "Volcano-plot showing significance versus fold-change for the selected {Contrast}. By selecting a geneset on the Enrichment analysis table, the genes from it will be highlighted.",
           info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests.",
           info.references = list(
             list(
@@ -255,7 +255,7 @@ EnrichmentUI <- function(id) {
         enrichment_plot_volcanoall_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
-          info.text = "Volcano plot of genesets for all contrasts displaying fold-change versus significance. The plots can be colored by using the {Color up/down regulated} plot setting; also the plots can be scaled using the {scale per method} plot setting.",
+          info.text = "Volcano plot of genesets for all contrasts displaying fold-change versus significance. The plots can be scaled using the {scale per method} plot setting.",
           info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests. By comparing multiple volcano plots, it can immediately be seen which comparison is statistically weak or strong.",
           info.references = list(
             list(
@@ -286,7 +286,7 @@ EnrichmentUI <- function(id) {
         enrichment_plot_volcanomethods_ui(
           ns("volcanoMethods"),
           title = "Volcano plots for all methods",
-          info.text = "Volcano plot of genesets for the selected {Contrast} displaying fold-change versus significance. The plots can be colored by using the {Color up/down regulated} plot setting; also the plots can be scaled using the {scale per method} plot setting.",
+          info.text = "Volcano plot of genesets for the selected {Contrast} displaying fold-change versus significance. The plots can be scaled using the {scale per method} plot setting.",
           info.methods = "Statistical significance assessed using multiple statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. By comparing multiple volcano plots, it can immediately be seen which method is statistically weak or strong.",
           info.references = list(
             list(
