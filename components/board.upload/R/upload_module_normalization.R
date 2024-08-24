@@ -602,7 +602,11 @@ upload_module_normalization_server <- function(
         pos0 <- out.res$pos[["pca"]]
         pos.list <- c(list("uncorrected" = pos0), pos.list)
         names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
+<<<<<<< HEAD
         names(pos.list) <- sub("limma", "auto-limma", names(pos.list))        
+=======
+        names(pos.list) <- sub("limma", "auto-Limma", names(pos.list))
+>>>>>>> f3a74756d50d757f7bfa74ebd8e07a59f00eea87
 
         pheno <- res$pheno
         xdim <- length(pheno)
@@ -661,7 +665,11 @@ upload_module_normalization_server <- function(
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
         method <- sub("ComBat", "auto-ComBat", method)
+<<<<<<< HEAD
         method <- sub("limma", "auto-limma", method)        
+=======
+        method <- sub("limma", "auto-Limma", method)
+>>>>>>> f3a74756d50d757f7bfa74ebd8e07a59f00eea87
         par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
         plot(pos0,
           col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
@@ -802,7 +810,11 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(ns("bec_method"), "Select method:",
                     choices = c(
                       "auto-ComBat" = "ComBat",
+<<<<<<< HEAD
                       "auto-limma" = "limma",                      
+=======
+                      "auto-Limma" = "limma",
+>>>>>>> f3a74756d50d757f7bfa74ebd8e07a59f00eea87
                       "SVA" = "SVA",
                       "RUV" = "RUV",
                       "NPM" = "NPM"
