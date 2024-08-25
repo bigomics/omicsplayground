@@ -75,7 +75,7 @@ clustering_table_clustannot_server <- function(
       }
 
       df$feature <- paste(df$feature, "&nbsp;", feature_link)
-      
+
       DT::datatable(
         df,
         rownames = FALSE,
