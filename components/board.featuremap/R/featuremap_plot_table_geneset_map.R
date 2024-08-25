@@ -231,16 +231,16 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gset_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
         rownames(F)
-        ) |> HandleNoLinkFound(
-          NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
-          SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
-        )
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
+      )
       df$geneset <- paste(df$geneset, "&nbsp;", gset_link)
-      
-      
+
+
       DT::datatable(df,
         rownames = FALSE,
-        escape = c(-1, -2),                    
+        escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",
