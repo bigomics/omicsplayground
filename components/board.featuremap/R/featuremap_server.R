@@ -20,10 +20,6 @@ FeatureMapBoard <- function(id, pgx) {
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$tabs, {
-      dbg("[FeatureMapBoard] changing to tab = ", input$tabs)
-    })
-
     # Observer (1):
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
@@ -108,9 +104,6 @@ FeatureMapBoard <- function(id, pgx) {
       if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
       }
-
-      dbg("[featuremap:getUMAP] 1: head(hilight) = ", head(hilight))
-      dbg("[featuremap:getUMAP] 1: head(names.hilight) = ", head(names(hilight)))
 
       hilight2 <- NULL
       if (!is.null(hilight)) {
