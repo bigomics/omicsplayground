@@ -16,13 +16,9 @@ FeatureMapBoard <- function(id, pgx) {
 <br><br>The maps can be colored according to the foldchange signature of the group contrasts (i.e. comparisons), or colored by the average relative log-expression according to some phenotype condition. Multiple signatures can then be easily compared by visually inspection of the colors.
 ", js = FALSE)
 
-    ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
-    ## ================================================================================
-
-    shiny::observeEvent(input$tabs, {
-      dbg("[FeatureMapBoard] changing to tab = ", input$tabs)
-    })
+    ## ========================================================================
+    ## ======================= OBSERVE FUNCTIONS ==============================
+    ## ========================================================================
 
     # Observer (1):
     shiny::observeEvent(input$info, {
@@ -97,9 +93,9 @@ FeatureMapBoard <- function(id, pgx) {
     )
 
 
-    ## ================================================================================
-    ## ============================= FUNCTIONS ========================================
-    ## ================================================================================
+    ## =========================================================================
+    ## ============================= FUNCTIONS =================================
+    ## =========================================================================
 
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          labels = NULL, zlim = NULL, cex = 0.9, cex.label = 1,
@@ -108,9 +104,6 @@ FeatureMapBoard <- function(id, pgx) {
       if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
       }
-
-      dbg("[featuremap:getUMAP] 1: head(hilight) = ", head(hilight))
-      dbg("[featuremap:getUMAP] 1: head(names.hilight) = ", head(names(hilight)))
 
       hilight2 <- NULL
       if (!is.null(hilight)) {
@@ -257,9 +250,9 @@ FeatureMapBoard <- function(id, pgx) {
       filtgenes
     })
 
-    ## ================================================================================
-    ## =========================== MODULES ============================================
-    ## ================================================================================
+    ## =========================================================================
+    ## =========================== MODULES =====================================
+    ## =========================================================================
 
     # Gene Map
     featuremap_plot_gene_map_server(
