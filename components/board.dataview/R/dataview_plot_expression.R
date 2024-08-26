@@ -209,7 +209,8 @@ dataview_plot_expression_server <- function(id,
 
       df <- pd[["df"]]
 
-      BLUE <- rgb(0.2, 0.5, 0.8, 0.8)
+      # BLUE <- rgb(0.2, 0.5, 0.8, 0.8)
+      BLUE <- omics_colors("brand_blue")
       bee.cex <- ifelse(length(df$x) > 500, 0.1, 0.2)
       bee.cex <- c(0.3, 0.1, 0.05)[cut(length(df$x), c(0, 100, 500, 99999))]
 
@@ -251,7 +252,9 @@ dataview_plot_expression_server <- function(id,
               meanline = list(
                 visible = TRUE
               ),
-              x0 = ""
+              x0 = "",
+              color = ~group,
+              colors = omics_pal_d()(length(unique(df$group)))
             ) %>%
             plotly::layout(
               yaxis = list(
@@ -268,7 +271,9 @@ dataview_plot_expression_server <- function(id,
             boxpoints = "all",
             jitter = 0.3,
             pointpos = 0.0,
-            type = "box"
+            type = "box",
+            color = ~group,
+            colors = omics_pal_d()(length(unique(df$group)))
           )
           ## fig
         }
@@ -280,6 +285,7 @@ dataview_plot_expression_server <- function(id,
           y = ~x,
           type = "bar",
           name = pd$gene,
+          marker = list(color = BLUE),
           hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"
         )
         pd$groupby <- ""
