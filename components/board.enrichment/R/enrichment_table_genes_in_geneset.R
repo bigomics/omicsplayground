@@ -43,7 +43,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       if (sum(rpt$feature %in% rpt$symbol) > nrow(rpt) * .8) {
         rpt$feature <- NULL
       }
-      
+
       # rpt$gene_title <- NULL  # this is important for metabolomics
       if (!is.null(rpt) && nrow(rpt) > 0) {
         jj <- which(sapply(rpt, is.numeric))
