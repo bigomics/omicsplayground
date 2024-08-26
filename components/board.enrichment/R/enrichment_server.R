@@ -203,6 +203,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rnaX <- pgx$X
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
         gsdiff.method <- "fc" ## OLD default
+
+        ai <- 1
+        browser()
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1], na.rm = TRUE)
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0], na.rm = TRUE)
@@ -220,6 +223,8 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
             names(fc) <- pgx$genes[names(fc), "symbol"]
             pp <- intersect(pgx$genes$symbol, names(fc))
             pp <- intersect(rownames(pgx$GMT), names(fc))
+
+            pp <- pp[!is.na(pp)]
           }
 
           ## check if multi-omics (TEMPORARILY FALSE)
@@ -237,6 +242,15 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           ngenes <- Matrix::rowSums(G, na.rm = TRUE)
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
+
+          ai <- 2
+          browser()
+
+          length(pp)
+          dim(G)
+          dim(rnaX)
+
+          # subset rnaX by pp
 
           AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp, s1], na.rm = TRUE) / ngenes
           AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0], na.rm = TRUE) / ngenes
@@ -297,6 +311,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (is.null(input$gs_top10) || length(input$gs_top10) == 0) {
         return(NULL)
       }
+
+      ai <- 1
+      browser()
 
       res <- getFullGeneSetTable()
 
