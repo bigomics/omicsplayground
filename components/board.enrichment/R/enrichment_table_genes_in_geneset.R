@@ -44,7 +44,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
         rpt$feature <- NULL
       }
 
-      rpt$gene_title <- NULL
+      # rpt$gene_title <- NULL  # this is important for metabolomics
       if (!is.null(rpt) && nrow(rpt) > 0) {
         jj <- which(sapply(rpt, is.numeric))
         rpt[, jj] <- round(rpt[, jj], digits = 4)

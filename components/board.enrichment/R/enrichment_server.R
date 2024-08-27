@@ -415,7 +415,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
       # check which columns are in pgx$genes
-      cols_in_pgx <- c("feature", "symbol", "human_ortholog")
+      cols_in_pgx <- c("feature", "symbol", "human_ortholog", "gene_title")
       cols_in_pgx <- cols_in_pgx[which(cols_in_pgx %in% colnames(pgx$genes))]
 
       genes_user <- pgx$genes[rownames(limma1), cols_in_pgx]
