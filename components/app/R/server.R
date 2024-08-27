@@ -665,6 +665,14 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
+      ## Hide PCSF and WGCNA for metabolomics
+        # WGCNA will be abailable upon gmt refactoring
+      if(DATATYPEPGX == "metabolomics") {
+        info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+        bigdash.hideTab(session, "pcsf-tab")
+        bigdash.hideTab(session, "wgcna-tab")
+      }
+
       info("[SERVER] trigger on change dataset done!")
     }
   )
