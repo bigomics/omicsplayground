@@ -106,6 +106,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       # this is needed when collapse by gene is not used
       if (!all(rownames(pgx$GMT) %in% names(rnk0))) {
         names(rnk0) <- pgx$genes[names(rnk0), "symbol"]
+
+        # remove NAs
+        rnk0 <- rnk0[!is.na(names(rnk0))]
       }
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
