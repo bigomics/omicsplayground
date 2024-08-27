@@ -83,9 +83,8 @@ expression_plot_barplot_server <- function(id,
       res <- res()
 
       shiny::validate(shiny::need(!is.null(sel()), tspan("Please select gene in the table.", js = FALSE)))
-
       psel <- rownames(res)[sel]
-      gene <- pgx$genes[psel, "feature"]
+      gene <- psel
       srt <- ifelse(grouped, 0, 35)
 
       return(list(
