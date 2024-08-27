@@ -666,8 +666,8 @@ app_server <- function(input, output, session) {
       }
 
       ## Hide PCSF and WGCNA for metabolomics
-        # WGCNA will be abailable upon gmt refactoring
-      if(DATATYPEPGX == "metabolomics") {
+      # WGCNA will be abailable upon gmt refactoring
+      if (DATATYPEPGX == "metabolomics") {
         info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
         bigdash.hideTab(session, "pcsf-tab")
         bigdash.hideTab(session, "wgcna-tab")
