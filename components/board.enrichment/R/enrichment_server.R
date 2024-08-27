@@ -204,8 +204,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
         gsdiff.method <- "fc" ## OLD default
 
-        ai <- 1
-        browser()
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1], na.rm = TRUE)
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0], na.rm = TRUE)
@@ -242,13 +240,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           ngenes <- Matrix::rowSums(G, na.rm = TRUE)
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
-
-          ai <- 2
-          browser()
-
-          length(pp)
-          dim(G)
-          dim(rnaX)
 
           # subset rnaX by pp
 
@@ -311,9 +302,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (is.null(input$gs_top10) || length(input$gs_top10) == 0) {
         return(NULL)
       }
-
-      ai <- 1
-      browser()
 
       res <- getFullGeneSetTable()
 
