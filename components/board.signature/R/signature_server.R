@@ -54,31 +54,31 @@ SignatureBoard <- function(id, pgx,
     ## ------------------------ observe/reactive function  -----------------------------
 
     shiny::observeEvent(input$example1, {
-      if(DATATYPEPGX == "metabolomics") {
+      if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = GLYCOLISIS.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
       }
     })
     shiny::observeEvent(input$example2, {
-      if(DATATYPEPGX == "metabolomics") {
+      if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = CITRICACIDCYCLE.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
       }
     })
     shiny::observeEvent(input$example3, {
-      if(DATATYPEPGX == "metabolomics") {
+      if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
       }
     })
     shiny::observeEvent(pgx$X, {
-      if(DATATYPEPGX == "metabolomics") {
+      if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
         shiny::updateActionButton(session, "example1", label = "[glycolisis] ")
-        shiny::updateActionButton(session, "example2", label = "[citric acid cycle] ")
+        shiny::updateActionButton(session, "example2", label = "[TCA cycle] ")
         shiny::updateActionButton(session, "example3", label = "[urea cycle] ")
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.GENES)
