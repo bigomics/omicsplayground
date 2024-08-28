@@ -203,18 +203,13 @@ PlotModuleUI <- function(id,
     tabs <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
         card_names[x],
-        bslib::card_body(
-          outputFunc[[x]](ns(paste0("renderfigure", x)), height = height.1) %>%
-            bigLoaders::useSpinner()
-        )
+        outputFunc[[x]](ns(paste0("renderfigure", x))) %>%
+          bigLoaders::useSpinner()
       )
     })
-    tabs <- c(tabs,
-      id = ns("card_selector"), ulClass = "nav navbar-nav header-nav",
-      selected = NULL
-    )
+    tabs <- c(tabs, title = "")
     plot_cards <- do.call(
-      bslib:::buildTabset,
+      bslib::navset_card_pill,
       tabs
     )
   } else {
@@ -235,7 +230,9 @@ PlotModuleUI <- function(id,
       title
     ),
     if (cards) {
-      plot_cards$navList
+      nav_bar <- gsub("nav nav-pills card-header-pills", "nav navbar-nav header-nav", plot_cards$children[[1]])
+      nav_bar <- gsub("card-header bslib-navs-card-title", "bslib-navs-card-title", nav_bar) |> shiny::HTML()
+      nav_bar
     } else {
       shiny::div()
     },
@@ -387,7 +384,7 @@ PlotModuleUI <- function(id,
     bslib::card_body(
       gap = "0px",
       if (cards) {
-        plot_cards$content
+        plot_cards$children[[2]]
       } else {
         plot_cards
       },
