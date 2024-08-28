@@ -191,10 +191,10 @@ ClusteringBoard <- function(id, pgx) {
       if (!pgx$organism %in% c("Human", "human")) {
         genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
         genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog),
-          genes$gene_name, genes$human_ortholog
+          rownames(genes), genes$human_ortholog
         )
       } else {
-        genes <- as.character(pgx$genes[rownames(pgx$X), "gene_name"])
+        genes <- as.character(rownames(pgx$genes[rownames(pgx$X), ]))
       }
       genesets <- rownames(pgx$gsetX)
 
@@ -274,7 +274,7 @@ ClusteringBoard <- function(id, pgx) {
 
         gg <- gg[which(toupper(gg) %in% toupper(genes))]
         if (length(gg) == 0) {
-          warning("[getFilteredMatrix] warning to genes overlap with filter")
+          warning("[getFilteredMatrix] warning: no genes overlap with filter")
           return(NULL)
         }
 
