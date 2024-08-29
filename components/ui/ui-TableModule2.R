@@ -55,7 +55,15 @@ TableModuleUI <- function(id,
       shiny::a("Download table data",
         style = "text-align: center;"
       ),
-      shiny::br(),
+      shiny::hr(),
+      shiny::radioButtons(
+        inputId = ns("format"),
+        label = NULL,
+        choices = c(
+          "CSV",
+          "Excel"
+        )
+      ),
       shiny::hr(),
       div(
         style = "text-align: center;",
@@ -165,18 +173,24 @@ TableModuleServer <- function(id,
                               height = c(640, 800),
                               width = c("auto", 1400),
                               selector = c("none", "single", "multi", "key")[1],
-                              filename = "table.csv") {
+                              filename = "table") {
   moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-      filename <- paste0(sub(".csv$", "", ns(filename)), ".csv")
+      filename <- ns(filename)
 
       if (is.null(func2)) func2 <- func
 
       # Downloader
       output$download <- shiny::downloadHandler(
-        filename = filename,
+        filename = function() {
+          if (input$format == "CSV") {
+            paste0(filename, ".csv")
+          } else {
+            paste0(filename, ".xlsx")
+          }
+        },
         content = function(file) {
           if (!is.null(csvFunc)) {
             dt <- csvFunc() ## data.frame or matrix
@@ -185,7 +199,11 @@ TableModuleServer <- function(id,
             dt <- func()$x$data
           }
           dt2 <- format(dt, digits = 4) ## round
-          write.csv(dt2, file = file, row.names = FALSE)
+          if (input$format == "CSV") {
+            write.csv(dt2, file = file, row.names = FALSE)
+          } else {
+            openxlsx::write.xlsx(dt2, file = file)
+          }
         }
       )
 
