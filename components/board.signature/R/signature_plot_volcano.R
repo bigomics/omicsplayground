@@ -53,10 +53,12 @@ signature_plot_volcano_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     download.fmt = c("png", "pdf"),
-    plotlib = "plotly",
+    plotlib = c("plotly", "ggplot"),
     options = plot_opts,
     height = height,
-    width = width
+    width = width,
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
@@ -78,11 +80,7 @@ signature_plot_volcano_server <- function(id,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ##
-    plotly_plots <- function(cex = 3,
-                             yrange = 0.5,
-                             n_rows = 2,
-                             margin_l = 70,
-                             margin_b = 50) {
+    plot_data <- shiny::reactive({
       shiny::req(sigCalculateGSEA())
 
       ## filter with table selection/search
@@ -114,18 +112,35 @@ signature_plot_volcano_server <- function(id,
         sel.gene <- gsea$gset
       }
 
+      return(list(
+        fc = fc,
+        qv = qv,
+        features = features,
+        symbols = symbols,
+        gsea = gsea,
+        sel.gene = sel.gene
+      ))
+    })
+
+    plotly_plots <- function(cex = 3,
+                             yrange = 0.5,
+                             n_rows = 2,
+                             margin_l = 70,
+                             margin_b = 50) {
+      pd <- plot_data()
+      shiny::req(pd)
       share_axis <- input$share_axis
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
-        names = features,
-        label.names = symbols,
+        FC = pd[["fc"]],
+        Q = pd[["qv"]],
+        names = pd[["features"]],
+        label.names = pd[["symbols"]],
         cex = cex,
         by_sig = FALSE,
-        highlight = gsea$gset,
-        label = sel.gene,
+        highlight = pd[["gsea"]]$gset,
+        label = pd[["sel.gene"]],
         share_axis = share_axis,
         yrange = yrange,
         n_rows = n_rows,
@@ -185,14 +200,62 @@ signature_plot_volcano_server <- function(id,
       return(fig)
     }
 
-    PlotModuleServer(
-      "plot",
-      plotlib = "plotly",
-      func = big_plotly.RENDER,
-      res = c(90, 130), ## resolution of plots
-      pdf.width = 10,
-      pdf.height = 6,
-      add.watermark = watermark
+    base.plots <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      fc <- pd[["fc"]]
+      qv <- pd[["qv"]]
+
+      gene_names <- rep(rownames(fc), ncol(fc))
+      label.names <- rep(pd[["symbols"]], ncol(fc))
+      fc <- data.frame(fc) %>% 
+        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
+                      names_to = "facet",   # Name of the new column for timepoints
+                      values_to = "fc")
+      qv <- data.frame(qv) %>% 
+        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
+                      names_to = "facet",   # Name of the new column for timepoints
+                      values_to = "qv")
+      facet <- fc$facet
+      x <- fc$fc
+      y <- qv$qv
+      y <- -log10(y + 1e-12)
+
+      playbase::pgx.Volcano2(
+        x,
+        y,
+        gene_names,
+        facet = facet,
+        label = pd[["sel.gene"]],
+        highlight = pd[["gsea"]]$gset,
+        label.names = label.names,
+        label.cex = 5,
+        xlab = "Effect size (log2FC)",
+        ylab = "Significance (-log10p)",
+        marker.size = 1.2,
+        showlegend = FALSE
+      )
+    }
+
+    plot_grid <- list(
+      list(plotlib = "plotly", func = plotly_plots, func2 = big_plotly.RENDER, card = 1),
+      list(plotlib = "ggplot", func = base.plots, func2 = base.plots, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "plot",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        # csvFunc = plot_data_csv,
+        res = c(80, 95), # resolution of plots
+        pdf.width = 10,
+        pdf.height = 6,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
   }) ## end of moduleServer
 }

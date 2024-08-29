@@ -26,9 +26,10 @@ enrichment_plot_volcano_ui <- function(
     height = height,
     width = width,
     caption = caption,
-    plotlib = "plotly",
-    plotlib2 = "plotly",
-    download.fmt = c("png", "pdf")
+    plotlib = c("plotly", "ggplot"),
+    download.fmt = c("png", "pdf"),
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
@@ -43,7 +44,7 @@ enrichment_plot_volcano_server <- function(id,
                                            geneDetails,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    volcano.RENDER <- shiny::reactive({
+    plot_data <- shiny::reactive({
       par(mfrow = c(1, 1), mgp = c(1.2, 0.4, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
 
@@ -86,17 +87,32 @@ enrichment_plot_volcano_server <- function(id,
       lfc <- 0.20
       lfc <- as.numeric(gs_lfc())
 
-      playbase::plotlyVolcano(
+      return(list(
         x = fx,
         y = -log10(qval),
-        names = fc.genes,
-        label.names = fc.genes,
+        fc.genes = fc.genes,
+        sel.genes = sel.genes,
+        lab.cex = 1,
+        fdr = fdr,
+        lfc = lfc
+      ))
+    })
+
+    plotly.RENDER <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      playbase::plotlyVolcano(
+        x = pd[["x"]],
+        y = pd[["y"]],
+        names = pd[["fc.genes"]],
+        label.names = pd[["fc.genes"]],
         source = "plot1",
         marker.type = "scattergl",
-        highlight = sel.genes,
-        label = sel.genes,
-        psig = fdr,
-        lfc = lfc,
+        highlight = pd[["sel.genes"]],
+        label = pd[["sel.genes"]],
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10q)",
         marker.size = 3,
@@ -105,17 +121,67 @@ enrichment_plot_volcano_server <- function(id,
         color_up_down = TRUE
       ) %>%
         plotly::layout(margin = list(b = 60))
-    })
+    }
 
-    PlotModuleServer(
-      "plot",
-      func = volcano.RENDER,
-      func2 = volcano.RENDER,
-      plotlib = "plotly",
-      plotlib2 = "plotly",
-      pdf.width = 5, pdf.height = 5,
-      res = c(72, 100),
-      add.watermark = watermark
+    base.RENDER <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      playbase::pgx.Volcano2(
+        x = pd[["x"]],
+        y = pd[["y"]],
+        names = pd[["fc.genes"]],
+        label.names = pd[["fc.genes"]],
+        highlight = pd[["sel.genes"]],
+        label = pd[["sel.genes"]],
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
+        xlab = "Effect size (log2FC)",
+        ylab = "Significance (-log10q)",
+        marker.size = 1,
+        showlegend = FALSE
+      )
+    }
+
+    base.RENDER.modal <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      playbase::pgx.Volcano2(
+        x = pd[["x"]],
+        y = pd[["y"]],
+        names = pd[["fc.genes"]],
+        label.names = pd[["fc.genes"]],
+        highlight = pd[["sel.genes"]],
+        label = pd[["sel.genes"]],
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
+        xlab = "Effect size (log2FC)",
+        ylab = "Significance (-log10q)",
+        marker.size = 1.5,
+        label.cex = 5,
+        axis.text.size = 22,
+        showlegend = FALSE
+      )
+    }
+
+    plot_grid <- list(
+      list(plotlib = "plotly", func = plotly.RENDER, func2 = plotly.RENDER, card = 1),
+      list(plotlib = "ggplot", func = base.RENDER, func2 = base.RENDER.modal, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "plot",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        res = c(80, 95), # resolution of plots
+        pdf.width = 10,
+        pdf.height = 8,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
   })
 }

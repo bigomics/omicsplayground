@@ -36,7 +36,7 @@ expression_plot_volcanoAll_ui <- function(id,
     id = ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "plotly",
+    plotlib = c("plotly", "ggplot"),
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -45,7 +45,9 @@ expression_plot_volcanoAll_ui <- function(id,
     options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = width
+    width = width,
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
@@ -87,15 +89,33 @@ expression_plot_volcanoAll_server <- function(id,
       FQ <- cbind(matF, matQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
 
+      ## meta tables
+      fc_cols <- grep("fc.*", colnames(FQ))
+      q_cols <- grep("q.*", colnames(FQ))
+      fc <- FQ[, fc_cols, drop = FALSE]
+      qv <- FQ[, q_cols, drop = FALSE]
+      colnames(fc) <- gsub("fc.", "", colnames(fc))
+      colnames(qv) <- gsub("q.", "", colnames(qv))
+      features <- rownames(FQ)
+
+
+      if (labeltype() == "symbol") {
+        names <- features
+        label.names <- symbols
+      } else {
+        names <- symbols
+        label.names <- features
+      }
+
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
         fdr = fdr,
         lfc = lfc,
-        FC = FC,
-        Q = Q,
-        symbols = symbols,
-        features = rownames(FQ),
+        fc = fc,
+        qv = qv,
+        names = names,
+        label.names = label.names,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes
       )
@@ -107,37 +127,17 @@ expression_plot_volcanoAll_server <- function(id,
                              margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
-      sel.genes <- pd[["sel.genes"]]
-
-      # Input vars
-      fdr <- pd[["fdr"]]
-      lfc <- pd[["lfc"]]
-      ## meta tables
-      fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
-      q_cols <- grep("q.*", colnames(pd[["FQ"]]))
-      fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
-      qv <- pd[["FQ"]][, q_cols, drop = FALSE]
-      colnames(fc) <- gsub("fc.", "", colnames(fc))
-      colnames(qv) <- gsub("q.", "", colnames(qv))
-
-
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
 
       # Call volcano plots
+      browser()
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
-        fdr = fdr,
-        lfc = lfc,
+        FC = pd[["fc"]],
+        Q = pd[["qv"]],
+        fdr = pd[["fdr"]],
+        lfc = pd[["lfc"]],
         cex = cex,
-        names = names,
-        label.names = label.names,
+        names = pd[["names"]],
+        label.names = pd[["label.names"]],
         share_axis = !input$scale_per_plot,
         yrange = yrange,
         n_rows = n_rows,
@@ -154,7 +154,7 @@ expression_plot_volcanoAll_server <- function(id,
       return(all_plts)
     }
 
-    modal_plotly.RENDER <- function() {
+    plotly.RENDER <- function() {
       fig <- plotly_plots(
         cex = 3, yrange = 0.05, n_rows = 2, margin_b = 40, margin_l = 50
       ) %>%
@@ -174,15 +174,73 @@ expression_plot_volcanoAll_server <- function(id,
       return(fig)
     }
 
-    PlotModuleServer(
-      "pltmod",
-      plotlib = "plotly",
-      func = modal_plotly.RENDER,
-      func2 = big_plotly.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(70, 90), ## resolution of plots
-      pdf.width = 12, pdf.height = 5,
-      add.watermark = watermark
+    base.plots <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      fc <- pd[["fc"]]
+      qv <- pd[["qv"]]
+
+      gene_names <- rep(rownames(fc), ncol(fc))
+      label.names <- rep(pd[["label.names"]], ncol(fc))
+      fc <- data.frame(fc) %>% 
+        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
+                      names_to = "facet",   # Name of the new column for timepoints
+                      values_to = "fc")
+      qv <- data.frame(qv) %>% 
+        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
+                      names_to = "facet",   # Name of the new column for timepoints
+                      values_to = "qv")
+      facet <- fc$facet
+      x <- fc$fc
+      y <- qv$qv
+      y <- -log10(y + 1e-12)
+
+      playbase::pgx.Volcano2(
+        x,
+        y,
+        gene_names,
+        facet = facet,
+        label = pd[["lab.genes"]],
+        highlight = pd[["sel.genes"]],
+        label.names = label.names,
+        label.cex = 5,
+        xlab = "Effect size (log2FC)",
+        ylab = "Significance (-log10p)",
+        marker.size = 1.2,
+        showlegend = FALSE
+      )
+    }
+
+    plot_grid <- list(
+      list(plotlib = "plotly", func = plotly.RENDER, func2 = big_plotly.RENDER, card = 1),
+      list(plotlib = "ggplot", func = base.plots, func2 = base.plots, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "pltmod",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        # csvFunc = plot_data_csv,
+        res = c(70, 90), # resolution of plots
+        pdf.width = 12,
+        pdf.height = 5,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
+
+    # PlotModuleServer(
+    #   "pltmod",
+    #   plotlib = "plotly",
+    #   func = plotly.RENDER,
+    #   func2 = big_plotly.RENDER,
+    #   csvFunc = plot_data, ##  *** downloadable data as CSV
+    #   res = c(70, 90), ## resolution of plots
+    #   pdf.width = 12, pdf.height = 5,
+    #   add.watermark = watermark
+    # )
   }) ## end of moduleServer
 }
