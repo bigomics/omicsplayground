@@ -79,6 +79,9 @@ expression_plot_maplot_server <- function(id,
         return(NULL)
       }
       shiny::req(pgx$X)
+      # ai <- 10
+      # browser()
+
       X <- pgx$X
       res <- res()
       lfc <- as.numeric(gx_lfc())
@@ -91,11 +94,11 @@ expression_plot_maplot_server <- function(id,
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
-      symbols <- res$symbol
+      symbols <- rownames(res)
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
-      return(list(
+      plot_data <- list(
         x = x,
         y = y,
         ylim = ylim,
@@ -107,13 +110,14 @@ expression_plot_maplot_server <- function(id,
         lab.cex = 1,
         fdr = fdr,
         lfc = lfc
-      ))
+      )
+
+      return(plot_data)
     })
 
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
-
 
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
@@ -131,7 +135,7 @@ expression_plot_maplot_server <- function(id,
         y = pd[["y"]],
         ## names = pd[["symbols"]],
         names = names,
-        label.names = label.names,
+        label.names = ifelse(is.na(label.names), pd[["features"]], label.names),
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         label.cex = pd[["lab.cex"]],

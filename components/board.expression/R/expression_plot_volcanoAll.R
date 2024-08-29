@@ -75,9 +75,13 @@ expression_plot_volcanoAll_server <- function(id,
       FC <- ct$F
       Q <- ct$Q
       fdr <- as.numeric(fdr())
+
+      
       lfc <- as.numeric(lfc())
       comp <- names(FC)
       shiny::req(length(comp) > 0)
+
+
 
       ## combined matrix for output
       matF <- do.call(cbind, FC)
@@ -85,7 +89,13 @@ expression_plot_volcanoAll_server <- function(id,
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
-      symbols <- pgx$genes[rownames(FQ), "symbol"]
+      symbols <- pgx$genes[match(rownames(FQ), pgx$genes$symbol), "symbol"]
+      features <- pgx$genes[match(rownames(FQ), pgx$genes$symbol), "feature"]
+      names <- pgx$genes[match(rownames(FQ), pgx$genes$symbol), "gene_title"]
+
+      # symbols <- ifelse(is.na(symbols), features, symbols)
+      # features <- ifelse(is.na(features), symbols, features)
+      # names <- ifelse(is.na(names), features, names)
 
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
@@ -95,7 +105,8 @@ expression_plot_volcanoAll_server <- function(id,
         FC = FC,
         Q = Q,
         symbols = symbols,
-        features = rownames(FQ),
+        features = features,
+        names = names,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes
       )
@@ -120,10 +131,17 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
 
+      ai <- 2
+      browser()
+
 
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
+      } else if (labeltype() == "name") {
+        names <- pd[["features"]]
+        label.names <- pd[["names"]]
+        
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
@@ -131,21 +149,21 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
+        FC = fc, # // symbol as rowname
+        Q = qv, # // symbol as rowname
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        names = names,
-        label.names = label.names,
+        names = names, # // symbol
+        label.names = ifelse(is.na(label.names), pd[["features"]], label.names), # // feature
         share_axis = !input$scale_per_plot,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = pd[["sel.genes"]], # symbol when available, feature when probes do not have symbol (?) // 
+        label = pd[["lab.genes"]], # symbol when available, feature when probes do not have symbol (?) // feature
         by_sig = FALSE
       )
 
