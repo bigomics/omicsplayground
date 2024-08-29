@@ -130,7 +130,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       F <- F[order(-Matrix::rowSums(F, na.rm = TRUE)), , drop = FALSE]
 
       sel.zero <- which(Matrix::rowSums(abs(F), na.rm = TRUE) < 1e-4)
-      if (length(sel.zero)) rownames(F)[sel.zero] <- ""
+      if (length(sel.zero)) F <- F[-sel.zero, , drop = FALSE]
 
       if (return_csv) {
         return(F)
