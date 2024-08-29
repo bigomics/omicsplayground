@@ -330,6 +330,8 @@ PlotModuleUI <- function(id,
       bslib::navset_bar,
       tabs_modal
     )
+    plot_cards_modal[[1]] <- gsub("nav navbar-nav nav-underline", "nav navbar-nav", plot_cards_modal[[1]]) |> shiny::HTML()
+    plot_cards_modal[[1]] <- gsub("navbar navbar-default navbar-static-top", "navbar navbar-default navbar-static-top navbar-custom", plot_cards_modal[[1]]) |> shiny::HTML()
   } else {
     plot_cards_modal <- outputFunc2(ns("renderpopup"), width = width.2, height = height.2) %>%
       bigLoaders::useSpinner()
