@@ -207,7 +207,7 @@ PlotModuleUI <- function(id,
           bigLoaders::useSpinner()
       )
     })
-    tabs <- c(tabs, title = "")
+    tabs <- c(tabs, title = "", id = ns("card_selector"))
     plot_cards <- do.call(
       bslib::navset_card_pill,
       tabs
@@ -230,7 +230,7 @@ PlotModuleUI <- function(id,
       title
     ),
     if (cards) {
-      nav_bar <- gsub("nav nav-pills card-header-pills", "nav navbar-nav header-nav", plot_cards$children[[1]])
+      nav_bar <- gsub("nav nav-pills shiny-tab-input card-header-pills", "nav navbar-nav shiny-tab-input header-nav", plot_cards$children[[1]])
       nav_bar <- gsub("card-header bslib-navs-card-title", "bslib-navs-card-title", nav_bar) |> shiny::HTML()
       nav_bar
     } else {
