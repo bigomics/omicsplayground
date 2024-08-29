@@ -93,6 +93,8 @@ expression_plot_maplot_server <- function(id,
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
       symbols <- res$symbol
 
+      names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
+
       return(list(
         x = x,
         y = y,
@@ -101,6 +103,7 @@ expression_plot_maplot_server <- function(id,
         lab.genes = genes_selected()$lab.genes,
         symbols = symbols,
         features = rownames(res),
+        names = names,
         lab.cex = 1,
         fdr = fdr,
         lfc = lfc
@@ -115,6 +118,9 @@ expression_plot_maplot_server <- function(id,
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
+      } else if (labeltype() == "name") {
+        names <- pd[["symbols"]]
+        label.names <- pd[["names"]]
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
