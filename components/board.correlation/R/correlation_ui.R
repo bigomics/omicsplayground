@@ -99,7 +99,7 @@ CorrelationUI <- function(id) {
           ns("cor_scatter"),
           title = "Correlation scatter plots",
           info.text = "Scatter plots of the co-expression of correlated gene pairs between the selected {Gene} and the top genes correlated to it (as seen on Top correlated genes plot) across the samples. The straight line correspond to the (linear) regression fit. The samples can be colored using the {Color by} plot setting and the layout of the scatter plots can be configured by using the {Layout} and {Swap XY-axes} plot settings.",
-          info.methods = "See Top correlated genes",
+          info.methods = "See Top correlated features",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
           caption = "Scatter plots of gene expression of top correlated genes.",
           height = c("100%", TABLE_HEIGHT_MODAL),
