@@ -206,6 +206,8 @@ expression_plot_volcanoAll_server <- function(id,
         label.cex = 5,
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10p)",
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
         marker.size = 1.2,
         showlegend = FALSE
       )
