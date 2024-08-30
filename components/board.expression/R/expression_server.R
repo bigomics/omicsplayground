@@ -449,6 +449,9 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(pgx)) {
         return(NULL)
       }
+
+      ai <- 100
+      browser()
       comp <- names(pgx$gx.meta$meta)
       if (length(comp) == 0) {
         return(NULL)
@@ -469,7 +472,7 @@ ExpressionBoard <- function(id, pgx) {
             testmethods = tests, comparison = comp[i],
             add.pq = FALSE, lfc = 0, fdr = 1
           )
-          fc.gene <- res[, grep("^gene$|^gene_name$", colnames(res))]
+          fc.gene <- rownames(res)
           qv.col <- grep("qval|adj.p|padj|fdr|meta.q", colnames(res), ignore.case = TRUE)[1]
           fx.col <- grep("mean.diff|logfc|foldchange|meta.fx", colnames(res), ignore.case = TRUE)[1]
           qval <- res[, qv.col]
