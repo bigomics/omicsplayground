@@ -76,7 +76,7 @@ expression_plot_volcanoAll_server <- function(id,
       Q <- ct$Q
       fdr <- as.numeric(fdr())
 
-      
+
       lfc <- as.numeric(lfc())
       comp <- names(FC)
       shiny::req(length(comp) > 0)
@@ -136,14 +136,10 @@ expression_plot_volcanoAll_server <- function(id,
 
 
       if (labeltype() == "symbol") {
-        names <- pd[["features"]]
         label.names <- pd[["symbols"]]
       } else if (labeltype() == "name") {
-        names <- pd[["features"]]
         label.names <- pd[["names"]]
-        
       } else {
-        names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
 
@@ -154,7 +150,7 @@ expression_plot_volcanoAll_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        names = names, # // symbol
+        names = pd[["features"]], # // symbol
         label.names = ifelse(is.na(label.names), pd[["features"]], label.names), # // feature
         share_axis = !input$scale_per_plot,
         yrange = yrange,
@@ -162,8 +158,8 @@ expression_plot_volcanoAll_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        highlight = pd[["sel.genes"]], # symbol when available, feature when probes do not have symbol (?) // 
-        label = pd[["lab.genes"]], # symbol when available, feature when probes do not have symbol (?) // feature
+        highlight = pd[["sel.genes"]], # feature
+        label = pd[["lab.genes"]], # feature
         by_sig = FALSE
       )
 

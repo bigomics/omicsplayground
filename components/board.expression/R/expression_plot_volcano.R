@@ -116,8 +116,8 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      ai <- 60
-      browser()
+      # ai <- 60
+      # browser()
 
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
