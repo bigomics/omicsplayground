@@ -72,6 +72,8 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Input variables
       ct <- getAllContrasts()
+
+      names(ct$Q)
       FC <- ct$F
       Q <- ct$Q
       fdr <- as.numeric(fdr())
@@ -89,9 +91,9 @@ expression_plot_volcanoAll_server <- function(id,
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
-      symbols <- pgx$genes[match(rownames(FQ), pgx$genes$symbol), "symbol"]
-      features <- pgx$genes[match(rownames(FQ), pgx$genes$symbol), "feature"]
-      names <- pgx$genes[match(rownames(FQ), pgx$genes$symbol), "gene_title"]
+      features <- rownames(FQ)
+      symbol <- pgx$genes[rownames(FQ), "symbol"]
+      names <- pgx$genes[rownames(FQ), "gene_title"]
 
       # symbols <- ifelse(is.na(symbols), features, symbols)
       # features <- ifelse(is.na(features), symbols, features)
