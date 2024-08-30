@@ -104,24 +104,17 @@ expression_plot_volcanoMethods_server <- function(id,
       fc <- mx[, "fc", drop = FALSE]
       qv <- mx[, "q", drop = FALSE]
       mx.features <- rownames(mx)
-      ai <- 1
-      browser()
+      # ai <- 1
+      # browser()
 
       mx.symbols <- pgx$genes[mx.features, "symbol"]
-
-
       mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]), mx.features, pgx$genes[mx.features, "gene_title"])
 
-
-
       if (labeltype() == "symbol") {
-        names <- mx.features
         label.names <- mx.symbols
       } else if (labeltype() == "name") {
-        names <- mx.symbol
-        label.names <- pd[["names"]]
+        label.names <- mx.names
       } else {
-        names <- mx.symbol
         label.names <- mx.features
       }
 
@@ -132,7 +125,7 @@ expression_plot_volcanoMethods_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        names = names,
+        names = mx.features,
         label.names = label.names,
         highlight = sel.genes,
         label = lab.genes,
