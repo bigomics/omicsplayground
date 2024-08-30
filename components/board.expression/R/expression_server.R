@@ -450,8 +450,8 @@ ExpressionBoard <- function(id, pgx) {
         return(NULL)
       }
 
-      ai <- 100
-      browser()
+      # ai <- 100
+      # browser()
       comp <- names(pgx$gx.meta$meta)
       if (length(comp) == 0) {
         return(NULL)
