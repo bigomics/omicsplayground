@@ -104,9 +104,6 @@ expression_plot_volcanoMethods_server <- function(id,
       fc <- mx[, "fc", drop = FALSE]
       qv <- mx[, "q", drop = FALSE]
       mx.features <- rownames(mx)
-      # ai <- 1
-      # browser()
-
       mx.symbols <- pgx$genes[mx.features, "symbol"]
       mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]), mx.features, pgx$genes[mx.features, "gene_title"])
 

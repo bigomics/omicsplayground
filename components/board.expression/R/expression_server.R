@@ -310,8 +310,6 @@ ExpressionBoard <- function(id, pgx) {
     genes_in_sel_geneset <- shiny::reactive({
       req(pgx$X, pgx$name)
 
-      # ai <- 10
-      # browser()
       if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == tspan("No geneset for selected gene.", js = FALSE)) {
         sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
         return(sel_gene)
@@ -331,8 +329,7 @@ ExpressionBoard <- function(id, pgx) {
 
     genes_selected <- shiny::reactive({
       shiny::req(input$gx_features)
-      # ai <- 22
-      # browser()
+      
       df1 <- filteredDiffExprTable()
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
@@ -372,8 +369,6 @@ ExpressionBoard <- function(id, pgx) {
       gene.selected <- !is.null(genetable_rows_selected()) && !is.null(df1)
       gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
 
-      # ai <- 50
-      # browser()
       if (gene.selected && !gset.selected) {
         lab.genes <- rownames(df1)[genetable_rows_selected()]
         sel.genes <- lab.genes
@@ -450,8 +445,6 @@ ExpressionBoard <- function(id, pgx) {
         return(NULL)
       }
 
-      # ai <- 100
-      # browser()
       comp <- names(pgx$gx.meta$meta)
       if (length(comp) == 0) {
         return(NULL)
@@ -531,8 +524,6 @@ ExpressionBoard <- function(id, pgx) {
     gx_related_genesets <- shiny::reactive({
       res <- filteredDiffExprTable()
 
-      # ai <- 5
-      # browser()
       X <- pgx$X
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)

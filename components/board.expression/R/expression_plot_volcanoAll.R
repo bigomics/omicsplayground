@@ -83,8 +83,6 @@ expression_plot_volcanoAll_server <- function(id,
       comp <- names(FC)
       shiny::req(length(comp) > 0)
 
-
-
       ## combined matrix for output
       matF <- do.call(cbind, FC)
       colnames(matF) <- paste0("fc.", names(FC))
@@ -94,10 +92,6 @@ expression_plot_volcanoAll_server <- function(id,
       features <- rownames(FQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
       names <- pgx$genes[rownames(FQ), "gene_title"]
-
-      # symbols <- ifelse(is.na(symbols), features, symbols)
-      # features <- ifelse(is.na(features), symbols, features)
-      # names <- ifelse(is.na(names), features, names)
 
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
@@ -133,10 +127,6 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
 
-      # ai <- 2
-      # browser()
-
-
       if (labeltype() == "symbol") {
         label.names <- pd[["symbols"]]
       } else if (labeltype() == "name") {
@@ -147,21 +137,21 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc, # // symbol as rowname
-        Q = qv, # // symbol as rowname
+        FC = fc,
+        Q = qv,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        names = pd[["features"]], # // symbol
-        label.names = ifelse(is.na(label.names), pd[["features"]], label.names), # // feature
+        names = pd[["features"]],
+        label.names = ifelse(is.na(label.names), pd[["features"]], label.names),
         share_axis = !input$scale_per_plot,
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        highlight = pd[["sel.genes"]], # feature
-        label = pd[["lab.genes"]], # feature
+        highlight = pd[["sel.genes"]],
+        label = pd[["lab.genes"]],
         by_sig = FALSE
       )
 

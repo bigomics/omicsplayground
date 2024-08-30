@@ -79,8 +79,6 @@ expression_plot_maplot_server <- function(id,
         return(NULL)
       }
       shiny::req(pgx$X)
-      # ai <- 10
-      # browser()
 
       X <- pgx$X
       res <- res()
