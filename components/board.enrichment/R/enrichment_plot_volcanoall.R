@@ -160,7 +160,6 @@ enrichment_plot_volcanoall_server <- function(id,
       qv <- pd[["Q"]]
 
       gene_names <- rep(rownames(fc), each = ncol(fc))
-      label.names <- rep(pd[["label.names"]], each = ncol(fc))
       fc <- data.frame(fc) %>%
         tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
                       names_to = "facet",   # Name of the new column for timepoints
