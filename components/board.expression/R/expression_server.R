@@ -309,6 +309,9 @@ ExpressionBoard <- function(id, pgx) {
 
     genes_in_sel_geneset <- shiny::reactive({
       req(pgx$X, pgx$name)
+
+      # ai <- 10
+      # browser()
       if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == tspan("No geneset for selected gene.", js = FALSE)) {
         sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
         return(sel_gene)
@@ -317,7 +320,13 @@ ExpressionBoard <- function(id, pgx) {
       sel_genes <- pgx$GMT[, sel_gset]
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes > 0)]
-      return(names(sel_genes))
+
+      # convert symbol to rownames (module is based on rownames)
+
+      ortholog_genes <- ifelse(is.na(pgx$genes$human_ortholog), pgx$genes$symbol, pgx$genes$human_ortholog)
+
+      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), ortholog_genes), ])
+      return(matched_rownames)
     })
 
     genes_selected <- shiny::reactive({

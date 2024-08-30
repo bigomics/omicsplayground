@@ -131,8 +131,8 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
 
-      ai <- 2
-      browser()
+      # ai <- 2
+      # browser()
 
 
       if (labeltype() == "symbol") {
