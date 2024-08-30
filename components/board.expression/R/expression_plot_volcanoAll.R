@@ -129,7 +129,6 @@ expression_plot_volcanoAll_server <- function(id,
       shiny::req(pd)
 
       # Call volcano plots
-      browser()
       all_plts <- playbase::plotlyVolcano_multi(
         FC = pd[["fc"]],
         Q = pd[["qv"]],
@@ -181,8 +180,8 @@ expression_plot_volcanoAll_server <- function(id,
       fc <- pd[["fc"]]
       qv <- pd[["qv"]]
 
-      gene_names <- rep(rownames(fc), ncol(fc))
-      label.names <- rep(pd[["label.names"]], ncol(fc))
+      gene_names <- rep(rownames(fc), each = ncol(fc))
+      label.names <- rep(pd[["label.names"]], each = ncol(fc))
       fc <- data.frame(fc) %>% 
         tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
                       names_to = "facet",   # Name of the new column for timepoints
@@ -223,7 +222,7 @@ expression_plot_volcanoAll_server <- function(id,
         plotlib = x$plotlib,
         func = x$func,
         func2 = x$func2,
-        # csvFunc = plot_data_csv,
+        csvFunc = plot_data,
         res = c(70, 90), # resolution of plots
         pdf.width = 12,
         pdf.height = 5,
