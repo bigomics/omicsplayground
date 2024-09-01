@@ -114,13 +114,19 @@ ExpressionBoard <- function(id, pgx) {
       test
     })
 
+    output$FDR_or_pv <- renderUI({
+        label <- if(input$show_pv) "P-value" else "FDR"
+        selectInput(ns("gx_fdr"),
+                    label,
+                    choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), 
+                    selected = 0.2)
+    })
 
     # functions #########
     comparison <- 1
     testmethods <- c("trend.limma")
     add.pq <- 0
-    getDEGtable <- function(pgx, testmethods, comparison, add.pq,
-                            lfc, fdr) {
+    getDEGtable <- function(pgx, testmethods, comparison, add.pq, lfc, fdr) {
       shiny::req(pgx$X)
 
       if (is.null(testmethods)) {
@@ -197,14 +203,11 @@ ExpressionBoard <- function(id, pgx) {
 
       colnames(mx.q) <- paste0(colnames(mx.q), ".q")
       colnames(mx.p) <- paste0(colnames(mx.p), ".p")
-
+      
       if (add.pq) {
-        mx.q <- mx.q[rownames(mx), , drop = FALSE]
-        res <- cbind(res, mx.q)
-        if (input$show_pv) {
-          mx.p <- mx.p[rownames(mx), , drop = FALSE]
-          res <- cbind(res, meta.p = mx$meta.p, mx.p)
-        }
+           mx.q <- mx.q[rownames(mx), , drop = FALSE]
+           mx.p <- mx.p[rownames(mx), , drop = FALSE]
+           res <- cbind(res, mx.q, meta.p = mx$meta.p, mx.p)
       }
 
       return(res)
@@ -222,17 +225,14 @@ ExpressionBoard <- function(id, pgx) {
 
       req(input$gx_contrast, input$gx_statmethod, input$gx_fdr, input$gx_lfc)
 
-      if (is.null(comp)) {
-        return(NULL)
-      }
-      if (is.null(tests)) {
-        return(NULL)
-      }
+      if (is.null(comp)) { return(NULL) }
+      if (is.null(tests)) { return(NULL) }
+
       res <- getDEGtable(pgx,
         testmethods = tests, comparison = comp,
         add.pq = TRUE, lfc = lfc, fdr = fdr
       )
-
+      
       ## Filter on features/genesets
       psel <- rownames(res)
       gx_features <- 1
@@ -564,6 +564,7 @@ ExpressionBoard <- function(id, pgx) {
       id = "genetable",
       res = filteredDiffExprTable,
       organism = pgx$organism,
+      show_pv = shiny::reactive(input$show_pv), 
       height = c(tabH - 10, 700),
       scrollY = "200px"
     )
