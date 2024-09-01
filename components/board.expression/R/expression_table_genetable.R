@@ -67,13 +67,14 @@ expression_table_genetable_server <- function(id,
       }
       rownames(res) <- sub(".*:", "", rownames(res))
 
-      kk <- grep("meta.fx|meta.fc", colnames(res), invert = TRUE)
-      res <- res[, kk, drop = FALSE]
-
+      ## AZ: disabled on Sept1. useless..?
+      ## kk <- grep("meta.fx|meta.fc", colnames(res), invert = TRUE)
+      ## res <- res[, kk, drop = FALSE]
+      
       if (show_pv()) {
-        res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
+          res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
       } else {
-        res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+          res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
       }
 
       if (input$gx_top10) {

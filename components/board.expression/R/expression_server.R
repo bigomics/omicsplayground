@@ -277,6 +277,7 @@ ExpressionBoard <- function(id, pgx) {
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
       res <- fullDiffExprTable()
+
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
@@ -287,21 +288,27 @@ ExpressionBoard <- function(id, pgx) {
       ## just show significant genes
       if (!is.null(input$gx_showall) && !input$gx_showall) {
         n <- length(tests)
-        sel <- which(res$stars == playbase::star.symbols(n))
+        ## sel <- which(res$stars == playbase::star.symbols(n))
+        if(input$show_pv) {
+            sel <- which(res$meta.p <= fdr & abs(res$logFC) >= lfc)
+        } else {
+            sel <- which(res$meta.q <= fdr & abs(res$logFC) >= lfc)
+        }
         res <- res[sel, , drop = FALSE]
       }
 
       ## just show top 10
-      if (length(input$gx_top10) && input$gx_top10) {
-        fx <- as.numeric(res[, fx.col])
-        names(fx) <- rownames(res)
-        pp <- unique(c(
-          head(names(sort(-fx[which(fx > 0)])), 10),
-          head(names(sort(fx[which(fx < 0)])), 10)
-        ))
-        res <- res[pp, , drop = FALSE]
-        res <- res[order(-res[, fx.col]), , drop = FALSE]
-      }
+      ## AZ: Disabled on Sept 1. useless?
+      ## if (length(input$gx_top10) && input$gx_top10) {
+      ##   fx <- as.numeric(res[, fx.col])
+      ##  names(fx) <- rownames(res)
+      ##  pp <- unique(c(
+      ##    head(names(sort(-fx[which(fx > 0)])), 10),
+      ##    head(names(sort(fx[which(fx < 0)])), 10)
+      ##  ))
+      ##  res <- res[pp, , drop = FALSE]
+      ##  res <- res[order(-res[, fx.col]), , drop = FALSE]
+      ## }
 
       if (nrow(res) == 0) {
         shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
@@ -332,7 +339,7 @@ ExpressionBoard <- function(id, pgx) {
       res <- fullDiffExprTable()
       features <- input$gx_features
       fam.genes <- res$symbol
-      fdr <- as.numeric(input$gx_fdr)
+      fdr <- as.numeric(input$gx_fdr) ## ps: can also be P-value if user checks box.
       lfc <- as.numeric(input$gx_lfc)
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
@@ -345,15 +352,21 @@ ExpressionBoard <- function(id, pgx) {
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
-      pval <- res[, grep("pvalue|meta.p|pval|p|p_value", colnames(res))[1]]
+      pval <- res[, grep("pvalue|meta.p|pval|p_value", colnames(res))[1]]
       pval <- pmax(pval, 1e-20)
+      
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       scaled.x <- scale(x, center = FALSE)
       scaled.y <- scale(y, center = FALSE)
 
-      sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+      if(input$show_pv) {
+          sig.genes <- fc.genes[which(pval <= fdr & abs(x) > lfc)]
+      } else {
+           sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+      }
       sel.genes <- intersect(sig.genes, sel.genes)
+
       impt <- function(g) {
         j <- match(g, fc.genes)
         x1 <- scaled.x[j]
