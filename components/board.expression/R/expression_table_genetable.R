@@ -75,7 +75,7 @@ expression_table_genetable_server <- function(id,
       } else {
           res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
       }
-      
+
       if (input$gx_top10) {
         res <- res[!is.na(res$logFC), ]
         res <- res[order(res$logFC, decreasing = TRUE), ]
