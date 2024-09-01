@@ -82,7 +82,9 @@ expression_table_genetable_server <- function(id,
           if (nrow(res) >= 20) {
               res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
           } else {
-              if (any(res$logFC > 0) && any(res$logFC < 0)) {
+              pos <- any(res$logFC > 0)
+              neg <- any(res$logFC < 0)
+              if (pos && neg) {
                   res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
               }
           }
