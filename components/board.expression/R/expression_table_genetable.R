@@ -77,9 +77,15 @@ expression_table_genetable_server <- function(id,
       }
 
       if (input$gx_top10) {
-        res <- res[!is.na(res$logFC), ]
-        res <- res[order(res$logFC, decreasing = TRUE), ]
-        res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
+          res <- res[!is.na(res$logFC), ]
+          res <- res[order(res$logFC, decreasing = TRUE), ]
+          if (nrow(res) >= 20) {
+              res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
+          } else {
+              if (any(res$logFC > 0) && any(res$logFC < 0)) {
+                  res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
+              }
+          }
       }
 
       numeric.cols <- which(sapply(res, is.numeric))
