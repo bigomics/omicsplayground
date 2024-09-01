@@ -289,10 +289,10 @@ ExpressionBoard <- function(id, pgx) {
       if (!is.null(input$gx_showall) && !input$gx_showall) {
         n <- length(tests)
         ## sel <- which(res$stars == playbase::star.symbols(n))
-        if(input$show_pv) {
-            sel <- which(res$meta.p <= fdr & abs(res$logFC) >= lfc)
+        if (input$show_pv) {
+          sel <- which(res$meta.p <= fdr & abs(res$logFC) >= lfc)
         } else {
-            sel <- which(res$meta.q <= fdr & abs(res$logFC) >= lfc)
+          sel <- which(res$meta.q <= fdr & abs(res$logFC) >= lfc)
         }
         res <- res[sel, , drop = FALSE]
       }
@@ -354,16 +354,16 @@ ExpressionBoard <- function(id, pgx) {
       qval <- pmax(qval, 1e-20)
       pval <- res[, grep("pvalue|meta.p|pval|p_value", colnames(res))[1]]
       pval <- pmax(pval, 1e-20)
-      
+
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       scaled.x <- scale(x, center = FALSE)
       scaled.y <- scale(y, center = FALSE)
 
-      if(input$show_pv) {
-          sig.genes <- fc.genes[which(pval <= fdr & abs(x) > lfc)]
+      if (input$show_pv) {
+        sig.genes <- fc.genes[which(pval <= fdr & abs(x) > lfc)]
       } else {
-           sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+        sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
       }
       sel.genes <- intersect(sig.genes, sel.genes)
 
