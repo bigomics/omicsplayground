@@ -1051,8 +1051,6 @@ app_server <- function(input, output, session) {
     # write dbg statement
     dbg("[SERVER] shiny.error triggered")
 
-    browser()
-
     sendErrorLogToCustomerSuport(user_email, pgx_name, error = err_traceback, path_to_creds = credential)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
