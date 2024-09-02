@@ -341,7 +341,7 @@ ExpressionBoard <- function(id, pgx) {
 
     genes_selected <- shiny::reactive({
       shiny::req(input$gx_features)
-      
+
       df1 <- filteredDiffExprTable()
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
