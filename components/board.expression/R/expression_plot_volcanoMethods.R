@@ -106,15 +106,16 @@ expression_plot_volcanoMethods_server <- function(id,
       y <- mx[, "q", drop = FALSE]
       title_y <- "Significance (-log10q)"
       if (show_pv()) {
-          y <- mx[, "p", drop = FALSE]
-          title_y <- "Significance (-log10p)"
+        y <- mx[, "p", drop = FALSE]
+        title_y <- "Significance (-log10p)"
       }
 
       mx.features <- rownames(mx)
       mx.symbols <- pgx$genes[mx.features, "symbol"]
       mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]),
-                         mx.features,
-                         pgx$genes[mx.features, "gene_title"])
+        mx.features,
+        pgx$genes[mx.features, "gene_title"]
+      )
 
       if (labeltype() == "symbol") {
         label.names <- mx.symbols
