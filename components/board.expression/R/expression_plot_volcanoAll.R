@@ -91,13 +91,13 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(matP) <- paste0("p.", names(P))
       FQ <- cbind(matF, matQ)
       if (show_pv()) {
-          FQ <- cbind(matF, matP)
+        FQ <- cbind(matF, matP)
       }
       features <- rownames(FQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
       names <- pgx$genes[rownames(FQ), "gene_title"]
 
-      ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option. 
+      ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option.
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
@@ -129,7 +129,7 @@ expression_plot_volcanoAll_server <- function(id,
       fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
       q_cols <- grep("q.*", colnames(pd[["FQ"]]))
       if (show_pv()) {
-          q_cols <- grep("p.*", colnames(pd[["FQ"]]))
+        q_cols <- grep("p.*", colnames(pd[["FQ"]]))
       }
       fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
       qv <- pd[["FQ"]][, q_cols, drop = FALSE]
@@ -138,8 +138,8 @@ expression_plot_volcanoAll_server <- function(id,
 
       title_y <- "Significance (-log10q)"
       if (show_pv()) {
-          colnames(qv) <- gsub("p.", "", colnames(qv))
-          title_y <- "Significance (-log10p)"
+        colnames(qv) <- gsub("p.", "", colnames(qv))
+        title_y <- "Significance (-log10p)"
       }
 
       if (labeltype() == "symbol") {
