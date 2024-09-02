@@ -73,13 +73,11 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Input variables
       ct <- getAllContrasts()
-
-      names(ct$Q)
+      ## names(ct$Q)
       FC <- ct$F
       Q <- ct$Q
+      P <- ct$P
       fdr <- as.numeric(fdr())
-
-
       lfc <- as.numeric(lfc())
       comp <- names(FC)
       shiny::req(length(comp) > 0)
@@ -89,11 +87,17 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(matF) <- paste0("fc.", names(FC))
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
+      matP <- do.call(cbind, P)
+      colnames(matP) <- paste0("p.", names(P))
       FQ <- cbind(matF, matQ)
+      if (show_pv()) {
+          FQ <- cbind(matF, matP)
+      }
       features <- rownames(FQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
       names <- pgx$genes[rownames(FQ), "gene_title"]
 
+      ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option. 
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
@@ -101,6 +105,7 @@ expression_plot_volcanoAll_server <- function(id,
         lfc = lfc,
         FC = FC,
         Q = Q,
+        P = P,
         symbols = symbols,
         features = features,
         names = names,
@@ -123,6 +128,9 @@ expression_plot_volcanoAll_server <- function(id,
       ## meta tables
       fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
       q_cols <- grep("q.*", colnames(pd[["FQ"]]))
+      if (show_pv()) {
+          q_cols <- grep("p.*", colnames(pd[["FQ"]]))
+      }
       fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
       qv <- pd[["FQ"]][, q_cols, drop = FALSE]
       colnames(fc) <- gsub("fc.", "", colnames(fc))
@@ -130,8 +138,8 @@ expression_plot_volcanoAll_server <- function(id,
 
       title_y <- "Significance (-log10q)"
       if (show_pv()) {
-        ## y <- -log10(pval + 1e-12)
-        title_y <- "Significance (-log10p)"
+          colnames(qv) <- gsub("p.", "", colnames(qv))
+          title_y <- "Significance (-log10p)"
       }
 
       if (labeltype() == "symbol") {

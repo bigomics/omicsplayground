@@ -459,46 +459,41 @@ ExpressionBoard <- function(id, pgx) {
     # tab differential expression > Top genes ####
 
     getAllContrasts <- shiny::reactive({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
 
-      comp <- names(pgx$gx.meta$meta)
-      if (length(comp) == 0) {
-        return(NULL)
-      }
+        if (is.null(pgx)) { return(NULL) }
 
-      tests <- colnames(pgx$gx.meta$meta[[1]]$p)
-      tests <- input$gx_statmethod
-      if (is.null(tests)) {
-        return(NULL)
-      }
+        comp <- names(pgx$gx.meta$meta)
+        if (length(comp) == 0) { return(NULL) }
 
-      i <- 1
-      F <- list()
-      Q <- list()
-      shiny::withProgress(message = "computing contrasts ...", value = 0, {
-        for (i in 1:length(comp)) {
-          res <- getDEGtable(pgx,
-            testmethods = tests, comparison = comp[i],
-            add.pq = FALSE, lfc = 0, fdr = 1
-          )
-          fc.gene <- rownames(res)
-          qv.col <- grep("qval|adj.p|padj|fdr|meta.q", colnames(res), ignore.case = TRUE)[1]
-          fx.col <- grep("mean.diff|logfc|foldchange|meta.fx", colnames(res), ignore.case = TRUE)[1]
-          qval <- res[, qv.col]
-          fx <- res[, fx.col]
-          names(qval) <- names(fx) <- fc.gene
-          F[[i]] <- fx
-          Q[[i]] <- qval
+        tests <- colnames(pgx$gx.meta$meta[[1]]$p)
+        tests <- input$gx_statmethod
+        if (is.null(tests)) { return(NULL) }
 
-          if (!interactive()) shiny::incProgress(1 / length(comp))
-        }
-      })
-      names(Q) <- names(F) <- comp
-
-      ct <- list(Q = Q, F = F)
-      return(ct)
+        i <- 1
+        F <- list()
+        Q <- list()
+        P <- list()
+        shiny::withProgress(message = "computing contrasts ...", value = 0, {
+            for (i in 1:length(comp)) {
+                res <- getDEGtable(pgx, testmethods = tests, comparison = comp[i],
+                                   add.pq = TRUE, lfc = 0, fdr = 1)
+                fc.gene <- rownames(res)
+                qv.col <- grep("qval|adj.p|padj|fdr|meta.q", colnames(res), ignore.case = TRUE)[1]
+                pv.col <- grep("pval|pvalue|padj|meta.p", colnames(res), ignore.case = TRUE)[1]
+                fx.col <- grep("mean.diff|logfc|foldchange|meta.fx", colnames(res), ignore.case = TRUE)[1]
+                qval <- res[, qv.col]
+                pval <- res[, pv.col]
+                fx <- res[, fx.col]
+                names(qval) <- names(pval) <- names(fx) <- fc.gene
+                F[[i]] <- fx
+                Q[[i]] <- qval
+                P[[i]] <- pval
+                if (!interactive()) shiny::incProgress(1 / length(comp))
+            }
+        })
+        names(Q) <- names(P) <- names(F) <- comp
+        ct <- list(Q = Q, P = P, F = F)
+        return(ct)
     })
 
     expression_plot_topgenes_server(
