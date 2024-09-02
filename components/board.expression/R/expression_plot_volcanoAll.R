@@ -62,6 +62,7 @@ expression_plot_volcanoAll_server <- function(id,
                                               getAllContrasts,
                                               fdr,
                                               lfc,
+                                              show_pv,
                                               genes_selected,
                                               labeltype = reactive("symbol"),
                                               watermark = FALSE) {
@@ -120,6 +121,11 @@ expression_plot_volcanoAll_server <- function(id,
       colnames(fc) <- gsub("fc.", "", colnames(fc))
       colnames(qv) <- gsub("q.", "", colnames(qv))
 
+      title_y <- "Significance (-log10q)"
+      if (show_pv()) {
+          ## y <- -log10(pval + 1e-12)
+          title_y <- "Significance (-log10p)"
+      }
 
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
@@ -139,6 +145,8 @@ expression_plot_volcanoAll_server <- function(id,
         names = names,
         label.names = label.names,
         share_axis = !input$scale_per_plot,
+        title_y = title_y,
+        title_x = "Effect size (log2FC)",
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
