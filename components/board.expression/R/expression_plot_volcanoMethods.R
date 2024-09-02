@@ -63,6 +63,7 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   comp, # input$gx_contrast
                                                   fdr, # input$gx_fdr
                                                   lfc, # input$gx_lfc
+                                                  show_pv,
                                                   genes_selected,
                                                   labeltype = reactive("symbol"),
                                                   watermark = FALSE) {
@@ -107,6 +108,13 @@ expression_plot_volcanoMethods_server <- function(id,
       mx.symbols <- pgx$genes[mx.features, "symbol"]
       mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]), mx.features, pgx$genes[mx.features, "gene_title"])
 
+      ## y <- -log10(qval + 1e-12)
+      title_y <- "Significance (-log10q)"
+      if (show_pv()) {
+        ## y <- -log10(pval + 1e-12)
+        title_y <- "Significance (-log10p)"
+      }
+
       if (labeltype() == "symbol") {
         label.names <- mx.symbols
       } else if (labeltype() == "name") {
@@ -126,7 +134,7 @@ expression_plot_volcanoMethods_server <- function(id,
         label.names = label.names,
         highlight = sel.genes,
         label = lab.genes,
-        title_y = "Significance (-log10q)",
+        title_y = title_y,
         title_x = "Effect size (log2FC)",
         share_axis = !input$scale_per_plot,
         yrange = yrange,

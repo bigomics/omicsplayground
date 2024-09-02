@@ -114,13 +114,20 @@ ExpressionBoard <- function(id, pgx) {
       test
     })
 
+    output$FDR_or_pv <- renderUI({
+      label <- if (input$show_pv) "P-value" else "FDR"
+      selectInput(ns("gx_fdr"),
+        label,
+        choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1),
+        selected = 0.2
+      )
+    })
 
     # functions #########
     comparison <- 1
     testmethods <- c("trend.limma")
     add.pq <- 0
-    getDEGtable <- function(pgx, testmethods, comparison, add.pq,
-                            lfc, fdr) {
+    getDEGtable <- function(pgx, testmethods, comparison, add.pq, lfc, fdr) {
       shiny::req(pgx$X)
 
       if (is.null(testmethods)) {
@@ -200,11 +207,8 @@ ExpressionBoard <- function(id, pgx) {
 
       if (add.pq) {
         mx.q <- mx.q[rownames(mx), , drop = FALSE]
-        res <- cbind(res, mx.q)
-        if (input$show_pv) {
-          mx.p <- mx.p[rownames(mx), , drop = FALSE]
-          res <- cbind(res, meta.p = mx$meta.p, mx.p)
-        }
+        mx.p <- mx.p[rownames(mx), , drop = FALSE]
+        res <- cbind(res, mx.q, meta.p = mx$meta.p, mx.p)
       }
 
       return(res)
@@ -228,6 +232,7 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(tests)) {
         return(NULL)
       }
+
       res <- getDEGtable(pgx,
         testmethods = tests, comparison = comp,
         add.pq = TRUE, lfc = lfc, fdr = fdr
@@ -272,6 +277,7 @@ ExpressionBoard <- function(id, pgx) {
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
       res <- fullDiffExprTable()
+
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
@@ -282,21 +288,27 @@ ExpressionBoard <- function(id, pgx) {
       ## just show significant genes
       if (!is.null(input$gx_showall) && !input$gx_showall) {
         n <- length(tests)
-        sel <- which(res$stars == playbase::star.symbols(n))
+        ## sel <- which(res$stars == playbase::star.symbols(n))
+        if (input$show_pv) {
+          sel <- which(res$meta.p <= fdr & abs(res$logFC) >= lfc)
+        } else {
+          sel <- which(res$meta.q <= fdr & abs(res$logFC) >= lfc)
+        }
         res <- res[sel, , drop = FALSE]
       }
 
       ## just show top 10
-      if (length(input$gx_top10) && input$gx_top10) {
-        fx <- as.numeric(res[, fx.col])
-        names(fx) <- rownames(res)
-        pp <- unique(c(
-          head(names(sort(-fx[which(fx > 0)])), 10),
-          head(names(sort(fx[which(fx < 0)])), 10)
-        ))
-        res <- res[pp, , drop = FALSE]
-        res <- res[order(-res[, fx.col]), , drop = FALSE]
-      }
+      ## AZ: Disabled on Sept 1. useless?
+      ## if (length(input$gx_top10) && input$gx_top10) {
+      ##   fx <- as.numeric(res[, fx.col])
+      ##  names(fx) <- rownames(res)
+      ##  pp <- unique(c(
+      ##    head(names(sort(-fx[which(fx > 0)])), 10),
+      ##    head(names(sort(fx[which(fx < 0)])), 10)
+      ##  ))
+      ##  res <- res[pp, , drop = FALSE]
+      ##  res <- res[order(-res[, fx.col]), , drop = FALSE]
+      ## }
 
       if (nrow(res) == 0) {
         shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
@@ -335,7 +347,7 @@ ExpressionBoard <- function(id, pgx) {
       res <- fullDiffExprTable()
       features <- input$gx_features
       fam.genes <- res$symbol
-      fdr <- as.numeric(input$gx_fdr)
+      fdr <- as.numeric(input$gx_fdr) ## ps: can also be P-value if user checks box.
       lfc <- as.numeric(input$gx_lfc)
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
@@ -348,15 +360,21 @@ ExpressionBoard <- function(id, pgx) {
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
-      pval <- res[, grep("pvalue|meta.p|pval|p|p_value", colnames(res))[1]]
+      pval <- res[, grep("pvalue|meta.p|pval|p_value", colnames(res))[1]]
       pval <- pmax(pval, 1e-20)
+
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       scaled.x <- scale(x, center = FALSE)
       scaled.y <- scale(y, center = FALSE)
 
-      sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+      if (input$show_pv) {
+        sig.genes <- fc.genes[which(pval <= fdr & abs(x) > lfc)]
+      } else {
+        sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+      }
       sel.genes <- intersect(sig.genes, sel.genes)
+
       impt <- function(g) {
         j <- match(g, fc.genes)
         x1 <- scaled.x[j]
@@ -513,6 +531,7 @@ ExpressionBoard <- function(id, pgx) {
       comp = shiny::reactive(input$gx_contrast),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
       labeltype = shiny::reactive(input$labeltype),
       watermark = WATERMARK
@@ -573,6 +592,7 @@ ExpressionBoard <- function(id, pgx) {
       id = "genetable",
       res = filteredDiffExprTable,
       organism = pgx$organism,
+      show_pv = shiny::reactive(input$show_pv),
       height = c(tabH - 10, 700),
       scrollY = "200px"
     )
