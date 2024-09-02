@@ -40,6 +40,7 @@ Imports:
     magrittr,
     markdown,
     miniUI,
+    openxlsx,
     pairsD3,
     partykit,
     patchwork,
