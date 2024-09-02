@@ -95,7 +95,6 @@ expression_plot_volcano_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
-
       return(list(
         x = x,
         y = y,

@@ -102,18 +102,19 @@ expression_plot_volcanoMethods_server <- function(id,
       ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
-      fc <- mx[, "fc", drop = FALSE]
-      qv <- mx[, "q", drop = FALSE]
-      mx.features <- rownames(mx)
-      mx.symbols <- pgx$genes[mx.features, "symbol"]
-      mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]), mx.features, pgx$genes[mx.features, "gene_title"])
-
-      ## y <- -log10(qval + 1e-12)
+      x <- mx[, "fc", drop = FALSE]
+      y <- mx[, "q", drop = FALSE]
       title_y <- "Significance (-log10q)"
       if (show_pv()) {
-        ## y <- -log10(pval + 1e-12)
-        title_y <- "Significance (-log10p)"
+          y <- mx[, "p", drop = FALSE]
+          title_y <- "Significance (-log10p)"
       }
+
+      mx.features <- rownames(mx)
+      mx.symbols <- pgx$genes[mx.features, "symbol"]
+      mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]),
+                         mx.features,
+                         pgx$genes[mx.features, "gene_title"])
 
       if (labeltype() == "symbol") {
         label.names <- mx.symbols
@@ -125,8 +126,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
+        FC = x,
+        Q = y,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
