@@ -1036,7 +1036,7 @@ app_server <- function(input, output, session) {
     user_email <- auth$email
     user_tab <- input$nav
 
-    if (!is.null(PGX)) {
+    if (!is.null(PGX) && !is.null(PGX$name)) {
       pgx_name <- PGX$name
     } else {
       pgx_name <- "No PGX loaded when error occurred"
@@ -1050,6 +1050,8 @@ app_server <- function(input, output, session) {
 
     # write dbg statement
     dbg("[SERVER] shiny.error triggered")
+
+    browser()
 
     sendErrorLogToCustomerSuport(user_email, pgx_name, error = err_traceback, path_to_creds = credential)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
