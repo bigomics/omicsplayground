@@ -321,6 +321,7 @@ ExpressionBoard <- function(id, pgx) {
 
     genes_in_sel_geneset <- shiny::reactive({
       req(pgx$X, pgx$name)
+
       if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == tspan("No geneset for selected gene.", js = FALSE)) {
         sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
         return(sel_gene)
@@ -329,11 +330,18 @@ ExpressionBoard <- function(id, pgx) {
       sel_genes <- pgx$GMT[, sel_gset]
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes > 0)]
-      return(names(sel_genes))
+
+      # convert symbol to rownames (module is based on rownames)
+
+      ortholog_genes <- ifelse(is.na(pgx$genes$human_ortholog), pgx$genes$symbol, pgx$genes$human_ortholog)
+
+      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), ortholog_genes), ])
+      return(matched_rownames)
     })
 
     genes_selected <- shiny::reactive({
       shiny::req(input$gx_features)
+
       df1 <- filteredDiffExprTable()
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
@@ -346,9 +354,9 @@ ExpressionBoard <- function(id, pgx) {
         fam.genes <- unique(unlist(gset))
       }
       jj <- match(fam.genes, res$symbol)
-      sel.genes <- res$symbol[setdiff(jj, NA)]
+      sel.genes <- rownames(res)[setdiff(jj, NA)]
 
-      fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+      fc.genes <- rownames(res)
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
@@ -378,9 +386,9 @@ ExpressionBoard <- function(id, pgx) {
 
       gene.selected <- !is.null(genetable_rows_selected()) && !is.null(df1)
       gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
+
       if (gene.selected && !gset.selected) {
-        lab.genes <- df1$symbol[genetable_rows_selected()]
-        if (lab.genes == "") lab.genes <- df1$feature[genetable_rows_selected]
+        lab.genes <- rownames(df1)[genetable_rows_selected()]
         sel.genes <- lab.genes
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
@@ -454,6 +462,7 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(pgx)) {
         return(NULL)
       }
+
       comp <- names(pgx$gx.meta$meta)
       if (length(comp) == 0) {
         return(NULL)
@@ -474,7 +483,7 @@ ExpressionBoard <- function(id, pgx) {
             testmethods = tests, comparison = comp[i],
             add.pq = FALSE, lfc = 0, fdr = 1
           )
-          fc.gene <- res[, grep("^gene$|^gene_name$", colnames(res))]
+          fc.gene <- rownames(res)
           qv.col <- grep("qval|adj.p|padj|fdr|meta.q", colnames(res), ignore.case = TRUE)[1]
           fx.col <- grep("mean.diff|logfc|foldchange|meta.fx", colnames(res), ignore.case = TRUE)[1]
           qval <- res[, qv.col]
@@ -534,6 +543,7 @@ ExpressionBoard <- function(id, pgx) {
     # rendering tables ####
     gx_related_genesets <- shiny::reactive({
       res <- filteredDiffExprTable()
+
       X <- pgx$X
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
@@ -547,12 +557,11 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(sel.row)) {
         return(NULL)
       }
-      gene1 <- res$symbol[sel.row]
-      # Deal with non-anotated genes
-      if (gene1 == "") {
-        gene1 <- res$feature[sel.row]
-      }
-      j <- which(rownames(pgx$GMT) == gene1)
+      gene1 <- res[sel.row, ]
+
+      gmt_gene_mapping <- ifelse(is.na(gene1$human_ortholog), gene1$symbol, gene1$human_ortholog)
+
+      j <- which(rownames(pgx$GMT) == gmt_gene_mapping)
       if (length(j) == 0) {
         return(NULL)
       } else {
@@ -568,8 +577,8 @@ ExpressionBoard <- function(id, pgx) {
       names(fx) <- rownames(pgx$gset.meta$meta[[contr]])
       fx <- round(fx[gset], digits = 4)
 
-      X <- playbase::rename_by(X, pgx$genes, "symbol")
-      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[gene1, ])[, 1]
+      # X <- playbase::rename_by(X, pgx$genes, "feature")
+      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[rownames(gene1), ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 

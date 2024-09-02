@@ -123,7 +123,7 @@ ExpressionInputs <- function(id) {
           placement = "top", options = list(container = "body")
         ),
         shiny::radioButtons(ns("labeltype"), "Plot labels:",
-          c("symbol", "probe"),
+          c("symbol", "probe", "name"),
           inline = TRUE
         ),
         withTooltip(

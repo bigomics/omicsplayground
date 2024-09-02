@@ -73,9 +73,13 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Input variables
       ct <- getAllContrasts()
+
+      names(ct$Q)
       FC <- ct$F
       Q <- ct$Q
       fdr <- as.numeric(fdr())
+
+
       lfc <- as.numeric(lfc())
       comp <- names(FC)
       shiny::req(length(comp) > 0)
@@ -86,7 +90,9 @@ expression_plot_volcanoAll_server <- function(id,
       matQ <- do.call(cbind, Q)
       colnames(matQ) <- paste0("q.", names(Q))
       FQ <- cbind(matF, matQ)
+      features <- rownames(FQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
+      names <- pgx$genes[rownames(FQ), "gene_title"]
 
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
@@ -96,7 +102,8 @@ expression_plot_volcanoAll_server <- function(id,
         FC = FC,
         Q = Q,
         symbols = symbols,
-        features = rownames(FQ),
+        features = features,
+        names = names,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes
       )
@@ -128,10 +135,10 @@ expression_plot_volcanoAll_server <- function(id,
       }
 
       if (labeltype() == "symbol") {
-        names <- pd[["features"]]
         label.names <- pd[["symbols"]]
+      } else if (labeltype() == "name") {
+        label.names <- pd[["names"]]
       } else {
-        names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
 
@@ -142,8 +149,8 @@ expression_plot_volcanoAll_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        names = names,
-        label.names = label.names,
+        names = pd[["features"]],
+        label.names = ifelse(is.na(label.names), pd[["features"]], label.names),
         share_axis = !input$scale_per_plot,
         title_y = title_y,
         title_x = "Effect size (log2FC)",
