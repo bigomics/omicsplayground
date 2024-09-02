@@ -130,8 +130,8 @@ expression_plot_volcanoAll_server <- function(id,
 
       title_y <- "Significance (-log10q)"
       if (show_pv()) {
-          ## y <- -log10(pval + 1e-12)
-          title_y <- "Significance (-log10p)"
+        ## y <- -log10(pval + 1e-12)
+        title_y <- "Significance (-log10p)"
       }
 
       if (labeltype() == "symbol") {
