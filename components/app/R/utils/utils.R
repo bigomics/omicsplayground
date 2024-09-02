@@ -174,8 +174,7 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_cr
   user_email <- trimws(user_email)
 
   if (user_email == "") {
-    message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get user email")
-    return(NULL)
+    user_email <- "No email (dev?)"
   }
 
   message <- glue::glue(
@@ -214,6 +213,9 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_cr
   json_payload <- jsonlite::toJSON(payload, auto_unbox = TRUE)
 
   bearer_token <- readLines(path_to_creds)
+
+  message("[sendErrorLogToCustomerSuport] Sending error log to customer support")
+
 
   # Send the POST request to HubSpot
   response <- httr::POST(

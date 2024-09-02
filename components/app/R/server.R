@@ -1042,10 +1042,6 @@ app_server <- function(input, output, session) {
       pgx_name <- "No PGX loaded when error occurred"
     }
 
-    if (user_email == "") {
-      user_email <- "No email (dev?)"
-    }
-
     credential <- file.path(ETC, "hubspot_creds")
 
     # write dbg statement
