@@ -174,6 +174,7 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_cr
   user_email <- trimws(user_email)
 
   if (user_email == "") {
+    message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get user email")
     return(NULL)
   }
 
