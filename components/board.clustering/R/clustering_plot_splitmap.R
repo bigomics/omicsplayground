@@ -33,13 +33,7 @@ clustering_plot_splitmap_ui <- function(
       "Choose a label type to be displayed in the heatmap.",
       placement = "right", options = list(container = "body")
     ),
-    withTooltip(
-      shiny::checkboxInput(
-        ns("hm_legend"), "show legend",
-        value = TRUE
-      ), "Show or hide the legend.",
-      placement = "right", options = list(container = "body")
-    ),
+    shiny::br(),
     shiny::fillRow(
       height = 50,
       withTooltip(shiny::numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width = "100%"),
@@ -51,7 +45,14 @@ clustering_plot_splitmap_ui <- function(
         placement = "right", options = list(container = "body")
       )
     ),
-    shiny::br()
+    shiny::br(),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("hm_legend"), "show legend",
+        value = TRUE
+      ), "Show or hide the legend.",
+      placement = "right", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(
