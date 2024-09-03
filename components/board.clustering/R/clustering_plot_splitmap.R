@@ -26,7 +26,13 @@ clustering_plot_splitmap_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  feature_labels <- c("feature", "symbol", "name")
+
   splitmap_opts <- shiny::tagList(
+    withTooltip(shiny::selectInput(ns("labeltype"), "Label type:", feature_labels, width = "100%"),
+      "Choose a label type to be displayed in the heatmap.",
+      placement = "right", options = list(container = "body")
+    ),
     withTooltip(
       shiny::checkboxInput(
         ns("hm_legend"), "show legend",
@@ -157,13 +163,27 @@ clustering_plot_splitmap_server <- function(id,
 
       show_colnames <- (input$hm_cexCol != 0)
 
-      if (hm_level() == "gene") {
-        ## strip any prefix
-        rownames(zx) <- sub(".*:", "", rownames(zx))
-      }
       rownames(zx) <- sub("HALLMARK:HALLMARK_", "HALLMARK:", rownames(zx))
       rownames(zx) <- gsub(playdata::GSET_PREFIX_REGEX, "", rownames(zx))
       rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
+      if (hm_level() == "gene") {
+        ## strip any prefix
+        rownames(zx) <- sub(".*:", "", rownames(zx))
+
+        labeled_features <- NULL
+        if (input$labeltype == "feature") {
+          rownames(zx) <- rownames(zx)
+        } else if (input$labeltype == "symbol") {
+          labeled_features <- pgx$genes[rownames(zx), "symbol"]
+          labeled_features <- ifelse(is.na(labeled_features), rownames(zx), labeled_features)
+          rownames(zx) <- labeled_features
+        } else if (input$labeltype == "name") {
+          labeled_features <- pgx$genes[rownames(zx), "gene_title"]
+          labeled_features <- ifelse(is.na(labeled_features), rownames(zx), labeled_features)
+          rownames(zx) <- labeled_features
+        }
+      }
+
       if (hm_level() == "geneset") rownames(zx) <- tolower(rownames(zx))
 
       cex2 <- ifelse(nrow(zx) > 60, 0.8, 0.9)
@@ -182,6 +202,7 @@ clustering_plot_splitmap_server <- function(id,
       if (input$hm_cexRow == 0) nrownames <- 0
 
       shiny::showNotification("Rendering heatmap...")
+
       playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
@@ -251,6 +272,20 @@ clustering_plot_splitmap_server <- function(id,
           playbase::breakstring2(aa, 50, brk = "<br>")
         }
         tooltips <- sapply(rownames(X), getInfo)
+        labeled_features <- NULL
+        if (input$labeltype == "feature") {
+          rownames(X) <- rownames(X)
+        } else if (input$labeltype == "symbol") {
+          labeled_features <- pgx$genes[rownames(X), "symbol"]
+          labeled_features <- ifelse(is.na(labeled_features), rownames(X), labeled_features)
+          rownames(X) <- labeled_features
+          names(tooltips) <- labeled_features
+        } else if (input$labeltype == "name") {
+          labeled_features <- pgx$genes[rownames(X), "gene_title"]
+          labeled_features <- ifelse(is.na(labeled_features), rownames(X), labeled_features)
+          rownames(X) <- labeled_features
+          names(tooltips) <- labeled_features
+        }
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- sapply(aa, function(x) {
