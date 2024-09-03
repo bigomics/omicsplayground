@@ -180,7 +180,7 @@ expression_plot_volcanoAll_server <- function(id,
       fc <- pd[["fc"]]
       qv <- pd[["qv"]]
 
-      gene_names <- rep(rownames(fc), each = ncol(fc))
+      gene_names <- rep(pd[["names"]], each = ncol(fc))
       label.names <- rep(pd[["label.names"]], each = ncol(fc))
       fc <- data.frame(fc) %>% 
         tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot

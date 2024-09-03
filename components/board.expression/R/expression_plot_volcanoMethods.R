@@ -86,7 +86,7 @@ expression_plot_volcanoMethods_server <- function(id,
         names <- mx.features
         label.names <- mx.symbols
       } else {
-        names <- mx.symbol
+        names <- mx.symbols
         label.names <- mx.features
       }
 
