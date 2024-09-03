@@ -116,7 +116,8 @@ ExpressionBoard <- function(id, pgx) {
 
     shiny::observeEvent(input$show_pv, {
       shiny::updateSelectInput(
-        session, "gx_fdr", label = if (input$show_pv) "P-value" else "FDR"
+        session, "gx_fdr",
+        label = if (input$show_pv) "P-value" else "FDR"
       )
     })
 
