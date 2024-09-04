@@ -65,6 +65,7 @@ compare_plot_fcfc_server <- function(id,
       FC <- plot_data()
       mat <- getMatrices()
 
+
       ## subsample for speed
       ncol_FC <- ncol(FC)
       nrow_FC <- nrow(FC)
@@ -72,8 +73,16 @@ compare_plot_fcfc_server <- function(id,
       sample_size <- ifelse(sample_size > nrow_FC, nrow_FC, sample_size)
 
       genes <- sample(rownames(FC), sample_size)
-      genes <- c(hilight, genes)
+
+      ai <- 2
+      browser()
+
+      if (any(hilight %in% genes)) {
+        genes <- c(hilight, genes)
+      }
+
       genes <- unique(genes)
+
 
       ## Get data ready
       data_1 <- mat$F1
@@ -90,6 +99,7 @@ compare_plot_fcfc_server <- function(id,
       for (j in ncol_d2:1) {
         for (i in seq_len(ncol_d1)) {
           ## Get the data for the current plot
+
           F <- cbind(
             data_1[genes, i, drop = FALSE],
             data_2[genes, j, drop = FALSE]
@@ -175,6 +185,9 @@ compare_plot_fcfc_server <- function(id,
     fcfcplot.RENDER <- function() {
       shiny::validate(shiny::need(getMatrices(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
+
+      ai <- 1
+      browser()
       p <- interactive_fcfc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,
         hilight = higenes
