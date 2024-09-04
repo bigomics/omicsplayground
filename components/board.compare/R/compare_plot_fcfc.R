@@ -74,9 +74,6 @@ compare_plot_fcfc_server <- function(id,
 
       genes <- sample(rownames(FC), sample_size)
 
-      ai <- 2
-      browser()
-
       if (any(hilight %in% genes)) {
         genes <- c(hilight, genes)
       }
@@ -127,7 +124,7 @@ compare_plot_fcfc_server <- function(id,
           )
 
           # Add the text to hilighted points
-          if (length(hilight) > 1) {
+          if (length(hilight) > 0) {
             hilight1 <- intersect(rownames(F), hilight)
             plot_i <- plot_i %>%
               plotly::add_trace(
@@ -186,8 +183,6 @@ compare_plot_fcfc_server <- function(id,
       shiny::validate(shiny::need(getMatrices(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
 
-      ai <- 1
-      browser()
       p <- interactive_fcfc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,
         hilight = higenes
