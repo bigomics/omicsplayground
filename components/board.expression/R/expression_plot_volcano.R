@@ -28,7 +28,7 @@ expression_plot_volcano_ui <- function(id,
   PlotModuleUI(
     ns("pltmod"),
     label = label,
-    plotlib = "plotly",
+    plotlib = c("plotly", "ggplot"),
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -37,7 +37,9 @@ expression_plot_volcano_ui <- function(id,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
-    height = height
+    height = height,
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
@@ -148,6 +150,65 @@ expression_plot_volcano_server <- function(id,
       plt
     }
 
+    base.RENDER <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      if (labeltype() == "symbol") {
+        names <- pd[["features"]]
+        label.names <- pd[["symbols"]]
+      } else {
+        names <- pd[["symbols"]]
+        label.names <- pd[["features"]]
+      }
+
+      playbase::ggVolcano(
+        x = pd[["x"]],
+        y = pd[["y"]],
+        names = names,
+        highlight = pd[["sel.genes"]],
+        label = pd[["lab.genes"]],
+        label.names = label.names,
+        label.cex = 4,
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
+        xlab = "Effect size (log2FC)",
+        ylab = pd[["ylab"]],
+        marker.size = 1,
+        showlegend = FALSE
+      )
+    }
+
+    base.RENDER.modal <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      if (labeltype() == "symbol") {
+        names <- pd[["features"]]
+        label.names <- pd[["symbols"]]
+      } else {
+        names <- pd[["symbols"]]
+        label.names <- pd[["features"]]
+      }
+
+      playbase::ggVolcano(
+        x = pd[["x"]],
+        y = pd[["y"]],
+        names = names,
+        highlight = pd[["sel.genes"]],
+        label = pd[["lab.genes"]],
+        label.names = label.names,
+        label.cex = 5,
+        axis.text.size = 22,
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
+        xlab = "Effect size (log2FC)",
+        ylab = pd[["ylab"]],
+        marker.size = 1.5,
+        showlegend = FALSE
+      )
+    }
+
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
         plotly::layout(
@@ -170,16 +231,24 @@ expression_plot_volcano_server <- function(id,
       return(df)
     }
 
-    PlotModuleServer(
-      "pltmod",
-      plotlib = "plotly",
-      func = plotly.RENDER,
-      func2 = modal_plotly.RENDER,
-      remove_margins = FALSE,
-      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
-      res = c(80, 95), ## resolution of plots
-      pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+    plot_grid <- list(
+      list(plotlib = "plotly", func = plotly.RENDER, func2 = modal_plotly.RENDER, card = 1),
+      list(plotlib = "ggplot", func = base.RENDER, func2 = base.RENDER.modal, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "pltmod",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        csvFunc = plot_data_csv,
+        res = c(80, 95), # resolution of plots
+        pdf.width = 10,
+        pdf.height = 8,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
   }) ## end of moduleServer
 }
