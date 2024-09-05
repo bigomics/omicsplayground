@@ -80,15 +80,15 @@ expression_plot_volcanoAll_server <- function(id,
       P <- ct$P
 
       dbg("[expression_plot_volcanoAll_server] dimF = ", dim(F))
-##      browser()
-      
+      ##      browser()
+
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
       comp <- colnames(F)
       shiny::req(length(comp) > 0)
 
       ## combined matrix for output
-      FQ <- data.frame( fc=F, q=Q, p=P)
+      FQ <- data.frame(fc = F, q = Q, p = P)
       features <- rownames(FQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
       names <- pgx$genes[rownames(FQ), "gene_title"]
@@ -103,13 +103,13 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Input vars
       if (show_pv()) {
-        ##P <- P
+        ## P <- P
         title_y <- "Significance (-log10p)"
       } else {
         P <- Q
         title_y <- "Significance (-log10q)"
       }
-      
+
       ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option.
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
@@ -122,7 +122,7 @@ expression_plot_volcanoAll_server <- function(id,
         symbols = symbols,
         features = features,
         names = names,
-        label.names = label.names,        
+        label.names = label.names,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes
       )
@@ -134,7 +134,7 @@ expression_plot_volcanoAll_server <- function(id,
                              margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
-      
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = pd$F,
@@ -180,7 +180,7 @@ expression_plot_volcanoAll_server <- function(id,
       return(fig)
     }
 
-    base.plots <- function(label.cex=4) {
+    base.plots <- function(label.cex = 4) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -188,14 +188,18 @@ expression_plot_volcanoAll_server <- function(id,
       qv <- pd$P
       gene_names <- rep(pd$names, each = ncol(fc))
       label.names <- rep(pd$label.names, each = ncol(fc))
-      pivot.fc <- data.frame(fc) %>% 
-        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
-                      names_to = "facet",   # Name of the new column for timepoints
-                      values_to = "fc")
-      pivot.qv <- data.frame(qv) %>% 
-        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
-                      names_to = "facet",   # Name of the new column for timepoints
-                      values_to = "qv")
+      pivot.fc <- data.frame(fc) %>%
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "fc"
+        )
+      pivot.qv <- data.frame(qv) %>%
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "qv"
+        )
       facet <- pivot.fc$facet
       x <- pivot.fc$fc
       y <- -log10(pivot.qv$qv + 1e-12)
@@ -219,9 +223,9 @@ expression_plot_volcanoAll_server <- function(id,
     }
 
     big_base.plots <- function() {
-      base.plots(label.cex=5)
+      base.plots(label.cex = 5)
     }
-    
+
     plot_grid <- list(
       list(plotlib = "plotly", func = plotly.RENDER, func2 = big_plotly.RENDER, card = 1),
       list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
@@ -241,6 +245,5 @@ expression_plot_volcanoAll_server <- function(id,
         card = x$card
       )
     })
-
   }) ## end of moduleServer
 }

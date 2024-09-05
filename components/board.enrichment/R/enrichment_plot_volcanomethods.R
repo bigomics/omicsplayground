@@ -25,7 +25,7 @@ enrichment_plot_volcanomethods_ui <- function(
 
   PlotModuleUI(
     ns("plot"),
-    plotlib = c("plotly","ggplot"),
+    plotlib = c("plotly", "ggplot"),
     title = title,
     caption = caption,
     options = plot_options,
@@ -144,13 +144,17 @@ enrichment_plot_volcanomethods_server <- function(id,
 
       gene_names <- rep(rownames(fc), each = ncol(fc))
       fc <- data.frame(fc) %>%
-        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
-                      names_to = "facet",   # Name of the new column for timepoints
-                      values_to = "fc")
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "fc"
+        )
       qv <- data.frame(qv) %>%
-        tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
-                      names_to = "facet",   # Name of the new column for timepoints
-                      values_to = "qv")
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "qv"
+        )
       facet <- fc$facet
       x <- fc$fc
       y <- qv$qv

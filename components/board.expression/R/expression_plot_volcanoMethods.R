@@ -188,7 +188,7 @@ expression_plot_volcanoMethods_server <- function(id,
       return(fig)
     }
 
-    base.plots <- function(label.cex=4) {
+    base.plots <- function(label.cex = 4) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -208,13 +208,17 @@ expression_plot_volcanoMethods_server <- function(id,
       gene_names <- rep(rownames(fc), each = ncol(fc))
       label.names <- rep(label.names, each = ncol(fc))
       fc <- data.frame(fc) %>%
-        tidyr::pivot_longer(cols = everything(),
-                      names_to = "facet",
-                      values_to = "fc")
+        tidyr::pivot_longer(
+          cols = everything(),
+          names_to = "facet",
+          values_to = "fc"
+        )
       qv <- data.frame(qv) %>%
-        tidyr::pivot_longer(cols = everything(),
-                      names_to = "facet",
-                      values_to = "qv")
+        tidyr::pivot_longer(
+          cols = everything(),
+          names_to = "facet",
+          values_to = "qv"
+        )
       facet <- fc$facet
       x <- fc$fc
       y <- qv$qv
@@ -238,10 +242,10 @@ expression_plot_volcanoMethods_server <- function(id,
       )
     }
 
-    big_base.plots <- function(label.cex=4) {
-      base.plots(label.cex=5) 
+    big_base.plots <- function(label.cex = 4) {
+      base.plots(label.cex = 5)
     }
-    
+
     plot_grid <- list(
       list(plotlib = "plotly", func = modal_plotly.RENDER, func2 = modal_plotly.RENDER, card = 1),
       list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
