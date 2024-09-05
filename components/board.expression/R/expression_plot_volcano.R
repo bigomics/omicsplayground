@@ -156,7 +156,7 @@ expression_plot_volcano_server <- function(id,
         label.names <- pd[["features"]]
       }
 
-      playbase::pgx.Volcano2(
+      playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,
@@ -185,7 +185,7 @@ expression_plot_volcano_server <- function(id,
         label.names <- pd[["features"]]
       }
 
-      playbase::pgx.Volcano2(
+      playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,

@@ -127,7 +127,7 @@ enrichment_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      playbase::pgx.Volcano2(
+      playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = pd[["fc.genes"]],
@@ -147,7 +147,7 @@ enrichment_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      playbase::pgx.Volcano2(
+      playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = pd[["fc.genes"]],

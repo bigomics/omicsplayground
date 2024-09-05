@@ -195,7 +195,7 @@ expression_plot_volcanoAll_server <- function(id,
       y <- qv$qv
       y <- -log10(y + 1e-12)
 
-      playbase::pgx.Volcano2(
+      playbase::ggVolcano(
         x,
         y,
         gene_names,
