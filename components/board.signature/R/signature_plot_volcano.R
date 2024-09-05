@@ -207,8 +207,8 @@ signature_plot_volcano_server <- function(id,
       fc <- pd[["fc"]]
       qv <- pd[["qv"]]
 
-      gene_names <- rep(rownames(fc), ncol(fc))
-      label.names <- rep(pd[["symbols"]], ncol(fc))
+      gene_names <- rep(rownames(fc), each = ncol(fc))
+      label.names <- rep(pd[["symbols"]], each = ncol(fc))
       fc <- data.frame(fc) %>% 
         tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
                       names_to = "facet",   # Name of the new column for timepoints
