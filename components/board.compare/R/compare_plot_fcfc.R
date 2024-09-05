@@ -75,7 +75,7 @@ compare_plot_fcfc_server <- function(id,
       genes <- sample(rownames(FC), sample_size)
 
       if (any(hilight %in% genes)) {
-        genes <- c(hilight, genes)
+        genes <- c(intersect(hilight, genes), genes)
       }
 
       genes <- unique(genes)
