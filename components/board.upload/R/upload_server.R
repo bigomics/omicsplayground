@@ -918,6 +918,7 @@ UploadBoard <- function(id,
         alt.text <- ""
 
         if (upload_datatype() != "metabolomics" && !organism %in% detected$species) {
+          # handle all data types failures other than metabolomics: trigger error to user if probetype not found
           detected_probetype <- "error"
           alt.species <- paste(detected$species, collapse = " or ")
           if (length(alt.species)) {
@@ -925,6 +926,7 @@ UploadBoard <- function(id,
             alt.text <- paste0("Are these perhaps ", alt.species, "?")
           }
         } else if (upload_datatype() != "metabolomics") {
+          # handle all data types success other than metabolomics: assign probetype to detected_probetype for selected organism (ugly)
           detected_probetype <- "error"
           if (organism %in% names(detected$probetype)) {
             detected_probetype <- detected$probetype[organism]
@@ -932,9 +934,13 @@ UploadBoard <- function(id,
         }
 
         if (upload_datatype() == "metabolomics" && is.null(detected$probetype)) {
+          # handle metabolomics failure: trigger error to user
           detected_probetype <- "error"
+        } else {
+          # handle metabolomics success: assign probetype to detected_probetype
+          detected_probetype <- detected$probetype[organism]
         }
-        ## detected_probetype <- detected$probetype
+        
         probetype(detected_probetype) ## set RV
 
         if (detected_probetype == "error") {
