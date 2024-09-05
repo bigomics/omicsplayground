@@ -64,6 +64,7 @@ expression_plot_volcanoAll_server <- function(id,
                                               getAllContrasts,
                                               fdr,
                                               lfc,
+                                              show_pv,
                                               genes_selected,
                                               labeltype = reactive("symbol"),
                                               watermark = FALSE) {
@@ -74,48 +75,54 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Input variables
       ct <- getAllContrasts()
-      FC <- ct$F
+      F <- ct$F
       Q <- ct$Q
+      P <- ct$P
+
+      dbg("[expression_plot_volcanoAll_server] dimF = ", dim(F))
+##      browser()
+      
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
-      comp <- names(FC)
+      comp <- colnames(F)
       shiny::req(length(comp) > 0)
 
       ## combined matrix for output
-      matF <- do.call(cbind, FC)
-      colnames(matF) <- paste0("fc.", names(FC))
-      matQ <- do.call(cbind, Q)
-      colnames(matQ) <- paste0("q.", names(Q))
-      FQ <- cbind(matF, matQ)
-      symbols <- pgx$genes[rownames(FQ), "symbol"]
-
-      ## meta tables
-      fc_cols <- grep("fc.*", colnames(FQ))
-      q_cols <- grep("q.*", colnames(FQ))
-      fc <- FQ[, fc_cols, drop = FALSE]
-      qv <- FQ[, q_cols, drop = FALSE]
-      colnames(fc) <- gsub("fc.", "", colnames(fc))
-      colnames(qv) <- gsub("q.", "", colnames(qv))
+      FQ <- data.frame( fc=F, q=Q, p=P)
       features <- rownames(FQ)
-
+      symbols <- pgx$genes[rownames(FQ), "symbol"]
+      names <- pgx$genes[rownames(FQ), "gene_title"]
 
       if (labeltype() == "symbol") {
-        names <- features
         label.names <- symbols
+      } else if (labeltype() == "name") {
+        label.names <- names
       } else {
-        names <- symbols
         label.names <- features
       }
 
+      # Input vars
+      if (show_pv()) {
+        ##P <- P
+        title_y <- "Significance (-log10p)"
+      } else {
+        P <- Q
+        title_y <- "Significance (-log10q)"
+      }
+      
+      ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option.
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
         fdr = fdr,
         lfc = lfc,
-        fc = fc,
-        qv = qv,
+        F = F,
+        P = P,
+        title_y = title_y,
+        symbols = symbols,
+        features = features,
         names = names,
-        label.names = label.names,
+        label.names = label.names,        
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes
       )
@@ -127,28 +134,28 @@ expression_plot_volcanoAll_server <- function(id,
                              margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
-
+      
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = pd[["fc"]],
-        Q = pd[["qv"]],
-        fdr = pd[["fdr"]],
-        lfc = pd[["lfc"]],
+        FC = pd$F,
+        Q = pd$P,
+        fdr = pd$fdr,
+        lfc = pd$lfc,
         cex = cex,
-        names = pd[["names"]],
-        label.names = pd[["label.names"]],
+        names = pd$features,
+        label.names = pd$label.names,
         share_axis = !input$scale_per_plot,
+        title_y = pd$title_y,
+        title_x = "Effect size (log2FC)",
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = pd$sel.genes,
+        label = pd$lab.genes,
         by_sig = FALSE
       )
-
-      all_plts
 
       return(all_plts)
     }
@@ -173,27 +180,25 @@ expression_plot_volcanoAll_server <- function(id,
       return(fig)
     }
 
-    base.plots <- function() {
+    base.plots <- function(label.cex=4) {
       pd <- plot_data()
       shiny::req(pd)
 
-      fc <- pd[["fc"]]
-      qv <- pd[["qv"]]
-
-      gene_names <- rep(pd[["names"]], each = ncol(fc))
-      label.names <- rep(pd[["label.names"]], each = ncol(fc))
-      fc <- data.frame(fc) %>% 
+      fc <- pd$F
+      qv <- pd$P
+      gene_names <- rep(pd$names, each = ncol(fc))
+      label.names <- rep(pd$label.names, each = ncol(fc))
+      pivot.fc <- data.frame(fc) %>% 
         tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
                       names_to = "facet",   # Name of the new column for timepoints
                       values_to = "fc")
-      qv <- data.frame(qv) %>% 
+      pivot.qv <- data.frame(qv) %>% 
         tidyr::pivot_longer(cols = everything(),      # Select all columns to pivot
                       names_to = "facet",   # Name of the new column for timepoints
                       values_to = "qv")
-      facet <- fc$facet
-      x <- fc$fc
-      y <- qv$qv
-      y <- -log10(y + 1e-12)
+      facet <- pivot.fc$facet
+      x <- pivot.fc$fc
+      y <- -log10(pivot.qv$qv + 1e-12)
 
       playbase::ggVolcano(
         x,
@@ -203,9 +208,9 @@ expression_plot_volcanoAll_server <- function(id,
         label = pd[["lab.genes"]],
         highlight = pd[["sel.genes"]],
         label.names = label.names,
-        label.cex = 5,
+        label.cex = label.cex,
         xlab = "Effect size (log2FC)",
-        ylab = "Significance (-log10p)",
+        ylab = pd$title_y,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         marker.size = 1.2,
@@ -213,9 +218,13 @@ expression_plot_volcanoAll_server <- function(id,
       )
     }
 
+    big_base.plots <- function() {
+      base.plots(label.cex=5)
+    }
+    
     plot_grid <- list(
       list(plotlib = "plotly", func = plotly.RENDER, func2 = big_plotly.RENDER, card = 1),
-      list(plotlib = "ggplot", func = base.plots, func2 = base.plots, card = 2)
+      list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
     )
 
     lapply(plot_grid, function(x) {

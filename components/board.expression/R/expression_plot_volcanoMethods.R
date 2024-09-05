@@ -65,6 +65,7 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   comp, # input$gx_contrast
                                                   fdr, # input$gx_fdr
                                                   lfc, # input$gx_lfc
+                                                  show_pv,
                                                   genes_selected,
                                                   labeltype = reactive("symbol"),
                                                   watermark = FALSE) {
@@ -118,21 +119,43 @@ expression_plot_volcanoMethods_server <- function(id,
       label.names <- pd[["label.names"]]
 
       ## meta tables
-      mx <- pd[["mx"]]
-      fc <- mx[, "fc", drop = FALSE]
-      qv <- mx[, "q", drop = FALSE]
-            # Call volcano plots
+      comp <- pd[["comp"]]
+      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
+      x <- mx[, "fc", drop = FALSE]
+      y <- mx[, "q", drop = FALSE]
+      title_y <- "Significance (-log10q)"
+      if (show_pv()) {
+        y <- mx[, "p", drop = FALSE]
+        title_y <- "Significance (-log10p)"
+      }
+
+      mx.features <- rownames(mx)
+      mx.symbols <- pgx$genes[mx.features, "symbol"]
+      mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]),
+        mx.features,
+        pgx$genes[mx.features, "gene_title"]
+      )
+
+      if (labeltype() == "symbol") {
+        label.names <- mx.symbols
+      } else if (labeltype() == "name") {
+        label.names <- mx.names
+      } else {
+        label.names <- mx.features
+      }
+
+      # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
+        FC = x,
+        Q = y,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
-        names = names,
+        names = mx.features,
         label.names = label.names,
         highlight = sel.genes,
         label = lab.genes,
-        title_y = "Significance (-log10q)",
+        title_y = title_y,
         title_x = "Effect size (log2FC)",
         share_axis = !input$scale_per_plot,
         yrange = yrange,
@@ -165,7 +188,7 @@ expression_plot_volcanoMethods_server <- function(id,
       return(fig)
     }
 
-    base.plots <- function() {
+    base.plots <- function(label.cex=4) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -175,7 +198,6 @@ expression_plot_volcanoMethods_server <- function(id,
       lfc <- pd[["lfc"]]
       names <- pd[["names"]]
       label.names <- pd[["label.names"]]
-
 
       mx <- pd[["mx"]]
       fc <- mx[, "fc", drop = FALSE][[1]] |> unclass()
@@ -209,16 +231,20 @@ expression_plot_volcanoMethods_server <- function(id,
         highlight = sel.genes,
         label = lab.genes,
         marker.size = 1.2,
-        label.cex = 5,
+        label.cex = label.cex,
         ylab = "Significance (-log10q)",
         xlab = "Effect size (log2FC)",
         showlegend = FALSE
       )
     }
 
+    big_base.plots <- function(label.cex=4) {
+      base.plots(label.cex=5) 
+    }
+    
     plot_grid <- list(
       list(plotlib = "plotly", func = modal_plotly.RENDER, func2 = modal_plotly.RENDER, card = 1),
-      list(plotlib = "ggplot", func = base.plots, func2 = base.plots, card = 2)
+      list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
     )
 
     plot_data_csv <- function() {

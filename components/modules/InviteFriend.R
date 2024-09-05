@@ -98,9 +98,8 @@ InviteFriendModule <- function(
       }
 
       ## check own email
-      own_email <- (friend_email == auth$email)
-      own_email <- agrep(gsub("[0-9.-]|@.*", "", friend_email), gsub("[0-9.-]|@.*", "", auth$email))
-      if (length(own_email) > 0) {
+      own_email <- friend_email == auth$email
+      if (own_email) {
         shinyalert::shinyalert(text = "Meh... You cannot invite yourself.")
         return(NULL)
       }

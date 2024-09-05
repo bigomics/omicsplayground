@@ -48,6 +48,7 @@ expression_table_genetable_ui <- function(
 expression_table_genetable_server <- function(id,
                                               res,
                                               organism,
+                                              show_pv,
                                               height,
                                               scrollY,
                                               watermark = FALSE) {
@@ -66,14 +67,28 @@ expression_table_genetable_server <- function(id,
       }
       rownames(res) <- sub(".*:", "", rownames(res))
 
-      ## kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
-      kk <- grep("meta.fx|meta.fc", colnames(res), invert = TRUE)
-      res <- res[, kk, drop = FALSE]
+      ## AZ: disabled on Sept1. useless..?
+      ## kk <- grep("meta.fx|meta.fc", colnames(res), invert = TRUE)
+      ## res <- res[, kk, drop = FALSE]
+
+      if (show_pv()) {
+        res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
+      } else {
+        res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+      }
 
       if (input$gx_top10) {
         res <- res[!is.na(res$logFC), ]
         res <- res[order(res$logFC, decreasing = TRUE), ]
-        res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
+        if (nrow(res) >= 20) {
+          res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
+        } else {
+          pos <- any(res$logFC > 0)
+          neg <- any(res$logFC < 0)
+          if (pos && neg) {
+            res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
+          }
+        }
       }
 
       numeric.cols <- which(sapply(res, is.numeric))
