@@ -917,14 +917,16 @@ UploadBoard <- function(id,
         organism <- upload_organism()
         alt.text <- ""
 
-        if (!organism %in% detected$species) {
+        browser()
+
+        if (upload_datatype() != "metabolomics" && !organism %in% detected$species) {
           detected_probetype <- "error"
           alt.species <- paste(detected$species, collapse = " or ")
           if (length(alt.species)) {
             alt.species <- paste0("<b>", alt.species, "</b>")
             alt.text <- paste0("Are these perhaps ", alt.species, "?")
           }
-        } else {
+        } else if (upload_datatype() != "metabolomics") {
           detected_probetype <- "error"
           if (organism %in% names(detected$probetype)) {
             detected_probetype <- detected$probetype[organism]
@@ -934,6 +936,13 @@ UploadBoard <- function(id,
         probetype(detected_probetype) ## set RV
 
         if (detected_probetype == "error") {
+
+          if (upload_datatype() == "metabolomics") {
+            alt.text =  paste0(c("ChEBI (recommended)", "HMDB", "PubChem",   "KEGG", "METLIN",  "SMILES"), collapse = ", ")
+            
+            alt.text <- paste0("<b>", alt.text, "</b>")
+            alt.text <- paste0("Valid probes are: ", alt.text, ".")
+          }
           dbg("[UploadBoard] ExtendedTask result has ERROR")
           shinyalert::shinyalert(
             title = "Probes not recognized!",
