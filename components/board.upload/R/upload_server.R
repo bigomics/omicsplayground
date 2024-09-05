@@ -917,39 +917,36 @@ UploadBoard <- function(id,
         organism <- upload_organism()
         alt.text <- ""
 
-        if (upload_datatype() != "metabolomics" && !organism %in% detected$species) {
-          # handle all data types failures other than metabolomics: trigger error to user if probetype not found
+        # detect_probetypes return NULL if no probetype is found across a given organism
+        # if NULL, probetype matching failed
+        if (is.null(detected$probetype[organism])) {
+          # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
           alt.species <- paste(detected$species, collapse = " or ")
           if (length(alt.species)) {
             alt.species <- paste0("<b>", alt.species, "</b>")
-            alt.text <- paste0("Are these perhaps ", alt.species, "?")
-          }
-        } else if (upload_datatype() != "metabolomics") {
-          # handle all data types success other than metabolomics: assign probetype to detected_probetype for selected organism (ugly)
-          detected_probetype <- "error"
-          if (organism %in% names(detected$probetype)) {
-            detected_probetype <- detected$probetype[organism]
-          }
-        }
 
-        if (upload_datatype() == "metabolomics" && is.null(detected$probetype)) {
-          # handle metabolomics failure: trigger error to user
-          detected_probetype <- "error"
+            # check if ANY organism matched the probes, if yes add a hint to the user
+            if (length(detected$species) > 1) {
+              alt.text <- paste0("Are these perhaps ", alt.species, "?")
+            }
+
+            if (upload_datatype() == "metabolomics") {
+              # overwrite alt.text for metabolomics
+              alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN"), collapse = ", ")
+
+              alt.text <- paste0("<b>", alt.text, "</b>")
+              alt.text <- paste0("Valid probes are: ", alt.text, ".")
+            }
+          }
         } else {
-          # handle metabolomics success: assign probetype to detected_probetype
+          # handle probetype matching success: assign detected probetype to detected_probetype
           detected_probetype <- detected$probetype[organism]
         }
-        
+
         probetype(detected_probetype) ## set RV
 
         if (detected_probetype == "error") {
-          if (upload_datatype() == "metabolomics") {
-            alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN", "SMILES"), collapse = ", ")
-
-            alt.text <- paste0("<b>", alt.text, "</b>")
-            alt.text <- paste0("Valid probes are: ", alt.text, ".")
-          }
           dbg("[UploadBoard] ExtendedTask result has ERROR")
           shinyalert::shinyalert(
             title = "Probes not recognized!",
