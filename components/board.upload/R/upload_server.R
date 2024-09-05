@@ -917,8 +917,6 @@ UploadBoard <- function(id,
         organism <- upload_organism()
         alt.text <- ""
 
-        browser()
-
         if (upload_datatype() != "metabolomics" && !organism %in% detected$species) {
           detected_probetype <- "error"
           alt.species <- paste(detected$species, collapse = " or ")
@@ -932,14 +930,17 @@ UploadBoard <- function(id,
             detected_probetype <- detected$probetype[organism]
           }
         }
+
+        if (upload_datatype() == "metabolomics" && is.null(detected$probetype)) {
+          detected_probetype <- "error"
+        }
         ## detected_probetype <- detected$probetype
         probetype(detected_probetype) ## set RV
 
         if (detected_probetype == "error") {
-
           if (upload_datatype() == "metabolomics") {
-            alt.text =  paste0(c("ChEBI (recommended)", "HMDB", "PubChem",   "KEGG", "METLIN",  "SMILES"), collapse = ", ")
-            
+            alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN", "SMILES"), collapse = ", ")
+
             alt.text <- paste0("<b>", alt.text, "</b>")
             alt.text <- paste0("Valid probes are: ", alt.text, ".")
           }
