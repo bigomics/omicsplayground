@@ -93,7 +93,8 @@ clustering_plot_splitmap_server <- function(id,
                                             hm_scale,
                                             hm_topmode,
                                             hm_clustk,
-                                            watermark = FALSE) {
+                                            watermark = FALSE,
+                                            labeltype) {
   moduleServer(id, function(input, output, session) {
     fullH <- 850
 
@@ -172,13 +173,13 @@ clustering_plot_splitmap_server <- function(id,
         rownames(zx) <- sub(".*:", "", rownames(zx))
 
         labeled_features <- NULL
-        if (input$labeltype == "feature") {
+        if (labeltype() == "feature") {
           rownames(zx) <- rownames(zx)
-        } else if (input$labeltype == "symbol") {
+        } else if (labeltype() == "symbol") {
           labeled_features <- pgx$genes[rownames(zx), "symbol"]
           labeled_features <- ifelse(is.na(labeled_features), rownames(zx), labeled_features)
           rownames(zx) <- labeled_features
-        } else if (input$labeltype == "name") {
+        } else if (labeltype() == "name") {
           labeled_features <- pgx$genes[rownames(zx), "gene_title"]
           labeled_features <- ifelse(is.na(labeled_features), rownames(zx), labeled_features)
           rownames(zx) <- labeled_features
@@ -274,14 +275,14 @@ clustering_plot_splitmap_server <- function(id,
         }
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
-        if (input$labeltype == "feature") {
+        if (labeltype() == "feature") {
           rownames(X) <- rownames(X)
-        } else if (input$labeltype == "symbol") {
+        } else if (labeltype() == "symbol") {
           labeled_features <- pgx$genes[rownames(X), "symbol"]
           labeled_features <- ifelse(is.na(labeled_features), rownames(X), labeled_features)
           rownames(X) <- labeled_features
           names(tooltips) <- labeled_features
-        } else if (input$labeltype == "name") {
+        } else if (labeltype() == "name") {
           labeled_features <- pgx$genes[rownames(X), "gene_title"]
           labeled_features <- ifelse(is.na(labeled_features), rownames(X), labeled_features)
           rownames(X) <- labeled_features

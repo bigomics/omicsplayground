@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx, labeltype = "feature") {
+ExpressionBoard <- function(id, pgx, labeltype = "probe") {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 

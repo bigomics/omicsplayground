@@ -161,7 +161,7 @@ app_server <- function(input, output, session) {
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
-  labeltype <- reactiveVal("probe") # can be probe (rownames counts), symbol or name
+  labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
@@ -357,7 +357,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["clustersamples"]) {
             info("[SERVER] calling ClusteringBoard module")
             insertBigTabItem("clustersamples")
-            ClusteringBoard("clustersamples", pgx = PGX)
+            ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["wordcloud"]) {
@@ -492,7 +492,7 @@ app_server <- function(input, output, session) {
       if (PGX$datatype == "metabolomics") {
         labeltype("name")
       } else {
-        labeltype("probe") # probe is feature (rownames of counts)
+        labeltype("feature") # probe is feature (rownames of counts)
       }
 
 

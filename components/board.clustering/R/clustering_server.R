@@ -12,7 +12,7 @@
 ##' @param pgx
 ##' @return
 ##' @author kwee
-ClusteringBoard <- function(id, pgx) {
+ClusteringBoard <- function(id, pgx, labeltype = "feature") {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
@@ -732,7 +732,8 @@ ClusteringBoard <- function(id, pgx) {
       hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      labeltype = labeltype
     )
 
     clustering_plot_clustpca_server("PCAplot",
