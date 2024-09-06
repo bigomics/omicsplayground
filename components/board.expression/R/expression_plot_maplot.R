@@ -112,7 +112,7 @@ expression_plot_maplot_server <- function(id,
       return(plot_data)
     })
 
-    plotly.RENDER <- function(marker.size=4, lab.cex=1) {
+    plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -126,7 +126,7 @@ expression_plot_maplot_server <- function(id,
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
-      
+
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -151,7 +151,7 @@ expression_plot_maplot_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER(marker.size=8, lab.cex=1.5) %>%
+      fig <- plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
         plotly::layout(
           font = list(size = 18),
           legend = list(
