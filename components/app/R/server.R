@@ -685,6 +685,16 @@ app_server <- function(input, output, session) {
     }
   )
 
+  # change label type based on selected input
+  shiny::observeEvent(
+    {
+      input$selected_labeltype
+    },
+    {
+      labeltype(input$selected_labeltype)
+    }
+  )
+
   ## -------------------------------------------------------------
   ## Session Timers
   ## -------------------------------------------------------------
