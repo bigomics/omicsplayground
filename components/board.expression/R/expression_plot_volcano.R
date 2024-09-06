@@ -112,7 +112,7 @@ expression_plot_volcano_server <- function(id,
     })
 
 
-    plotly.RENDER <- function(marker.size=4, lab.cex=1) {
+    plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -148,15 +148,15 @@ expression_plot_volcano_server <- function(id,
       )
       plt
     }
-    
+
     modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER(marker.size=8, lab.cex=1.5) %>%
+      fig <- plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
         plotly::layout(
           font = list(size = 18),
           legend = list(
             font = list(size = 18)
           )
-        ) 
+        )
       fig
     }
 
