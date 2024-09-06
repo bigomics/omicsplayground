@@ -106,14 +106,13 @@ expression_plot_volcano_server <- function(id,
         names = names,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
-        lab.cex = 1,
         fdr = fdr,
         lfc = lfc
       ))
     })
 
 
-    plotly.RENDER <- function() {
+    plotly.RENDER <- function(marker.size=4, lab.cex=1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -137,17 +136,28 @@ expression_plot_volcano_server <- function(id,
         marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.cex = pd[["lab.cex"]],
+        label.cex = lab.cex,
         group.names = c("group1", "group0"),
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
-        marker.size = 3,
+        marker.size = marker.size,
         showlegend = FALSE,
         color_up_down = TRUE
       )
       plt
+    }
+    
+    modal_plotly.RENDER <- function() {
+      fig <- plotly.RENDER(marker.size=8, lab.cex=1.5) %>%
+        plotly::layout(
+          font = list(size = 18),
+          legend = list(
+            font = list(size = 18)
+          )
+        ) 
+      fig
     }
 
     base.RENDER <- function() {
@@ -207,20 +217,6 @@ expression_plot_volcano_server <- function(id,
         marker.size = 1.5,
         showlegend = FALSE
       )
-    }
-
-    modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
-        ) %>%
-        plotly::style(
-          marker.size = 6
-        )
-      fig
     }
 
     plot_data_csv <- function() {

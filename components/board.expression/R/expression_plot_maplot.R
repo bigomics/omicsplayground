@@ -105,7 +105,6 @@ expression_plot_maplot_server <- function(id,
         symbols = symbols,
         features = rownames(res),
         names = names,
-        lab.cex = 1,
         fdr = fdr,
         lfc = lfc
       )
@@ -113,7 +112,7 @@ expression_plot_maplot_server <- function(id,
       return(plot_data)
     })
 
-    plotly.RENDER <- function() {
+    plotly.RENDER <- function(marker.size=4, lab.cex=1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -127,22 +126,21 @@ expression_plot_maplot_server <- function(id,
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
       }
-
+      
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
-        ## names = pd[["symbols"]],
         names = names,
-        label.names = ifelse(is.na(label.names), pd[["features"]], label.names),
+        label.names = label.names,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.cex = pd[["lab.cex"]],
+        label.cex = lab.cex,
         group.names = c("group1", "group0"),
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Average expression (log2)",
         ylab = "Effect size (log2FC)",
-        marker.size = 4,
+        marker.size = marker.size,
         displayModeBar = FALSE,
         showlegend = FALSE,
         source = "plot1",
@@ -153,14 +151,14 @@ expression_plot_maplot_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
+      fig <- plotly.RENDER(marker.size=8, lab.cex=1.5) %>%
         plotly::layout(
           font = list(size = 18),
           legend = list(
             font = list(size = 18)
           )
         )
-      fig <- plotly::style(fig, marker.size = 10)
+      ## fig <- plotly::style(fig, marker.size = 8)
       fig
     }
 
