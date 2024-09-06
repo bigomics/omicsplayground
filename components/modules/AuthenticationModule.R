@@ -941,6 +941,52 @@ LoginCodeAuthenticationModule <- function(id,
         return(USER)
       }
 
+      ## (OPTION HUBSPOT_CHECK defined step) Check if user has updated info on Hubspot
+      ## If not, redirect to auth where the popup will be prompted to the user
+      if (opt$HUBSPOT_CHECK) {
+        dbg("[LoginCodeAuthenticationModule] checking in hubspot for user data")
+        search_body <- create_hubspot_search(user_email)
+        credential <- file.path(ETC, "hubspot_creds")
+        if (!file.exists(credential)) {
+          stop("Error: Hubspot check is TRUE but no /etc/hubspot_creds file is on the deploy.")
+        }
+        HUBSPOT_SECRET <- readLines(credential)
+        response <- hubspot_post(
+            url = "https://api.hubapi.com/crm/v3/objects/contacts/search",
+            body = search_body,
+            access_token = HUBSPOT_SECRET
+        )
+        if (httr::content(response)$total == 1) {
+          lastname <- httr::content(response)$results[[1]]$properties$lastname
+          firstname <- httr::content(response)$results[[1]]$properties$firstname
+          jobtitle <- httr::content(response)$results[[1]]$properties$jobtitle
+          background <- httr::content(response)$results[[1]]$properties$background
+          bioinfos_team <- httr::content(response)$results[[1]]$properties$bioinformaticians_in_the_team
+          id <- httr::content(response)$results[[1]]$id
+          is_null_or_empty <- function(x) {
+              is.null(x) || (is.character(x) && x == "")
+          }
+          is_any_null_or_empty <- is_null_or_empty(lastname) |
+                  is_null_or_empty(firstname) |
+                  is_null_or_empty(jobtitle) |
+                  is_null_or_empty(background) |
+                  is_null_or_empty(bioinfos_team)
+          time_since_update <- as.numeric(Sys.Date() - as.Date(httr::content(response)$results[[1]]$updatedAt))
+          if (time_since_update < 1) {
+            dbg("[LoginCodeAuthenticationModule] user is less than one day old, skipping data complete check")
+            is_any_null_or_empty <- FALSE
+          }
+          if(is_any_null_or_empty) { # Missing info, redirect to auth
+            dbg("[LoginCodeAuthenticationModule] missing data for ", user_email, " redirecting to auth")
+            shinyjs::runjs(
+              "window.location.replace('https://auth.bigomics.ch/#!/login?email=hola@hola.com');"
+            )
+          }
+        } else {
+          warning("[HUBSPOT] Error: User ", user_email, " not on HubSpot")
+        }
+      }
+
       # create user_dir (always), set path, and set options
       user_dir <- file.path(PGX.DIR, user_email)
       create_user_dir_if_needed(user_dir, PGX.DIR)
