@@ -44,7 +44,6 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ## prepare data
     geneinfo_data <- shiny::reactive({
       feature <- r.gene()
@@ -56,8 +55,8 @@ dataview_module_geneinfo_server <- function(id,
       if (is.null(datatype) || is.na(datatype) || datatype == "") datatype <- "RNA-seq"
 
       jj <- match(feature, rownames(pgx$genes))
-      symbol <- pgx$genes$symbol[jj]      
-      
+      symbol <- pgx$genes$symbol[jj]
+
       if (datatype == "metabolomics") {
         info <- playbase::getMetaboliteInfo(
           organism = organism,
@@ -71,7 +70,7 @@ dataview_module_geneinfo_server <- function(id,
           datatype = datatype,
           as.link = TRUE
         )
-        
+
         ## reorder
         nn <- intersect(
           c(
@@ -80,13 +79,13 @@ dataview_module_geneinfo_server <- function(id,
           ),
           names(info)
         )
-        
+
         info <- info[nn]
         names(info) <- sub("gene_symbol", "symbol", names(info))
         names(info) <- sub("uniprot", "protein", names(info))
         names(info) <- sub("map_location", "genome location", names(info))
       }
-      
+
       if (is.null(info)) {
         info$summary <- "(no info available)"
         if (symbol %in% names(playdata::GENE_SUMMARY)) {
@@ -98,7 +97,7 @@ dataview_module_geneinfo_server <- function(id,
       ## add feature name is not symbol
       info$feature <- NULL
       if (feature != symbol) {
-        info <- c( feature = feature, info )
+        info <- c(feature = feature, info)
       }
       ## info$organism <- NULL
       ## info$databases <- NULL
