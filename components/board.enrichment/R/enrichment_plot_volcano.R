@@ -98,7 +98,7 @@ enrichment_plot_volcano_server <- function(id,
       ))
     })
 
-    plotly.RENDER <- function(marker.size=3, lab.cex=1) {
+    plotly.RENDER <- function(marker.size = 3, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -125,7 +125,7 @@ enrichment_plot_volcano_server <- function(id,
     }
 
     plotly.RENDER2 <- function() {
-      plotly.RENDER(marker.size = 8, lab.cex=1.5) %>%
+      plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
         plotly::layout(
           font = list(size = 18),
           legend = list(
@@ -133,7 +133,7 @@ enrichment_plot_volcano_server <- function(id,
           )
         )
     }
-    
+
     base.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)

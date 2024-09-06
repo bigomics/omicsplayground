@@ -174,7 +174,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             tooltips = NULL,
             cex.text = cex.text,
             cex.title = 1.1,
-            cex.axis = 1.3            
+            cex.axis = 1.3
           ) %>% plotly::layout(
             margin = list(l = 30, r = 10, t = 20, b = 40)
           )
@@ -191,7 +191,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             cbar.width = 15,
             tooltips = NULL,
             cex.text = cex.text,
-            cex.axis = 0.8                        
+            cex.axis = 0.8
           ) %>%
             plotly::add_text(
               x = x.title, y = y.title, text = gset.name,

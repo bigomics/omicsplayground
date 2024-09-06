@@ -76,7 +76,7 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       res <- getFilteredGeneSetTable()
       df <- df[intersect(rownames(df), rownames(res)), ] ## take intersection of current comparison
       df <- df[order(-df$rms.ES), ]
-      
+
       colnames(df) <- gsub("_", " ", colnames(df)) ## so it allows wrap line
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
       qv.cols <- grep("^q", colnames(df))
@@ -108,11 +108,11 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       )
 
       df$geneset <- paste(df$geneset, "&nbsp;", geneset_link)
-      
+
       dt <- DT::datatable(
         df,
         rownames = NULL,
-        escape = c(-1,-2),
+        escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",

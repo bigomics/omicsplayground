@@ -201,7 +201,7 @@ EnrichmentUI <- function(id) {
           caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
-        )        
+        )
       )
     ),
     shiny::tabPanel(

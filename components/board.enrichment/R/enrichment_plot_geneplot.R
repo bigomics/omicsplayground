@@ -97,7 +97,7 @@ enrichment_plot_geneplot_server <- function(id,
         if (!grouped && ncol(pgx$X) > 15) srt <- 60
         has.design <- !is.null(pgx$model.parameters$design)
         collapse.others <- ifelse(has.design, FALSE, TRUE)
-        
+
         playbase::pgx.plotExpression(
           pgx,
           probe,

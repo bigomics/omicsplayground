@@ -80,7 +80,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       )
       rpt$GS <- paste(rpt$GS, "&nbsp;", GS_link)
       colnames(rpt) <- sub("GS", "geneset", colnames(rpt))
-            
+
       is.numcol <- sapply(rpt, function(col) is.numeric(col) && !is.integer(col))
       numcols <- which(is.numcol & !colnames(rpt) %in% c("size"))
       numcols <- colnames(rpt)[numcols]
@@ -89,7 +89,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
       DT::datatable(rpt,
         class = "compact cell-border stripe hover",
         rownames = FALSE,
-        escape = c(-1, -2),        
+        escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,

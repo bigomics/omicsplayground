@@ -31,7 +31,7 @@ enrichment_plot_barplot_ui <- function(
       "Show other samples as 'others' in the plot",
       placement = "top",
       options = list(container = "body")
-    )    
+    )
   )
 
   PlotModuleUI(
@@ -88,7 +88,7 @@ enrichment_plot_barplot_server <- function(id,
       grouped <- !input$ungroup
       has.design <- !is.null(pgx$model.parameters$design)
       collapse.others <- ifelse(has.design, FALSE, TRUE)
-      
+
       ngrp <- length(unique(pgx$samples$group))
       srt <- ifelse(!grouped || ngrp > 4, 30, 0)
       if (!grouped && ncol(pgx$X) > 15) srt <- 60
@@ -98,7 +98,7 @@ enrichment_plot_barplot_server <- function(id,
         logscale = TRUE,
         level = "geneset",
         collapse.others = collapse.others,
-        showothers = input$show_others,        
+        showothers = input$show_others,
         grouped = grouped,
         cex = 1.1,
         srt = srt,

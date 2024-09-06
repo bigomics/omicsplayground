@@ -66,10 +66,9 @@ functional_plot_go_network_server <- function(id,
                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      
       plot_data <- shiny::reactive({
         fa_contrast <- fa_contrast()
-        score <- pgx$meta.go$pathscore[, fa_contrast]        
+        score <- pgx$meta.go$pathscore[, fa_contrast]
         res <- list(
           score = score,
           fa_contrast = fa_contrast
