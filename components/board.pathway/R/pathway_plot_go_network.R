@@ -66,11 +66,12 @@ functional_plot_go_network_server <- function(id,
                                               watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
+      
       plot_data <- shiny::reactive({
         fa_contrast <- fa_contrast()
-
+        score <- pgx$meta.go$pathscore[, fa_contrast]        
         res <- list(
-          pgx = pgx,
+          score = score,
           fa_contrast = fa_contrast
         )
         return(res)
@@ -78,9 +79,7 @@ functional_plot_go_network_server <- function(id,
 
       plot_RENDER <- shiny::reactive({
         res <- plot_data()
-        pgx <- res$pgx
         comparison <- res$fa_contrast
-
         require(igraph)
 
         methods <- c("fisher", "gsva", "camera")
@@ -181,8 +180,11 @@ functional_plot_go_network_server <- function(id,
 
         visNetwork::visNetwork(gr$nodes, gr$edges) %>%
           visNetwork::visEdges(
-            smooth = FALSE, hidden = FALSE, arrows = list(enabled = TRUE),
-            scaling = list(min = 10 * cex, max = 30 * cex), width = 5 * cex
+            smooth = FALSE,
+            hidden = FALSE,
+            arrows = list(enabled = TRUE),
+            scaling = list(min = 10 * cex, max = 30 * cex),
+            width = 5 * cex
           ) %>%
           visNetwork::visNodes(
             font = list(size = font.size * cex, vadjust = 0),
@@ -197,6 +199,7 @@ functional_plot_go_network_server <- function(id,
         "plot",
         plotlib = "visnetwork",
         func = plot_RENDER,
+        csvFunc = plot_data,
         res = 72,
         pdf.width = 10, pdf.height = 8,
         add.watermark = watermark

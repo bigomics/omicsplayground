@@ -208,13 +208,13 @@ expression_plot_volcano_server <- function(id,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         label.names = label.names,
-        label.cex = 5,
+        label.cex = 6,
         axis.text.size = 22,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
-        marker.size = 1.5,
+        marker.size = 1.8,
         showlegend = FALSE
       )
     }
