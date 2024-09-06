@@ -941,12 +941,6 @@ LoginCodeAuthenticationModule <- function(id,
         return(USER)
       }
 
-      ## (OPTION HUBSPOT_CHECK defined step) Check if user has updated info on Hubspot
-      ## If not, redirect to auth where the popup will be prompted to the user
-      if (opt$HUBSPOT_CHECK) {
-        checkHubspot(user_email)
-      }
-
       # create user_dir (always), set path, and set options
       user_dir <- file.path(PGX.DIR, user_email)
       create_user_dir_if_needed(user_dir, PGX.DIR)

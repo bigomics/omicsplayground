@@ -179,8 +179,7 @@ opt.default <- list(
   TIMEOUT = 0,
   WATERMARK = TRUE,
   APACHE_COOKIE_PATH = OPG,
-  DEVMODE = FALSE,
-  HUBSPOT_CHECK = FALSE
+  DEVMODE = FALSE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")

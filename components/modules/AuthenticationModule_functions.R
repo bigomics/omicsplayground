@@ -318,53 +318,7 @@ checkEmail <- function(email, domain = NULL, blocked_domain = NULL, user_databas
   list(valid = TRUE, "email ok")
 }
 
-checkHubspot <- function(user_email) {
-  dbg("[HubSpotCheckModule] checking hubspot for user data for email: ", user_email)
-  search_body <- create_hubspot_search(user_email)
-  credential <- file.path(ETC, "hubspot_creds")
-  if (!file.exists(credential)) {
-    stop("[HubSpotCheckModule] Error: Hubspot check is TRUE but no /etc/hubspot_creds file is on the deploy.")
-  }
-  HUBSPOT_SECRET <- readLines(credential)
-  response <- hubspot_post(
-      url = "https://api.hubapi.com/crm/v3/objects/contacts/search",
-      body = search_body,
-      access_token = HUBSPOT_SECRET
-  )
-  if (httr::content(response)$total == 1) {
-    lastname <- httr::content(response)$results[[1]]$properties$lastname
-    firstname <- httr::content(response)$results[[1]]$properties$firstname
-    jobtitle <- httr::content(response)$results[[1]]$properties$jobtitle
-    background <- httr::content(response)$results[[1]]$properties$background
-    bioinfos_team <- httr::content(response)$results[[1]]$properties$bioinformaticians_in_the_team
-    id <- httr::content(response)$results[[1]]$id
-    is_null_or_empty <- function(x) {
-        is.null(x) || (is.character(x) && x == "")
-    }
-    is_any_null_or_empty <- is_null_or_empty(lastname) |
-            is_null_or_empty(firstname) |
-            is_null_or_empty(jobtitle) |
-            is_null_or_empty(background) |
-            is_null_or_empty(bioinfos_team)
-    time_since_update <- as.numeric(Sys.Date() - as.Date(httr::content(response)$results[[1]]$updatedAt))
-    if (time_since_update < 1) {
-      dbg("[HubSpotCheckModule] user is less than one day old, skipping data complete check")
-      is_any_null_or_empty <- FALSE
-    }
-    if(is_any_null_or_empty) { # Missing info, redirect to auth
-      dbg("[HubSpotCheckModule] missing data for ", user_email, " redirecting to auth")
-      shinyjs::runjs(
-        paste0(
-          "window.location.replace('https://auth.bigomics.ch/#!/login?email=",
-          user_email,
-          "');"
-        )
-      )
-    }
-  } else {
-    warning("[HubSpotCheckModule] Error: User ", user_email, " not on HubSpot")
-  }
-}
+
 
 ## ================================================================================
 ## ================================= END OF FILE ==================================
