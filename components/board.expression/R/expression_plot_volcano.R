@@ -116,7 +116,6 @@ expression_plot_volcano_server <- function(id,
     plotly.RENDER <- function() {
       pd <- plot_data()
       shiny::req(pd)
-      browser()
 
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
@@ -125,7 +124,7 @@ expression_plot_volcano_server <- function(id,
         names <- pd[["features"]]
         label.names <- pd[["names"]]
       } else {
-        names <- pd[["symbols"]]
+        names <- pd[["features"]]
         label.names <- pd[["features"]]
       }
 
@@ -158,6 +157,9 @@ expression_plot_volcano_server <- function(id,
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
+      } else if (labeltype() == "name") {
+        names <- pd[["features"]]
+        label.names <- pd[["names"]]
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
@@ -187,6 +189,9 @@ expression_plot_volcano_server <- function(id,
       if (labeltype() == "symbol") {
         names <- pd[["features"]]
         label.names <- pd[["symbols"]]
+      } else if (labeltype() == "name") {
+        names <- pd[["features"]]
+        label.names <- pd[["names"]]
       } else {
         names <- pd[["symbols"]]
         label.names <- pd[["features"]]
