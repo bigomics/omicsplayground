@@ -488,15 +488,6 @@ app_server <- function(input, output, session) {
     }
 
     if (env$load$is_data_loaded() == 1) {
-      # choose the default labeltype based on datatype
-      if (PGX$datatype == "metabolomics") {
-        labeltype("name")
-      } else {
-        labeltype("feature") # probe is feature (rownames of counts)
-      }
-
-
-
       # this is a function - like "handleSettings()" in bigdash- needed to
       # make the settings sidebar show up for the inserted tabs
       shinyjs::runjs(
@@ -634,6 +625,13 @@ app_server <- function(input, output, session) {
       }
       dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
+
+      # choose the default labeltype based on datatype
+      if (PGX$datatype == "metabolomics") {
+        labeltype("name")
+      } else {
+        labeltype("feature") # probe is feature (rownames of counts)
+      }
 
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
