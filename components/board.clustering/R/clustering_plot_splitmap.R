@@ -26,14 +26,7 @@ clustering_plot_splitmap_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  feature_labels <- c("feature", "symbol", "name")
-
   splitmap_opts <- shiny::tagList(
-    withTooltip(shiny::selectInput(ns("labeltype"), "Label type:", feature_labels, width = "100%"),
-      "Choose a label type to be displayed in the heatmap.",
-      placement = "right", options = list(container = "body")
-    ),
-    shiny::br(),
     shiny::fillRow(
       height = 50,
       withTooltip(shiny::numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width = "100%"),
