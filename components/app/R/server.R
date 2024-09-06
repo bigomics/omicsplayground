@@ -161,6 +161,7 @@ app_server <- function(input, output, session) {
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
+  labeltype <- reactiveVal("probe") # can be probe (rownames counts), symbol or name
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
@@ -369,7 +370,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["diffexpr"]) {
             info("[SERVER] calling ExpressionBoard module")
             insertBigTabItem("diffexpr")
-            ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
+            ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) -> env$diffexpr
           }
 
           if (ENABLED["clusterfeatures"]) {
@@ -487,6 +488,15 @@ app_server <- function(input, output, session) {
     }
 
     if (env$load$is_data_loaded() == 1) {
+      # choose the default labeltype based on datatype
+      if (PGX$datatype == "metabolomics") {
+        labeltype("name")
+      } else {
+        labeltype("probe") # probe is feature (rownames of counts)
+      }
+
+
+
       # this is a function - like "handleSettings()" in bigdash- needed to
       # make the settings sidebar show up for the inserted tabs
       shinyjs::runjs(

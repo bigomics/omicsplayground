@@ -127,10 +127,10 @@ ExpressionInputs <- function(id) {
           placement = "top", options = list(container = "body")
         ),
         br(),
-        shiny::radioButtons(ns("labeltype"), "Plot labels:",
-          c("symbol", "feature" = "probe", "name"),
-          inline = TRUE
-        ),
+        # shiny::radioButtons(ns("labeltype"), "Plot labels:",
+        #   c("symbol", "feature" = "probe", "name"),
+        #   inline = TRUE
+        # ),
         br(),
         withTooltip(
           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
