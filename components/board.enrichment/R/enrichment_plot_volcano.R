@@ -121,7 +121,9 @@ enrichment_plot_volcano_server <- function(id,
         showlegend = FALSE,
         color_up_down = TRUE
       ) %>%
-        plotly::layout(margin = list(b = 60))
+        plotly::layout(
+          margin = list(l = 0, r = 0, t = 0, b = 0)
+        )
     }
 
     plotly.RENDER2 <- function() {
@@ -141,6 +143,7 @@ enrichment_plot_volcano_server <- function(id,
       playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
+        title = NULL,
         names = pd[["fc.genes"]],
         label.names = pd[["fc.genes"]],
         highlight = pd[["sel.genes"]],
@@ -169,9 +172,9 @@ enrichment_plot_volcano_server <- function(id,
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10q)",
-        marker.size = 1.8,
+        marker.size = 2,
         label.cex = 6,
-        axis.text.size = 22,
+        axis.text.size = 24,
         showlegend = FALSE
       )
     }

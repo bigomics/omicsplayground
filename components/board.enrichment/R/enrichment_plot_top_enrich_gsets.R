@@ -150,7 +150,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       qv <- res$qv
 
       x.title <- 0.01 * length(rnk0)
-      y.title <- max(rnk0)
+      y.title <- 0.96 * max(rnk0)
 
       ntop <- length(gmt.genes)
       if (ntop == 1) rowcol <- c(1, 1)
