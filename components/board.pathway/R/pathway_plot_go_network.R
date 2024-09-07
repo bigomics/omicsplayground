@@ -189,9 +189,9 @@ functional_plot_go_network_server <- function(id,
             font = list(size = font.size * cex, vadjust = 0),
             scaling = list(min = 1 * cex, max = 80 * cex)
           ) %>%
-          visNetwork::visPhysics(stabilization = FALSE) %>%
+          visNetwork::visPhysics(enabled = FALSE, stabilization = FALSE) %>%
           visNetwork::visOptions(highlightNearest = list(enabled = T, degree = 1, hover = TRUE)) %>%
-          visNetwork::visPhysics(enabled = FALSE)
+          visNetwork::visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = TRUE)        
       })
 
       PlotModuleServer(
