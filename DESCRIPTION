@@ -68,6 +68,7 @@ Imports:
     sodium,
     sortable,
     svgPanZoom,
+    tidyr,
     tools,
     waiter,
     webshot2,
