@@ -38,7 +38,7 @@ signature_plot_volcano_ui <- function(
       shiny::radioButtons(
         inputId = ns("showlabel"),
         label = "Show labels:",
-        choices = c("no","top10","all"),
+        choices = c("no", "top10", "all"),
         selected = "top10",
         inline = TRUE
       ),
@@ -137,13 +137,13 @@ signature_plot_volcano_server <- function(id,
 
       showlabel <- input$showlabel
       label <- pd[["sel.gene"]]
-      if(showlabel == "no") label <- NULL
-      if(showlabel == "top10") {
+      if (showlabel == "no") label <- NULL
+      if (showlabel == "top10") {
         ii <- match(label, pd[["features"]])
-        rr <- rowMeans(pd$fc[ii,]**2) + rowMeans(log10(pd$qv[ii,])**2)
+        rr <- rowMeans(pd$fc[ii, ]**2) + rowMeans(log10(pd$qv[ii, ])**2)
         label <- head(label[order(-rr)], 10)
       }
-      
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = pd[["fc"]],
@@ -151,7 +151,7 @@ signature_plot_volcano_server <- function(id,
         names = pd[["features"]],
         label.names = pd[["symbols"]],
         label.cex = label.cex,
-        cex = cex,        
+        cex = cex,
         by_sig = FALSE,
         highlight = pd[["gsea"]]$gset,
         label = label,
@@ -227,10 +227,10 @@ signature_plot_volcano_server <- function(id,
 
       showlabel <- input$showlabel
       label <- pd[["sel.gene"]]
-      if(showlabel == "no") label <- NULL
-      if(showlabel == "top10") {
+      if (showlabel == "no") label <- NULL
+      if (showlabel == "top10") {
         ii <- match(label, pd[["features"]])
-        rr <- rowMeans(pd$fc[ii,]**2) + rowMeans(log10(pd$qv[ii,])**2)
+        rr <- rowMeans(pd$fc[ii, ]**2) + rowMeans(log10(pd$qv[ii, ])**2)
         label <- head(label[order(-rr)], 10)
       }
 

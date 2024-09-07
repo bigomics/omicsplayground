@@ -191,7 +191,7 @@ functional_plot_go_network_server <- function(id,
           ) %>%
           visNetwork::visPhysics(enabled = FALSE, stabilization = FALSE) %>%
           visNetwork::visOptions(highlightNearest = list(enabled = T, degree = 1, hover = TRUE)) %>%
-          visNetwork::visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = TRUE)        
+          visNetwork::visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = TRUE)
       })
 
       PlotModuleServer(
