@@ -194,7 +194,7 @@ EnrichmentUI <- function(id) {
         ),
         enrichment_plot_freq_top_gsets_ui(
           ns("topEnrichedFreq"),
-          title = "Frequency in top gene sets",
+          title = "Most frequent genes",
           info.text = "Barchart showing the number of times a gene is present in the top-N genesets for the selected {Contrast} sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
           info.methods = "See Top enriched gene sets",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses",
