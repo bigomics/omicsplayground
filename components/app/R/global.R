@@ -218,7 +218,19 @@ if (opt$DEVMODE) {
 ## show options
 message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")), collapse = "\n"), "\n")
 
-
+## ------------------------------------------------
+## Check HubSpot connection
+## ------------------------------------------------
+if (opt$HUBSPOT_CHECK) {
+  if (dir.exists(paste0(OPG, "/../omicsplayground-hubconnect"))) {
+    dbg("[HubspotConnect]: Folder found, reading files")
+    list_files <- list.files(paste0(OPG, "/../omicsplayground-hubconnect/R"), full.names = TRUE)
+    sapply(list_files, source)
+  } else {
+    dbg("[HubspotConnect]: Folder NOT found, seting Hubspot check to FALSE")
+    opt$HUBSPOT_CHECK <- FALSE
+  }
+}
 
 ## ------------------------------------------------
 ## ENABLE/DISABLE BOARDS
