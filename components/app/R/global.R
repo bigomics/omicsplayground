@@ -220,6 +220,7 @@ message("\n", paste(paste(names(opt), "\t= ", sapply(opt, paste, collapse = " ")
 ## ------------------------------------------------
 ## Check HubSpot connection
 ## ------------------------------------------------
+if(is.null(opt$HUBSPOT_CHECK)) opt$HUBSPOT_CHECK <- FALSE
 if (opt$HUBSPOT_CHECK) {
   if (dir.exists(paste0(OPG, "/../omicsplayground-hubconnect"))) {
     dbg("[HubspotConnect]: Folder found, reading files")
