@@ -18,9 +18,17 @@ enrichment_plot_barplot_ui <- function(
   options <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
-        ns("gs_ungroup1"), "ungroup samples", FALSE
+        ns("ungroup"), "ungroup samples", FALSE
       ),
       "Ungroup samples in the plot",
+      placement = "top",
+      options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_others"), "show others", FALSE
+      ),
+      "Show other samples as 'others' in the plot",
       placement = "top",
       options = list(container = "body")
     )
@@ -77,10 +85,9 @@ enrichment_plot_barplot_server <- function(id,
 
       grouped <- TRUE
       grouped <- FALSE
-      grouped <- !input$gs_ungroup1
+      grouped <- !input$ungroup
       has.design <- !is.null(pgx$model.parameters$design)
       collapse.others <- ifelse(has.design, FALSE, TRUE)
-      #
 
       ngrp <- length(unique(pgx$samples$group))
       srt <- ifelse(!grouped || ngrp > 4, 30, 0)
@@ -91,6 +98,7 @@ enrichment_plot_barplot_server <- function(id,
         logscale = TRUE,
         level = "geneset",
         collapse.others = collapse.others,
+        showothers = input$show_others,
         grouped = grouped,
         cex = 1.1,
         srt = srt,

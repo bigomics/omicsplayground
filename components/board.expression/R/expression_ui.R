@@ -126,10 +126,12 @@ ExpressionInputs <- function(id) {
           "Show p-values in the table. WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
           placement = "top", options = list(container = "body")
         ),
+        br(),
         shiny::radioButtons(ns("labeltype"), "Plot labels:",
-          c("symbol", "probe", "name"),
+          c("symbol", "feature" = "probe", "name"),
           inline = TRUE
         ),
+        br(),
         withTooltip(
           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
             choices = NULL, inline = TRUE

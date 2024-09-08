@@ -556,7 +556,7 @@ app_server <- function(input, output, session) {
       tag <- shiny::actionButton(
         "dataset_click", pgx.name,
         class = "quick-button",
-        style = "border: none; color: black; font-size: 1em;"
+        style = "border: none; color: black; font-size: 0.9em;"
       )
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))

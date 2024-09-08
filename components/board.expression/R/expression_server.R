@@ -497,6 +497,9 @@ ExpressionBoard <- function(id, pgx) {
         }
       })
       names(Q) <- names(P) <- names(F) <- comp
+      F <- do.call(cbind, F)
+      P <- do.call(cbind, P)
+      Q <- do.call(cbind, Q)
       ct <- list(Q = Q, P = P, F = F)
       return(ct)
     })

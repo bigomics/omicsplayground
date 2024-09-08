@@ -24,11 +24,16 @@ enrichment_plot_geneplot_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("gs_ungroup2"), "ungroup samples", FALSE),
+    withTooltip(shiny::checkboxInput(ns("ungroup"), "ungroup samples", FALSE),
       "Ungroup samples in the plot",
       placement = "top",
       options = list(container = "body")
-    )
+    ),
+    withTooltip(shiny::checkboxInput(ns("show_others"), "show others", FALSE),
+      "Show other samples as 'others' in the plot",
+      placement = "top",
+      options = list(container = "body")
+    ),
   )
 
   PlotModuleUI(
@@ -87,9 +92,11 @@ enrichment_plot_geneplot_server <- function(id,
         probe <- sel$rn
         gene <- sel$gene
         ngrp <- length(unique(pgx$samples$group))
-        grouped <- !input$gs_ungroup2
+        grouped <- !input$ungroup
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)
         if (!grouped && ncol(pgx$X) > 15) srt <- 60
+        has.design <- !is.null(pgx$model.parameters$design)
+        collapse.others <- ifelse(has.design, FALSE, TRUE)
 
         playbase::pgx.plotExpression(
           pgx,
@@ -97,7 +104,8 @@ enrichment_plot_geneplot_server <- function(id,
           comp = comp0,
           logscale = TRUE,
           level = "gene",
-          collapse.others = FALSE,
+          collapse.others = collapse.others,
+          showothers = input$show_others,
           grouped = grouped,
           srt = srt,
           main = "",

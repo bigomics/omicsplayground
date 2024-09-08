@@ -44,17 +44,18 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ## prepare data
     geneinfo_data <- shiny::reactive({
       feature <- r.gene()
-      shiny::req(feature)
+      shiny::req(feature %in% rownames(pgx$X))
 
       organism <- pgx$organism
-
-      if (is.null(organism) || organism == "") organism <- "Human"
+      if (is.null(organism) || is.na(organism) || organism == "") organism <- "Human"
+      datatype <- pgx$datatype
+      if (is.null(datatype) || is.na(datatype) || datatype == "") datatype <- "RNA-seq"
 
       jj <- match(feature, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-      datatype <- pgx$datatype
 
       if (datatype == "metabolomics") {
         info <- playbase::getMetaboliteInfo(
@@ -69,8 +70,21 @@ dataview_module_geneinfo_server <- function(id,
           datatype = datatype,
           as.link = TRUE
         )
-      }
 
+        ## reorder
+        nn <- intersect(
+          c(
+            "gene_symbol", "organism", "name", "map_location",
+            "uniprot", "databases", "summary", names(info)
+          ),
+          names(info)
+        )
+
+        info <- info[nn]
+        names(info) <- sub("gene_symbol", "symbol", names(info))
+        names(info) <- sub("uniprot", "protein", names(info))
+        names(info) <- sub("map_location", "genome location", names(info))
+      }
 
       if (is.null(info)) {
         info$summary <- "(no info available)"
@@ -78,26 +92,15 @@ dataview_module_geneinfo_server <- function(id,
           info$summary <- playdata::GENE_SUMMARY[symbol]
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
-        if (feature != symbol) {
-          info[["feature"]] <- feature
-        }
-        ## info$organism <- NULL
-        ## info$databases <- NULL
-
-        ## reorder
-        nn <- intersect(
-          c(
-            "feature", "gene_symbol", "uniprot", "organism", "name", "map_location",
-            "databases", "summary", names(info)
-          ),
-          names(info)
-        )
-        info <- info[nn]
-        names(info) <- sub("gene_symbol", "symbol", names(info))
-        names(info) <- sub("uniprot", "protein", names(info))
-        names(info) <- sub("map_location", "genome location", names(info))
       }
 
+      ## add feature name is not symbol
+      info$feature <- NULL
+      if (feature != symbol) {
+        info <- c(feature = feature, info)
+      }
+      ## info$organism <- NULL
+      ## info$databases <- NULL
 
       # prepare info for display
       res <- c()
