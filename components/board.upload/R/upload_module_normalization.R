@@ -756,7 +756,7 @@ upload_module_normalization_server <- function(
                       "maxMedian", "maxSum", ## "TMM",
                       "reference"
                     ),
-                    selected = ifelse(tolower(upload_datatype()) == "proteomics",
+                    selected = ifelse(grepl("proteomics", upload_datatype(), ignore.case = TRUE),
                       "maxMedian", "CPM"
                     )
                   ),
