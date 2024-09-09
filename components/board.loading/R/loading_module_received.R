@@ -50,12 +50,12 @@ upload_module_received_server <- function(id,
               paste(
                 "You have received a dataset from another user. Please accept or decline it in the Sharing panel."
               ),
-              showConfirmButton = FALSE,              
-##            confirmButtonText = "Go to shared datasets",
+              showConfirmButton = FALSE,
+              ##            confirmButtonText = "Go to shared datasets",
               showCancelButton = TRUE,
               cancelButtonText = "OK",
               inputId = "new_dataset_received"
-##              callbackR = show_shared_tab
+              ##              callbackR = show_shared_tab
             )
           }
           nr_ds_received(current_ds_received)
@@ -90,11 +90,10 @@ upload_module_received_server <- function(id,
             )
             ## return(NULL)
           } else {
-
             # split the file name into user who shared and file name
             received_pgx <- sub("__to__.*", "", received_files)
             received_from <- gsub(".*__from__|__$", "", received_files)
-            
+
             accept_btns <- makebuttonInputs2(
               FUN = actionButton,
               len = received_files,
@@ -109,7 +108,7 @@ upload_module_received_server <- function(id,
               ## onclick = paste0('Shiny.onInputChange(\"',ns("accept_pgx"),'\", this.id, {priority: "event"})')
               onclick = paste0('Shiny.onInputChange("', ns("accept_pgx"), '", this.id, {priority: "event"})')
             )
-            
+
             decline_btns <- makebuttonInputs2(
               FUN = actionButton,
               len = received_files,
@@ -123,7 +122,7 @@ upload_module_received_server <- function(id,
               tooltip = "Declinie dataset",
               onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\", this.id, {priority: "event"})')
             )
-            
+
             df <- data.frame(
               Dataset = received_pgx,
               From = received_from,

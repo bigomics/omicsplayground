@@ -95,7 +95,7 @@ LoadingBoard <- function(id,
       shared_files <- pgxshared$getSharedFiles()
       num_received <- length(received_files)
       num_shared <- length(shared_files)
-      
+
       ## if (num_received == 0 && num_shared == 0) {
       ##   dbg("[sharing_panel_ui] no shared datasets!")
       ##   return(paste("No shared datasets in queue."))
@@ -115,7 +115,7 @@ LoadingBoard <- function(id,
         br()
       )
 
-      out <- shiny::tagList(out1, out2) 
+      out <- shiny::tagList(out1, out2)
       return(out)
     })
 
