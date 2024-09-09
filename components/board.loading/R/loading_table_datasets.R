@@ -239,7 +239,9 @@ loading_table_datasets_server <- function(id,
 
     table_data <- shiny::reactive({
       df <- getFilteredPGXINFO()
-      if (is.null(df)) { return(NULL) }
+      if (is.null(df)) {
+        return(NULL)
+      }
       df$dataset <- sub("[.]pgx$", "", df$dataset)
       df$conditions <- gsub("[,]", " ", df$conditions)
       df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
