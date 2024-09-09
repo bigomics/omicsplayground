@@ -320,7 +320,7 @@ checkEmail <- function(email, domain = NULL, blocked_domain = NULL, user_databas
 
 chueckHubspotData <- function(user_email) {
   is_data_complete <- checkHubspot(user_email)
-  if(!is_data_complete) {
+  if (!is_data_complete) {
     dbg("[HubspotCheckModule]: Redirecting", user_email, "to auth page")
     shinyjs::runjs(
       paste0(
