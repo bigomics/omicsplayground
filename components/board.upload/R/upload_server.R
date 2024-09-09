@@ -965,7 +965,7 @@ UploadBoard <- function(id,
         ## wrong datatype. just give warning. or should we change datatype?
         if (detected_probetype != "error" &&
           any(grepl("PROT", detected_probetype)) &&
-          !(upload_datatype() %in% c("proteomics"))) {
+          !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
           shinyalert::shinyalert(
             title = "Is this proteomics data?",
             text = paste0(

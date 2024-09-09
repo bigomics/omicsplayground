@@ -139,7 +139,8 @@ upload_table_preview_counts_server <- function(
                 info.text = info.text,
                 caption = caption,
                 label = "",
-                show.maximize = FALSE
+                show.maximize = FALSE,
+                translate_js = FALSE
               ),
               bslib::card(
                 bslib::navset_pill(

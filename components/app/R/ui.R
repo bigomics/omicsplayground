@@ -319,6 +319,7 @@ app_ui <- function(x) {
           div(
             id = "mainmenu_appsettings",
             bigdash::navbarDropdown(
+              auto_close = "outside",
               shiny::icon("cog"),
               div(
                 class = "dropdown-items",
