@@ -94,7 +94,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
         sample = as.vector(mapply(rep, colnames(hist)[-c(1, 2)], nrow(hist)))
       )
 
-      if (DATATYPEPGX == "proteomics") {
+      if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
         xlab <- "Abundance"
       } else {
         xlab <- "Expression"

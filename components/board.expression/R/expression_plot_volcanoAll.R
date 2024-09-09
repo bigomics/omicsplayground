@@ -79,9 +79,6 @@ expression_plot_volcanoAll_server <- function(id,
       Q <- ct$Q
       P <- ct$P
 
-      dbg("[expression_plot_volcanoAll_server] dimF = ", dim(F))
-      ##      browser()
-
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
       comp <- colnames(F)
@@ -186,7 +183,7 @@ expression_plot_volcanoAll_server <- function(id,
 
       fc <- pd$F
       qv <- pd$P
-      gene_names <- rep(pd$names, each = ncol(fc))
+      feature_names <- rep(rownames(fc), each = ncol(fc))
       label.names <- rep(pd$label.names, each = ncol(fc))
       pivot.fc <- data.frame(fc) %>%
         tidyr::pivot_longer(
@@ -207,7 +204,7 @@ expression_plot_volcanoAll_server <- function(id,
       playbase::ggVolcano(
         x,
         y,
-        gene_names,
+        names = feature_names,
         facet = facet,
         label = pd[["lab.genes"]],
         highlight = pd[["sel.genes"]],

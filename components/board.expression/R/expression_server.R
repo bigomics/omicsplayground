@@ -351,10 +351,11 @@ ExpressionBoard <- function(id, pgx, labeltype = "probe") {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
-      jj <- match(fam.genes, res$symbol)
-      sel.genes <- rownames(res)[setdiff(jj, NA)]
+      ##      jj <- match(fam.genes, res$symbol)
+      jj <- which(res$symbol %in% fam.genes)
+      sel.features <- rownames(res)[setdiff(jj, NA)]
 
-      fc.genes <- rownames(res)
+      features <- rownames(res)
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
@@ -367,14 +368,14 @@ ExpressionBoard <- function(id, pgx, labeltype = "probe") {
       scaled.y <- scale(y, center = FALSE)
 
       if (input$show_pv) {
-        sig.genes <- fc.genes[which(pval <= fdr & abs(x) > lfc)]
+        sig.genes <- features[which(pval <= fdr & abs(x) > lfc)]
       } else {
-        sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
+        sig.genes <- features[which(qval <= fdr & abs(x) > lfc)]
       }
-      sel.genes <- intersect(sig.genes, sel.genes)
+      sel.features <- intersect(sig.genes, sel.features)
 
       impt <- function(g) {
-        j <- match(g, fc.genes)
+        j <- match(g, features)
         x1 <- scaled.x[j]
         y1 <- scaled.y[j]
         x <- sign(x1) * (x1**2 + 0.25 * y1**2)
@@ -386,25 +387,25 @@ ExpressionBoard <- function(id, pgx, labeltype = "probe") {
       gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
 
       if (gene.selected && !gset.selected) {
-        lab.genes <- rownames(df1)[genetable_rows_selected()]
-        sel.genes <- lab.genes
+        lab.features <- rownames(df1)[genetable_rows_selected()]
+        sel.features <- lab.features
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
-        sel.genes <- genes_in_sel_geneset()
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
+        sel.features <- genes_in_sel_geneset()
+        lab.features <- c(
+          head(sel.features[order(impt(sel.features))], 10),
+          head(sel.features[order(-impt(sel.features))], 10)
         )
         lab.cex <- 1
       } else {
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
+        lab.features <- c(
+          head(sel.features[order(impt(sel.features))], 10),
+          head(sel.features[order(-impt(sel.features))], 10)
         )
         lab.cex <- 1
       }
 
-      res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes, "fc.genes" = fc.genes)
+      res <- list("sel.genes" = sel.features, "lab.genes" = lab.features, "fc.genes" = features)
       return(res)
     })
 
