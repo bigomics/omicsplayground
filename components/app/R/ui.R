@@ -320,13 +320,10 @@ app_ui <- function(x) {
             id = "mainmenu_appsettings",
             bigdash::navbarDropdown(
               shiny::icon("cog"),
-              bigdash::navbarDropdownItem(
-                bslib::input_switch("enable_beta", "Enable beta features")
-              ),
-              bigdash::navbarDropdownItem(
-                bslib::input_switch("enable_info", "Show info boxes", value = TRUE)
-              ),
-              bigdash::navbarDropdownItem(
+              div(
+                class = "dropdown-items",
+                bslib::input_switch("enable_beta", "Enable beta features"),
+                bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
                 selector_switch(
                   class = "card-footer-checked",
                   label = "show captions",
