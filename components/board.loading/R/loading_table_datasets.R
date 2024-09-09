@@ -239,9 +239,7 @@ loading_table_datasets_server <- function(id,
 
     table_data <- shiny::reactive({
       df <- getFilteredPGXINFO()
-      if (is.null(df)) {
-        return(NULL)
-      }
+      if (is.null(df)) { return(NULL) }
       df$dataset <- sub("[.]pgx$", "", df$dataset)
       df$conditions <- gsub("[,]", " ", df$conditions)
       df$conditions <- sapply(as.character(df$conditions), andothers, split = " ", n = 5)
@@ -250,7 +248,6 @@ loading_table_datasets_server <- function(id,
       df$nsets <- NULL
       return(df)
     })
-
 
     pgxTable_DT <- reactive({
       df <- table_data()
@@ -266,7 +263,7 @@ loading_table_datasets_server <- function(id,
       }
       validate(need(nrow(df) > 0, "Need at least one dataset!"))
 
-      df$creator <- NULL
+      ## df$creator <- NULL
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))
