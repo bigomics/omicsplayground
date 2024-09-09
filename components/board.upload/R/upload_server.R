@@ -916,13 +916,13 @@ UploadBoard <- function(id,
         detected <- checkprobes_task$result()
         organism <- upload_organism()
         alt.text <- ""
-        
+
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
         e1 <- is.null(detected$probetype[organism])
         e2 <- is.na(detected$probetype[organism])
         e3 <- !(organism %in% detected$species)
-        task_failed <- (e1 || e2 || e3)        
+        task_failed <- (e1 || e2 || e3)
         if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
