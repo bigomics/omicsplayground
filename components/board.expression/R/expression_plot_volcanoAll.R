@@ -79,9 +79,6 @@ expression_plot_volcanoAll_server <- function(id,
       Q <- ct$Q
       P <- ct$P
 
-      dbg("[expression_plot_volcanoAll_server] dimF = ", dim(F))
-      ##      browser()
-
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
       comp <- colnames(F)
