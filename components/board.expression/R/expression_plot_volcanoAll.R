@@ -186,7 +186,7 @@ expression_plot_volcanoAll_server <- function(id,
 
       fc <- pd$F
       qv <- pd$P
-      gene_names <- rep(pd$names, each = ncol(fc))
+      gene_names <- rep(rownames(fc), each = ncol(fc))
       label.names <- rep(pd$label.names, each = ncol(fc))
       pivot.fc <- data.frame(fc) %>%
         tidyr::pivot_longer(
