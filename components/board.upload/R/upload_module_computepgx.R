@@ -47,7 +47,7 @@ upload_module_computepgx_server <- function(
           upload_datatype()
         },
         {
-          if (tolower(upload_datatype()) == "proteomics") {
+          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
           } else {
             mm <- c(
