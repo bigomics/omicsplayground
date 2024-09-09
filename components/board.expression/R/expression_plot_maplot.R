@@ -112,20 +112,31 @@ expression_plot_maplot_server <- function(id,
       return(plot_data)
     })
 
+    getLabels <- reactive({
+      res <- res()
+      symbols <- playbase::probe2symbol(
+        probes = rownames(res), res, query = "symbol", fill_na = TRUE
+      )
+      names <- playbase::probe2symbol(
+        probes = rownames(res), res, query = "gene_title", fill_na = TRUE
+      )
+      features <- rownames(res)
+      if (labeltype() == "symbol") {
+        label.names <- symbols
+      } else if (labeltype() == "name") {
+        label.names <- names
+      } else {
+        label.names <- features
+      }
+      label.names
+    })    
+    
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else if (labeltype() == "name") {
-        names <- pd[["symbols"]]
-        label.names <- pd[["names"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
+      names <- pd[["features"]]
+      label.names <- getLabels()
 
       plt <- playbase::plotlyMA(
         x = pd[["x"]],

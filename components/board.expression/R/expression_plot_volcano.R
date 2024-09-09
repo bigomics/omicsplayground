@@ -111,22 +111,32 @@ expression_plot_volcano_server <- function(id,
       ))
     })
 
+    getLabels <- reactive({
+      res <- res()
+      symbols <- playbase::probe2symbol(
+        probes = rownames(res), res, query = "symbol", fill_na = TRUE
+      )
+      names <- playbase::probe2symbol(
+        probes = rownames(res), res, query = "gene_title", fill_na = TRUE
+      )
+      features <- rownames(res)
+      if (labeltype() == "symbol") {
+        label.names <- symbols
+      } else if (labeltype() == "name") {
+        label.names <- names
+      } else {
+        label.names <- features
+      }
+      label.names
+    })    
 
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else if (labeltype() == "name") {
-        names <- pd[["features"]]
-        label.names <- pd[["names"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
-
+      label.names <- getLabels()
+      names <- pd$features
+      
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -164,13 +174,8 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
+      label.names <- getLabels()
+      names <- pd$features
 
       playbase::ggVolcano(
         x = pd[["x"]],
@@ -193,13 +198,8 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
+      label.names <- getLabels()
+      names <- pd$features
 
       playbase::ggVolcano(
         x = pd[["x"]],
