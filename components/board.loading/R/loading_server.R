@@ -95,37 +95,27 @@ LoadingBoard <- function(id,
       shared_files <- pgxshared$getSharedFiles()
       num_received <- length(received_files)
       num_shared <- length(shared_files)
+      
+      ## if (num_received == 0 && num_shared == 0) {
+      ##   dbg("[sharing_panel_ui] no shared datasets!")
+      ##   return(paste("No shared datasets in queue."))
+      ## }
 
-      if (num_received == 0 && num_shared == 0) {
-        return(paste("No shared datasets."))
-      }
+      out1 <- shiny::wellPanel(
+        shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
+        br(), br(),
+        pgxreceived$receivedPGXtable(),
+        br()
+      )
 
-      out <- tagList()
-      if (length(out) == 0) {
-        if (num_received > 0) {
-          out1 <- shiny::wellPanel(
-            shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
-            br(), br(),
-            pgxreceived$receivedPGXtable(),
-            br()
-          )
-          out <- tagList(out, out1)
-        }
-        if (num_shared > 0) {
-          out2 <- shiny::wellPanel(
-            shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
-            br(), br(),
-            pgxshared$sharedPGXtable(),
-            br()
-          )
-          if (length(out) == 0) {
-            out <- out2
-          } else {
-            out <- tagList(out, br(), out2)
-          }
-        }
-      }
+      out2 <- shiny::wellPanel(
+        shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
+        br(), br(),
+        pgxshared$sharedPGXtable(),
+        br()
+      )
 
+      out <- shiny::tagList(out1, out2) 
       return(out)
     })
 
