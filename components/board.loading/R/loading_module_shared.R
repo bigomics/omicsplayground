@@ -50,13 +50,13 @@ upload_module_shared_server <- function(id,
               To = "-",
               Actions = "-"
             )
-            ##return(NULL)
+            ## return(NULL)
           } else {
             # split the file name into user who shared and file name
             shared_pgx <- sub("__to__.*", "", shared_files)
             shared_to <- gsub(".*__to__|__from__.*", "", shared_files)
             shared_from <- gsub(".*__from__|__$", "", shared_files)
-            
+
             resend_btns <- makebuttonInputs2(
               FUN = actionButton,
               len = shared_files,
@@ -70,7 +70,7 @@ upload_module_shared_server <- function(id,
               tooltip = "Resend this dataset",
               onclick = paste0('Shiny.onInputChange("', ns("resend_pgx"), '", this.id, {priority: "event"})')
             )
-            
+
             cancel_btns <- makebuttonInputs2(
               FUN = actionButton,
               len = shared_files,
