@@ -251,7 +251,6 @@ loading_table_datasets_server <- function(id,
       return(df)
     })
 
-
     pgxTable_DT <- reactive({
       df <- table_data()
       is.dt <- is.data.frame(df)
@@ -266,7 +265,7 @@ loading_table_datasets_server <- function(id,
       }
       validate(need(nrow(df) > 0, "Need at least one dataset!"))
 
-      df$creator <- NULL
+      ## df$creator <- NULL
       target1 <- grep("date", colnames(df))
       target2 <- grep("description", colnames(df))
       target3 <- grep("conditions", colnames(df))

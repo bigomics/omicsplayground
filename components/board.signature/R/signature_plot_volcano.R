@@ -35,13 +35,14 @@ signature_plot_volcano_ui <- function(
       placement = "left", options = list(container = "body")
     ),
     withTooltip(
-      shiny::checkboxInput(
-        inputId = ns("color_up_down"),
-        label = "Color up/down regulated",
-        value = TRUE
+      shiny::radioButtons(
+        inputId = ns("showlabel"),
+        label = "Show labels:",
+        choices = c("no", "top10", "all"),
+        selected = "top10",
+        inline = TRUE
       ),
-      "Color up/down regulated features.",
-      placement = "left", options = list(container = "body")
+      "Show labels."
     )
   )
 
@@ -112,17 +113,20 @@ signature_plot_volcano_server <- function(id,
         sel.gene <- gsea$gset
       }
 
-      return(list(
+      pd <- list(
         fc = fc,
         qv = qv,
         features = features,
         symbols = symbols,
         gsea = gsea,
         sel.gene = sel.gene
-      ))
+      )
+
+      return(pd)
     })
 
-    plotly_plots <- function(cex = 3,
+    plotly_plots <- function(cex = 5,
+                             label.cex = 1.1,
                              yrange = 0.5,
                              n_rows = 2,
                              margin_l = 70,
@@ -131,16 +135,28 @@ signature_plot_volcano_server <- function(id,
       shiny::req(pd)
       share_axis <- input$share_axis
 
+      showlabel <- input$showlabel
+      label <- pd[["sel.gene"]]
+      if (showlabel == "no") label <- NULL
+      if (showlabel == "top10") {
+        ii <- match(label, pd[["features"]])
+        rr <- rowMeans(pd$fc[ii, ]**2) + rowMeans(log10(pd$qv[ii, ])**2)
+        label <- head(label[order(-rr)], 10)
+      }
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = pd[["fc"]],
         Q = pd[["qv"]],
+        fdr = 0.05,
+        lfc = 1,
         names = pd[["features"]],
         label.names = pd[["symbols"]],
+        label.cex = label.cex,
         cex = cex,
         by_sig = FALSE,
         highlight = pd[["gsea"]]$gset,
-        label = pd[["sel.gene"]],
+        label = label,
         share_axis = share_axis,
         yrange = yrange,
         n_rows = n_rows,
@@ -150,7 +166,7 @@ signature_plot_volcano_server <- function(id,
         # Remove default titles
         title_y = "",
         title_x = "",
-        color_up_down = input$color_up_down
+        color_up_down = TRUE
       ) %>%
         plotly::layout(
           annotations = list(
@@ -187,14 +203,15 @@ signature_plot_volcano_server <- function(id,
       nr <- length(enrichmentContrastTable$rows_all())
       n_rows <- floor(sqrt(nr))
       fig <- plotly_plots(
-        cex = 5,
+        cex = 8,
+        label.cex = 1.3,
         yrange = 0.02,
         n_rows = n_rows,
         margin_b = 45,
         margin_l = 70
       ) %>%
         plotly::style(
-          marker.size = 6
+          marker.size = 7
         ) %>%
         playbase::plotly_build_light(.)
       return(fig)
@@ -209,32 +226,44 @@ signature_plot_volcano_server <- function(id,
 
       gene_names <- rep(rownames(fc), each = ncol(fc))
       label.names <- rep(pd[["symbols"]], each = ncol(fc))
-      fc <- data.frame(fc) %>%
+
+      showlabel <- input$showlabel
+      label <- pd[["sel.gene"]]
+      if (showlabel == "no") label <- NULL
+      if (showlabel == "top10") {
+        ii <- match(label, pd[["features"]])
+        rr <- rowMeans(pd$fc[ii, ]**2) + rowMeans(log10(pd$qv[ii, ])**2)
+        label <- head(label[order(-rr)], 10)
+      }
+
+      pivot.fc <- data.frame(fc) %>%
         tidyr::pivot_longer(
           cols = everything(), # Select all columns to pivot
           names_to = "facet", # Name of the new column for timepoints
           values_to = "fc"
         )
-      qv <- data.frame(qv) %>%
+      pivot.qv <- data.frame(qv) %>%
         tidyr::pivot_longer(
           cols = everything(), # Select all columns to pivot
           names_to = "facet", # Name of the new column for timepoints
           values_to = "qv"
         )
-      facet <- fc$facet
-      x <- fc$fc
-      y <- qv$qv
-      y <- -log10(y + 1e-12)
+      facet <- factor(pivot.fc$facet, levels = colnames(fc))
+      x <- pivot.fc$fc
+      y <- -log10(pivot.qv$qv + 1e-12)
 
       playbase::ggVolcano(
         x,
         y,
         gene_names,
+        lfc = 1,
+        psig = 0.05,
         facet = facet,
-        label = pd[["sel.gene"]],
+        label = label,
         highlight = pd[["gsea"]]$gset,
         label.names = label.names,
         label.cex = 5,
+        title = NULL,
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10p)",
         marker.size = 1.2,

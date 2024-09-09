@@ -98,7 +98,7 @@ enrichment_plot_volcano_server <- function(id,
       ))
     })
 
-    plotly.RENDER <- function() {
+    plotly.RENDER <- function(marker.size = 3, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -111,16 +111,29 @@ enrichment_plot_volcano_server <- function(id,
         marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
         label = pd[["sel.genes"]],
+        label.cex = lab.cex,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10q)",
-        marker.size = 3,
+        marker.size = marker.size,
         displayModeBar = FALSE,
         showlegend = FALSE,
         color_up_down = TRUE
       ) %>%
-        plotly::layout(margin = list(b = 60))
+        plotly::layout(
+          margin = list(l = 0, r = 0, t = 0, b = 0)
+        )
+    }
+
+    plotly.RENDER2 <- function() {
+      plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
+        plotly::layout(
+          font = list(size = 18),
+          legend = list(
+            font = list(size = 18)
+          )
+        )
     }
 
     base.RENDER <- function() {
@@ -130,6 +143,7 @@ enrichment_plot_volcano_server <- function(id,
       playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
+        title = NULL,
         names = pd[["fc.genes"]],
         label.names = pd[["fc.genes"]],
         highlight = pd[["sel.genes"]],
@@ -158,15 +172,15 @@ enrichment_plot_volcano_server <- function(id,
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10q)",
-        marker.size = 1.5,
-        label.cex = 5,
-        axis.text.size = 22,
+        marker.size = 2,
+        label.cex = 6,
+        axis.text.size = 24,
         showlegend = FALSE
       )
     }
 
     plot_grid <- list(
-      list(plotlib = "plotly", func = plotly.RENDER, func2 = plotly.RENDER, card = 1),
+      list(plotlib = "plotly", func = plotly.RENDER, func2 = plotly.RENDER2, card = 1),
       list(plotlib = "ggplot", func = base.RENDER, func2 = base.RENDER.modal, card = 2)
     )
 

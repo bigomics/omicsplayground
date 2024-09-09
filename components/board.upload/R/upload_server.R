@@ -37,15 +37,15 @@ UploadBoard <- function(id,
     checkprobes_task <- ExtendedTask$new(function(organism, probes, datatype, probe_type) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        probetype0 <- playbase::detect_species_probetype(
+        detected <- playbase::detect_species_probetype(
           probes = probes,
           datatype = datatype,
           probe_type = probe_type,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
         )
-        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
-        if (is.null(probetype0)) probetype0 <- "error"
-        probetype0
+        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", detected)
+        if (is.null(detected)) detected <- "error"
+        detected
       })
     })
 
@@ -917,24 +917,25 @@ UploadBoard <- function(id,
         organism <- upload_organism()
         alt.text <- ""
 
-        # detect_probetypes return NULL if no probetype is found across a given organism
-        # if NULL, probetype matching failed
-        if (is.null(detected$probetype[organism])) {
+        # detect_probetypes return NULL if no probetype is found
+        # across a given organism if NULL, probetype matching failed
+        e1 <- is.null(detected$probetype[organism])
+        e2 <- is.na(detected$probetype[organism])
+        e3 <- !(organism %in% detected$species)
+        task_failed <- (e1 || e2 || e3)
+        if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
           alt.species <- paste(detected$species, collapse = " or ")
           if (length(alt.species)) {
             alt.species <- paste0("<b>", alt.species, "</b>")
-
             # check if ANY organism matched the probes, if yes add a hint to the user
-            if (length(detected$species) > 1) {
+            if (length(detected$species) >= 1) {
               alt.text <- paste0("Are these perhaps ", alt.species, "?")
             }
-
             if (upload_datatype() == "metabolomics") {
               # overwrite alt.text for metabolomics
               alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN"), collapse = ", ")
-
               alt.text <- paste0("<b>", alt.text, "</b>")
               alt.text <- paste0("Valid probes are: ", alt.text, ".")
             }
@@ -947,7 +948,7 @@ UploadBoard <- function(id,
         probetype(detected_probetype) ## set RV
 
         if (detected_probetype == "error") {
-          dbg("[UploadBoard] ExtendedTask result has ERROR")
+          info("[UploadBoard] ExtendedTask result has ERROR")
           shinyalert::shinyalert(
             title = "Probes not recognized!",
             text = paste0(
