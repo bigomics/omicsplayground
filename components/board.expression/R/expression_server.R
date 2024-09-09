@@ -351,8 +351,8 @@ ExpressionBoard <- function(id, pgx) {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
-##      jj <- match(fam.genes, res$symbol)
-      jj <- which( res$symbol %in% fam.genes )
+      ##      jj <- match(fam.genes, res$symbol)
+      jj <- which(res$symbol %in% fam.genes)
       sel.features <- rownames(res)[setdiff(jj, NA)]
 
       features <- rownames(res)

@@ -128,7 +128,7 @@ expression_plot_volcano_server <- function(id,
         label.names <- features
       }
       label.names
-    })    
+    })
 
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
@@ -136,7 +136,7 @@ expression_plot_volcano_server <- function(id,
 
       label.names <- getLabels()
       names <- pd$features
-      
+
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],

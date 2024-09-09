@@ -129,8 +129,8 @@ expression_plot_maplot_server <- function(id,
         label.names <- features
       }
       label.names
-    })    
-    
+    })
+
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
