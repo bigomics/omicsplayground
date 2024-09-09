@@ -226,7 +226,7 @@ app_server <- function(input, output, session) {
 
 
     shiny::observeEvent(upload_datatype(), {
-      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)){
+      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
         shiny.i18n::update_lang("proteomics", session)
       } else if (tolower(upload_datatype()) == "metabolomics") {
         shiny.i18n::update_lang("metabolomics", session)
