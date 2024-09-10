@@ -76,7 +76,8 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         list(
           input$data_type,
           pgx$X,
-          pgx$counts
+          pgx$counts,
+          labeltype()
         )
       },
       {
@@ -116,12 +117,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
 
         browser()
-
         if (labeltype() == "feature") {
           names(features) <- features
         } else if (labeltype() == "symbol") {
           pre_labels <- pgx$genes[features, "symbol"]
-          pre_labels <- ifelse(is.na(pre_labels, features, pre_labels))
+          pre_labels <- ifelse(is.na(pre_labels), features, pre_labels)
           names(features) <- pre_labels
         } else if (labeltype() == "name") {
           pre_labels <- pgx$genes[features, "gene_title"]
