@@ -116,7 +116,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           )
         }
 
-        browser()
         if (labeltype() == "feature") {
           names(features) <- features
         } else if (labeltype() == "symbol") {
