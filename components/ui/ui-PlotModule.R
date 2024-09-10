@@ -612,14 +612,12 @@ PlotModuleServer <- function(id,
                   p <- func()
                   iheatmapr::save_iheatmap(p, vwidth = png.width, vheight = png.height, PNGFILE)
                 } else if (plotlib == "visnetwork") {
-                  p <- func()
-                  visPrint(p,
-                    file = PNGFILE,
-                    width = png.width * resx * 2,
-                    height = png.height * resx * 2,
-                    delay = vis.delay,
-                    zoom = 1
-                  )
+                  session$sendCustomMessage("export-widget", list(
+                    id = "pathway-GO_network-plot-renderfigure",
+                    width = png.width/80,
+                    height = png.height/80,
+                    name = PNGFILE
+                  ))
                 } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
