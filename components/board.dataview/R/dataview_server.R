@@ -82,12 +82,16 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       {
         shiny::req(input$data_type)
 
-        if (input$data_type %in% c("counts", "abundance")) {
-          features <- rownames(pgx$counts)
-        } else {
-          ## log2CPM
-          features <- rownames(pgx$X)
-        }
+
+        # X should be labelled as features, so rownames(counts) and rownames(x) shoud match (???)
+        features <- rownames(pgx$X)
+        # if (input$data_type %in% c("counts", "abundance")) {
+        #   features <- rownames(pgx$counts)
+        # } else {
+        #   ## log2CPM
+        #   features <- rownames(pgx$X)
+        # }
+
         ## gene filter.
         fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2, na.rm = TRUE)
         features <- intersect(names(sort(-fc2)), features) ## most var gene??
@@ -112,6 +116,19 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
 
         browser()
+
+        if (labeltype() == "feature") {
+          names(features) <- features
+        } else if (labeltype() == "symbol") {
+          pre_labels <- pgx$genes[features, "symbol"]
+          pre_labels <- ifelse(is.na(pre_labels, features, pre_labels))
+          names(features) <- pre_labels
+        } else if (labeltype() == "name") {
+          pre_labels <- pgx$genes[features, "gene_title"]
+          pre_labels <- ifelse(is.na(pre_labels), features, pre_labels)
+          names(features) <- pre_labels
+        }
+
 
         shiny::updateSelectizeInput(
           session, "search_gene",
