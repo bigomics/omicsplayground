@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature") {
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
