@@ -350,7 +350,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["dataview"]) {
             info("[SERVER] calling DataView module")
             insertBigTabItem("dataview")
-            DataViewBoard("dataview", pgx = PGX)
+            DataViewBoard("dataview", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 

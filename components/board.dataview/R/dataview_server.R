@@ -12,7 +12,7 @@
 #' @param pgx Reactive expression that provides the input pgx data object
 #'
 #' @export
-DataViewBoard <- function(id, pgx) {
+DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     rowH <- 355 ## row height of panels
@@ -110,6 +110,8 @@ DataViewBoard <- function(id, pgx) {
             features[1001:length(features)]
           )
         }
+
+        browser()
 
         shiny::updateSelectizeInput(
           session, "search_gene",

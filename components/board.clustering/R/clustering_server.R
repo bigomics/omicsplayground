@@ -12,7 +12,7 @@
 ##' @param pgx
 ##' @return
 ##' @author kwee
-ClusteringBoard <- function(id, pgx, labeltype = "feature") {
+ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature") {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
