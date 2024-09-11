@@ -71,12 +71,14 @@ clustering_table_clustannot_server <- function(
           SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
         )
       } else {
-        feature_link <- FALSE
+        feature_link <- ""
       }
+
+      df$feature <- paste(df$feature, "&nbsp;", feature_link)
 
       DT::datatable(
         df,
-        rownames = feature_link,
+        rownames = FALSE,
         escape = c(-1, -2),
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",

@@ -93,7 +93,7 @@ if (!file.exists("00SourceAll.R")) {
   source("board.enrichment/R/enrichment_plot_volcanomethods.R", encoding = "UTF-8")
   source("board.enrichment/R/enrichment_server.R", encoding = "UTF-8")
   source("board.enrichment/R/enrichment_table_enrichment_analysis.R", encoding = "UTF-8")
-  source("board.enrichment/R/enrichment_table_genes_in_geneset_ui.R", encoding = "UTF-8")
+  source("board.enrichment/R/enrichment_table_genes_in_geneset.R", encoding = "UTF-8")
   source("board.enrichment/R/enrichment_table_gset_enrich_all_contrasts.R", encoding = "UTF-8")
   source("board.enrichment/R/enrichment_table_n_sig_gsets.R", encoding = "UTF-8")
   source("board.enrichment/R/enrichment_ui.R", encoding = "UTF-8")

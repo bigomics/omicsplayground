@@ -161,6 +161,7 @@ app_server <- function(input, output, session) {
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
+  labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
@@ -226,7 +227,7 @@ app_server <- function(input, output, session) {
 
 
     shiny::observeEvent(upload_datatype(), {
-      if (tolower(upload_datatype()) == "proteomics") {
+      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
         shiny.i18n::update_lang("proteomics", session)
       } else if (tolower(upload_datatype()) == "metabolomics") {
         shiny.i18n::update_lang("metabolomics", session)
@@ -349,14 +350,14 @@ app_server <- function(input, output, session) {
           if (ENABLED["dataview"]) {
             info("[SERVER] calling DataView module")
             insertBigTabItem("dataview")
-            DataViewBoard("dataview", pgx = PGX)
+            DataViewBoard("dataview", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 
           if (ENABLED["clustersamples"]) {
             info("[SERVER] calling ClusteringBoard module")
             insertBigTabItem("clustersamples")
-            ClusteringBoard("clustersamples", pgx = PGX)
+            ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["wordcloud"]) {
@@ -369,7 +370,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["diffexpr"]) {
             info("[SERVER] calling ExpressionBoard module")
             insertBigTabItem("diffexpr")
-            ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
+            ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) -> env$diffexpr
           }
 
           if (ENABLED["clusterfeatures"]) {
@@ -556,7 +557,7 @@ app_server <- function(input, output, session) {
       tag <- shiny::actionButton(
         "dataset_click", pgx.name,
         class = "quick-button",
-        style = "border: none; color: black; font-size: 1em;"
+        style = "border: none; color: black; font-size: 0.9em;"
       )
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
@@ -615,7 +616,7 @@ app_server <- function(input, output, session) {
       DATATYPEPGX <<- tolower(PGX$datatype)
 
       ## change language
-      if (DATATYPEPGX == "proteomics") {
+      if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
         lang <- "proteomics"
       } else if (DATATYPEPGX == "metabolomics") {
         lang <- "metabolomics"
@@ -624,6 +625,13 @@ app_server <- function(input, output, session) {
       }
       dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
+
+      # choose the default labeltype based on datatype
+      if (PGX$datatype == "metabolomics") {
+        labeltype("name")
+      } else {
+        labeltype("feature") # probe is feature (rownames of counts)
+      }
 
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
@@ -665,7 +673,42 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
+      ## Hide PCSF and WGCNA for metabolomics
+      # WGCNA will be abailable upon gmt refactoring
+      if (DATATYPEPGX == "metabolomics") {
+        info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+        bigdash.hideTab(session, "pcsf-tab")
+        bigdash.hideTab(session, "wgcna-tab")
+      }
+
       info("[SERVER] trigger on change dataset done!")
+    }
+  )
+
+  # change label type based on selected input
+  shiny::observeEvent(
+    {
+      input$selected_labeltype
+    },
+    {
+      labeltype(input$selected_labeltype)
+    }
+  )
+
+  # if labeltype is updated (via different pgx data types), we need to update the selector choice
+  shiny::observeEvent(
+    {
+      labeltype()
+    },
+    {
+      # if input$selected_labeltype does not match labeltype, we need to update the selector
+      if (input$selected_labeltype != labeltype()) {
+        shiny::updateSelectInput(
+          session,
+          "selected_labeltype",
+          selected = labeltype()
+        )
+      }
     }
   )
 
@@ -1028,8 +1071,10 @@ app_server <- function(input, output, session) {
     user_email <- auth$email
     user_tab <- input$nav
 
-    if (!is.null(PGX)) {
+    if (!is.null(PGX) && !is.null(PGX$name)) {
       pgx_name <- PGX$name
+    } else {
+      pgx_name <- "No PGX loaded when error occurred"
     }
 
     credential <- file.path(ETC, "hubspot_creds")

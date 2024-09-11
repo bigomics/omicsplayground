@@ -113,7 +113,7 @@ dataview_table_rawdata_server <- function(id,
         annot <- annot[, c("feature", "symbol", "gene_title")]
       }
       annot$gene_title <- substring(annot$gene_title, 1, 50)
-      if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000)) > 0.8) {
+      if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000), na.rm = TRUE) > 0.8) {
         annot$symbol <- NULL
       }
 

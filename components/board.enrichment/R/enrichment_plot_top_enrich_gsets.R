@@ -106,6 +106,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       # this is needed when collapse by gene is not used
       if (!all(rownames(pgx$GMT) %in% names(rnk0))) {
         names(rnk0) <- pgx$genes[names(rnk0), "symbol"]
+
+        # remove NAs
+        rnk0 <- rnk0[!is.na(names(rnk0))]
       }
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
@@ -147,7 +150,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       qv <- res$qv
 
       x.title <- 0.01 * length(rnk0)
-      y.title <- max(rnk0)
+      y.title <- 0.96 * max(rnk0)
 
       ntop <- length(gmt.genes)
       if (ntop == 1) rowcol <- c(1, 1)
@@ -169,7 +172,9 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             yth = 1, ## threshold for which points get label
             cbar.width = 32,
             tooltips = NULL,
-            cex.text = cex.text
+            cex.text = cex.text,
+            cex.title = 1.1,
+            cex.axis = 1.3
           ) %>% plotly::layout(
             margin = list(l = 30, r = 10, t = 20, b = 40)
           )
@@ -185,7 +190,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             yth = 999, ## threshold for which points get label
             cbar.width = 15,
             tooltips = NULL,
-            cex.text = cex.text
+            cex.text = cex.text,
+            cex.axis = 0.8
           ) %>%
             plotly::add_text(
               x = x.title, y = y.title, text = gset.name,

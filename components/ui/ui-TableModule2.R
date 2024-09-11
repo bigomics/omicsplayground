@@ -15,7 +15,8 @@ TableModuleUI <- function(id,
                           caption2 = info.text,
                           just.info = FALSE,
                           show.maximize = TRUE,
-                          translate = TRUE) {
+                          translate = TRUE,
+                          translate_js = TRUE) {
   ns <- shiny::NS(id)
 
   if (length(height) == 1) height <- c(height, 800)
@@ -32,10 +33,10 @@ TableModuleUI <- function(id,
   height.2 <- ifnotchar.int(height[2])
 
   if (translate) {
-    info.text <- tspan(info.text)
-    title <- tspan(title)
-    caption <- tspan(caption)
-    caption2 <- tspan(caption2)
+    info.text <- tspan(info.text, js = translate_js)
+    title <- tspan(title, js = translate_js)
+    caption <- tspan(caption, js = translate_js)
+    caption2 <- tspan(caption2, js = translate_js)
   }
 
   options.button <- ""
@@ -55,7 +56,15 @@ TableModuleUI <- function(id,
       shiny::a("Download table data",
         style = "text-align: center;"
       ),
-      shiny::br(),
+      shiny::hr(),
+      shiny::radioButtons(
+        inputId = ns("format"),
+        label = NULL,
+        choices = c(
+          "CSV",
+          "Excel"
+        )
+      ),
       shiny::hr(),
       div(
         style = "text-align: center;",
@@ -165,18 +174,24 @@ TableModuleServer <- function(id,
                               height = c(640, 800),
                               width = c("auto", 1400),
                               selector = c("none", "single", "multi", "key")[1],
-                              filename = "table.csv") {
+                              filename = "table") {
   moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-      filename <- paste0(sub(".csv$", "", ns(filename)), ".csv")
+      filename <- ns(filename)
 
       if (is.null(func2)) func2 <- func
 
       # Downloader
       output$download <- shiny::downloadHandler(
-        filename = filename,
+        filename = function() {
+          if (input$format == "CSV") {
+            paste0(filename, ".csv")
+          } else {
+            paste0(filename, ".xlsx")
+          }
+        },
         content = function(file) {
           if (!is.null(csvFunc)) {
             dt <- csvFunc() ## data.frame or matrix
@@ -185,7 +200,11 @@ TableModuleServer <- function(id,
             dt <- func()$x$data
           }
           dt2 <- format(dt, digits = 4) ## round
-          write.csv(dt2, file = file, row.names = FALSE)
+          if (input$format == "CSV") {
+            write.csv(dt2, file = file, row.names = FALSE)
+          } else {
+            openxlsx::write.xlsx(dt2, file = file)
+          }
         }
       )
 

@@ -48,13 +48,14 @@ upload_module_received_server <- function(id,
             shinyalert::shinyalert(
               "New dataset received!",
               paste(
-                "You have received a dataset from another user. Please accept or decline it in the Loading tab."
+                "You have received a dataset from another user. Please accept or decline it in the Sharing panel."
               ),
-              confirmButtonText = "Go to shared datasets",
+              showConfirmButton = FALSE,
+              ##            confirmButtonText = "Go to shared datasets",
               showCancelButton = TRUE,
-              cancelButtonText = "Stay here",
-              inputId = "new_dataset_received",
-              callbackR = show_shared_tab
+              cancelButtonText = "OK",
+              inputId = "new_dataset_received"
+              ##              callbackR = show_shared_tab
             )
           }
           nr_ds_received(current_ds_received)
@@ -82,47 +83,52 @@ upload_module_received_server <- function(id,
         {
           received_files <- getReceivedFiles()
           if (is.null(received_files) || length(received_files) == 0) {
-            return(NULL)
+            df <- data.frame(
+              Dataset = "-",
+              To = "-",
+              Actions = "-"
+            )
+            ## return(NULL)
+          } else {
+            # split the file name into user who shared and file name
+            received_pgx <- sub("__to__.*", "", received_files)
+            received_from <- gsub(".*__from__|__$", "", received_files)
+
+            accept_btns <- makebuttonInputs2(
+              FUN = actionButton,
+              len = received_files,
+              id = ns("accept_pgx__"),
+              label = "",
+              width = "50px",
+              inline = TRUE,
+              icon = shiny::icon("check"),
+              class = "btn-inline btn-success",
+              style = "padding:0px; margin:0px; font-size:85%;",
+              tooltip = "Accept dataset",
+              ## onclick = paste0('Shiny.onInputChange(\"',ns("accept_pgx"),'\", this.id, {priority: "event"})')
+              onclick = paste0('Shiny.onInputChange("', ns("accept_pgx"), '", this.id, {priority: "event"})')
+            )
+
+            decline_btns <- makebuttonInputs2(
+              FUN = actionButton,
+              len = received_files,
+              id = "decline_pgx__",
+              label = "",
+              width = "50px",
+              inline = TRUE,
+              icon = shiny::icon("x"),
+              class = "btn-inline btn-danger",
+              style = "padding:0px; margin:0px; font-size:85%;",
+              tooltip = "Declinie dataset",
+              onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\", this.id, {priority: "event"})')
+            )
+
+            df <- data.frame(
+              Dataset = received_pgx,
+              From = received_from,
+              Actions = paste(accept_btns, decline_btns)
+            )
           }
-
-          # split the file name into user who shared and file name
-          received_pgx <- sub("__to__.*", "", received_files)
-          received_from <- gsub(".*__from__|__$", "", received_files)
-
-          accept_btns <- makebuttonInputs2(
-            FUN = actionButton,
-            len = received_files,
-            id = ns("accept_pgx__"),
-            label = "",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("check"),
-            class = "btn-inline btn-success",
-            style = "padding:0px; margin:0px; font-size:85%;",
-            tooltip = "Accept dataset",
-            ## onclick = paste0('Shiny.onInputChange(\"',ns("accept_pgx"),'\", this.id, {priority: "event"})')
-            onclick = paste0('Shiny.onInputChange("', ns("accept_pgx"), '", this.id, {priority: "event"})')
-          )
-
-          decline_btns <- makebuttonInputs2(
-            FUN = actionButton,
-            len = received_files,
-            id = "decline_pgx__",
-            label = "",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("x"),
-            class = "btn-inline btn-danger",
-            style = "padding:0px; margin:0px; font-size:85%;",
-            tooltip = "Declinie dataset",
-            onclick = paste0('Shiny.onInputChange(\"', ns("decline_pgx"), '\", this.id, {priority: "event"})')
-          )
-
-          df <- data.frame(
-            Dataset = received_pgx,
-            From = received_from,
-            Actions = paste(accept_btns, decline_btns)
-          )
 
           dt_table <- DT::datatable(
             df,

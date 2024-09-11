@@ -117,15 +117,15 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>WGCNA functional analysis.</b> <b>(a)</b> Module-trait analysis identifies modules that are significantly associated with the measured clinical traits by quantifying the association as the correlation of the eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of genes in the selected module. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
+          bs_alert(HTML("<b>WGCNA functional analysis.</b> <b>(a)</b> Module-trait analysis identifies modules that are significantly associated with the measured traits by quantifying the association as the correlation of the eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of genes in the selected module. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
           bslib::layout_columns(
             col_widths = c(4, 4, 4),
             height = "60%",
             wgcna_plot_MTrelationships_ui(
               ns("moduleTrait"),
               title = "Module-Trait relationships",
-              info.text = "WGCNA module and trait relationship.",
-              caption = "Module-trait analysis identifies modules that are significantly associated with the measured clinical traits by quantifying the association as the correlation of the eigengenes with external traits.",
+              info.text = "WGCNA module and trait relationship. Network construction and module detection on the normalized, transposed, and filtered (removal of very low varying genes) gene expression matrix are performed using the WGCNA function blockwiseModules. To assess relationships between gene modules and metadata (eg. phenotypes of interest), Pearson correlation between each module eigengene (i.e., ME, the first PC component of the expression profiles of all genes mapped within the module) and the trait of interest is computed. These correlation coefficients (ranging from -1 to 1, representing fully negative and fully positive correlation, respectively), are conveniently displayed in a heatmap using the WGCNA labeledheatmap function. Positive correlation suggests that genes in the module may be upregulated as the phenotype/trait value increases. Therefore, ME-trait relationship indicates how strong a gene module is associated with a phenotype.",
+              caption = "Module-trait analysis identifies modules that are significantly associated with the measured traits by quantifying the association as the correlation of the eigengenes with external traits.",
               label = "a",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

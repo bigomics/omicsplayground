@@ -65,7 +65,6 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       if (show.q) {
         F1 <- do.call(cbind, lapply(1:ncol(F), function(i) cbind(F[, i], Q[, i])))
         colnames(F1) <- as.vector(rbind(paste0("ES.", colnames(F)), paste0("q.", colnames(Q))))
-        #
         df <- data.frame(geneset = gs, rms.ES = fc.rms, F1, check.names = FALSE)
       } else {
         F1 <- F
@@ -77,17 +76,6 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       res <- getFilteredGeneSetTable()
       df <- df[intersect(rownames(df), rownames(res)), ] ## take intersection of current comparison
       df <- df[order(-df$rms.ES), ]
-      ## wrap with hyperlink
-      geneset_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
-        rownames(df)
-      ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
-        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
-      )
-      df$i <- geneset_link
-      new_order <- c(names(df)[1], "i", names(df)[names(df) != "i" & names(df) != names(df)[1]])
-      df <- df[, new_order]
 
       colnames(df) <- gsub("_", " ", colnames(df)) ## so it allows wrap line
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
@@ -103,17 +91,28 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       )
     })
 
-    fctable.RENDER <- function() {
+    table.RENDER <- function() {
       td <- table_data()
       df <- td$df
       qv.cols <- td$qv.cols
       fc.cols <- td$fc.cols
       F <- td$F
 
+      ## wrap with hyperlink
+      geneset_link <- playbase::wrapHyperLink(
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>", nrow(df)),
+        rownames(df)
+      ) |> HandleNoLinkFound(
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
+        SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
+      )
+
+      df$geneset <- paste(df$geneset, "&nbsp;", geneset_link)
+
       dt <- DT::datatable(
         df,
         rownames = NULL,
-        escape = FALSE,
+        escape = c(-1, -2),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         plugins = "scrollResize",
@@ -150,16 +149,16 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       return(dt)
     }
 
-    fctable.RENDER_modal <- function() {
-      dt <- fctable.RENDER()
+    table.RENDER_modal <- function() {
+      dt <- table.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       return(dt)
     }
 
     TableModuleServer(
       "datasets",
-      func = fctable.RENDER,
-      func2 = fctable.RENDER_modal,
+      func = table.RENDER,
+      func2 = table.RENDER_modal,
       csvFunc = table_data,
       selector = "none"
     )

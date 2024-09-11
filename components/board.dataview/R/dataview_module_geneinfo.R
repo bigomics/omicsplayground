@@ -44,56 +44,74 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ## prepare data
     geneinfo_data <- shiny::reactive({
       feature <- r.gene()
-      shiny::req(feature)
+      shiny::req(feature %in% rownames(pgx$X))
 
       organism <- pgx$organism
-      if (is.null(organism) || organism == "") organism <- "Human"
+      if (is.null(organism) || is.na(organism) || organism == "") organism <- "Human"
+      datatype <- pgx$datatype
+      if (is.null(datatype) || is.na(datatype) || datatype == "") datatype <- "RNA-seq"
+
       jj <- match(feature, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-      ## symbol <- pgx$genes$human_ortholog[jj]
-      ## info <- playbase::getHSGeneInfo(symbol)
-      datatype <- pgx$datatype
-      info <- playbase::getOrgGeneInfo(
-        organism = organism,
-        gene = symbol,
-        feature = feature,
-        datatype = datatype,
-        as.link = TRUE
-      )
-      res <- tspan("(gene info not available)")
-      if (!is.null(info)) {
+
+      if (datatype == "metabolomics") {
+        info <- playbase::getMetaboliteInfo(
+          organism = organism,
+          chebi = symbol
+        )
+      } else {
+        info <- playbase::getOrgGeneInfo(
+          organism = organism,
+          gene = symbol,
+          feature = feature,
+          datatype = datatype,
+          as.link = TRUE
+        )
+
+        ## reorder
+        nn <- intersect(
+          c(
+            "gene_symbol", "organism", "name", "map_location",
+            "uniprot", "databases", "summary", names(info)
+          ),
+          names(info)
+        )
+
+        info <- info[nn]
+        names(info) <- sub("gene_symbol", "symbol", names(info))
+        names(info) <- sub("uniprot", "protein", names(info))
+        names(info) <- sub("map_location", "genome location", names(info))
+      }
+
+      if (is.null(info)) {
         info$summary <- "(no info available)"
         if (symbol %in% names(playdata::GENE_SUMMARY)) {
           info$summary <- playdata::GENE_SUMMARY[symbol]
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
-        if (feature != symbol) {
-          info[["feature"]] <- feature
-        }
-        ## info$organism <- NULL
-        ## info$databases <- NULL
+      }
 
-        ## reorder
-        nn <- intersect(
-          c(
-            "feature", "gene_symbol", "uniprot", "organism", "name", "map_location",
-            "databases", "summary", names(info)
-          ),
-          names(info)
-        )
-        info <- info[nn]
-        names(info) <- sub("gene_symbol", "symbol", names(info))
-        names(info) <- sub("uniprot", "protein", names(info))
-        names(info) <- sub("map_location", "genome location", names(info))
+      ## add feature name is not symbol
+      info$feature <- NULL
+      if (!is.na(symbol) && feature != symbol) {
+        info <- c(feature = feature, info)
+      }
+      ## info$organism <- NULL
+      ## info$databases <- NULL
 
-        res <- c()
-        for (i in 1:length(info)) {
-          xx <- paste(info[[i]], collapse = ", ")
-          res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
-        }
-        res <- paste(res, collapse = "<p>")
+      # prepare info for display
+      res <- c()
+      for (i in 1:length(info)) {
+        xx <- paste(info[[i]], collapse = ", ")
+        res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
+      }
+      res <- paste(res, collapse = "<p>")
+
+      if (is.null(res)) {
+        res <- tspan("(gene info not available)")
       }
       res
     })
