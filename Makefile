@@ -81,7 +81,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta11"
+VERSION = "v3.5.0-beta12.9001"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
