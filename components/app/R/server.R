@@ -695,6 +695,23 @@ app_server <- function(input, output, session) {
     }
   )
 
+  # if labeltype is updated (via different pgx data types), we need to update the selector choice
+  shiny::observeEvent(
+    {
+      labeltype()
+    },
+    {
+      # if input$selected_labeltype does not match labeltype, we need to update the selector
+      if (input$selected_labeltype != labeltype()) {
+        shiny::updateSelectInput(
+          session,
+          "selected_labeltype",
+          selected = labeltype()
+        )
+      }
+    }
+  )
+
   ## -------------------------------------------------------------
   ## Session Timers
   ## -------------------------------------------------------------
