@@ -97,7 +97,7 @@ IntersectionUI <- function(id) {
         height = fullH,
         foldchange_heatmap_ui(
           id = ns("FoldchangeHeatmap"),
-          title = "Folchange heatmap",
+          title = "Foldchange heatmap",
           info.text = "The Connectivity Heatmap shows the most similar profiles as a heatmap.
                        Contrasts that are similar will be clustered close together.",
           caption = "Signature heatmap visualizing the similarity of all available contrasts
