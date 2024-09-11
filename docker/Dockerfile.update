@@ -77,6 +77,17 @@ RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.g
         R -e "remotes::install_github('bigomics/playdata@main',dependencies=FALSE)"; \
     fi
 
+#------------------------------------------------------------
+# Install fresh bigdash (from same BRANCH)
+#------------------------------------------------------------
+# check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
+RUN echo "Checking bigdash branch ${BRANCH}"
+RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/bigdash.git ${BRANCH} | wc -l) && \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+        R -e "remotes::install_github('bigomics/bigdash@${BRANCH}',dependencies=FALSE)"; \
+    else \
+        R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
+    fi
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
