@@ -37,7 +37,6 @@ app_ui <- function(x) {
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
-
     VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
     upgrade.tab <- NULL
@@ -71,6 +70,7 @@ app_ui <- function(x) {
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
+        visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
         shinyjs::useShinyjs(),
         waiter::use_waiter(),
         sever::useSever(),
