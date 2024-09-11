@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx) {
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -420,7 +420,7 @@ ExpressionBoard <- function(id, pgx) {
       show_pv = shiny::reactive(input$show_pv),
       res = fullDiffExprTable,
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -433,7 +433,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_features = reactive(input$gx_features),
       res = fullDiffExprTable,
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -524,7 +524,7 @@ ExpressionBoard <- function(id, pgx) {
       lfc = shiny::reactive(input$gx_lfc),
       show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -538,7 +538,7 @@ ExpressionBoard <- function(id, pgx) {
       lfc = shiny::reactive(input$gx_lfc),
       show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 

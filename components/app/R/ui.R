@@ -330,6 +330,12 @@ app_ui <- function(x) {
                   label = "show captions",
                   is.checked = FALSE
                 )
+              ),
+              bigdash::navbarDropdownItem(
+                withTooltip(shiny::selectInput("selected_labeltype", "Label type:", c("feature", "symbol", "name"), width = "100%"),
+                  "Choose a label type to be displayed in the heatmap.",
+                  placement = "right", options = list(container = "body")
+                )
               )
             )
           ),

@@ -161,6 +161,7 @@ app_server <- function(input, output, session) {
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
+  labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
@@ -349,14 +350,14 @@ app_server <- function(input, output, session) {
           if (ENABLED["dataview"]) {
             info("[SERVER] calling DataView module")
             insertBigTabItem("dataview")
-            DataViewBoard("dataview", pgx = PGX)
+            DataViewBoard("dataview", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 
           if (ENABLED["clustersamples"]) {
             info("[SERVER] calling ClusteringBoard module")
             insertBigTabItem("clustersamples")
-            ClusteringBoard("clustersamples", pgx = PGX)
+            ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["wordcloud"]) {
@@ -369,7 +370,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["diffexpr"]) {
             info("[SERVER] calling ExpressionBoard module")
             insertBigTabItem("diffexpr")
-            ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
+            ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) -> env$diffexpr
           }
 
           if (ENABLED["clusterfeatures"]) {
@@ -625,6 +626,13 @@ app_server <- function(input, output, session) {
       dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
 
+      # choose the default labeltype based on datatype
+      if (PGX$datatype == "metabolomics") {
+        labeltype("name")
+      } else {
+        labeltype("feature") # probe is feature (rownames of counts)
+      }
+
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
       if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
@@ -674,6 +682,16 @@ app_server <- function(input, output, session) {
       }
 
       info("[SERVER] trigger on change dataset done!")
+    }
+  )
+
+  # change label type based on selected input
+  shiny::observeEvent(
+    {
+      input$selected_labeltype
+    },
+    {
+      labeltype(input$selected_labeltype)
     }
   )
 
