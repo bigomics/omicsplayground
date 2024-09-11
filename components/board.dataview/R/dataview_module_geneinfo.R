@@ -96,7 +96,7 @@ dataview_module_geneinfo_server <- function(id,
 
       ## add feature name is not symbol
       info$feature <- NULL
-      if (feature != symbol) {
+      if (!is.na(symbol) && feature != symbol) {
         info <- c(feature = feature, info)
       }
       ## info$organism <- NULL
