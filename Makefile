@@ -51,10 +51,15 @@ docker: FORCE version
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
 		2>&1 | tee docker.log
 
+update_playdata=false
+update_bigdash=false
+update_playbase=true
 docker.update: FORCE
 	@echo building update docker 
 	docker build --no-cache \
-		--progress plain \
+		--build-arg update_playdata=$(update_playdata) \
+		--build-arg update_bigdash=$(update_bigdash) \
+		--build-arg update_playbase=$(update_playbase) \
 		-f docker/Dockerfile.update \
 	  	-t bigomics/omicsplayground:update .
 
