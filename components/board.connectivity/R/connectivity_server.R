@@ -227,6 +227,9 @@ ConnectivityBoard <- function(
           check.sigdb = TRUE,
           verbose = FALSE
         )
+        
+        dbg("[compute_connectivity] need_update = ", need_update)
+        dbg("[compute_connectivity] names(pgx$connectivity) = ", names(pgx$connectivity))        
 
         if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
@@ -237,10 +240,17 @@ ConnectivityBoard <- function(
           shiny::removeModal(session)
         }
 
-        if (!"datasets-sigdb.h5" %in% names(pgx$connectivity)) {
+        has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
+        if(!has.user_sigdb) {
+          dbg("[compute_connectivity] USER sigdb missing")
+        } else {
+          dbg("[compute_connectivity] USER sigdb available")
+        }
+
+        if (need_update || !has.user_sigdb) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
-            info("[compute_connectivity] computing connectivity scores...")
+            info("[compute_connectivity] re-computing connectivity scores...")
             pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
             shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {
               user.scores <- playbase::pgx.computeConnectivityScores(
@@ -254,8 +264,15 @@ ConnectivityBoard <- function(
           }
           pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
           ## save results back?? but what is the real filename?????
-          ## playbase::pgx.save(pgx, file = file.path(pgxdir,pgx$name))
+          dbg("[compute_connectivity] pgx$filename = ", pgx$filename)
+          if(!is.null(pgx$filename)) {
+            pgx.filepath <- file.path(pgxdir,basename(pgx$filename))
+            dbg("[compute_connectivity] filename = ", pgx.filepath)
+            playbase::pgx.save( shiny::reactiveValuesToList(pgx), file = pgx.filepath)
+          }
         }
+
+        ## return connectivity results object
         pgx$connectivity
       },
       ignoreNULL = TRUE,
