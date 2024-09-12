@@ -51,6 +51,11 @@ WORKDIR /omicsplayground
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
 RUN make sass
 
+#------------------------------------------------------------
+# Add testing framework dependencies
+#------------------------------------------------------------
+RUN R -e "install.packages('shinytest2')"
+
 # add entrypoint to execute when the docker container starts up
 
 # give permission to execute the entrypoint
