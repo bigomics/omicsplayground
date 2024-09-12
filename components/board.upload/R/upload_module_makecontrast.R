@@ -184,19 +184,12 @@ upload_module_makecontrast_server <- function(
           "Please select at least one phenotype"
         ))
 
+        ## create conditions from phenotype matrix
         df <- phenoRT()
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
-        df <- type.convert(df, as.is = TRUE)
-        ii <- which(sapply(df, class) %in% c("numeric", "integer"))
-        if (length(ii)) {
-          for (i in ii) {
-            x <- df[, i]
-            df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
-          }
-        }
-
+        df <- playbase::binarizeNumericalColumns(df) 
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
