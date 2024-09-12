@@ -92,12 +92,12 @@ contrast_correlation_server <- function(id,
     ctcorrplot.PLOTLY <- function() {
       R <- plot_data()
       res <- getFoldChangeMatrix()
-      col <- playdata::BLUERED(16)
+      col <- grDevices::colorRampPalette(c(omics_colors("brand_blue"), omics_colors("grey"), omics_colors("red")))(16)
       col <- gplots::colorpanel(64, "royalblue3", "grey90", "indianred3")
       if (min(R, na.rm = TRUE) >= 0) col <- tail(col, 32)
       if (max(R, na.rm = TRUE) <= 0) col <- head(col, 32)
 
-      bluered.pal <- colorRampPalette(colors = c("royalblue3", "grey90", "indianred3"))
+      bluered.pal <- colorRampPalette(colors = c(omics_colors("brand_blue"), omics_colors("grey"), omics_colors("red")))
       cellnote <- NULL
 
       if (is.null(R) && !is.null(res)) {

@@ -81,9 +81,8 @@ clustering_plot_phenoplot_server <- function(id,
         colvar <- factor(Y[, pheno[i]])
         colvar[which(colvar %in% c(NA, "", " ", "NA", "na"))] <- NA
         colvar <- factor(as.character(colvar))
-        klrpal <- playdata::COLORS
+        klrpal <- rep(omics_pal_d("muted_light")(8), 10)
         klr1 <- klrpal[colvar]
-        klr1 <- paste0(gplots::col2hex(klr1), "99")
         jj <- which(is.na(klr1))
         if (length(jj)) klr1[jj] <- "#AAAAAA22"
         tt <- tolower(pheno[i])

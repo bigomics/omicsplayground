@@ -168,7 +168,7 @@ clustering_plot_table_parcoord_server <- function(id,
       table(clust.id)
 
       df <- data.frame(clust.id = clust.id, zx)
-      klrpal <- rep(RColorBrewer::brewer.pal(8, "Set2"), 99)
+      klrpal <- rep(omics_pal_d("light")(8), 99)
       klrpal <- klrpal[1:max(clust.id)]
       klrpal2 <- lapply(1:length(klrpal), function(i) c((i - 1) / (length(klrpal) - 1), klrpal[i]))
 

@@ -79,13 +79,8 @@ clustering_plot_genemodule_server <- function(id,
       shiny::req(pd)
 
       mat <- pd$mat
-      plotly.colors <- c(
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-      )
-      ## plotly.colors <- c('#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
-      ##  '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52')
-      plotly.colors <- paste0(plotly.colors, "99")
+      plotly.colors <- omics_pal_d("muted_light")(8)
+      plotly.colors <- rep(plotly.colors, 10)
 
       nplots <- nrow(mat)
       plts <- list()
