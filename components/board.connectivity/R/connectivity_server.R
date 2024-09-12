@@ -79,13 +79,6 @@ ConnectivityBoard <- function(
       has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
       shiny::req(has.contrast)
 
-      if (!has.contrast) {
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! ct = ", ct)
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gx.meta) = ", names(meta1))
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gset.meta) = ", names(meta2))
-        return(NULL)
-      }
-
       ## convert to human symbols so we can match different organism
       fc <- meta1[[ct]]$meta.fx
       names(fc) <- rownames(meta1[[ct]])
@@ -228,9 +221,6 @@ ConnectivityBoard <- function(
           verbose = FALSE
         )
         
-        dbg("[compute_connectivity] need_update = ", need_update)
-        dbg("[compute_connectivity] names(pgx$connectivity) = ", names(pgx$connectivity))        
-
         if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
           info("[compute_connectivity] calling updateDatasetFolder")
@@ -241,12 +231,6 @@ ConnectivityBoard <- function(
         }
 
         has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
-        if(!has.user_sigdb) {
-          dbg("[compute_connectivity] USER sigdb missing")
-        } else {
-          dbg("[compute_connectivity] USER sigdb available")
-        }
-
         if (need_update || !has.user_sigdb) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
@@ -264,10 +248,8 @@ ConnectivityBoard <- function(
           }
           pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
           ## save results back?? but what is the real filename?????
-          dbg("[compute_connectivity] pgx$filename = ", pgx$filename)
           if(!is.null(pgx$filename)) {
             pgx.filepath <- file.path(pgxdir,basename(pgx$filename))
-            dbg("[compute_connectivity] filename = ", pgx.filepath)
             playbase::pgx.save( shiny::reactiveValuesToList(pgx), file = pgx.filepath)
           }
         }
