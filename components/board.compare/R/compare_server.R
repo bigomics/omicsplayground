@@ -347,7 +347,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
                            higenes, ntop, get_data = FALSE) {
       p <- NULL
       ## map hilighted genes to pgx probes
-      hilight <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
+      label <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
 
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
@@ -369,7 +369,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           pos = mapped.pos,
           cex = 0.9,
           cex.lab = cex.lab,
-          hilight = hilight,
+          hilight = NULL,
+          label = label,          
           ntop = ntop,
           zfix = TRUE,
           par.sq = TRUE,
