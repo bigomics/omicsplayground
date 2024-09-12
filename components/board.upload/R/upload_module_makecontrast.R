@@ -137,7 +137,7 @@ upload_module_makecontrast_server <- function(
         rv$condition_group2 <- NULL
         shiny::updateTextInput(session, "newname", value = "")
 
-        cond <- sel.conditions()        
+        cond <- sel.conditions()
         if (length(cond) == 0 || is.null(cond)) {
           return(NULL)
         }
@@ -176,10 +176,9 @@ upload_module_makecontrast_server <- function(
       )
 
       sel.conditions <- shiny::reactive({
-        
         ## shiny::req( phenoRT(), countsRT())  ## shiny BUG if has NA!!!!
-        shiny::req( dim(phenoRT()), dim(countsRT()))
-        
+        shiny::req(dim(phenoRT()), dim(countsRT()))
+
         shiny::validate(shiny::need(
           length(input$param) > 0,
           "Please select at least one phenotype"
@@ -195,7 +194,7 @@ upload_module_makecontrast_server <- function(
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
         cond <- apply(df1, 1, paste, collapse = ".")
-        
+
         ## get abbreviated phenotype
         minlen <- ifelse(length(pp) >= 2, 4, 8)
         minlen <- ifelse(length(pp) >= 3, 3, minlen)
@@ -206,7 +205,7 @@ upload_module_makecontrast_server <- function(
         abv.df <- abv.df[ss, pp, drop = FALSE]
         abv.cond <- apply(abv.df, 1, paste, collapse = ".")
         names(cond) <- abv.cond
-        
+
         cond
       })
 
