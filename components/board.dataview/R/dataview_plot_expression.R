@@ -209,7 +209,6 @@ dataview_plot_expression_server <- function(id,
 
       df <- pd[["df"]]
 
-      # BLUE <- rgb(0.2, 0.5, 0.8, 0.8)
       BLUE <- omics_colors("brand_blue")
       bee.cex <- ifelse(length(df$x) > 500, 0.1, 0.2)
       bee.cex <- c(0.3, 0.1, 0.05)[cut(length(df$x), c(0, 100, 500, 99999))]
