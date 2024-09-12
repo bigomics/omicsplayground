@@ -189,7 +189,7 @@ upload_module_makecontrast_server <- function(
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
-        df <- playbase::binarizeNumericalColumns(df) 
+        df <- playbase::binarizeNumericalColumns(df)
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
