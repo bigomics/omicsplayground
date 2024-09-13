@@ -209,3 +209,9 @@ main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
 
 shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
+
+## Initialize translator
+library(shiny.i18n)
+DICTIONARY <- file.path(FILES, "translation.json")
+i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
+i18n$set_translation_language("RNA-seq")
