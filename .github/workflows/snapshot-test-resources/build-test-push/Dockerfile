@@ -59,6 +59,6 @@ RUN R -e "install.packages('shinytest2')"
 # add entrypoint to execute when the docker container starts up
 
 # give permission to execute the entrypoint
-RUN chmod +x .github/workflows/build-test-push/entrypoint.sh
+RUN chmod +x .github/workflows/snapshot-test-resources/entrypoint.sh
 
-ENTRYPOINT [".github/workflows/build-test-push/entrypoint.sh"]
+ENTRYPOINT [".github/workflows/snapshot-test-resources/entrypoint.sh"]
