@@ -99,6 +99,7 @@ app_ui <- function() {
 
     bigdash::bigPage(
         header,
+        shiny.i18n::usei18n(i18n),
         title = "Omics Playground v3",
         theme = big_theme2,
         sidebar = sidebar,
