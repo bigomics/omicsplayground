@@ -49,14 +49,15 @@ dataview_module_geneinfo_server <- function(id,
       feature <- r.gene()
       shiny::req(feature %in% rownames(pgx$X))
 
-      organism <- pgx$organism
+      organism <- pgx$organism      
       if (is.null(organism) || is.na(organism) || organism == "") organism <- "Human"
-      datatype <- pgx$datatype
-      if (is.null(datatype) || is.na(datatype) || datatype == "") datatype <- "RNA-seq"
+      datatype <- pgx$datatype      
+      if (is.null(datatype) || is.na(datatype) || datatype == "") datatype <- "RNA-seq"      
 
       jj <- match(feature, rownames(pgx$genes))
       symbol <- pgx$genes$symbol[jj]
-
+      ortholog <- pgx$genes$human_ortholog[jj]
+      
       if (datatype == "metabolomics") {
         info <- playbase::getMetaboliteInfo(
           organism = organism,
@@ -67,6 +68,7 @@ dataview_module_geneinfo_server <- function(id,
           organism = organism,
           gene = symbol,
           feature = feature,
+          ortholog = ortholog,
           datatype = datatype,
           as.link = TRUE
         )
@@ -85,7 +87,7 @@ dataview_module_geneinfo_server <- function(id,
         names(info) <- sub("uniprot", "protein", names(info))
         names(info) <- sub("map_location", "genome location", names(info))
       }
-
+      
       if (is.null(info)) {
         info$summary <- "(no info available)"
         if (symbol %in% names(playdata::GENE_SUMMARY)) {
@@ -93,7 +95,7 @@ dataview_module_geneinfo_server <- function(id,
           info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
         }
       }
-
+      
       ## add feature name is not symbol
       info$feature <- NULL
       if (!is.na(symbol) && feature != symbol) {
@@ -109,7 +111,7 @@ dataview_module_geneinfo_server <- function(id,
         res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
       }
       res <- paste(res, collapse = "<p>")
-
+      
       if (is.null(res)) {
         res <- tspan("(gene info not available)")
       }
