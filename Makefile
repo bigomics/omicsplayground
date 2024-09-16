@@ -57,6 +57,7 @@ update_playbase=true
 docker.update: FORCE
 	@echo building update docker 
 	docker build --no-cache \
+		--progress plain \
 		--build-arg update_playdata=$(update_playdata) \
 		--build-arg update_bigdash=$(update_bigdash) \
 		--build-arg update_playbase=$(update_playbase) \
@@ -86,7 +87,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-beta12.9001"
+VERSION = "v3.5.0-rc1"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
