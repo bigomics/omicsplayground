@@ -54,14 +54,14 @@ RUN rm -fr /omicsplayground  \
 # Install fresh playbase (from same BRANCH)
 #------------------------------------------------------------
 # check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
-RUN if [ "$update_playbase" == "true" ]; then \
-RUN echo "Checking playbase branch ${BRANCH}"; \
-  RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
-  if [ $BRANCH_EXISTS -eq 1 ]; then \
-    R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
+RUN if [ $update_playbase = true ]; then \
+    echo "Checking playbase branch ${BRANCH}"; \
+    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+       R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
     else \
-    R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
-  fi \
+       R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
+    fi \
 fi
 
 # after install non-detected missing packages
@@ -74,29 +74,29 @@ fi
 # Install fresh playdata (from same BRANCH)
 #------------------------------------------------------------
 # check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
-RUN if [ "$update_playdata" == "true" ]; then \
-  RUN echo "Checking playdata branch ${BRANCH}"; \
-  RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${BRANCH} | wc -l); \
-  if [ $BRANCH_EXISTS -eq 1 ]; then \
-    R -e "remotes::install_github('bigomics/playdata@${BRANCH}',dependencies=FALSE)"; \
+RUN if [ $update_playdata = true ]; then \
+    echo "Checking playdata branch ${BRANCH}"; \
+    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${BRANCH} | wc -l); \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+        R -e "remotes::install_github('bigomics/playdata@${BRANCH}',dependencies=FALSE)"; \
     else \
-    R -e "remotes::install_github('bigomics/playdata@main',dependencies=FALSE)"; \
-  fi \
+        R -e "remotes::install_github('bigomics/playdata@main',dependencies=FALSE)"; \
+    fi \
 fi
 
 #------------------------------------------------------------
 # Install fresh bigdash (from same BRANCH)
 #------------------------------------------------------------
 # check if bigdash@{$BRANCH} exists, if it does, install.. otherwise install main
-RUN if [ "$update_bigdash" = "true" ]; then \
+RUN if [ $update_bigdash = true ]; then \
     echo "Checking bigdash branch ${BRANCH}"; \
     BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/bigdash.git ${BRANCH} | wc -l); \
     if [ $BRANCH_EXISTS -eq 1 ]; then \
-      R -e "remotes::install_github('bigomics/bigdash@${BRANCH}',dependencies=FALSE)"; \
+       R -e "remotes::install_github('bigomics/bigdash@${BRANCH}',dependencies=FALSE)"; \
     else \
-      R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
+       R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
     fi \
-  fi
+fi
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
