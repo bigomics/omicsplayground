@@ -15,7 +15,8 @@ scan_packages <- function(path='R') {
   renv.out <- renv::dependencies(path = path, root = getwd(), errors = "ignored")
   pkg.used <- sort(unique(renv.out$Package))
   pkg.used <- setdiff(pkg.used, "playbase")
-
+  pkg.used <- c(pkg.used, "sf")  ## add manually
+    
   ## Define remote locations or versions
   github_url <- function(repo, tag) {
     if(grepl("@",repo)) {
@@ -101,7 +102,7 @@ scan_packages <- function(path='R') {
 
 }
 
-install_dependencies <- function(use.remotes=FALSE) {
+install_dependencies.NOTUSED <- function(use.remotes=FALSE) {
   
   require <- function(pkg) (pkg %in% installed.packages()[,'Package'])
   remove.pkg <- function(p) if(require(p, character.only=TRUE)) try(remove.packages(p))
@@ -132,7 +133,7 @@ install_dependencies <- function(use.remotes=FALSE) {
   }
 }
 
-install_silent <- function(pkg.list, linkto=NULL, force=FALSE) {
+install_silent.NOTUSED <- function(pkg.list, linkto=NULL, force=FALSE) {
   ## suppress ultra-verbose packages that issue loads of warnings
   ## during compilation.
   if(!is.null(linkto)) {
