@@ -1061,6 +1061,7 @@ app_server <- function(input, output, session) {
         ),
         type = "message"
       )
+      err_traceback <- append(error$message, err_traceback)
     }
 
     # clean up and concatenate err_traceback
