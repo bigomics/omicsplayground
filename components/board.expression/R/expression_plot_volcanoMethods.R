@@ -238,7 +238,8 @@ expression_plot_volcanoMethods_server <- function(id,
         label.cex = label.cex,
         ylab = "Significance (-log10q)",
         xlab = "Effect size (log2FC)",
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 

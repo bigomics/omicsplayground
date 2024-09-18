@@ -215,7 +215,8 @@ expression_plot_volcanoAll_server <- function(id,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         marker.size = 1.2,
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 
