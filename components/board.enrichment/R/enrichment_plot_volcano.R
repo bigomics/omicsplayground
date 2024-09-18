@@ -153,7 +153,8 @@ enrichment_plot_volcano_server <- function(id,
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10q)",
         marker.size = 1,
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 
@@ -175,7 +176,8 @@ enrichment_plot_volcano_server <- function(id,
         marker.size = 2,
         label.cex = 6,
         axis.text.size = 24,
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 

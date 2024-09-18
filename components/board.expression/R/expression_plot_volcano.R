@@ -190,7 +190,8 @@ expression_plot_volcano_server <- function(id,
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
         marker.size = 1,
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 
@@ -215,7 +216,8 @@ expression_plot_volcano_server <- function(id,
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
         marker.size = 1.8,
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 

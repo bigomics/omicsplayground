@@ -267,7 +267,8 @@ signature_plot_volcano_server <- function(id,
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10p)",
         marker.size = 1.2,
-        showlegend = FALSE
+        showlegend = FALSE,
+        title = NULL
       )
     }
 
