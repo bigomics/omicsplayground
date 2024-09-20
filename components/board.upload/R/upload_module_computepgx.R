@@ -400,8 +400,8 @@ upload_module_computepgx_server <- function(
           shiny::updateCheckboxGroupInput(
             session,
             "gene_methods",
-            GENETEST.METHODS(),
             selected = GENETEST.SELECTED
+            choices = GENETEST.METHODS(),
           )
           shiny::updateCheckboxGroupInput(session,
             "gset_methods",
