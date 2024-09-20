@@ -98,6 +98,8 @@ dataview_plot_averagerank_server <- function(id,
       pd <- plot_data()
       req(pd)
 
+      stop()
+      
       mean.fc <- pd$df$mean.fc
       sel <- pd$sel
       gene <- pd$gene
