@@ -1070,7 +1070,7 @@ app_server <- function(input, output, session) {
     # Remove pdf + download + card_selector + copy_info + unnecessary table inputs
     board_inputs <- board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)]
 
-    input_values <- lapply(board_inputs, function(x){
+    input_values <- lapply(board_inputs, function(x) {
       value <- input[[x]]
       return(paste0(x, ": ", value))
     }) |> unlist()
