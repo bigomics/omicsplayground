@@ -396,6 +396,18 @@ upload_module_computepgx_server <- function(
             choices = ONESAMPLE.GENESET_METHODS,
             sel = c("fisher", "fgsea")
           )
+        } else {
+          shiny::updateCheckboxGroupInput(
+            session,
+            "gene_methods",
+            GENETEST.METHODS(),
+            selected = GENETEST.SELECTED
+          )
+          shiny::updateCheckboxGroupInput(session,
+            "gset_methods",
+            choices = GENESET.METHODS,
+            sel = GENESET.SELECTED
+          )
         }
       })
 
