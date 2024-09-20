@@ -59,8 +59,19 @@ upload_module_computepgx_server <- function(
         }
       )
 
-      ## GENETEST.SELECTED <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-      GENETEST.SELECTED <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+      GENETEST.SELECTED <- shiny::eventReactive(
+        {
+          upload_datatype()
+        },
+        {
+          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          } else {
+            mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+          }
+          return(mm)
+        }
+      )
 
       ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
@@ -180,7 +191,7 @@ upload_module_computepgx_server <- function(
                   ns("gene_methods"),
                   shiny::HTML("<h4>Gene tests:</h4>"),
                   GENETEST.METHODS(),
-                  selected = GENETEST.SELECTED
+                  selected = GENETEST.SELECTED()
                 )
               ),
               bslib::card(
@@ -190,7 +201,7 @@ upload_module_computepgx_server <- function(
                     <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
                       <h4>Enrichment methods:</h4>
                       <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='flex-button'>
-                        <i class='fas fa-arrow-up-right-from-square-circle'></i>
+                        <i class='fa-solid fa-arrow-up-right-from-square-circle'></i>
                       </a>
                     </div>
                   "),
@@ -400,8 +411,8 @@ upload_module_computepgx_server <- function(
           shiny::updateCheckboxGroupInput(
             session,
             "gene_methods",
-            selected = GENETEST.SELECTED
             choices = GENETEST.METHODS(),
+            sel = GENETEST.SELECTED()
           )
           shiny::updateCheckboxGroupInput(session,
             "gset_methods",
