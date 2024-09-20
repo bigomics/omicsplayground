@@ -1064,9 +1064,22 @@ app_server <- function(input, output, session) {
       err_traceback <- append(error$message, err_traceback)
     }
 
+    # Get inputs to reproduce state
+    board_inputs <- names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))]
+
+    # Remove pdf + download + card_selector + copy_info + unnecessary table inputs
+    board_inputs <- board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)]
+
+    input_values <- lapply(board_inputs, function(x) {
+      value <- input[[x]]
+      return(paste0(x, ": ", value))
+    }) |> unlist()
+
+    err_traceback <- append(input_values, err_traceback)
+
     # clean up and concatenate err_traceback
 
-    err_traceback <- paste(err_traceback, collapse = "\n")
+    err_traceback <- paste(err_traceback, collapse = "\n ")
 
     pgx_name <- NULL
     user_email <- auth$email
