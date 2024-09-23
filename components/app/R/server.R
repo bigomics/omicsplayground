@@ -685,6 +685,50 @@ app_server <- function(input, output, session) {
     }
   )
 
+  # populate labeltype selector based on pgx$genes
+
+  observeEvent(
+    {
+      PGX$genes
+    },
+    {
+      req(PGX$genes)
+      browser()
+
+      clean_genes_matrix <- PGX$genes
+
+      # remove NA columns
+      clean_genes_matrix <- clean_genes_matrix[, colSums(is.na(clean_genes_matrix)) == 0]
+
+      # remove columns with only 1 unique value
+      clean_genes_matrix <- clean_genes_matrix[, sapply(clean_genes_matrix, function(x) length(unique(x)) > 1)]
+
+
+      # improve naming of label types (gene_title -> name) and remove pos, map, tx_len
+      label_types_available <- colnames(clean_genes_matrix)
+
+      names(label_types_available) <- label_types_available
+
+      # rename gene_title name to name
+      names(label_types_available)[names(label_types_available) == "gene_title"] <- "name"
+
+      # remove pos, map, tx_len (not interesting for label types)
+      label_types_available <- label_types_available[!grepl("pos|map|tx_len", names(label_types_available))]
+
+      ai <- 1
+      browser()
+
+      shiny::updateSelectInput(
+        session,
+        "selected_labeltype",
+        choices = label_types_available,
+        selected = labeltype()
+      )
+    }
+  )
+
+
+
   # change label type based on selected input
   shiny::observeEvent(
     {
