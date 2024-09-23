@@ -72,7 +72,8 @@ dataview_module_geneinfo_server <- function(id,
           datatype = datatype,
           as.link = TRUE
         )
-
+      }
+      if (!is.null(info)) {
         ## reorder
         nn <- intersect(
           c(
@@ -81,14 +82,12 @@ dataview_module_geneinfo_server <- function(id,
           ),
           names(info)
         )
-
         info <- info[nn]
         names(info) <- sub("gene_symbol", "symbol", names(info))
         names(info) <- sub("uniprot", "protein", names(info))
         names(info) <- sub("map_location", "genome location", names(info))
-      }
-
-      if (is.null(info)) {
+      } else {
+        info <- list()
         info$summary <- "(no info available)"
         if (symbol %in% names(playdata::GENE_SUMMARY)) {
           info$summary <- playdata::GENE_SUMMARY[symbol]
