@@ -627,8 +627,9 @@ app_server <- function(input, output, session) {
       shiny.i18n::update_lang(lang, session)
 
       # choose the default labeltype based on datatype
+
       if (PGX$datatype == "metabolomics") {
-        labeltype("name")
+        labeltype("gene_title")
       } else {
         labeltype("feature") # probe is feature (rownames of counts)
       }
@@ -693,15 +694,17 @@ app_server <- function(input, output, session) {
     },
     {
       req(PGX$genes)
-      browser()
 
       clean_genes_matrix <- PGX$genes
 
       # remove NA columns
-      clean_genes_matrix <- clean_genes_matrix[, colSums(is.na(clean_genes_matrix)) == 0]
+      clean_genes_matrix <- clean_genes_matrix[, !apply(is.na(clean_genes_matrix), 2, all), drop = FALSE]
 
       # remove columns with only 1 unique value
-      clean_genes_matrix <- clean_genes_matrix[, sapply(clean_genes_matrix, function(x) length(unique(x)) > 1)]
+      clean_genes_matrix <- clean_genes_matrix[, sapply(clean_genes_matrix, function(x) length(unique(x)) > 1), drop = FALSE]
+
+      # remove duplicated columns
+      clean_genes_matrix <- clean_genes_matrix[, !duplicated(t(clean_genes_matrix)), drop = FALSE]
 
 
       # improve naming of label types (gene_title -> name) and remove pos, map, tx_len
@@ -714,9 +717,6 @@ app_server <- function(input, output, session) {
 
       # remove pos, map, tx_len (not interesting for label types)
       label_types_available <- label_types_available[!grepl("pos|map|tx_len", names(label_types_available))]
-
-      ai <- 1
-      browser()
 
       shiny::updateSelectInput(
         session,
