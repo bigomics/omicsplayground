@@ -13,6 +13,15 @@ dataview_plot_totalcounts_ui <- function(
     title) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList( ## AZ
+    shiny::radioButtons(
+      inputId = ns("sampleqc_plottype"),
+      label = "Plot type",
+      choices = c("Average total abundance",
+                  "Number of detected features")
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     title = title,
@@ -20,7 +29,7 @@ dataview_plot_totalcounts_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     caption = caption,
-    options = NULL,
+    options = options,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height
@@ -50,79 +59,105 @@ dataview_plot_totalcounts_server <- function(id,
         ("")
       }
 
-      ylab <- paste0("total ", type, logtype)
-      if (data_groupby != "<ungrouped>") {
-        ylab <- paste0("average total ", type, logtype)
+      sampleqc_plottype <- input$sampleqc_plottype
+
+      ## ylab <- paste0("total ", type, logtype)
+      ## if (data_groupby != "<ungrouped>") {
+      ##   ylab <- paste0("average total ", type, logtype)
+      ## }
+
+      if (sampleqc_plottype == "Average total abundance") {
+          ylab <- paste0("Average total ", type, logtype)
+      } else if (sampleqc_plottype == "Number of detected features") {
+          ylab <- "N. of detected features"
       }
 
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          counts = log10(tbl$total.counts)
+          counts = log10(tbl$total.counts),
+          ndetectedfeat = tbl$n.detected.features
         ),
-        ylab = ylab
+        ylab = ylab,
+        sampleqc_plottype = sampleqc_plottype
       )
+
       return(res)
     })
 
 
-    plot.RENDER <- function() {
-      res <- plot_data()
-      shiny::req(res)
-      df <- res[[1]]
+    ## plot.RENDER <- function() {
+    ##  res <- plot_data()
+    ##  shiny::req(res)
+    ##  df <- res[[1]]
+    ## ---- xlab ------ ###
+    ##  names.arg <- df$sample
+    ##  if (length(names.arg) > 20) { names.arg <- "" }
+    ##  cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
+    ##  par(mar = c(8, 4, 2, 0.5), mgp = c(2.2, 0.8, 0))
+    ## if (res$sampleqc_plottype == "Average total abundance") { ## AZ
+    ##    barplot(
+    ##        df$counts / 1e6,
+    ##        las = 3,
+    ##        border = NA,
+    ##        col = rgb(0.2, 0.5, 0.8, 0.8),
+    ##        cex.names = cex.names,
+    ##        cex.lab = 1,
+    ##        ylab = paste(res$ylab, "(M)"),
+    ##        ylim = c(0, max(df$counts) / 1e6) * 1.1,
+    ##        names.arg = names.arg
+    ##    )
+    ## } else if (res$sampleqc_plottype == "Number of detected features") {
+    ##    barplot(
+    ##        df$ndetectedfeat,
+    ##        las = 3,
+    ##        border = NA,
+    ##        col = rgb(0.2, 0.5, 0.8, 0.8),
+    ##        cex.names = cex.names,
+    ##        cex.lab = 1,
+    ##        ylab = paste(res$ylab, "(M)"),
+    ##        ylim = c(0, max(df$ndetectedfeat) / 1e6) * 1.1,
+    ##        names.arg = names.arg
+    ##     )
+    ## }
+    ## }
 
-      ## ---- xlab ------ ###
-      names.arg <- df$sample
-      if (length(names.arg) > 20) {
-        names.arg <- ""
-      }
-      cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
-
-      par(mar = c(8, 4, 2, 0.5), mgp = c(2.2, 0.8, 0))
-      barplot(
-        df$counts / 1e6,
-        las = 3, border = NA,
-        col = rgb(0.2, 0.5, 0.8, 0.8),
-        cex.names = cex.names,
-        cex.lab = 1,
-        ylab = paste(res$ylab, "(M)"),
-        ylim = c(0, max(df$counts) / 1e6) * 1.1,
-        names.arg = names.arg
-      )
-    }
-
-    modal_plot.RENDER <- function() {
-      plot.RENDER()
-    }
+    ## modal_plot.RENDER <- function() { plot.RENDER() }
 
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
       df <- res[[1]]
-
-      fig <-
-        plotly::plot_ly(
-          data = df,
-          x = ~sample,
-          y = ~counts,
-          type = "bar",
-          marker = list(
-            color = omics_colors("brand_blue")
-          ),
-          hovertemplate = ~ paste0(
-            "Sample: <b>", sample, "</b><br>",
-            res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
-            "<extra></extra>"
-          )
-        ) %>%
-        plotly_default() %>%
-        plotly::layout(
-          xaxis = list(title = FALSE),
-          yaxis = list(title = res$ylab),
-          margin = list(l = 30, r = 0, t = 0, b = 0)
-        )
-
-      fig
+      
+      if(res$sampleqc_plottype == "Average total abundance") {
+          fig <-
+              plotly::plot_ly(
+                data = df, x = ~sample, y = ~counts, type = "bar",
+                marker = list(color = omics_colors("brand_blue")),
+                hovertemplate = ~ paste0("Sample: <b>", sample, "</b><br>",
+                                         res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
+                                         "<extra></extra>")
+                ) %>%
+              plotly_default() %>%
+              plotly::layout(xaxis = list(title = FALSE),
+                             yaxis = list(title = res$ylab),
+                             margin = list(l = 30, r = 0, t = 0, b = 0))
+          fig
+      } else if (res$sampleqc_plottype == "Number of detected features") {
+          fig <-
+              plotly::plot_ly(
+                data = df, x = ~sample, y = ~ndetectedfeat, type = "bar",
+                marker = list(color = omics_colors("brand_blue")),
+                hovertemplate = ~ paste0("Sample: <b>", sample, "</b><br>",
+                                         res$ylab, ": <b>", sprintf("%8.0f", ndetectedfeat), "</b>",
+                                         "<extra></extra>")
+                ) %>%
+              plotly_default() %>%
+              plotly::layout(xaxis = list(title = FALSE),
+                             yaxis = list(title = res$ylab),
+                             margin = list(l = 30, r = 0, t = 0, b = 0))
+          fig
+      }
     }
 
     modal_plotly.RENDER <- function() {
