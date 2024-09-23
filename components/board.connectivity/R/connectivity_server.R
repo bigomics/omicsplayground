@@ -220,7 +220,7 @@ ConnectivityBoard <- function(
           check.sigdb = TRUE,
           verbose = FALSE
         )
-        
+
         if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
           info("[compute_connectivity] calling updateDatasetFolder")
@@ -248,9 +248,9 @@ ConnectivityBoard <- function(
           }
           pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
           ## save results back?? but what is the real filename?????
-          if(!is.null(pgx$filename)) {
-            pgx.filepath <- file.path(pgxdir,basename(pgx$filename))
-            playbase::pgx.save( shiny::reactiveValuesToList(pgx), file = pgx.filepath)
+          if (!is.null(pgx$filename)) {
+            pgx.filepath <- file.path(pgxdir, basename(pgx$filename))
+            playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)
           }
         }
 
