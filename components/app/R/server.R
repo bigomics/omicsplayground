@@ -558,15 +558,15 @@ app_server <- function(input, output, session) {
       ##   class = "quick-button",
       ##   style = "border: none; color: black; font-size: 1em;"
       ## )
-      tag <- SearchWidgetUI("search", label=pgx.name, class = "quick-button")
+      tag <- QuestionWidgetUI("question", label=pgx.name, class = "quick-button")
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
     }
     tag
   })
 
-  ## server for search widget
-  SearchWidgetServer("search", pgx = PGX)
+  ## server for Question widget
+  QuestionWidgetServer("question", pgx = PGX)
   
   observeEvent(input$dataset_click, {
     shiny::req(PGX$name)
