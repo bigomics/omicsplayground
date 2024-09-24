@@ -1081,6 +1081,19 @@ app_server <- function(input, output, session) {
 
     err_traceback <- paste(err_traceback, collapse = "\n ")
 
+    # Skip if error is repeated
+    # Initialize variable as well
+    if (!exists("err_traceback_prev")) {
+      err_traceback_prev <<- ""
+    }
+    if (err_traceback == err_traceback_prev) {
+      message("EPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa")
+      return()
+    }
+
+    # Save globally last error
+    err_traceback_prev <<- err_traceback
+
     pgx_name <- NULL
     user_email <- auth$email
     user_tab <- input$nav
