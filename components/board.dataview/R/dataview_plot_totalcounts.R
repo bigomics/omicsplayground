@@ -67,7 +67,8 @@ dataview_plot_totalcounts_server <- function(id,
       ## }
 
       if (sampleqc_plottype == "Average total abundance") {
-          ylab <- paste0("Average total ", type, logtype)
+          ## ylab <- paste0("Average total ", type, logtype)
+          ylab <- paste0("Total ", type)
       } else if (sampleqc_plottype == "Number of detected features") {
           ylab <- "N. of detected features"
       }
@@ -75,7 +76,8 @@ dataview_plot_totalcounts_server <- function(id,
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          counts = log10(tbl$total.counts),
+          ## counts = log10(tbl$total.counts),
+          counts = tbl$total.counts,
           ndetectedfeat = tbl$n.detected.features
         ),
         ylab = ylab,
