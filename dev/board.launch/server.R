@@ -88,6 +88,7 @@ app_server <- function(input, output, session) {
         req(input$pgx_path)
         pgx <- playbase::pgx.load(input$pgx_path)
         pgx <- playbase::pgx.initialize(pgx)
+        DATATYPEPGX <<- tolower(pgx$datatype)
         server <- board_server_fn(board, pgx = pgx)
 
   })
