@@ -718,6 +718,15 @@ app_server <- function(input, output, session) {
       # remove pos, map, tx_len (not interesting for label types)
       label_types_available <- label_types_available[!grepl("pos|map|tx_len", names(label_types_available))]
 
+      # if available, rename chr0 to Chromossome and chr to locus
+      if ("chr0" %in% names(label_types_available)) {
+        names(label_types_available)[names(label_types_available) == "chr0"] <- "Chromossome"
+      }
+
+      if ("chr" %in% names(label_types_available)) {
+        names(label_types_available)[names(label_types_available) == "chr"] <- "Locus"
+      }
+
       shiny::updateSelectInput(
         session,
         "selected_labeltype",

@@ -68,7 +68,8 @@ expression_plot_volcano_server <- function(id,
                                            res,
                                            genes_selected,
                                            labeltype = reactive("symbol"),
-                                           watermark = FALSE) {
+                                           watermark = FALSE,
+                                           pgx) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
@@ -97,7 +98,7 @@ expression_plot_volcano_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
-      label.names <- playbase::probe2symbol(rownames(res), res, labeltype(), fill_na = TRUE)
+      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
 
       return(list(
         x = x,
@@ -122,7 +123,7 @@ expression_plot_volcano_server <- function(id,
         x = pd[["x"]],
         y = pd[["y"]],
         names = pd$features,
-        label.names = pd[["labal.names"]],
+        label.names = pd[["label.names"]],
         source = "plot1",
         marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
