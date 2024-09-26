@@ -106,6 +106,17 @@ correlation_plot_cor_graph_server <- function(
       visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
       visdata$edges$width <- 2 * visdata$edges$width
 
+      if (nrow(visdata$edges) == 0 && nrow(visdata$nodes) == 1) {
+        visdata$edges <- data.frame(
+          from = rownames(visdata$nodes),
+          to = rownames(visdata$nodes),
+          weight = 1,
+          rho = 1,
+          width = 1,
+          color = "fff"
+        )
+      }
+
       graph <- visNetwork::visNetwork(
         nodes = visdata$nodes,
         edges = visdata$edges
