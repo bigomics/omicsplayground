@@ -1,7 +1,7 @@
 searchTabs <- function(board) {
     tabs <- list(
         biomarker = c("Feature selection", "Feature-set ranking"),
-        dataview = c("Gene overview", "Sample QC", "Counts table", "Sample information", "Contrasts"),
+        dataview = c("Gene overview", "Sample QC", "Data table", "Sample information", "Contrasts"),
         clustering = c("Heatmap", "PCA/tSNE", "Parallel"),
         featuremap = c("Gene", "Geneset"),
         expression = c("Overview", "Top genes", "Volcano by comparison", "Volcano by method"),
