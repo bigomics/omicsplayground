@@ -359,6 +359,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }))
         prop.counts <- 100 * t(t(summed.counts) / total.counts)
 
+        ## N. of detected features per sample or group AZ
+        n.detected.features <- apply(counts, 2, function(x) length(which(x > 0)))
+
         ## get variation per group
         log2counts <- log2(1 + counts)
         varx <- apply(log2counts, 1, var)
@@ -396,6 +399,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           subtt = subtt,
           log2counts = log2counts,
           prop.counts = prop.counts,
+          n.detected.features = n.detected.features, ## AZ
           gset.genes = gset.genes
         )
         ## getCountStatistics(res)

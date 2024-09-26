@@ -79,13 +79,6 @@ ConnectivityBoard <- function(
       has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
       shiny::req(has.contrast)
 
-      if (!has.contrast) {
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! ct = ", ct)
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gx.meta) = ", names(meta1))
-        dbg("[ConnectivityBoard:getCurrentContrast] ERROR! names(gset.meta) = ", names(meta2))
-        return(NULL)
-      }
-
       ## convert to human symbols so we can match different organism
       fc <- meta1[[ct]]$meta.fx
       names(fc) <- rownames(meta1[[ct]])
@@ -237,10 +230,11 @@ ConnectivityBoard <- function(
           shiny::removeModal(session)
         }
 
-        if (!"datasets-sigdb.h5" %in% names(pgx$connectivity)) {
+        has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
+        if (need_update || !has.user_sigdb) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
-            info("[compute_connectivity] computing connectivity scores...")
+            info("[compute_connectivity] re-computing connectivity scores...")
             pgx.showSmallModal("Computing connectivity scores<br>Please wait...")
             shiny::withProgress(message = "Computing connectivity scores...", value = 0.33, {
               user.scores <- playbase::pgx.computeConnectivityScores(
@@ -254,8 +248,13 @@ ConnectivityBoard <- function(
           }
           pgx$connectivity[["datasets-sigdb.h5"]] <- user.scores
           ## save results back?? but what is the real filename?????
-          ## playbase::pgx.save(pgx, file = file.path(pgxdir,pgx$name))
+          if (!is.null(pgx$filename)) {
+            pgx.filepath <- file.path(pgxdir, basename(pgx$filename))
+            playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)
+          }
         }
+
+        ## return connectivity results object
         pgx$connectivity
       },
       ignoreNULL = TRUE,

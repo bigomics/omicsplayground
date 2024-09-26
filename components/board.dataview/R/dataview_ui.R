@@ -195,9 +195,10 @@ DataViewUI <- function(id) {
           dataview_plot_totalcounts_ui(
             ns("counts_total"),
             label = "a",
-            title = "Total counts",
+            title = "Total counts / Number of detected features",
             info.text = "Average total counts by sample. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot of the average counts for each group.",
+            caption = "Barplot of the total counts or number of detected features for each sample (or group).",
+            ## caption = "Barplot of the average counts for each group.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
