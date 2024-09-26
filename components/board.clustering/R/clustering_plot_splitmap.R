@@ -165,8 +165,6 @@ clustering_plot_splitmap_server <- function(id,
         ## strip any prefix
         rownames(zx) <- sub(".*:", "", rownames(zx))
 
-        ai <- 3435
-        browser()
         rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
       }
 
