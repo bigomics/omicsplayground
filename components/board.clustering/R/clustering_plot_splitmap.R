@@ -165,18 +165,7 @@ clustering_plot_splitmap_server <- function(id,
         ## strip any prefix
         rownames(zx) <- sub(".*:", "", rownames(zx))
 
-        labeled_features <- NULL
-        if (labeltype() == "feature") {
-          rownames(zx) <- rownames(zx)
-        } else if (labeltype() == "symbol") {
-          labeled_features <- pgx$genes[rownames(zx), "symbol"]
-          labeled_features <- ifelse(is.na(labeled_features), rownames(zx), labeled_features)
-          rownames(zx) <- labeled_features
-        } else if (labeltype() == "name") {
-          labeled_features <- pgx$genes[rownames(zx), "gene_title"]
-          labeled_features <- ifelse(is.na(labeled_features), rownames(zx), labeled_features)
-          rownames(zx) <- labeled_features
-        }
+        rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
       }
 
       if (hm_level() == "geneset") rownames(zx) <- tolower(rownames(zx))
@@ -268,19 +257,8 @@ clustering_plot_splitmap_server <- function(id,
         }
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
-        if (labeltype() == "feature") {
-          rownames(X) <- rownames(X)
-        } else if (labeltype() == "symbol") {
-          labeled_features <- pgx$genes[rownames(X), "symbol"]
-          labeled_features <- ifelse(is.na(labeled_features), rownames(X), labeled_features)
-          rownames(X) <- labeled_features
-          names(tooltips) <- labeled_features
-        } else if (labeltype() == "name") {
-          labeled_features <- pgx$genes[rownames(X), "gene_title"]
-          labeled_features <- ifelse(is.na(labeled_features), rownames(X), labeled_features)
-          rownames(X) <- labeled_features
-          names(tooltips) <- labeled_features
-        }
+
+        rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- sapply(aa, function(x) {

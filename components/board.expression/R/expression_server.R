@@ -421,7 +421,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       res = fullDiffExprTable,
       genes_selected = genes_selected,
       labeltype = labeltype,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      pgx = pgx
     )
 
     expression_plot_maplot_server(
