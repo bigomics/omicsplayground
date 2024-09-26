@@ -90,8 +90,6 @@ expression_plot_volcanoAll_server <- function(id,
       symbols <- pgx$genes[rownames(FQ), "symbol"]
       names <- pgx$genes[rownames(FQ), "gene_title"]
 
-      ai <- 423955987
-      browser()
       label.names <- playbase::probe2symbol(rownames(FQ), pgx$genes, labeltype(), fill_na = TRUE)
 
       # Input vars

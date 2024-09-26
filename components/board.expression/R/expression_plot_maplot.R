@@ -96,9 +96,6 @@ expression_plot_maplot_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
-      ai=56546546
-      browser()
-
       label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
 
       plot_data <- list(
@@ -118,7 +115,7 @@ expression_plot_maplot_server <- function(id,
       return(plot_data)
     })
 
-    
+
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
