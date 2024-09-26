@@ -17,8 +17,10 @@ dataview_plot_totalcounts_ui <- function(
     shiny::radioButtons(
       inputId = ns("sampleqc_plottype"),
       label = "Plot type",
-      choices = c("Average total abundance",
-                  "Number of detected features")
+      choices = c(
+        "Average total abundance",
+        "Number of detected features"
+      )
     )
   )
 
@@ -67,10 +69,10 @@ dataview_plot_totalcounts_server <- function(id,
       ## }
 
       if (sampleqc_plottype == "Average total abundance") {
-          ## ylab <- paste0("Average total ", type, logtype)
-          ylab <- paste0("Total ", type)
+        ## ylab <- paste0("Average total ", type, logtype)
+        ylab <- paste0("Total ", type)
       } else if (sampleqc_plottype == "Number of detected features") {
-          ylab <- "N. of detected features"
+        ylab <- "N. of detected features"
       }
 
       res <- list(
@@ -130,35 +132,43 @@ dataview_plot_totalcounts_server <- function(id,
       res <- plot_data()
       shiny::req(res)
       df <- res[[1]]
-      
-      if(res$sampleqc_plottype == "Average total abundance") {
-          fig <-
-              plotly::plot_ly(
-                data = df, x = ~sample, y = ~counts, type = "bar",
-                marker = list(color = omics_colors("brand_blue")),
-                hovertemplate = ~ paste0("Sample: <b>", sample, "</b><br>",
-                                         res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
-                                         "<extra></extra>")
-                ) %>%
-              plotly_default() %>%
-              plotly::layout(xaxis = list(title = FALSE),
-                             yaxis = list(title = res$ylab),
-                             margin = list(l = 30, r = 0, t = 0, b = 0))
-          fig
+
+      if (res$sampleqc_plottype == "Average total abundance") {
+        fig <-
+          plotly::plot_ly(
+            data = df, x = ~sample, y = ~counts, type = "bar",
+            marker = list(color = omics_colors("brand_blue")),
+            hovertemplate = ~ paste0(
+              "Sample: <b>", sample, "</b><br>",
+              res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
+              "<extra></extra>"
+            )
+          ) %>%
+          plotly_default() %>%
+          plotly::layout(
+            xaxis = list(title = FALSE),
+            yaxis = list(title = res$ylab),
+            margin = list(l = 30, r = 0, t = 0, b = 0)
+          )
+        fig
       } else if (res$sampleqc_plottype == "Number of detected features") {
-          fig <-
-              plotly::plot_ly(
-                data = df, x = ~sample, y = ~ndetectedfeat, type = "bar",
-                marker = list(color = omics_colors("brand_blue")),
-                hovertemplate = ~ paste0("Sample: <b>", sample, "</b><br>",
-                                         res$ylab, ": <b>", sprintf("%8.0f", ndetectedfeat), "</b>",
-                                         "<extra></extra>")
-                ) %>%
-              plotly_default() %>%
-              plotly::layout(xaxis = list(title = FALSE),
-                             yaxis = list(title = res$ylab),
-                             margin = list(l = 30, r = 0, t = 0, b = 0))
-          fig
+        fig <-
+          plotly::plot_ly(
+            data = df, x = ~sample, y = ~ndetectedfeat, type = "bar",
+            marker = list(color = omics_colors("brand_blue")),
+            hovertemplate = ~ paste0(
+              "Sample: <b>", sample, "</b><br>",
+              res$ylab, ": <b>", sprintf("%8.0f", ndetectedfeat), "</b>",
+              "<extra></extra>"
+            )
+          ) %>%
+          plotly_default() %>%
+          plotly::layout(
+            xaxis = list(title = FALSE),
+            yaxis = list(title = res$ylab),
+            margin = list(l = 30, r = 0, t = 0, b = 0)
+          )
+        fig
       }
     }
 
