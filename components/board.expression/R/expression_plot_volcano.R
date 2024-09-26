@@ -97,6 +97,10 @@ expression_plot_volcano_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
+      ai <- 56456463
+      browser()
+      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+
       return(list(
         x = x,
         y = y,
@@ -107,40 +111,23 @@ expression_plot_volcano_server <- function(id,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
         fdr = fdr,
-        lfc = lfc
+        lfc = lfc,
+        label.names = label.names
       ))
-    })
-
-    getLabels <- reactive({
-      res <- res()
-      symbols <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "symbol", fill_na = TRUE
-      )
-      names <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "gene_title", fill_na = TRUE
-      )
-      features <- rownames(res)
-      if (labeltype() == "symbol") {
-        label.names <- symbols
-      } else if (labeltype() == "name") {
-        label.names <- names
-      } else {
-        label.names <- features
-      }
-      label.names
     })
 
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- getLabels()
-      names <- pd$features
+      label.names <- pd[{
+        "labal.names"
+      }]
 
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
-        names = names,
+        names = pd$features,
         label.names = label.names,
         source = "plot1",
         marker.type = "scattergl",
