@@ -97,9 +97,7 @@ expression_plot_volcano_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
-      ai <- 56456463
-      browser()
-      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+      label.names <- playbase::probe2symbol(rownames(res), res, labeltype(), fill_na = TRUE)
 
       return(list(
         x = x,
@@ -120,15 +118,11 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- pd[{
-        "labal.names"
-      }]
-
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = pd$features,
-        label.names = label.names,
+        label.names = pd[["labal.names"]],
         source = "plot1",
         marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
