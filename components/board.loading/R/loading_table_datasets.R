@@ -635,9 +635,9 @@ loading_table_datasets_server <- function(id,
           )
         } else {
           msg <- paste(
-            "Deleteing is disabled for your account.",
+            "Deleting is disabled.",
             "Please <a href='https://events.bigomics.ch/upgrade' target='_blank'>",
-            "<b><u>upgrade</u></b></a> to enable it."
+            "<b><u>upgrade</u></b></a> your account to enable it."
           )
           shinyalert::shinyalert(
             title = "Oops!",
