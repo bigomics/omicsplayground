@@ -156,7 +156,6 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- getLabels()
       names <- pd$features
 
       playbase::ggVolcano(
@@ -165,7 +164,7 @@ expression_plot_volcano_server <- function(id,
         names = names,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.names = label.names,
+        label.names = pd[["label.names"]],
         label.cex = 4,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
@@ -181,7 +180,6 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- getLabels()
       names <- pd$features
 
       playbase::ggVolcano(
@@ -190,7 +188,7 @@ expression_plot_volcano_server <- function(id,
         names = names,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.names = label.names,
+        label.names = pd[["label.names"]],
         label.cex = 6,
         axis.text.size = 22,
         psig = pd[["fdr"]],
