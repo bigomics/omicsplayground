@@ -339,7 +339,8 @@ UploadBoard <- function(id,
               title = "Maximum samples reached",
               text = paste(
                 "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", MAXSAMPLES, "samples.", js = FALSE)
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                MAXSAMPLES, "samples."
               ),
               type = "error"
             )
@@ -628,21 +629,21 @@ UploadBoard <- function(id,
       is.count = TRUE
     )
 
-    corrected2 <- reactiveValues()
-    observe({
-      corrected2$counts <- corrected1$counts()
-      corrected2$X <- corrected1$X()
-      corrected2$impX <- corrected1$impX()
-    })
-
+    ## corrected2 <- reactiveValues()
+    ## observe({
+    ##   corrected2$counts <- corrected1$counts()
+    ##   corrected2$X <- corrected1$X()
+    ##   corrected2$impX <- corrected1$impX()
+    ## })
+    
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      #      countsRT = corrected1$counts,
-      #      countsX = corrected1$X,
-      #      impX = corrected1$impX,
-      countsRT = reactive(corrected2$counts),
-      countsX = reactive(corrected2$X),
-      impX = reactive(corrected2$impX),
+      countsRT = corrected1$counts,
+      countsX = corrected1$X,
+      impX = corrected1$impX,
+      #countsRT = reactive(corrected2$counts),
+      #countsX = reactive(corrected2$X),
+      #impX = reactive(corrected2$impX),
       norm_method = shiny::reactive(corrected1$norm_method()),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
