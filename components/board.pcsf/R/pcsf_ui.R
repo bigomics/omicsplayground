@@ -11,7 +11,8 @@ PcsfInputs <- function(id) {
     br(),
     withTooltip(
       selectInput(ns("contrast"), "Select contrast:",
-        choices = NULL, multiple = FALSE),
+        choices = NULL, multiple = FALSE
+      ),
       "Select contrast.",
       placement = "right"
     ),
@@ -34,10 +35,11 @@ PcsfInputs <- function(id) {
       br(),
       withTooltip(
         shiny::radioButtons(ns("pcsf_ntop"), "Initial network size:",
-          choices = c("S"=500, "M"=1000, "L"=2000),
-          selected = 1000, inline = TRUE ),
+          choices = c("S" = 500, "M" = 1000, "L" = 2000),
+          selected = 1000, inline = TRUE
+        ),
         "Select initial network size (number of top genes) for ."
-      )      
+      )
     )
   )
 }

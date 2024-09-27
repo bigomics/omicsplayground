@@ -135,34 +135,37 @@ PcsfBoard <- function(id, pgx) {
     )
 
     pcsf_compute <- shiny::eventReactive(
-    {
-      list( pgx$X, input$contrast, input$pcsf_beta, input$pcsf_ntop)
-    },
-    {
-      contrast <- input$contrast
-      beta <- as.numeric(input$pcsf_beta)
-      ntop <- as.integer(input$pcsf_ntop)
-      
-      pcsf <- playbase::pgx.computePCSF(
-        pgx,
-        contrast,
-        level = "gene",
-        ntop = ntop,
-        ncomp = 2,
-        beta = 10^beta,
-        use.corweight = TRUE,
-        dir = "both",
-        rm.negedge = TRUE
-      )
-      if(is.null(pcsf)) {
-        validate()
-        shiny::validate( !is.null(pcsf),
-          "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size.")
-        return(NULL)
+      {
+        list(pgx$X, input$contrast, input$pcsf_beta, input$pcsf_ntop)
+      },
+      {
+        contrast <- input$contrast
+        beta <- as.numeric(input$pcsf_beta)
+        ntop <- as.integer(input$pcsf_ntop)
+
+        pcsf <- playbase::pgx.computePCSF(
+          pgx,
+          contrast,
+          level = "gene",
+          ntop = ntop,
+          ncomp = 2,
+          beta = 10^beta,
+          use.corweight = TRUE,
+          dir = "both",
+          rm.negedge = TRUE
+        )
+        if (is.null(pcsf)) {
+          validate()
+          shiny::validate(
+            !is.null(pcsf),
+            "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size."
+          )
+          return(NULL)
+        }
+
+        pcsf
       }
-      
-      pcsf
-    })
+    )
 
     pcsf_plot_network_server(
       "pcsf_network",
@@ -185,7 +188,5 @@ PcsfBoard <- function(id, pgx) {
     ##   pcsf_compute = pcsf_compute,
     ##   watermark = WATERMARK
     ## )
-
-    
   })
 }

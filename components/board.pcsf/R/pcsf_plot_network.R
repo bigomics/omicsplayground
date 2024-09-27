@@ -33,7 +33,20 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
         inline = FALSE
       ),
       "Highlight labels by scaling label size with selection."
+<<<<<<< HEAD
     )    
+=======
+    ),
+    withTooltip(
+      shiny::radioButtons(ns("layout"), "Layout algorithm:",
+        choiceNames = c("Barnes-Hut", "Kamada-Kawai", "hierarchical"),
+        choiceValues = c("BH", "KK", "hierarchical"),
+        selected = "",
+        inline = FALSE
+      ),
+      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
+    )
+>>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
   )
 
   PlotModuleUI(
@@ -62,7 +75,7 @@ pcsf_plot_network_server <- function(id,
                                      pgx,
                                      pcsf_compute,
                                      r_layout = reactive("KK"),
-##                                     highlightby = reactive("none"),
+                                     ##                                     highlightby = reactive("none"),
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -75,7 +88,11 @@ pcsf_plot_network_server <- function(id,
     })
 
     visnetwork.RENDER <- function() {
+<<<<<<< HEAD
 
+=======
+      physics <- TRUE
+>>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
       sel.layout <- input$layout
       req(sel.layout, input$highlightby)
       
@@ -94,8 +111,13 @@ pcsf_plot_network_server <- function(id,
 
       ## compute PCSF
       pcsf <- pcsf_compute()
+<<<<<<< HEAD
       
       plt <- playbase::plotPCSF(
+=======
+
+      playbase::plotPCSF(
+>>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
         pcsf,
         highlightby = input$highlightby,
         layout = layout,
@@ -105,10 +127,13 @@ pcsf_plot_network_server <- function(id,
         label_cex = 30,
         nlabel = -1
       )
+<<<<<<< HEAD
 
       plt
+=======
+>>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
     }
-    
+
     PlotModuleServer(
       "plotmodule",
       func = visnetwork.RENDER,
