@@ -428,7 +428,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["corr"]) {
             info("[SERVER] calling CorrelationBoard module")
             insertBigTabItem("corr")
-            CorrelationBoard("corr", pgx = PGX)
+            CorrelationBoard("corr", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["bio"]) {
