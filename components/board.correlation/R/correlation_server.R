@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CorrelationBoard <- function(id, pgx) {
+CorrelationBoard <- function(id, pgx, labeltype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -244,7 +244,9 @@ CorrelationBoard <- function(id, pgx) {
       getPartialCorrelation = getPartialCorrelation,
       getGeneCorr           = getGeneCorr,
       cor_table             = cor_table,
-      watermark             = WATERMARK
+      watermark             = WATERMARK,
+      pgx                   = pgx,
+      labeltype             = labeltype
     )
 
     correlation_plot_scattercorr_server(
@@ -256,7 +258,8 @@ CorrelationBoard <- function(id, pgx) {
       getGeneCorr = getGeneCorr,
       sel_gene = reactive(input$gene),
       COL = COL,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      labeltype = labeltype
     )
 
     correlation_plot_correlation_UMAP_server(

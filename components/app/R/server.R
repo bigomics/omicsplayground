@@ -376,7 +376,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["clusterfeatures"]) {
             info("[SERVER] calling FeatureMapBoard module")
             insertBigTabItem("clusterfeatures")
-            FeatureMapBoard("clusterfeatures", pgx = PGX)
+            FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 
@@ -428,7 +428,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["corr"]) {
             info("[SERVER] calling CorrelationBoard module")
             insertBigTabItem("corr")
-            CorrelationBoard("corr", pgx = PGX)
+            CorrelationBoard("corr", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["bio"]) {
@@ -627,8 +627,9 @@ app_server <- function(input, output, session) {
       shiny.i18n::update_lang(lang, session)
 
       # choose the default labeltype based on datatype
+
       if (PGX$datatype == "metabolomics") {
-        labeltype("name")
+        labeltype("gene_title")
       } else {
         labeltype("feature") # probe is feature (rownames of counts)
       }
@@ -684,6 +685,58 @@ app_server <- function(input, output, session) {
       info("[SERVER] trigger on change dataset done!")
     }
   )
+
+  # populate labeltype selector based on pgx$genes
+
+  observeEvent(
+    {
+      PGX$genes
+    },
+    {
+      req(PGX$genes)
+
+      clean_genes_matrix <- PGX$genes
+
+      # remove NA columns
+      clean_genes_matrix <- clean_genes_matrix[, !apply(is.na(clean_genes_matrix), 2, all), drop = FALSE]
+
+      # remove columns with only 1 unique value
+      clean_genes_matrix <- clean_genes_matrix[, sapply(clean_genes_matrix, function(x) length(unique(x)) > 1), drop = FALSE]
+
+      # remove duplicated columns
+      clean_genes_matrix <- clean_genes_matrix[, !duplicated(t(clean_genes_matrix)), drop = FALSE]
+
+
+      # improve naming of label types (gene_title -> name) and remove pos, map, tx_len
+      label_types_available <- colnames(clean_genes_matrix)
+
+      names(label_types_available) <- label_types_available
+
+      # rename gene_title name to name
+      names(label_types_available)[names(label_types_available) == "gene_title"] <- "name"
+
+      # remove pos, map, tx_len (not interesting for label types)
+      label_types_available <- label_types_available[!grepl("pos|map|tx_len", names(label_types_available))]
+
+      # if available, rename chr0 to Chromossome and chr to locus
+      if ("chr0" %in% names(label_types_available)) {
+        names(label_types_available)[names(label_types_available) == "chr0"] <- "Chromossome"
+      }
+
+      if ("chr" %in% names(label_types_available)) {
+        names(label_types_available)[names(label_types_available) == "chr"] <- "Locus"
+      }
+
+      shiny::updateSelectInput(
+        session,
+        "selected_labeltype",
+        choices = label_types_available,
+        selected = labeltype()
+      )
+    }
+  )
+
+
 
   # change label type based on selected input
   shiny::observeEvent(
