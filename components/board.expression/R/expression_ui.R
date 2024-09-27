@@ -301,12 +301,12 @@ ExpressionUI <- function(id) {
     shiny::tabPanel(
       "Table",
       bslib::layout_columns(
-        col_widths = c(8, 4),
+        col_widths = c(7, 5),
         height = halfH,
         expression_table_genetable_ui(
           ns("genetable"),
           title = "Differential expression analysis",
-          info.text = "The table shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results. For a selected comparison under the Contrast setting, the results of the selected methods are combined and reported under the table, where meta.q for a gene represents the highest q value among the methods and the number of stars for a gene indicate how many methods identified significant q values (q < 0.05). The table is interactive (scrollable, clickable); users can sort genes by logFC, meta.q, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the top 10 genes from the table Settings.",
+          info.text = "The table shows the results of the statistical tests. Omics Playground performs DE analysis using four commonly accepted methods, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and combines the statistical results using a meta.q value that represents the highest q value among the methods. The number of stars indicate how many methods identified significant. The table is interactive (scrollable, clickable); users can sort by logFC, meta.q, or average expression in either conditions.",
           caption = "Table showing the significant results of the differential expression analysis on the selected contrast.",
           width = c("100%", "100%"),
           height = c("100%", TABLE_HEIGHT_MODAL)
