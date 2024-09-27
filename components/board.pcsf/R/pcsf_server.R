@@ -157,7 +157,7 @@ PcsfBoard <- function(id, pgx) {
       if(is.null(pcsf)) {
         validate()
         shiny::validate( !is.null(pcsf),
-          "No PCSF solution found. Your beta value is probably too small. Please adjust beta or network size.")
+          "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size.")
         return(NULL)
       }
       
