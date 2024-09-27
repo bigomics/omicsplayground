@@ -43,7 +43,6 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
       ),
       "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
     )
->>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
   )
 
   PlotModuleUI(
