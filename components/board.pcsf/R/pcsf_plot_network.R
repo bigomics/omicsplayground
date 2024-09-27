@@ -16,6 +16,14 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
   ns <- shiny::NS(id)
 
   plot_opts <- tagList(
+    withTooltip(shiny::radioButtons(ns("layout"), "Layout algorithm:",
+      choiceNames = c("Barnes-Hut", "Hierarchical", "Kamada-Kawai"),
+      choiceValues = c("BH", "hierarchical", "KK" ),
+      selected = "KK",
+      inline = FALSE
+      ),
+      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."),
+    hr(),
     withTooltip(
       radioButtons(
         ns("highlightby"),
@@ -25,14 +33,7 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
         inline = FALSE
       ),
       "Highlight labels by scaling label size with selection."
-    ),    
-    withTooltip(shiny::radioButtons(ns("layout"), "Layout algorithm:",
-      choiceNames = c("Barnes-Hut", "Kamada-Kawai", "hierarchical"),
-      choiceValues = c("BH", "KK", "hierarchical"),
-      selected = "",
-      inline = FALSE
-    ),
-    "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree.")
+    )    
   )
 
   PlotModuleUI(
@@ -75,8 +76,10 @@ pcsf_plot_network_server <- function(id,
 
     visnetwork.RENDER <- function() {
 
-      physics = TRUE
       sel.layout <- input$layout
+      req(sel.layout, input$highlightby)
+      
+      physics = TRUE
       if (sel.layout == "hierarchical") {
         layout <- "hierarchical"
         physics <- FALSE
@@ -88,9 +91,11 @@ pcsf_plot_network_server <- function(id,
         layout <- "layout_with_kk"
         physics <- TRUE
       }
+
+      ## compute PCSF
       pcsf <- pcsf_compute()
-          
-      playbase::plotPCSF(
+      
+      plt <- playbase::plotPCSF(
         pcsf,
         highlightby = input$highlightby,
         layout = layout,
@@ -99,8 +104,9 @@ pcsf_plot_network_server <- function(id,
         node_cex = 30,
         label_cex = 30,
         nlabel = -1
-      ) 
+      )
 
+      plt
     }
     
     PlotModuleServer(
