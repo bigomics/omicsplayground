@@ -10,43 +10,18 @@ PcsfInputs <- function(id) {
     hr(),
     br(),
     withTooltip(
-      radioButtons(
-        ns("colorby"),
-        "Color nodes by:",
-        choices = c("gene.cluster", "contrast"),
-        selected = "contrast",
-        inline = TRUE
-      ),
-      "Choose how to color the nodes",
-      placement = "right"
-    ),
-    conditionalPanel(
-      "input.colorby == 'contrast'",
-      ns = ns,
-      withTooltip(
-        selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
-        "Select contrast.",
-        placement = "right"
-      )
-    ),
-    hr(),
-    withTooltip(
-      radioButtons(
-        ns("highlightby"),
-        "Highlight labels by:",
-        choices = c("none", "FC", "centrality"),
-        selected = "centrality",
-        inline = TRUE
-      ),
-      "Highlight labels by scaling with selection.",
-      placement = "top"
-    ),
-    hr(),
-    withTooltip(
-      shiny::sliderInput(ns("pcsf_beta"), "Solution size:", -4, 4, 0, 1),
+      selectInput(ns("contrast"), "Select contrast:",
+        choices = NULL, multiple = FALSE),
       "Select contrast.",
       placement = "right"
     ),
+    hr(),
+    withTooltip(
+      shiny::sliderInput(ns("pcsf_beta"), "Prize strength (beta):", -4, 1, 0, 1),
+      "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
+      placement = "right"
+    ),
+    hr(),
     br(),
     withTooltip(
       actionLink(ns("adv_options"), "Options", icon = icon("cog", lib = "glyphicon")),
@@ -56,12 +31,13 @@ PcsfInputs <- function(id) {
     shiny::conditionalPanel(
       "input.adv_options % 2 == 1",
       ns = ns,
-      shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns("check1"), "check1", TRUE),
-          "Some check.",
-          placement = "top"
-        )
-      )
+      br(),
+      withTooltip(
+        shiny::radioButtons(ns("pcsf_ntop"), "Initial network size:",
+          choices = c("S"=500, "M"=1000, "L"=2000),
+          selected = 1000, inline = TRUE ),
+        "Select initial network size (number of top genes) for ."
+      )      
     )
   )
 }
@@ -76,8 +52,6 @@ PcsfUI <- function(id) {
     boardHeader(
       title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
-    ## "Hello",
-    #
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(
@@ -87,15 +61,8 @@ PcsfUI <- function(id) {
           height = "calc(100vh - 190px)",
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
-            col_widths = c(5, 7),
+            col_widths = c(7, 5),
             height = "calc(100vh - 190px)",
-            pcsf_plot_heatmap_ui(
-              id = ns("pcsf_heatmap"),
-              caption = "PCSF gene modules",
-              info.text = "",
-              height = c("100%", "75vh"),
-              width = c("auto", "100%")
-            ),
             pcsf_plot_network_ui(
               ns("pcsf_network"),
               caption = paste(
@@ -105,15 +72,15 @@ PcsfUI <- function(id) {
               info.text = pcsf_graph_info,
               height = c("100%", "75vh"),
               width = c("auto", "100%")
+            ),
+            pcsf_table_centrality_ui(
+              ns("centrality_table"),
+              title = "Centrality score",
+              info.text = "",
+              caption = "Table showing the centrality score of genes.",
+              width = c("100%", "100%"),
+              height = c("100%", TABLE_HEIGHT_MODAL)
             )
-            ## pcsf_table_centrality_ui(
-            ##   ns("centrality_table"),
-            ##   title = tspan("Gene centrality"),
-            ##   info.text = "",
-            ##   caption = "Table showing the centrality score of genes.",
-            ##   width = c("100%", "100%"),
-            ##   height = c("100%", TABLE_HEIGHT_MODAL)
-            ## )
           )
         )
       )

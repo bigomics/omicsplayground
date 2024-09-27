@@ -17,21 +17,21 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
 
   plot_opts <- tagList(
     withTooltip(
-      shiny::radioButtons(ns("layout"), "Layout:",
-        choiceNames = c("Kamada-Kawai", "hierarchical"),
-        choiceValues = c("kk", "hierarchical"),
-        inline = TRUE
+      radioButtons(
+        ns("highlightby"),
+        "Highlight labels by:",
+        choices = c("centrality", "foldchange" = "prize"),
+        selected = "centrality",
+        inline = FALSE
       ),
-      "Select layout algorithm",
-      placement = "left",
-      options = list(container = "body")
+      "Highlight labels by scaling label size with selection."
+    ),    
+    withTooltip(shiny::radioButtons(ns("layout"), "Layout algorithm:",
+      choiceNames = c("Barnes-Hut", "Kamada-Kawai", "hierarchical"),
+      choiceValues = c("BH", "KK", "hierarchical"),
+      inline = FALSE
     ),
-    withTooltip(
-      checkboxInput(ns("physics"), "physics", TRUE),
-      "....",
-      placement = "left",
-      options = list(container = "body")
-    )
+    "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree.")
   )
 
   PlotModuleUI(
@@ -59,10 +59,8 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
 pcsf_plot_network_server <- function(id,
                                      pgx,
                                      pcsf_compute,
-                                     pcsf_beta = reactive(1),
-                                     colorby = reactive("gene.cluster"),
-                                     contrast = reactive(NULL),
-                                     highlightby = reactive("none"),
+                                     r_layout = reactive("KK"),
+##                                     highlightby = reactive("none"),
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -70,106 +68,40 @@ pcsf_plot_network_server <- function(id,
     observeEvent(input$physics, {
       # Update the network
       do.physics <- input$physics
-      visNetwork::visNetworkProxy("plotmodule-renderfigure") %>%
+      visNetwork::visNetworkProxy(ns("plotmodule-renderfigure")) %>%
         visNetwork::visPhysics(enabled = do.physics)
     })
 
-    get_network <- reactive({
-      res <- pcsf_compute()
-      shiny::req(res)
-
-      ppi <- res$ppi
-      terminals <- res$terminals
-      idx <- res$idx
-
-      beta <- as.numeric(pcsf_beta())
-
-      net <- tryCatch(
-        {
-          PCSF::PCSF(ppi, terminals, w = 2, b = exp(beta))
-        },
-        error = function(cond) {
-          return(NULL)
-        }
-      )
-
-      if (is.null(net)) {
-        shiny::validate(shiny::need(
-          !is.na(net),
-          "PCSF Network could not be computed for the given parameters. Try increasing the solution size in the settings bar."
-        ))
-        return(NULL)
-      }
-
-      igraph::V(net)$group <- idx[igraph::V(net)$name]
-
-      ## remove small clusters...
-      cmp <- igraph::components(net)
-      sel.kk <- which(cmp$csize > 0.10 * max(cmp$csize))
-      net <- igraph::subgraph(net, cmp$membership %in% sel.kk)
-      class(net) <- c("PCSF", "igraph")
-      net
-    })
-
     visnetwork.RENDER <- function() {
-      res <- pcsf_compute()
-      net <- get_network()
-      shiny::req(net)
 
-      .colorby <- colorby()
-      .contrast <- contrast()
-      if (.colorby == "gene.cluster") {
-        igraph::V(net)$type <- igraph::V(net)$group
-      } else {
-        fx <- res$meta[, .contrast]
-        vv <- igraph::V(net)$name
-        igraph::V(net)$type <- c("down", "up")[1 + 1 * (sign(fx[vv]) > 0)]
-      }
-
-      do.physics <- input$physics
-      if (input$layout == "hierarchical") {
+      physics = TRUE
+      sel.layout <- input$layout
+      if (sel.layout == "hierarchical") {
         layout <- "hierarchical"
+        physics <- FALSE
+      } else if (sel.layout == "KK") {
+        layout <- "layout_with_kk"
+        physics <- FALSE
       } else {
-        layout <- paste0("layout_with_", input$layout)
+        ## barnesHut
+        layout <- "layout_with_kk"
+        physics <- TRUE
       }
-
-      label_cex <- 30
-      if (highlightby() == "centrality") {
-        ewt <- 1.0 / igraph::E(net)$weight
-        bc <- igraph::page_rank(net, weights = ewt)$vector
-        #
-        label_cex <- 30 + 80 * (bc / max(bc))**2
-      }
-      if (highlightby() == "FC") {
-        vv <- igraph::V(net)$name
-        if (.colorby == "contrast") {
-          fx <- res$meta[, .contrast]
-          fx <- fx[vv]
-        } else {
-          fx <- rowMeans(res$meta**2, na.rm = TRUE)
-          fx <- fx[vv]
-        }
-        label_cex <- 30 + 80 * (abs(fx) / max(abs(fx), na.rm = TRUE))**2
-      }
-
-      visnet <- visplot.PCSF( ## from playbase or util_pcsf.R??? (IK)
-        net,
-        style = 1,
-        node_size = 30,
-        node_label_cex = label_cex,
-        invert.weight = TRUE,
-        edge_width = 4,
-        Steiner_node_color = "lightblue",
-        Terminal_node_color = "lightgreen",
-        extra_node_colors = list("down" = "blue", "up" = "red"),
-        width = "100%", height = 900,
+      pcsf <- pcsf_compute()
+          
+      playbase::plotPCSF(
+        pcsf,
+        highlightby = input$highlightby,
         layout = layout,
-        physics = do.physics
-      )
+        physics = physics,
+        plotlib = "visnet",
+        node_cex = 30,
+        label_cex = 30,
+        nlabel = -1
+      ) 
 
-      visnet
     }
-
+    
     PlotModuleServer(
       "plotmodule",
       func = visnetwork.RENDER,
