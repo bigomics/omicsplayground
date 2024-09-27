@@ -376,7 +376,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["clusterfeatures"]) {
             info("[SERVER] calling FeatureMapBoard module")
             insertBigTabItem("clusterfeatures")
-            FeatureMapBoard("clusterfeatures", pgx = PGX)
+            FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 

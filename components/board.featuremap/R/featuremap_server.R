@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-FeatureMapBoard <- function(id, pgx) {
+FeatureMapBoard <- function(id, pgx, labeltype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -261,7 +261,8 @@ FeatureMapBoard <- function(id, pgx) {
       plotUMAP = plotUMAP,
       sigvar = reactive(input$selcomp),
       filteredGenes = filteredGenes,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      labeltype = labeltype
     )
 
     # Gene Signatures
