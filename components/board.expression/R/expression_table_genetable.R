@@ -86,8 +86,7 @@ expression_table_genetable_server <- function(id,
       res
     }
 
-    table.RENDER <- function(showdetails = FALSE) {      
-
+    table.RENDER <- function(showdetails = FALSE) {
       df <- table_data()
       df$gene_name <- NULL
 
@@ -98,12 +97,12 @@ expression_table_genetable_server <- function(id,
         df$feature <- NULL
       }
 
-      if(!showdetails) {
+      if (!showdetails) {
         hide.cols <- grep("^AveExpr|p$|q$", colnames(df))
         hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
-        if(length(hide.cols)) df <- df[,-hide.cols]
+        if (length(hide.cols)) df <- df[, -hide.cols]
       }
-      
+
       numeric.cols <- which(sapply(df, is.numeric))
       numeric.cols <- colnames(df)[numeric.cols]
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]

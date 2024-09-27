@@ -389,9 +389,9 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (gene.selected && !gset.selected) {
         ## only gene selected: color all genes with same name, label selected
         this.feature <- rownames(df1)[genetable_rows_selected()]
-        this.symbol  <-res[this.feature,"symbol"]        
-        sel.features <- rownames(res)[which( res$symbol == this.symbol )]
-        ##lab.features <- this.feature
+        this.symbol <- res[this.feature, "symbol"]
+        sel.features <- rownames(res)[which(res$symbol == this.symbol)]
+        ## lab.features <- this.feature
         lab.features <- sel.features
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
