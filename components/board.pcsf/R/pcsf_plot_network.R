@@ -33,9 +33,6 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
         inline = FALSE
       ),
       "Highlight labels by scaling label size with selection."
-<<<<<<< HEAD
-    )    
-=======
     ),
     withTooltip(
       shiny::radioButtons(ns("layout"), "Layout algorithm:",
@@ -88,11 +85,6 @@ pcsf_plot_network_server <- function(id,
     })
 
     visnetwork.RENDER <- function() {
-<<<<<<< HEAD
-
-=======
-      physics <- TRUE
->>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
       sel.layout <- input$layout
       req(sel.layout, input$highlightby)
       
@@ -111,13 +103,8 @@ pcsf_plot_network_server <- function(id,
 
       ## compute PCSF
       pcsf <- pcsf_compute()
-<<<<<<< HEAD
       
       plt <- playbase::plotPCSF(
-=======
-
-      playbase::plotPCSF(
->>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
         pcsf,
         highlightby = input$highlightby,
         layout = layout,
@@ -127,11 +114,8 @@ pcsf_plot_network_server <- function(id,
         label_cex = 30,
         nlabel = -1
       )
-<<<<<<< HEAD
 
       plt
-=======
->>>>>>> 782d41ad26de63f48cdf64fd3ec938ada26a6cb9
     }
 
     PlotModuleServer(
