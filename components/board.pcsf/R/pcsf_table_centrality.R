@@ -65,7 +65,7 @@ pcsf_table_centrality_server <- function(id,
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip",
-          pageLength = 9999,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+          pageLength = 9999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE,
           scrollResize = TRUE,
           scrollY = 100,
