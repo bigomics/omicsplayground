@@ -25,14 +25,16 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
         inline = FALSE
       ),
       "Highlight labels by scaling label size with selection."
-    ),    
-    withTooltip(shiny::radioButtons(ns("layout"), "Layout algorithm:",
-      choiceNames = c("Barnes-Hut", "Kamada-Kawai", "hierarchical"),
-      choiceValues = c("BH", "KK", "hierarchical"),
-      selected = "",
-      inline = FALSE
     ),
-    "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree.")
+    withTooltip(
+      shiny::radioButtons(ns("layout"), "Layout algorithm:",
+        choiceNames = c("Barnes-Hut", "Kamada-Kawai", "hierarchical"),
+        choiceValues = c("BH", "KK", "hierarchical"),
+        selected = "",
+        inline = FALSE
+      ),
+      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
+    )
   )
 
   PlotModuleUI(
@@ -61,7 +63,7 @@ pcsf_plot_network_server <- function(id,
                                      pgx,
                                      pcsf_compute,
                                      r_layout = reactive("KK"),
-##                                     highlightby = reactive("none"),
+                                     ##                                     highlightby = reactive("none"),
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -74,8 +76,7 @@ pcsf_plot_network_server <- function(id,
     })
 
     visnetwork.RENDER <- function() {
-
-      physics = TRUE
+      physics <- TRUE
       sel.layout <- input$layout
       if (sel.layout == "hierarchical") {
         layout <- "hierarchical"
@@ -89,7 +90,7 @@ pcsf_plot_network_server <- function(id,
         physics <- TRUE
       }
       pcsf <- pcsf_compute()
-          
+
       playbase::plotPCSF(
         pcsf,
         highlightby = input$highlightby,
@@ -99,10 +100,9 @@ pcsf_plot_network_server <- function(id,
         node_cex = 30,
         label_cex = 30,
         nlabel = -1
-      ) 
-
+      )
     }
-    
+
     PlotModuleServer(
       "plotmodule",
       func = visnetwork.RENDER,

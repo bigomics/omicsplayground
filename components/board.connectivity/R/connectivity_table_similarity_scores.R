@@ -54,7 +54,7 @@ connectivity_table_similarity_scores_server <- function(id,
         NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
-      df[["dataset/contrast"]] <- paste(df[["dataset/contrast"]],"&nbsp;",feature_link)
+      df[["dataset/contrast"]] <- paste(df[["dataset/contrast"]], "&nbsp;", feature_link)
 
       DT::datatable(df,
         rownames = FALSE,

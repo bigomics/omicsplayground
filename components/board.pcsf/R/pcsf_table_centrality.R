@@ -20,8 +20,7 @@ pcsf_table_centrality_ui <- function(
     height) {
   ns <- shiny::NS(id)
 
-  table_opts <- shiny::tagList(
-  )
+  table_opts <- shiny::tagList()
 
   TableModuleUI(
     ns("table"),
@@ -29,7 +28,7 @@ pcsf_table_centrality_ui <- function(
     caption = caption,
     width = width,
     height = height,
-##    options = table_opts,
+    ##    options = table_opts,
     title = title,
   )
 }
@@ -43,23 +42,21 @@ pcsf_table_centrality_ui <- function(
 pcsf_table_centrality_server <- function(id,
                                          pgx,
                                          r_contrast,
-                                         r_pcsf
-                                         ) {
+                                         r_pcsf) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table.RENDER <- function() {
-
       df <- playbase::pgx.getPCSFcentrality(
         pgx,
         contrast = r_contrast(),
         pcsf = r_pcsf(),
         n = 100,
-        plot=FALSE
+        plot = FALSE
       )
 
-      num.cols <- match( c("centrality","logFC"), colnames(df))
-      
+      num.cols <- match(c("centrality", "logFC"), colnames(df))
+
       dt <- DT::datatable(df,
         rownames = FALSE,
         extensions = c("Scroller"),
@@ -80,13 +77,13 @@ pcsf_table_centrality_server <- function(id,
         DT::formatSignif(columns = num.cols, digits = 4) %>%
         DT::formatStyle(
           "logFC",
-          background = color_from_middle( df$logFC, "lightblue", "#f5aeae"),
+          background = color_from_middle(df$logFC, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%
         DT::formatStyle(
           "centrality",
-          background = color_from_middle( df$centrality, "white", "#fec34d"),
+          background = color_from_middle(df$centrality, "white", "#fec34d"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
