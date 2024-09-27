@@ -48,16 +48,17 @@ connectivity_table_similarity_scores_server <- function(id,
       numcols <- intersect(numcols, colnames(df))
 
       feature_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>", nrow(df)),
         df$`dataset/contrast`
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
+      df[["dataset/contrast"]] <- paste(df[["dataset/contrast"]],"&nbsp;",feature_link)
 
       DT::datatable(df,
-        rownames = feature_link,
-        escape = c(-1, -2),
+        rownames = FALSE,
+        escape = c(-1),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
