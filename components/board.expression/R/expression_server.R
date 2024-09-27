@@ -387,10 +387,15 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
 
       if (gene.selected && !gset.selected) {
-        lab.features <- rownames(df1)[genetable_rows_selected()]
-        sel.features <- lab.features
+        ## only gene selected: color all genes with same name, label selected
+        this.feature <- rownames(df1)[genetable_rows_selected()]
+        this.symbol <- res[this.feature, "symbol"]
+        sel.features <- rownames(res)[which(res$symbol == this.symbol)]
+        ## lab.features <- this.feature
+        lab.features <- sel.features
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
+        ## gset selected: color all significant gene in geneset, label top 20
         sel.features <- genes_in_sel_geneset()
         lab.features <- c(
           head(sel.features[order(impt(sel.features))], 10),
@@ -398,6 +403,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         )
         lab.cex <- 1
       } else {
+        ## no selection: color all significant features, label top 20
         lab.features <- c(
           head(sel.features[order(impt(sel.features))], 10),
           head(sel.features[order(-impt(sel.features))], 10)
@@ -405,7 +411,11 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         lab.cex <- 1
       }
 
-      res <- list("sel.genes" = sel.features, "lab.genes" = lab.features, "fc.genes" = features)
+      res <- list(
+        "sel.genes" = sel.features,
+        "lab.genes" = lab.features,
+        "fc.genes" = features
+      )
       return(res)
     })
 
