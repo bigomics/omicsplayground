@@ -620,14 +620,14 @@ UploadBoard <- function(id,
       height = height
     )
 
-    correctedX <- upload_module_batchcorrect_server(
-      id = "batchcorrect",
-      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
-      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
-      r_contrasts = modified_ct,
-      r_results = modified_ct,
-      is.count = TRUE
-    )
+    ## correctedX <- upload_module_batchcorrect_server(
+    ##   id = "batchcorrect",
+    ##   r_X = shiny::reactive(checked_samples_counts()$COUNTS),
+    ##   r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+    ##   r_contrasts = modified_ct,
+    ##   r_results = modified_ct,
+    ##   is.count = TRUE
+    ## )
 
     ## corrected2 <- reactiveValues()
     ## observe({
