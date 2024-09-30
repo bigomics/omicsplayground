@@ -1113,6 +1113,7 @@ UploadBoard <- function(id,
             if (!is.null(recompute_pgx())) {
               bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
+              upload_organism(pgx$organism)
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
