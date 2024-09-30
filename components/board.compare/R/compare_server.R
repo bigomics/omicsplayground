@@ -457,18 +457,24 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       "fcfcplot",
       getMatrices = getMatrices,
       hilightgenes = hilightgenes,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      labeltype = labeltype,
+      pgx = pgx
     )
 
     # Cumulative FC
     compare_plot_cum_fc1_server(
       "cumfcplot1",
+      pgx = pgx,
+      labeltype = labeltype,
       getMatrices = getMatrices,
       watermark = WATERMARK
     )
 
     compare_plot_cum_fc2_server(
       "cumfcplot2",
+      pgx = pgx,
+      labeltype = labeltype,
       getMatrices = getMatrices,
       watermark = WATERMARK
     )
