@@ -332,12 +332,13 @@ app_ui <- function(x) {
                 )
               ),
               bigdash::navbarDropdownItem(
-                withTooltip(shiny::selectInput(
-                  inputId = "selected_labeltype",
-                  label = "Label type:",
-                  choices = c("feature", "symbol", "name"),
-                  selected = NULL,
-                  width = "100%"
+                withTooltip(
+                  shiny::selectInput(
+                    inputId = "selected_labeltype",
+                    label = "Label type:",
+                    choices = c("feature", "symbol", "name"),
+                    selected = NULL,
+                    width = "100%"
                   ),
                   "Choose a label type to be displayed in the heatmap.",
                   placement = "right", options = list(container = "body")

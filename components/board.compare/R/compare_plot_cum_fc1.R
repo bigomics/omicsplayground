@@ -67,7 +67,7 @@ compare_plot_cum_fc1_server <- function(id,
       F1 <- F1[ii, , drop = FALSE]
 
       # rename_by
-      if(!is.null(rownames(F1))){
+      if (!is.null(rownames(F1))) {
         rownames(F1) <- make.names(playbase::probe2symbol(rownames(F1), pgx$genes, labeltype(), fill_na = TRUE), unique = TRUE)
       }
 

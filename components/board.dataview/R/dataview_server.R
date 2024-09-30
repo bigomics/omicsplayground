@@ -115,7 +115,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
             features[1001:length(features)]
           )
         }
-        
+
         names(features) <- playbase::probe2symbol(features, pgx$genes, labeltype(), fill_na = TRUE)
 
         shiny::updateSelectizeInput(
