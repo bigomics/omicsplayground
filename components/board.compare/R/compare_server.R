@@ -348,7 +348,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       p <- NULL
       ## map hilighted genes to pgx probes
       label <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
-#       label <- playbase::probe2symbol(label, pgx$genes, labeltype(), fill_na = TRUE)
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- pgx1$cluster.genes$pos[["umap2d"]]

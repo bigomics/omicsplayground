@@ -479,7 +479,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["comp"]) {
             info("[SERVER] calling CompareBoard module")
             insertBigTabItem("comp")
-            CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
+            CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir), labeltype = labeltype)
           }
 
           info("[SERVER] calling modules done!")
