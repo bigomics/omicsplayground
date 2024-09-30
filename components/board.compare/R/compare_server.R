@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "mini-example"))) {
+CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "mini-example")), labeltype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
@@ -344,11 +344,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ============================================================================
 
     createPlot <- function(pgx, pgx1, pgx2, ct, target_col, type, cex.lab,
-                           higenes, ntop, get_data = FALSE) {
+                           higenes, ntop, get_data = FALSE, labeltype = shiny::reactive("feature")) {
       p <- NULL
       ## map hilighted genes to pgx probes
       label <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
-
+#       label <- playbase::probe2symbol(label, pgx$genes, labeltype(), fill_na = TRUE)
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- pgx1$cluster.genes$pos[["umap2d"]]
@@ -375,7 +375,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           zfix = TRUE,
           par.sq = TRUE,
           plotlib = "base",
-          data = get_data
+          data = get_data,
+          labeltype = labeltype
         )
         ## } else if (type == "heatmap") {
         ##   gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
@@ -432,7 +433,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
       getMatrices = getMatrices,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      labeltype = labeltype
     )
 
     # Dataset 2
@@ -446,7 +448,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       plottype = shiny::reactive(input$plottype),
       dataset2 = dataset2,
       getMatrices = getMatrices,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      labeltype = labeltype
     )
 
     # FC Correlation

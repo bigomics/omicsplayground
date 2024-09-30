@@ -68,7 +68,8 @@ expression_plot_volcano_server <- function(id,
                                            res,
                                            genes_selected,
                                            labeltype = reactive("symbol"),
-                                           watermark = FALSE) {
+                                           watermark = FALSE,
+                                           pgx) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
     plot_data <- shiny::reactive({
@@ -97,6 +98,8 @@ expression_plot_volcano_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
+      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+
       return(list(
         x = x,
         y = y,
@@ -107,41 +110,20 @@ expression_plot_volcano_server <- function(id,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
         fdr = fdr,
-        lfc = lfc
+        lfc = lfc,
+        label.names = label.names
       ))
-    })
-
-    getLabels <- reactive({
-      res <- res()
-      symbols <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "symbol", fill_na = TRUE
-      )
-      names <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "gene_title", fill_na = TRUE
-      )
-      features <- rownames(res)
-      if (labeltype() == "symbol") {
-        label.names <- symbols
-      } else if (labeltype() == "name") {
-        label.names <- names
-      } else {
-        label.names <- features
-      }
-      label.names
     })
 
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- getLabels()
-      names <- pd$features
-
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
-        names = names,
-        label.names = label.names,
+        names = pd$features,
+        label.names = pd[["label.names"]],
         source = "plot1",
         marker.type = "scattergl",
         highlight = pd[["sel.genes"]],
@@ -174,7 +156,6 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- getLabels()
       names <- pd$features
 
       playbase::ggVolcano(
@@ -183,7 +164,7 @@ expression_plot_volcano_server <- function(id,
         names = names,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.names = label.names,
+        label.names = pd[["label.names"]],
         label.cex = 4,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
@@ -199,7 +180,6 @@ expression_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      label.names <- getLabels()
       names <- pd$features
 
       playbase::ggVolcano(
@@ -208,7 +188,7 @@ expression_plot_volcano_server <- function(id,
         names = names,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.names = label.names,
+        label.names = pd[["label.names"]],
         label.cex = 6,
         axis.text.size = 22,
         psig = pd[["fdr"]],

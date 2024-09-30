@@ -69,7 +69,9 @@ correlation_plot_barplot_server <- function(id,
                                             getPartialCorrelation,
                                             getGeneCorr,
                                             cor_table,
-                                            watermark = FALSE) {
+                                            watermark = FALSE,
+                                            pgx,
+                                            labeltype) {
   moduleServer(id, function(input, output, session) {
     # reactive function listeninng for changes in input
     plot_data <- shiny::reactive({
@@ -91,9 +93,9 @@ correlation_plot_barplot_server <- function(id,
       if (length(sel) == 1) names(rho) <- rownames(R)[sel]
 
       prho <- df$pcor
-      names(prho) <- rownames(df)
+      names(prho) <- playbase::probe2symbol(rownames(df), pgx$genes, labeltype(), fill_na = TRUE)
+      names(rho) <- playbase::probe2symbol(names(rho), pgx$genes, labeltype(), fill_na = TRUE)
       prho <- prho[match(names(rho), names(prho))]
-      names(prho) <- names(rho)
 
       pd <- data.frame(
         "correlation" = rho,
