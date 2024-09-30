@@ -74,7 +74,8 @@ featuremap_plot_gene_map_server <- function(id,
                                             plotUMAP,
                                             sigvar,
                                             filteredGenes,
-                                            watermark = FALSE) {
+                                            watermark = FALSE,
+                                            labeltype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -101,10 +102,7 @@ featuremap_plot_gene_map_server <- function(id,
       F <- F[gg, , drop = FALSE]
 
       hilight.probes <- playbase::map_probes(pgx$genes, hilight)
-      labels <- NULL
-      if (input$labeltype == "symbol") {
-        labels <- pgx$genes[rownames(pos), "symbol"]
-      }
+      labels <- playbase::probe2symbol(rownames(pos), pgx$genes, labeltype(), fill_na = TRUE)
 
       pd <- list(
         df = data.frame(pos, fc = fc),
