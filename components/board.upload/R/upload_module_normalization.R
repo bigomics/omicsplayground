@@ -16,7 +16,7 @@ upload_module_normalization_ui <- function(id, height = "100%") {
 
 upload_module_normalization_server <- function(
     id,
-    r_X,
+    r_counts,
     r_samples,
     r_contrasts,
     upload_datatype,
@@ -30,7 +30,7 @@ upload_module_normalization_server <- function(
       
       observeEvent( input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
-        gg <- sort(rownames(r_X()))
+        gg <- sort(rownames(r_counts()))
         shiny::updateSelectizeInput(
           session, "ref_gene",
           choices = gg,
@@ -45,9 +45,9 @@ upload_module_normalization_server <- function(
 
       ## Impute and remove duplicated features
       imputedX <- reactive({
-        shiny::req(r_X())
+        shiny::req(r_counts())
         shiny::req(!is.null(input$zero_as_na))
-        counts <- r_X()
+        counts <- r_counts()
 
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
@@ -337,7 +337,7 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
 
       plot_normalization <- function() {
-        rX <- r_X()
+        rX <- r_counts()
         X0 <- imputedX()
         ## X1 <- normalizedX()
         X1 <- cleanX()$X
@@ -423,7 +423,7 @@ upload_module_normalization_server <- function(
 
       ## missing values
       plot_missingvalues <- function() {
-        X0 <- r_X()
+        X0 <- r_counts()
         X1 <- imputedX()
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
@@ -664,10 +664,10 @@ upload_module_normalization_server <- function(
 
 
       getBatchParams <- eventReactive({
-        list(r_X(), r_samples(), r_contrasts())
+        list(r_counts(), r_samples(), r_contrasts())
       },{
-        shiny::req(r_X(), r_samples(), r_contrasts())        
-        X <- r_X()
+        shiny::req(r_counts(), r_samples(), r_contrasts())        
+        X <- r_counts()
         samples <- r_samples()
         contrasts <- r_contrasts()        
         pars <- playbase::get_model_parameters(
