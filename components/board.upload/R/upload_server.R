@@ -1041,7 +1041,7 @@ UploadBoard <- function(id,
       upload_organism(input$selected_organism)
     })
 
-    observeEvent(input$start_upload, {
+    observeEvent(c(input$start_upload, recompute_pgx()), {
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
@@ -1111,6 +1111,7 @@ UploadBoard <- function(id,
             wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
+              bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
