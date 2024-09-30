@@ -96,6 +96,8 @@ expression_plot_maplot_server <- function(id,
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
 
+      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+
       plot_data <- list(
         x = x,
         y = y,
@@ -106,37 +108,20 @@ expression_plot_maplot_server <- function(id,
         features = rownames(res),
         names = names,
         fdr = fdr,
-        lfc = lfc
+        lfc = lfc,
+        label.names = label.names
       )
 
       return(plot_data)
     })
 
-    getLabels <- reactive({
-      res <- res()
-      symbols <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "symbol", fill_na = TRUE
-      )
-      names <- playbase::probe2symbol(
-        probes = rownames(res), res, query = "gene_title", fill_na = TRUE
-      )
-      features <- rownames(res)
-      if (labeltype() == "symbol") {
-        label.names <- symbols
-      } else if (labeltype() == "name") {
-        label.names <- names
-      } else {
-        label.names <- features
-      }
-      label.names
-    })
 
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
       names <- pd[["features"]]
-      label.names <- getLabels()
+      label.names <- pd[["label.names"]]
 
       plt <- playbase::plotlyMA(
         x = pd[["x"]],

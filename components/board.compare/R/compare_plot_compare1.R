@@ -52,7 +52,8 @@ compare_plot_compare1_server <- function(id,
                                          plottype,
                                          dataset2,
                                          getMatrices,
-                                         watermark = FALSE) {
+                                         watermark = FALSE,
+                                         labeltype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -75,7 +76,7 @@ compare_plot_compare1_server <- function(id,
       target_col <- mat$target_col
 
       if (length(higenes) <= 3) cex.lab <- 1.3
-      data <- createPlot(pgx1, pgx1, pgx2, ct, target_col, type, cex.lab, higenes, ntop, get_data)
+      data <- createPlot(pgx1, pgx1, pgx2, ct, target_col, type, cex.lab, higenes, ntop, get_data, labeltype)
       data
     }
 

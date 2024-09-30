@@ -45,7 +45,9 @@ compare_plot_fcfc_ui <- function(id,
 compare_plot_fcfc_server <- function(id,
                                      getMatrices,
                                      hilightgenes,
-                                     watermark = FALSE) {
+                                     watermark = FALSE,
+                                     labeltype,
+                                     pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -126,11 +128,12 @@ compare_plot_fcfc_server <- function(id,
           # Add the text to hilighted points
           if (length(hilight) > 0) {
             hilight1 <- intersect(rownames(F), hilight)
+            hilighy_label <- playbase::probe2symbol(hilight1, pgx$genes, labeltype(), fill_na = TRUE)
             plot_i <- plot_i %>%
               plotly::add_trace(
                 x = F[hilight1, 1],
                 y = F[hilight1, 2],
-                text = hilight1,
+                text = hilighy_label,
                 key = hilight1,
                 type = "scattergl",
                 mode = "marker+text",

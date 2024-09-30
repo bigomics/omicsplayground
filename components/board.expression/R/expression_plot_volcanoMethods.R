@@ -136,13 +136,7 @@ expression_plot_volcanoMethods_server <- function(id,
         pgx$genes[mx.features, "gene_title"]
       )
 
-      if (labeltype() == "symbol") {
-        label.names <- mx.symbols
-      } else if (labeltype() == "name") {
-        label.names <- mx.names
-      } else {
-        label.names <- mx.features
-      }
+      label.names <- playbase::probe2symbol(rownames(mx), pgx$genes, labeltype(), fill_na = TRUE)
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
