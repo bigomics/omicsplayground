@@ -266,11 +266,8 @@ upload_module_normalization_server <- function(
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
 
-        dbg("[results_correction_methods] 2a : batch.pars = ", batch.pars)
         if(any(grepl("<autodetect>",batch.pars))) batch.pars <- "<autodetect>"
         if(any(grepl("<none>",batch.pars))) batch.pars <- NULL
-        
-        dbg("[results_correction_methods] 2b : batch.pars = ", batch.pars)
         
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
@@ -955,7 +952,6 @@ upload_module_normalization_server <- function(
       cX <- reactive({
         shiny::req(dim(correctedX()$X))
         cX <- correctedX()$X
-        dbg("[normalization_server:fCHECK] dim.cX = ", dim(cX))
         cX
       })
 
@@ -963,10 +959,8 @@ upload_module_normalization_server <- function(
         shiny::req(dim(correctedX()$X))
         if (length(correctedX()) == 2) {
           impX <- correctedX()$impX1
-          dbg("[normalization_server:fCHECK] dim.impX = ", dim(impX))
         } else {
           impX <- NULL
-          dbg("[normalization_server:fCHECK] dim.impX = NULL")
         }
         impX
       })
@@ -974,7 +968,6 @@ upload_module_normalization_server <- function(
       norm_method <- reactive({
         m <- input$normalization_method
         if (!input$normalize) m <- "skip_normalization"
-        dbg("[normalization_server:fCHECK] Normalization method = ", m)
         m
       })
 
