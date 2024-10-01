@@ -214,6 +214,18 @@ featuremap_plot_gene_map_server <- function(id,
         df$human_ortholog <- NULL
       }
 
+      ## detect brush
+      sel.genes <- NULL
+      b <- plotly::event_data("plotly_selected", source = ns("gene_umap"))
+
+      if (!is.null(b) & length(b)) {
+        sel <- b$key
+        sel.genes <- rownames(df)[rownames(df) %in% sel]
+      } else {
+        sel.genes <- rownames(df)
+      }
+      df <- df[sel.genes, , drop=FALSE]
+
       DT::datatable(df,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
