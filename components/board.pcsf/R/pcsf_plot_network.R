@@ -16,13 +16,15 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
   ns <- shiny::NS(id)
 
   plot_opts <- tagList(
-    withTooltip(shiny::radioButtons(ns("layout"), "Layout algorithm:",
-      choiceNames = c("Barnes-Hut", "Hierarchical", "Kamada-Kawai"),
-      choiceValues = c("BH", "hierarchical", "KK" ),
-      selected = "KK",
-      inline = FALSE
+    withTooltip(
+      shiny::radioButtons(ns("layout"), "Layout algorithm:",
+        choiceNames = c("Barnes-Hut", "Hierarchical", "Kamada-Kawai"),
+        choiceValues = c("BH", "hierarchical", "KK"),
+        selected = "KK",
+        inline = FALSE
       ),
-      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."),
+      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
+    ),
     hr(),
     withTooltip(
       radioButtons(
@@ -86,8 +88,8 @@ pcsf_plot_network_server <- function(id,
     visnetwork.RENDER <- function() {
       sel.layout <- input$layout
       req(sel.layout, input$highlightby)
-      
-      physics = TRUE
+
+      physics <- TRUE
       if (sel.layout == "hierarchical") {
         layout <- "hierarchical"
         physics <- FALSE
@@ -102,7 +104,7 @@ pcsf_plot_network_server <- function(id,
 
       ## compute PCSF
       pcsf <- pcsf_compute()
-      
+
       plt <- playbase::plotPCSF(
         pcsf,
         highlightby = input$highlightby,

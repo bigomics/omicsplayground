@@ -116,18 +116,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           )
         }
 
-        if (labeltype() == "feature") {
-          names(features) <- features
-        } else if (labeltype() == "symbol") {
-          pre_labels <- pgx$genes[features, "symbol"]
-          pre_labels <- ifelse(is.na(pre_labels), features, pre_labels)
-          names(features) <- pre_labels
-        } else if (labeltype() == "name") {
-          pre_labels <- pgx$genes[features, "gene_title"]
-          pre_labels <- ifelse(is.na(pre_labels), features, pre_labels)
-          names(features) <- pre_labels
-        }
-
+        names(features) <- playbase::probe2symbol(features, pgx$genes, labeltype(), fill_na = TRUE)
 
         shiny::updateSelectizeInput(
           session, "search_gene",
