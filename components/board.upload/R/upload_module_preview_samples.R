@@ -191,6 +191,7 @@ upload_table_preview_samples_server <- function(
     output$umap <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
+      counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
       prior <- min(counts[which(counts>0)],na.rm=TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
