@@ -622,11 +622,11 @@ UploadBoard <- function(id,
       upload_organism(input$selected_organism)
     })
 
-    observeEvent( input$start_upload, {
-      recompute_pgx(NULL)  ## need to reset
+    observeEvent(input$start_upload, {
+      recompute_pgx(NULL) ## need to reset
     })
-      
-    observeEvent( c(input$start_upload, recompute_pgx() ), {    
+
+    observeEvent(c(input$start_upload, recompute_pgx()), {
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
@@ -1083,7 +1083,7 @@ UploadBoard <- function(id,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
-                 
+
     normalized <- upload_module_normalization_server(
       id = "checkqc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
