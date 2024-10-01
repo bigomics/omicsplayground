@@ -1193,7 +1193,6 @@ UploadBoard <- function(id,
 
       if( input$selected_datatype == "scRNA-seq" ) {
         counts <- checked_samples_counts()$COUNTS
-        dbg("dim(counts) = ",dim(counts))
         if(is.null(dim(counts))) return(NULL)
         logX <- playbase::logCPM(counts, 1, total=1e5)
         impX <- NULL
@@ -1218,13 +1217,9 @@ UploadBoard <- function(id,
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-#      countsRT = normalized$counts,
-#      countsX = normalized$X,
-#      impX = normalized$impX,
       countsRT = reactive(compute_input$counts),
       countsX = reactive(compute_input$X),
       impX = reactive(compute_input$impX),
-      # norm_method = shiny::reactive(normalized$norm_method()),
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
