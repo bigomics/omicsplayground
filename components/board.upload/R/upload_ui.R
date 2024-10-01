@@ -26,6 +26,7 @@ UploadUI <- function(id) {
               "RNA-seq",
               "mRNA microarray",
               "proteomics",
+              "scRNA-seq",
               "metabolomics (beta)" = "metabolomics"
               ## "scRNA-seq",
               ## "other"
@@ -56,80 +57,8 @@ UploadUI <- function(id) {
 
   ui <- div(
     boardHeader(title = "Upload New", info_link = ns("upload_info")),
-    useUploadWizard(ns),
+    uiOutput(ns("upload_wizard")),
     body
   )
-
   return(ui)
-}
-
-
-useUploadWizard <- function(ns) {
-  counts_ui <- wizardR::wizard_step(
-    step_title = tspan("Step 1: Upload counts", js = FALSE),
-    step_id = "step_counts",
-    upload_table_preview_counts_ui(
-      ns("counts_preview")
-    )
-  )
-
-  samples_ui <- wizardR::wizard_step(
-    step_title = "Step 2: Upload samples",
-    step_id = "step_samples",
-    upload_table_preview_samples_ui(
-      ns("samples_preview")
-    )
-  )
-
-  contrasts_ui <- wizardR::wizard_step(
-    step_title = "Step 3: Create comparisons",
-    step_id = "step_comparisons",
-    upload_table_preview_contrasts_ui(
-      ns("contrasts_preview")
-    )
-  )
-
-  ## batchcorrect_panel <- wizardR::wizard_step(
-  ##   step_title = "BatchEffects",
-  ##   step_id = "step_bc",
-  ##   bslib::layout_columns(
-  ##     col_widths = 12,
-  ##     heights_equal = "row",
-  ##     style = "margin-bottom: 20px",
-  ##     upload_module_batchcorrect_ui(ns("batchcorrect")),
-  ##   )
-  ## )
-
-  normalization_panel <- wizardR::wizard_step(
-    step_title = "Step 4: QC/BC",
-    step_id = "step_qc",
-    upload_module_normalization_ui(ns("checkqc"))
-  )
-
-  compute_panel <- wizardR::wizard_step(
-    step_title = "Compute!",
-    step_id = "step_compute",
-    upload_module_computepgx_ui(ns("compute"))
-  )
-
-  wizard <- wizardR::wizard(
-    id = ns("upload_wizard"),
-    width = 90,
-    height = 75,
-    modal = TRUE,
-    style = "dots",
-    lock_start = FALSE,
-    ## initial_panel,
-    counts_ui,
-    samples_ui,
-    contrasts_ui,
-    normalization_panel,
-    compute_panel,
-    options = list(
-      navigation = "buttons",
-      finish = "Compute!"
-    )
-  )
-
-  return(wizard)
 }

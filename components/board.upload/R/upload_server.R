@@ -523,6 +523,89 @@ UploadBoard <- function(id,
       }
     })
 
+    ## Dynamic render of appropriate wizard
+    output$upload_wizard <- shiny::renderUI({
+
+      counts_ui <- wizardR::wizard_step(
+        step_title = tspan("Step 1: Upload counts", js = FALSE),
+        step_id = "step_counts",
+        server = TRUE,
+        upload_table_preview_counts_ui(
+          ns("counts_preview")
+        )
+      )
+
+      samples_ui <- wizardR::wizard_step(
+        step_title = "Step 2: Upload samples",
+        step_id = "step_samples",
+        server = TRUE,
+        upload_table_preview_samples_ui(
+          ns("samples_preview")
+        )
+      )
+
+      contrasts_ui <- wizardR::wizard_step(
+        step_title = "Step 3: Create comparisons",
+        step_id = "step_comparisons",
+        server = TRUE,
+        upload_table_preview_contrasts_ui(
+          ns("contrasts_preview")
+        )
+      )
+
+      normalization_panel <- wizardR::wizard_step(
+        step_title = "Step 4: QC/BC",
+        step_id = "step_qc",
+        server = TRUE,
+        upload_module_normalization_ui(ns("checkqc"))
+      )
+
+      compute_panel <- wizardR::wizard_step(
+        step_title = "Compute!",
+        step_id = "step_compute",
+        server = TRUE,
+        upload_module_computepgx_ui(ns("compute"))
+      )
+
+      if(upload_datatype() == "scRNA-seq"){
+        wizard <- wizardR::wizard(
+          id = ns("upload_wizard"),
+          width = 90,
+          height = 75,
+          modal = TRUE,
+          style = "dots",
+          lock_start = FALSE,
+          counts_ui,
+          samples_ui,
+          contrasts_ui,
+          ## sc_normalization_panel,
+          compute_panel,
+          options = list(
+            navigation = "buttons",
+            finish = "Compute!"
+          )
+        )
+      } else {
+        wizard <- wizardR::wizard(
+          id = ns("upload_wizard"),
+          width = 90,
+          height = 75,
+          modal = TRUE,
+          style = "dots",
+          lock_start = FALSE,
+          counts_ui,
+          samples_ui,
+          contrasts_ui,
+          normalization_panel,
+          compute_panel,
+          options = list(
+            navigation = "buttons",
+            finish = "Compute!"
+          )
+        )
+      }
+      return(wizard)
+    })
 
     ## --------------------------------------------------------
     ## Check annotation matrix
@@ -1103,22 +1186,41 @@ UploadBoard <- function(id,
     ##   is.count = TRUE
     ## )
 
-    ## corrected2 <- reactiveValues()
-    ## observe({
-    ##   corrected2$counts <- normalized$counts()
-    ##   corrected2$X <- normalized$X()
-    ##   corrected2$impX <- normalized$impX()
-    ## })
+    ## placeholder for dynamic inputs for computepgx
+    compute_input <- reactiveValues()
+
+    observe({
+
+      if( input$selected_datatype == "scRNA-seq" ) {
+        counts <- checked_samples_counts()$COUNTS
+        if(is.null(dim(counts))) return(NULL)
+        logX <- playbase::logCPM(counts, 1, total=1e5)
+        impX <- NULL
+        if(any(missing(counts))) {
+          impX <- imputeSVD2(logX)
+        }
+        compute_input$counts <- counts
+        compute_input$X <- logX
+        compute_input$impX <- impX
+        ## compute_input$counts <- normalized_sc$counts()
+        ## compute_input$X <- normalized_sc$X()
+        ## compute_input$impX <- normalized_sc$impX()
+        compute_input$norm_method <- "CPM"
+      } else {
+        compute_input$counts <- normalized$counts()
+        compute_input$X <- normalized$X()
+        compute_input$impX <- normalized$impX()
+        compute_input$norm_method <- normalized$norm_method()
+      }
+      
+    })
 
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = normalized$counts,
-      countsX = normalized$X,
-      impX = normalized$impX,
-      # countsRT = reactive(corrected2$counts),
-      # countsX = reactive(corrected2$X),
-      # impX = reactive(corrected2$impX),
-      norm_method = shiny::reactive(normalized$norm_method()),
+      countsRT = reactive(compute_input$counts),
+      countsX = reactive(compute_input$X),
+      impX = reactive(compute_input$impX),
+      norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
