@@ -225,7 +225,7 @@ UploadBoard <- function(id,
     }
 
     ## =====================================================================
-    ## ===================== checkTables ===================================
+    ## =================== INPUT CHECK FUNCTIONS ===========================
     ## =====================================================================
 
     ## --------------------------------------------------------
@@ -510,15 +510,6 @@ UploadBoard <- function(id,
       }
     )
 
-    ## output$input_recap <- renderUI({
-    ##   shiny::fluidRow(
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
-    ##   )
-    ## })
-
     output$probe_type_ui <- shiny::renderUI({
       if (input$selected_datatype == "metabolomics") {
         div(
@@ -599,7 +590,7 @@ UploadBoard <- function(id,
 
 
     ## =====================================================================
-    ## ========================= SUBMODULES/SERVERS ========================
+    ## ================= VARIOUS OBSERVERS/TRIGGERS ========================
     ## =====================================================================
 
     shiny::observeEvent(modified_ct(), {
@@ -609,65 +600,6 @@ UploadBoard <- function(id,
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
     })
-
-    corrected1 <- upload_module_normalization_server(
-      id = "checkqc",
-      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
-      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
-      r_contrasts = modified_ct,
-      upload_datatype = upload_datatype,
-      is.count = TRUE,
-      height = height
-    )
-
-    correctedX <- upload_module_batchcorrect_server(
-      id = "batchcorrect",
-      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
-      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
-      r_contrasts = modified_ct,
-      r_results = modified_ct,
-      is.count = TRUE
-    )
-
-    ## corrected2 <- reactiveValues()
-    ## observe({
-    ##   corrected2$counts <- corrected1$counts()
-    ##   corrected2$X <- corrected1$X()
-    ##   corrected2$impX <- corrected1$impX()
-    ## })
-
-    computed_pgx <- upload_module_computepgx_server(
-      id = "compute",
-      countsRT = corrected1$counts,
-      countsX = corrected1$X,
-      impX = corrected1$impX,
-      # countsRT = reactive(corrected2$counts),
-      # countsX = reactive(corrected2$X),
-      # impX = reactive(corrected2$impX),
-      norm_method = shiny::reactive(corrected1$norm_method()),
-      samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
-      contrastsRT = modified_ct,
-      annotRT = shiny::reactive(checked_annot()$matrix),
-      raw_dir = raw_dir,
-      metaRT = shiny::reactive(uploaded$meta),
-      lib.dir = FILES,
-      auth = auth,
-      create_raw_dir = create_raw_dir,
-      alertready = FALSE,
-      height = "100%",
-      recompute_info = recompute_info,
-      inactivityCounter = inactivityCounter,
-      upload_wizard = reactive(input$upload_wizard),
-      upload_name = upload_name,
-      upload_description = upload_description,
-      upload_datatype = upload_datatype,
-      upload_organism = upload_organism,
-      upload_gx_methods = upload_gx_methods,
-      upload_gset_methods = upload_gset_methods,
-      process_counter = process_counter,
-      reset_upload_text_input = reset_upload_text_input,
-      probetype = probetype
-    )
 
     uploaded_pgx <- shiny::reactive({
       if (!is.null(uploaded$pgx)) {
@@ -679,6 +611,39 @@ UploadBoard <- function(id,
       }
       return(pgx)
     })
+
+
+    # change upload_datatype to selected_datatype
+    observeEvent(input$selected_datatype, {
+      upload_datatype(input$selected_datatype)
+    })
+
+    # change upload_organism to selected_organism
+    observeEvent(input$selected_organism, {
+      upload_organism(input$selected_organism)
+    })
+
+    observeEvent(input$start_upload, {
+      ## check number of datasets
+      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
+      if (!auth$options$ENABLE_DELETE) {
+        ## count also deleted files...
+        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
+      }
+      max.datasets <- as.integer(auth$options$MAX_DATASETS)
+      if (numpgx >= max.datasets) {
+        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        return(NULL)
+      }
+
+      ## start upload wizard
+      new_upload(new_upload() + 1)
+    })
+
+
+    ## ===============================================================================
+    ## =========================== WIZARD LOGIC ======================================
+    ## ===============================================================================
 
     # warn user when locked button is clicked (UX)
     observeEvent(
@@ -764,8 +729,6 @@ UploadBoard <- function(id,
         }
       }
     )
-
-    # --------------- wizard lock/unlock logic ------------------------
 
     ## Note: would be good to be able to lock/unlock left and
     ## right navigation separately... IK
@@ -878,6 +841,95 @@ UploadBoard <- function(id,
       }
     )
 
+
+    # observe show_modal and start modal
+    shiny::observeEvent(
+      list(new_upload()),
+      {
+        shiny::req(auth$options)
+        enable_upload <- auth$options$ENABLE_UPLOAD
+        if (!enable_upload) {
+          shinyalert::shinyalert(
+            title = "Upload disabled",
+            text = "Sorry, upload of new data is disabled for this account.",
+            type = "warning",
+            closeOnClickOutside = FALSE
+          )
+          return(NULL)
+        }
+
+        isolate({
+          lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+          lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+          # upload_datatype(NULL)  ## not good! crash on new upload
+          # upload_organism(NULL)
+          upload_name(NULL)
+          upload_description(NULL)
+          show_comparison_builder(TRUE)
+          selected_contrast_input(FALSE)
+        })
+
+        reset_upload_text_input(reset_upload_text_input() + 1)
+        wizardR::reset("upload_wizard")
+
+        # skip upload trigger at first startup
+        if (new_upload() == 0) {
+          return(NULL)
+        }
+
+        if (input$selected_organism == "No organism" && !auth$options$ENABLE_ANNOT) {
+          shinyalert::shinyalert(
+            title = "No organism",
+            text = "Sorry, not yet implemented.",
+            type = "warning",
+            #
+            closeOnClickOutside = FALSE
+          )
+          return(NULL)
+        }
+
+        if (enable_upload) {
+          MAX_DS_PROCESS <- 1
+          if (process_counter() < MAX_DS_PROCESS) {
+            wizardR::lock("upload_wizard")
+            wizardR::wizard_show(ns("upload_wizard"))
+            if (!is.null(recompute_pgx())) {
+              bigdash.selectTab(session, selected = "upload-tab")
+              pgx <- recompute_pgx()
+              upload_organism(pgx$organism)
+              uploaded$samples.csv <- pgx$samples
+              uploaded$contrasts.csv <- pgx$contrast
+              uploaded$counts.csv <- pgx$counts
+              recompute_info(
+                list(
+                  "name" = pgx$name,
+                  "description" = pgx$description
+                )
+              )
+            }
+          } else {
+            shinyalert::shinyalert(
+              title = "Computation in progress",
+              text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
+              type = "warning",
+              closeOnClickOutside = FALSE
+            )
+          }
+        } else {
+          shinyalert::shinyalert(
+            title = "Upload disabled",
+            text = "Sorry, upload of new data is disabled for this account.",
+            type = "warning",
+            closeOnClickOutside = FALSE
+          )
+        }
+      }
+    )
+
+    ## ===============================================================================
+    ## =========================== EXTENDED TASK =====================================
+    ## ===============================================================================
+
     ## check probetypes we have counts and every time upload_species changes
     observeEvent(
       {
@@ -983,7 +1035,7 @@ UploadBoard <- function(id,
 
 
     ## =====================================================================
-    ## ===================== PLOTS AND TABLES ==============================
+    ## ======================== MODULES SERVERS ============================
     ## =====================================================================
 
     upload_table_preview_counts_server(
@@ -1028,122 +1080,67 @@ UploadBoard <- function(id,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
-
-    ## =================== wizard logic =====================
-
-    # change upload_datatype to selected_datatype
-    observeEvent(input$selected_datatype, {
-      upload_datatype(input$selected_datatype)
-    })
-
-    # change upload_organism to selected_organism
-    observeEvent(input$selected_organism, {
-      upload_organism(input$selected_organism)
-    })
-
-    observeEvent(c(input$start_upload, recompute_pgx()), {
-      ## check number of datasets
-      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
-      if (!auth$options$ENABLE_DELETE) {
-        ## count also deleted files...
-        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
-      }
-      max.datasets <- as.integer(auth$options$MAX_DATASETS)
-      if (numpgx >= max.datasets) {
-        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
-        return(NULL)
-      }
-
-      ## start upload wizard
-      new_upload(new_upload() + 1)
-    })
-
-    # observe show_modal and start modal
-    shiny::observeEvent(
-      list(new_upload()),
-      {
-        shiny::req(auth$options)
-        enable_upload <- auth$options$ENABLE_UPLOAD
-        if (!enable_upload) {
-          shinyalert::shinyalert(
-            title = "Upload disabled",
-            text = "Sorry, upload of new data is disabled for this account.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        }
-
-        isolate({
-          lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-          lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          # upload_datatype(NULL)  ## not good! crash on new upload
-          # upload_organism(NULL)
-          upload_name(NULL)
-          upload_description(NULL)
-          show_comparison_builder(TRUE)
-          selected_contrast_input(FALSE)
-        })
-
-        reset_upload_text_input(reset_upload_text_input() + 1)
-        wizardR::reset("upload_wizard")
-
-        # skip upload trigger at first startup
-        if (new_upload() == 0) {
-          return(NULL)
-        }
-
-        if (input$selected_organism == "No organism" && !auth$options$ENABLE_ANNOT) {
-          shinyalert::shinyalert(
-            title = "No organism",
-            text = "Sorry, not yet implemented.",
-            type = "warning",
-            #
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        }
-
-
-        if (enable_upload) {
-          MAX_DS_PROCESS <- 1
-          if (process_counter() < MAX_DS_PROCESS) {
-            wizardR::lock("upload_wizard")
-            wizardR::wizard_show(ns("upload_wizard"))
-            if (!is.null(recompute_pgx())) {
-              bigdash.selectTab(session, selected = "upload-tab")
-              pgx <- recompute_pgx()
-              upload_organism(pgx$organism)
-              uploaded$samples.csv <- pgx$samples
-              uploaded$contrasts.csv <- pgx$contrast
-              uploaded$counts.csv <- pgx$counts
-              recompute_info(
-                list(
-                  "name" = pgx$name,
-                  "description" = pgx$description
-                )
-              )
-            }
-
-            # if recomputing pgx, add data to wizard
-          } else {
-            shinyalert::shinyalert(
-              title = "Computation in progress",
-              text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
-              type = "warning",
-              closeOnClickOutside = FALSE
-            )
-          }
-        } else {
-          shinyalert::shinyalert(
-            title = "Upload disabled",
-            text = "Sorry, upload of new data is disabled for this account.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-        }
-      }
+                 
+    normalized <- upload_module_normalization_server(
+      id = "checkqc",
+      r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
+      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+      r_contrasts = modified_ct,
+      upload_datatype = upload_datatype,
+      is.count = TRUE,
+      height = height
     )
+
+    ## correctedX <- upload_module_batchcorrect_server(
+    ##   id = "batchcorrect",
+    ##   r_X = shiny::reactive(checked_samples_counts()$COUNTS),
+    ##   r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+    ##   r_contrasts = modified_ct,
+    ##   r_results = modified_ct,
+    ##   is.count = TRUE
+    ## )
+
+    ## corrected2 <- reactiveValues()
+    ## observe({
+    ##   corrected2$counts <- normalized$counts()
+    ##   corrected2$X <- normalized$X()
+    ##   corrected2$impX <- normalized$impX()
+    ## })
+
+    computed_pgx <- upload_module_computepgx_server(
+      id = "compute",
+      countsRT = normalized$counts,
+      countsX = normalized$X,
+      impX = normalized$impX,
+      # countsRT = reactive(corrected2$counts),
+      # countsX = reactive(corrected2$X),
+      # impX = reactive(corrected2$impX),
+      norm_method = shiny::reactive(normalized$norm_method()),
+      samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
+      contrastsRT = modified_ct,
+      annotRT = shiny::reactive(checked_annot()$matrix),
+      raw_dir = raw_dir,
+      metaRT = shiny::reactive(uploaded$meta),
+      lib.dir = FILES,
+      auth = auth,
+      create_raw_dir = create_raw_dir,
+      alertready = FALSE,
+      height = "100%",
+      recompute_info = recompute_info,
+      inactivityCounter = inactivityCounter,
+      upload_wizard = reactive(input$upload_wizard),
+      upload_name = upload_name,
+      upload_description = upload_description,
+      upload_datatype = upload_datatype,
+      upload_organism = upload_organism,
+      upload_gx_methods = upload_gx_methods,
+      upload_gset_methods = upload_gset_methods,
+      process_counter = process_counter,
+      reset_upload_text_input = reset_upload_text_input,
+      probetype = probetype
+    )
+
+
 
     ## ------------------------------------------------
     ## Board return object
