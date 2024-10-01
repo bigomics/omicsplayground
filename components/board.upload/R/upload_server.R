@@ -612,7 +612,6 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-
     # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
@@ -623,7 +622,11 @@ UploadBoard <- function(id,
       upload_organism(input$selected_organism)
     })
 
-    observeEvent(input$start_upload, {
+    observeEvent( input$start_upload, {
+      recompute_pgx(NULL)  ## need to reset
+    })
+      
+    observeEvent( c(input$start_upload, recompute_pgx() ), {    
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
@@ -1080,116 +1083,6 @@ UploadBoard <- function(id,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
-
-    observeEvent( input$start_upload, {
-      recompute_pgx(NULL)  ## need to reset
-    })
-      
-    observeEvent(c(input$start_upload, recompute_pgx()), {
-      ## check number of datasets
-      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
-      if (!auth$options$ENABLE_DELETE) {
-        ## count also deleted files...
-        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
-      }
-      max.datasets <- as.integer(auth$options$MAX_DATASETS)
-      if (numpgx >= max.datasets) {
-        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
-        return(NULL)
-      }
-
-      ## start upload wizard
-      new_upload(new_upload() + 1)
-    })
-
-    # observe show_modal and start modal
-    shiny::observeEvent(
-      list(new_upload()),
-      {
-        shiny::req(auth$options)
-        enable_upload <- auth$options$ENABLE_UPLOAD
-        if (!enable_upload) {
-          shinyalert::shinyalert(
-            title = "Upload disabled",
-            text = "Sorry, upload of new data is disabled for this account.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        }
-
-        isolate({
-          dbg("[upload_server:observe:new_upload] resetting ReactiveLists")
-          lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-          lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          # upload_datatype(NULL)  ## not good! crash on new upload
-          # upload_organism(NULL)
-          upload_name(NULL)
-          upload_description(NULL)
-          show_comparison_builder(TRUE)
-          selected_contrast_input(FALSE)
-        })
-
-        reset_upload_text_input(reset_upload_text_input() + 1)
-        wizardR::reset("upload_wizard")
-
-        # skip upload trigger at first startup
-        if (new_upload() == 0) {
-          return(NULL)
-        }
-
-        if (input$selected_organism == "No organism" && !auth$options$ENABLE_ANNOT) {
-          shinyalert::shinyalert(
-            title = "No organism",
-            text = "Sorry, not yet implemented.",
-            type = "warning",
-            #
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        }
-
-
-        if (enable_upload) {
-          MAX_DS_PROCESS <- 1
-          if (process_counter() < MAX_DS_PROCESS) {
-            wizardR::lock("upload_wizard")
-            wizardR::wizard_show(ns("upload_wizard"))
-            if (!is.null(recompute_pgx())) {
-              dbg("[upload_server:observe:new_upload] is.null.recompute_pgx() = ", is.null(recompute_pgx()))
-              bigdash.selectTab(session, selected = "upload-tab")
-              pgx <- recompute_pgx()
-              upload_organism(pgx$organism)
-              uploaded$samples.csv <- pgx$samples
-              uploaded$contrasts.csv <- pgx$contrast
-              uploaded$counts.csv <- pgx$counts
-              recompute_info(
-                list(
-                  "name" = pgx$name,
-                  "description" = pgx$description
-                )
-              )
-##              recompute_pgx(NULL)  ## clear/reset
-            }
-            # if recomputing pgx, add data to wizard
-          } else {
-            shinyalert::shinyalert(
-              title = "Computation in progress",
-              text = "Sorry, only one computation is allowed at a time. Please wait for the current computation to finish.",
-              type = "warning",
-              closeOnClickOutside = FALSE
-            )
-          }
-        } else {
-          shinyalert::shinyalert(
-            title = "Upload disabled",
-            text = "Sorry, upload of new data is disabled for this account.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-        }
-      }
-=======
                  
     normalized <- upload_module_normalization_server(
       id = "checkqc",
@@ -1199,7 +1092,6 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       is.count = TRUE,
       height = height
->>>>>>> dec770726a14a9dadaa29f890d362ee8761cb87e
     )
 
     ## correctedX <- upload_module_batchcorrect_server(
