@@ -639,12 +639,12 @@ UploadBoard <- function(id,
       ## start upload wizard
       new_upload(new_upload() + 1)
     })
-    
-    
+
+
     ## ===============================================================================
     ## =========================== WIZARD LOGIC ======================================
     ## ===============================================================================
-    
+
     # warn user when locked button is clicked (UX)
     observeEvent(
       input$upload_wizard_locked,
@@ -906,7 +906,7 @@ UploadBoard <- function(id,
                 )
               )
             }
-1
+            1
             # if recomputing pgx, add data to wizard
           } else {
             shinyalert::shinyalert(
@@ -926,7 +926,7 @@ UploadBoard <- function(id,
         }
       }
     )
-    
+
     ## ===============================================================================
     ## =========================== EXTENDED TASK =====================================
     ## ===============================================================================
@@ -1081,7 +1081,7 @@ UploadBoard <- function(id,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
-    
+
     normalized <- upload_module_normalization_server(
       id = "checkqc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1142,7 +1142,7 @@ UploadBoard <- function(id,
     )
 
 
-    
+
     ## ------------------------------------------------
     ## Board return object
     ## ------------------------------------------------

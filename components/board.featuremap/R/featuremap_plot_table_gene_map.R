@@ -224,7 +224,7 @@ featuremap_plot_gene_map_server <- function(id,
       } else {
         sel.genes <- rownames(df)
       }
-      df <- df[sel.genes, , drop=FALSE]
+      df <- df[sel.genes, , drop = FALSE]
 
       DT::datatable(df,
         rownames = FALSE,

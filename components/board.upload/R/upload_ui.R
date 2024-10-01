@@ -53,7 +53,7 @@ UploadUI <- function(id) {
       )
     )
   )
-  
+
   ui <- div(
     boardHeader(title = "Upload New", info_link = ns("upload_info")),
     useUploadWizard(ns),
@@ -65,7 +65,6 @@ UploadUI <- function(id) {
 
 
 useUploadWizard <- function(ns) {
-
   counts_ui <- wizardR::wizard_step(
     step_title = tspan("Step 1: Upload counts", js = FALSE),
     step_id = "step_counts",

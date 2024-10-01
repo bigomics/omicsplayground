@@ -27,8 +27,8 @@ upload_module_normalization_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-      
-      observeEvent( input$normalization_method, {
+
+      observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
         shiny::updateSelectizeInput(
@@ -160,7 +160,7 @@ upload_module_normalization_server <- function(
         X1 <- X1[, kk, drop = FALSE]
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
-        
+
         nmissing <- sum(is.na(X1))
         if (!input$batchcorrect) {
           dbg("[normalization_server:correctedX] Data not corrected for batch effects")
@@ -173,7 +173,6 @@ upload_module_normalization_server <- function(
             cx <- list(X = X1, impX1 = impX1)
           }
         } else {
-
           m <- input$bec_method
           dbg("[normalization_server:correctedX] Batch correction method = ", m)
           mm <- unique(c("uncorrected", m))
@@ -181,20 +180,20 @@ upload_module_normalization_server <- function(
           ##  pars <- get_model_parameters()
           pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
           batch.pars <- input$bec_param
-          if(any(grepl("<autodectect>",batch.pars))) {
+          if (any(grepl("<autodectect>", batch.pars))) {
             batch.pars <- pars$batch.pars
           }
-          if(any(grepl("<none>",batch.pars))) {
+          if (any(grepl("<none>", batch.pars))) {
             batch.pars <- ""
-          }          
+          }
           batch.pars <- intersect(batch.pars, colnames(samples))
 
-          if(length(batch.pars)) {
-            batch <- samples[, batch.pars, drop=FALSE]  ## matrix
+          if (length(batch.pars)) {
+            batch <- samples[, batch.pars, drop = FALSE] ## matrix
           } else {
             batch <- NULL
           }
-          
+
           pheno <- pars$pheno
           if (nmissing == 0) {
             xlist <- playbase::runBatchCorrectionMethods(
@@ -247,7 +246,7 @@ upload_module_normalization_server <- function(
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
-       
+
         nmissing0 <- sum(is.na(X0))
         if (nmissing0 > 0) {
           X0 <- playbase::imputeMissing(X0, method = "SVD2")
@@ -266,9 +265,9 @@ upload_module_normalization_server <- function(
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
 
-        if(any(grepl("<autodetect>",batch.pars))) batch.pars <- "<autodetect>"
-        if(any(grepl("<none>",batch.pars))) batch.pars <- NULL
-        
+        if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
+        if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
+
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
@@ -575,14 +574,14 @@ upload_module_normalization_server <- function(
         shiny::req(out.res)
 
         methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
-        ##methods <- intersect(methods, names(res$pos))
-        ##pos.list <- res$pos[methods]
+        ## methods <- intersect(methods, names(res$pos))
+        ## pos.list <- res$pos[methods]
         pos.list <- res$pos
         ## get same positions as after outlier detection
         pos0 <- out.res$pos[["pca"]]
         pos.list <- c(list("uncorrected" = pos0), pos.list)
-#        names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
-#        names(pos.list) <- sub("limma", "auto-limma", names(pos.list))
+        #        names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
+        #        names(pos.list) <- sub("limma", "auto-limma", names(pos.list))
 
         pheno <- res$pheno
         xdim <- length(pheno)
@@ -594,7 +593,7 @@ upload_module_normalization_server <- function(
         cex1 <- 2.5 * as.numeric(as.character(cex1))
         par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
         for (m in methods) {
-          if(m %in% names(pos.list)) {
+          if (m %in% names(pos.list)) {
             plot(
               pos.list[[m]],
               col = col1,
@@ -642,8 +641,8 @@ upload_module_normalization_server <- function(
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-#        method <- sub("ComBat", "auto-ComBat", method)
-#        method <- sub("limma", "auto-limma", method)
+        #        method <- sub("ComBat", "auto-ComBat", method)
+        #        method <- sub("limma", "auto-limma", method)
         par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
         plot(pos0,
           col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
@@ -660,37 +659,40 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
 
 
-      getBatchParams <- eventReactive({
-        list(r_counts(), r_samples(), r_contrasts())
-      },{
-        shiny::req(r_counts(), r_samples(), r_contrasts())        
-        X <- r_counts()
-        samples <- r_samples()
-        contrasts <- r_contrasts()        
-        pars <- playbase::get_model_parameters(
-          X,
-          samples,
-          pheno = NULL,
-          contrasts = contrasts
-        )
-        all.pars <- setdiff(colnames(samples), pars$pheno.pars)
-        all.pars <- union(all.pars, pars$batch.pars)
-        names(all.pars) <- ifelse( all.pars %in% pars$batch.pars,
-                                  paste(all.pars,"*"), all.pars )
-        ##        all.pars <- c("<autodetect>","<none>",all.pars)
-        all.pars <- c("<autodetect>",all.pars)        
-        return(all.pars)
-      })
+      getBatchParams <- eventReactive(
+        {
+          list(r_counts(), r_samples(), r_contrasts())
+        },
+        {
+          shiny::req(r_counts(), r_samples(), r_contrasts())
+          X <- r_counts()
+          samples <- r_samples()
+          contrasts <- r_contrasts()
+          pars <- playbase::get_model_parameters(
+            X,
+            samples,
+            pheno = NULL,
+            contrasts = contrasts
+          )
+          all.pars <- setdiff(colnames(samples), pars$pheno.pars)
+          all.pars <- union(all.pars, pars$batch.pars)
+          names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
+            paste(all.pars, "*"), all.pars
+          )
+          ##        all.pars <- c("<autodetect>","<none>",all.pars)
+          all.pars <- c("<autodetect>", all.pars)
+          return(all.pars)
+        }
+      )
 
 
-      
 
-      
+
+
       output$normalization <- shiny::renderUI({
-
         ## reactive
         batch_params <- getBatchParams()
-        
+
         score.infotext <-
           "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
 
@@ -816,9 +818,9 @@ upload_module_normalization_server <- function(
                     ns("bec_method"),
                     label = "Select method:",
                     choices = c(
-                      "ComBat",                      
+                      "ComBat",
                       "limma",
-                      "NPM" = "NPM",                      
+                      "NPM" = "NPM",
                       "RUV" = "RUV",
                       "SVA" = "SVA"
                     ),
@@ -830,12 +832,12 @@ upload_module_normalization_server <- function(
                     shiny::selectizeInput(
                       ns("bec_param"),
                       label = "Batch parameter:",
-                      choices = batch_params,  ## reactive
+                      choices = batch_params, ## reactive
                       selected = batch_params[1],
                       multiple = TRUE,
                       options = list(
-                        placeholder = "Select..." 
-                      )                      
+                        placeholder = "Select..."
+                      )
                     ),
                     shiny::br()
                   )
@@ -898,8 +900,8 @@ upload_module_normalization_server <- function(
               )
             )
           ),
-          ##div(shiny::selectInput(ns("normalizationUI"),NULL,choices=TRUE),style='display:none')
-          div(shiny::checkboxInput(ns("normalizationUI"),NULL,TRUE),style='visibility:hidden')
+          ## div(shiny::selectInput(ns("normalizationUI"),NULL,choices=TRUE),style='display:none')
+          div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
         )
 
         return(ui)
