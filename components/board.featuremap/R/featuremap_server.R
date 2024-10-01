@@ -77,18 +77,62 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     observeEvent(
       {
-        list(pgx$samples, pgx$X)
+        list(input$sigvar, pgx$samples)
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
+      }
+    )
+    observeEvent(
+      {
+        list(pgx$samples, pgx$X, input$showvar)
       },
       {
         shiny::req(pgx$samples)
         shiny::req(pgx$X)
+        shiny::req(input$showvar)
 
-        cvar <- colnames(pgx$model.parameters$contr.matrix)
-        sel.cvar <- head(cvar, 8)
-        shiny::updateSelectizeInput(session, "selcomp",
-          choices = cvar,
-          selected = sel.cvar
-        )
+        if (input$showvar == "phenotype") {
+          cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, max.ncat = 99)
+          cvar0 <- head(grep("^[.]", cvar, invert = TRUE, value = TRUE), 1)
+          shiny::updateSelectInput(session, "sigvar", choices = cvar, selected = cvar0)
+        }
+        if (input$showvar == "comparisons") {
+          cvar <- colnames(pgx$model.parameters$contr.matrix)
+          sel.cvar <- head(cvar, 8)
+          shiny::updateSelectizeInput(session, "selcomp",
+            choices = cvar,
+            selected = sel.cvar
+          )
+          shiny::updateSelectInput(session, "ref_group", choices = "  ")
+        }
+      }
+    )
+    observeEvent(
+      {
+        list(pgx$samples, input$showvar, input$sigvar)
+      },
+      {
+        shiny::req(pgx$samples, input$sigvar, input$showvar)
+        if (input$sigvar %in% colnames(pgx$samples)) {
+          y <- setdiff(pgx$samples[, input$sigvar], c(NA))
+          y <- c("<average>", sort(unique(y)))
+          shiny::updateSelectInput(session, "ref_group", choices = y)
+        }
+      }
+    )
+    observeEvent(
+      {
+        list(input$selcomp)
+      },
+      {
+        ## shiny::req(pgx$samples, input$sigvar, input$showvar)
+        shiny::updateSelectInput(session, "ref_group", choices = " ")
       }
     )
 
@@ -254,12 +298,21 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## =========================== MODULES =====================================
     ## =========================================================================
 
+    sigvar2 <- shiny::reactive({
+      if (input$showvar == "phenotype") {
+        return(input$sigvar)
+      }
+      if (input$showvar == "comparisons") {
+        return(input$selcomp)
+      }
+    })
+
     # Gene Map
     featuremap_plot_gene_map_server(
       "geneUMAP",
       pgx = pgx,
       plotUMAP = plotUMAP,
-      sigvar = reactive(input$selcomp),
+      sigvar = sigvar2,
       filteredGenes = filteredGenes,
       watermark = WATERMARK,
       labeltype = labeltype
@@ -269,7 +322,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     featuremap_plot_gene_sig_server(
       "geneSigPlots",
       pgx = pgx,
-      sigvar = reactive(input$selcomp),
+      sigvar = sigvar2,
       ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark = WATERMARK
@@ -281,7 +334,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx = pgx,
       plotUMAP = plotUMAP,
       filter_gsets = shiny::reactive(input$filter_gsets),
-      sigvar = reactive(input$selcomp),
+      sigvar = sigvar2,
       watermark = WATERMARK
     )
 
@@ -289,7 +342,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     featuremap_plot_gset_sig_server(
       "gsetSigPlots",
       pgx = pgx,
-      sigvar = reactive(input$selcomp),
+      sigvar = sigvar2,
       ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
       watermark = WATERMARK
