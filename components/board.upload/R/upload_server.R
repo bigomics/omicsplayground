@@ -525,7 +525,6 @@ UploadBoard <- function(id,
 
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
-
       counts_ui <- wizardR::wizard_step(
         step_title = tspan("Step 1: Upload counts", js = FALSE),
         step_id = "step_counts",
@@ -567,7 +566,7 @@ UploadBoard <- function(id,
         upload_module_computepgx_ui(ns("compute"))
       )
 
-      if(upload_datatype() == "scRNA-seq"){
+      if (upload_datatype() == "scRNA-seq") {
         wizard <- wizardR::wizard(
           id = ns("upload_wizard"),
           width = 90,
@@ -1190,13 +1189,14 @@ UploadBoard <- function(id,
     compute_input <- reactiveValues()
 
     observe({
-
-      if( input$selected_datatype == "scRNA-seq" ) {
+      if (input$selected_datatype == "scRNA-seq") {
         counts <- checked_samples_counts()$COUNTS
-        if(is.null(dim(counts))) return(NULL)
-        logX <- playbase::logCPM(counts, 1, total=1e5)
+        if (is.null(dim(counts))) {
+          return(NULL)
+        }
+        logX <- playbase::logCPM(counts, 1, total = 1e5)
         impX <- NULL
-        if(any(missing(counts))) {
+        if (any(missing(counts))) {
           impX <- imputeSVD2(logX)
         }
         compute_input$counts <- counts
@@ -1212,7 +1212,6 @@ UploadBoard <- function(id,
         compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
       }
-      
     })
 
     computed_pgx <- upload_module_computepgx_server(
