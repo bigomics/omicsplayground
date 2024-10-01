@@ -57,7 +57,7 @@ UploadUI <- function(id) {
 
   ui <- div(
     boardHeader(title = "Upload New", info_link = ns("upload_info")),
-    uiOutput(ns("upload_render")),
+    uiOutput(ns("upload_wizard")),
     body
   )
   return(ui)
