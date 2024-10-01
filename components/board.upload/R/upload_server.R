@@ -523,6 +523,81 @@ UploadBoard <- function(id,
       }
     })
 
+    output$upload_render <- shiny::renderUI({
+      counts_ui <- wizardR::wizard_step(
+        step_title = tspan("Step 1: Upload counts", js = FALSE),
+        step_id = "step_counts",
+        upload_table_preview_counts_ui(
+          ns("counts_preview")
+        )
+      )
+
+      samples_ui <- wizardR::wizard_step(
+        step_title = "Step 2: Upload samples",
+        step_id = "step_samples",
+        upload_table_preview_samples_ui(
+          ns("samples_preview")
+        )
+      )
+
+      contrasts_ui <- wizardR::wizard_step(
+        step_title = "Step 3: Create comparisons",
+        step_id = "step_comparisons",
+        upload_table_preview_contrasts_ui(
+          ns("contrasts_preview")
+        )
+      )
+
+      normalization_panel <- wizardR::wizard_step(
+        step_title = "Step 4: QC/BC",
+        step_id = "step_qc",
+        upload_module_normalization_ui(ns("checkqc"))
+      )
+
+      compute_panel <- wizardR::wizard_step(
+        step_title = "Compute!",
+        step_id = "step_compute",
+        upload_module_computepgx_ui(ns("compute"))
+      )
+
+      if(upload_datatype() == "scRNA-seq"){
+        wizard <- wizardR::wizard(
+          id = ns("upload_wizard"),
+          width = 90,
+          height = 75,
+          modal = TRUE,
+          style = "dots",
+          lock_start = FALSE,
+          counts_ui,
+          samples_ui,
+          contrasts_ui,
+          compute_panel,
+          options = list(
+            navigation = "buttons",
+            finish = "Compute!"
+          )
+        )
+      } else {
+        wizard <- wizardR::wizard(
+          id = ns("upload_wizard"),
+          width = 90,
+          height = 75,
+          modal = TRUE,
+          style = "dots",
+          lock_start = FALSE,
+          counts_ui,
+          samples_ui,
+          contrasts_ui,
+          normalization_panel,
+          compute_panel,
+          options = list(
+            navigation = "buttons",
+            finish = "Compute!"
+          )
+        )
+      }
+      return(wizard)
+    })
 
     ## --------------------------------------------------------
     ## Check annotation matrix
