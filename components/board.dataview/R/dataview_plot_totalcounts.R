@@ -132,7 +132,7 @@ dataview_plot_totalcounts_server <- function(id,
       shiny::req(res)
       df <- res[[1]]
 
-      if (res$sampleqc_plottype == "Average total abundance") {
+      if (res$sampleqc_plottype == "Total abundance") {
         fig <-
           plotly::plot_ly(
             data = df, x = ~sample, y = ~counts, type = "bar",

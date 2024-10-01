@@ -214,13 +214,35 @@ featuremap_plot_table_geneset_map_server <- function(id,
         sel.gsets <- intersect(sel.gsets, filt.gsets)
       }
 
-      contrasts <- sigvar()
-      F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
-      gg <- intersect(sel.gsets, rownames(F))
-      F <- F[gg, contrasts, drop = FALSE]
+      pheno <- sigvar()
+      is.fc <- FALSE
+      if (any(pheno %in% colnames(pgx$samples))) {
+        gg <- intersect(sel.gsets, rownames(pgx$gsetX))
+        X <- pgx$gsetX[gg, , drop = FALSE]
+        X <- X - rowMeans(X, na.rm = TRUE)
+        y <- pgx$samples[, pheno]
+        if (nrow(X) == 1) {
+          F <- tapply(1:ncol(X), y, function(i) {
+            rowMeans(X[, c(i, i), drop = FALSE])
+          })
+          F <- data.frame(t(F))
+          rownames(F) <- gg
+        } else {
+          F <- do.call(cbind, tapply(1:ncol(X), y, function(i) {
+            rowMeans(X[, c(i, i), drop = FALSE])
+          }))
+        }
+        is.fc <- FALSE
+      } else {
+        F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
+        gg <- intersect(sel.gsets, rownames(F))
+        F <- F[gg, , drop = FALSE]
+        is.fc <- TRUE
+      }
 
       F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
-      F <- cbind(rms.FC = sqrt(rowMeans(F**2, na.rm = TRUE)), F)
+      F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
+      if (is.fc) colnames(F)[1] <- "rms.FC"
       F <- round(F, digits = 3)
       gs.db <- sub(":.*", "", rownames(F))
       gs <- sub(".*[:]", "", rownames(F))

@@ -1140,7 +1140,6 @@ app_server <- function(input, output, session) {
       err_traceback_prev <<- ""
     }
     if (err_traceback == err_traceback_prev) {
-      message("EPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa")
       return()
     }
 
