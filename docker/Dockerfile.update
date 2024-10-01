@@ -68,7 +68,8 @@ fi
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
 #RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
 RUN R -e "install.packages(c('sf'))"
-#RUN R -e "remotes::install_github('bigomics/bigdash',dependencies=FALSE)"
+# TODO: temporary solution, this should go out once we rebuild base image
+RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE)"
 #RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 
 #------------------------------------------------------------
