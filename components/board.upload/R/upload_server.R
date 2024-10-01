@@ -1041,6 +1041,10 @@ UploadBoard <- function(id,
       upload_organism(input$selected_organism)
     })
 
+    observeEvent( input$start_upload, {
+      recompute_pgx(NULL)  ## need to reset
+    })
+      
     observeEvent(c(input$start_upload, recompute_pgx()), {
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
@@ -1075,6 +1079,7 @@ UploadBoard <- function(id,
         }
 
         isolate({
+          dbg("[upload_server:observe:new_upload] resetting ReactiveLists")
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
           # upload_datatype(NULL)  ## not good! crash on new upload
@@ -1111,6 +1116,7 @@ UploadBoard <- function(id,
             wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
+              dbg("[upload_server:observe:new_upload] is.null.recompute_pgx() = ", is.null(recompute_pgx()))
               bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
               upload_organism(pgx$organism)
@@ -1123,8 +1129,8 @@ UploadBoard <- function(id,
                   "description" = pgx$description
                 )
               )
+##              recompute_pgx(NULL)  ## clear/reset
             }
-
             # if recomputing pgx, add data to wizard
           } else {
             shinyalert::shinyalert(
