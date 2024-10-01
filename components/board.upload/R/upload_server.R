@@ -612,7 +612,6 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-
     # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
@@ -624,6 +623,10 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
+      recompute_pgx(NULL) ## need to reset
+    })
+
+    observeEvent(c(input$start_upload, recompute_pgx()), {
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
@@ -888,14 +891,15 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
-
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
             wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
+              bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
+              upload_organism(pgx$organism)
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
@@ -906,8 +910,6 @@ UploadBoard <- function(id,
                 )
               )
             }
-            1
-            # if recomputing pgx, add data to wizard
           } else {
             shinyalert::shinyalert(
               title = "Computation in progress",
