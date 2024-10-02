@@ -139,9 +139,11 @@ signature_plot_volcano_server <- function(id,
       label <- pd[["sel.gene"]]
       if (showlabel == "no") label <- NULL
       if (showlabel == "top10") {
-        ii <- match(label, pd[["features"]])
-        rr <- rowMeans(pd$fc[ii, ]**2) + rowMeans(log10(pd$qv[ii, ])**2)
-        label <- head(label[order(-rr)], 10)
+        if (!is.null(label)) {
+          ii <- match(label, pd[["symbols"]])
+          rr <- Matrix::rowMeans(pd$fc[ii, , drop = FALSE]**2) + Matrix::rowMeans(log10(pd$qv[ii, , drop = FALSE])**2)
+          label <- head(label[order(-rr)], 10)
+        }
       }
 
       # Call volcano plots
