@@ -92,6 +92,7 @@ correlation_plot_scattercorr_server <- function(id,
       R <- getGeneCorr()
       sel <- cor_table$rownames_current()
       sel <- head(intersect(sel, rownames(R)), NTOP)
+      shiny::req(sel)
       rho <- R[sel, "cor"]
 
       if (length(rho) == 1) names(rho) <- rownames(R)[1]

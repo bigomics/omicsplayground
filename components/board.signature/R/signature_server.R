@@ -172,7 +172,12 @@ SignatureBoard <- function(id, pgx,
           genes <- union(genes, rx.genes)
         }
         ## map to probes
-        features <- playbase::map_probes(pgx$genes, genes, column = "human_ortholog", ignore.case = TRUE)
+        features1 <- playbase::map_probes(pgx$genes, genes,
+          column = "human_ortholog", ignore.case = TRUE)
+        features2 <- playbase::map_probes(pgx$genes, genes,
+          column = "symbol", ignore.case = TRUE)
+        features <- union(features1, features2)
+        
       } else if (input$type == "contrast" &&
         input$feature[1] %in% playbase::pgx.getContrasts(pgx)) {
         contr <- input$feature
