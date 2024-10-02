@@ -664,7 +664,7 @@ upload_module_normalization_server <- function(
           list(r_counts(), r_samples(), r_contrasts())
         },
         {
-          shiny::req(r_counts(), r_samples(), r_contrasts())
+          shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
           X <- r_counts()
           samples <- r_samples()
           contrasts <- r_contrasts()
