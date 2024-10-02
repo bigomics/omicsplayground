@@ -192,14 +192,14 @@ upload_table_preview_samples_server <- function(
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
       counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
-      prior <- min(counts[which(counts>0)],na.rm=TRUE)
+      prior <- min(counts[which(counts > 0)], na.rm = TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
       hilight2 <- colnames(X)
-      if(ncol(X) > 100) hilight2 <- NULL
+      if (ncol(X) > 100) hilight2 <- NULL
       playbase::pgx.dimPlot(
         X, y,
         method = "umap",
