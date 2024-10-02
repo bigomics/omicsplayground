@@ -191,11 +191,15 @@ upload_table_preview_samples_server <- function(
     output$umap <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
-      X <- log2(counts)
+      counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
+      prior <- min(counts[which(counts>0)],na.rm=TRUE)
+      X <- log2(counts + prior)
       Y <- uploaded$samples.csv
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
+      hilight2 <- colnames(X)
+      if(ncol(X) > 100) hilight2 <- NULL
       playbase::pgx.dimPlot(
         X, y,
         method = "umap",
@@ -203,7 +207,7 @@ upload_table_preview_samples_server <- function(
         cex = 2.5,
         xlab = "umap-x",
         ylab = "umap-y",
-        hilight2 = colnames(X) ## label all points
+        hilight2 = hilight2 ## label all points
       )
     })
 
