@@ -34,16 +34,14 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     # add task to detect probetype using annothub
-    checkprobes_task <- ExtendedTask$new(function(organism, probes, datatype, probe_type) {
+    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
         detected <- playbase::detect_species_probetype(
           probes = probes,
           datatype = datatype,
-          probe_type = probe_type,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
         )
-        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", detected)
         if (is.null(detected)) detected <- "error"
         detected
       })
@@ -510,18 +508,18 @@ UploadBoard <- function(id,
       }
     )
 
-    output$probe_type_ui <- shiny::renderUI({
-      if (input$selected_datatype == "metabolomics") {
-        div(
-          p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
-          shiny::selectInput(
-            ns("selected_probe"),
-            label = NULL,
-            choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
-          )
-        )
-      }
-    })
+    ## output$probe_type_ui <- shiny::renderUI({
+    ##   if (input$selected_datatype == "metabolomics") {
+    ##     div(
+    ##       p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+    ##       shiny::selectInput(
+    ##         ns("selected_probe"),
+    ##         label = NULL,
+    ##         choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
+    ##       )
+    ##     )
+    ##   }
+    ## })
 
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
@@ -1029,8 +1027,7 @@ UploadBoard <- function(id,
         checkprobes_task$invoke(
           organism = upload_organism(),
           datatype = upload_datatype(),
-          probes = probes,
-          probe_type = input$selected_probe
+          probes = probes
         )
       }
     )
@@ -1042,11 +1039,11 @@ UploadBoard <- function(id,
           "[observeEvent:checkprobes_task$result] task status = ",
           checkprobes_task$status()
         )
-        if (checkprobes_task$status() != "success") {
-          return(NULL)
-        }
         if (checkprobes_task$status() == "error") {
           probetype("error")
+          return(NULL)
+        }
+        if (checkprobes_task$status() != "success") {
           return(NULL)
         }
 
@@ -1084,6 +1081,7 @@ UploadBoard <- function(id,
         }
 
         probetype(detected_probetype) ## set RV
+        info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
 
         if (detected_probetype == "error") {
           info("[UploadBoard] ExtendedTask result has ERROR")
