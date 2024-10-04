@@ -232,7 +232,7 @@ clustering_plot_splitmap_server <- function(id,
       splitx <- filt$grp
 
       ## iheatmapr needs factors for sharing between groups
-      annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
+      annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE, check.names = FALSE)
       rownames(annotF) <- rownames(annot)
 
       sel <- selected_phenotypes()
