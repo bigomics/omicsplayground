@@ -71,6 +71,9 @@ dataview_table_rawdata_server <- function(id,
       }
       x0 <- x
 
+      # Handle to avoid errors on dataset change
+      shiny::req(any(rownames(x) == gene))
+
       k <- which(rownames(x) == gene)
       rho <- cor(t(logx), logx[k, ], use = "pairwise")[, 1]
       rho <- rho[match(rownames(x), names(rho))]
