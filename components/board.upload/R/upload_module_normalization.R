@@ -766,11 +766,16 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
-                    choices = c(
-                      "CPM", "CPM+quantile", ## "quantile",
-                      "maxMedian", "maxSum", ## "TMM",
-                      "reference"
-                    ),
+                    choices = if(grepl("proteomics", upload_datatype(), ignore.case = TRUE)){
+                      c(
+                        "maxMedian", "maxSum", ## "TMM",
+                        "reference"
+                      )} else {
+                      c(
+                        "CPM", "CPM+quantile", ## "quantile",
+                        "maxMedian", "maxSum", ## "TMM",
+                        "reference"
+                      )},
                     selected = ifelse(grepl("proteomics", upload_datatype(), ignore.case = TRUE),
                       "maxMedian", "CPM+quantile"
                     )
