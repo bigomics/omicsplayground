@@ -63,7 +63,8 @@ clustering_plot_splitmap_ui <- function(
     width = width,
     height = height,
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    show.ai = TRUE
   )
 }
 
@@ -87,7 +88,8 @@ clustering_plot_splitmap_server <- function(id,
                                             hm_topmode,
                                             hm_clustk,
                                             watermark = FALSE,
-                                            labeltype) {
+                                            labeltype,
+                                            info = list() ) {
   moduleServer(id, function(input, output, session) {
     fullH <- 850
 
@@ -300,7 +302,7 @@ clustering_plot_splitmap_server <- function(id,
     plot_data_csv <- function() {
       plotly_splitmap.RENDER_get()$X
     }
-
+    
     lapply(plot_grid, function(x) {
       PlotModuleServer(
         "pltmod",
@@ -311,7 +313,9 @@ clustering_plot_splitmap_server <- function(id,
         pdf.width = 10,
         pdf.height = 8,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        info = info,
+        show.ai = TRUE
       )
     })
 

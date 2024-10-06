@@ -9,8 +9,10 @@ dataview_plot_averagerank_ui <- function(
     height,
     width,
     title,
-    info.text,
-    caption) {
+    info
+#    info.text,
+#    caption
+    ) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -19,12 +21,14 @@ dataview_plot_averagerank_ui <- function(
     label = label,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info.text,
+    info = info,
+    # info.text = info.text,
+    # caption = caption,
     options = NULL,
-    caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
-    height = height
+    height = height,
+    show.ai = TRUE
   )
 }
 
@@ -33,6 +37,7 @@ dataview_plot_averagerank_server <- function(id,
                                              r.gene = reactive(""),
                                              r.samples = reactive(""),
                                              r.data_type = reactive("counts"),
+                                             info = list(),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -192,6 +197,8 @@ dataview_plot_averagerank_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
+      info = info,
+      show.ai = TRUE,
       add.watermark = watermark
     )
   }) ## end of moduleServer

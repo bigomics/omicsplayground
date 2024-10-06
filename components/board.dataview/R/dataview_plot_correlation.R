@@ -9,10 +9,8 @@ dataview_plot_correlation_ui <- function(
     title,
     height,
     width,
-    caption,
-    info.text,
-    info.methods,
-    info.extra_link) {
+    info
+    ) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -20,16 +18,12 @@ dataview_plot_correlation_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    caption = caption,
-    #
-    #
-    info.text = info.text,
-    info.methods = info.methods,
-    info.extra_link = info.extra_link,
+    info = info,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
-    height = height
+    height = height,
+    show.ai = TRUE
   )
 }
 
@@ -37,6 +31,7 @@ dataview_plot_correlation_server <- function(id,
                                              pgx,
                                              r.gene = reactive(""),
                                              r.samples = reactive(NULL),
+                                             info = info,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     getTopCorrelatedGenes <- function(pgx, gene, n, samples) {
@@ -186,7 +181,9 @@ dataview_plot_correlation_server <- function(id,
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      info = info,
+      add.watermark = watermark,
+      show.ai = TRUE
     )
   }) ## end of moduleServer
 }
