@@ -112,13 +112,13 @@ html {
     background-color: #fff;
   }
 
-  .btn-circle-xs,
-  .btn-circle-xs:focus {
+  .btn-circle-xs,.btn-circle-xs:focus {
     background: #FFFFFF;
     color: #DDD;
     text-shadow: 0 0 0px #ccc;
     border: 0px;
     border-radius: 3px !important;
+    width: 18px;
   }
 
   .btn-circle-xs:hover {
@@ -136,6 +136,18 @@ html {
     padding-right: 8px;
   }
 
+  .module-btn, .module-btn:focus {
+    background: #FFFFFF;
+    color: #DDD;
+    border: 0px;
+    width: 18px;    
+  }
+  
+  .module-btn:hover {
+    color: #444;
+  }
+
+  
   .chart-wrapper .chart-notes {
     font-size: 11px;
     font-weight: 400;

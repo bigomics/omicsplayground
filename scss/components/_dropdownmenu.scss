@@ -28,5 +28,15 @@ div#mainmenu_appsettings .dropdown-menu.show {
 }
 
 .dropdown-items {
-    margin: 10px;
+    margin: 8px;
+}
+
+
+.selectize-dropdown-input, selectize-dropdown-content {
+    font-size: 14px;
+}
+
+.selectize-input .item, .selectize-input .option,
+.selectize-dropdown .item, .selectize-dropdown .option {
+    font-size: 14px;
 }
