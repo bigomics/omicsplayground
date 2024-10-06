@@ -9,6 +9,7 @@ PlotModuleUI <- function(id,
                          info.methods = NULL,
                          info.references = NULL,
                          info.extra_link = NULL,
+                         info = NULL,
                          title = "",
                          options = NULL,
                          label = "",
@@ -32,7 +33,8 @@ PlotModuleUI <- function(id,
                          card_names = NULL,
                          header_buttons = NULL,
                          translate = TRUE,
-                         translate_js = TRUE) {
+                         translate_js = TRUE,
+                         show.ai = FALSE) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -49,6 +51,14 @@ PlotModuleUI <- function(id,
   height.1 <- ifnotchar.int(height[1])
   height.2 <- ifnotchar.int(height[2])
 
+  if(!is.null(info) && class(info) == "list") {
+    info.text <- info$description  
+    info.methods <- info$methods
+    info.references = info$references
+    info.extra_link = info$documentation
+    if(!is.null(info$caption)) caption <- info$caption
+  }
+  
   if (translate) {
     info.text <- tspan(info.text, js = translate_js)
     info.methods <- tspan(info.methods, js = translate_js)
@@ -56,7 +66,7 @@ PlotModuleUI <- function(id,
     caption2 <- tspan(caption2, js = translate_js)
     caption <- tspan(caption, js = translate_js)
   }
-
+  
   getOutputFunc <- function(plotlib) {
     FUN <- switch(plotlib,
       generic = NULL,
@@ -189,7 +199,7 @@ PlotModuleUI <- function(id,
   )
 
   if (no.download || length(download.fmt) == 0) dload.button <- ""
-
+  
   zoom.button <- NULL
   if (show.maximize) {
     zoom.button <- modalTrigger(
@@ -200,7 +210,14 @@ PlotModuleUI <- function(id,
     )
   }
 
-  # Build cards or single plot
+  ai.button <- NULL
+  if (show.ai) {
+    ai.button <- ExplainPlotUI( ns("explainplot") )
+  }
+
+  #------------------------------------------------------------------------
+  #---------------- Build cards or single plot ----------------------------
+  #------------------------------------------------------------------------
   if (cards) {
     tabs <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
@@ -223,90 +240,93 @@ PlotModuleUI <- function(id,
     header_buttons <- div()
   }
 
+  info.button <- DropdownMenu(
+    shiny::div(
+      class = "plotmodule-info",
+      shiny::HTML("<b>Description</b><br>"),
+      shiny::HTML(as.character(info.text))
+    ),
+    if (!is.null(info.methods)) {
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML("<b>Methods</b><br>"),
+        shiny::HTML(info.methods)
+      )
+    } else {
+      NULL
+    },
+    if (!is.null(info.references)) {
+      html_code <- ""
+      for (i in seq_along(info.references)) {
+        ref <- info.references[[i]]
+        name <- ref[[1]]
+        link <- ref[[2]]
+        # Create the formatted HTML string
+        formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
+        # Append the formatted string to the HTML code
+        html_code <- paste0(html_code, formatted_ref)
+      }
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML("<b>References</b>"),
+        shiny::div(
+          class = "plotmodule-info plotmodule-references",
+          shiny::HTML(html_code)
+        )
+      )
+    } else {
+      NULL
+    },
+    if (!is.null(info.extra_link)) {
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML(
+          paste0(
+            "<b><a href='",
+            info.extra_link,
+            "' target='_blank'>Further information...</a></b>"
+          )
+          )
+      )
+    } else {
+      NULL
+    },
+    shiny::HTML("<br>"),
+    shiny::actionButton(
+      ns("copy_info"),
+      "Copy text",
+      icon = shiny::icon("clipboard"),
+      class = "btn-outline-dark btn-sm",
+      onclick = "copyPlotModuleInfo();"
+    ),
+    size = "xs",
+    icon = shiny::icon("info"),
+    status = "default",
+    width = "300px"
+  )
+
+  card_buttons <- if (cards) {
+    nav_bar <- gsub("nav nav-pills shiny-tab-input card-header-pills", "nav navbar-nav shiny-tab-input header-nav", plot_cards$children[[1]])
+    nav_bar <- gsub("card-header bslib-navs-card-title", "bslib-navs-card-title", nav_bar) |> shiny::HTML()
+    nav_bar
+  } else {
+    shiny::div()
+  }
+  
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",
       style = "white-space: nowrap; overflow: hidden; text-overflow: clip;",
       title
     ),
-    if (cards) {
-      nav_bar <- gsub("nav nav-pills shiny-tab-input card-header-pills", "nav navbar-nav shiny-tab-input header-nav", plot_cards$children[[1]])
-      nav_bar <- gsub("card-header bslib-navs-card-title", "bslib-navs-card-title", nav_bar) |> shiny::HTML()
-      nav_bar
-    } else {
-      shiny::div()
-    },
+    shiny::div(card_buttons, class = "px-2"),
     header_buttons,
-    DropdownMenu(
-      shiny::div(
-        class = "plotmodule-info",
-        shiny::HTML("<b>Plot info</b><br>"),
-        shiny::HTML(as.character(info.text))
-      ),
-      if (!is.null(info.methods)) {
-        shiny::div(
-          class = "plotmodule-info",
-          shiny::HTML("<b>Methods</b><br>"),
-          shiny::HTML(info.methods)
-        )
-      } else {
-        NULL
-      },
-      if (!is.null(info.references)) {
-        html_code <- ""
-        for (i in seq_along(info.references)) {
-          ref <- info.references[[i]]
-          name <- ref[[1]]
-          link <- ref[[2]]
-
-          # Create the formatted HTML string
-          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
-
-          # Append the formatted string to the HTML code
-          html_code <- paste0(html_code, formatted_ref)
-        }
-        shiny::div(
-          class = "plotmodule-info",
-          shiny::HTML("<b>References</b>"),
-          shiny::div(
-            class = "plotmodule-info plotmodule-references",
-            shiny::HTML(html_code)
-          )
-        )
-      } else {
-        NULL
-      },
-      if (!is.null(info.extra_link)) {
-        shiny::div(
-          class = "plotmodule-info",
-          shiny::HTML(
-            paste0(
-              "<b><a href='",
-              info.extra_link,
-              "' target='_blank'>Further information...</a></b>"
-            )
-          )
-        )
-      } else {
-        NULL
-      },
-      shiny::HTML("<br>"),
-      shiny::actionButton(
-        ns("copy_info"),
-        "Copy text",
-        icon = shiny::icon("clipboard"),
-        class = "btn-outline-dark btn-sm",
-        onclick = "copyPlotModuleInfo();"
-      ),
-      size = "xs",
-      icon = shiny::icon("info"),
-      status = "default",
-      width = "300px"
-    ),
+    shiny::div(class = "ai-button", title = "AI", ai.button),
+    info.button,
     options.button,
-    shiny::div(class = "download-button", title = "download", dload.button),
+    shiny::div(class = "download-button", title = "download", dload.button),    
     shiny::div(class = "zoom-button", title = "zoom", zoom.button)
   )
 
@@ -379,7 +399,11 @@ PlotModuleUI <- function(id,
   if (any(class(caption) == "reactive")) {
     caption <- caption()
   }
-
+  
+  ## ------------------------------------------------------------------------
+  ## ------------------------- final CARD UI  -------------------------------
+  ## ------------------------------------------------------------------------
+  
   e <- bslib::card(
     class = "plotmodule",
     full_screen = FALSE,
@@ -477,7 +501,9 @@ PlotModuleServer <- function(id,
                              add.watermark = FALSE,
                              remove_margins = FALSE,
                              vis.delay = 0,
-                             card = NULL) {
+                             card = NULL,
+                             show.ai = FALSE,
+                             info = list()) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -969,6 +995,29 @@ PlotModuleServer <- function(id,
         })
       }
 
+      ## ------------------------------------------------------------------------
+      ## ----------------------- ExplainPlotModule (AI) -------------------------
+      ## ------------------------------------------------------------------------
+
+      if(show.ai) {
+
+        info2 <- lapply(info, function(a) paste(unlist(a),collapse="; "))
+        if(FALSE && !is.null(csvFunc())) {
+          toptable <- head(csvFunc(),10)
+          info2$table <- paste(as.character(knitr::kable(toptable,format="markdown")),collapse="\n")
+        }
+        names(info2)
+        context <- paste0(toupper(names(info2)), ": ", info2,collapse="\n")
+        
+        ExplainPlotModule(
+          id = "explainplot",
+          plot_fun = func,
+          context = context,
+          chat = NULL,
+          plotlib = plotlib
+        )
+      }
+      
       ## --------------------------------------------------------------------------------
       ## ---------------------------- UI ------------------------------------------------
       ## --------------------------------------------------------------------------------
