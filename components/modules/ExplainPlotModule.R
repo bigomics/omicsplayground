@@ -23,18 +23,39 @@ ExplainPlotModule <- function(id,
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
+
+    has_warned <- FALSE
+    
+    is_enabled <- function(){
+      has.key <- (Sys.getenv("OPENAI_API_KEY") != "")
+      has.key
+    }
     
     observeEvent( input$button, {
-      ## beepr::beep(sound=1)
-      shinyalert::shinyalert(
-        title = "",
-        text = "Warning. The following is AI-generated. It may not always be correct. Your image and its data will be send to ChatGPT. Do you agree?",
-        size = "xs",
-        showCancelButton = TRUE,
-        callbackR = function(x) {
-          if(x==TRUE) explain_plot(chat, plot_fun(), model=NULL) 
-        }
-      )
+      if(!is_enabled()) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "Sorry. BigOmics Copilot is not enabled for this account",
+          size = "xs",
+          showCancelButton = FALSE
+        )
+        ## beepr::beep(sound=1)
+        return(NULL)
+      }
+      if(!has_warned) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "Warning. The following is AI-generated. It may not always be correct. Your plot and its data will be send to ChatGPT. Do you agree?",
+          size = "xs",
+          showCancelButton = TRUE,
+          callbackR = function(x) {
+            if(x==TRUE) explain_plot(chat, plot_fun(), model=NULL) 
+          }
+        )
+        has_warned <<- TRUE
+      } else {
+        explain_plot(chat, plot_fun(), model=NULL) 
+      }
       
     })
     
@@ -72,12 +93,12 @@ ExplainPlotModule <- function(id,
     
     explain_plot <- function(chat, p, model, ..., session = getDefaultReactiveDomain()) {
 
+      img_content <- plot_to_img_content(p)
+      img_url <- paste("data:image/png;base64,",img_content@data)
+      
+      system_prompt_str = paste("You are a chatbot integrated in a data visualization dashboard. You will be asked questions about the following plot, its data and how to interprete this plot. Do not answer questions not related to the plot. Only answer questions about biology, genomics, or statistics. Refuse other questions. Be succint. Use 1, maximum 2 paragraphs. Try to make specific observations if you can, but be conservative in drawing firm conclusions and express uncertainty if you can't be confident. Use following context:\n<CONTEXT>\n",context,"\n</CONTEXT>")
+      system_prompt_str = paste("You are a chatbot integrated in a data visualization dashboard. You will be asked questions about the following plot, its data and how to interprete this plot. Do not answer questions not related to the plot. Only answer questions about biology, genomics, or statistics. Refuse other questions. Be succint. Use 1, maximum 2 paragraphs. Try to make specific observations if you can. Sometimes suggest a follow up question (but only questions that you are able to answer). Use following context:\n<CONTEXT>\n",context,"\n</CONTEXT>")
       if(is.null(chat)) {
-        img_content <- plot_to_img_content(p)
-        img_url <- paste("data:image/png;base64,",img_content@data)
-
-        system_prompt_str = paste("You are a chatbot integrated in a data visualization dashboard. You will be asked questions about the following plot, its data and how to interprete this plot. Do not answer questions not related to the plot. Only answer questions about biology, genomics, or statistics. Refuse other questions. Be succint. Use 1, maximum 2 paragraphs. Try to make specific observations if you can, but be conservative in drawing firm conclusions and express uncertainty if you can't be confident. Use following context:\n<CONTEXT>\n",context,"\n</CONTEXT>")
-        system_prompt_str = paste("You are a chatbot integrated in a data visualization dashboard. You will be asked questions about the following plot, its data and how to interprete this plot. Do not answer questions not related to the plot. Only answer questions about biology, genomics, or statistics. Refuse other questions. Be succint. Use 1, maximum 2 paragraphs. Try to make specific observations if you can. Sometimes suggest a follow up question (but only questions that you are able to answer). Use following context:\n<CONTEXT>\n",context,"\n</CONTEXT>")                
         chat <- elmer::new_chat_openai(system_prompt = system_prompt_str, model="gpt-4o-mini")
       }
 
@@ -111,7 +132,7 @@ ExplainPlotModule <- function(id,
         footer = NULL
       ) |> tagAppendAttributes(style = "--bs-modal-margin: 1.75rem;"))
       
-      
+            
       onFlushed(function() {
         stream <- chat$stream_async("Interpret this plot", img_content)
         Sys.sleep(0.1)
