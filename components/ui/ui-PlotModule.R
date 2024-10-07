@@ -1000,14 +1000,32 @@ PlotModuleServer <- function(id,
       ## ------------------------------------------------------------------------
 
       if(show.ai) {
-
+        ##-------- create context string from info 
+        
         info2 <- lapply(info, function(a) paste(unlist(a),collapse="; "))
-        if(FALSE && !is.null(csvFunc())) {
-          toptable <- head(csvFunc(),10)
-          info2$table <- paste(as.character(knitr::kable(toptable,format="markdown")),collapse="\n")
+
+        ## add table data to context (check if it is not too big!!!)
+        if(FALSE && !is.null(csvFunc)) {
+          ## SOME BUG!!! It hangs here!!!!
+          data <- csvFunc()
+          if (is.list(data) && !is.data.frame(data)) data <- data[[1]]
+          dbg("[ui-PlotModule] dim(data_table) = ", dim(data))
+          if( FALSE && nrow(data) < 20 && NCOL(data) < 20) {
+            dbg("[ui-PlotModule] adding datatable to context")
+            info2$data <- paste(as.character(
+              knitr::kable(data,format="markdown")),collapse="\n")
+          }
         }
-        names(info2)
-        context <- paste0(toupper(names(info2)), ": ", info2,collapse="\n")
+        
+        ## add settings to context
+        settings <- getSettings(ns, session)
+        info2 <- c(info2, list("Settings" = settings$settings_str))
+        dbg("[ui-PlotModule]  info2$Settings = ", info2$Settings)
+          
+        ## create context as string
+        names(info2) <- toupper(names(info2))
+        dbg("[ui-PlotModule]  names(info2) = ",names(info2))
+        context <- paste0(names(info2), ": ", info2,collapse="\n")        
         
         ExplainPlotModule(
           id = "explainplot",

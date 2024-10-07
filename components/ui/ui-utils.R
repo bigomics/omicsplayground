@@ -242,7 +242,137 @@ HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteStrin
   return(wrapHyperLinkOutput)
 }
 
+getSettings <- function(ns, session) {
+  # Get board/plot ns
+  board_ns <- sub("-.*", "", ns(""))
+  plot_ns <- sub(".*-(.*?)-.*", "\\1", ns(""))
+  # Get board inputs
+  board_inputs <- names(.subset2(session, "parent")$input)[grepl(board_ns, names(.subset2(session, "parent")$input))]
+  board_inputs <- board_inputs[substr(board_inputs, 1, nchar(board_ns) + 1) == paste0(board_ns, "-")]
+  # Get board settings
+  board_settings <- board_inputs[grep("^[^-]*-[^-]*$", board_inputs)]
+  # Remove `data_options`, `tabs` `board_info`
+  board_settings <- board_settings[!grepl("data_options|tabs|info|options|compute|pdx_runbutton", board_settings)]
+  # Get settings values
+  board_settings_values <- lapply(board_settings, function(x) {
+    val <- .subset2(session, "parent")$input[[x]]
+    if (is.null(val)) val <- ""
+    if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
+    val <- paste(val, collapse = ", ")
+    return(val)
+  }) |> unlist()
+  # Merge values and input names (without namespacing)
+  settings_table <- data.frame(
+    setting = sub("^[^-]*-", "", board_settings),
+    value = board_settings_values
+  )
+  # Correct column names (of board settings)
+  df_names <- lapply(settings_table[,1], function(x) {
+    tspan(inputLabelDictionary(board_ns, x), js = FALSE)
+  }) |> unlist()
+  settings_table[,1] <- df_names
+
+  # Get plot inputs
+  plot_inputs <- board_inputs[grepl(plot_ns, board_inputs)]
+  # Get plot settings
+  plot_settings <- plot_inputs[grep("^[^-]*-[^-]*-[^-]*$", plot_inputs)]
+  # Get plot values
+  plot_settings_values <- lapply(plot_settings, function(x) {
+    val <- .subset2(session, "parent")$input[[x]]
+    if (is.null(val)) val <- ""
+    if (any(nchar(val) > 30)) val <- paste0(substr(val, 1, 30), "...")
+    val <- paste(val, collapse = ", ")
+    return(val)
+  }) |> unlist()
+  # Merge values and input names (without namespacing)
+  plot_table <- data.frame(
+    setting = sub("^[^-]*-", "", sub("^[^-]*-[^-]*-", "", plot_settings)),
+    value = plot_settings_values
+  )
+
+  # Get loaded metadata
+  timestamp <- as.character(format(Sys.time(), "%a %b %d %X %Y"))
+  version <- scan(file.path(OPG, "VERSION"), character())[1]
+  dataset <- LOADEDPGX
+  datatype <- DATATYPEPGX
+  metadata <- data.frame(
+    setting = c("Dataset", "Timestamp", "Data type", "Version"),
+    value = c(dataset, timestamp, datatype, version)
+  )
+
+  ## setting as string
+  df <- rbind(metadata, plot_table, settings_table)
+  settings_str <- paste(paste0(df[,1],"=",df[,2]),collapse=";")
+  
+  list(
+    metadata = metadata,
+    plot_table = plot_table,
+    settings_table = settings_table,
+    settings_str = settings_str)
+}
+
+
 addSettings <- function(ns, session, file) {
+
+  ##board_ns <- sub("-.*", "", ns(""))
+  settings <- getSettings(ns, session)
+
+  # Merge plot and settings
+  df <- rbind(
+    settings$metadata, c("", ""),
+    c("Plot option", "Value"), settings$plot_table, c("", ""),
+    c("Setting", "Value"), settings$settings_table
+  )
+
+  ## # Correct column names
+  ## df_names <- lapply(df$setting, function(x) {
+  ##   tspan(inputLabelDictionary(board_ns, x), js = FALSE)
+  ## }) |> unlist()
+  ## df$setting <- df_names
+  
+  # Setup table theme
+  table_theme <- gridExtra::ttheme_minimal(
+    colhead = list(
+      fg_params = list(
+        fontface = "bold", # Bold font for headers
+        hjust = 0, # Left-align the text
+        x = 0 # Align text to the left within the cell
+      )
+    ),
+    core = list(
+      fg_params = list(
+        fontface = c(
+          rep("plain", nrow(settings$metadata) + 1),
+          "bold",
+          rep("plain", nrow(settings$plot_table) + 1),
+          "bold",
+          rep("plain", nrow(settings$settings_table))
+        ),
+        hjust = 0,
+        x = 0
+      )
+    )
+  )
+
+  # Compute PDF height using nrow
+  height <- nrow(df) * 0.4
+
+  # Print PDF temp table
+  df_pdf <- tempfile(fileext = ".pdf")
+  final_pdf <- tempfile(fileext = ".pdf")
+  pdf(df_pdf, height = height, width = 10)
+  gridExtra::grid.table(df, rows = NULL, col = c("Metadata", "Value"), theme = table_theme)
+  dev.off()
+  # Construct the pdftk command
+  pdftk_command <- sprintf("pdftk %s %s cat output %s", file, df_pdf, final_pdf)
+  # Execute the command
+  system(pdftk_command)
+  ## finally copy to final exported file
+  dbg("[downloadHandler.PDF] copy PDFFILE", final_pdf, "to download file", file)
+  file.copy(final_pdf, file, overwrite = TRUE)
+}
+
+addSettings.SAVE <- function(ns, session, file) {
   # Get board/plot ns
   board_ns <- sub("-.*", "", ns(""))
   plot_ns <- sub(".*-(.*?)-.*", "\\1", ns(""))
@@ -445,6 +575,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
   if (is.null(val)) val <- inputId
   return(val)
 }
+
 
 tspan <- function(text, js = TRUE) {
   if (is.null(text)) {
