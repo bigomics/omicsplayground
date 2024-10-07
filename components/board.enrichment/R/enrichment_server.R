@@ -242,7 +242,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
 
           # subset rnaX by pp
-
           AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp, s1], na.rm = TRUE) / ngenes
           AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0], na.rm = TRUE) / ngenes
           remove(rnaX)
@@ -254,9 +253,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         AveExpr0 <- mean0 - meta.fc / 2
 
         # Subset meta.fc with non-na values
-        meta.fc <- meta.fc[!is.na(meta.fc)]
-
+        meta.fc <- meta.fc[which(!is.na(meta.fc) & !is.na(mean0))]
         gs <- intersect(names(meta.fc), rownames(meta))
+
         if (!is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
             logFC = meta.fc[gs],
