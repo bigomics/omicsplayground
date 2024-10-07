@@ -69,6 +69,8 @@ dataview_plot_expression_server <- function(id,
       if (groupby != "<ungrouped>") {
         grp <- factor(as.character(pgx$Y[samples, groupby]))
       }
+      # Req fro data change consistency
+      shiny::req(length(grp) == length(samples))
 
       pp <- rownames(pgx$genes)[match(gene, rownames(pgx$genes))]
       if (data_type %in% c("counts", "abundance")) {
