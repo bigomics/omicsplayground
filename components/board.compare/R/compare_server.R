@@ -401,7 +401,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         p <- playbase::pgx.plotContrast(
           pgx,
           contrast = ct,
-          hilight = hilight,
+          hilight = NULL,
+          label = label,
           ntop = ntop,
           cex.lab = cex.lab, #
           par.sq = TRUE,
