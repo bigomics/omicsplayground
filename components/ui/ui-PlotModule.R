@@ -37,6 +37,7 @@ PlotModuleUI <- function(id,
                          show.ai = FALSE) {
   ns <- shiny::NS(id)
 
+  ## ------------ only when DEVMODE ---------------
   dbg("[PlotModuleUI] opt$DEVMODE = ",opt$DEVMODE)
   show.ai <- (show.ai && opt$DEVMODE)
 
@@ -192,7 +193,8 @@ PlotModuleUI <- function(id,
         ns = ns,
         shiny::checkboxInput(
           inputId = ns("get_pdf_settings"),
-          label = "Include plot settings"
+          label = "Include plot settings",
+          value = TRUE
         )
       ),
       download_buttons,
@@ -1003,7 +1005,7 @@ PlotModuleServer <- function(id,
       ## ----------------------- ExplainPlotModule (AI) -------------------------
       ## ------------------------------------------------------------------------
 
-      if(show.ai) {
+      if(opt$DEVMODE && show.ai) {
         ##-------- create context string from info 
         
         info2 <- lapply(info, function(a) paste(unlist(a),collapse="; "))
