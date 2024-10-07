@@ -253,6 +253,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         AveExpr1 <- mean0 + meta.fc / 2
         AveExpr0 <- mean0 - meta.fc / 2
 
+        # Subset meta.fc with non-na values
+        meta.fc <- meta.fc[!is.na(meta.fc)]
+
         gs <- intersect(names(meta.fc), rownames(meta))
         if (!is.data.frame(pgx$gset.meta$info)) {
           rpt <- data.frame(
