@@ -69,7 +69,7 @@ dataview_plot_expression_server <- function(id,
       if (groupby != "<ungrouped>") {
         grp <- factor(as.character(pgx$Y[samples, groupby]))
       }
-      # Req fro data change consistency
+      # Req to avoid error on dataset change
       shiny::req(length(grp) == length(samples))
 
       pp <- rownames(pgx$genes)[match(gene, rownames(pgx$genes))]
