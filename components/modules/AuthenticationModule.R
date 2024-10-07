@@ -913,7 +913,7 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
     query_email <- shiny::isolate(shiny::getQueryString()$email)
-    if (!is.null(query_email)) {
+    if (!is.null(query_email) & !is.null(decrypted_cookie)) {
       if (query_email != decrypted_cookie) {
         # If the query email is different than the cookie email
         # we assume that the user wants to login
