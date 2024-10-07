@@ -134,6 +134,7 @@ ExplainPlotModule <- function(id,
       
             
       onFlushed(function() {
+        ## shinychat::chat_append( ns(chat_id), "👋 Hi, I'm **BigO** your Omics Copilot! I'm here to answer questions about this plot")
         stream <- chat$stream_async("Interpret this plot", img_content)
         Sys.sleep(0.1)
         shinychat::chat_append_stream( ns(chat_id), stream)
