@@ -375,7 +375,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           par.sq = TRUE,
           plotlib = "base",
           data = get_data,
-          labeltype = labeltype
+          labeltype = labeltype()
         )
         ## } else if (type == "heatmap") {
         ##   gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
