@@ -178,7 +178,8 @@ PlotModuleUI <- function(id,
         ns = ns,
         shiny::checkboxInput(
           inputId = ns("get_pdf_settings"),
-          label = "Include plot settings"
+          label = "Include plot settings",
+          TRUE
         )
       ),
       download_buttons,
