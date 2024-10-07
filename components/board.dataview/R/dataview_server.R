@@ -381,7 +381,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         ss <- names(total.counts)
         prop.counts <- prop.counts[, ss, drop = FALSE]
         counts <- counts[, ss, drop = FALSE]
-        if (any(pgx$X[, samples, drop = FALSE] < 0)) {
+        if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
           offset <- 1e-6
         } else {
           offset <- 1
