@@ -1026,6 +1026,7 @@ PlotModuleServer <- function(id,
         }
         
         ## add settings to context
+        dbg("[ui-PlotModule]  namespace.ns = ", ns(""))
         settings <- getSettings(ns, session)
         info2 <- c(info2, list("Settings" = settings$settings_str))
         dbg("[ui-PlotModule]  info2$Settings = ", info2$Settings)

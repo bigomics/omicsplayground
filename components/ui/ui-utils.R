@@ -243,6 +243,7 @@ HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteStrin
 }
 
 getSettings <- function(ns, session) {
+  dbg("[getSettings]  namespace.ns = ", ns(""))
   # Get board/plot ns
   board_ns <- sub("-.*", "", ns(""))
   plot_ns <- sub(".*-(.*?)-.*", "\\1", ns(""))
@@ -314,7 +315,6 @@ getSettings <- function(ns, session) {
 
 addSettings <- function(ns, session, file) {
 
-  ##board_ns <- sub("-.*", "", ns(""))
   settings <- getSettings(ns, session)
 
   # Merge plot and settings
