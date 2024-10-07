@@ -37,6 +37,10 @@ PlotModuleUI <- function(id,
                          show.ai = FALSE) {
   ns <- shiny::NS(id)
 
+  dbg("[PlotModuleUI] opt$DEVMODE = ",opt$DEVMODE)
+  show.ai <- (show.ai && opt$DEVMODE)
+
+  
   if (is.null(plotlib2)) plotlib2 <- plotlib
   if (length(height) == 1) height <- c(height, 800)
   if (length(width) == 1) width <- c(width, "100%")
