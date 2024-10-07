@@ -1005,6 +1005,8 @@ PlotModuleServer <- function(id,
         info2 <- lapply(info, function(a) paste(unlist(a),collapse="; "))
 
         ## add table data to context (check if it is not too big!!!)
+        dbg("[ui-PlotModule]  is.null(csvFunc) = ", is.null(csvFunc))
+        ## dbg("[ui-PlotModule]  class(csvFunc()) = ", class(csvFunc()))  ## HANGS!!!
         if(FALSE && !is.null(csvFunc)) {
           ## SOME BUG!!! It hangs here!!!!
           data <- csvFunc()
