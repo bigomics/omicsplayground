@@ -107,7 +107,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         } else {
           score <- score[order(-score[, 1]), , drop = FALSE]
         }
-        score <- score[nrow(score):1, ]
+        score <- score[nrow(score):1, , drop = FALSE]
 
         colnames(score) <- substring(colnames(score), 1, 30)
         rownames(score) <- substring(rownames(score), 1, 50)
