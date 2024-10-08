@@ -318,7 +318,7 @@ SignatureBoard <- function(id, pgx,
 
       N <- cbind(
         k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
-        k2 = Matrix::rowSums(G[, ii] != 0), n2 = length(ii)
+        k2 = Matrix::rowSums(G[, ii, drop = FALSE] != 0), n2 = length(ii)
       )
       rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
@@ -348,7 +348,7 @@ SignatureBoard <- function(id, pgx,
       names(fx) <- gg
 
       gset <- names(y)[which(y != 0)]
-      G1 <- G[aa, which(y != 0)]
+      G1 <- G[aa, which(y != 0), drop = FALSE]
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
