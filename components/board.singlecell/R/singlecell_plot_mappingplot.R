@@ -131,6 +131,7 @@ singlecell_plot_mappingplot_server <- function(id,
 
       if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
         grp <- pd[["pgx"]]$samples[rownames(pd[["score"]]), pd[["grpvar"]]]
+        shiny::validate(shiny::need(length(unique(grp)) > 1, "Filter is too restrictive, two samples at least are required."))
         pd[["pos"]] <- apply(pd[["pos"]], 2, function(x) tapply(x, grp, median))
         pd[["score"]] <- apply(pd[["score"]], 2, function(x) tapply(x, grp, mean))
         ii <- hclust(dist(pd[["score"]]))$order
