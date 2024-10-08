@@ -31,7 +31,7 @@ enrichment_plot_volcanoall_ui <- function(
 
   PlotModuleUI(
     ns("plot"),
-    plotlib = "plotly",
+    plotlib = c("plotly", "ggplot"),
     title = title,
     info.text = info.text,
     info.methods = info.methods,
@@ -41,6 +41,8 @@ enrichment_plot_volcanoall_ui <- function(
     options = plot_options,
     height = height,
     width = width,
+    cards = TRUE,
+    card_names = c("dynamic", "static"),
     download.fmt = c("png", "pdf")
   )
 }
@@ -150,16 +152,67 @@ enrichment_plot_volcanoall_server <- function(id,
       return(fig)
     }
 
+    base.plots <- function() {
+      pd <- plot_data()
+      shiny::req(pd)
 
-    PlotModuleServer(
-      "plot",
-      plotlib = "plotly",
-      func = modal_plotly.RENDER,
-      func2 = big_plotly.RENDER,
-      pdf.width = 10,
-      pdf.height = 5,
-      res = c(72, 85),
-      add.watermark = watermark
+      fc <- pd[["FC"]]
+      qv <- pd[["Q"]]
+
+      gene_names <- rep(rownames(fc), each = ncol(fc))
+      fc <- data.frame(fc) %>%
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "fc"
+        )
+      qv <- data.frame(qv) %>%
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "qv"
+        )
+      facet <- fc$facet
+      x <- fc$fc
+      y <- qv$qv
+      y <- -log10(y + 1e-12)
+
+      playbase::ggVolcano(
+        x,
+        y,
+        gene_names,
+        facet = facet,
+        label = pd[["gset_selected"]],
+        highlight = pd[["gset_selected"]],
+        label.cex = 5,
+        lfc = pd[["lfc"]],
+        psig = pd[["fdr"]],
+        xlab = "Effect size (log2FC)",
+        ylab = "Significance (-log10p)",
+        marker.size = 1.2,
+        showlegend = FALSE,
+        title = NULL
+      )
+    }
+
+    plot_grid <- list(
+      list(plotlib = "plotly", func = modal_plotly.RENDER, func2 = big_plotly.RENDER, card = 1),
+      list(plotlib = "ggplot", func = base.plots, func2 = base.plots, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "plot",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        csvFunc = plot_data,
+        res = c(72, 85), # resolution of plots
+        pdf.width = 10,
+        pdf.height = 5,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
   }) ## end module-server
 } ## server

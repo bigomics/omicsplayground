@@ -89,6 +89,7 @@ biomarker_plot_featurerank_server <- function(id,
       X <- X[, samples]
 
       ## the code below overwrittes user input, and should be removed
+
       cvar <- playbase::pgx.getCategoricalPhenotypes(pgx$Y, max.ncat = 999)
       cvar <- grep("sample|patient|years|days|months|gender",
         cvar,
@@ -119,14 +120,11 @@ biomarker_plot_featurerank_server <- function(id,
       for (i in 1:ncol(Y)) {
         if (!interactive()) progress$inc(1 / ncol(Y))
 
-
-
         grp <- Y[, i]
         grp <- as.character(grp)
 
         score <- rep(NA, length(features))
         names(score) <- names(features)
-        j <- 1
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) {
@@ -137,8 +135,10 @@ biomarker_plot_featurerank_server <- function(id,
             ## pp <- playbase::filterProbes(pgx$genes, features[[j]])
           }
           pp <- head(pp[order(-sdx[pp])], 1000) ## how many top SD??
-          pp <- intersect(pp, rownames(X))
-          X1 <- X[pp, , drop = FALSE]
+
+          X1 <- playbase::rename_by(X, pgx$genes, "symbol")
+          pp <- intersect(pp, rownames(X1))
+          X1 <- X1[pp, , drop = FALSE]
 
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
@@ -165,6 +165,7 @@ biomarker_plot_featurerank_server <- function(id,
         }
         S[, i] <- score
       }
+
       S[is.na(S)] <- 0 ## missing values
 
       return(S)

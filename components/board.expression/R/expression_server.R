@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx) {
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -114,13 +114,18 @@ ExpressionBoard <- function(id, pgx) {
       test
     })
 
+    shiny::observeEvent(input$show_pv, {
+      shiny::updateSelectInput(
+        session, "gx_fdr",
+        label = if (input$show_pv) "P-value" else "FDR"
+      )
+    })
 
     # functions #########
     comparison <- 1
     testmethods <- c("trend.limma")
     add.pq <- 0
-    getDEGtable <- function(pgx, testmethods, comparison, add.pq,
-                            lfc, fdr) {
+    getDEGtable <- function(pgx, testmethods, comparison, add.pq, lfc, fdr) {
       shiny::req(pgx$X)
 
       if (is.null(testmethods)) {
@@ -200,11 +205,8 @@ ExpressionBoard <- function(id, pgx) {
 
       if (add.pq) {
         mx.q <- mx.q[rownames(mx), , drop = FALSE]
-        res <- cbind(res, mx.q)
-        if (input$show_pv) {
-          mx.p <- mx.p[rownames(mx), , drop = FALSE]
-          res <- cbind(res, meta.p = mx$meta.p, mx.p)
-        }
+        mx.p <- mx.p[rownames(mx), , drop = FALSE]
+        res <- cbind(res, mx.q, meta.p = mx$meta.p, mx.p)
       }
 
       return(res)
@@ -228,6 +230,7 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(tests)) {
         return(NULL)
       }
+
       res <- getDEGtable(pgx,
         testmethods = tests, comparison = comp,
         add.pq = TRUE, lfc = lfc, fdr = fdr
@@ -272,6 +275,7 @@ ExpressionBoard <- function(id, pgx) {
       fdr <- as.numeric(input$gx_fdr)
       lfc <- as.numeric(input$gx_lfc)
       res <- fullDiffExprTable()
+
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
       }
@@ -282,21 +286,27 @@ ExpressionBoard <- function(id, pgx) {
       ## just show significant genes
       if (!is.null(input$gx_showall) && !input$gx_showall) {
         n <- length(tests)
-        sel <- which(res$stars == playbase::star.symbols(n))
+        ## sel <- which(res$stars == playbase::star.symbols(n))
+        if (input$show_pv) {
+          sel <- which(res$meta.p <= fdr & abs(res$logFC) >= lfc)
+        } else {
+          sel <- which(res$meta.q <= fdr & abs(res$logFC) >= lfc)
+        }
         res <- res[sel, , drop = FALSE]
       }
 
       ## just show top 10
-      if (length(input$gx_top10) && input$gx_top10) {
-        fx <- as.numeric(res[, fx.col])
-        names(fx) <- rownames(res)
-        pp <- unique(c(
-          head(names(sort(-fx[which(fx > 0)])), 10),
-          head(names(sort(fx[which(fx < 0)])), 10)
-        ))
-        res <- res[pp, , drop = FALSE]
-        res <- res[order(-res[, fx.col]), , drop = FALSE]
-      }
+      ## AZ: Disabled on Sept 1. useless?
+      ## if (length(input$gx_top10) && input$gx_top10) {
+      ##   fx <- as.numeric(res[, fx.col])
+      ##  names(fx) <- rownames(res)
+      ##  pp <- unique(c(
+      ##    head(names(sort(-fx[which(fx > 0)])), 10),
+      ##    head(names(sort(fx[which(fx < 0)])), 10)
+      ##  ))
+      ##  res <- res[pp, , drop = FALSE]
+      ##  res <- res[order(-res[, fx.col]), , drop = FALSE]
+      ## }
 
       if (nrow(res) == 0) {
         shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
@@ -309,6 +319,7 @@ ExpressionBoard <- function(id, pgx) {
 
     genes_in_sel_geneset <- shiny::reactive({
       req(pgx$X, pgx$name)
+
       if (!is.data.frame(gx_related_genesets()) && gx_related_genesets() == tspan("No geneset for selected gene.", js = FALSE)) {
         sel_gene <- filteredDiffExprTable()$symbol[genetable_rows_selected()]
         return(sel_gene)
@@ -317,40 +328,54 @@ ExpressionBoard <- function(id, pgx) {
       sel_genes <- pgx$GMT[, sel_gset]
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes > 0)]
-      return(names(sel_genes))
+
+      # convert symbol to rownames (module is based on rownames)
+
+      ortholog_genes <- ifelse(is.na(pgx$genes$human_ortholog), pgx$genes$symbol, pgx$genes$human_ortholog)
+
+      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), ortholog_genes), ])
+      return(matched_rownames)
     })
 
     genes_selected <- shiny::reactive({
       shiny::req(input$gx_features)
+
       df1 <- filteredDiffExprTable()
       df2 <- gx_related_genesets()
       res <- fullDiffExprTable()
       features <- input$gx_features
       fam.genes <- res$symbol
-      fdr <- as.numeric(input$gx_fdr)
+      fdr <- as.numeric(input$gx_fdr) ## ps: can also be P-value if user checks box.
       lfc <- as.numeric(input$gx_lfc)
       if (features != "<all>") {
         gset <- playdata::getGSETS(features)
         fam.genes <- unique(unlist(gset))
       }
-      jj <- match(fam.genes, res$symbol)
-      sel.genes <- res$symbol[setdiff(jj, NA)]
+      ##      jj <- match(fam.genes, res$symbol)
+      jj <- which(res$symbol %in% fam.genes)
+      sel.features <- rownames(res)[setdiff(jj, NA)]
 
-      fc.genes <- playbase::probe2symbol(probes = rownames(res), res, query = "symbol", fill_na = TRUE)
+      features <- rownames(res)
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
       qval <- pmax(qval, 1e-20)
-      pval <- res[, grep("pvalue|meta.p|pval|p|p_value", colnames(res))[1]]
+      pval <- res[, grep("pvalue|meta.p|pval|p_value", colnames(res))[1]]
       pval <- pmax(pval, 1e-20)
+
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       y <- -log10(qval + 1e-12)
       scaled.x <- scale(x, center = FALSE)
       scaled.y <- scale(y, center = FALSE)
 
-      sig.genes <- fc.genes[which(qval <= fdr & abs(x) > lfc)]
-      sel.genes <- intersect(sig.genes, sel.genes)
+      if (input$show_pv) {
+        sig.genes <- features[which(pval <= fdr & abs(x) > lfc)]
+      } else {
+        sig.genes <- features[which(qval <= fdr & abs(x) > lfc)]
+      }
+      sel.features <- intersect(sig.genes, sel.features)
+
       impt <- function(g) {
-        j <- match(g, fc.genes)
+        j <- match(g, features)
         x1 <- scaled.x[j]
         y1 <- scaled.y[j]
         x <- sign(x1) * (x1**2 + 0.25 * y1**2)
@@ -360,27 +385,37 @@ ExpressionBoard <- function(id, pgx) {
 
       gene.selected <- !is.null(genetable_rows_selected()) && !is.null(df1)
       gset.selected <- !is.null(gsettable_rows_selected()) && !is.null(df2)
+
       if (gene.selected && !gset.selected) {
-        lab.genes <- df1$symbol[genetable_rows_selected()]
-        if (lab.genes == "") lab.genes <- df1$feature[genetable_rows_selected]
-        sel.genes <- lab.genes
+        ## only gene selected: color all genes with same name, label selected
+        this.feature <- rownames(df1)[genetable_rows_selected()]
+        this.symbol <- res[this.feature, "symbol"]
+        sel.features <- rownames(res)[which(res$symbol == this.symbol)]
+        ## lab.features <- this.feature
+        lab.features <- sel.features
         lab.cex <- 1.3
       } else if (gene.selected && gset.selected) {
-        sel.genes <- genes_in_sel_geneset()
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
+        ## gset selected: color all significant gene in geneset, label top 20
+        sel.features <- genes_in_sel_geneset()
+        lab.features <- c(
+          head(sel.features[order(impt(sel.features))], 10),
+          head(sel.features[order(-impt(sel.features))], 10)
         )
         lab.cex <- 1
       } else {
-        lab.genes <- c(
-          head(sel.genes[order(impt(sel.genes))], 10),
-          head(sel.genes[order(-impt(sel.genes))], 10)
+        ## no selection: color all significant features, label top 20
+        lab.features <- c(
+          head(sel.features[order(impt(sel.features))], 10),
+          head(sel.features[order(-impt(sel.features))], 10)
         )
         lab.cex <- 1
       }
 
-      res <- list("sel.genes" = sel.genes, "lab.genes" = lab.genes, "fc.genes" = fc.genes)
+      res <- list(
+        "sel.genes" = sel.features,
+        "lab.genes" = lab.features,
+        "fc.genes" = features
+      )
       return(res)
     })
 
@@ -395,8 +430,9 @@ ExpressionBoard <- function(id, pgx) {
       show_pv = shiny::reactive(input$show_pv),
       res = fullDiffExprTable,
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
-      watermark = WATERMARK
+      labeltype = labeltype,
+      watermark = WATERMARK,
+      pgx = pgx
     )
 
     expression_plot_maplot_server(
@@ -408,7 +444,7 @@ ExpressionBoard <- function(id, pgx) {
       gx_features = reactive(input$gx_features),
       res = fullDiffExprTable,
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -436,6 +472,7 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(pgx)) {
         return(NULL)
       }
+
       comp <- names(pgx$gx.meta$meta)
       if (length(comp) == 0) {
         return(NULL)
@@ -450,27 +487,32 @@ ExpressionBoard <- function(id, pgx) {
       i <- 1
       F <- list()
       Q <- list()
+      P <- list()
       shiny::withProgress(message = "computing contrasts ...", value = 0, {
         for (i in 1:length(comp)) {
           res <- getDEGtable(pgx,
             testmethods = tests, comparison = comp[i],
-            add.pq = FALSE, lfc = 0, fdr = 1
+            add.pq = TRUE, lfc = 0, fdr = 1
           )
-          fc.gene <- res[, grep("^gene$|^gene_name$", colnames(res))]
+          fc.gene <- rownames(res)
           qv.col <- grep("qval|adj.p|padj|fdr|meta.q", colnames(res), ignore.case = TRUE)[1]
+          pv.col <- grep("pval|pvalue|padj|meta.p", colnames(res), ignore.case = TRUE)[1]
           fx.col <- grep("mean.diff|logfc|foldchange|meta.fx", colnames(res), ignore.case = TRUE)[1]
           qval <- res[, qv.col]
+          pval <- res[, pv.col]
           fx <- res[, fx.col]
-          names(qval) <- names(fx) <- fc.gene
+          names(qval) <- names(pval) <- names(fx) <- fc.gene
           F[[i]] <- fx
           Q[[i]] <- qval
-
+          P[[i]] <- pval
           if (!interactive()) shiny::incProgress(1 / length(comp))
         }
       })
-      names(Q) <- names(F) <- comp
-
-      ct <- list(Q = Q, F = F)
+      names(Q) <- names(P) <- names(F) <- comp
+      F <- do.call(cbind, F)
+      P <- do.call(cbind, P)
+      Q <- do.call(cbind, Q)
+      ct <- list(Q = Q, P = P, F = F)
       return(ct)
     })
 
@@ -491,8 +533,9 @@ ExpressionBoard <- function(id, pgx) {
       getAllContrasts = getAllContrasts,
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -504,8 +547,9 @@ ExpressionBoard <- function(id, pgx) {
       comp = shiny::reactive(input$gx_contrast),
       fdr = shiny::reactive(input$gx_fdr),
       lfc = shiny::reactive(input$gx_lfc),
+      show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
-      labeltype = shiny::reactive(input$labeltype),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -514,6 +558,7 @@ ExpressionBoard <- function(id, pgx) {
     # rendering tables ####
     gx_related_genesets <- shiny::reactive({
       res <- filteredDiffExprTable()
+
       X <- pgx$X
       if (is.null(res) || nrow(res) == 0) {
         return(NULL)
@@ -527,12 +572,11 @@ ExpressionBoard <- function(id, pgx) {
       if (is.null(sel.row)) {
         return(NULL)
       }
-      gene1 <- res$symbol[sel.row]
-      # Deal with non-anotated genes
-      if (gene1 == "") {
-        gene1 <- res$feature[sel.row]
-      }
-      j <- which(rownames(pgx$GMT) == gene1)
+      gene1 <- res[sel.row, ]
+
+      gmt_gene_mapping <- ifelse(is.na(gene1$human_ortholog), gene1$symbol, gene1$human_ortholog)
+
+      j <- which(rownames(pgx$GMT) == gmt_gene_mapping)
       if (length(j) == 0) {
         return(NULL)
       } else {
@@ -548,8 +592,8 @@ ExpressionBoard <- function(id, pgx) {
       names(fx) <- rownames(pgx$gset.meta$meta[[contr]])
       fx <- round(fx[gset], digits = 4)
 
-      X <- playbase::rename_by(X, pgx$genes, "symbol")
-      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[gene1, ])[, 1]
+      # X <- playbase::rename_by(X, pgx$genes, "feature")
+      rho <- cor(t(pgx$gsetX[gset, , drop = FALSE]), X[rownames(gene1), ])[, 1]
       rho <- round(rho, digits = 3)
       gset1 <- substring(gset, 1, 60)
 
@@ -564,6 +608,7 @@ ExpressionBoard <- function(id, pgx) {
       id = "genetable",
       res = filteredDiffExprTable,
       organism = pgx$organism,
+      show_pv = shiny::reactive(input$show_pv),
       height = c(tabH - 10, 700),
       scrollY = "200px"
     )

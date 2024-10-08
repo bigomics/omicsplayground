@@ -156,6 +156,8 @@ PlotModuleUI <- function(id,
     shiny::br(), shiny::br(), shiny::br()
   )
 
+  if ("csv" %in% download.fmt) download.fmt <- c(download.fmt, "excel")
+
   dload.button <- DropdownMenu(
     div(
       style = "width: 150px;",
@@ -176,7 +178,8 @@ PlotModuleUI <- function(id,
         ns = ns,
         shiny::checkboxInput(
           inputId = ns("get_pdf_settings"),
-          label = "Include plot settings"
+          label = "Include plot settings",
+          TRUE
         )
       ),
       download_buttons,
@@ -203,18 +206,13 @@ PlotModuleUI <- function(id,
     tabs <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
         card_names[x],
-        bslib::card_body(
-          outputFunc[[x]](ns(paste0("renderfigure", x)), height = height.1) %>%
-            bigLoaders::useSpinner()
-        )
+        outputFunc[[x]](ns(paste0("renderfigure", x))) %>%
+          bigLoaders::useSpinner()
       )
     })
-    tabs <- c(tabs,
-      id = ns("card_selector"), ulClass = "nav navbar-nav header-nav",
-      selected = NULL
-    )
+    tabs <- c(tabs, title = "", id = ns("card_selector"))
     plot_cards <- do.call(
-      bslib:::buildTabset,
+      bslib::navset_card_pill,
       tabs
     )
   } else {
@@ -235,7 +233,9 @@ PlotModuleUI <- function(id,
       title
     ),
     if (cards) {
-      plot_cards$navList
+      nav_bar <- gsub("nav nav-pills shiny-tab-input card-header-pills", "nav navbar-nav shiny-tab-input header-nav", plot_cards$children[[1]])
+      nav_bar <- gsub("card-header bslib-navs-card-title", "bslib-navs-card-title", nav_bar) |> shiny::HTML()
+      nav_bar
     } else {
       shiny::div()
     },
@@ -333,6 +333,8 @@ PlotModuleUI <- function(id,
       bslib::navset_bar,
       tabs_modal
     )
+    plot_cards_modal[[1]] <- gsub("nav navbar-nav nav-underline", "nav navbar-nav", plot_cards_modal[[1]]) |> shiny::HTML()
+    plot_cards_modal[[1]] <- gsub("navbar navbar-default navbar-static-top", "navbar navbar-default navbar-static-top navbar-custom", plot_cards_modal[[1]]) |> shiny::HTML()
   } else {
     plot_cards_modal <- outputFunc2(ns("renderpopup"), width = width.2, height = height.2) %>%
       bigLoaders::useSpinner()
@@ -387,7 +389,7 @@ PlotModuleUI <- function(id,
     bslib::card_body(
       gap = "0px",
       if (cards) {
-        plot_cards$content
+        plot_cards$children[[2]]
       } else {
         plot_cards
       },
@@ -468,6 +470,7 @@ PlotModuleServer <- function(id,
                              download.png = NULL,
                              download.html = NULL,
                              download.csv = NULL,
+                             download.excel = NULL,
                              download.obj = NULL,
                              pdf.width = 8,
                              pdf.height = 6,
@@ -577,11 +580,13 @@ PlotModuleServer <- function(id,
       do.html <- "html" %in% download.fmt
       do.obj <- "obj" %in% download.fmt
       do.csv <- !is.null(csvFunc)
+      do.excel <- !is.null(csvFunc)
 
-      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- NULL
+      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- EXCELFILE <- NULL
       if (do.pdf) PDFFILE <- paste0(gsub("file", "plot", tempfile()), ".pdf")
       if (do.png) PNGFILE <- paste0(gsub("file", "plot", tempfile()), ".png")
       if (do.csv) CSVFILE <- paste0(gsub("file", "data", tempfile()), ".csv")
+      if (do.excel) EXCELFILE <- paste0(gsub("file", "data", tempfile()), ".xlsx")
       HTMLFILE <- paste0(tempfile(), ".html") ## tempory for webshot
       HTMLFILE
       unlink(HTMLFILE)
@@ -886,6 +891,20 @@ PlotModuleServer <- function(id,
         ) ## end of HTML downloadHandler
       } ## end of do HTML
 
+      # Excel download
+      if (do.excel) {
+        download.excel <- shiny::downloadHandler(
+          filename = paste0(filename, ".xlsx"),
+          content = function(file) {
+            shiny::withProgress({
+              data <- csvFunc()
+              if (is.list(data) && !is.data.frame(data)) data <- data[[1]]
+              openxlsx::write.xlsx(data, file = file)
+            })
+          }
+        )
+      }
+
       ## --------------------------------------------------------------------------------
       ## ------------------------ OUTPUT ------------------------------------------------
       ## --------------------------------------------------------------------------------
@@ -899,6 +918,9 @@ PlotModuleServer <- function(id,
           }
           if (input$downloadOption == "csv") {
             output$download <- download.csv
+          }
+          if (input$downloadOption == "excel") {
+            output$download <- download.excel
           }
           if (input$downloadOption == "html") {
             output$download <- download.html
@@ -926,6 +948,12 @@ PlotModuleServer <- function(id,
               "download",
               card
             )]] <- download.csv
+          }
+          if (input$downloadOption == "excel") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.excel
           }
           if (input$downloadOption == "html") {
             output[[paste0(
@@ -1170,6 +1198,7 @@ PlotModuleServer <- function(id,
         download.png = download.png,
         download.html = download.html,
         download.csv = download.csv,
+        download.excel = download.excel,
         saveHTML = saveHTML,
         renderFunc = renderFunc
       )

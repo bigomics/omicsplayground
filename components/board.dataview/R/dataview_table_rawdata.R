@@ -71,6 +71,9 @@ dataview_table_rawdata_server <- function(id,
       }
       x0 <- x
 
+      # Handle to avoid errors on dataset change
+      shiny::req(any(rownames(x) == gene))
+
       k <- which(rownames(x) == gene)
       rho <- cor(t(logx), logx[k, ], use = "pairwise")[, 1]
       rho <- rho[match(rownames(x), names(rho))]
@@ -113,7 +116,7 @@ dataview_table_rawdata_server <- function(id,
         annot <- annot[, c("feature", "symbol", "gene_title")]
       }
       annot$gene_title <- substring(annot$gene_title, 1, 50)
-      if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000)) > 0.8) {
+      if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000), na.rm = TRUE) > 0.8) {
         annot$symbol <- NULL
       }
 

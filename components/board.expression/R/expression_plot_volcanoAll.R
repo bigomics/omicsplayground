@@ -36,7 +36,7 @@ expression_plot_volcanoAll_ui <- function(id,
     id = ns("pltmod"),
     title = title,
     label = label,
-    plotlib = "plotly",
+    plotlib = c("plotly", "ggplot"),
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -45,7 +45,9 @@ expression_plot_volcanoAll_ui <- function(id,
     options = plot_options,
     download.fmt = c("png", "pdf", "csv"),
     height = height,
-    width = width
+    width = width,
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
@@ -62,6 +64,7 @@ expression_plot_volcanoAll_server <- function(id,
                                               getAllContrasts,
                                               fdr,
                                               lfc,
+                                              show_pv,
                                               genes_selected,
                                               labeltype = reactive("symbol"),
                                               watermark = FALSE) {
@@ -72,30 +75,45 @@ expression_plot_volcanoAll_server <- function(id,
 
       # Input variables
       ct <- getAllContrasts()
-      FC <- ct$F
+      F <- ct$F
       Q <- ct$Q
+      P <- ct$P
+
       fdr <- as.numeric(fdr())
       lfc <- as.numeric(lfc())
-      comp <- names(FC)
+      comp <- colnames(F)
       shiny::req(length(comp) > 0)
 
       ## combined matrix for output
-      matF <- do.call(cbind, FC)
-      colnames(matF) <- paste0("fc.", names(FC))
-      matQ <- do.call(cbind, Q)
-      colnames(matQ) <- paste0("q.", names(Q))
-      FQ <- cbind(matF, matQ)
+      FQ <- data.frame(fc = F, q = Q, p = P)
+      features <- rownames(FQ)
       symbols <- pgx$genes[rownames(FQ), "symbol"]
+      names <- pgx$genes[rownames(FQ), "gene_title"]
 
+      label.names <- playbase::probe2symbol(rownames(FQ), pgx$genes, labeltype(), fill_na = TRUE)
+
+      # Input vars
+      if (show_pv()) {
+        ## P <- P
+        title_y <- "Significance (-log10p)"
+      } else {
+        P <- Q
+        title_y <- "Significance (-log10q)"
+      }
+
+      ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option.
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
         fdr = fdr,
         lfc = lfc,
-        FC = FC,
-        Q = Q,
+        F = F,
+        P = P,
+        title_y = title_y,
         symbols = symbols,
-        features = rownames(FQ),
+        features = features,
+        names = names,
+        label.names = label.names,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes
       )
@@ -107,54 +125,33 @@ expression_plot_volcanoAll_server <- function(id,
                              margin_l = 50, margin_b = 50) {
       pd <- plot_data()
       shiny::req(pd)
-      sel.genes <- pd[["sel.genes"]]
-
-      # Input vars
-      fdr <- pd[["fdr"]]
-      lfc <- pd[["lfc"]]
-      ## meta tables
-      fc_cols <- grep("fc.*", colnames(pd[["FQ"]]))
-      q_cols <- grep("q.*", colnames(pd[["FQ"]]))
-      fc <- pd[["FQ"]][, fc_cols, drop = FALSE]
-      qv <- pd[["FQ"]][, q_cols, drop = FALSE]
-      colnames(fc) <- gsub("fc.", "", colnames(fc))
-      colnames(qv) <- gsub("q.", "", colnames(qv))
-
-
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
-        FC = fc,
-        Q = qv,
-        fdr = fdr,
-        lfc = lfc,
+        FC = pd$F,
+        Q = pd$P,
+        fdr = pd$fdr,
+        lfc = pd$lfc,
         cex = cex,
-        names = names,
-        label.names = label.names,
+        names = pd$features,
+        label.names = pd$label.names,
         share_axis = !input$scale_per_plot,
+        title_y = pd$title_y,
+        title_x = "Effect size (log2FC)",
         yrange = yrange,
         n_rows = n_rows,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = pd$sel.genes,
+        label = pd$lab.genes,
         by_sig = FALSE
       )
-
-      all_plts
 
       return(all_plts)
     }
 
-    modal_plotly.RENDER <- function() {
+    plotly.RENDER <- function() {
       fig <- plotly_plots(
         cex = 3, yrange = 0.05, n_rows = 2, margin_b = 40, margin_l = 50
       ) %>%
@@ -174,15 +171,71 @@ expression_plot_volcanoAll_server <- function(id,
       return(fig)
     }
 
-    PlotModuleServer(
-      "pltmod",
-      plotlib = "plotly",
-      func = modal_plotly.RENDER,
-      func2 = big_plotly.RENDER,
-      csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(70, 90), ## resolution of plots
-      pdf.width = 12, pdf.height = 5,
-      add.watermark = watermark
+    base.plots <- function(label.cex = 4) {
+      pd <- plot_data()
+      shiny::req(pd)
+
+      fc <- pd$F
+      qv <- pd$P
+      feature_names <- rep(rownames(fc), each = ncol(fc))
+      label.names <- rep(pd$label.names, each = ncol(fc))
+      pivot.fc <- data.frame(fc) %>%
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "fc"
+        )
+      pivot.qv <- data.frame(qv) %>%
+        tidyr::pivot_longer(
+          cols = everything(), # Select all columns to pivot
+          names_to = "facet", # Name of the new column for timepoints
+          values_to = "qv"
+        )
+      facet <- pivot.fc$facet
+      x <- pivot.fc$fc
+      y <- -log10(pivot.qv$qv + 1e-12)
+
+      playbase::ggVolcano(
+        x,
+        y,
+        names = feature_names,
+        facet = facet,
+        label = pd[["lab.genes"]],
+        highlight = pd[["sel.genes"]],
+        label.names = label.names,
+        label.cex = label.cex,
+        xlab = "Effect size (log2FC)",
+        ylab = pd$title_y,
+        psig = pd[["fdr"]],
+        lfc = pd[["lfc"]],
+        marker.size = 1.2,
+        showlegend = FALSE,
+        title = NULL
+      )
+    }
+
+    big_base.plots <- function() {
+      base.plots(label.cex = 5)
+    }
+
+    plot_grid <- list(
+      list(plotlib = "plotly", func = plotly.RENDER, func2 = big_plotly.RENDER, card = 1),
+      list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "pltmod",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        csvFunc = plot_data,
+        res = c(70, 90), # resolution of plots
+        pdf.width = 12,
+        pdf.height = 5,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
   }) ## end of moduleServer
 }

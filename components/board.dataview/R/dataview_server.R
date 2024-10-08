@@ -12,7 +12,7 @@
 #' @param pgx Reactive expression that provides the input pgx data object
 #'
 #' @export
-DataViewBoard <- function(id, pgx) {
+DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     rowH <- 355 ## row height of panels
@@ -76,18 +76,23 @@ DataViewBoard <- function(id, pgx) {
         list(
           input$data_type,
           pgx$X,
-          pgx$counts
+          pgx$counts,
+          labeltype()
         )
       },
       {
         shiny::req(input$data_type)
 
-        if (input$data_type %in% c("counts", "abundance")) {
-          features <- rownames(pgx$counts)
-        } else {
-          ## log2CPM
-          features <- rownames(pgx$X)
-        }
+
+        # X should be labelled as features, so rownames(counts) and rownames(x) shoud match (???)
+        features <- rownames(pgx$X)
+        # if (input$data_type %in% c("counts", "abundance")) {
+        #   features <- rownames(pgx$counts)
+        # } else {
+        #   ## log2CPM
+        #   features <- rownames(pgx$X)
+        # }
+
         ## gene filter.
         fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2, na.rm = TRUE)
         features <- intersect(names(sort(-fc2)), features) ## most var gene??
@@ -110,6 +115,8 @@ DataViewBoard <- function(id, pgx) {
             features[1001:length(features)]
           )
         }
+
+        names(features) <- playbase::probe2symbol(features, pgx$genes, labeltype(), fill_na = TRUE)
 
         shiny::updateSelectizeInput(
           session, "search_gene",
@@ -350,6 +357,9 @@ DataViewBoard <- function(id, pgx) {
         }))
         prop.counts <- 100 * t(t(summed.counts) / total.counts)
 
+        ## N. of detected features per sample or group AZ
+        n.detected.features <- apply(counts, 2, function(x) length(which(x > 0)))
+
         ## get variation per group
         log2counts <- log2(1 + counts)
         varx <- apply(log2counts, 1, var)
@@ -371,7 +381,7 @@ DataViewBoard <- function(id, pgx) {
         ss <- names(total.counts)
         prop.counts <- prop.counts[, ss, drop = FALSE]
         counts <- counts[, ss, drop = FALSE]
-        if (any(pgx$X[, samples, drop = FALSE] < 0)) {
+        if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
           offset <- 1e-6
         } else {
           offset <- 1
@@ -387,6 +397,7 @@ DataViewBoard <- function(id, pgx) {
           subtt = subtt,
           log2counts = log2counts,
           prop.counts = prop.counts,
+          n.detected.features = n.detected.features, ## AZ
           gset.genes = gset.genes
         )
         ## getCountStatistics(res)

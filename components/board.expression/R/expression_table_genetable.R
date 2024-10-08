@@ -48,37 +48,46 @@ expression_table_genetable_ui <- function(
 expression_table_genetable_server <- function(id,
                                               res,
                                               organism,
+                                              show_pv,
                                               height,
                                               scrollY,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    table.RENDER <- function() {
+    table_data <- function() {
       res <- res()
-
-      if (is.null(res) || nrow(res) == 0) {
-        return(NULL)
-      }
+      req(res)
 
       if ("gene_title" %in% colnames(res)) {
         res$gene_title <- playbase::shortstring(res$gene_title, 50)
       }
       rownames(res) <- sub(".*:", "", rownames(res))
 
-      ## kk <- grep("meta.fx|meta.fc|meta.p", colnames(res), invert = TRUE)
-      kk <- grep("meta.fx|meta.fc", colnames(res), invert = TRUE)
-      res <- res[, kk, drop = FALSE]
+      if (show_pv()) {
+        res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
+      } else {
+        res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+      }
 
       if (input$gx_top10) {
         res <- res[!is.na(res$logFC), ]
         res <- res[order(res$logFC, decreasing = TRUE), ]
-        res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
+        if (nrow(res) >= 20) {
+          res <- rbind(res[1:10, ], res[(nrow(res) - 9):nrow(res), ])
+        } else {
+          pos <- any(res$logFC > 0)
+          neg <- any(res$logFC < 0)
+          if (pos && neg) {
+            res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
+          }
+        }
       }
+      res
+    }
 
-      numeric.cols <- which(sapply(res, is.numeric))
-      numeric.cols <- colnames(res)[numeric.cols]
-      df <- res
+    table.RENDER <- function(showdetails = FALSE) {
+      df <- table_data()
       df$gene_name <- NULL
 
       if (organism %in% c("Human", "human")) {
@@ -88,6 +97,14 @@ expression_table_genetable_server <- function(id,
         df$feature <- NULL
       }
 
+      if (!showdetails) {
+        hide.cols <- grep("^AveExpr|p$|q$", colnames(df))
+        hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
+        if (length(hide.cols)) df <- df[, -hide.cols]
+      }
+
+      numeric.cols <- which(sapply(df, is.numeric))
+      numeric.cols <- colnames(df)[numeric.cols]
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
       fx <- df[, fx.col]
 
@@ -122,14 +139,13 @@ expression_table_genetable_server <- function(id,
     }
 
     table.RENDER_modal <- function() {
-      dt <- table.RENDER()
+      dt <- table.RENDER(showdetails = TRUE)
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     }
 
     table_csv <- function() {
-      dt <- table.RENDER()
-      dt <- dt$x$data
+      dt <- table_data()
       dt$stars <- NULL
       return(dt)
     }

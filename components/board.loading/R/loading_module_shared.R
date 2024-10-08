@@ -42,51 +42,55 @@ upload_module_shared_server <- function(id,
       sharedPGXtable <- shiny::eventReactive(
         c(current_page(), getSharedFiles()),
         {
-          req(current_page() == "load-tab")
+          ## req(current_page() == "sharing-tab")
           shared_files <- getSharedFiles()
           if (length(shared_files) == 0) {
-            return(NULL)
+            df <- data.frame(
+              Dataset = "-",
+              To = "-",
+              Actions = "-"
+            )
+            ## return(NULL)
+          } else {
+            # split the file name into user who shared and file name
+            shared_pgx <- sub("__to__.*", "", shared_files)
+            shared_to <- gsub(".*__to__|__from__.*", "", shared_files)
+            shared_from <- gsub(".*__from__|__$", "", shared_files)
+
+            resend_btns <- makebuttonInputs2(
+              FUN = actionButton,
+              len = shared_files,
+              id = ns("resend_pgx__"),
+              label = "",
+              width = "50px",
+              inline = TRUE,
+              icon = shiny::icon("repeat"),
+              class = "btn-inline btn-success",
+              style = "padding:0px; margin:0px; font-size:85%;",
+              tooltip = "Resend this dataset",
+              onclick = paste0('Shiny.onInputChange("', ns("resend_pgx"), '", this.id, {priority: "event"})')
+            )
+
+            cancel_btns <- makebuttonInputs2(
+              FUN = actionButton,
+              len = shared_files,
+              id = "cancel_pgx__",
+              label = "",
+              width = "50px",
+              inline = TRUE,
+              icon = shiny::icon("x"),
+              class = "btn-inline btn-danger",
+              style = "padding:0px; margin:0px; font-size:85%;",
+              tooltip = "Cancel this dataset sharing",
+              onclick = paste0('Shiny.onInputChange(\"', ns("cancel_pgx"), '\", this.id, {priority: "event"})')
+            )
+
+            df <- data.frame(
+              Dataset = shared_pgx,
+              To = shared_to,
+              Actions = paste(resend_btns, cancel_btns)
+            )
           }
-
-          # split the file name into user who shared and file name
-          shared_pgx <- sub("__to__.*", "", shared_files)
-          shared_to <- gsub(".*__to__|__from__.*", "", shared_files)
-          shared_from <- gsub(".*__from__|__$", "", shared_files)
-
-          resend_btns <- makebuttonInputs2(
-            FUN = actionButton,
-            len = shared_files,
-            id = ns("resend_pgx__"),
-            label = "",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("repeat"),
-            class = "btn-inline btn-success",
-            style = "padding:0px; margin:0px; font-size:85%;",
-            tooltip = "Resend this dataset",
-            onclick = paste0('Shiny.onInputChange("', ns("resend_pgx"), '", this.id, {priority: "event"})')
-          )
-
-          cancel_btns <- makebuttonInputs2(
-            FUN = actionButton,
-            len = shared_files,
-            id = "cancel_pgx__",
-            label = "",
-            width = "50px",
-            inline = TRUE,
-            icon = shiny::icon("x"),
-            class = "btn-inline btn-danger",
-            style = "padding:0px; margin:0px; font-size:85%;",
-            tooltip = "Cancel this dataset sharing",
-            onclick = paste0('Shiny.onInputChange(\"', ns("cancel_pgx"), '\", this.id, {priority: "event"})')
-          )
-
-
-          df <- data.frame(
-            Dataset = shared_pgx,
-            To = shared_to,
-            Actions = paste(resend_btns, cancel_btns)
-          )
 
           dt_table <- DT::datatable(
             df,

@@ -4,6 +4,75 @@
 ##
 
 
+## ExpressionInputs <- function(id) {
+##   ns <- shiny::NS(id) ## namespace
+##   bigdash::tabSettings(
+##     shiny::hr(), shiny::br(),
+##     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
+##       "Select a contrast of interest for the analysis.",
+##       placement = "top"
+##     ),
+##     withTooltip(
+##       shiny::selectInput(ns("gx_features"), tspan("Gene family:"),
+##         choices = NULL, multiple = FALSE
+##       ),
+##       "Choose a specific gene family for the analysis.",
+##       placement = "top"
+##     ),
+##     shiny::fillRow(
+##       flex = c(1, 1),
+##       withTooltip(
+##         shiny::selectInput(ns("gx_fdr"), "FDR",
+##           choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2
+##         ),
+##         "Set the false discovery rate (FDR) threshold.",
+##         placement = "top"
+##       ),
+##       withTooltip(
+##         shiny::selectInput(ns("gx_lfc"), "logFC",
+##           choices = c(0, 0.1, 0.2, 0.5, 1, 2, 5), selected = 0
+##         ),
+##         "Set the logarithmic fold change (logFC) threshold.",
+##         placement = "top"
+##       )
+##     ),
+##     shiny::br(), shiny::br(),
+##     shiny::br(), shiny::br(),
+##     withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
+##       "Toggle advanced options.",
+##       placement = "top"
+##     ),
+##     shiny::br(), br(),
+##     shiny::conditionalPanel(
+##       "input.gx_options % 2 == 1",
+##       ns = ns,
+##       shiny::tagList( ## gx_showall does not work??
+##         withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
+##           "Display all genes in the table. Disable filtering of significant genes.",
+##           placement = "top", options = list(container = "body")
+##         ),
+##         withTooltip(shiny::checkboxInput(ns("show_pv"), "Show p-values", FALSE),
+##           "Show p-values in the table. WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
+##           placement = "top", options = list(container = "body")
+##         ),
+##         shiny::radioButtons(ns("labeltype"), "Plot labels:",
+##           c("symbol", "probe"),
+##           inline = TRUE
+##         ),
+##         withTooltip(
+##           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
+##             choices = NULL, inline = TRUE
+##           ),
+##           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
+##            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
+##            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
+##           placement = "right", options = list(container = "body")
+##         )
+##       )
+##     )
+##   )
+## }
+
 ExpressionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
@@ -22,10 +91,12 @@ ExpressionInputs <- function(id) {
     shiny::fillRow(
       flex = c(1, 1),
       withTooltip(
-        shiny::selectInput(ns("gx_fdr"), "FDR",
-          choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2
+        selectInput(ns("gx_fdr"),
+          "FDR",
+          choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1),
+          selected = 0.2
         ),
-        "Set the false discovery rate (FDR) threshold.",
+        "Set the false discovery rate (FDR) or P-value threshold.",
         placement = "top"
       ),
       withTooltip(
@@ -55,10 +126,12 @@ ExpressionInputs <- function(id) {
           "Show p-values in the table. WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
           placement = "top", options = list(container = "body")
         ),
-        shiny::radioButtons(ns("labeltype"), "Plot labels:",
-          c("symbol", "probe"),
-          inline = TRUE
-        ),
+        br(),
+        # shiny::radioButtons(ns("labeltype"), "Plot labels:",
+        #   c("symbol", "feature" = "probe", "name"),
+        #   inline = TRUE
+        # ),
+        br(),
         withTooltip(
           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
             choices = NULL, inline = TRUE
@@ -228,12 +301,12 @@ ExpressionUI <- function(id) {
     shiny::tabPanel(
       "Table",
       bslib::layout_columns(
-        col_widths = c(8, 4),
+        col_widths = c(7, 5),
         height = halfH,
         expression_table_genetable_ui(
           ns("genetable"),
           title = "Differential expression analysis",
-          info.text = "The table shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results. For a selected comparison under the Contrast setting, the results of the selected methods are combined and reported under the table, where meta.q for a gene represents the highest q value among the methods and the number of stars for a gene indicate how many methods identified significant q values (q < 0.05). The table is interactive (scrollable, clickable); users can sort genes by logFC, meta.q, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the top 10 genes from the table Settings.",
+          info.text = "The table shows the results of the statistical tests. Omics Playground performs DE analysis using four commonly accepted methods, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and combines the statistical results using a meta.q value that represents the highest q value among the methods. The number of stars indicate how many methods identified significant. The table is interactive (scrollable, clickable); users can sort by logFC, meta.q, or average expression in either conditions.",
           caption = "Table showing the significant results of the differential expression analysis on the selected contrast.",
           width = c("100%", "100%"),
           height = c("100%", TABLE_HEIGHT_MODAL)

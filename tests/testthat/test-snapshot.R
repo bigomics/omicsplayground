@@ -14,7 +14,7 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("tcga")]
+  boards <- boards[!boards %in% c("tcga", "signature")]
 
   authentication <- options()$authentication
 

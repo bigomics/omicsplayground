@@ -37,7 +37,6 @@ app_ui <- function(x) {
     #-------------------------------------------------------
     ## Build USERMENU
     #-------------------------------------------------------
-
     VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
     upgrade.tab <- NULL
@@ -71,6 +70,7 @@ app_ui <- function(x) {
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
+        visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
         shinyjs::useShinyjs(),
         waiter::use_waiter(),
         sever::useSever(),
@@ -196,17 +196,22 @@ app_ui <- function(x) {
         .where = "declarations"
       )
 
-      ## offcanvas chatbox
-      div.chirpbutton <- NULL
-      if (opt$ENABLE_CHIRP) {
-        div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-          width = "auto", class = "quick-button",
-          onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
-        )
-      }
+      ## ## offcanvas chatbox
+      ## div.chirpbutton <- NULL
+      ## if (opt$ENABLE_CHIRP) {
+      ##   div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
+      ##     width = "auto", class = "quick-button",
+      ##     onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
+      ##   )
+      ## }
 
       div.invitebutton <- InviteFriendUI("invite")
 
+      div.copilotbutton <- NULL
+      if(opt$DEVMODE) {
+        div.copilotbutton <- uiOutput("copilot_button")
+      }
+      
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
         shiny.i18n::usei18n(i18n),
@@ -258,8 +263,9 @@ app_ui <- function(x) {
             ##   )
             ## ))
           ),
-          div.invitebutton,
-          div.chirpbutton,
+          div.copilotbutton,
+          div.invitebutton,          
+##        div.chirpbutton,
           div(
             id = "mainmenu_help",
             bigdash::navbarDropdown(
@@ -319,18 +325,29 @@ app_ui <- function(x) {
           div(
             id = "mainmenu_appsettings",
             bigdash::navbarDropdown(
+              auto_close = "outside",
               shiny::icon("cog"),
-              bigdash::navbarDropdownItem(
-                bslib::input_switch("enable_beta", "Enable beta features")
-              ),
-              bigdash::navbarDropdownItem(
-                bslib::input_switch("enable_info", "Show info boxes", value = TRUE)
-              ),
-              bigdash::navbarDropdownItem(
+              div(
+                class = "dropdown-items",
+                bslib::input_switch("enable_beta", "Enable beta features"),
+                bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
                 selector_switch(
                   class = "card-footer-checked",
                   label = "show captions",
                   is.checked = FALSE
+                )
+              ),
+              bigdash::navbarDropdownItem(
+                withTooltip(
+                  shiny::selectInput(
+                    inputId = "selected_labeltype",
+                    label = "Label type:",
+                    choices = c("feature", "symbol", "name"),
+                    selected = NULL,
+                    width = "100%"
+                  ),
+                  "Choose a label type to be displayed in the heatmap.",
+                  placement = "right", options = list(container = "body")
                 )
               )
             )

@@ -27,13 +27,6 @@ clustering_plot_splitmap_ui <- function(
   ns <- shiny::NS(id)
 
   splitmap_opts <- shiny::tagList(
-    withTooltip(
-      shiny::checkboxInput(
-        ns("hm_legend"), "show legend",
-        value = TRUE
-      ), "Show or hide the legend.",
-      placement = "right", options = list(container = "body")
-    ),
     shiny::fillRow(
       height = 50,
       withTooltip(shiny::numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width = "100%"),
@@ -45,7 +38,14 @@ clustering_plot_splitmap_ui <- function(
         placement = "right", options = list(container = "body")
       )
     ),
-    shiny::br()
+    shiny::br(),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("hm_legend"), "show legend",
+        value = TRUE
+      ), "Show or hide the legend.",
+      placement = "right", options = list(container = "body")
+    )
   )
 
   PlotModuleUI(
@@ -86,7 +86,8 @@ clustering_plot_splitmap_server <- function(id,
                                             hm_scale,
                                             hm_topmode,
                                             hm_clustk,
-                                            watermark = FALSE) {
+                                            watermark = FALSE,
+                                            labeltype) {
   moduleServer(id, function(input, output, session) {
     fullH <- 850
 
@@ -157,13 +158,16 @@ clustering_plot_splitmap_server <- function(id,
 
       show_colnames <- (input$hm_cexCol != 0)
 
-      if (hm_level() == "gene") {
-        ## strip any prefix
-        rownames(zx) <- sub(".*:", "", rownames(zx))
-      }
       rownames(zx) <- sub("HALLMARK:HALLMARK_", "HALLMARK:", rownames(zx))
       rownames(zx) <- gsub(playdata::GSET_PREFIX_REGEX, "", rownames(zx))
       rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
+      if (hm_level() == "gene") {
+        ## strip any prefix
+        rownames(zx) <- sub(".*:", "", rownames(zx))
+
+        rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
+      }
+
       if (hm_level() == "geneset") rownames(zx) <- tolower(rownames(zx))
 
       cex2 <- ifelse(nrow(zx) > 60, 0.8, 0.9)
@@ -182,6 +186,7 @@ clustering_plot_splitmap_server <- function(id,
       if (input$hm_cexRow == 0) nrownames <- 0
 
       shiny::showNotification("Rendering heatmap...")
+
       playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
@@ -227,7 +232,7 @@ clustering_plot_splitmap_server <- function(id,
       splitx <- filt$grp
 
       ## iheatmapr needs factors for sharing between groups
-      annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE)
+      annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE, check.names = FALSE)
       rownames(annotF) <- rownames(annot)
 
       sel <- selected_phenotypes()
@@ -251,6 +256,9 @@ clustering_plot_splitmap_server <- function(id,
           playbase::breakstring2(aa, 50, brk = "<br>")
         }
         tooltips <- sapply(rownames(X), getInfo)
+        labeled_features <- NULL
+
+        rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- sapply(aa, function(x) {

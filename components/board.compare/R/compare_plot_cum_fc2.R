@@ -39,7 +39,8 @@ compare_plot_cum_fc2_ui <- function(id,
 #'
 #' @export
 compare_plot_cum_fc2_server <- function(id,
-                                        # pgx,
+                                        pgx,
+                                        labeltype,
                                         # dataset2,
                                         getMatrices,
                                         watermark = FALSE) {
@@ -64,6 +65,11 @@ compare_plot_cum_fc2_server <- function(id,
       ii <- head(order(-rowMeans(FC**2)), 40)
       ii <- ii[order(rowMeans(FC[ii, ]))]
       F2 <- F2[ii, , drop = FALSE]
+
+      # rename_by
+      if (!is.null(rownames(F2))) {
+        rownames(F2) <- make.names(playbase::probe2symbol(rownames(F2), pgx$genes, labeltype(), fill_na = TRUE), unique = TRUE)
+      }
 
       # Prepare input for the plot
       d <- data.frame(

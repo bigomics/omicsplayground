@@ -161,7 +161,11 @@ selector_switch <- function(
       id = ifelse(is.checked, "flexSwitchCheckChecked", "flexSwitchCheckDefault"),
       role = "switch"
     ),
-    tags$label(label)
+    tags$label(
+      class = "form-check-label",
+      `for` = "flexSwitchCheckDefault",
+      label
+    )
   )
 }
 

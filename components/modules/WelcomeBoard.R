@@ -64,6 +64,7 @@ WelcomeBoardUI <- function(id) {
   ## --------------------- page ------------------------------------------
   div(
     id = "welcome-page",
+    ##    uiOutput(ns("notification")),
     div(
       class = "row",
       div(
@@ -176,6 +177,10 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
       bigdash.openSettings(lock = TRUE)
       bigdash.openSidebar()
       bigdash.selectTab(session, "load-tab")
+    })
+
+    output$notification <- renderUI({
+      div(bs_alert(HTML("Notification!"), style = "warning"), class = "p-5", style = "top: 10px !important; margin: 0 50px -40px 50px !important")
     })
   })
 }

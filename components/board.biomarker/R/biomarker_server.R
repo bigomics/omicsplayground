@@ -90,7 +90,7 @@ BiomarkerBoard <- function(id, pgx) {
         shiny::req(pgx$Y)
         samples <- rownames(pgx$Y)
         sel <- input$pdx_samplefilter
-        if (!is.null(sel) && sel != "") {
+        if (!is.null(sel) && all(sel != "")) {
           samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, sel)
         }
         samples

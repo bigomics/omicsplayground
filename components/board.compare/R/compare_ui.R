@@ -27,11 +27,11 @@ CompareInputs <- function(id) {
     withTooltip(
       shiny::actionButton(
         ns("compare_button"),
-        label = "Compare",
+        label = "Update",
         class = "btn-outline-primary",
         icon = icon("refresh")
       ),
-      "Click to start comparison computation.",
+      "Click to update the comparison plots.",
       placement = "right"
     ),
     shiny::br(),

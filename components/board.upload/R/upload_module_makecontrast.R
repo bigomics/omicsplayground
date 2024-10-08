@@ -176,26 +176,20 @@ upload_module_makecontrast_server <- function(
       )
 
       sel.conditions <- shiny::reactive({
-        shiny::req(phenoRT(), countsRT())
+        ## shiny::req( phenoRT(), countsRT())  ## shiny BUG if has NA!!!!
+        shiny::req(dim(phenoRT()), dim(countsRT()))
+
         shiny::validate(shiny::need(
           length(input$param) > 0,
           "Please select at least one phenotype"
         ))
 
+        ## create conditions from phenotype matrix
         df <- phenoRT()
-
         if ("<samples>" %in% input$param) {
           df <- cbind(df, "<samples>" = rownames(df))
         }
-        df <- type.convert(df, as.is = TRUE)
-        ii <- which(sapply(df, class) %in% c("numeric", "integer"))
-        if (length(ii)) {
-          for (i in ii) {
-            x <- df[, i]
-            df[, i] <- c("low", "high")[1 + 1 * (x >= mean(x, na.rm = TRUE))]
-          }
-        }
-
+        df <- playbase::binarizeNumericalColumns(df)
         pp <- intersect(input$param, colnames(df))
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
@@ -208,10 +202,10 @@ upload_module_makecontrast_server <- function(
           df,
           minlength = minlen, abbrev.colnames = FALSE
         )
-
         abv.df <- abv.df[ss, pp, drop = FALSE]
         abv.cond <- apply(abv.df, 1, paste, collapse = ".")
         names(cond) <- abv.cond
+
         cond
       })
 
@@ -352,9 +346,6 @@ upload_module_makecontrast_server <- function(
         gr1 <- gsub(".*:|_vs_.*", "", ct.name) ## first is MAIN group!!!
         gr2 <- gsub(".*_vs_|@.*", "", ct.name)
         ctx <- c(NA, gr1, gr2)[1 + 1 * in.main + 2 * in.ref]
-
-        dbg("length(ctx) = ", length(ctx))
-        dbg("ctx = ", ctx)
 
         if (sum(in.main) == 0 || sum(in.ref) == 0) {
           shinyalert::shinyalert("ERROR", "Both groups must have samples")

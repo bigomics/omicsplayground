@@ -28,9 +28,16 @@ SignatureBoard <- function(id, pgx,
     ## ========================= INPUTS UI ============================================
     ## ================================================================================
 
+    DEFAULT.GENES <- "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
+
     IMMCHECK.GENES <- "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
     APOPTOSIS.GENES <- "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
     CELLCYCLE.GENES <- "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
+
+    DEFAULT.METABOLITES <- "16827 80470 21264 53487 29009 16843 28712 81068 2700 17111 30915 17361 16411 17858 44247 46229 17752 27849 1188  17381 16708 17052 27814 17566 27398 52222 30851 16856 17406 24813 27438 15971 16504 16082 28822 17712 53488 17442 15811 16755 65046 64557 28158"
+    GLYCOLISIS.METABOLITES <- "17234 15361 17665 15946 16905 16108 29052 16001 17794 17835 18021 15422 16761 15846 24996 28602"
+    CITRICACIDCYCLE.METABOLITES <- "57288 16947 32805 30887 16810 15380 15741 18012 30797 30744 15346 15846 16908 16238 17877 17552 15996 16526 15377"
+    UREACYCLE.METABOLITES <- "15729 16349 16941 16467 16199 17672 17053 18012"
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -47,13 +54,38 @@ SignatureBoard <- function(id, pgx,
     ## ------------------------ observe/reactive function  -----------------------------
 
     shiny::observeEvent(input$example1, {
-      shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
+      if (DATATYPEPGX == "metabolomics") {
+        shiny::updateTextAreaInput(session, "genelist", value = GLYCOLISIS.METABOLITES)
+      } else {
+        shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
+      }
     })
     shiny::observeEvent(input$example2, {
-      shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
+      if (DATATYPEPGX == "metabolomics") {
+        shiny::updateTextAreaInput(session, "genelist", value = CITRICACIDCYCLE.METABOLITES)
+      } else {
+        shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
+      }
     })
     shiny::observeEvent(input$example3, {
-      shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
+      if (DATATYPEPGX == "metabolomics") {
+        shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
+      } else {
+        shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
+      }
+    })
+    shiny::observeEvent(pgx$X, {
+      if (DATATYPEPGX == "metabolomics") {
+        shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
+        shiny::updateActionButton(session, "example1", label = "[glycolisis] ")
+        shiny::updateActionButton(session, "example2", label = "[TCA cycle] ")
+        shiny::updateActionButton(session, "example3", label = "[urea cycle] ")
+      } else {
+        shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.GENES)
+        shiny::updateActionButton(session, "example1", label = "[immune_chkpt] ")
+        shiny::updateActionButton(session, "example2", label = "[apoptosis] ")
+        shiny::updateActionButton(session, "example3", label = "[cell_cycle] ")
+      }
     })
 
     shiny::observe({
@@ -140,7 +172,13 @@ SignatureBoard <- function(id, pgx,
           genes <- union(genes, rx.genes)
         }
         ## map to probes
-        features <- playbase::map_probes(pgx$genes, genes, column = NULL, ignore.case = TRUE)
+        features1 <- playbase::map_probes(pgx$genes, genes,
+          column = "human_ortholog", ignore.case = TRUE
+        )
+        features2 <- playbase::map_probes(pgx$genes, genes,
+          column = "symbol", ignore.case = TRUE
+        )
+        features <- union(features1, features2)
       } else if (input$type == "contrast" &&
         input$feature[1] %in% playbase::pgx.getContrasts(pgx)) {
         contr <- input$feature

@@ -85,10 +85,10 @@ intersection_scatterplot_pairs_server <- function(id,
       if (input$splom_highlight) {
         df.color <- c("#00000033", "#0066FF")[1 + is.sel]
         df.color <- c("#AAAAAA", "#1e60BB")[1 + is.sel]
-        df.color <- c("#CCCCCC22", "#1e60BB88")[1 + is.sel]
+        df.color <- c("#CCCCCC22", omics_colors("brand_blue"))[1 + is.sel]
       } else {
         df.color <- rep("#00000088", nrow(df))
-        df.color <- rep("#1e60BB88", nrow(df))
+        df.color <- rep(omics_colors("brand_blue"), nrow(df))
       }
 
       ## Labels for top 50

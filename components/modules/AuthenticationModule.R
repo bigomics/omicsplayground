@@ -912,6 +912,17 @@ LoginCodeAuthenticationModule <- function(id,
     ## Step 0: detect cookie and pass
     ## --------------------------------------
     decrypted_cookie <- get_and_decrypt_cookie(session)
+    query_email <- shiny::isolate(shiny::getQueryString()$email)
+    if (!is.null(query_email) & !is.null(decrypted_cookie)) {
+      if (query_email != decrypted_cookie) {
+        # If the query email is different than the cookie email
+        # we assume that the user wants to login
+        # with a different account, therefore we do not
+        # use the cookie
+        decrypted_cookie <- NULL
+      }
+    }
+
     if (!is.null(decrypted_cookie)) {
       dbg("[LoginCodeAuthenticationModule] cookies found : login OK! ")
       output$login_warning <- shiny::renderText("")
@@ -939,6 +950,12 @@ LoginCodeAuthenticationModule <- function(id,
         shinyjs::runjs("logoutInApp();")
         shiny::showModal(login_modal)
         return(USER)
+      }
+
+      ## (OPTION HUBSPOT_CHECK defined step) Check if user has updated info on Hubspot
+      ## If not, redirect to auth where the popup will be prompted to the user
+      if (opt$HUBSPOT_CHECK) {
+        chueckHubspotData(user_email)
       }
 
       # create user_dir (always), set path, and set options

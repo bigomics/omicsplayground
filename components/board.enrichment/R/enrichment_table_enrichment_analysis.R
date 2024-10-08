@@ -72,28 +72,28 @@ enrichment_table_enrichment_analysis_server <- function(id,
 
       ## wrap genesets names with known links.
       GS_link <- playbase::wrapHyperLink(
-        rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(rpt)),
+        rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>", nrow(rpt)),
         rownames(rpt)
       ) |> HandleNoLinkFound(
-        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
+        NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
       )
-      selectmode <- "single"
+      rpt$GS <- paste(rpt$GS, "&nbsp;", GS_link)
+      colnames(rpt) <- sub("GS", "geneset", colnames(rpt))
 
       is.numcol <- sapply(rpt, function(col) is.numeric(col) && !is.integer(col))
       numcols <- which(is.numcol & !colnames(rpt) %in% c("size"))
       numcols <- colnames(rpt)[numcols]
 
-      colnames(rpt) <- sub("GS", "geneset", colnames(rpt))
 
       DT::datatable(rpt,
         class = "compact cell-border stripe hover",
-        rownames = GS_link,
-        escape = FALSE,
+        rownames = FALSE,
+        escape = c(-1, -2),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
-        selection = list(mode = selectmode, target = "row", selected = 1),
+        selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "frtip",
           paging = TRUE,

@@ -62,7 +62,7 @@ dataview_plot_abundance_server <- function(id,
           y = ~value,
           type = "bar",
           color = ~gene,
-          colors = omics_pal_d("muted")(length(unique(long.data$gene))),
+          colors = omics_pal_d(palette = "expanded")(length(unique(long.data$gene))),
           hovertemplate = ~ paste0(
             "Sample: <b>", sample, "</b><br>",
             "Gene: <b>", gene, "</b><br>",

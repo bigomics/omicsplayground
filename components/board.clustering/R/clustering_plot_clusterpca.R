@@ -121,7 +121,9 @@ clustering_plot_clustpca_server <- function(id,
       tt.info <- apply(Y, 1, function(y) paste0(colnames(Y), ": <b>", y, "</b></br>", collapse = ""))
       tt.info <- I(as.character(tt.info))
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
-
+      clrs.length <- length(unique(colvar))
+      clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(clrs.length / 8))[1:clrs.length]
+      clrs <- clrs[colvar]
       if (do3d) {
         ## 3D plot
         plt <- plotly::plot_ly(df, mode = "markers") %>%
@@ -131,6 +133,7 @@ clustering_plot_clustpca_server <- function(id,
             z = df[, 3],
             type = "scatter3d",
             color = colvar,
+            colors = clrs,
             marker = list(
               size = 6 * cex1 * cex,
               line = list(color = "grey10", width = 0.1)
@@ -175,6 +178,7 @@ clustering_plot_clustpca_server <- function(id,
             y = df[, 2],
             type = "scattergl",
             color = colvar, ## size = sizevar, sizes=c(80,140),
+            colors = clrs,
             marker = list(
               size = 16 * cex1 * cex,
               line = list(color = "grey20", width = 0.6)

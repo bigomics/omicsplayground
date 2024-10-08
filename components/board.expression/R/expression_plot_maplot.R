@@ -79,6 +79,7 @@ expression_plot_maplot_server <- function(id,
         return(NULL)
       }
       shiny::req(pgx$X)
+
       X <- pgx$X
       res <- res()
       lfc <- as.numeric(gx_lfc())
@@ -91,9 +92,13 @@ expression_plot_maplot_server <- function(id,
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
-      symbols <- res$symbol
+      symbols <- rownames(res)
 
-      return(list(
+      names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
+
+      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+
+      plot_data <- list(
         x = x,
         y = y,
         ylim = ylim,
@@ -101,40 +106,37 @@ expression_plot_maplot_server <- function(id,
         lab.genes = genes_selected()$lab.genes,
         symbols = symbols,
         features = rownames(res),
-        lab.cex = 1,
+        names = names,
         fdr = fdr,
-        lfc = lfc
-      ))
+        lfc = lfc,
+        label.names = label.names
+      )
+
+      return(plot_data)
     })
 
-    plotly.RENDER <- function() {
+
+    plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
 
-
-      if (labeltype() == "symbol") {
-        names <- pd[["features"]]
-        label.names <- pd[["symbols"]]
-      } else {
-        names <- pd[["symbols"]]
-        label.names <- pd[["features"]]
-      }
+      names <- pd[["features"]]
+      label.names <- pd[["label.names"]]
 
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
-        ## names = pd[["symbols"]],
         names = names,
         label.names = label.names,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
-        label.cex = pd[["lab.cex"]],
+        label.cex = lab.cex,
         group.names = c("group1", "group0"),
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Average expression (log2)",
         ylab = "Effect size (log2FC)",
-        marker.size = 4,
+        marker.size = marker.size,
         displayModeBar = FALSE,
         showlegend = FALSE,
         source = "plot1",
@@ -145,14 +147,14 @@ expression_plot_maplot_server <- function(id,
     }
 
     modal_plotly.RENDER <- function() {
-      fig <- plotly.RENDER() %>%
+      fig <- plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
         plotly::layout(
           font = list(size = 18),
           legend = list(
             font = list(size = 18)
           )
         )
-      fig <- plotly::style(fig, marker.size = 10)
+      ## fig <- plotly::style(fig, marker.size = 8)
       fig
     }
 

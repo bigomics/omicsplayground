@@ -8,7 +8,6 @@ app_ui <- function() {
     use_example_data = options()$use_example_data
 
     # handle pgx file input
-
     pgx_file <- ""
 
     if(!is.null(use_example_data) && use_example_data == TRUE){
@@ -18,14 +17,13 @@ app_ui <- function() {
     # handle board inputs and dependencies
 
     directory <- file.path(OPG, glue::glue('components/board.{board}/R/'))  # Specify the directory path
-    file_paths <- list.files(directory, full.names = TRUE)  # Get the full file paths in the directory
+    file_paths <- list.files(directory, full.names = TRUE, pattern="*[.][rR]$")  
 
     for (file_path in file_paths) {
         source(file_path)
     }
 
-    ui_files <- list.files(path = file.path(OPG,'components/ui/'))
-
+    ui_files <- list.files(path = file.path(OPG,'components/ui/'), pattern="*[.][rR]$")
     for (ui_file in ui_files) {
         source(file.path(OPG,'components/ui/', ui_file))
     }
@@ -99,6 +97,7 @@ app_ui <- function() {
 
     bigdash::bigPage(
         header,
+        shiny.i18n::usei18n(i18n),
         title = "Omics Playground v3",
         theme = big_theme2,
         sidebar = sidebar,

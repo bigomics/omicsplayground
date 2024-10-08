@@ -237,13 +237,13 @@ signature_plot_markers_server <- function(id,
       for (i in 0:min(nmax, nrow(top.gx))) {
         jj <- 1:ncol(top.gx)
         if (i == 0) {
-          klrpal <- playdata::BLUERED(16)
+          klrpal <- grDevices::colorRampPalette(c(omics_colors("brand_blue"), omics_colors("grey"), omics_colors("red")))(16)
           colvar <- fc1
           klr1 <- klrpal[8 + round(7 * fc1)]
           tt <- "INPUT SIGNATURE"
           jj <- order(abs(fc1))
         } else {
-          klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
+          klrpal <- colorRampPalette(c("grey90", "grey60", omics_colors("red")))(16)
           colvar <- pmax(top.gx[i, ], 0)
           colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar, na.rm = TRUE) + 0.3 * max(top.gx, na.rm = TRUE))))
           klr1 <- klrpal[colvar]

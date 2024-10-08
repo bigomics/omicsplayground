@@ -63,7 +63,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       if (is.summary.available) {
         tx <- playdata::TISSUE[hgnc.gene, ]
         grp <- playdata::TISSUE_GRP[names(tx)]
-        tissue.klr <- playdata::COLORS[grp]
+        tissue.klr <- omics_pal_d()(8)[grp]
         ylab <- "expression (TPM)"
         if (data_type == "logCPM") {
           ylab <- "expression (log2TPM)"

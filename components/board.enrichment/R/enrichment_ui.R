@@ -69,7 +69,7 @@ EnrichmentUI <- function(id) {
     shiny::tabPanel(
       "Enrichment",
       bslib::layout_columns(
-        col_widths = c(6, 6),
+        col_widths = c(5, 4, 3),
         height = halfH,
         enrichment_plot_top_enrich_gsets_ui(
           ns("topEnriched"),
@@ -107,23 +107,6 @@ EnrichmentUI <- function(id) {
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         ),
-        enrichment_plot_freq_top_gsets_ui(
-          ns("topEnrichedFreq"),
-          title = "Frequency in top gene sets",
-          info.text = "Barchart showing the number of times a gene is present in the top-N genesets for the selected {Contrast} sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
-          info.methods = "See Top enriched gene sets",
-          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses",
-          caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
-    ),
-    shiny::tabPanel(
-      "Geneset expression",
-      bslib::layout_columns(
-        col_widths = c(3, 3, 3, 3),
-        height = halfH,
         enrichment_plot_volcano_ui(
           ns("subplot_volcano"),
           title = "Volcano plot",
@@ -183,10 +166,17 @@ EnrichmentUI <- function(id) {
           caption = "Barplot of the selected gene set in the phenotypic groups. ",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", 900)
-        ),
+        )
+      )
+    ),
+    shiny::tabPanel(
+      tspan("Gene expression"),
+      bslib::layout_columns(
+        col_widths = c(3, 4, 5),
+        height = halfH,
         enrichment_plot_geneplot_ui(
           ns("subplot_geneplot"),
-          title = "Expression geneplot",
+          title = "Expression plot",
           info.text = "An expression barplot per sample group for the gene that is selected from the genes Table II. Samples can be ungrouped in the barplot by selecting ungroup samples from the plot Settings.",
           caption = "Barplot of the selected gene in the phenotypic groups. ",
           height = c("100%", TABLE_HEIGHT_MODAL),
@@ -195,12 +185,22 @@ EnrichmentUI <- function(id) {
         enrichment_plot_scatter_ui(
           ns("subplot_scatter"),
           title = "Enrichment vs. expression",
-          info.text = "Scatter plot of enrichment scores versus expression values for selected {Contrast} for the gene set selected from the Enrichment analysis table and the gene selected from the genes table.",
+          info.text = "Scatter plot of enrichment scores versus expression values for selected {Comparison} for the gene set selected from the Enrichment analysis table and the gene selected from the genes table.",
           info.methods = "See Enrichment barplot",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses",
           caption = "Scatter plot of the selected gene set enrichment scores versus the selected gene expression values by sample.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", 900)
+        ),
+        enrichment_plot_freq_top_gsets_ui(
+          ns("topEnrichedFreq"),
+          title = "Most frequent genes",
+          info.text = "Barchart showing the number of times a gene is present in the top-N genesets for the selected {Contrast} sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes.",
+          info.methods = "See Top enriched gene sets",
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses",
+          caption = "Gene frequency plot indicating the most recurring genes across the most correlated gene sets.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     ),

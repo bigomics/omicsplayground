@@ -318,7 +318,19 @@ checkEmail <- function(email, domain = NULL, blocked_domain = NULL, user_databas
   list(valid = TRUE, "email ok")
 }
 
-
+chueckHubspotData <- function(user_email) {
+  is_data_complete <- checkHubspot(user_email)
+  if (!is_data_complete) {
+    dbg("[HubspotCheckModule]: Redirecting", user_email, "to auth page")
+    shinyjs::runjs(
+      paste0(
+        "window.location.replace('https://auth.bigomics.ch/#!/login?email=",
+        user_email,
+        "');"
+      )
+    )
+  }
+}
 
 ## ================================================================================
 ## ================================= END OF FILE ==================================

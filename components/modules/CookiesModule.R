@@ -16,8 +16,22 @@ extract_cookie_value <- function(session, cookie_name) {
 # Decrypt cookie
 decrypt_cookie <- function(cookie, nonce) {
   key_base64 <- readLines(file.path(OPG, "etc/keys/cookie.txt"))[1]
-  email_nonce_raw <- sodium::hex2bin(nonce)
-  email_raw <- sodium::hex2bin(cookie)
+  email_nonce_raw <- tryCatch(
+    {
+      sodium::hex2bin(nonce)
+    },
+    error = function(w) {
+      ""
+    }
+  )
+  email_raw <- tryCatch(
+    {
+      sodium::hex2bin(cookie)
+    },
+    error = function(w) {
+      ""
+    }
+  )
   attr(email_raw, "nonce") <- email_nonce_raw
   # Return NULL if not successful decryption
   email <- tryCatch(

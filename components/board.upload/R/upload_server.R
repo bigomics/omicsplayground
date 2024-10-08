@@ -34,18 +34,16 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     # add task to detect probetype using annothub
-    checkprobes_task <- ExtendedTask$new(function(organism, probes, datatype, probe_type) {
+    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        probetype0 <- playbase::detect_species_probetype(
+        detected <- playbase::detect_species_probetype(
           probes = probes,
           datatype = datatype,
-          probe_type = probe_type,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
         )
-        dbg("[UploadBoard:ExtendedTask.new] finished! probetype = ", probetype0)
-        if (is.null(probetype0)) probetype0 <- "error"
-        probetype0
+        if (is.null(detected)) detected <- "error"
+        detected
       })
     })
 
@@ -225,7 +223,7 @@ UploadBoard <- function(id,
     }
 
     ## =====================================================================
-    ## ===================== checkTables ===================================
+    ## =================== INPUT CHECK FUNCTIONS ===========================
     ## =====================================================================
 
     ## --------------------------------------------------------
@@ -339,7 +337,8 @@ UploadBoard <- function(id,
               title = "Maximum samples reached",
               text = paste(
                 "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", MAXSAMPLES, "samples.", js = FALSE)
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                MAXSAMPLES, "samples."
               ),
               type = "error"
             )
@@ -509,28 +508,101 @@ UploadBoard <- function(id,
       }
     )
 
-    ## output$input_recap <- renderUI({
-    ##   shiny::fluidRow(
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Organism:</b> ", upload_organism(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Name:</b> ", upload_name(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Description:</b> ", upload_description(), sep = "<br>")))),
-    ##     shiny::column(3, tags$h3(shiny::HTML(paste("<b>Data type:</b> ", upload_datatype(), sep = "<br>"))))
-    ##   )
+    ## output$probe_type_ui <- shiny::renderUI({
+    ##   if (input$selected_datatype == "metabolomics") {
+    ##     div(
+    ##       p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+    ##       shiny::selectInput(
+    ##         ns("selected_probe"),
+    ##         label = NULL,
+    ##         choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
+    ##       )
+    ##     )
+    ##   }
     ## })
 
-    output$probe_type_ui <- shiny::renderUI({
-      if (input$selected_datatype == "metabolomics") {
-        div(
-          p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
-          shiny::selectInput(
-            ns("selected_probe"),
-            label = NULL,
-            choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
+    ## Dynamic render of appropriate wizard
+    output$upload_wizard <- shiny::renderUI({
+      counts_ui <- wizardR::wizard_step(
+        step_title = tspan("Step 1: Upload counts", js = FALSE),
+        step_id = "step_counts",
+        server = TRUE,
+        upload_table_preview_counts_ui(
+          ns("counts_preview")
+        )
+      )
+
+      samples_ui <- wizardR::wizard_step(
+        step_title = "Step 2: Upload samples",
+        step_id = "step_samples",
+        server = TRUE,
+        upload_table_preview_samples_ui(
+          ns("samples_preview")
+        )
+      )
+
+      contrasts_ui <- wizardR::wizard_step(
+        step_title = "Step 3: Create comparisons",
+        step_id = "step_comparisons",
+        server = TRUE,
+        upload_table_preview_contrasts_ui(
+          ns("contrasts_preview")
+        )
+      )
+
+      normalization_panel <- wizardR::wizard_step(
+        step_title = "Step 4: QC/BC",
+        step_id = "step_qc",
+        server = TRUE,
+        upload_module_normalization_ui(ns("checkqc"))
+      )
+
+      compute_panel <- wizardR::wizard_step(
+        step_title = "Compute!",
+        step_id = "step_compute",
+        server = TRUE,
+        upload_module_computepgx_ui(ns("compute"))
+      )
+
+      if (upload_datatype() == "scRNA-seq") {
+        wizard <- wizardR::wizard(
+          id = ns("upload_wizard"),
+          width = 90,
+          height = 75,
+          modal = TRUE,
+          style = "dots",
+          lock_start = FALSE,
+          counts_ui,
+          samples_ui,
+          contrasts_ui,
+          ## sc_normalization_panel,
+          compute_panel,
+          options = list(
+            navigation = "buttons",
+            finish = "Compute!"
+          )
+        )
+      } else {
+        wizard <- wizardR::wizard(
+          id = ns("upload_wizard"),
+          width = 90,
+          height = 75,
+          modal = TRUE,
+          style = "dots",
+          lock_start = FALSE,
+          counts_ui,
+          samples_ui,
+          contrasts_ui,
+          normalization_panel,
+          compute_panel,
+          options = list(
+            navigation = "buttons",
+            finish = "Compute!"
           )
         )
       }
+      return(wizard)
     })
-
 
     ## --------------------------------------------------------
     ## Check annotation matrix
@@ -598,7 +670,7 @@ UploadBoard <- function(id,
 
 
     ## =====================================================================
-    ## ========================= SUBMODULES/SERVERS ========================
+    ## ================= VARIOUS OBSERVERS/TRIGGERS ========================
     ## =====================================================================
 
     shiny::observeEvent(modified_ct(), {
@@ -608,65 +680,6 @@ UploadBoard <- function(id,
         write.csv(modct, file.path(raw_dir(), "user_contrasts.csv"), row.names = TRUE)
       }
     })
-
-    corrected1 <- upload_module_normalization_server(
-      id = "checkqc",
-      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
-      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
-      r_contrasts = modified_ct,
-      upload_datatype = upload_datatype,
-      is.count = TRUE,
-      height = height
-    )
-
-    correctedX <- upload_module_batchcorrect_server(
-      id = "batchcorrect",
-      r_X = shiny::reactive(checked_samples_counts()$COUNTS),
-      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
-      r_contrasts = modified_ct,
-      r_results = modified_ct,
-      is.count = TRUE
-    )
-
-    corrected2 <- reactiveValues()
-    observe({
-      corrected2$counts <- corrected1$counts()
-      corrected2$X <- corrected1$X()
-      corrected2$impX <- corrected1$impX()
-    })
-
-    computed_pgx <- upload_module_computepgx_server(
-      id = "compute",
-      #      countsRT = corrected1$counts,
-      #      countsX = corrected1$X,
-      #      impX = corrected1$impX,
-      countsRT = reactive(corrected2$counts),
-      countsX = reactive(corrected2$X),
-      impX = reactive(corrected2$impX),
-      norm_method = shiny::reactive(corrected1$norm_method()),
-      samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
-      contrastsRT = modified_ct,
-      annotRT = shiny::reactive(checked_annot()$matrix),
-      raw_dir = raw_dir,
-      metaRT = shiny::reactive(uploaded$meta),
-      lib.dir = FILES,
-      auth = auth,
-      create_raw_dir = create_raw_dir,
-      alertready = FALSE,
-      height = "100%",
-      recompute_info = recompute_info,
-      inactivityCounter = inactivityCounter,
-      upload_wizard = reactive(input$upload_wizard),
-      upload_name = upload_name,
-      upload_description = upload_description,
-      upload_datatype = upload_datatype,
-      upload_organism = upload_organism,
-      upload_gx_methods = upload_gx_methods,
-      upload_gset_methods = upload_gset_methods,
-      process_counter = process_counter,
-      reset_upload_text_input = reset_upload_text_input,
-      probetype = probetype
-    )
 
     uploaded_pgx <- shiny::reactive({
       if (!is.null(uploaded$pgx)) {
@@ -678,6 +691,42 @@ UploadBoard <- function(id,
       }
       return(pgx)
     })
+
+    # change upload_datatype to selected_datatype
+    observeEvent(input$selected_datatype, {
+      upload_datatype(input$selected_datatype)
+    })
+
+    # change upload_organism to selected_organism
+    observeEvent(input$selected_organism, {
+      upload_organism(input$selected_organism)
+    })
+
+    observeEvent(input$start_upload, {
+      recompute_pgx(NULL) ## need to reset
+    })
+
+    observeEvent(c(input$start_upload, recompute_pgx()), {
+      ## check number of datasets
+      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
+      if (!auth$options$ENABLE_DELETE) {
+        ## count also deleted files...
+        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
+      }
+      max.datasets <- as.integer(auth$options$MAX_DATASETS)
+      if (numpgx >= max.datasets) {
+        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        return(NULL)
+      }
+
+      ## start upload wizard
+      new_upload(new_upload() + 1)
+    })
+
+
+    ## ===============================================================================
+    ## =========================== WIZARD LOGIC ======================================
+    ## ===============================================================================
 
     # warn user when locked button is clicked (UX)
     observeEvent(
@@ -763,8 +812,6 @@ UploadBoard <- function(id,
         }
       }
     )
-
-    # --------------- wizard lock/unlock logic ------------------------
 
     ## Note: would be good to be able to lock/unlock left and
     ## right navigation separately... IK
@@ -877,171 +924,6 @@ UploadBoard <- function(id,
       }
     )
 
-    ## check probetypes we have counts and every time upload_species changes
-    observeEvent(
-      {
-        ## list(uploaded$counts.csv, upload_organism())
-        list(uploaded$counts.csv)
-      },
-      {
-        shiny::req(uploaded$counts.csv, upload_organism())
-        probes <- rownames(uploaded$counts.csv)
-        probetype("running")
-
-        checkprobes_task$invoke(
-          organism = upload_organism(),
-          datatype = upload_datatype(),
-          probes = probes,
-          probe_type = input$selected_probe
-        )
-      }
-    )
-
-    observeEvent(
-      checkprobes_task$status(),
-      {
-        dbg(
-          "[observeEvent:checkprobes_task$result] task status = ",
-          checkprobes_task$status()
-        )
-        if (checkprobes_task$status() != "success") {
-          return(NULL)
-        }
-        if (checkprobes_task$status() == "error") {
-          probetype("error")
-          return(NULL)
-        }
-
-        ## inspect ExtendedTask results
-        detected <- checkprobes_task$result()
-        organism <- upload_organism()
-        alt.text <- ""
-
-        if (!organism %in% detected$species) {
-          detected_probetype <- "error"
-          alt.species <- paste(detected$species, collapse = " or ")
-          if (length(alt.species)) {
-            alt.species <- paste0("<b>", alt.species, "</b>")
-            alt.text <- paste0("Are these perhaps ", alt.species, "?")
-          }
-        } else {
-          detected_probetype <- "error"
-          if (organism %in% names(detected$probetype)) {
-            detected_probetype <- detected$probetype[organism]
-          }
-        }
-        ## detected_probetype <- detected$probetype
-        probetype(detected_probetype) ## set RV
-
-        if (detected_probetype == "error") {
-          dbg("[UploadBoard] ExtendedTask result has ERROR")
-          shinyalert::shinyalert(
-            title = "Probes not recognized!",
-            text = paste0(
-              "Error. Your probes do not match any probe type for <b>",
-              organism, "</b>. Please check your probe names and select ",
-              "another organism. ", alt.text
-            ),
-            type = "error",
-            size = "s",
-            html = TRUE
-          )
-        }
-
-        ## wrong datatype. just give warning. or should we change datatype?
-        if (detected_probetype != "error" &&
-          any(grepl("PROT", detected_probetype)) &&
-          !(upload_datatype() %in% c("proteomics"))) {
-          shinyalert::shinyalert(
-            title = "Is this proteomics data?",
-            text = paste0(
-              "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
-              "<b>", upload_datatype(), "</b> as data type."
-            ),
-            type = "warning",
-            size = "s",
-            html = TRUE
-          )
-        }
-      }
-    )
-
-
-    ## =====================================================================
-    ## ===================== PLOTS AND TABLES ==============================
-    ## =====================================================================
-
-    upload_table_preview_counts_server(
-      id = "counts_preview",
-      uploaded = uploaded,
-      checked_matrix = shiny::reactive(checked_counts()$matrix),
-      checklist = checklist,
-      scrollY = "calc(50vh - 140px)",
-      width = c("auto", "100%"),
-      height = c("100%", TABLE_HEIGHT_MODAL),
-      title = "Uploaded Counts",
-      info.text = "This is the uploaded counts data.",
-      caption = "This is the uploaded counts data."
-    )
-
-    upload_table_preview_samples_server(
-      "samples_preview",
-      uploaded,
-      checklist = checklist,
-      scrollY = "calc(50vh - 140px)",
-      width = c("auto", "100%"),
-      height = c("100%", TABLE_HEIGHT_MODAL),
-      title = "Uploaded Samples",
-      info.text = "This is the uploaded samples data.",
-      caption = "This is the uploaded samples data."
-    )
-
-    modified_ct <- upload_table_preview_contrasts_server(
-      "contrasts_preview",
-      uploaded,
-      checklist,
-      scrollY = "calc(50vh - 140px)",
-      height = c("100%", TABLE_HEIGHT_MODAL),
-      width = c("auto", "100%"),
-      title = "Uploaded Contrasts",
-      info.text = "This is the uploaded comparison data.",
-      caption = "This is the uploaded comparison data.",
-      checked_samples = checked_samples_counts,
-      checked_counts = checked_samples_counts,
-      checked_contrasts = checked_contrasts,
-      show_comparison_builder = show_comparison_builder,
-      selected_contrast_input = selected_contrast_input,
-      upload_wizard = shiny::reactive(input$upload_wizard)
-    )
-
-    ## =================== wizard logic =====================
-
-    # change upload_datatype to selected_datatype
-    observeEvent(input$selected_datatype, {
-      upload_datatype(input$selected_datatype)
-    })
-
-    # change upload_organism to selected_organism
-    observeEvent(input$selected_organism, {
-      upload_organism(input$selected_organism)
-    })
-
-    observeEvent(input$start_upload, {
-      ## check number of datasets
-      numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
-      if (!auth$options$ENABLE_DELETE) {
-        ## count also deleted files...
-        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
-      }
-      max.datasets <- as.integer(auth$options$MAX_DATASETS)
-      if (numpgx >= max.datasets) {
-        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
-        return(NULL)
-      }
-
-      ## start upload wizard
-      new_upload(new_upload() + 1)
-    })
 
     # observe show_modal and start modal
     shiny::observeEvent(
@@ -1089,14 +971,15 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
-
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {
             wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
+              bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
+              upload_organism(pgx$organism)
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
@@ -1107,8 +990,6 @@ UploadBoard <- function(id,
                 )
               )
             }
-
-            # if recomputing pgx, add data to wizard
           } else {
             shinyalert::shinyalert(
               title = "Computation in progress",
@@ -1127,6 +1008,241 @@ UploadBoard <- function(id,
         }
       }
     )
+
+    ## ===============================================================================
+    ## =========================== EXTENDED TASK =====================================
+    ## ===============================================================================
+
+    ## check probetypes we have counts and every time upload_species changes
+    observeEvent(
+      {
+        ## list(uploaded$counts.csv, upload_organism())
+        list(uploaded$counts.csv)
+      },
+      {
+        shiny::req(uploaded$counts.csv, upload_organism())
+        probes <- rownames(uploaded$counts.csv)
+        probetype("running")
+
+        checkprobes_task$invoke(
+          organism = upload_organism(),
+          datatype = upload_datatype(),
+          probes = probes
+        )
+      }
+    )
+
+    observeEvent(
+      checkprobes_task$status(),
+      {
+        dbg(
+          "[observeEvent:checkprobes_task$result] task status = ",
+          checkprobes_task$status()
+        )
+        if (checkprobes_task$status() == "error") {
+          probetype("error")
+          return(NULL)
+        }
+        if (checkprobes_task$status() != "success") {
+          return(NULL)
+        }
+
+        ## inspect ExtendedTask results
+        detected <- checkprobes_task$result()
+        organism <- upload_organism()
+        alt.text <- ""
+
+        # detect_probetypes return NULL if no probetype is found
+        # across a given organism if NULL, probetype matching failed
+        e1 <- is.null(detected$probetype[organism])
+        e2 <- is.na(detected$probetype[organism])
+        e3 <- !(organism %in% detected$species)
+        task_failed <- (e1 || e2 || e3)
+        if (task_failed) {
+          # handle probetype mismatch failures: assign "error" to detected_probetype
+          detected_probetype <- "error"
+          alt.species <- paste(detected$species, collapse = " or ")
+          if (length(alt.species)) {
+            alt.species <- paste0("<b>", alt.species, "</b>")
+            # check if ANY organism matched the probes, if yes add a hint to the user
+            if (length(detected$species) >= 1) {
+              alt.text <- paste0("Are these perhaps ", alt.species, "?")
+            }
+            if (upload_datatype() == "metabolomics") {
+              # overwrite alt.text for metabolomics
+              alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN"), collapse = ", ")
+              alt.text <- paste0("<b>", alt.text, "</b>")
+              alt.text <- paste0("Valid probes are: ", alt.text, ".")
+            }
+          }
+        } else {
+          # handle probetype matching success: assign detected probetype to detected_probetype
+          detected_probetype <- detected$probetype[organism]
+        }
+
+        probetype(detected_probetype) ## set RV
+        info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
+
+        if (detected_probetype == "error") {
+          info("[UploadBoard] ExtendedTask result has ERROR")
+          shinyalert::shinyalert(
+            title = "Probes not recognized!",
+            text = paste0(
+              "Error. Your probes do not match any probe type for <b>",
+              organism, "</b>. Please check your probe names and select ",
+              "another organism. ", alt.text
+            ),
+            type = "error",
+            size = "s",
+            html = TRUE
+          )
+        }
+
+        ## wrong datatype. just give warning. or should we change datatype?
+        if (detected_probetype != "error" &&
+          any(grepl("PROT", detected_probetype)) &&
+          !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
+          shinyalert::shinyalert(
+            title = "Is this proteomics data?",
+            text = paste0(
+              "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
+              "<b>", upload_datatype(), "</b> as data type."
+            ),
+            type = "warning",
+            size = "s",
+            html = TRUE
+          )
+        }
+      }
+    )
+
+
+    ## =====================================================================
+    ## ======================== MODULES SERVERS ============================
+    ## =====================================================================
+
+    upload_table_preview_counts_server(
+      id = "counts_preview",
+      uploaded = uploaded,
+      checked_matrix = shiny::reactive(checked_counts()$matrix),
+      checklist = checklist,
+      scrollY = "calc(50vh - 140px)",
+      width = c("auto", "100%"),
+      height = c("100%", TABLE_HEIGHT_MODAL),
+      title = "Uploaded Counts",
+      info.text = "This is the uploaded counts data.",
+      caption = "This is the uploaded counts data."
+    )
+
+    upload_table_preview_samples_server(
+      "samples_preview",
+      uploaded,
+      checklist = checklist,
+      scrollY = "calc(50vh - 140px)",
+      width = c("auto", "100%"),
+      height = c("100%", TABLE_HEIGHT_MODAL),
+      title = "Uploaded Samples",
+      info.text = "This is the uploaded samples data.",
+      caption = "This is the uploaded samples data."
+    )
+
+    modified_ct <- upload_table_preview_contrasts_server(
+      "contrasts_preview",
+      uploaded,
+      checklist,
+      scrollY = "calc(50vh - 140px)",
+      height = c("100%", TABLE_HEIGHT_MODAL),
+      width = c("auto", "100%"),
+      title = "Uploaded Contrasts",
+      info.text = "This is the uploaded comparison data.",
+      caption = "This is the uploaded comparison data.",
+      checked_samples = checked_samples_counts,
+      checked_counts = checked_samples_counts,
+      checked_contrasts = checked_contrasts,
+      show_comparison_builder = show_comparison_builder,
+      selected_contrast_input = selected_contrast_input,
+      upload_wizard = shiny::reactive(input$upload_wizard)
+    )
+
+    normalized <- upload_module_normalization_server(
+      id = "checkqc",
+      r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
+      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+      r_contrasts = modified_ct,
+      upload_datatype = upload_datatype,
+      is.count = TRUE,
+      height = height
+    )
+
+    ## correctedX <- upload_module_batchcorrect_server(
+    ##   id = "batchcorrect",
+    ##   r_X = shiny::reactive(checked_samples_counts()$COUNTS),
+    ##   r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+    ##   r_contrasts = modified_ct,
+    ##   r_results = modified_ct,
+    ##   is.count = TRUE
+    ## )
+
+    ## placeholder for dynamic inputs for computepgx
+    compute_input <- reactiveValues()
+
+    observe({
+      if (input$selected_datatype == "scRNA-seq") {
+        counts <- checked_samples_counts()$COUNTS
+        if (is.null(dim(counts))) {
+          return(NULL)
+        }
+        logX <- playbase::logCPM(counts, 1, total = 1e5)
+        impX <- NULL
+        if (any(missing(counts))) {
+          impX <- imputeSVD2(logX)
+        }
+        compute_input$counts <- counts
+        compute_input$X <- logX
+        compute_input$impX <- impX
+        ## compute_input$counts <- normalized_sc$counts()
+        ## compute_input$X <- normalized_sc$X()
+        ## compute_input$impX <- normalized_sc$impX()
+        compute_input$norm_method <- "CPM"
+      } else {
+        compute_input$counts <- normalized$counts()
+        compute_input$X <- normalized$X()
+        compute_input$impX <- normalized$impX()
+        compute_input$norm_method <- normalized$norm_method()
+      }
+    })
+
+    computed_pgx <- upload_module_computepgx_server(
+      id = "compute",
+      countsRT = reactive(compute_input$counts),
+      countsX = reactive(compute_input$X),
+      impX = reactive(compute_input$impX),
+      norm_method = shiny::reactive(compute_input$norm_method),
+      samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
+      contrastsRT = modified_ct,
+      annotRT = shiny::reactive(checked_annot()$matrix),
+      raw_dir = raw_dir,
+      metaRT = shiny::reactive(uploaded$meta),
+      lib.dir = FILES,
+      auth = auth,
+      create_raw_dir = create_raw_dir,
+      alertready = FALSE,
+      height = "100%",
+      recompute_info = recompute_info,
+      inactivityCounter = inactivityCounter,
+      upload_wizard = reactive(input$upload_wizard),
+      upload_name = upload_name,
+      upload_description = upload_description,
+      upload_datatype = upload_datatype,
+      upload_organism = upload_organism,
+      upload_gx_methods = upload_gx_methods,
+      upload_gset_methods = upload_gset_methods,
+      process_counter = process_counter,
+      reset_upload_text_input = reset_upload_text_input,
+      probetype = probetype
+    )
+
+
 
     ## ------------------------------------------------
     ## Board return object

@@ -100,7 +100,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       ntop <- dt[[3]]
       gset.weight <- dt[[4]]
       fcweight <- dt[[5]]
-      ngenes <- 35
+      ngenes <- 30
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       fx <- rpt[, fx.col]
       names(fx) <- rownames(rpt)
@@ -130,7 +130,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       F <- F[order(-Matrix::rowSums(F, na.rm = TRUE)), , drop = FALSE]
 
       sel.zero <- which(Matrix::rowSums(abs(F), na.rm = TRUE) < 1e-4)
-      if (length(sel.zero)) rownames(F)[sel.zero] <- ""
+      if (length(sel.zero)) F <- F[-sel.zero, , drop = FALSE]
 
       if (return_csv) {
         return(F)
@@ -139,6 +139,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       playbase::pgx.stackedBarplot(
         x = F,
         ylab = ifelse(wt, "weighted frequency", "frequency"),
+        xlab = tspan("genes", js = FALSE),
         showlegend = FALSE
       )
     }

@@ -161,6 +161,7 @@ app_server <- function(input, output, session) {
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
+  labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
@@ -226,7 +227,7 @@ app_server <- function(input, output, session) {
 
 
     shiny::observeEvent(upload_datatype(), {
-      if (tolower(upload_datatype()) == "proteomics") {
+      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
         shiny.i18n::update_lang("proteomics", session)
       } else if (tolower(upload_datatype()) == "metabolomics") {
         shiny.i18n::update_lang("metabolomics", session)
@@ -349,14 +350,14 @@ app_server <- function(input, output, session) {
           if (ENABLED["dataview"]) {
             info("[SERVER] calling DataView module")
             insertBigTabItem("dataview")
-            DataViewBoard("dataview", pgx = PGX)
+            DataViewBoard("dataview", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 
           if (ENABLED["clustersamples"]) {
             info("[SERVER] calling ClusteringBoard module")
             insertBigTabItem("clustersamples")
-            ClusteringBoard("clustersamples", pgx = PGX)
+            ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["wordcloud"]) {
@@ -369,13 +370,13 @@ app_server <- function(input, output, session) {
           if (ENABLED["diffexpr"]) {
             info("[SERVER] calling ExpressionBoard module")
             insertBigTabItem("diffexpr")
-            ExpressionBoard("diffexpr", pgx = PGX) -> env$diffexpr
+            ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) -> env$diffexpr
           }
 
           if (ENABLED["clusterfeatures"]) {
             info("[SERVER] calling FeatureMapBoard module")
             insertBigTabItem("clusterfeatures")
-            FeatureMapBoard("clusterfeatures", pgx = PGX)
+            FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype)
           }
           shiny::incProgress(0.1)
 
@@ -427,7 +428,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["corr"]) {
             info("[SERVER] calling CorrelationBoard module")
             insertBigTabItem("corr")
-            CorrelationBoard("corr", pgx = PGX)
+            CorrelationBoard("corr", pgx = PGX, labeltype = labeltype)
           }
 
           if (ENABLED["bio"]) {
@@ -478,7 +479,7 @@ app_server <- function(input, output, session) {
           if (ENABLED["comp"]) {
             info("[SERVER] calling CompareBoard module")
             insertBigTabItem("comp")
-            CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir))
+            CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir), labeltype = labeltype)
           }
 
           info("[SERVER] calling modules done!")
@@ -553,42 +554,24 @@ app_server <- function(input, output, session) {
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
       pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-      ## tag <- shiny::actionButton(
-      ##   "dataset_click", pgx.name,
-      ##   class = "quick-button",
-      ##   style = "border: none; color: black; font-size: 1em;"
-      ## )
-      tag <- QuestionWidgetUI("question", label=pgx.name, class = "quick-button")
+      tag <- HTML(pgx.name)
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
     }
     tag
   })
 
-  ## server for Question widget
-  QuestionWidgetServer("question", pgx = PGX)
-  
-  observeEvent(input$dataset_click, {
-    shiny::req(PGX$name)
-    pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    fields <- c("name", "datatype", "description", "date")
-    fields <- intersect(fields, names(PGX))
-    body <- ""
-    for (f in fields) {
-      txt1 <- paste0("<b>", f, ":</b>&nbsp; ", PGX[[f]], "<br>")
-      body <- paste(body, txt1)
-    }
-    shiny::showModal(shiny::modalDialog(
-      title = pgx.name,
-      div(HTML(body), style = "font-size: 1.1em;"),
-      footer = NULL,
-      size = "l",
-      easyClose = TRUE,
-      fade = FALSE
-    ))
-  })
+  if(opt$DEVMODE) {
 
-
+    output$copilot_button <- renderUI({
+      if(is.null(PGX$X)) return(NULL)
+      div.chirpbutton <- shiny::actionButton(
+        "copilot_click", "Copilot",
+        width = "auto", class = "quick-button"
+      )
+    })
+    OmicsChatServer("chat", pgx=PGX, input.click = reactive(input$copilot_click))
+  }
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
   observeEvent(input$nav, {
@@ -619,7 +602,7 @@ app_server <- function(input, output, session) {
       DATATYPEPGX <<- tolower(PGX$datatype)
 
       ## change language
-      if (DATATYPEPGX == "proteomics") {
+      if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
         lang <- "proteomics"
       } else if (DATATYPEPGX == "metabolomics") {
         lang <- "metabolomics"
@@ -628,6 +611,14 @@ app_server <- function(input, output, session) {
       }
       dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
+
+      # choose the default labeltype based on datatype
+
+      if (PGX$datatype == "metabolomics") {
+        labeltype("gene_title")
+      } else {
+        labeltype("feature") # probe is feature (rownames of counts)
+      }
 
       ## show beta feauture
       show.beta <- env$user_settings$enable_beta()
@@ -669,7 +660,94 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
+      ## Hide PCSF and WGCNA for metabolomics
+      # WGCNA will be abailable upon gmt refactoring
+      if (DATATYPEPGX == "metabolomics") {
+        info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+        bigdash.hideTab(session, "pcsf-tab")
+        bigdash.hideTab(session, "wgcna-tab")
+      }
+
       info("[SERVER] trigger on change dataset done!")
+    }
+  )
+
+  # populate labeltype selector based on pgx$genes
+
+  observeEvent(
+    {
+      PGX$genes
+    },
+    {
+      req(PGX$genes)
+
+      clean_genes_matrix <- PGX$genes
+
+      # remove NA columns
+      clean_genes_matrix <- clean_genes_matrix[, !apply(is.na(clean_genes_matrix), 2, all), drop = FALSE]
+
+      # remove columns with only 1 unique value
+      clean_genes_matrix <- clean_genes_matrix[, sapply(clean_genes_matrix, function(x) length(unique(x)) > 1), drop = FALSE]
+
+      # remove duplicated columns
+      clean_genes_matrix <- clean_genes_matrix[, !duplicated(t(clean_genes_matrix)), drop = FALSE]
+
+
+      # improve naming of label types (gene_title -> name) and remove pos, map, tx_len
+      label_types_available <- colnames(clean_genes_matrix)
+
+      names(label_types_available) <- label_types_available
+
+      # rename gene_title name to name
+      names(label_types_available)[names(label_types_available) == "gene_title"] <- "name"
+
+      # remove pos, map, tx_len (not interesting for label types)
+      label_types_available <- label_types_available[!grepl("pos|map|tx_len", names(label_types_available))]
+
+      # if available, rename chr0 to Chromossome and chr to locus
+      if ("chr0" %in% names(label_types_available)) {
+        names(label_types_available)[names(label_types_available) == "chr0"] <- "Chromossome"
+      }
+
+      if ("chr" %in% names(label_types_available)) {
+        names(label_types_available)[names(label_types_available) == "chr"] <- "Locus"
+      }
+
+      shiny::updateSelectInput(
+        session,
+        "selected_labeltype",
+        choices = label_types_available,
+        selected = labeltype()
+      )
+    }
+  )
+
+
+
+  # change label type based on selected input
+  shiny::observeEvent(
+    {
+      input$selected_labeltype
+    },
+    {
+      labeltype(input$selected_labeltype)
+    }
+  )
+
+  # if labeltype is updated (via different pgx data types), we need to update the selector choice
+  shiny::observeEvent(
+    {
+      labeltype()
+    },
+    {
+      # if input$selected_labeltype does not match labeltype, we need to update the selector
+      if (input$selected_labeltype != labeltype()) {
+        shiny::updateSelectInput(
+          session,
+          "selected_labeltype",
+          selected = labeltype()
+        )
+      }
     }
   )
 
@@ -1022,18 +1100,46 @@ app_server <- function(input, output, session) {
         ),
         type = "message"
       )
+      err_traceback <- append(error$message, err_traceback)
     }
+
+    # Get inputs to reproduce state
+    board_inputs <- names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))]
+
+    # Remove pdf + download + card_selector + copy_info + unnecessary table inputs
+    board_inputs <- board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)]
+
+    input_values <- lapply(board_inputs, function(x) {
+      value <- input[[x]]
+      return(paste0(x, ": ", value))
+    }) |> unlist()
+
+    err_traceback <- append(input_values, err_traceback)
 
     # clean up and concatenate err_traceback
 
-    err_traceback <- paste(err_traceback, collapse = "\n")
+    err_traceback <- paste(err_traceback, collapse = "\n ")
+
+    # Skip if error is repeated
+    # Initialize variable as well
+    if (!exists("err_traceback_prev")) {
+      err_traceback_prev <<- ""
+    }
+    if (err_traceback == err_traceback_prev) {
+      return()
+    }
+
+    # Save globally last error
+    err_traceback_prev <<- err_traceback
 
     pgx_name <- NULL
     user_email <- auth$email
     user_tab <- input$nav
 
-    if (!is.null(PGX)) {
+    if (!is.null(PGX) && !is.null(PGX$name)) {
       pgx_name <- PGX$name
+    } else {
+      pgx_name <- "No PGX loaded when error occurred"
     }
 
     credential <- file.path(ETC, "hubspot_creds")

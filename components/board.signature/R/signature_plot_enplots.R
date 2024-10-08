@@ -124,6 +124,7 @@ signature_plot_enplots_server <- function(id,
             align = "center", showarrow = FALSE
           )
         }
+        rownames(F)[is.na(rownames(F))] <- "NA"
         p <- playbase::gsea.enplotly(
           F[, i],
           gset,
