@@ -680,6 +680,7 @@ app_server <- function(input, output, session) {
         info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
         bigdash.hideTab(session, "pcsf-tab")
         bigdash.hideTab(session, "wgcna-tab")
+        bigdash.hideTab(session, "cmap-tab")
       }
 
       info("[SERVER] trigger on change dataset done!")
