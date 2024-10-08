@@ -10,10 +10,12 @@ dataview_plot_tissue_ui <- function(
     title,
     height,
     width,
-    caption,
-    info.text,
-    info.methods,
-    info.references) {
+    info
+#    caption,
+#    info.text,
+#    info.methods,
+#    info.references
+    ) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -21,18 +23,21 @@ dataview_plot_tissue_ui <- function(
     title = title,
     label = label,
     plotlib = "plotly",
-    info.text = info.text,
-    info.methods = info.methods,
-    info.references = info.references,
-    caption = caption,
+    info = info,
+#    info.text = info.text,
+#    info.methods = info.methods,
+#    info.references = info.references,
+#    caption = caption,
     options = NULL,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
-    height = height
+    height = height,
+    show.ai = TRUE
   )
 }
 
-dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark = FALSE) {
+dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, info = list(),
+                                        watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
@@ -162,7 +167,9 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 4,
-      add.watermark = watermark
+      add.watermark = watermark,
+      info = info,
+      show.ai = TRUE
     )
   }) ## end of moduleServer
 }

@@ -10,25 +10,25 @@ dataview_plot_tsne_ui <- function(
     height,
     width,
     caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link) {
+    info
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("pltmod"),
     plotlib = "plotly",
-    info.text = info.text,
-    info.methods = info.methods,
-    info.references = info.references,
-    info.extra_link = info.extra_link,
+    info = info,
+#    info.text = info$description,
+#    info.methods = info$methods,
+#    info.references = info$references,
+#    info.extra_link = info$documentation,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height,
     label = label,
     caption = caption,
-    title = title
+    title = title,
+    show.ai = TRUE
   )
 }
 
@@ -38,6 +38,7 @@ dataview_plot_tsne_server <- function(id,
                                       r.samples = reactive(""),
                                       r.data_type = reactive("counts"),
                                       r.groupby = reactive(""),
+                                      info = list(),
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_dl <- reactiveValues()
@@ -284,15 +285,15 @@ dataview_plot_tsne_server <- function(id,
     PlotModuleServer(
       "pltmod",
       plotlib = "plotly",
-      #
-      #
+      info = info,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(100, 300) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       ## label = label, title = "t-SNE clustering",
-      add.watermark = watermark
+      add.watermark = watermark,
+      show.ai = TRUE
     )
   }) ## end of moduleServer
 }

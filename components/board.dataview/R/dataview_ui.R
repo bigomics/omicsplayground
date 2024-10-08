@@ -55,6 +55,52 @@ DataViewInputs <- function(id) {
   )
 }
 
+
+
+DATAVIEW_EXPRESSION_INFO <- list(
+  description = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. Also, the type of expression can be selected under {Data type} under Settings > Options.",
+  caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene."
+)
+
+DATAVIEW_AVERAGERANK_INFO <- list(
+  description = "Rank of the selected gene by decreasing expression. The type of expression can be selected under {Data type} under Settings > Options.",
+  caption = "Ranking of the selected gene by decreasing average expression."
+)
+
+## To provide info to UI and server (for AI chat) we need to pull out
+## info as global.
+DATAVIEW_TSNE_INFO <- list(
+  description = "T-SNE clustering of samples (or cells) colored by the expression of the gene selected. The darker blue color represents over-expression of the selected gene across samples (or cells).",
+  methods = "Clustering of the samples using the t-distributed stochastic neighbor embedding (t-SNE) method. Performed using the Rtsne R package [1].",
+  references = list(
+    list(
+      "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17",
+      "https://doi.org/10.32614/CRAN.package.Rtsne"
+    )
+  ),
+  documentation = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
+)
+
+DATAVIEW_TISSUE_INFO <- list(
+  description = "Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, the human ortholog is used to query the GTEX database.",
+  methods = "Tissue clusters computed using unsupervised clustering. Perfomed using the hierarchical clustering method from the R core stats package, then queried to the GTEx database [1].",
+  references = list(
+    list(
+      "GTEx Consortium. (2020). The GTEx Consortium atlas of genetic regulatory effects across human tissues. Science, 369(6509), 1318-1330.",
+      "https://doi.org/10.1126/science.aaz1776"
+    )
+  ),
+  caption = "Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, we use the human ortholog to query the GTEX database."
+)
+
+DATAVIEW_CORRELATION_INFO <- list(
+  description = "Barplot of the top positively and negatively correlated genes with the selected gene. Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
+  methods = "Correlation between selected gene and top positively and negatively correlated genes performed using Pearson correlation method from the R core stats package.",
+  documentation = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
+  caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene."
+)
+
+
 #' DataView module UI output function
 #'
 #' @description Renders the output part for the module as tabsetPanel object
@@ -116,8 +162,7 @@ DataViewUI <- function(id) {
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
                 title = "Gene expression",
-                info.text = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. Also, the type of expression can be selected under {Data type} under Settings > Options.",
-                caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
+                info = DATAVIEW_EXPRESSION_INFO,
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 label = "a"
               ),
@@ -125,8 +170,9 @@ DataViewUI <- function(id) {
                 ns("averagerankplot"),
                 label = "b",
                 title = "Average rank",
-                info.text = "Rank of the selected gene by decreasing expression. The type of expression can be selected under {Data type} under Settings > Options.",
-                caption = "Ranking of the selected gene by decreasing average expression.",
+                info = DATAVIEW_AVERAGERANK_INFO,
+#                info.text = "Rank of the selected gene by decreasing expression. The type of expression can be selected under {Data type} under Settings > Options.",
+#                caption = "Ranking of the selected gene by decreasing average expression.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
@@ -134,15 +180,7 @@ DataViewUI <- function(id) {
                 ns("tsneplot"),
                 label = "c",
                 title = "t-SNE clustering",
-                info.text = "T-SNE clustering of samples (or cells) colored by the expression of the gene selected.",
-                info.methods = "Clustering of the samples using the t-distributed stochastic neighbor embedding (t-SNE) method. Performed using the Rtsne R package [1]. The dark blue color represents an over-expression of the selected gene across samples (or cells).",
-                info.references = list(
-                  list(
-                    "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17",
-                    "https://doi.org/10.32614/CRAN.package.Rtsne"
-                  )
-                ),
-                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
+                info = DATAVIEW_TSNE_INFO,
                 caption = "t-SNE of samples colored by expression of selected gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -154,10 +192,11 @@ DataViewUI <- function(id) {
                 ns("correlationplot"),
                 label = "d",
                 title = "Top correlated genes",
-                info.text = "Barplot of the top positively and negatively correlated genes with the selected gene.",
-                info.methods = "Correlation between selected gene and top positively and negatively correlated genes performed using Pearson correlation method from the R core stats package. Colors are from absolute expression levels of genes, where the low and high expressions range between the light and dark colors, respectively.",
-                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
-                caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
+                info = info,
+#                info.text = DATAVIEW_CORRELATION_INFO$description,
+#                info.methods = "Correlation between selected gene and top positively and negatively correlated genes performed using Pearson correlation method from the R core stats package.",
+#                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
+#                caption = "Barplot of the top positively and negatively correlated genes with the selected gene. Darker color corresponds to higher expression of the gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
@@ -167,15 +206,11 @@ DataViewUI <- function(id) {
                 width = c("auto", "100%"),
                 label = "e",
                 title = "Tissue expression (GTEX)",
-                info.text = "Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, the human ortholog is used to query the GTEX database.",
-                info.methods = "Tissue clusters computed using unsupervised clustering. Perfomed using the hierarchical clustering method from the R core stats package, then queried to the GTEx database [1].",
-                info.references = list(
-                  list(
-                    "GTEx Consortium. (2020). The GTEx Consortium atlas of genetic regulatory effects across human tissues. Science, 369(6509), 1318-1330.",
-                    "https://doi.org/10.1126/science.aaz1776"
-                  )
-                ),
-                caption = paste("Top 15 expressing tissues for the selected gene in the tissue expression GTEx database. Colors represent tissue clusters. If species other than human, we use the human ortholog to query the GTEX database.")
+                info = DATAVIEW_TISSUE_INFO
+#                info.text = DATAVIEW_TISSUE_INFO$description,
+#                info.methods = DATAVIEW_TISSUE_INFO$methods,
+#                info.references = DATAVIEW_TISSUE_INFO$references,
+#                caption = DATAVIEW_TISSUE_INFO$caption
               )
             )
           )

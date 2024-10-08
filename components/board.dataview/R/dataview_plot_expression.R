@@ -8,8 +8,10 @@ dataview_plot_expression_ui <- function(
     label = "",
     height,
     title,
-    caption,
-    info.text) {
+    info
+#    caption,
+#    info.text
+    ) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -24,14 +26,15 @@ dataview_plot_expression_ui <- function(
     ns("pltmod"),
     title = title,
     label = label,
-    caption = caption,
+    info = info,
+#    caption = caption,
+#    info.text = info.text,
     options = options,
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
-    info.text = info.text,
     download.fmt = c("png", "pdf", "csv"),
-    #
-    height = height
+    height = height,
+    show.ai = TRUE
   )
 }
 
@@ -41,6 +44,7 @@ dataview_plot_expression_server <- function(id,
                                             r.samples = reactive(""),
                                             r.data_type = reactive("counts"),
                                             r.data_groupby = reactive("<ungrouped>"),
+                                            info = info,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -319,7 +323,9 @@ dataview_plot_expression_server <- function(id,
       download.fmt = c("png", "pdf", "csv", "obj"),
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      info = info,
+      show.ai = TRUE
     )
   }) ## end of moduleServer
 }

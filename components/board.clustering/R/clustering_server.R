@@ -733,7 +733,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
       watermark = WATERMARK,
-      labeltype = labeltype
+      labeltype = labeltype,
+      info = CLUSTERING_HEATMAP_INFO
     )
 
     clustering_plot_clustpca_server("PCAplot",

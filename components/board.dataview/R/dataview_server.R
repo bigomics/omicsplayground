@@ -174,7 +174,8 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
       r.groupby = reactive(input$data_groupby),
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      info = DATAVIEW_TSNE_INFO
     )
 
     dataview_plot_averagerank_server(
@@ -183,6 +184,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       r.gene = reactive(input$search_gene),
       r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
+      info = DATAVIEW_AVERAGERANK_INFO,
       watermark = WATERMARK
     )
 
@@ -191,6 +193,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx,
       r.gene = reactive(input$search_gene),
       r.samples = selected_samples,
+      info = DATAVIEW_CORRELATION_INFO,
       watermark = WATERMARK
     )
 
@@ -199,6 +202,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx,
       r.gene = reactive(input$search_gene),
       r.data_type = reactive(input$data_type),
+      info = DATAVIEW_TISSUE_INFO,
       watermark = WATERMARK
     )
 
@@ -209,6 +213,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
       r.data_groupby = reactive(input$data_groupby),
+      info = DATAVIEW_EXPRESSION_INFO,
       watermark = WATERMARK
     )
 
