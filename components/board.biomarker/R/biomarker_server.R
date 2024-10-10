@@ -147,7 +147,8 @@ BiomarkerBoard <- function(id, pgx) {
         list(
           input$pdx_predicted,
           input$pdx_samplefilter,
-          input$pdx_filter
+          input$pdx_filter,
+          pgx$X
         )
       },
       {
