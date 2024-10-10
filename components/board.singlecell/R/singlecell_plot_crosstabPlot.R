@@ -115,7 +115,9 @@ singlecell_plot_crosstabPlot_server <- function(id,
         y <- NULL
         if (is.gene) {
           xgene <- pgx$genes[rownames(pgx$X), ]$symbol
-          gx <- pgx$X[which(xgene == pheno), kk, drop = FALSE]
+          X <- playbase::rename_by(pgx$X, pgx$genes, "symbol")
+          pheno <- pgx$genes[pheno,]$symbol
+          gx <- X[which(xgene == pheno), kk, drop = FALSE]
           gx.highTH <- mean(gx, na.rm = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
