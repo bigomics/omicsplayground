@@ -127,7 +127,7 @@ singlecell_plot_markersplot_server <- function(id,
         markers <- intersect(toupper(markers), toupper(gene_table$symbol))
         jj <- match(markers, toupper(gene_table$symbol))
         pmarkers <- rownames(gene_table)[jj]
-        if (!all(pmarkers %in% rownames(X))/length(pmarkers)) { # go to symbol match
+        if (!all(pmarkers %in% rownames(X))) { # go to symbol match
           pmarkers <- pgx$genes[pmarkers,]$symbol
         }
         gx <- X[pmarkers, rownames(pos), drop = FALSE]
