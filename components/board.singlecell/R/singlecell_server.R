@@ -135,7 +135,7 @@ SingleCellBoard <- function(id, pgx) {
 
       shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
       shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
-      ## shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
+      shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
     })
 
     # Observe tabPanel change to update Settings visibility
