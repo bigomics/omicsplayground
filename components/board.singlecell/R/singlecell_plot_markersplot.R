@@ -127,6 +127,7 @@ singlecell_plot_markersplot_server <- function(id,
         markers <- intersect(toupper(markers), toupper(gene_table$symbol))
         jj <- match(markers, toupper(gene_table$symbol))
         pmarkers <- rownames(gene_table)[jj]
+        pmarkers <- pgx$genes[pmarkers,]$symbol
         gx <- X[pmarkers, rownames(pos), drop = FALSE]
       } else if (mrk_level == "geneset") {
         markers <- gset_collections[[1]]
