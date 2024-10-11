@@ -146,7 +146,7 @@ dataview_plot_totalcounts_server <- function(id,
           plotly_default() %>%
           plotly::layout(
             xaxis = list(title = FALSE),
-            yaxis = list(title = res$ylab),
+            yaxis = list(title = list(text = res$ylab, standoff = 25L)),
             margin = list(l = 30, r = 0, t = 0, b = 0)
           )
         fig
@@ -164,9 +164,9 @@ dataview_plot_totalcounts_server <- function(id,
           plotly_default() %>%
           plotly::layout(
             xaxis = list(title = FALSE),
-            yaxis = list(title = res$ylab),
+            yaxis = list(title = list(text = res$ylab, standoff = 25L)),
             margin = list(l = 30, r = 0, t = 0, b = 0)
-          )
+            )
         fig
       }
     }
