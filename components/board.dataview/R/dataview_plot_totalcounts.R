@@ -166,7 +166,7 @@ dataview_plot_totalcounts_server <- function(id,
             xaxis = list(title = FALSE),
             yaxis = list(title = list(text = res$ylab, standoff = 25L)),
             margin = list(l = 30, r = 0, t = 0, b = 0)
-            )
+          )
         fig
       }
     }
