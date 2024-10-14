@@ -66,6 +66,10 @@ clustering_plot_phenoplot_server <- function(id,
       pd <- plot_data()
       showlabels <- input$showlabels
       pheno <- selected_phenotypes()
+      shiny::validate(shiny::need(
+        length(pheno) > 0,
+        "Please select at least one phenotype."
+      ))
       Y <- pd[, pheno, drop = FALSE]
       pos <- pd[, c("x", "y")]
 
