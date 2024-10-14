@@ -151,7 +151,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           return()
         }
         if (input$hm_splitby == "gene") {
-          xgenes <- sort(rownames(pgx$X))
+          xgenes <- sort(rownames(getFilteredMatrix()$zx))
           shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
         }
         if (input$hm_splitby == "phenotype") {
