@@ -210,7 +210,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (mean(df$feature %in% df$symbol, na.rm = TRUE) > 0.9) {
         df$feature <- NULL
       }
-      if (mean(df$symbol == df$human_ortholog, na.rm = TRUE) > 0.9 | all(is.na(df$human_ortholog))) {
+      if (mean(df$symbol == df$human_ortholog, na.rm = TRUE) > 0.9 || all(is.na(df$human_ortholog))) {
         df$human_ortholog <- NULL
       }
 
