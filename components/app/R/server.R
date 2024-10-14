@@ -680,6 +680,7 @@ app_server <- function(input, output, session) {
         info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
         bigdash.hideTab(session, "pcsf-tab")
         bigdash.hideTab(session, "wgcna-tab")
+        bigdash.hideTab(session, "cmap-tab")
       }
 
       info("[SERVER] trigger on change dataset done!")
@@ -1136,15 +1137,15 @@ app_server <- function(input, output, session) {
 
     # Skip if error is repeated
     # Initialize variable as well
-    if (!exists("err_traceback_prev")) {
-      err_traceback_prev <<- ""
+    if (!exists("err_prev")) {
+      err_prev <<- ""
     }
-    if (err_traceback == err_traceback_prev) {
+    if (error$message == err_prev) {
       return()
     }
 
     # Save globally last error
-    err_traceback_prev <<- err_traceback
+    err_prev <<- error$message
 
     pgx_name <- NULL
     user_email <- auth$email
