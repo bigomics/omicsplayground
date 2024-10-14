@@ -171,7 +171,7 @@ SignatureBoard <- function(id, pgx,
           }
           genes <- union(genes, rx.genes)
         }
-        genes <- intersect(genes, symbols)
+        genes <- intersect(toupper(genes), symbols)
         ## map to probes
         features1 <- playbase::map_probes(pgx$genes, genes,
           column = "human_ortholog", ignore.case = TRUE
