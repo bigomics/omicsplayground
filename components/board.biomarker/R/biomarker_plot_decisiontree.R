@@ -56,13 +56,13 @@ biomarker_plot_decisiontree_server <- function(id,
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res)
+        shiny::req(is_computed())
         return(res)
       })
 
       plot.RENDER <- function() {
         res <- plot_data()
 
-        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(res)
         par(mfrow = c(1, 1), mar = c(1, 0, 2, 0))
         is.surv <- grepl("Surv", res$rf$call)[2]

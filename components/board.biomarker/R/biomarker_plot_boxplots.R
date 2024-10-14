@@ -66,6 +66,7 @@ biomarker_plot_boxplots_server <- function(id,
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res)
+        shiny::req(is_computed())
 
         ## get variables used in the tree solution
         vars <- setdiff(res$rf$frame$var, "<leaf>")
@@ -103,7 +104,6 @@ biomarker_plot_boxplots_server <- function(id,
       plot.RENDER <- function() {
         pdata <- plot_data()
 
-        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(pdata)
 
         ## vars, X, y
