@@ -67,7 +67,7 @@ dataview_plot_expression_server <- function(id,
       grpvar <- 1
       grp <- rep(NA, length(samples))
       if (groupby != "<ungrouped>") {
-        grp <- factor(as.character(pgx$Y[samples, groupby]))
+        grp <- factor(as.character(pgx$samples[samples, groupby]))
       }
       # Req to avoid error on dataset change
       shiny::req(length(grp) == length(samples))

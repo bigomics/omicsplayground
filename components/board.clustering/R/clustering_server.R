@@ -57,7 +57,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
-      var.types <- colnames(pgx$Y)
+      var.types <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999) 
       var.types <- var.types[grep("sample|patient", var.types, invert = TRUE)]
       vv <- c(var.types, rep("<none>", 10))
       var.types0 <- c("<none>", "<cluster>", var.types)
