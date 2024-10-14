@@ -133,9 +133,9 @@ SingleCellBoard <- function(id, pgx) {
       if (length(g1) == 0) g1 <- genes[1]
       if (length(g2) == 0) g2 <- genes[2]
 
-      shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
-      shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
-      ## shiny::updateSliderInput(session, "nbins", min = 0, max = 50, value = 5, step = 5)
+      ## NOTE: server=TRUE sometime not renders plot. please check. (XM)
+      shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server=TRUE)
+      shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server=TRUE)
     })
 
     # Observe tabPanel change to update Settings visibility
