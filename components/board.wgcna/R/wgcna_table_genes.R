@@ -33,6 +33,7 @@ wgcna_table_genes_server <- function(id,
 
       k <- selected_module()
       genes <- out$me.genes[[k]]
+      shiny::req(genes)
       tt <- playdata::GENE_TITLE[toupper(genes)]
       rho <- cor(out$datExpr[, genes], out$net$MEs[, k])[, 1]
 
