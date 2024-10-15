@@ -97,6 +97,7 @@ biomarker_plot_featurerank_server <- function(id,
       ) ## no sample IDs
       Y <- pgx$Y[colnames(X), cvar, drop = FALSE]
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
+      shiny::validate(shiny::need(length(kk) > 0, "Number of samples filtered is too restrictive. Change the 'Filter samples'."))
       Y <- Y[, kk, drop = FALSE]
       dim(Y)
 
