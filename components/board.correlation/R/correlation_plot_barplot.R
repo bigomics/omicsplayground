@@ -107,6 +107,7 @@ correlation_plot_barplot_server <- function(id,
 
     render_barplot <- function() {
       pd <- plot_data()
+      shiny::req(pd)
 
       playbase::pgx.stackedBarplot(
         x = pd,
