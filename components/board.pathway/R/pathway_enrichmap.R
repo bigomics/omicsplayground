@@ -12,7 +12,7 @@ compute_enrichmentmap <- function(pgx, qsig = 0.05, ntop = 120, wt = 1, contrast
   X <- pgx$gsetX
   G <- Matrix::t(pgx$GMT)
   table(rownames(G) == rownames(F))
-  G <- G[grep("^PATHWAY|^GOBP|^GOMF|^C5|^GO_BP", rownames(G)), ]
+  G <- G[grep("^PATHWAY|^GOBP|^GOMF|^C5|^GO_BP|^GO_MF", rownames(G)), ]
 
   ## take most significant genesets
   if (!is.null(contrast)) {
