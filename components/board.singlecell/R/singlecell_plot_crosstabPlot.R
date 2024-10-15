@@ -86,18 +86,18 @@ singlecell_plot_crosstabPlot_server <- function(id,
         }
         scores <- pmax(scores, 0) ## ??
       } else {
-        x <- as.character(pgx$Y[, 1])
-        x <- as.character(pgx$Y[, crosstabvar])
+        x <- as.character(pgx$samples[, 1])
+        x <- as.character(pgx$samples[, crosstabvar])
         x[is.na(x)] <- "_"
         scores <- model.matrix(~ 0 + x)
-        rownames(scores) <- rownames(pgx$Y)
+        rownames(scores) <- rownames(pgx$samples)
         colnames(scores) <- sub("^x", "", colnames(scores))
       }
 
       ## restrict to selected sample set
       kk <- head(1:nrow(scores), 1000)
       kk <- 1:nrow(scores)
-      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$samples, samplefilter())
       scores <- scores[kk, , drop = FALSE]
       scores <- scores[, which(colSums(scores) > 0), drop = FALSE]
       scores[which(is.na(scores))] <- 0
