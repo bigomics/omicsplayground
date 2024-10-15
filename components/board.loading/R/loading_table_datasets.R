@@ -226,6 +226,10 @@ loading_table_datasets_server <- function(id,
 
     shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
+      # Make sure there is a row selected
+      if (is.null(pgxfile)) {
+        return(NULL)
+      }
       pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
         message("[LoadingBoard@load_react] ERROR pgxfile not found : ", pgxfilename, "\n")
