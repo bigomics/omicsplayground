@@ -246,7 +246,7 @@ UploadBoard <- function(id,
           return(NULL)
         } else {
           if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
-              write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
+            write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
           } else { # At first raw_dir will not exist, if the user deletes and uploads a different counts it will already exist
             raw_dir(create_raw_dir(auth))
             write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
@@ -372,7 +372,7 @@ UploadBoard <- function(id,
           return(list(status = "Missing samples.csv", matrix = NULL))
         } else {
           if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
-              write.csv(df0, file.path(raw_dir(), "samples.csv"), row.names = TRUE)
+            write.csv(df0, file.path(raw_dir(), "samples.csv"), row.names = TRUE)
           }
         }
 
