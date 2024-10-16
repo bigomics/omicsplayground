@@ -1150,6 +1150,7 @@ app_server <- function(input, output, session) {
     pgx_name <- NULL
     user_email <- auth$email
     user_tab <- input$nav
+    raw_dir <- raw_dir()
 
     if (!is.null(PGX) && !is.null(PGX$name)) {
       pgx_name <- PGX$name
@@ -1157,12 +1158,16 @@ app_server <- function(input, output, session) {
       pgx_name <- "No PGX loaded when error occurred"
     }
 
+    if (is.null(raw_dir)) {
+      raw_dir <- "Not a data upload error"
+    }
+
     credential <- file.path(ETC, "hubspot_creds")
 
     # write dbg statement
     dbg("[SERVER] shiny.error triggered")
 
-    sendErrorLogToCustomerSuport(user_email, pgx_name, error = err_traceback, path_to_creds = credential)
+    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 

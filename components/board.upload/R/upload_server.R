@@ -20,7 +20,7 @@ UploadBoard <- function(id,
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     # this directory is used to save pgx files, logs, inputs, etc..
-    raw_dir <- reactiveVal(NULL)
+    raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
@@ -244,8 +244,14 @@ UploadBoard <- function(id,
         df0 <- uploaded$counts.csv
         if (is.null(df0)) {
           return(NULL)
+        } else {
+          if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
+              write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
+          } else { # At first raw_dir will not exist, if the user deletes and uploads a different counts it will already exist
+            raw_dir(create_raw_dir(auth))
+            write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
+          }
         }
-
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -364,6 +370,10 @@ UploadBoard <- function(id,
         df0 <- uploaded$samples.csv
         if (is.null(df0)) {
           return(list(status = "Missing samples.csv", matrix = NULL))
+        } else {
+          if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
+              write.csv(df0, file.path(raw_dir(), "samples.csv"), row.names = TRUE)
+          }
         }
 
         ## Single matrix counts check

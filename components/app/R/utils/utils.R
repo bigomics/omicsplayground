@@ -165,7 +165,7 @@ sever_disconnected <- function() {
   sever_crash(error = NULL)
 }
 
-sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_creds = "hubspot_creds") {
+sendErrorLogToCustomerSuport <- function(user_email, pgx_name, raw_dir, error, path_to_creds = "hubspot_creds") {
   if (!file.exists(path_to_creds)) {
     message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get credential =", path_to_creds)
     return(NULL)
@@ -182,6 +182,8 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_cr
         The user name is : {user_email}
 
         The ds name is: {pgx_name}
+
+        Upload folder is: {raw_dir}
 
           The error is:
 
