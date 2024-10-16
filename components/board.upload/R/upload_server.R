@@ -244,8 +244,11 @@ UploadBoard <- function(id,
         df0 <- uploaded$counts.csv
         if (is.null(df0)) {
           return(NULL)
+        } else {
+            if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
+                write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
+            }
         }
-
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -364,6 +367,10 @@ UploadBoard <- function(id,
         df0 <- uploaded$samples.csv
         if (is.null(df0)) {
           return(list(status = "Missing samples.csv", matrix = NULL))
+        } else {
+            if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
+                write.csv(df0, file.path(raw_dir(), "samples.csv"), row.names = TRUE)
+            }
         }
 
         ## Single matrix counts check
