@@ -388,16 +388,20 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         gx <- pgx$X[1, ]
         gx <- pgx$X[splitvar, colnames(zx)]
 
+        ## TODO if this code is revived again, for some datasets
+        ## the number of unique values in gx can be equal or
+        ## lower than k, on those cases it will crash
+
         ## estimate best K
-        within.ssratio <- sapply(1:4, function(k) {
-          km <- kmeans(gx, k)
-          km$tot.withinss / km$totss
-        })
-        within.ssratio
-        k.est <- min(which(within.ssratio < 0.10))
-        k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
-        k.est
-        k.est <- pmax(pmin(k.est, 3), 2)
+        # within.ssratio <- sapply(1:4, function(k) {
+        #   km <- kmeans(gx, k)
+        #   km$tot.withinss / km$totss
+        # })
+        # within.ssratio
+        # k.est <- min(which(within.ssratio < 0.10))
+        # k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
+        # k.est
+        # k.est <- pmax(pmin(k.est, 3), 2)
         k.est <- 2 ## for now...
 
         if (k.est == 2) {
