@@ -20,7 +20,7 @@ UploadBoard <- function(id,
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     # this directory is used to save pgx files, logs, inputs, etc..
-    raw_dir <- reactiveVal(NULL)
+    raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
