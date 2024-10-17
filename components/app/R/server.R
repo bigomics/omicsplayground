@@ -716,8 +716,8 @@ app_server <- function(input, output, session) {
       # rename gene_title name to name
       names(label_types_available)[names(label_types_available) == "gene_title"] <- "name"
 
-      # remove pos, map, tx_len (not interesting for label types)
-      label_types_available <- label_types_available[!grepl("pos|map|tx_len", names(label_types_available))]
+      # remove pos, map, tx_len, source (not interesting for label types)
+      label_types_available <- label_types_available[!grepl("pos|map|tx_len|source", names(label_types_available))]
 
       # if available, rename chr0 to Chromossome and chr to locus
       if ("chr0" %in% names(label_types_available)) {
