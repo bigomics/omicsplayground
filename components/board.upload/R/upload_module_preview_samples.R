@@ -201,7 +201,7 @@ upload_table_preview_samples_server <- function(
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(
-        any(rownames(X) %in% names(y)),
+        any(colnames(X) %in% names(y)),
         "No matches between samples and counts."
       ))
       playbase::pgx.dimPlot(
