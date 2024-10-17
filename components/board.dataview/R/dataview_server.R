@@ -183,6 +183,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       r.gene = reactive(input$search_gene),
       r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
