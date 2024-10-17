@@ -33,6 +33,7 @@ dataview_plot_averagerank_server <- function(id,
                                              r.gene = reactive(""),
                                              r.samples = reactive(""),
                                              r.data_type = reactive("counts"),
+                                             labeltype,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -111,6 +112,9 @@ dataview_plot_averagerank_server <- function(id,
       if (length(ii) > 200) {
         ii <- c(1:200, seq(201, length(mean.fc), 10))
       }
+
+      # Translate gene to labeltype
+      gene <- playbase::probe2symbol(gene, pgx$genes, labeltype(), fill_na = TRUE)
 
       fig <-
         plotly::plot_ly(
