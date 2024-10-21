@@ -131,8 +131,7 @@ upload_module_normalization_server <- function(
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-          X_subset <- head(X[order(-matrixStats::rowSds(X)), ], 1000)
-          res <- playbase::detectOutlierSamples(X_subset, plot = FALSE)
+          res <- playbase::detectOutlierSamples(X, plot = FALSE)
           is.outlier <- (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
             X <- X[, which(!is.outlier), drop = FALSE] ## also filter counts?
@@ -308,7 +307,6 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          X <- head(X[order(-matrixStats::rowSds(X)), ], 1000)
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           nb <- min(30, dim(X) / 5)
