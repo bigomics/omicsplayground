@@ -12,7 +12,8 @@ app_ui <- function(x) {
       http_only = TRUE,
       secure_only = TRUE,
       redirect = "/close",
-      same_site = "Strict"
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/cookie_nonce", x$PATH_INFO)) {
     value <- x$HTTP_HEADER_USER_COOKIE
@@ -32,8 +33,7 @@ app_ui <- function(x) {
       expiration = -1,
       http_only = TRUE,
       secure_only = TRUE,
-      redirect = "/close",
-      path = "/"
+      redirect = "/close"
     ))
   } else if (identical("/close", x$PATH_INFO)) {} else if (identical("/", x$PATH_INFO)) {
     #-------------------------------------------------------
