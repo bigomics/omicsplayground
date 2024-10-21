@@ -111,6 +111,10 @@ clustering_plot_splitmap_server <- function(id,
       annot <- filt$annot
       zx.idx <- filt$idx
 
+      shiny::validate(shiny::need(
+        ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
+
       return(list(
         zx = zx,
         annot = annot,
