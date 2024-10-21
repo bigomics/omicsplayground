@@ -22,7 +22,8 @@ app_ui <- function(x) {
       http_only = TRUE,
       secure_only = TRUE,
       redirect = "/close",
-      same_site = "Strict"
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/cookie_remove", x$PATH_INFO)) {
     return(cookies::set_cookie_response(
@@ -31,7 +32,8 @@ app_ui <- function(x) {
       expiration = -1,
       http_only = TRUE,
       secure_only = TRUE,
-      redirect = "/close"
+      redirect = "/close",
+      path = "/"
     ))
   } else if (identical("/close", x$PATH_INFO)) {} else if (identical("/", x$PATH_INFO)) {
     #-------------------------------------------------------
