@@ -131,7 +131,8 @@ upload_module_normalization_server <- function(
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-          res <- playbase::detectOutlierSamples(X, plot = FALSE)
+          X_subset <- head(X[order(-matrixStats::rowSds(X)), ], 1000)
+          res <- playbase::detectOutlierSamples(X_subset, plot = FALSE)
           is.outlier <- (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
             X <- X[, which(!is.outlier), drop = FALSE] ## also filter counts?
