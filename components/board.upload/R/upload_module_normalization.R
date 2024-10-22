@@ -307,6 +307,11 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
+          nmissing1 <- sum(is.na(X))
+          if (nmissing1 > 0) {
+            X <- playbase::imputeMissing(X, method = "SVD2")
+          }
+
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           nb <- min(30, dim(X) / 5)
