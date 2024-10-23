@@ -194,7 +194,7 @@ PlotModuleUI <- function(id,
   zoom.button <- NULL
   if (show.maximize) {
     zoom.button <- shiny::actionButton(
-      "toggle_button",
+      ns("toggle_button"),
       icon("up-right-and-down-left-from-center"),
       class = "btn-circle-xs"
     )
@@ -979,6 +979,17 @@ PlotModuleServer <- function(id,
       if (length(width) == 1) width <- c(width, 1200)
       if (length(res) == 1) res <- c(res, 1.3 * res)
 
+
+      funcX <- function() {
+        fs <- input$fullscreen
+        if (is.null(fs)) fs <- FALSE
+        if(fs) {
+          func2()
+        } else {
+          func()
+        }
+      }
+
       res.1 <- res[1]
       res.2 <- res[2]
 
@@ -1083,7 +1094,7 @@ PlotModuleServer <- function(id,
           # If the plotting function is `plotly`, add the edit button
           render <- renderFunc({
             # By default remove plotly logo from all plots
-            plot <- func() %>%
+            plot <- funcX() %>%
               plotly::config(
                 displaylogo = FALSE,
                 scrollZoom = TRUE
@@ -1115,7 +1126,7 @@ PlotModuleServer <- function(id,
                 )
             }
             plot
-          })
+          }) |> shiny::bindCache(input$fullscreen)
         } else {
           render <- renderFunc(func())
         }
