@@ -96,6 +96,12 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           gg1 <- unique(c(gg1, unlist(gg2)))
         }
         gg1 <- gg1[which(toupper(gg1) %in% toupper(pgx$genes$symbol))]
+        shiny::validate(shiny::need(
+          length(gg1) > 1,
+          tspan(
+            "Custom filtering does not match any gene. Please make sure the genes on the <custom> filter are present on your data.", js = FALSE
+          )
+        ))
         psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -189,7 +195,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
       cm <- intersect(rownames(R), rownames(zx))
       R <- R[cm, , drop = FALSE]
-      zx <- zx[cm, ]
+      zx <- zx[cm, , drop = FALSE]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2, na.rm = TRUE))
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
