@@ -193,9 +193,8 @@ PlotModuleUI <- function(id,
 
   zoom.button <- NULL
   if (show.maximize) {
-    zoom.button <- modalTrigger(
-      ns("zoombutton"),
-      ns("plotPopup"),
+    zoom.button <- shiny::actionButton(
+      "toggle_button",
       icon("up-right-and-down-left-from-center"),
       class = "btn-circle-xs"
     )
