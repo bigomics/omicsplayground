@@ -70,6 +70,7 @@ app_ui <- function(x) {
         shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
+        shiny::tags$head(shiny::tags$script(src = "custom/plotModule.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
         visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
