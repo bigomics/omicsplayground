@@ -54,6 +54,10 @@ RUN rm -fr /omicsplayground  \
 # Install fresh playbase (from same BRANCH)
 #------------------------------------------------------------
 # check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
+# TODO: temporary solution, this should go out once we rebuild base image
+RUN R -e "install.packages('ggiraph')"
+RUN R -e "BiocManager::install('TileDBArray')"
+
 RUN if [ $update_playbase = true ]; then \
     echo "Checking playbase branch ${BRANCH}"; \
     BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
@@ -70,8 +74,6 @@ fi
 RUN R -e "install.packages(c('sf'))"
 # TODO: temporary solution, this should go out once we rebuild base image
 RUN R -e "remotes::install_github('bigomics/wizardR',dependencies=FALSE)"
-RUN R -e "install.packages('ggiraph')"
-RUN R -e "BiocManager::install('TileDBArray')"
 #RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 
 #------------------------------------------------------------
