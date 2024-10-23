@@ -99,7 +99,8 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         shiny::validate(shiny::need(
           length(gg1) > 1,
           tspan(
-            "Custom filtering does not match any gene. Please make sure the genes on the <custom> filter are present on your data.", js = FALSE
+            "Custom filtering does not match any gene. Please make sure the genes on the <custom> filter are present on your data.",
+            js = FALSE
           )
         ))
         psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
