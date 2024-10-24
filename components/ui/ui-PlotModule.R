@@ -979,16 +979,21 @@ PlotModuleServer <- function(id,
       if (length(width) == 1) width <- c(width, 1200)
       if (length(res) == 1) res <- c(res, 1.3 * res)
 
-
-      funcX <- function() {
+      # Fullscreen controls
+      is_fullscreen <- shiny::reactive({
         fs <- input$fullscreen
         if (is.null(fs)) fs <- FALSE
+        return(fs)
+      })
+
+      funcX <- shiny::reactive({
+        fs <- is_fullscreen()
         if(fs) {
           func2()
         } else {
           func()
         }
-      }
+      })
 
       res.1 <- res[1]
       res.2 <- res[2]
@@ -1126,7 +1131,7 @@ PlotModuleServer <- function(id,
                 )
             }
             plot
-          }) |> shiny::bindCache(input$fullscreen)
+          })
         } else {
           render <- renderFunc(func())
         }
