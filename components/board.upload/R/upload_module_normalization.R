@@ -267,11 +267,6 @@ upload_module_normalization_server <- function(
         if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
-        if(!is.null(X1)) {
-            dbg("---MNT.Z2:", paste0(batch.pars, collapse=","))
-            dbg("---MNT.Z3:", class(contrasts), "--", paste0(colnames(contrasts), collapse=", "))
-        }
-
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
