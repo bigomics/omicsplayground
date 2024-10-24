@@ -56,7 +56,7 @@ clustering_plot_phenoplot_server <- function(id,
       jj <- selected_samples()
       kk <- selected_phenotypes()
       pos <- pos[jj, ]
-      Y <- pgx$Y[jj, kk, drop = FALSE]
+      Y <- pgx$samples[jj, kk, drop = FALSE]
       ## complete dataframe for downloading
       df <- data.frame(pos, Y, check.names = FALSE)
       return(df)
