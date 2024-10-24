@@ -41,3 +41,14 @@ $(document).on('keydown', function(e) {
         }
     }
 });
+
+// Add the "click" listener for the overlay to exit full screen mode
+$(document).on('click', '#bslib-full-screen-overlay', function() {
+    var $fullScreenCard = $(this).next('.card');
+    if ($fullScreenCard.length > 0) {
+        var prefix = $(this).find('a').attr('id').split('toggle_button')[0];
+        $(this).remove();  // Remove the overlay
+        $fullScreenCard.attr('data-full-screen', 'false');
+        Shiny.setInputValue(prefix + 'fullscreen', false);
+    }
+});
