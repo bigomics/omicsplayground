@@ -177,7 +177,6 @@ upload_module_normalization_server <- function(
           dbg("[normalization_server:correctedX] Batch correction method = ", m)
           mm <- unique(c("uncorrected", m))
 
-          ##  pars <- get_model_parameters()
           pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
           batch.pars <- input$bec_param
           if (any(grepl("<autodectect>", batch.pars))) {
@@ -267,6 +266,11 @@ upload_module_normalization_server <- function(
 
         if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
+
+        if(!is.null(X1)) {
+            dbg("---MNT.Z2:", paste0(batch.pars, collapse=","))
+            dbg("---MNT.Z3:", class(contrasts), "--", paste0(colnames(contrasts), collapse=", "))
+        }
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
@@ -657,7 +661,6 @@ upload_module_normalization_server <- function(
       ## Plot UI
       ## ------------------------------------------------------------------
 
-
       getBatchParams <- eventReactive(
         {
           list(r_counts(), r_samples(), r_contrasts())
@@ -683,10 +686,6 @@ upload_module_normalization_server <- function(
           return(all.pars)
         }
       )
-
-
-
-
 
       output$normalization <- shiny::renderUI({
         ## reactive
@@ -754,11 +753,17 @@ upload_module_normalization_server <- function(
                     selected = "SVD2"
                   )
                 ),
-                ## shiny::checkboxInput(ns("remove_xxl"), label = "Treat XXL as NA", value = FALSE),
+                ## shiny::checkboxInput(ns("remove_xxl"), label="Treat XXL as NA", value=FALSE),
                 br()
               ),
               bslib::accordion_panel(
                 title = "2. Normalization",
+                shiny::div(style="display: flex; align-items: center; justify-content: space-between;",
+                shiny::p("Normalize the data using one of the following methods:"),
+                shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <i class='fa-solid fa-circle-info' style='color: blue; font-size: 20px;'></i>
+                      </a>")
+                  ),
                 shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = TRUE),
                 shiny::conditionalPanel(
                   "input.normalize == true",
