@@ -28,3 +28,16 @@ $(document).on('click', '[id$="toggle_button"]', function() {
         Shiny.setInputValue(prefix + 'fullscreen', false);
       }
 });
+
+// Add the "Escape" key listener to exit full screen mode
+$(document).on('keydown', function(e) {
+    if (e.key === "Escape") {
+        var $fullScreenCard = $('.card[data-full-screen="true"]');
+        if ($fullScreenCard.length > 0) {
+            var prefix = $fullScreenCard.prev('#bslib-full-screen-overlay').find('a').attr('id').split('toggle_button')[0];
+            $fullScreenCard.prev('#bslib-full-screen-overlay').remove();  // Remove the overlay
+            $fullScreenCard.attr('data-full-screen', 'false');
+            Shiny.setInputValue(prefix + 'fullscreen', false);
+        }
+    }
+});
