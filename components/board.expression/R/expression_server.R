@@ -188,6 +188,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0"
         colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
       }
+
       aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
       gene.annot <- pgx$genes[rownames(mx), aa]
       gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
@@ -294,19 +295,6 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         res <- res[sel, , drop = FALSE]
       }
-
-      ## just show top 10
-      ## AZ: Disabled on Sept 1. useless?
-      ## if (length(input$gx_top10) && input$gx_top10) {
-      ##   fx <- as.numeric(res[, fx.col])
-      ##  names(fx) <- rownames(res)
-      ##  pp <- unique(c(
-      ##    head(names(sort(-fx[which(fx > 0)])), 10),
-      ##    head(names(sort(fx[which(fx < 0)])), 10)
-      ##  ))
-      ##  res <- res[pp, , drop = FALSE]
-      ##  res <- res[order(-res[, fx.col]), , drop = FALSE]
-      ## }
 
       if (nrow(res) == 0) {
         shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
