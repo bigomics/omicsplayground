@@ -30,3 +30,12 @@
   min-height: 0rem;
   margin-bottom: 0rem;
 }
+
+.info-icon {
+  color: #198fd1 !important;
+  cursor: pointer;
+  font-size: 1.25em;
+}
+.info-icon:hover {
+  color: rgba(25,143,209,.8) !important;
+}
