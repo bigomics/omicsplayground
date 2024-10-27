@@ -758,12 +758,13 @@ upload_module_normalization_server <- function(
               ),
               bslib::accordion_panel(
                 title = "2. Normalization",
-                shiny::div(style="display: flex; align-items: center; justify-content: space-between;",
-                shiny::p("Normalize the data using one of the following methods:"),
-                shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;",
+                  shiny::p("Normalize the data using one of the following methods:"),
+                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
-                  ),
+                ),
                 shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = TRUE),
                 shiny::conditionalPanel(
                   "input.normalize == true",
