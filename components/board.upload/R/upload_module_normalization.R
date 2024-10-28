@@ -823,8 +823,8 @@ upload_module_normalization_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                  title = "4. Batch-effect correction",
-                  shiny::div(
+                title = "4. Batch-effect correction",
+                shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
                   shiny::p("Automatically remove unwanted variation from your data."),
                   shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
