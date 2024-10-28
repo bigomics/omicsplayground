@@ -14,6 +14,8 @@ upload_table_preview_counts_ui <- function(id) {
 
 upload_table_preview_counts_server <- function(
     id,
+    create_raw_dir,
+    auth,
     uploaded,
     checked_matrix,
     checklist,
@@ -247,6 +249,22 @@ upload_table_preview_counts_server <- function(
           type = "error"
         )
         return()
+      }
+
+      # Save file
+      if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
+        file.copy(
+          from = input$counts_csv$datapath,
+          to = paste0(raw_dir(), "/counts.csv"),
+          overwrite = TRUE
+        )
+      } else { # At first raw_dir will not exist, if the user deletes and uploads a different counts it will already exist
+        raw_dir(create_raw_dir(auth))
+        file.copy(
+          from = input$counts_csv$datapath,
+          to = paste0(raw_dir(), "/counts.csv"),
+          overwrite = TRUE
+        )
       }
 
       sel <- grep("count|expression|abundance", tolower(input$counts_csv$name))
