@@ -88,45 +88,6 @@ dataview_plot_totalcounts_server <- function(id,
       return(res)
     })
 
-
-    ## plot.RENDER <- function() {
-    ##  res <- plot_data()
-    ##  shiny::req(res)
-    ##  df <- res[[1]]
-    ## ---- xlab ------ ###
-    ##  names.arg <- df$sample
-    ##  if (length(names.arg) > 20) { names.arg <- "" }
-    ##  cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
-    ##  par(mar = c(8, 4, 2, 0.5), mgp = c(2.2, 0.8, 0))
-    ## if (res$sampleqc_plottype == "Average total abundance") { ## AZ
-    ##    barplot(
-    ##        df$counts / 1e6,
-    ##        las = 3,
-    ##        border = NA,
-    ##        col = rgb(0.2, 0.5, 0.8, 0.8),
-    ##        cex.names = cex.names,
-    ##        cex.lab = 1,
-    ##        ylab = paste(res$ylab, "(M)"),
-    ##        ylim = c(0, max(df$counts) / 1e6) * 1.1,
-    ##        names.arg = names.arg
-    ##    )
-    ## } else if (res$sampleqc_plottype == "Number of detected features") {
-    ##    barplot(
-    ##        df$ndetectedfeat,
-    ##        las = 3,
-    ##        border = NA,
-    ##        col = rgb(0.2, 0.5, 0.8, 0.8),
-    ##        cex.names = cex.names,
-    ##        cex.lab = 1,
-    ##        ylab = paste(res$ylab, "(M)"),
-    ##        ylim = c(0, max(df$ndetectedfeat) / 1e6) * 1.1,
-    ##        names.arg = names.arg
-    ##     )
-    ## }
-    ## }
-
-    ## modal_plot.RENDER <- function() { plot.RENDER() }
-
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
