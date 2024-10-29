@@ -48,7 +48,8 @@ upload_module_normalization_server <- function(
         shiny::req(r_counts())
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_counts()
-
+        samples <- r_samples()
+        
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
@@ -59,32 +60,39 @@ upload_module_normalization_server <- function(
 
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
+          ## ADD ALERT: NOT RECOMMENDED FOR scRNA-seq.
           counts[which(counts == 0)] <- NA
         }
 
-        m <- input$normalization_method
-        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
-        X <- log2(counts + prior) ## NEED RETHINK
-
-        ## if (input$remove_xxl) {
-        ##     dbg("[normalization_server:imputedX]: Assign NA to outlier features")
-        ##     X[playbase::is.xxl(X, z = 10)] <- NA
-        ## }
-
-        nmissing <- sum(is.na(X))
-        dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
-        if (nmissing > 0 && input$impute) {
-          m <- input$impute_method
-          dbg("[normalization_server:imputedX] Imputing data using ", m)
-          X <- playbase::imputeMissing(X, method = m)
-          dbg("[normalization_server:imputedX] dim.imputedX = ", dim(X))
+        if (upload_datatype == "scRNA-seq") {
+            dbg("[normalization_server:imputedX] scRNA-seq.")
+            dbg("[normalization_server:imputedX] Creating seurat object.")
+            SOBJ <- Seurat::CreateSeuratObject(counts = counts, assay = "RNA", meta.data = samples)
+            dbg("[normalization_server:imputedX] Checking MT contamination. Removing cells with %MT > 5%.")
+            ## ....
+            ## ....
+            X <- SOBJ@assays$RNA
+            return(X)
         } else {
-          dbg("[normalization_server:imputedX] No imputation.")
-        }
+            m <- input$normalization_method
+            prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
+            X <- log2(counts + prior) ## NEED RETHINK
 
-        dbg("[normalization_server:imputedX] Checking for duplicated features")
-        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-        X
+            nmissing <- sum(is.na(X))
+            dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
+            if (nmissing > 0 && input$impute) {
+                m <- input$impute_method
+                dbg("[normalization_server:imputedX] Imputing data using ", m)
+                X <- playbase::imputeMissing(X, method = m)
+                dbg("[normalization_server:imputedX] dim.imputedX = ", dim(X))
+            } else {
+                dbg("[normalization_server:imputedX] No imputation.")
+            }
+
+            dbg("[normalization_server:imputedX] Checking for duplicated features")
+            X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+            X
+        }
       })
 
       ## Normalize
@@ -94,55 +102,56 @@ upload_module_normalization_server <- function(
         if (input$normalize) {
           m <- input$normalization_method
           dbg("[normalization_server:normalizedX] Normalizing data using ", m)
-          ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
-          ref <- NULL
-          if (m == "reference") {
-            ref <- input$ref_gene
-            shiny::validate(shiny::need(
-              isTruthy(ref),
-              tspan("Please select reference gene", js = FALSE)
-            ))
-            shiny::req(ref)
-          }
-          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-          m0 <- m
-          if (m == "CPM+quantile") m0 <- "CPM"
-          normCounts <- playbase::pgx.countNormalization(
-            pmax(2**X - prior, 0),
-            method = m0, ref = ref
-          )
-          X <- log2(normCounts + prior)
-          if (m == "CPM+quantile") {
-            dbg("[normalization_server:normalizedX] Applying quantile normalization")
-            X <- limma::normalizeQuantiles(X)
+          if (upload_datatype == "scRNA-seq") {
+              dbg("[normalization_server:normalizedX] scRNAseq: performing logNormalization with Seurat")
+              SOBJ <- Seurat::NormalizeData(SOBJ,
+                                            normalization.method = "LogNormalize",
+                                            scale.factor = 10000)
+              X <- SOBJ@assays$RNA
+          } else {          
+              ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
+              ref <- NULL
+              if (m == "reference") {
+                  ref <- input$ref_gene
+                  shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js = FALSE)))
+                  shiny::req(ref)
+              }
+              prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+              m0 <- m
+              if (m == "CPM+quantile") m0 <- "CPM"
+              normCounts <- playbase::pgx.countNormalization(pmax(2**X - prior, 0), method = m0, ref = ref)
+              X <- log2(normCounts + prior)
+              if (m == "CPM+quantile") {
+                  dbg("[normalization_server:normalizedX] Applying quantile normalization")
+                  X <- limma::normalizeQuantiles(X)
+              }
           }
         } else {
-          dbg("[normalization_server:normalizedX] Skipping normalization")
+              dbg("[normalization_server:normalizedX] Skipping normalization")
         }
         return(X)
-      })
+        })
 
       ## Remove outliers
       cleanX <- reactive({
-        shiny::req(dim(normalizedX()))
-        X <- normalizedX()
-
-        if (input$remove_outliers) {
-          threshold <- input$outlier_threshold
-          dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-          res <- playbase::detectOutlierSamples(X, plot = FALSE)
-          is.outlier <- (res$z.outlier > threshold)
-          if (any(is.outlier) && !all(is.outlier)) {
-            X <- X[, which(!is.outlier), drop = FALSE] ## also filter counts?
+          shiny::req(dim(normalizedX()))
+          X <- normalizedX()
+          if (upload_datatype != "scRNA-seq" && input$remove_outliers) {
+              threshold <- input$outlier_threshold
+              dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
+              res <- playbase::detectOutlierSamples(X, plot = FALSE)
+              is.outlier <- (res$z.outlier > threshold)
+              if (any(is.outlier) && !all(is.outlier)) {
+                  X <- X[, which(!is.outlier), drop = FALSE] ## also filter counts?
+              }
           }
-        }
-        pos <- NULL
-        if (NCOL(X) > 1) {
-          pos <- irlba::irlba(X, nv = 2)$v
-          rownames(pos) <- colnames(X)
-        }
-        dbg("[normalization_server:cleanX] dim.cleanX = ", dim(X))
-        list(X = X, pos = pos)
+          pos <- NULL
+          if (NCOL(X) > 1) {
+              pos <- irlba::irlba(X, nv = 2)$v
+              rownames(pos) <- colnames(X)
+          }
+          dbg("[normalization_server:cleanX] dim.cleanX = ", dim(X))
+          list(X = X, pos = pos)
       })
 
       ## Technical and biological effects correction
@@ -159,71 +168,76 @@ upload_module_normalization_server <- function(
         X1 <- X1[, kk, drop = FALSE]
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
+        
+        if (upload_datatype != "scRNA-seq") {
 
-        nmissing <- sum(is.na(X1))
-        if (!input$batchcorrect) {
-          dbg("[normalization_server:correctedX] Data not corrected for batch effects")
-          if (nmissing == 0) {
-            cx <- list(X = X1)
-          } else {
-            dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
-            dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
-            impX1 <- playbase::imputeMissing(X1, method = "SVD2")
-            cx <- list(X = X1, impX1 = impX1)
-          }
+            nmissing <- sum(is.na(X1))
+            if (!input$batchcorrect) {
+                dbg("[normalization_server:correctedX] Data not corrected for batch effects")
+                if (nmissing == 0) {
+                    cx <- list(X = X1)
+                } else {
+                    dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
+                    dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
+                    impX1 <- playbase::imputeMissing(X1, method = "SVD2")
+                    cx <- list(X = X1, impX1 = impX1)
+                }
+            } else {
+                m <- input$bec_method
+                dbg("[normalization_server:correctedX] Batch correction method = ", m)
+                mm <- unique(c("uncorrected", m))
+
+                pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
+                batch.pars <- input$bec_param
+                if (any(grepl("<autodectect>", batch.pars))) {
+                    batch.pars <- pars$batch.pars
+                }
+                if (any(grepl("<none>", batch.pars))) { batch.pars <- "" }
+                batch.pars <- intersect(batch.pars, colnames(samples))
+
+                if (length(batch.pars)) {
+                    batch <- samples[, batch.pars, drop = FALSE] ## matrix
+                } else {
+                    batch <- NULL
+                }
+
+                pheno <- pars$pheno
+                if (nmissing == 0) {
+                    xlist <- playbase::runBatchCorrectionMethods(
+                                           X = X1,
+                                           batch = batch,
+                                           y = pheno,
+                                           methods = mm,
+                                           ntop = Inf
+                                       )
+                    cx <- list(X = xlist[[m]])
+                } else {
+                    dbg("[normalization_server:correctedX] missing values in X1")
+                    impX1 <- playbase::imputeMissing(X1, method = "SVD2")
+                    xlist <- playbase::runBatchCorrectionMethods(
+                                           X = impX1,
+                                           batch = batch,
+                                           y = pheno,
+                                           methods = mm,
+                                           ntop = Inf
+                                       )
+                    bc_impX1 <- xlist[[m]] ## Batch corrected, imputed
+                    jj <- which(is.na(X1), arr.ind = TRUE)
+                    xlist[[m]][jj] <- NA ## Batch corrected, with original NAs restored
+                    cx <- list(X = xlist[[m]], impX1 = bc_impX1)
+                }
+            }
+            shiny::removeModal()
         } else {
-          m <- input$bec_method
-          dbg("[normalization_server:correctedX] Batch correction method = ", m)
-          mm <- unique(c("uncorrected", m))
-
-          pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
-          batch.pars <- input$bec_param
-          if (any(grepl("<autodectect>", batch.pars))) {
-            batch.pars <- pars$batch.pars
-          }
-          if (any(grepl("<none>", batch.pars))) {
-            batch.pars <- ""
-          }
-          batch.pars <- intersect(batch.pars, colnames(samples))
-
-          if (length(batch.pars)) {
-            batch <- samples[, batch.pars, drop = FALSE] ## matrix
-          } else {
-            batch <- NULL
-          }
-
-          pheno <- pars$pheno
-          if (nmissing == 0) {
-            xlist <- playbase::runBatchCorrectionMethods(
-              X = X1,
-              batch = batch,
-              y = pheno,
-              methods = mm,
-              ntop = Inf
-            )
-            cx <- list(X = xlist[[m]])
-          } else {
-            dbg("[normalization_server:correctedX] missing values in X1")
-            impX1 <- playbase::imputeMissing(X1, method = "SVD2")
-            xlist <- playbase::runBatchCorrectionMethods(
-              X = impX1,
-              batch = batch,
-              y = pheno,
-              methods = mm,
-              ntop = Inf
-            )
-            bc_impX1 <- xlist[[m]] ## Batch corrected, imputed
-            jj <- which(is.na(X1), arr.ind = TRUE)
-            xlist[[m]][jj] <- NA ## Batch corrected, with original NAs restored
-            cx <- list(X = xlist[[m]], impX1 = bc_impX1)
-          }
+            cx <- list(X = X1)
         }
-        shiny::removeModal()
 
         return(cx)
+
       })
 
       ## return object
+      ## Fix for scRNAseq
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
@@ -239,58 +253,62 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        X0 <- imputedX()
-        X1 <- cleanX()$X ## normalized+cleaned
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        batch.pars <- input$bec_param
+        if (upload_datatype != "scRNA-seq") {
 
-        nmissing0 <- sum(is.na(X0))
-        if (nmissing0 > 0) {
-          X0 <- playbase::imputeMissing(X0, method = "SVD2")
+            X0 <- imputedX()
+            X1 <- cleanX()$X ## normalized+cleaned
+            samples <- r_samples()
+            contrasts <- r_contrasts()
+            batch.pars <- input$bec_param
+
+            nmissing0 <- sum(is.na(X0))
+            if (nmissing0 > 0) {
+                X0 <- playbase::imputeMissing(X0, method = "SVD2")
+            }
+
+            nmissing1 <- sum(is.na(X1))
+            if (nmissing1 > 0) {
+                X1 <- playbase::imputeMissing(X1, method = "SVD2")
+            }
+
+            kk <- intersect(colnames(X1), colnames(X0))
+            kk <- intersect(kk, rownames(samples))
+            kk <- intersect(kk, rownames(contrasts))
+            X1 <- X1[, kk, drop = FALSE]
+            X0 <- X0[, kk, drop = FALSE]
+            contrasts <- contrasts[kk, , drop = FALSE]
+            samples <- samples[kk, , drop = FALSE]
+
+            if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
+            if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
+
+            methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
+            xlist.init <- list("uncorrected" = X0, "normalized" = X1)
+
+            shiny::withProgress(
+                       message = "Comparing batch-correction methods...",
+                       value = 0.3,
+                       {
+                           res <- playbase::compare_batchcorrection_methods(
+                                                X1, samples,
+                                                pheno = NULL,
+                                                contrasts = contrasts,
+                                                batch.pars = batch.pars,
+                                                clust.method = "tsne",
+                                                methods = methods,
+                                                evaluate = FALSE, ## no score computation
+                                                xlist.init = xlist.init
+                                            )
+                       }
+                   )
+        } else {
+            res <- NULL
         }
-
-        nmissing1 <- sum(is.na(X1))
-        if (nmissing1 > 0) {
-          X1 <- playbase::imputeMissing(X1, method = "SVD2")
-        }
-
-        kk <- intersect(colnames(X1), colnames(X0))
-        kk <- intersect(kk, rownames(samples))
-        kk <- intersect(kk, rownames(contrasts))
-        X1 <- X1[, kk, drop = FALSE]
-        X0 <- X0[, kk, drop = FALSE]
-        contrasts <- contrasts[kk, , drop = FALSE]
-        samples <- samples[kk, , drop = FALSE]
-
-        if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
-        if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
-
-        methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        xlist.init <- list("uncorrected" = X0, "normalized" = X1)
-
-        shiny::withProgress(
-          message = "Comparing batch-correction methods...",
-          value = 0.3,
-          {
-            res <- playbase::compare_batchcorrection_methods(
-              X1, samples,
-              pheno = NULL,
-              contrasts = contrasts,
-              batch.pars = batch.pars,
-              clust.method = "tsne",
-              methods = methods,
-              evaluate = FALSE, ## no score computation
-              xlist.init = xlist.init
-            )
-          }
-        )
-
-        ## ## take out failed methods
-        ## xlist.ok <- sapply(res$xlist, function(x) !any(class(x)=="try-error"))
-        ## pos.ok <- sapply(res$pos, function(x) !any(class(x)=="try-error"))
-        ## res$xlist <- res$xlist[which(xlist.ok && pos.ok)]
-        ## res$pos <- res$pos[which(xlist.ok && pos.ok)]
+            ## ## take out failed methods
+            ## xlist.ok <- sapply(res$xlist, function(x) !any(class(x)=="try-error"))
+            ## pos.ok <- sapply(res$pos, function(x) !any(class(x)=="try-error"))
+            ## res$xlist <- res$xlist[which(xlist.ok && pos.ok)]
+            ## res$pos <- res$pos[which(xlist.ok && pos.ok)]
 
         return(res)
       })
@@ -895,14 +913,14 @@ upload_module_normalization_server <- function(
                                       col_widths = c(6, 6),
                                       row_heights = c(3, 3),
                                       heights_equal = "row",
-                                      PlotModuleUI(
-                                          ns("plot2"),
-                                          title = "Dropout rate",
-                                          info.text = dropout.infotext,
-                                          caption = dropout.infotext,
-                                          options = dropout.options,
-                                          height = c("auto", "100%"),
-                                          show.maximize = FALSE),
+                                      ## PlotModuleUI(
+                                      ##     ns("plot2"),
+                                      ##     title = "Dropout rate",
+                                      ##     info.text = dropout.infotext,
+                                      ##     caption = dropout.infotext,
+                                      ##     options = dropout.options,
+                                      ##     height = c("auto", "100%"),
+                                      ##     show.maximize = FALSE),
                                       PlotModuleUI(
                                           ns("plot1"),
                                           title = "Dimensional reduction",
