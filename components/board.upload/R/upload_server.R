@@ -92,10 +92,6 @@ UploadBoard <- function(id,
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
-      #      all_species <- sort(unique(c(all_species, "Plasmodium falciparum")))
-      #      all_species <- all_species[grep("Homo sapiens|Mus musculus|Rattus norvegicus",
-      #        all_species, invert = TRUE )]
-      #      all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
       if (!auth$options$ENABLE_ANNOT) {
         all_species <- setdiff(all_species, "No organism")
       }
@@ -517,19 +513,6 @@ UploadBoard <- function(id,
       }
     )
 
-    ## output$probe_type_ui <- shiny::renderUI({
-    ##   if (input$selected_datatype == "metabolomics") {
-    ##     div(
-    ##       p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
-    ##       shiny::selectInput(
-    ##         ns("selected_probe"),
-    ##         label = NULL,
-    ##         choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
-    ##       )
-    ##     )
-    ##   }
-    ## })
-
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
       counts_ui <- wizardR::wizard_step(
@@ -546,7 +529,7 @@ UploadBoard <- function(id,
         step_id = "step_samples",
         server = TRUE,
         upload_table_preview_samples_ui(
-          ns("samples_preview")
+            ns("samples_preview")
         )
       )
 
@@ -557,6 +540,14 @@ UploadBoard <- function(id,
         upload_table_preview_contrasts_ui(
           ns("contrasts_preview")
         )
+      )
+
+      ## AZ: could simply use normalization_panel?
+      sc_normalization_panel <- wizardR::wizard_step(
+        step_title = "Step 4: QC/BC",
+        step_id = "step_qc",
+        server = TRUE,
+        upload_module_normalization_ui(ns("checkqc"))
       )
 
       normalization_panel <- wizardR::wizard_step(
@@ -584,12 +575,9 @@ UploadBoard <- function(id,
           counts_ui,
           samples_ui,
           contrasts_ui,
-          ## sc_normalization_panel,
+          sc_normalization_panel,
           compute_panel,
-          options = list(
-            navigation = "buttons",
-            finish = "Compute!"
-          )
+          options = list(navigation = "buttons", finish = "Compute!")
         )
       } else {
         wizard <- wizardR::wizard(
@@ -1209,9 +1197,6 @@ UploadBoard <- function(id,
         compute_input$counts <- counts
         compute_input$X <- logX
         compute_input$impX <- impX
-        ## compute_input$counts <- normalized_sc$counts()
-        ## compute_input$X <- normalized_sc$X()
-        ## compute_input$impX <- normalized_sc$impX()
         compute_input$norm_method <- "CPM"
       } else {
         compute_input$counts <- normalized$counts()

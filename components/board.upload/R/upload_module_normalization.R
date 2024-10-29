@@ -112,7 +112,6 @@ upload_module_normalization_server <- function(
             method = m0, ref = ref
           )
           X <- log2(normCounts + prior)
-          ## if (FALSE && input$quantile_norm) {
           if (m == "CPM+quantile") {
             dbg("[normalization_server:normalizedX] Applying quantile normalization")
             X <- limma::normalizeQuantiles(X)
@@ -702,6 +701,10 @@ upload_module_normalization_server <- function(
 
         batcheff.infotext <-
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
+        
+        dropout.infotext <- "In single cell transcriptomics, the dropout rate indicates the fraction of features (genes) that have zero expression values (undetected) in a cell. Dropouts can be caused by low efficiency in capturing mRNA molecules during library prep, issues arising during reverse transcription of cDNA molecules and/or PCR amplification, but also zero, low, or stochastic gene expression levels in individual cells. Sparsity in scRNA-seq data matrix is directly affected by drop-out rate."
+
+        dimred.infotext <- "T-distributed stochastic neighbor embedding (t-SNE) and uniform manifold approximation and projection (UMAP) are non-linear dimensionality reduction techniques highly used for visualizing scRNA-seq matrix. Each dot in the t-SNE or UMAP map is an individual cell. Cells are colored by variable of interest. Enable to visualize biologically meaningful cell clusters, and batch-effects in the data."
 
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"), "Plot type:", c("heatmap", "ratio plot"),
@@ -728,6 +731,24 @@ upload_module_normalization_server <- function(
           )
         )
 
+        dropout.options <- tagList(
+          shiny::radioButtons(
+            ns("dropout_plottype"),
+            label = "Plot type:",
+            choices = c("boxplot", "histogram"),
+            selected = "histogram", inline = FALSE
+          )
+        )
+
+        dimred.options <- tagList(
+          shiny::radioButtons(
+            ns("dimred_plottype"),
+            label = "Plot type:",
+            choices = c("tSNE", "UMAP"),
+            selected = "UMAP", inline = FALSE
+          )
+        )
+
         navmenu <- tagList(
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
@@ -751,10 +772,7 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
                       "SVDimpute" = "SVD2"
-                      # "Zero" = "zero",
-                      # "MinDet",
-                      # "MinProb"
-                      # "NMF"
+                      ## "Zero" = "zero", "MinDet", "MinProb", "NMF"
                     ),
                     selected = "SVD2"
                   )
@@ -778,21 +796,18 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
                     choices = if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-                      c(
-                        "maxMedian", "maxSum", ## "TMM",
-                        "reference"
-                      )
+                      c("maxMedian", "maxSum", "reference")
+                    } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+                      c("CPM", "logNormalize")
                     } else {
-                      c(
-                        "CPM", "CPM+quantile", ## "quantile",
-                        "maxMedian", "maxSum", ## "TMM",
-                        "reference"
-                      )
+                        c("CPM", "CPM+quantile", "maxMedian", "maxSum", "reference")
                     },
-                    selected = ifelse(grepl("proteomics", upload_datatype(), ignore.case = TRUE),
-                      "maxMedian", "CPM+quantile"
-                    )
-                  ),
+                    selected = if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+                       c("maxMedian", "CPM+quantile")
+                  } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+                      "logNormalize"
+                  }
+               ),
                   shiny::conditionalPanel(
                     "input.normalization_method == 'reference'",
                     ns = ns,
@@ -800,12 +815,9 @@ upload_module_normalization_server <- function(
                       ns("ref_gene"), NULL,
                       choices = NULL,
                       multiple = FALSE,
-                      options = list(
-                        placeholder = tspan("Choose gene...", js = FALSE)
-                      )
+                      options = list(placeholder = tspan("Choose gene...", js = FALSE))
                     )
                   )
-                  ## shiny::checkboxInput(ns("quantile_norm"), "Add quantile normalization", value = TRUE)
                 ),
                 br()
               ),
@@ -813,12 +825,8 @@ upload_module_normalization_server <- function(
                 title = "3. Remove outliers",
                 shiny::p("Automatically detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
-                shiny::conditionalPanel(
-                  "input.remove_outliers == true",
-                  ns = ns,
-                  shiny::sliderInput(
-                    ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1
-                  )
+                shiny::conditionalPanel("input.remove_outliers == true", ns = ns,
+                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
                 ),
                 br()
               ),
@@ -859,9 +867,7 @@ upload_module_normalization_server <- function(
                       choices = batch_params, ## reactive
                       selected = batch_params[1],
                       multiple = TRUE,
-                      options = list(
-                        placeholder = "Select..."
-                      )
+                      options = list(placeholder = "Select...")
                     ),
                     shiny::br()
                   )
@@ -874,60 +880,92 @@ upload_module_normalization_server <- function(
         )
 
         ## ---------------------------- UI ----------------------------------
-        ui <- div(
-          bslib::as_fill_carrier(),
-          style = "width: 100%; display: flex; ",
-          bslib::layout_columns(
-            col_widths = c(2, 10),
-            style = "margin-bottom: 20px;",
-            heights_equal = "row",
-            ## ----------- menu ------------
-            navmenu,
-            ## ----------- canvas ------------
-            bslib::layout_columns(
-              col_widths = c(6, 6),
-              row_heights = c(3, 3),
-              heights_equal = "row",
-              PlotModuleUI(
-                ns("plot2"),
-                title = "Missing values",
-                info.text = missing.infotext,
-                caption = missing.infotext,
-                options = missing.options,
-                height = c("auto", "100%"),
-                show.maximize = FALSE
-              ),
-              PlotModuleUI(
-                ns("plot1"),
-                title = "Normalization",
-                options = norm.options,
-                info.text = normalization.infotext,
-                height = c("auto", "100%"),
-                show.maximize = FALSE
-              ),
-              PlotModuleUI(
-                ns("plot3"),
-                title = "Outliers detection",
-                info.text = score.infotext,
-                caption = score.infotext,
-                options = outlier.options,
-                height = c("auto", "100%"),
-                show.maximize = FALSE
-              ),
-              PlotModuleUI(
-                ns("plot4"),
-                title = "Batch-effects correction",
-                options = NULL,
-                info.text = batcheff.infotext,
-                height = c("auto", "100%"),
-                show.maximize = FALSE
-              )
+        if(upload_datatype() == "scRNA-seq") {
+            ui <- div(
+                bslib::as_fill_carrier(),
+                style = "width: 100%; display: flex; ",
+                bslib::layout_columns(
+                           col_widths = c(2, 10),
+                           style = "margin-bottom: 20px;",
+                           heights_equal = "row",
+                           ## ----------- menu ------------
+                           navmenu,
+                           ## ----------- canvas ------------
+                           bslib::layout_columns(
+                                      col_widths = c(6, 6),
+                                      row_heights = c(3, 3),
+                                      heights_equal = "row",
+                                      PlotModuleUI(
+                                          ns("plot2"),
+                                          title = "Dropout rate",
+                                          info.text = dropout.infotext,
+                                          caption = dropout.infotext,
+                                          options = dropout.options,
+                                          height = c("auto", "100%"),
+                                          show.maximize = FALSE),
+                                      PlotModuleUI(
+                                          ns("plot1"),
+                                          title = "Dimensional reduction",
+                                          info.text = dimred.infotext,
+                                          caption = dropout.infotext,
+                                          options = dimred.options,
+                                          height = c("auto", "100%"),
+                                          show.maximize = FALSE),
+                                      )
+                       ),
+                div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
+            )            
+        } else {
+            ui <- div(
+                bslib::as_fill_carrier(),
+                style = "width: 100%; display: flex; ",
+                bslib::layout_columns(
+                           col_widths = c(2, 10),
+                           style = "margin-bottom: 20px;",
+                           heights_equal = "row",
+                           ## ----------- menu ------------
+                           navmenu,
+                           ## ----------- canvas ------------
+                           bslib::layout_columns(
+                                      col_widths = c(6, 6),
+                                      row_heights = c(3, 3),
+                                      heights_equal = "row",
+                                      PlotModuleUI(
+                                          ns("plot2"),
+                                          title = "Missing values",
+                                          info.text = missing.infotext,
+                                          caption = missing.infotext,
+                                          options = missing.options,
+                                          height = c("auto", "100%"),
+                                          show.maximize = FALSE),
+                                      PlotModuleUI(
+                                          ns("plot1"),
+                                          title = "Normalization",
+                                          options = norm.options,
+                                          info.text = normalization.infotext,
+                                          height = c("auto", "100%"),
+                                          show.maximize = FALSE),
+                                      PlotModuleUI(
+                                          ns("plot3"),
+                                          title = "Outliers detection",
+                                          info.text = score.infotext,
+                                          caption = score.infotext,
+                                          options = outlier.options,
+                                          height = c("auto", "100%"),
+                                          show.maximize = FALSE),
+                                      PlotModuleUI(
+                                          ns("plot4"),
+                                          title = "Batch-effects correction",
+                                          options = NULL,
+                                          info.text = batcheff.infotext,
+                                          height = c("auto", "100%"),
+                                          show.maximize = FALSE),
+                                      )
+                       ),
+                div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
             )
-          ),
-          ## div(shiny::selectInput(ns("normalizationUI"),NULL,choices=TRUE),style='display:none')
-          div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
-        )
-
+        }
+        
         return(ui)
       })
 
