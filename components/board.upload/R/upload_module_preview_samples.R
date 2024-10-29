@@ -280,6 +280,13 @@ upload_table_preview_samples_server <- function(
         return()
       }
 
+      # Save file
+      file.copy(
+        from = input$samples_csv$datapath,
+        to = paste0(raw_dir(), "/samples.csv"),
+        overwrite = TRUE
+      )
+
       uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
     })
 

@@ -203,17 +203,6 @@ UploadBoard <- function(id,
     ## ================== DATA LOADING OBSERVERS ===========================
     ## =====================================================================
 
-    ## ------------------------------------------------------------------
-    ## Observer for uploading data files using fileInput widget.
-    ##
-    ## Reads in the data files from the file names, checks and
-    ## puts in the reactive values object 'uploaded'. Then
-    ## uploaded should trigger the computePGX module.
-    ## ------------------------------------------------------------------
-
-
-    last_hash <- 1234
-
     create_raw_dir <- function(auth) {
       auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
       prefix <- paste0("raw_", auth_id, "_")
@@ -242,12 +231,6 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
-        if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
-          write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
-        } else { # At first raw_dir will not exist, if the user deletes and uploads a different counts it will already exist
-          raw_dir(create_raw_dir(auth))
-          write.csv(df0, file.path(raw_dir(), "counts.csv"), row.names = TRUE)
-        }
         if (is.null(df0)) {
           return(NULL)
         }
@@ -369,12 +352,7 @@ UploadBoard <- function(id,
         df0 <- uploaded$samples.csv
         if (is.null(df0)) {
           return(list(status = "Missing samples.csv", matrix = NULL))
-        } else {
-          if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
-            write.csv(df0, file.path(raw_dir(), "samples.csv"), row.names = TRUE)
-          }
         }
-
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -1132,6 +1110,8 @@ UploadBoard <- function(id,
 
     upload_table_preview_counts_server(
       id = "counts_preview",
+      create_raw_dir = create_raw_dir,
+      auth = auth,
       uploaded = uploaded,
       checked_matrix = shiny::reactive(checked_counts()$matrix),
       checklist = checklist,
