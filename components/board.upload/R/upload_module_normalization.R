@@ -867,13 +867,7 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("bec_method"),
                     label = "Select method:",
-                    choices = c(
-                      "ComBat",
-                      "limma",
-                      "NPM" = "NPM",
-                      "RUV" = "RUV",
-                      "SVA" = "SVA"
-                    ),
+                    choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
                     selected = "SVA"
                   ),
                   shiny::conditionalPanel(
@@ -913,14 +907,6 @@ upload_module_normalization_server <- function(
                                       col_widths = c(6, 6),
                                       row_heights = c(3, 3),
                                       heights_equal = "row",
-                                      ## PlotModuleUI(
-                                      ##     ns("plot2"),
-                                      ##     title = "Dropout rate",
-                                      ##     info.text = dropout.infotext,
-                                      ##     caption = dropout.infotext,
-                                      ##     options = dropout.options,
-                                      ##     height = c("auto", "100%"),
-                                      ##     show.maximize = FALSE),
                                       PlotModuleUI(
                                           ns("plot1"),
                                           title = "Dimensional reduction",
