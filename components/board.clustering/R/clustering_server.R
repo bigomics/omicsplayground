@@ -643,7 +643,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ref <- pgx$X[, , drop = FALSE]
       if (ann.level == "gene" && ann.refset %in% names(pgx$families)) {
         gg <- pgx$families[[ann.refset]]
-        jj <- match(toupper(gg), toupper(pgx$genes$gene_name))
+        jj <- match(toupper(gg), toupper(pgx$genes$symbol))
         jj <- setdiff(jj, NA)
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]

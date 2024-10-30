@@ -92,7 +92,8 @@ clustering_plot_clusterannot_server <- function(id,
         }
         if (input$xann_level == "gene") {
           ann.types <- names(pgx$families)
-          cc <- sapply(pgx$families, function(g) length(intersect(g, rownames(pgx$X))))
+          genes <- playbase::probe2symbol(rownames(pgx$X), pgx$genes, "symbol", fill_na = TRUE)
+          cc <- sapply(pgx$families, function(g) length(intersect(toupper(g), toupper(genes))))
           ann.types <- ann.types[cc >= 3]
         }
         ann.types <- setdiff(ann.types, "<all>") ## avoid slow...
