@@ -118,7 +118,7 @@ upload_module_normalization_server <- function(
               m <- "LogNormalize"
               sf <- 10000
               SOBJ <- Seurat::NormalizeData(SOBJ, normalization.method = m, scale.factor = sf)
-              X <- SOBJ@assays$RNA$data
+              X <- as.matrix(SOBJ@assays$RNA$data)
           } else {          
               ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
               ref <- NULL
@@ -334,28 +334,32 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          nmissing1 <- sum(is.na(X))
-          if (nmissing1 > 0) {
-            X <- playbase::imputeMissing(X, method = "SVD2")
+          if (upload_datatype() != "scRNA-seq") {
+
+              nmissing1 <- sum(is.na(X))
+              if (nmissing1 > 0) {
+                  X <- playbase::imputeMissing(X, method = "SVD2")
+              }
+
+              out <- playbase::detectOutlierSamples(X, plot = FALSE)
+
+              nb <- min(30, dim(X) / 5)
+              scaledX <- t(scale(t(scale(t(X), scale = FALSE))))
+              corX <- cor(t(scaledX))
+       
+              pos <- list()
+              pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
+              for (i in 1:length(pos)) {
+                  rownames(pos[[i]]) <- rownames(scaledX)
+                  colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
+              }
+
+              out$pos <- pos
+              out$corX <- corX
+              out
+          } else {
+              out <- NULL
           }
-
-          out <- playbase::detectOutlierSamples(X, plot = FALSE)
-
-          nb <- min(30, dim(X) / 5)
-          scaledX <- t(scale(t(scale(t(X), scale = FALSE))))
-          corX <- cor(t(scaledX))
-
-          ## standard dim reduction methods
-          pos <- list()
-          pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
-          for (i in 1:length(pos)) {
-            rownames(pos[[i]]) <- rownames(scaledX)
-            colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
-          }
-
-          out$pos <- pos
-          out$corX <- corX
-          out
         }
       )
 
@@ -366,323 +370,311 @@ upload_module_normalization_server <- function(
       plot_normalization <- function() {
         rX <- r_counts()
         X0 <- imputedX()
-        ## X1 <- normalizedX()
         X1 <- cleanX()$X
-        main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
-        if (input$norm_plottype == "boxplot") {
-          if (ncol(X0) > 40) {
-            jj <- sample(ncol(X0), 40)
-            ii <- rownames(X0) ## names!
-            ## just downsampling for boxplots
-            if (length(ii) > 2000) ii <- sample(ii, 2000)
-            X0 <- X0[ii, jj]
-            X1 <- X1[ii, jj]
-            rX <- rX[ii, jj]
-          }
+        if (upload_datatype() != "scRNA-seq") {
 
-          par(mfrow = c(1, 2), mar = c(6, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-          boxplot(
-            X0,
-            main = "raw",
-            ylim = range(X0, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X0, na.rm = TRUE)),
-            las = 2,
-            ylab = tspan("counts (log2)", js = FALSE),
-            xlab = "",
-            cex.axis = 0.8,
-            cex = 0.5
-          )
+            main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
-          boxplot(
-            X1,
-            main = main.tt,
-            ylim = range(X1, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X1, na.rm = TRUE)),
-            las = 2,
-            ylab = "",
-            xlab = "",
-            cex.axis = 0.8,
-            cex = 0.5
-          )
+            if (input$norm_plottype == "boxplot") {
+                if (ncol(X0) > 40) {
+                    jj <- sample(ncol(X0), 40)
+                    ii <- rownames(X0) ## names!
+                    ## just downsampling for boxplots
+                    if (length(ii) > 2000) ii <- sample(ii, 2000)
+                    X0 <- X0[ii, jj]
+                    X1 <- X1[ii, jj]
+                    rX <- rX[ii, jj]
+                }
+
+                par(mfrow = c(1, 2), mar = c(6, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+                boxplot(
+                    X0,
+                    main = "raw",
+                    ylim = range(X0, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X0, na.rm = TRUE)),
+                    las = 2,
+                    ylab = tspan("counts (log2)", js = FALSE),
+                    xlab = "",
+                    cex.axis = 0.8,
+                    cex = 0.5)
+
+                boxplot(
+                    X1,
+                    main = main.tt,
+                    ylim = range(X1, na.rm = TRUE) + 0.2 * c(-1, 1) * diff(range(X1, na.rm = TRUE)),
+                    las = 2,
+                    ylab = "",
+                    xlab = "",
+                    cex.axis = 0.8,
+                    cex = 0.5)
+            }
+
+            if (input$norm_plottype == "histogram") {
+                xmax0 <- quantile(X0[which(rX > 0)], probs = 0.999, na.rm = TRUE)
+                xmax1 <- quantile(X1[which(rX > 0)], probs = 0.999, na.rm = TRUE)
+                xmin0 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
+                xmin1 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
+                xmin0 <- min(xmin0, 0)
+                xmin1 <- min(xmin1, 0)
+                xlim0 <- c(xmin0, xmax0)
+                xlim1 <- c(xmin1, xmax1)
+                par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+                hist(X0, breaks = 70, main = "raw", xlim = xlim0,
+                     las = 1, xlab = tspan("counts (log2)", js = FALSE))
+                hist(X1, breaks = 60, main = main.tt, xlim = xlim1,
+                     las = 1, xlab = tspan("counts (log2)", js = FALSE), ylab = "")
+            }
+
+            if (input$norm_plottype == "density") {
+                xmax0 <- quantile(X0[which(rX > 0)], probs = 0.999, na.rm = TRUE)
+                xmax1 <- quantile(X1[which(rX > 0)], probs = 0.999, na.rm = TRUE)
+                xmin0 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
+                xmin1 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
+                xmin0 <- min(xmin0, 0)
+                xmin1 <- min(xmin1, 0)
+                xlim0 <- c(xmin0, xmax0)
+                xlim1 <- c(xmin1, xmax1)
+                par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+                playbase::gx.hist(X0, breaks = 70, main = "raw", xlim = xlim0,
+                                  las = 1, xlab = tspan("counts (log2)", js = FALSE))
+                playbase::gx.hist(X1, breaks = 60, main = main.tt, xlim = xlim1,
+                                  las = 1, xlab = tspan("counts (log2)", js = FALSE), ylab = "")
+            }
         }
 
-        if (input$norm_plottype == "histogram") {
-          xmax0 <- quantile(X0[which(rX > 0)], probs = 0.999, na.rm = TRUE)
-          xmax1 <- quantile(X1[which(rX > 0)], probs = 0.999, na.rm = TRUE)
-          xmin0 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
-          xmin1 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
-          xmin0 <- min(xmin0, 0)
-          xmin1 <- min(xmin1, 0)
-          xlim0 <- c(xmin0, xmax0)
-          xlim1 <- c(xmin1, xmax1)
-          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-          hist(X0,
-            breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = tspan("counts (log2)", js = FALSE)
-          )
-          hist(X1,
-            breaks = 60, main = main.tt, xlim = xlim1,
-            las = 1, xlab = tspan("counts (log2)", js = FALSE), ylab = ""
-          )
-        }
-
-        if (input$norm_plottype == "density") {
-          xmax0 <- quantile(X0[which(rX > 0)], probs = 0.999, na.rm = TRUE)
-          xmax1 <- quantile(X1[which(rX > 0)], probs = 0.999, na.rm = TRUE)
-          xmin0 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
-          xmin1 <- quantile(X1[which(rX > 0)], probs = 0.001, na.rm = TRUE)
-          xmin0 <- min(xmin0, 0)
-          xmin1 <- min(xmin1, 0)
-          xlim0 <- c(xmin0, xmax0)
-          xlim1 <- c(xmin1, xmax1)
-
-          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-          playbase::gx.hist(X0,
-            breaks = 70, main = "raw", xlim = xlim0,
-            las = 1, xlab = tspan("counts (log2)", js = FALSE)
-          )
-
-          playbase::gx.hist(X1,
-            breaks = 60, main = main.tt, xlim = xlim1,
-            las = 1, xlab = tspan("counts (log2)", js = FALSE), ylab = ""
-          )
-        }
       }
 
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_counts()
         X1 <- imputedX()
-        X0 <- X0[rownames(X1), ] ## remove duplicates
+        X0 <- X0[rownames(X1), , drop = FALSE] ## remove duplicates
 
-        has.zeros <- any(X0 == 0, na.rm = TRUE)
-        if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
-          plot.new()
-          text(0.5, 0.5, "No missing values", cex = 1.2)
-        } else if (FALSE && any(is.na(X0)) && !any(is.na(X1))) {
-          X0[!is.na(X0)] <- 2
-          X0[is.na(X0)] <- 1
-          par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.5, 0.5), mgp = c(2.2, 0.85, 0))
-          playbase::gx.imagemap(X0, cex = -1)
-          title("Missing values patterns in raw data", cex.main = 0.8)
+        if (upload_datatype() != "scRNA-seq") {
 
-          X1[!is.na(X1)] <- 2
-          X1[is.na(X1)] <- 1
-          playbase::gx.imagemap(X1, cex = -1)
-          title("No missing values in imputed data", cex.main = 0.8)
-        } else {
-          ii <- which(is.na(X0))
-          if (isolate(input$zero_as_na)) {
-            ii <- which(is.na(X0) | X0 == 0)
-          }
-          q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
-          X1[X1 > q999] <- NA
-          h <- hist(X1, breaks = 80, plot = FALSE, las = 1)
-          hh <- h$breaks
+            has.zeros <- any(X0 == 0, na.rm = TRUE)
+            if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
+                plot.new()
+                text(0.5, 0.5, "No missing values", cex = 1.2)
+            } else if (FALSE && any(is.na(X0)) && !any(is.na(X1))) {
+                X0[!is.na(X0)] <- 2
+                X0[is.na(X0)] <- 1
+                par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.5, 0.5), mgp = c(2.2, 0.85, 0))
+                playbase::gx.imagemap(X0, cex = -1)
+                title("Missing values patterns in raw data", cex.main = 0.8)
 
-          ## set zero value to 1, NA values to 2
-          X2 <- 1 * is.na(X0)
-          if (input$zero_as_na) X2[X0 == 0] <- 1
-          jj <- head(order(-apply(X2, 1, sd)), 200)
-          X2 <- X2[jj, ]
-
-          par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), tcl = -0.15, mgp = c(2.2, 0.2, 0))
-
-          if (length(ii) > 0) {
-            hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2)", las = 1)
-            hist(X1[ii], breaks = hh, add = TRUE, col = "red", las = 1)
-          } else {
-            hist(X1, breaks = hh, main = "", xlab = "expression (log2)", las = 1)
-          }
-
-          if (input$missing_plottype == "heatmap") {
-            if (any(X2 > 0)) {
-              ## NA heatmap
-              par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
-              playbase::gx.imagemap(X2, cex = -1)
-              title("missing values patterns", cex.main = 1.2)
+                X1[!is.na(X1)] <- 2
+                X1[is.na(X1)] <- 1
+                playbase::gx.imagemap(X1, cex = -1)
+                title("No missing values in imputed data", cex.main = 0.8)
             } else {
-              plot.new()
-              text(0.5, 0.5, "no missing values")
-            }
-          }
+                ii <- which(is.na(X0))
+                if (isolate(input$zero_as_na)) {
+                    ii <- which(is.na(X0) | X0 == 0)
+                }
+                q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
+                X1[X1 > q999] <- NA
+                h <- hist(X1, breaks = 80, plot = FALSE, las = 1)
+                hh <- h$breaks
 
-          if (input$missing_plottype == "ratio plot") {
-            if (any(X2 > 0)) {
-              ## NA ratio plot
-              par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
-              x.avg <- rowMeans(X1, na.rm = TRUE)
-              x.nar <- rowMeans(is.na(X0))
-              x.avg2 <- cut(x.avg, breaks = 20)
-              x.nar2 <- tapply(1:nrow(X0), x.avg2, function(i) mean(is.na(X0[i, , drop = FALSE])))
-              aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
-              barplot(rbind(x.nar2, 1 - x.nar2),
-                beside = FALSE, names.arg = aa, las = 1,
-                xlab = "average intensity (log2)", ylab = "missing value ratio"
-              )
-              title("missingness vs. average intensity")
-            } else {
-              plot.new()
-              text(0.5, 0.5, "no missing values")
+                ## set zero value to 1, NA values to 2
+                X2 <- 1 * is.na(X0)
+                if (input$zero_as_na) X2[X0 == 0] <- 1
+                jj <- head(order(-apply(X2, 1, sd)), 200)
+                X2 <- X2[jj, , drop = FALSE]
+
+                par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), tcl = -0.15, mgp = c(2.2, 0.2, 0))
+
+                if (length(ii) > 0) {
+                    hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2)", las = 1)
+                    hist(X1[ii], breaks = hh, add = TRUE, col = "red", las = 1)
+                } else {
+                    hist(X1, breaks = hh, main = "", xlab = "expression (log2)", las = 1)
+                }
+
+                if (input$missing_plottype == "heatmap") {
+                    if (any(X2 > 0)) {
+                        ## NA heatmap
+                        par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
+                        playbase::gx.imagemap(X2, cex = -1)
+                        title("missing values patterns", cex.main = 1.2)
+                    } else {
+                        plot.new()
+                        text(0.5, 0.5, "no missing values")
+                    }
+                }
+
+                if (input$missing_plottype == "ratio plot") {
+                    if (any(X2 > 0)) {
+                        ## NA ratio plot
+                        par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
+                        x.avg <- rowMeans(X1, na.rm = TRUE)
+                        x.nar <- rowMeans(is.na(X0))
+                        x.avg2 <- cut(x.avg, breaks = 20)
+                        x.nar2 <- tapply(1:nrow(X0), x.avg2, function(i) mean(is.na(X0[i, , drop = FALSE])))
+                        aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
+                        barplot(rbind(x.nar2, 1 - x.nar2),
+                                beside = FALSE, names.arg = aa, las = 1,
+                                xlab = "average intensity (log2)", ylab = "missing value ratio")
+                        title("missingness vs. average intensity")
+                    } else {
+                        plot.new()
+                        text(0.5, 0.5, "no missing values")
+                    }
+                }
             }
-          }
         }
+
       }
 
       ## sample outlier PCA plot
       plot.outlierPCA <- function(pos, z, z0, shownames) {
-        is.outlier <- (z > z0)
-        col1 <- "grey70"
-        ## col1 <- res.outliers$dbscan$cluster + 1
-        cex1 <- cut(nrow(pos),
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
-        cex1 <- 3 * as.numeric(as.character(cex1))
-        pos <- playbase::uscale(pos)
 
-        ## How about plotly??
-        plot(pos,
-          col = col1, cex = 0.8 * cex1, pch = 20, las = 1,
-          xlim = c(-0.1, 1.1), ylim = c(-0.1, 1.1),
-          xlab = "PC1", ylab = "PC2", main = "outliers"
-        )
+          if (upload_datatype() != "scRNA-seq") {
 
-        if (shownames) {
-          pos1 <- pos
-          j <- which(is.outlier)
-          if (length(j)) pos1 <- pos[-j, , drop = FALSE]
-          text(pos1, rownames(pos1), cex = 0.85, offset = 0.8, pos = 1:4)
-        }
+              is.outlier <- (z > z0)
+              col1 <- "grey70"
+              ## col1 <- res.outliers$dbscan$cluster + 1
+              cex1 <- cut(nrow(pos),
+                          breaks = c(0, 40, 100, 250, 1000, 999999),
+                          c(1, 0.85, 0.7, 0.55, 0.4))
+              cex1 <- 3 * as.numeric(as.character(cex1))
+              pos <- playbase::uscale(pos)
 
-        if (any(is.outlier)) {
-          j <- which(is.outlier)
-          points(pos[j, , drop = FALSE], col = "red", cex = 0.8 * cex1, lwd = 3, pch = 1)
-          outlier.name <- rownames(pos)[j]
-          text(pos[j, 1], pos[j, 2], outlier.name, cex = 1.0, offset = 0.8, pos = 1:4)
-        }
+              ## How about plotly??
+              plot(pos,
+                   col = col1, cex = 0.8 * cex1, pch = 20, las = 1,
+                   xlim = c(-0.1, 1.1), ylim = c(-0.1, 1.1),
+                   xlab = "PC1", ylab = "PC2", main = "outliers")
+
+              if (shownames) {
+                  pos1 <- pos
+                  j <- which(is.outlier)
+                  if (length(j)) pos1 <- pos[-j, , drop = FALSE]
+                  text(pos1, rownames(pos1), cex = 0.85, offset = 0.8, pos = 1:4)
+              }
+
+              if (any(is.outlier)) {
+                  j <- which(is.outlier)
+                  points(pos[j, , drop = FALSE], col = "red", cex = 0.8 * cex1, lwd = 3, pch = 1)
+                  outlier.name <- rownames(pos)[j]
+                  text(pos[j, 1], pos[j, 2], outlier.name, cex = 1.0, offset = 0.8, pos = 1:4)
+              }
+
+          }
+
       }
 
       ## sample outlier scores
       plot_outliers <- function() {
-        res <- results_outlier_methods()
-        z0 <- as.numeric(input$outlier_threshold)
-        zscore <- res$z.outlier
-        Z <- res$Z
-        pos <- res$pos[["pca"]]
-        ## plottype <- input$outlier_plottype
-        plottype <- "pca"
-        if (plottype == "pca") {
-          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-          barplot(zscore,
-            main = "outlier score", ylab = "z-score",
-            las = 1, ylim = c(0, max(7, 1.2 * max(Z))),
-          )
-          abline(h = z0, lty = 3, lwd = 1.5, col = "red")
-          plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
-        }
 
-        if (plottype == "heatmap") {
-          par(mfrow = c(1, 2), mar = c(0, 3, 0, 1), mgp = c(2.1, 0.8, 0))
-          playbase::gx.heatmap(res$corX,
-            sym = TRUE, mar = c(1, 12), keysize = 0.4,
-            cexCol = 0.0001, scale = "none", key = FALSE
-          )
-        }
+          if (upload_datatype() != "scRNA-seq") {
+
+              res <- results_outlier_methods()
+              z0 <- as.numeric(input$outlier_threshold)
+              zscore <- res$z.outlier
+              Z <- res$Z
+              pos <- res$pos[["pca"]]
+              plottype <- "pca"
+              if (plottype == "pca") {
+                  par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+                  barplot(zscore,
+                          main = "outlier score", ylab = "z-score",
+                          las = 1, ylim = c(0, max(7, 1.2 * max(Z))))
+                  abline(h = z0, lty = 3, lwd = 1.5, col = "red")
+                  plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
+              }
+              if (plottype == "heatmap") {
+                  par(mfrow = c(1, 2), mar = c(0, 3, 0, 1), mgp = c(2.1, 0.8, 0))
+                  playbase::gx.heatmap(res$corX, sym = TRUE, mar = c(1, 12), keysize = 0.4,
+                                       cexCol = 0.0001, scale = "none", key = FALSE)
+              }
+
+          }
+
       }
 
       plot_correction <- function() {
-        if (input$batchcorrect) {
-          plot_before_after()
-        } else {
-          plot_all_methods()
-        }
+          if (upload_datatype() != "scRNA-seq") {
+              if (input$batchcorrect) {
+                  plot_before_after()
+              } else {
+                  plot_all_methods()
+              }
+          }
       }
 
       plot_all_methods <- function() {
-        res <- results_correction_methods()
-        out.res <- results_outlier_methods()
-        shiny::req(res)
-        shiny::req(out.res)
 
-        methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
-        ## methods <- intersect(methods, names(res$pos))
-        ## pos.list <- res$pos[methods]
-        pos.list <- res$pos
-        ## get same positions as after outlier detection
-        pos0 <- out.res$pos[["pca"]]
-        pos.list <- c(list("uncorrected" = pos0), pos.list)
-        #        names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
-        #        names(pos.list) <- sub("limma", "auto-limma", names(pos.list))
+          if (upload_datatype() != "scRNA-seq") {
+              res <- results_correction_methods()
+              out.res <- results_outlier_methods()
+              shiny::req(res)
+              shiny::req(out.res)
+              
+              methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
+              pos.list <- res$pos
+              ## get same positions as after outlier detection
+              pos0 <- out.res$pos[["pca"]]
+              pos.list <- c(list("uncorrected" = pos0), pos.list)
+              pheno <- res$pheno
+              xdim <- length(pheno)
+              col1 <- factor(pheno)
+              cex1 <- cut(xdim, breaks = c(0, 40, 100, 250, 1000, 999999),
+                          c(1, 0.85, 0.7, 0.55, 0.4))
+              cex1 <- 2.5 * as.numeric(as.character(cex1))
+              par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
+              for (m in methods) {
+                  if (m %in% names(pos.list)) {
+                      plot(pos.list[[m]], col = col1, cex = cex1, pch = 20)
+                  } else {
+                      plot.new()
+                      text(0.45, 0.5, "method failed")
+                  }
+                  title(m, cex.main = 1.5)
+              }
+          }   
 
-        pheno <- res$pheno
-        xdim <- length(pheno)
-        col1 <- factor(pheno)
-        cex1 <- cut(xdim,
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
-        cex1 <- 2.5 * as.numeric(as.character(cex1))
-        par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
-        for (m in methods) {
-          if (m %in% names(pos.list)) {
-            plot(
-              pos.list[[m]],
-              col = col1,
-              cex = cex1,
-              pch = 20
-            )
-          } else {
-            plot.new()
-            text(0.45, 0.5, "method failed")
-          }
-          title(m, cex.main = 1.5)
-        }
       }
 
       plot_before_after <- function() {
-        out.res <- results_outlier_methods()
-        res <- results_correction_methods()
-        ## get same positions as after outlier detection
-        ## pos0 <- res$pos[["normalized"]]
-        pos0 <- out.res$pos[["pca"]]
-        method <- input$bec_method
 
-        if (!method %in% names(res$pos)) {
-          plot.new()
-          text(0.45, 0.5, "method failed")
-          return(NULL)
-        }
+          if (upload_datatype() != "scRNA-seq") {
+              out.res <- results_outlier_methods()
+              res <- results_correction_methods()
+              ## get same positions as after outlier detection
+              pos0 <- out.res$pos[["pca"]]
+              method <- input$bec_method
 
-        if (!input$batchcorrect) {
-          pos1 <- pos0
-        } else {
-          pos1 <- res$pos[[method]]
-        }
+              if (!method %in% names(res$pos)) {
+                  plot.new()
+                  text(0.45, 0.5, "method failed")
+                  return(NULL)
+              }
 
-        kk <- intersect(rownames(pos0), rownames(pos1))
-        pos0 <- pos0[kk, ]
-        pos1 <- pos1[kk, ]
+              if (!input$batchcorrect) {
+                  pos1 <- pos0
+              } else {
+                  pos1 <- res$pos[[method]]
+              }
 
-        ## pheno <- r_contrasts()[,1]
-        pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
-        pheno <- pheno[rownames(pos0)]
-        col1 <- factor(pheno)
-        cex1 <- cut(nrow(pos1),
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
-        cex1 <- 2.7 * as.numeric(as.character(cex1))
-        #        method <- sub("ComBat", "auto-ComBat", method)
-        #        method <- sub("limma", "auto-limma", method)
-        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-        plot(pos0,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
-          main = "uncorrected", xlab = "PC1", ylab = "PC2"
-        )
-        plot(pos1,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
-          main = method, xlab = "PC1", ylab = "PC2"
-        )
+              kk <- intersect(rownames(pos0), rownames(pos1))
+              pos0 <- pos0[kk, , drop = FALSE]
+              pos1 <- pos1[kk, , drop = FALSE]
+
+              pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
+              pheno <- pheno[rownames(pos0)]
+              col1 <- factor(pheno)
+              cex1 <- cut(nrow(pos1), breaks = c(0, 40, 100, 250, 1000, 999999),
+                          c(1, 0.85, 0.7, 0.55, 0.4))
+              cex1 <- 2.7 * as.numeric(as.character(cex1))
+              par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+              plot(pos0, col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
+                   main = "uncorrected", xlab = "PC1", ylab = "PC2")
+              plot(pos1, col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
+                   main = method, xlab = "PC1", ylab = "PC2")
+          }
+
       }
 
       ## ------------------------------------------------------------------
