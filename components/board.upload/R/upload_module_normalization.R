@@ -64,14 +64,25 @@ upload_module_normalization_server <- function(
           counts[which(counts == 0)] <- NA
         }
 
-        if (upload_datatype == "scRNA-seq") {
+        if (upload_datatype() == "scRNA-seq") {
             dbg("[normalization_server:imputedX] scRNA-seq.")
             dbg("[normalization_server:imputedX] Creating seurat object.")
-            SOBJ <- Seurat::CreateSeuratObject(counts = counts, assay = "RNA", meta.data = samples)
-            dbg("[normalization_server:imputedX] Checking MT contamination. Removing cells with %MT > 5%.")
-            ## ....
-            ## ....
-            X <- SOBJ@assays$RNA
+            SOBJ <- Seurat::CreateSeuratObject(counts = counts,
+                                               assay = "RNA",
+                                               meta.data = samples,
+                                               min.cells = 5,
+                                               min.features = 3)
+            dbg("[normalization_server:imputedX] Removing cells with %MT > 5% (if any).")
+            hh <- grep("^MT-", rownames(SOBJ@assays$RNA$counts))
+            if (any(hh)) {
+                SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^MT-")
+            }
+            hh <- grep("^Mt-", rownames(SOBJ@assays$RNA$counts))
+            if (any(hh)) {
+                SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^Mt-")
+            }
+            SOBJ <- subset(SOBJ, subset = nFeature_RNA > 200 & percent.mt < 5)
+            X <- SOBJ@assays$RNA$counts
             return(X)
         } else {
             m <- input$normalization_method
@@ -102,12 +113,12 @@ upload_module_normalization_server <- function(
         if (input$normalize) {
           m <- input$normalization_method
           dbg("[normalization_server:normalizedX] Normalizing data using ", m)
-          if (upload_datatype == "scRNA-seq") {
+          if (upload_datatype() == "scRNA-seq") {
               dbg("[normalization_server:normalizedX] scRNAseq: performing logNormalization with Seurat")
-              SOBJ <- Seurat::NormalizeData(SOBJ,
-                                            normalization.method = "LogNormalize",
-                                            scale.factor = 10000)
-              X <- SOBJ@assays$RNA
+              m <- "LogNormalize"
+              sf <- 10000
+              SOBJ <- Seurat::NormalizeData(SOBJ, normalization.method = m, scale.factor = sf)
+              X <- SOBJ@assays$RNA$data
           } else {          
               ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
               ref <- NULL
@@ -136,19 +147,23 @@ upload_module_normalization_server <- function(
       cleanX <- reactive({
           shiny::req(dim(normalizedX()))
           X <- normalizedX()
-          if (upload_datatype != "scRNA-seq" && input$remove_outliers) {
-              threshold <- input$outlier_threshold
-              dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-              res <- playbase::detectOutlierSamples(X, plot = FALSE)
-              is.outlier <- (res$z.outlier > threshold)
-              if (any(is.outlier) && !all(is.outlier)) {
-                  X <- X[, which(!is.outlier), drop = FALSE] ## also filter counts?
+          if (upload_datatype() != "scRNA-seq") {
+              if (input$remove_outliers) {
+                  threshold <- input$outlier_threshold
+                  dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
+                  res <- playbase::detectOutlierSamples(X, plot = FALSE)
+                  is.outlier <- (res$z.outlier > threshold)
+                  if (any(is.outlier) && !all(is.outlier)) {
+                      X <- X[, which(!is.outlier), drop = FALSE] ## also filter counts?
+                  }
               }
-          }
-          pos <- NULL
-          if (NCOL(X) > 1) {
-              pos <- irlba::irlba(X, nv = 2)$v
-              rownames(pos) <- colnames(X)
+              pos <- NULL
+              if (NCOL(X) > 1) {
+                  pos <- irlba::irlba(X, nv = 2)$v
+                  rownames(pos) <- colnames(X)
+              }
+          } else {
+              pos <- NULL
           }
           dbg("[normalization_server:cleanX] dim.cleanX = ", dim(X))
           list(X = X, pos = pos)
@@ -160,16 +175,14 @@ upload_module_normalization_server <- function(
         X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
-
-        ## recompute chosed correction method with full
-        ## matrix. previous was done on shortened matrix.
+          
         kk <- intersect(colnames(X1), rownames(samples))
         kk <- intersect(kk, rownames(contrasts))
         X1 <- X1[, kk, drop = FALSE]
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
         
-        if (upload_datatype != "scRNA-seq") {
+        if (upload_datatype() != "scRNA-seq") {
 
             nmissing <- sum(is.na(X1))
             if (!input$batchcorrect) {
@@ -241,10 +254,14 @@ upload_module_normalization_server <- function(
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
-        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-        dbg("[normalization_server:correctedCounts] Generating counts. Prior=", prior)
-        counts <- pmax(2**X - prior, 0)
-        counts
+        if (upload_datatype() != "scRNA-seq") {
+            prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+            dbg("[normalization_server:correctedCounts] Generating counts. Prior=", prior)
+            counts <- pmax(2**X - prior, 0)
+            counts
+        } else {
+            counts <- pmax(exp(X) - 1, 0)  
+        }
       })
 
       ## ------------------------------------------------------------------
@@ -253,7 +270,7 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        if (upload_datatype != "scRNA-seq") {
+        if (upload_datatype() != "scRNA-seq") {
 
             X0 <- imputedX()
             X1 <- cleanX()$X ## normalized+cleaned
@@ -286,31 +303,25 @@ upload_module_normalization_server <- function(
             xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
             shiny::withProgress(
-                       message = "Comparing batch-correction methods...",
-                       value = 0.3,
-                       {
-                           res <- playbase::compare_batchcorrection_methods(
-                                                X1, samples,
-                                                pheno = NULL,
-                                                contrasts = contrasts,
-                                                batch.pars = batch.pars,
-                                                clust.method = "tsne",
-                                                methods = methods,
-                                                evaluate = FALSE, ## no score computation
-                                                xlist.init = xlist.init
-                                            )
+                 message = "Comparing batch-correction methods...",
+                 value = 0.3, {
+                     res <- playbase::compare_batchcorrection_methods(
+                                 X1, samples,
+                                 pheno = NULL,
+                                 contrasts = contrasts,
+                                 batch.pars = batch.pars,
+                                 clust.method = "tsne",
+                                 methods = methods,
+                                 evaluate = FALSE, ## no score computation
+                                 xlist.init = xlist.init)
                        }
                    )
         } else {
             res <- NULL
         }
-            ## ## take out failed methods
-            ## xlist.ok <- sapply(res$xlist, function(x) !any(class(x)=="try-error"))
-            ## pos.ok <- sapply(res$pos, function(x) !any(class(x)=="try-error"))
-            ## res$xlist <- res$xlist[which(xlist.ok && pos.ok)]
-            ## res$pos <- res$pos[which(xlist.ok && pos.ok)]
 
         return(res)
+
       })
 
       ## Remove?
