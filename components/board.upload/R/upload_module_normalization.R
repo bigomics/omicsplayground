@@ -27,7 +27,6 @@ upload_module_normalization_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
@@ -72,16 +71,16 @@ upload_module_normalization_server <- function(
                                                meta.data = samples,
                                                min.cells = 5,
                                                min.features = 3)
-            dbg("[normalization_server:imputedX] Removing cells with %MT > 5% (if any).")
-            hh <- grep("^MT-", rownames(SOBJ@assays$RNA$counts))
-            if (any(hh)) {
-                SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^MT-")
-            }
-            hh <- grep("^Mt-", rownames(SOBJ@assays$RNA$counts))
-            if (any(hh)) {
-                SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^Mt-")
-            }
-            SOBJ <- subset(SOBJ, subset = nFeature_RNA > 200 & percent.mt < 5)
+            ## dbg("[normalization_server:imputedX] Removing cells with %MT > 5% (if any).")
+            ## hh <- grep("^MT-", rownames(SOBJ@assays$RNA$counts))
+            ## if (any(hh)) {
+            ##     SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^MT-")
+            ## }
+            ## hh <- grep("^Mt-", rownames(SOBJ@assays$RNA$counts))
+            ## if (any(hh)) {
+            ##     SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^Mt-")
+            ## }
+            ## SOBJ <- subset(SOBJ, subset = nFeature_RNA > 200 & percent.mt < 5)
             X <- SOBJ@assays$RNA$counts
             return(X)
         } else {
@@ -110,11 +109,14 @@ upload_module_normalization_server <- function(
       normalizedX <- reactive({
         shiny::req(dim(imputedX()))
         X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
+        counts <- r_counts() ## added for scrnaseq
+        samples <- r_samples() ## added for scrnaseq
         if (input$normalize) {
           m <- input$normalization_method
           dbg("[normalization_server:normalizedX] Normalizing data using ", m)
           if (upload_datatype() == "scRNA-seq") {
               dbg("[normalization_server:normalizedX] scRNAseq: performing logNormalization with Seurat")
+              SOBJ <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
               m <- "LogNormalize"
               sf <- 10000
               SOBJ <- Seurat::NormalizeData(SOBJ, normalization.method = m, scale.factor = sf)
@@ -446,6 +448,7 @@ upload_module_normalization_server <- function(
 
       ## missing values
       plot_missingvalues <- function() {
+          
         X0 <- r_counts()
         X1 <- imputedX()
         X0 <- X0[rownames(X1), , drop = FALSE] ## remove duplicates
@@ -640,6 +643,7 @@ upload_module_normalization_server <- function(
       plot_before_after <- function() {
 
           if (upload_datatype() != "scRNA-seq") {
+
               out.res <- results_outlier_methods()
               res <- results_correction_methods()
               ## get same positions as after outlier detection
@@ -673,9 +677,53 @@ upload_module_normalization_server <- function(
                    main = "uncorrected", xlab = "PC1", ylab = "PC2")
               plot(pos1, col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
                    main = method, xlab = "PC1", ylab = "PC2")
+
           }
 
       }
+
+      ##----------------------------------## 30-10-2024.
+      ##--------Only for scRNA-seq--------##
+      ##----------------------------------##
+      plot_scRNAseq_dimred <- function() {
+
+          shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
+          counts <- r_counts()
+          samples <- r_samples()
+          contrasts <- r_contrasts()
+
+          if (upload_datatype() == "scRNA-seq") {
+              ## options(future.globals.maxSize = 8000 * 1024^2)
+              dbg("--------MNT1: OK")
+              kk <- intersect(rownames(samples), colnames(counts))
+              samples <- samples[kk, , drop = FALSE]
+              counts <- counts[, kk, drop = FALSE]
+              SOBJ <- Seurat::CreateSeuratObject(counts = counts,
+                                                 assay = "RNA",
+                                                 meta.data = samples,
+                                                 min.cells = 5,
+                                                 min.features = 3)
+              m <- "LogNormalize"
+              sf <- 10000
+              SOBJ <- Seurat::NormalizeData(SOBJ, normalization.method = m, scale.factor = sf)
+              SOBJ <- FindVariableFeatures(SOBJ, selection.method = "vst", nfeatures = 2000)
+              SOBJ <- ScaleData(SOBJ)
+              SOBJ <- RunPCA(SOBJ, features = VariableFeatures(object = SOBJ))
+              SOBJ <- FindNeighbors(SOBJ, dims = 1:10)
+              SOBJ <- FindClusters(SOBJ, resolution = 0.5)
+              SOBJ <- RunUMAP(SOBJ, dims = 1:10)
+              SOBJ <- RunTSNE(SOBJ, dims = 1:10)
+              dbg("--------MNT2: OK")
+
+              ## par(mfrow = c(1, 2), mar = c(6, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+              Seurat::DimPlot(SOBJ, label=TRUE, repel=TRUE, label.size=5, group.by="celltype")
+
+          }
+
+      }
+
+
+
 
       ## ------------------------------------------------------------------
       ## Plot UI
@@ -690,25 +738,18 @@ upload_module_normalization_server <- function(
           X <- r_counts()
           samples <- r_samples()
           contrasts <- r_contrasts()
-          pars <- playbase::get_model_parameters(
-            X,
-            samples,
-            pheno = NULL,
-            contrasts = contrasts
-          )
+          pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
           all.pars <- setdiff(colnames(samples), pars$pheno.pars)
           all.pars <- union(all.pars, pars$batch.pars)
           names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
             paste(all.pars, "*"), all.pars
           )
-          ##        all.pars <- c("<autodetect>","<none>",all.pars)
           all.pars <- c("<autodetect>", all.pars)
           return(all.pars)
         }
       )
 
       output$normalization <- shiny::renderUI({
-        ## reactive
         batch_params <- getBatchParams()
 
         score.infotext <-
@@ -1018,6 +1059,16 @@ upload_module_normalization_server <- function(
         pdf.width = 12,
         pdf.height = 6,
         add.watermark = FALSE
+      )
+
+      PlotModuleServer(
+          "plot5",
+          plotlib = "base",
+          func = plot_scRNAseq_dimred,
+          res = c(75, 120),
+          pdf.width = 12,
+          pdf.height = 6,
+          add.watermark = FALSE
       )
 
       cX <- reactive({
