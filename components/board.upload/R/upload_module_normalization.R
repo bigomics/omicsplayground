@@ -5,9 +5,8 @@
 
 
 ## =========================================================================
-## ==================== NORMALIZATION UI/SERVER =================================
+## ===================== NORMALIZATION UI/SERVER ===========================
 ## =========================================================================
-
 
 upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
@@ -56,7 +55,7 @@ upload_module_normalization_server <- function(
         if (negs > 0) {
           counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX)
         }
-
+        
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           ## ADD ALERT: NOT RECOMMENDED FOR scRNA-seq.
@@ -64,24 +63,21 @@ upload_module_normalization_server <- function(
         }
 
         if (upload_datatype() == "scRNA-seq") {
+            dbg("--------MNT000:", paste0(colnames(samples), collapse=", "))
             dbg("[normalization_server:imputedX] scRNA-seq.")
             dbg("[normalization_server:imputedX] Creating seurat object.")
-            SOBJ <- Seurat::CreateSeuratObject(counts = counts,
-                                               assay = "RNA",
-                                               meta.data = samples,
-                                               min.cells = 5,
-                                               min.features = 3)
-            ## dbg("[normalization_server:imputedX] Removing cells with %MT > 5% (if any).")
-            ## hh <- grep("^MT-", rownames(SOBJ@assays$RNA$counts))
+            SO <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
+            ## dbg("[normalization_server:imputedX] Removing cells with %MT>5% (if any).")
+            ## ss <- c("^MT-", "^Mt-")
+            ## i=1
+            ## for (i in 1:length(ss)) {
+            ## hh <- grep(ss[i], rownames(SO@assays$RNA$counts))
             ## if (any(hh)) {
-            ##     SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^MT-")
+            ##     SO[["percent.mt"]] <- PercentageFeatureSet(SO, pattern = ss[i])
             ## }
-            ## hh <- grep("^Mt-", rownames(SOBJ@assays$RNA$counts))
-            ## if (any(hh)) {
-            ##     SOBJ[["percent.mt"]] <- PercentageFeatureSet(SOBJ, pattern = "^Mt-")
-            ## }
-            ## SOBJ <- subset(SOBJ, subset = nFeature_RNA > 200 & percent.mt < 5)
-            X <- SOBJ@assays$RNA$counts
+            ## jj <- which(SO$nFeature_RNA > 200 & SO$percent.mt < 5)
+            ## SO <- subset(SO, cells = rownames(SO@meta.data)[jj])
+            X <- SO@assays$RNA$counts
             return(X)
         } else {
             m <- input$normalization_method
@@ -115,12 +111,10 @@ upload_module_normalization_server <- function(
           m <- input$normalization_method
           dbg("[normalization_server:normalizedX] Normalizing data using ", m)
           if (upload_datatype() == "scRNA-seq") {
-              dbg("[normalization_server:normalizedX] scRNAseq: performing logNormalization with Seurat")
-              SOBJ <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
-              m <- "LogNormalize"
-              sf <- 10000
-              SOBJ <- Seurat::NormalizeData(SOBJ, normalization.method = m, scale.factor = sf)
-              X <- as.matrix(SOBJ@assays$RNA$data)
+              dbg("[normalization_server:normalizedX] scRNAseq: Seurat's logNormalization")
+              SO <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
+              SO <- Seurat::NormalizeData(SO)
+              X <- as.matrix(SO@assays$RNA$data)
           } else {          
               ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
               ref <- NULL
@@ -486,7 +480,8 @@ upload_module_normalization_server <- function(
                 jj <- head(order(-apply(X2, 1, sd)), 200)
                 X2 <- X2[jj, , drop = FALSE]
 
-                par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5), tcl = -0.15, mgp = c(2.2, 0.2, 0))
+                par(mfrow = c(1, 2), mar = c(3.2, 3.2, 0.8, 0.5),
+                    tcl = -0.15, mgp = c(2.2, 0.2, 0))
 
                 if (length(ii) > 0) {
                     hist(X1[-ii], breaks = hh, main = "", xlab = "expression (log2)", las = 1)
@@ -497,7 +492,6 @@ upload_module_normalization_server <- function(
 
                 if (input$missing_plottype == "heatmap") {
                     if (any(X2 > 0)) {
-                        ## NA heatmap
                         par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
                         playbase::gx.imagemap(X2, cex = -1)
                         title("missing values patterns", cex.main = 1.2)
@@ -509,7 +503,6 @@ upload_module_normalization_server <- function(
 
                 if (input$missing_plottype == "ratio plot") {
                     if (any(X2 > 0)) {
-                        ## NA ratio plot
                         par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
                         x.avg <- rowMeans(X1, na.rm = TRUE)
                         x.nar <- rowMeans(is.na(X0))
@@ -518,7 +511,8 @@ upload_module_normalization_server <- function(
                         aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
                         barplot(rbind(x.nar2, 1 - x.nar2),
                                 beside = FALSE, names.arg = aa, las = 1,
-                                xlab = "average intensity (log2)", ylab = "missing value ratio")
+                                xlab = "average intensity (log2)",
+                                ylab = "missing value ratio")
                         title("missingness vs. average intensity")
                     } else {
                         plot.new()
@@ -685,45 +679,56 @@ upload_module_normalization_server <- function(
       ##----------------------------------## 30-10-2024.
       ##--------Only for scRNA-seq--------##
       ##----------------------------------##
-      plot_scRNAseq_dimred <- function() {
-
-          shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
+      plot_scRNAseq <- function() {
           counts <- r_counts()
           samples <- r_samples()
           contrasts <- r_contrasts()
+          kk <- intersect(rownames(samples), colnames(counts))
+          samples <- samples[kk, , drop = FALSE]
+          counts <- counts[, kk, drop = FALSE]
+          ## options(future.globals.maxSize = 8000 * 1024^2)
 
-          if (upload_datatype() == "scRNA-seq") {
-              ## options(future.globals.maxSize = 8000 * 1024^2)
-              dbg("--------MNT1: OK")
-              kk <- intersect(rownames(samples), colnames(counts))
-              samples <- samples[kk, , drop = FALSE]
-              counts <- counts[, kk, drop = FALSE]
-              SOBJ <- Seurat::CreateSeuratObject(counts = counts,
-                                                 assay = "RNA",
-                                                 meta.data = samples,
-                                                 min.cells = 5,
-                                                 min.features = 3)
-              m <- "LogNormalize"
-              sf <- 10000
-              SOBJ <- Seurat::NormalizeData(SOBJ, normalization.method = m, scale.factor = sf)
-              SOBJ <- FindVariableFeatures(SOBJ, selection.method = "vst", nfeatures = 2000)
-              SOBJ <- ScaleData(SOBJ)
-              SOBJ <- RunPCA(SOBJ, features = VariableFeatures(object = SOBJ))
-              SOBJ <- FindNeighbors(SOBJ, dims = 1:10)
-              SOBJ <- FindClusters(SOBJ, resolution = 0.5)
-              SOBJ <- RunUMAP(SOBJ, dims = 1:10)
-              SOBJ <- RunTSNE(SOBJ, dims = 1:10)
-              dbg("--------MNT2: OK")
-
-              ## par(mfrow = c(1, 2), mar = c(6, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-              Seurat::DimPlot(SOBJ, label=TRUE, repel=TRUE, label.size=5, group.by="celltype")
-
+          require(Seurat)
+          shiny::withProgress(
+                     message = "Creating Seurat object and normalizing.",
+                     value = 0.4, {
+                         SO <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
+                         SO <- Seurat::NormalizeData(SO)
+                     }
+                 )
+          shiny::withProgress(
+                     message = "Identifying variable features and scaling the data.",
+                     value = 0.2, {                                 
+                         SO <- Seurat::FindVariableFeatures(SO)
+                         SO <- Seurat::ScaleData(SO)
+                     }
+                 )
+          shiny::withProgress(
+                     message = "Computing dimensional reduction and finding cell clusters.",
+                     value = 0.1, {
+                         var_ff <- Seurat::VariableFeatures(SO)
+                         SO <- Seurat::RunPCA(SO, features = var_ff)
+                         SO <- Seurat::FindNeighbors(SO, dims = 1:10)
+                         SO <- Seurat::FindClusters(SO, resolution = 0.5)
+                         SO <- Seurat::RunUMAP(SO, dims = 1:10)
+                         SO <- Seurat::RunTSNE(SO, dims = 1:10)
+                     }
+                 )
+          jj <- match(colnames(SO@assays$RNA$data), rownames(samples))
+          SO@meta.data <- cbind(SO@meta.data,
+                                stim = samples[jj, "stim"],
+                                celltype = samples[jj, "celltype"]
+                                )
+          Var <- c("celltype", "stim", "seurat_clusters")
+          dimred <- tolower(input$dimred_plottype)
+          plist <- list()
+          i <- 1
+          for(i in 1:length(Var)) { 
+              plist[[Var[i]]] <- Seurat::DimPlot(SO, reduction = dimred,
+                                                 pt.size = 1.5, group.by = Var[i])
           }
-
+          cowplot::plot_grid(plotlist = plist)
       }
-
-
-
 
       ## ------------------------------------------------------------------
       ## Plot UI
@@ -952,7 +957,7 @@ upload_module_normalization_server <- function(
                                       row_heights = c(3, 3),
                                       heights_equal = "row",
                                       PlotModuleUI(
-                                          ns("plot1"),
+                                          ns("plot5"),
                                           title = "Dimensional reduction",
                                           info.text = dimred.infotext,
                                           caption = dropout.infotext,
@@ -1064,7 +1069,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
           "plot5",
           plotlib = "base",
-          func = plot_scRNAseq_dimred,
+          func = plot_scRNAseq,
           res = c(75, 120),
           pdf.width = 12,
           pdf.height = 6,
