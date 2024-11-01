@@ -25,30 +25,30 @@ upload_module_normalizationSC_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
-
-      observeEvent(input$normalization_method, {
-        shiny::req(input$normalization_method == "reference")
-        gg <- sort(rownames(r_counts()))
-        shiny::updateSelectizeInput(
-          session, "ref_gene",
-          choices = gg,
-          selected = character(0), server = TRUE
-        )
-      })
       
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## Impute and remove duplicated features
-      normalizedCounts <- reactive({
+      normalizedCounts <- shiny::reactive({
+
         shiny::req(r_counts())
         counts <- r_counts()
-        if (is.null(dim(counts))) {
+        samples <- r_samples()
+        if (is.null(counts)) {
           return(NULL)
         }
-        playbase::logCPM(counts, 1, total = 1e5, log = FALSE)
-        if(!is.null(counts)) dbg("-----MNT1: OK")
+
+        SC <- playbase::pgx.supercell(
+          counts = counts,
+          meta = samples,
+          gamma = 10,
+          group = NULL
+        )
+
+        nX <- playbase::logCPM(SC[["counts"]], 1, total = 1e5, log = FALSE)
+        list(counts = nX, samples = SC[["meta"]])
+
       })
 
       ## ------------------------------------------------------------------
@@ -56,13 +56,15 @@ upload_module_normalizationSC_server <- function(
       ## ------------------------------------------------------------------
 
       plot1 <- function() {
-          counts <- r_counts()
-          samples <- r_samples()
-          contrasts <- r_contrasts()
-          kk <- intersect(rownames(samples), colnames(counts))
-          samples <- samples[kk, , drop = FALSE]
-          counts <- counts[, kk, drop = FALSE]
-          pgx.dimPlot(log2(counts+1), samples[,"stim"])
+        ## counts <- r_counts()
+        ## samples <- r_samples()
+        counts <- normalizedCounts()$counts
+        samples <- normalizedCounts()$samples
+        kk <- intersect(rownames(samples), colnames(counts))
+        samples <- samples[kk, , drop = FALSE]
+        counts <- counts[, kk, drop = FALSE]
+        ## plot(1:100, log(1:100), cex=1)
+        pgx.dimPlot(log2(counts+1), samples[,"stim"])
       }
 
       ## ------------------------------------------------------------------
@@ -116,7 +118,7 @@ upload_module_normalizationSC_server <- function(
               row_heights = c(3, 3),
               heights_equal = "row",
               PlotModuleUI(
-                ns("plot5"),
+                ns("plot1"),
                 title = "Dimensional reduction",
                 ## info.text = dimred.infotext,
                 ## caption = dropout.infotext,
@@ -125,7 +127,8 @@ upload_module_normalizationSC_server <- function(
                 show.maximize = FALSE),
               )
           ),
-          div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
+          div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE),
+            style = "visibility:hidden")
         )            
         return(ui)
       })
@@ -145,19 +148,18 @@ upload_module_normalizationSC_server <- function(
       )
 
       ## log2 counts
-      cX <- reactive({
-        shiny::req(dim(normalizedCounts()))
-        cX <- log2(normalizedCounts() + 1)
-        if(!is.null(cX)) dbg("-----MNT2: OK")
-        return(cX)
+      cX <- shiny::reactive({
+        shiny::req(dim(normalizedCounts()$counts))
+        log2(normalizedCounts()$counts + 1)
       })
 
       return(
         list(
-          counts = normalizedCounts,
+          counts = shiny::reactive(normalizedCounts()$counts),
+          samples = shiny::reactive(normalizedCounts()$samples),
           X = cX,
-          impX = NULL,
-          norm_method = "CPM"
+          impX = shiny::reactive(NULL),
+          norm_method = shiny::reactive("CPM")
         )
       ) ## pointing to reactive
     } ## end-of-server
