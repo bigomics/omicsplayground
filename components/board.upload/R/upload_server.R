@@ -547,7 +547,7 @@ UploadBoard <- function(id,
         step_title = "Step 4: QC/BC",
         step_id = "step_qc",
         server = TRUE,
-        upload_module_normalization_ui(ns("checkqc"))
+        upload_module_normalizationSC_ui(ns("checkqc"))  ## ns clash??
       )
 
       normalization_panel <- wizardR::wizard_step(
@@ -1171,6 +1171,17 @@ UploadBoard <- function(id,
       height = height
     )
 
+    sc_normalized <- upload_module_normalizationSC_server(
+      id = "checkqc_sc",
+      r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
+      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+      r_contrasts = modified_ct,
+      upload_datatype = upload_datatype,
+      is.count = TRUE,
+      height = height
+    )
+
+    
     ## correctedX <- upload_module_batchcorrect_server(
     ##   id = "batchcorrect",
     ##   r_X = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1185,19 +1196,23 @@ UploadBoard <- function(id,
 
     observe({
       if (input$selected_datatype == "scRNA-seq") {
-        counts <- checked_samples_counts()$COUNTS
-        if (is.null(dim(counts))) {
-          return(NULL)
-        }
-        logX <- playbase::logCPM(counts, 1, total = 1e5)
-        impX <- NULL
-        if (any(missing(counts))) {
-          impX <- imputeSVD2(logX)
-        }
-        compute_input$counts <- counts
-        compute_input$X <- logX
-        compute_input$impX <- impX
-        compute_input$norm_method <- "CPM"
+        ## counts <- checked_samples_counts()$COUNTS
+        ## if (is.null(dim(counts))) {
+        ##   return(NULL)
+        ## }
+        ## logX <- playbase::logCPM(counts, 1, total = 1e5)
+        ## impX <- NULL
+        ## if (any(missing(counts))) {
+        ##   impX <- imputeSVD2(logX)
+        ## }
+        ## compute_input$counts <- counts
+        ## compute_input$X <- logX
+        ## compute_input$impX <- impX
+        ## compute_input$norm_method <- "CPM"
+        compute_input$counts <- sc_normalized$counts()
+        compute_input$X <- sc_normalized$X()
+        compute_input$impX <- NULL
+        compute_input$norm_method <- sc_normalized$norm_method()
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()

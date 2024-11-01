@@ -48,6 +48,7 @@ upload_module_normalizationSC_server <- function(
           return(NULL)
         }
         playbase::logCPM(counts, 1, total = 1e5, log = FALSE)
+        if(!is.null(counts)) dbg("-----MNT1: OK")
       })
 
       ## ------------------------------------------------------------------
@@ -61,7 +62,7 @@ upload_module_normalizationSC_server <- function(
           kk <- intersect(rownames(samples), colnames(counts))
           samples <- samples[kk, , drop = FALSE]
           counts <- counts[, kk, drop = FALSE]
-          pgx.dimPlot( log2(counts+1), samples[,1])
+          pgx.dimPlot(log2(counts+1), samples[,"stim"])
       }
 
       ## ------------------------------------------------------------------
@@ -117,9 +118,9 @@ upload_module_normalizationSC_server <- function(
               PlotModuleUI(
                 ns("plot5"),
                 title = "Dimensional reduction",
-#                info.text = dimred.infotext,
-#                caption = dropout.infotext,
-#                options = dimred.options,
+                ## info.text = dimred.infotext,
+                ## caption = dropout.infotext,
+                ## options = dimred.options,
                 height = c("auto", "100%"),
                 show.maximize = FALSE),
               )
@@ -147,7 +148,8 @@ upload_module_normalizationSC_server <- function(
       cX <- reactive({
         shiny::req(dim(normalizedCounts()))
         cX <- log2(normalizedCounts() + 1)
-        cX
+        if(!is.null(cX)) dbg("-----MNT2: OK")
+        return(cX)
       })
 
       return(
