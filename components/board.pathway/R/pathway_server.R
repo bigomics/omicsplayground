@@ -149,8 +149,7 @@ PathwayBoard <- function(id,
 
     functional_plot_reactome_actmap_server(
       "reactome_actmap",
-      reactive(pgx$gset.meta$meta),
-      getReactomeTable,
+      getFilteredReactomeTable,
       pgx = pgx,
       WATERMARK
     )
@@ -271,7 +270,7 @@ PathwayBoard <- function(id,
     functional_plot_wikipathway_actmap_server(
       "wikipathway_actmap",
       pgx,
-      getWikiPathwayTable,
+      getFilteredWikiPathwayTable,
       WATERMARK
     )
 
