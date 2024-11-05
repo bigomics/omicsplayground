@@ -38,16 +38,75 @@ upload_module_normalizationSC_server <- function(
         if (is.null(counts)) {
           return(NULL)
         }
+        
+        ## ref.tissue <- input$azmRef
+        ## celltype.compute <- input$celltypeCompute
+        cells.trs <- 5000
+        ref.tissue <- "pbmcref"
+        celltype.compute <- TRUE
+        ncells <- ncol(counts)
+        counts.sc <- samples.sc <- NULL
+        
+        if (celltype.compute) {
 
-        SC <- playbase::pgx.supercell(
-          counts = counts,
-          meta = samples,
-          gamma = 10,
-          group = NULL
-        )
+          dbg("[normalizationSC_server:normalizedCounts:] Inferring cell types with Azimuth!")
+          
+          if (ncells <= cells.trs) {
+            
+            shiny::withProgress(
+              message = "Your dataset contains ", ncells, " cells. Inferring cell types with Azimuth.",
+              value = 0.3, {
+                azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref.tissue)
+              }
+            )
+            if(!is.null(azm)) { dbg("----------MNT1: OK") }
+            celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
+            samples$azm.celltype <- celltype
+            nX <- as.matrix(playbase::logCPM(counts, 1, total = 1e5))
+            return(list(counts = nX, samples = samples))
 
-        nX <- playbase::logCPM(SC[["counts"]], 1, total = 1e5, log = FALSE)
-        list(counts = nX, samples = SC[["meta"]])
+          } else {
+
+            shiny::withProgress(
+              message = "Your dataset contains > 5K cells. Computing metacells.",
+              value = 0.3, {
+                SC <- playbase::pgx.supercell(counts = counts, meta = samples)
+                counts.sc <- SC$counts
+                samples.sc <- SC$meta
+                ## samples$sc.membership <- SC$membership
+              }
+            )
+            shiny::withProgress(
+              message = "Inferring cell types with Azimuth on metacells.",
+              value = 0.3, {
+                azm <- playbase::pgx.runAzimuth(counts = counts.sc, reference = ref.tissue)
+                celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
+                samples.sc$azm.celltype <- celltype
+              }
+            )
+            nX <- as.matrix(playbase::logCPM(counts.sc, 1, total = 1e5))
+            return(list(counts = nX, samples = samples.sc))
+
+          }
+
+        } else {
+
+          dbg("[normalizationSC_server:normalizedCounts:] Cell type already pre-defined.")
+          if (ncells > cells.trs) {
+            shiny::withProgress(
+              message = "Your dataset contains > 5K cells. Computing metacells.",
+              value = 0.3, {
+                SC <- playbase::pgx.supercell(counts = counts, meta = samples)
+                counts.sc <- SC$counts
+                samples.sc <- SC$meta
+                ## samples$sc.membership <- SC$membership
+              }
+            )
+          }
+          nX <- as.matrix(playbase::logCPM(counts.sc, 1, total = 1e5))
+          return(list(counts = nX, samples = samples.sc))
+
+        }
 
       })
 
@@ -56,15 +115,17 @@ upload_module_normalizationSC_server <- function(
       ## ------------------------------------------------------------------
 
       plot1 <- function() {
-        ## counts <- r_counts()
-        ## samples <- r_samples()
+        shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
         counts <- normalizedCounts()$counts
         samples <- normalizedCounts()$samples
         kk <- intersect(rownames(samples), colnames(counts))
         samples <- samples[kk, , drop = FALSE]
         counts <- counts[, kk, drop = FALSE]
-        ## plot(1:100, log(1:100), cex=1)
-        pgx.dimPlot(log2(counts+1), samples[,"stim"])
+        Vars <- c("celltype","stim")
+        for(i in 1:length(Vars)) {
+          y <- samples[, Vars[i]]
+          playbase::pgx.dimPlot(counts, y, method="umap")
+        }
       }
 
       ## ------------------------------------------------------------------
