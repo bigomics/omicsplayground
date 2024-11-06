@@ -85,7 +85,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
       smoothen <- function(y) {
         loess(y ~ mid, data.frame(mid = hist$mid, y = y), span = 0.25)$fitted
       }
-      y.smooth <- apply(hist[, 3:ncol(hist)], 2, smoothen)
+      y.smooth <- apply(hist[, 3:ncol(hist), drop = FALSE], 2, smoothen)
 
       df <- data.frame(
         x = rep(hist$mids, ncol(hist) - 2),
