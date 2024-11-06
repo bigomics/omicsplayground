@@ -87,7 +87,7 @@ dataview_plot_tsne_server <- function(id,
         }
       }
 
-      pos <- pgx$tsne2d[samples, ]
+      pos <- pgx$tsne2d[samples, , drop = FALSE]
 
       fc1 <- tanh(0.99 * scale(gx)[, 1])
       fc1 <- tanh(0.99 * scale(gx, center = FALSE)[, 1])
