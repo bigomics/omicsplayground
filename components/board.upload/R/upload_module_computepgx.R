@@ -527,15 +527,15 @@ upload_module_computepgx_server <- function(
             text = stringr::str_squish("Missing values are present in your data. You chose not to impute. The following differential gene expression (DGE) tests are currently unsupported with missing values: limma/voom, DESeq2 and edgeR LRT, QL F-test, Wald test. Please adjust your DGE test selection accordingly."),
             type = "warning",
             timer = 60000
-            )
+          )
         }
-        
+
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
         max.genes <- as.integer(auth$options$MAX_GENES)
         max.genesets <- as.integer(auth$options$MAX_GENESETS)
-        
+
         ## get selected methods from input
         gx.methods <- input$gene_methods
         gset.methods <- input$gset_methods
