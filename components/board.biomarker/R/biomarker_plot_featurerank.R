@@ -159,7 +159,18 @@ biomarker_plot_featurerank_server <- function(id,
           if (method %in% c("p-value", "meta")) {
             jj <- which(!is.na(grp))
             design <- model.matrix(~ grp[jj])
-            suppressWarnings(fit <- limma::eBayes(limma::lmFit(X1[, jj, drop = FALSE], design)))
+            fit <- tryCatch(
+              {
+                suppressWarnings(limma::eBayes(limma::lmFit(X1[, jj, drop = FALSE], design)))
+              },
+              error = function(w) {
+                NA
+              }
+            )
+            if (all(is.na(fit))) {
+              score[j] <- NA
+              next
+            }
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
             s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE)
           }

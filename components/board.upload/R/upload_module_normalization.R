@@ -177,7 +177,6 @@ upload_module_normalization_server <- function(
           dbg("[normalization_server:correctedX] Batch correction method = ", m)
           mm <- unique(c("uncorrected", m))
 
-          ##  pars <- get_model_parameters()
           pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
           batch.pars <- input$bec_param
           if (any(grepl("<autodectect>", batch.pars))) {
@@ -307,7 +306,11 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          X <- head(X[order(-matrixStats::rowSds(X)), ], 1000)
+          nmissing1 <- sum(is.na(X))
+          if (nmissing1 > 0) {
+            X <- playbase::imputeMissing(X, method = "SVD2")
+          }
+
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           nb <- min(30, dim(X) / 5)
@@ -658,7 +661,6 @@ upload_module_normalization_server <- function(
       ## Plot UI
       ## ------------------------------------------------------------------
 
-
       getBatchParams <- eventReactive(
         {
           list(r_counts(), r_samples(), r_contrasts())
@@ -684,10 +686,6 @@ upload_module_normalization_server <- function(
           return(all.pars)
         }
       )
-
-
-
-
 
       output$normalization <- shiny::renderUI({
         ## reactive
@@ -738,7 +736,13 @@ upload_module_normalization_server <- function(
               style = "background-color: #F7FAFD99;",
               bslib::accordion_panel(
                 title = "1. Missing values",
-                shiny::p("Replace missing values using an imputation method:\n"),
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;",
+                  shiny::p("Replace missing values using an imputation method:\n"),
+                  shiny::HTML("<a href='https://bigomics.ch/blog/imputation-of-missing-values-in-proteomics' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>")
+                ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
                 shiny::checkboxInput(ns("impute"), label = "Impute missing values", value = TRUE),
                 shiny::conditionalPanel(
@@ -755,11 +759,18 @@ upload_module_normalization_server <- function(
                     selected = "SVD2"
                   )
                 ),
-                ## shiny::checkboxInput(ns("remove_xxl"), label = "Treat XXL as NA", value = FALSE),
+                ## shiny::checkboxInput(ns("remove_xxl"), label="Treat XXL as NA", value=FALSE),
                 br()
               ),
               bslib::accordion_panel(
                 title = "2. Normalization",
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;",
+                  shiny::p("Normalize the data using one of the following methods:"),
+                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#normalization' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>")
+                ),
                 shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = TRUE),
                 shiny::conditionalPanel(
                   "input.normalize == true",
@@ -813,7 +824,13 @@ upload_module_normalization_server <- function(
               ),
               bslib::accordion_panel(
                 title = "4. Batch-effect correction",
-                shiny::p("Automatically remove unwanted variation from your data."),
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;",
+                  shiny::p("Automatically remove unwanted variation from your data."),
+                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>")
+                ),
                 shiny::checkboxInput(ns("batchcorrect"),
                   label = "Remove batch effects",
                   value = FALSE

@@ -183,6 +183,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       r.gene = reactive(input$search_gene),
       r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -355,6 +356,10 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         summed.counts <- t(sapply(gset, function(f) {
           Matrix::colSums(counts[which(gg %in% f), , drop = FALSE], na.rm = TRUE)
         }))
+        if (length(total.counts) == 1) {
+          summed.counts <- t(summed.counts)
+          colnames(summed.counts) <- colnames(counts)
+        }
         prop.counts <- 100 * t(t(summed.counts) / total.counts)
 
         ## N. of detected features per sample or group AZ

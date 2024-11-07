@@ -201,7 +201,7 @@ upload_table_preview_samples_server <- function(
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(
-        any(rownames(X) %in% names(y)),
+        any(colnames(X) %in% rownames(Y)),
         "No matches between samples and counts."
       ))
       playbase::pgx.dimPlot(
@@ -279,6 +279,13 @@ upload_table_preview_samples_server <- function(
         )
         return()
       }
+
+      # Save file
+      file.copy(
+        from = input$samples_csv$datapath,
+        to = paste0(raw_dir(), "/samples.csv"),
+        overwrite = TRUE
+      )
 
       uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
     })

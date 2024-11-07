@@ -36,7 +36,7 @@ docker.run2:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -it -p 4000:3838 \
 		-v ~/Playground/pgx:/omicsplayground/data \
-		-v ~/Playground/libx-v3:/omicsplayground/libx \
+		-v ~/Playground/libx-v4:/omicsplayground/libx \
 		-v ~/Playground/pgx-visreport:/pgx-visreport \
 		-v /aws/pgx-share:/omicsplayground/data_shared \
 		-v /aws/pgx-public:/omicsplayground/data_public \
@@ -87,7 +87,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0-rc5"
+VERSION = "v3.5.0-rc7"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE

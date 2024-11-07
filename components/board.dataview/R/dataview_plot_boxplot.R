@@ -80,10 +80,10 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.dat
         ylab <- "Abundance (log2)"
       }
 
-      df <- res$counts[, ]
+      df <- res$counts[, , drop = FALSE]
       if (nrow(df) > 1000) {
         sel <- sample(nrow(df), 1000)
-        df <- df[sel, ]
+        df <- df[sel, , drop = FALSE]
       }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")

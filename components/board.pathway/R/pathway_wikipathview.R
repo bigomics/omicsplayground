@@ -2,6 +2,7 @@
 
 wikipathview <- function(wp, val) {
   require(xml2)
+  shiny::req(wp)
 
   isClassic <- FALSE
   url <- paste0("https://www.wikipathways.org/wikipathways-assets/pathways/", wp, "/", wp, ".svg")

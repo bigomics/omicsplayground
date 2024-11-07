@@ -15,7 +15,7 @@ scan_packages <- function(path='R') {
   renv.out <- renv::dependencies(path = path, root = getwd(), errors = "ignored")
   pkg.used <- sort(unique(renv.out$Package))
   pkg.used <- setdiff(pkg.used, "playbase")
-  pkg.used <- c(pkg.used, "sf", "listviewer")  ## add manually
+  pkg.used <- c(pkg.used, "sf", "listviewer", "TileDBArray")  ## add manually
     
   ## Define remote locations or versions
   github_url <- function(repo, tag) {

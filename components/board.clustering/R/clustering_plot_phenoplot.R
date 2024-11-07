@@ -48,6 +48,7 @@ clustering_plot_phenoplot_server <- function(id,
     plot_data <- reactive({
       pgx <- pgx
       shiny::req(pgx$Y)
+      Y <- pgx$Y
 
       ## get t-SNE positions
       clustmethod1 <- paste0(clustmethod(), "2d")
@@ -55,8 +56,9 @@ clustering_plot_phenoplot_server <- function(id,
       colnames(pos) <- c("x", "y")
       jj <- selected_samples()
       kk <- selected_phenotypes()
-      pos <- pos[jj, ]
-      Y <- pgx$Y[jj, kk, drop = FALSE]
+      kk <- kk[which(kk %in% colnames(Y))]
+      pos <- pos[jj, , drop = FALSE]
+      Y <- Y[jj, kk, drop = FALSE]
       ## complete dataframe for downloading
       df <- data.frame(pos, Y, check.names = FALSE)
       return(df)
@@ -70,6 +72,12 @@ clustering_plot_phenoplot_server <- function(id,
         length(pheno) > 0,
         "Please select at least one phenotype."
       ))
+      pheno.ex <- setdiff(pheno, colnames(pd))
+      shiny::validate(shiny::need(
+        length(pheno.ex) == 0,
+        paste0(pheno.ex, " appear(s) not valid as phenotype(s). Please remove from selection on the menu on the right.")
+      ))
+      pheno <- pheno[which(pheno %in% colnames(pd))]
       Y <- pd[, pheno, drop = FALSE]
       pos <- pd[, c("x", "y")]
 

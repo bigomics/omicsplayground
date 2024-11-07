@@ -92,11 +92,13 @@ clustering_plot_clusterannot_server <- function(id,
         }
         if (input$xann_level == "gene") {
           ann.types <- names(pgx$families)
-          cc <- sapply(pgx$families, function(g) length(intersect(g, rownames(pgx$X))))
+          genes <- playbase::probe2symbol(rownames(pgx$X), pgx$genes, "symbol", fill_na = TRUE)
+          cc <- sapply(pgx$families, function(g) length(intersect(toupper(g), toupper(genes))))
           ann.types <- ann.types[cc >= 3]
         }
         ann.types <- setdiff(ann.types, "<all>") ## avoid slow...
         ann.types <- grep("^<", ann.types, invert = TRUE, value = TRUE) ## remove special groups
+        if (length(ann.types) == 0) ann.types <- "<all>" # bring back <all> is ann.types is empty
         sel <- ann.types[1]
         if ("H" %in% ann.types) sel <- "H"
         j <- grep("^transcription", ann.types, ignore.case = TRUE)
