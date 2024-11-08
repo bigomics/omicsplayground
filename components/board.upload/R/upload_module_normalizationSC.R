@@ -14,13 +14,13 @@ upload_module_normalizationSC_ui <- function(id, height = "100%") {
 }
 
 upload_module_normalizationSC_server <- function(
-    id,
-    r_counts,
-    r_samples,
-    r_contrasts,
-    upload_datatype,
-    is.count = FALSE,
-    height = 720) {
+                                                 id,
+                                                 r_counts,
+                                                 r_samples,
+                                                 r_contrasts,
+                                                 upload_datatype,
+                                                 is.count = FALSE,
+                                                 height = 720) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -35,76 +35,49 @@ upload_module_normalizationSC_server <- function(
         shiny::req(r_counts())
         counts <- r_counts()
         samples <- r_samples()
-        if (is.null(counts)) {
-          return(NULL)
-        }
+        if (is.null(counts)) { return(NULL) }
+        kk <- intersect(colnames(counts), rownames(samples))
+        counts <- counts[, kk, drop = FALSE]
+        samples <- samples[kk, , drop = FALSE]
         
-        ## ref.tissue <- input$azmRef
-        ## celltype.compute <- input$celltypeCompute
-        cells.trs <- 5000
-        ref.tissue <- "pbmcref"
-        celltype.compute <- TRUE
-        ncells <- ncol(counts)
-        counts.sc <- samples.sc <- NULL
-        
-        if (celltype.compute) {
+        cells_trs <- 1500
+        ref_tissue <- input$ref_atlas ## "pbmcref"
+        ## celltype_compute <- TRUE
+        ## if (celltype_compute) {
 
-          dbg("[normalizationSC_server:normalizedCounts:] Inferring cell types with Azimuth!")
-          
-          if (ncells <= cells.trs) {
-            
-            shiny::withProgress(
-              message = "Your dataset contains ", ncells, " cells. Inferring cell types with Azimuth.",
-              value = 0.3, {
-                azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref.tissue)
-              }
-            )
-            if(!is.null(azm)) { dbg("----------MNT1: OK") }
-            celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
-            samples$azm.celltype <- celltype
-            nX <- as.matrix(playbase::logCPM(counts, 1, total = 1e5))
-            return(list(counts = nX, samples = samples))
+        if (input$infercelltypes) {
 
+          dbg("------------MNT1 OK")
+          ss <- c("celltype","cell_type","cell.type","CELL_TYPE")
+          kk <- which(!colnames(samples) %in% ss)
+          samples <- samples[, kk, drop = FALSE]
+
+          dbg("[normalizationSC_server:normalizedCounts:] N.cells in dataset ", ncol(counts))
+
+          if (ncol(counts) > cells_trs) {
+            dbg("[normalizationSC_server:normalizedCounts:] Performing random sampling of 1000 cells.")
+            kk <- sample(colnames(counts), 1000)
+            counts1 <- counts[, kk, drop = FALSE] 
+            samples1 <- samples[kk, , drop = FALSE]
           } else {
-
-            shiny::withProgress(
-              message = "Your dataset contains > 5K cells. Computing metacells.",
-              value = 0.3, {
-                SC <- playbase::pgx.supercell(counts = counts, meta = samples)
-                counts.sc <- SC$counts
-                samples.sc <- SC$meta
-                ## samples$sc.membership <- SC$membership
-              }
-            )
-            shiny::withProgress(
-              message = "Inferring cell types with Azimuth on metacells.",
-              value = 0.3, {
-                azm <- playbase::pgx.runAzimuth(counts = counts.sc, reference = ref.tissue)
-                celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
-                samples.sc$azm.celltype <- celltype
-              }
-            )
-            nX <- as.matrix(playbase::logCPM(counts.sc, 1, total = 1e5))
-            return(list(counts = nX, samples = samples.sc))
-
+            counts1 <- counts
+            samples1 <- samples
           }
 
+          dbg("[normalizationSC_server:normalizedCounts:] Inferring cell types with Azimuth!")
+          dbg("[normalizationSC_server:normalizedCounts:] Reference atlas:", ref_tissue)
+          azm <- playbase::pgx.runAzimuth(counts = counts1, reference = ref_tissue)
+          dbg("[normalizationSC_server:normalizedCounts:] Cell types inference completed.")
+          celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
+          samples1 <- cbind(samples1, celltype = celltype)
+          nX <- playbase::logCPM(as.matrix(counts1), 1, total = 1e4)
+          return(list(counts = nX, samples = samples1))
+          
         } else {
 
           dbg("[normalizationSC_server:normalizedCounts:] Cell type already pre-defined.")
-          if (ncells > cells.trs) {
-            shiny::withProgress(
-              message = "Your dataset contains > 5K cells. Computing metacells.",
-              value = 0.3, {
-                SC <- playbase::pgx.supercell(counts = counts, meta = samples)
-                counts.sc <- SC$counts
-                samples.sc <- SC$meta
-                ## samples$sc.membership <- SC$membership
-              }
-            )
-          }
-          nX <- as.matrix(playbase::logCPM(counts.sc, 1, total = 1e5))
-          return(list(counts = nX, samples = samples.sc))
+          nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
+          return(list(counts = nX, samples = samples))
 
         }
 
@@ -121,26 +94,44 @@ upload_module_normalizationSC_server <- function(
         kk <- intersect(rownames(samples), colnames(counts))
         samples <- samples[kk, , drop = FALSE]
         counts <- counts[, kk, drop = FALSE]
+        method <- tolower(input$dimred_plottype)
         Vars <- c("celltype","stim")
+        par(mfrow = c(1,2))
+        for(i in 1:length(Vars)) {
+          y <- samples[, Vars[i]]
+          playbase::pgx.dimPlot(counts, y, method = method)
+        }
+      }
+
+      plot2 <- function() {
+        shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
+        counts <- normalizedCounts()$counts
+        samples <- normalizedCounts()$samples
+        kk <- intersect(rownames(samples), colnames(counts))
+        samples <- samples[kk, , drop = FALSE]
+        counts <- counts[, kk, drop = FALSE]
+        Vars <- c("celltype","stim")
+        par(mfrow = c(1,2))
         for(i in 1:length(Vars)) {
           y <- samples[, Vars[i]]
           playbase::pgx.dimPlot(counts, y, method="umap")
         }
       }
 
+
       ## ------------------------------------------------------------------
       ## Plot UI
       ## ------------------------------------------------------------------
       output$normalization <- shiny::renderUI({
-
-        dimred.infotext <- "T-distributed stochastic neighbor embedding (t-SNE)"
         
-        dropout.options <- tagList(
+        dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
+        
+        dimred.options <- tagList(
           shiny::radioButtons(
-            ns("dropout_plottype"),
+            ns("dimred_plottype"),
             label = "Plot type:",
-            choices = c("boxplot", "histogram"),
-            selected = "histogram", inline = FALSE
+            choices = c("tSNE", "UMAP"),
+            selected = "tSNE", inline = FALSE
           )
         )
 
@@ -151,16 +142,33 @@ upload_module_normalizationSC_server <- function(
               multiple = FALSE,
               style = "background-color: #F7FAFD99;",
               bslib::accordion_panel(
-                title = "1. Step 1",
+                title = "Cell type inference",
                 shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("wip")
+                  style = "display: flex; align-items: center; justify-content: space-between;"
                 ),
-                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value=FALSE),
+                shiny::checkboxInput(
+                  ns("infercelltypes"),
+                  label = "Infer cell types with Azimuth",
+                  value = TRUE),
+                shiny::conditionalPanel(
+                  "input.infercelltypes == true",
+                  ns = ns,
+                  shiny::selectInput(
+                    ns("ref_atlas"),
+                    label = "Select reference atlas",
+                    choices = c(
+                      "adiposeref", "bonemarrowref", "fetusref",
+                      "heartref", "humancortexref", "kidneyref",
+                      "lungref", "mousecortexref", "pancreasref",
+                      "pbmcref", "tonsilref"
+                    ),
+                    selected = "pbmcref"
+                  )
+                ),
                 br()
               )
-            ))
-          )
+            )
+          ))
         )
 
         ## ---------------------------- UI ----------------------------------
@@ -181,19 +189,29 @@ upload_module_normalizationSC_server <- function(
               PlotModuleUI(
                 ns("plot1"),
                 title = "Dimensional reduction",
-                ## info.text = dimred.infotext,
-                ## caption = dropout.infotext,
-                ## options = dimred.options,
+                info.text = dimred.infotext,
+                caption = dimred.infotext,
+                options = dimred.options,
                 height = c("auto", "100%"),
-                show.maximize = FALSE),
+                show.maximize = FALSE
+              ),
+              PlotModuleUI(
+                ns("plot2"),
+                title = "Dimensional reduction",
+                info.text = dimred.infotext,
+                caption = dimred.infotext,
+                options = dimred.options,
+                height = c("auto", "100%"),
+                show.maximize = FALSE,
               )
+            )
           ),
           div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE),
             style = "visibility:hidden")
         )            
         return(ui)
       })
-    
+      
       ## ------------------------------------------------------------------
       ## Plot modules
       ## ------------------------------------------------------------------
@@ -202,6 +220,15 @@ upload_module_normalizationSC_server <- function(
         "plot1",
         plotlib = "base",
         func = plot1,
+        res = c(75, 120),
+        pdf.width = 12,
+        pdf.height = 6,
+        add.watermark = FALSE
+      )
+      PlotModuleServer(
+        "plot2",
+        plotlib = "base",
+        func = plot2,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
