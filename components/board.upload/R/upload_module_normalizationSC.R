@@ -41,13 +41,11 @@ upload_module_normalizationSC_server <- function(
         samples <- samples[kk, , drop = FALSE]
         
         cells_trs <- 1500
-        ref_tissue <- input$ref_atlas ## "pbmcref"
-        ## celltype_compute <- TRUE
-        ## if (celltype_compute) {
+        ref_tissue <- input$ref_atlas
+        celltype_compute <- TRUE
+        if (celltype_compute) {
+        ## if (input$infercelltypes) {
 
-        if (input$infercelltypes) {
-
-          dbg("------------MNT1 OK")
           ss <- c("celltype","cell_type","cell.type","CELL_TYPE")
           kk <- which(!colnames(samples) %in% ss)
           samples <- samples[, kk, drop = FALSE]
@@ -167,7 +165,8 @@ upload_module_normalizationSC_server <- function(
                 ),
                 br()
               )
-            )
+            ),
+            br()
           ))
         )
 
