@@ -89,15 +89,15 @@ upload_module_normalizationSC_server <- function(
         shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
         counts <- normalizedCounts()$counts
         samples <- normalizedCounts()$samples
+        cluster_vars <- input$clusterBy
         kk <- intersect(rownames(samples), colnames(counts))
         samples <- samples[kk, , drop = FALSE]
         counts <- counts[, kk, drop = FALSE]
         method <- tolower(input$dimred_plottype)
-        Vars <- c("celltype","stim")
-        par(mfrow = c(1,2))
-        for(i in 1:length(Vars)) {
-          y <- samples[, Vars[i]]
-          playbase::pgx.dimPlot(counts, y, method = method)
+        par(mfrow = c(1,length(cluster_vars)))
+        for(i in 1:length(cluster_vars)) {
+          v <- cluster_vars[i]
+          playbase::pgx.dimPlot(counts, samples[, v], method = method)
         }
       }
 
@@ -105,15 +105,32 @@ upload_module_normalizationSC_server <- function(
         shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
         counts <- normalizedCounts()$counts
         samples <- normalizedCounts()$samples
+        cluster_vars <- input$clusterBy
         kk <- intersect(rownames(samples), colnames(counts))
         samples <- samples[kk, , drop = FALSE]
         counts <- counts[, kk, drop = FALSE]
-        Vars <- c("celltype","stim")
-        par(mfrow = c(1,2))
-        for(i in 1:length(Vars)) {
-          y <- samples[, Vars[i]]
-          playbase::pgx.dimPlot(counts, y, method="umap")
+        SO <- playbase::pgx.justSeuratObject(counts, samples)
+        ## SO <- CreateSe
+        SO <- Seurat::NormalizeData(SO)
+        SO <- Seurat::FindVariableFeatures(SO)
+        SO <- Seurat::ScaleData(SO)
+        hvf <- Seurat::VariableFeatures(SO)[1:10]
+        if(!is.null(SO)) dbg("----MNT1: ", paste0(colnames(SO@meta.data), collapse=", "))
+        if(!is.null(SO)) dbg("----MNT2: ", paste0(colnames(samples), collapse=", "))
+        plist <- list()
+        for(i in 1:length(cluster_vars)) {
+          v <- as.character(cluster_vars[i])
+          if (! v %in% colnames(SO@meta.data)) {
+            SO@meta.data <- cbind(SO@meta.data, samples[, v])
+            colnames(SO@meta.data)[ncol(SO@meta.data)] <- v
+          }
+          ug <- length(unique(samples[, v]))
+          scaling <- ifelse(ug < 3, FALSE, TRUE)
+          pl <- Seurat::DotPlot(SO, features = hvf, group.by = v, scale = scaling)
+          pl <- pl + RotatedAxis() + ylab("") + xlab("")
+          plist[[i]] <- pl
         }
+        cowplot::plot_grid(plotlist = plist)
       }
 
 
@@ -121,8 +138,14 @@ upload_module_normalizationSC_server <- function(
       ## Plot UI
       ## ------------------------------------------------------------------
       output$normalization <- shiny::renderUI({
-        
+
+        shiny::req(dim(normalizedCounts()$samples))
+        samples <- normalizedCounts()$samples
+        metadata_vars <- colnames(samples)
+                
         dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
+
+        dotplot.infotext <- "Dot plot of top 10 highly variable features in the data. The dot plot allows to visualize the expression changes across different user-defined identity classes (e.g., cell clusters, cell types, phenotype classes). The size of each dot reflects the percentage of cells within a class; the color of each dot indicates the average expression level (computed using Seurat's AverageExpression function) across all cells within a class (blue is high)."
         
         dimred.options <- tagList(
           shiny::radioButtons(
@@ -134,11 +157,13 @@ upload_module_normalizationSC_server <- function(
         )
 
         navmenu <- tagList(
+          
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
             bslib::accordion(
               multiple = FALSE,
               style = "background-color: #F7FAFD99;",
+
               bslib::accordion_panel(
                 title = "Cell type inference",
                 shiny::div(
@@ -164,10 +189,26 @@ upload_module_normalizationSC_server <- function(
                   )
                 ),
                 br()
+              ),
+
+              bslib::accordion_panel(
+                title = "Visualize cell clusters",
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;"
+                ),
+                shiny::selectInput(
+                  ns("clusterBy"),
+                  label = "Visualize cell cluster by",
+                  choices = metadata_vars, ## reactive
+                  multiple = TRUE,
+                  selected = "celltype"
+                ),
+                shiny::br()
               )
-            ),
-            br()
-          ))
+
+            ))
+          )
+
         )
 
         ## ---------------------------- UI ----------------------------------
@@ -196,13 +237,13 @@ upload_module_normalizationSC_server <- function(
               ),
               PlotModuleUI(
                 ns("plot2"),
-                title = "Dimensional reduction",
-                info.text = dimred.infotext,
-                caption = dimred.infotext,
-                options = dimred.options,
+                title = "Highly variable features",
+                info.text = dotplot.infotext,
+                caption = dotplot.infotext,
+                ## options = dotplot.options,
                 height = c("auto", "100%"),
                 show.maximize = FALSE,
-              )
+                )
             )
           ),
           div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE),
