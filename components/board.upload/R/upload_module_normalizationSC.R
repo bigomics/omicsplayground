@@ -110,13 +110,13 @@ upload_module_normalizationSC_server <- function(
         samples <- samples[kk, , drop = FALSE]
         counts <- counts[, kk, drop = FALSE]
         SO <- playbase::pgx.justSeuratObject(counts, samples)
-        ## SO <- CreateSe
         SO <- Seurat::NormalizeData(SO)
         SO <- Seurat::FindVariableFeatures(SO)
         SO <- Seurat::ScaleData(SO)
         hvf <- Seurat::VariableFeatures(SO)[1:10]
         if(!is.null(SO)) dbg("----MNT1: ", paste0(colnames(SO@meta.data), collapse=", "))
         if(!is.null(SO)) dbg("----MNT2: ", paste0(colnames(samples), collapse=", "))
+        require(ggplot2)
         plist <- list()
         for(i in 1:length(cluster_vars)) {
           v <- as.character(cluster_vars[i])
@@ -127,7 +127,7 @@ upload_module_normalizationSC_server <- function(
           ug <- length(unique(samples[, v]))
           scaling <- ifelse(ug < 3, FALSE, TRUE)
           pl <- Seurat::DotPlot(SO, features = hvf, group.by = v, scale = scaling)
-          pl <- pl + RotatedAxis() + ylab("") + xlab("")
+          pl <- pl + RotatedAxis() + ggplot2::ylab("") + ggplot2::xlab("")
           plist[[i]] <- pl
         }
         cowplot::plot_grid(plotlist = plist)
