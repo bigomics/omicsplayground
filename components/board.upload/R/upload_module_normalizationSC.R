@@ -114,8 +114,7 @@ upload_module_normalizationSC_server <- function(
         SO <- Seurat::FindVariableFeatures(SO)
         SO <- Seurat::ScaleData(SO)
         hvf <- Seurat::VariableFeatures(SO)[1:10]
-        if(!is.null(SO)) dbg("----MNT1: ", paste0(colnames(SO@meta.data), collapse=", "))
-        if(!is.null(SO)) dbg("----MNT2: ", paste0(colnames(samples), collapse=", "))
+        if (length(cluster_vars) > 1) hvf <- hvf[1:5]
         require(ggplot2)
         plist <- list()
         for(i in 1:length(cluster_vars)) {
