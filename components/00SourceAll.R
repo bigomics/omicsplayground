@@ -144,7 +144,6 @@ if (!file.exists("00SourceAll.R")) {
   source("board.pathway/R/pathway_table_wikipathway.R", encoding = "UTF-8")
   source("board.pathway/R/pathway_ui.R", encoding = "UTF-8")
   source("board.pathway/R/pathway_wikipathview.R", encoding = "UTF-8")
-  source("board.pcsf/R/pcsf_plot_heatmap.R", encoding = "UTF-8")
   source("board.pcsf/R/pcsf_plot_network.R", encoding = "UTF-8")
   source("board.pcsf/R/pcsf_server.R", encoding = "UTF-8")
   source("board.pcsf/R/pcsf_table_centrality.R", encoding = "UTF-8")

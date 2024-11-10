@@ -186,6 +186,8 @@ upload_table_preview_counts_server <- function(
       counts <- checked_matrix()
       shiny::req(counts)
       xx <- log2(1 + counts)
+      # Add seed to make it deterministic
+      set.seed(123)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- data.table::melt(xx))
       dc$value[dc$value == 0] <- NA

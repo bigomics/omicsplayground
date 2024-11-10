@@ -519,6 +519,17 @@ upload_module_computepgx_server <- function(
         contrasts <- as.matrix(contrastsRT())
         annot_table <- annotRT()
 
+        nmissing.counts <- sum(is.na(counts))
+        nmissing.countsX <- sum(is.na(countsX))
+        if (nmissing.counts > 0 || nmissing.countsX > 0) {
+          shinyalert::shinyalert(
+            title = "WARNING",
+            text = stringr::str_squish("Missing values are present in your data. You chose not to impute. The following differential gene expression (DGE) tests are currently unsupported with missing values: limma/voom, DESeq2 and edgeR LRT, QL F-test, Wald test. Please adjust your DGE test selection accordingly."),
+            type = "warning",
+            timer = 60000
+          )
+        }
+
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
