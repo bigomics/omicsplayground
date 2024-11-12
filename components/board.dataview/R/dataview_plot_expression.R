@@ -245,7 +245,7 @@ dataview_plot_expression_server <- function(id,
             plotly::plot_ly(
               x = ~group,
               y = ~x,
-              type = "violin"#,
+              type = "violin" # ,
             ) %>%
             plotly::layout(
               yaxis = list(
@@ -259,7 +259,7 @@ dataview_plot_expression_server <- function(id,
             x = ~group,
             y = ~x,
             jitter = 0.3,
-            type = "box"#,
+            type = "box" # ,
           )
           ## fig
         }
