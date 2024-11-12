@@ -142,7 +142,18 @@ BiomarkerUI <- function(id) {
             height = imgH2,
             width = c("auto", "100%"),
             label = "d"
-          )
+          ),
+          biomarker_plot_auc_ui( ## NEW AZ
+            ns("pdx_auc"),
+            title = "Receiver-operating characteristic (ROC) curve and Area Under the Curve (AUC)",
+            info.text = "ROC and AUC for top biomarkers selected by regression model in decision tree.",
+            info.methods = "ROC and AUC are common machine learning techniques. They are generally adopted to assess the relationship between correctly classified and incorrectly classified data points. The ROC curve is generally drawn by calculating the true positive rate (TPR) and false positive rate (FPR), expressed in terms of sensitivity and specificity.",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
+            caption = "ROC and AUC for top biomarkers selected by regression model in decision tree.",
+            height = imgH1,
+            width = c("auto", "100%"),
+            label = "e"
+          ),
         )
       ), ## tabPanel 1
       shiny::tabPanel(

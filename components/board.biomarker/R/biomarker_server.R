@@ -365,6 +365,13 @@ BiomarkerBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
+    biomarker_plot_auc_server(
+      "pdx_auc",
+      calcVariableImportance,
+      is_computed,
+      watermark = WATERMARK
+    )
+
     biomarker_plot_boxplots_server(
       "pdx_boxplots",
       calcVariableImportance,
