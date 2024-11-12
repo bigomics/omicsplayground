@@ -149,7 +149,7 @@ ClusteringUI <- function(id) {
 
   pca_info <- HTML("<b>Dimensionality reduction</b> is an unsupervised clustering technique that projects the samples into a lower dimensional, here 2D, space. Samples that have similar expression profiles will cluster close together. By coloring the points by condition, we can see which phenotype best explains the clustering.")
 
-  parallel_info <- HTML("The <b>Parallel Coordinates</b> plot is great for visualizing time series or ordered experiments. By grouping samples by time points and showing them sequentially, we can see trends in the expression of groups of genes, or so-called gene modules. The figure is interactive so you can manally order the time points.")
+  parallel_info <- HTML("The <b>Parallel Coordinates</b> plot is great for visualizing time series or ordered experiments. By grouping samples by time points and showing them sequentially, we can see trends in the expression of groups of genes, or so-called gene modules. The figure is interactive so you can manually order the time points.")
 
   rowH <- 350
   rowH <- "40vh"

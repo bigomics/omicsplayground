@@ -193,8 +193,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       add.watermark = watermark
     )
 
-    # Table
-    gsetTable.RENDER <- shiny::reactive({
+    table_data <- shiny::reactive({
       shiny::req(pgx$X)
       pos <- getUMAP()
 
@@ -249,10 +248,15 @@ featuremap_plot_table_geneset_map_server <- function(id,
       gs <- substring(gs, 1, 100)
       df <- data.frame(DB = gs.db, geneset = gs, F, check.names = FALSE)
       rownames(df) <- rownames(F)
+      return(df)
+    })
 
+    # Table
+    gsetTable.RENDER <- shiny::reactive({
+      df <- table_data()
       gset_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-arrow-up-right-from-square'></i>", nrow(df)),
-        rownames(F)
+        rownames(df)
       ) |> HandleNoLinkFound(
         NoLinkString = "<i class='fa-solid fa-arrow-up-right-from-square'></i>",
         SubstituteString = "<i class='fa-solid fa-arrow-up-right-from-square blank_icon'></i>"
@@ -286,10 +290,16 @@ featuremap_plot_table_geneset_map_server <- function(id,
       dt
     })
 
+    table_data_csv <- function() {
+      df <- table_data()
+      return(df)
+    }
+
     tablemodule <- TableModuleServer(
       "gset_table",
       func = gsetTable.RENDER,
       func2 = gsetTable.RENDER_modal,
+      csvFunc = table_data_csv,
       selector = "none"
     )
 
