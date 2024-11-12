@@ -186,11 +186,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
     # Cummulative FC
     getMatrices <- shiny::reactive({
+      
       pgx1 <- pgx
-      pgx2 <- dataset2()
+      pgx2 <- dataset2()      
       shiny::req(pgx1$X)
       shiny::req(pgx2$X)
-
+      
       ct1 <- contrast1()
       ct2 <- contrast2()
       valid.ct1 <- !is.null(ct1) && all(ct1 %in% playbase::pgx.getContrasts(pgx1))
@@ -204,13 +205,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         shinyjs::click(ns("compare_button"))
         return(NULL)
       }
-
-      org1 <- tolower(playbase::pgx.getOrganism(pgx1))
-      org2 <- tolower(playbase::pgx.getOrganism(pgx2))
-
+      
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
-
+      org1 <- tolower(playbase::pgx.getOrganism(pgx1))
+      org2 <- tolower(playbase::pgx.getOrganism(pgx2))
+      
       target_col <- "rownames"
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
         # For old versions
@@ -229,20 +229,25 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         target_col <- "human_ortholog"
       }
       target_col
-
+      
       if (target_col != "rownames") {
         F1 <- playbase::rename_by(F1, pgx1$genes, target_col)
         F2 <- playbase::rename_by(F2, pgx2$genes, target_col)
       }
-
+      
       F1 <- playbase::rowmean(F1, rownames(F1))
       F2 <- playbase::rowmean(F2, rownames(F2))
+
       gg <- intersect(rownames(F1), rownames(F2))
+      gg <- setdiff(gg, c("",NA,"NA"))
+      dd1 <- setdiff(gg, rownames(F1))
+      dd2 <- setdiff(gg, rownames(F2))
+      
       F1 <- F1[gg, , drop = FALSE]
       F2 <- F2[gg, , drop = FALSE]
       colnames(F1) <- paste0("1:", colnames(F1))
       colnames(F2) <- paste0("2:", colnames(F2))
-
+      
       ## ---------- X matrices ---------------
       X1 <- pgx1$X
       X2 <- pgx2$X
@@ -250,13 +255,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         X1 <- playbase::rename_by(X1, pgx1$genes, target_col)
         X2 <- playbase::rename_by(X2, pgx2$genes, target_col)
       }
-
+      
       ## collapse duplicates
       X1 <- playbase::rowmean(X1, rownames(X1))
       X2 <- playbase::rowmean(X2, rownames(X2))
       X1 <- X1[match(rownames(F1), rownames(X1)), ]
       X2 <- X2[match(rownames(F2), rownames(X2)), ]
-
+      
       ## compute correlation if we have enough common samples
       rho <- NULL
       kk <- intersect(colnames(pgx1$X), colnames(pgx2$X))
@@ -265,7 +270,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         scaled_X2 <- scale(Matrix::t(X2[, kk]))
         rho <- colSums(scaled_X1 * scaled_X2, na.rm = TRUE) / (nrow(X1) - 1)
       }
-
+      
       ## get gene_title
       if (target_col == "rownames") {
         match.target <- rownames(pgx1$genes)
@@ -273,29 +278,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         match.target <- pgx1$genes[, target_col]
       }
       gene_title <- pgx1$genes[match(rownames(F1), match.target), "gene_title"]
-
-      pos1 <- pos2 <- NULL
-      if (0) {
-        ## we also need collapsed/aligned UMAP positions
-        pos1 <- pgx1$cluster.genes$pos[["umap2d"]]
-        pos2 <- pgx2$cluster.genes$pos[["umap2d"]]
-        if (target_col != "rownames") {
-          pos1 <- playbase::rename_by(pos1, pgx1$genes, target_col)
-          pos2 <- playbase::rename_by(pos2, pgx2$genes, target_col)
-        }
-        pos1 <- playbase::rowmean(pos1, rownames(pos1))
-        pos2 <- playbase::rowmean(pos2, rownames(pos2))
-        pos1 <- pos1[match(rownames(F1), rownames(pos1)), ]
-        pos2 <- pos1[match(rownames(F2), rownames(pos2)), ]
-      }
-
+            
       list(
         F1 = F1,
         F2 = F2,
         X1 = X1,
         X2 = X2,
-        pos1 = pos1,
-        pos2 = pos2,
         rho = rho,
         gene_title = gene_title,
         target_col = target_col
