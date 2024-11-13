@@ -28,8 +28,6 @@ UploadUI <- function(id) {
               "proteomics",
               "scRNA-seq",
               "metabolomics (beta)" = "metabolomics"
-              ## "scRNA-seq",
-              ## "other"
             ),
             selected = DEFAULTS$datatype
           )
