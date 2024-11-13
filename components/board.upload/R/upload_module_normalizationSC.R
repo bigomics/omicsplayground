@@ -40,7 +40,7 @@ upload_module_normalizationSC_server <- function(
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
         
-        cells_trs <- 1500
+        cells_trs <- 2000
         ref_tissue <- input$ref_atlas
         celltype_compute <- TRUE
         if (celltype_compute) {
@@ -109,30 +109,71 @@ upload_module_normalizationSC_server <- function(
         kk <- intersect(rownames(samples), colnames(counts))
         samples <- samples[kk, , drop = FALSE]
         counts <- counts[, kk, drop = FALSE]
-        SO <- playbase::pgx.justSeuratObject(counts, samples)
-        SO <- Seurat::NormalizeData(SO)
-        SO <- Seurat::FindVariableFeatures(SO)
-        SO <- Seurat::ScaleData(SO)
-        hvf <- Seurat::VariableFeatures(SO)[1:10]
-        if (length(cluster_vars) > 1) hvf <- hvf[1:5]
-        require(ggplot2)
-        plist <- list()
-        for(i in 1:length(cluster_vars)) {
-          v <- as.character(cluster_vars[i])
-          if (! v %in% colnames(SO@meta.data)) {
-            SO@meta.data <- cbind(SO@meta.data, samples[, v])
-            colnames(SO@meta.data)[ncol(SO@meta.data)] <- v
-          }
-          ug <- length(unique(samples[, v]))
-          scaling <- ifelse(ug < 3, FALSE, TRUE)
-          pl <- Seurat::DotPlot(SO, features = hvf, group.by = v, scale = scaling)
-          pl <- pl + RotatedAxis() + ggplot2::ylab("") + ggplot2::xlab("")
-          plist[[i]] <- pl
+        SO <- playbase::pgx.justSeuratObject(counts, samples)        
+
+        ##----Mitocondrial %
+        ## mt.humans <- grep("^MT-", rownames(SO@assays$RNA))
+        SO[["percent.mt"]] <- PercentageFeatureSet(SO, pattern = "^MT-")
+        ## mt.mouse <- grep("^Mt-", rownames(SO@assays$RNA))
+        ## SO[["percent.mt.mouse"]] <- PercentageFeatureSet(SO, pattern = "^Mt-")
+
+        ##----Hemoglobins %
+        hb.humans <- grep("^HB", rownames(SO@assays$RNA))
+        hb.mouse <- grep("^Hb", rownames(SO@assays$RNA))
+        if (any(hb.humans)) {
+          SO[["percent.hb"]] <- Seurat::PercentageFeatureSet(SO, pattern = "^HB")
         }
+        if (any(hb.mouse)) {
+          SO[["percent.hb"]] <- Seurat::PercentageFeatureSet(SO, pattern = "^Hb")
+        }
+
+        ##------Cellcycle genes
+        ## ....
+        ## ....
+        ## ....
+        
+        ff <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.hb")
+        pl <- Seurat::VlnPlot(SO, features = ff, ncol = length(ff))
+        pl <- pl + ggplot2::xlab("")
+        plist <- list(pl)
         cowplot::plot_grid(plotlist = plist)
+        ## SO <- Seurat::NormalizeData(SO)
+        ## SO <- Seurat::FindVariableFeatures(SO)
+        ## SO <- Seurat::ScaleData(SO)
+        ## hvf <- Seurat::VariableFeatures(SO)[1:10]
+        ## if (length(cluster_vars) > 1) hvf <- hvf[1:5]
+        ## require(ggplot2)
+        ## plist <- list()
+        ## for(i in 1:length(cluster_vars)) {
+        ##  v <- as.character(cluster_vars[i])
+        ##  if (! v %in% colnames(SO@meta.data)) {
+        ##    SO@meta.data <- cbind(SO@meta.data, samples[, v])
+        ##    colnames(SO@meta.data)[ncol(SO@meta.data)] <- v
+        ##  }
+        ##  ug <- length(unique(samples[, v]))
+        ##  scaling <- ifelse(ug < 3, FALSE, TRUE)
+        ##  pl <- Seurat::DotPlot(SO, features = hvf, group.by = v, scale = scaling)
+        ##  pl <- pl + RotatedAxis() + ggplot2::ylab("") + ggplot2::xlab("")
+        ##  plist[[i]] <- pl
+        ## }
+        ## cowplot::plot_grid(plotlist = plist)
       }
 
+      ## TO DO: SAVE DIMPLOT. SO PLOTS ARE SAME.
+      ## TO DO: MAKE UPLOAD_SAMPLES FAST. ONCE CLICK NEXT IT WILL START AZIMUTH.
+      ## TO DO: add pgx.createSingleCellPGX into pgx.createPGX
+      
+      ## plot3 <- function() { PIE CHART
+      ##   shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
+      ##   counts <- normalizedCounts()$counts
+      ##   samples <- normalizedCounts()$samples
+      ##   cluster_vars <- input$clusterBy
+      ##   kk <- intersect(rownames(samples), colnames(counts))
+      ##   samples <- samples[kk, , drop = FALSE]
+      ##   counts <- counts[, kk, drop = FALSE]
+      ## }
 
+      
       ## ------------------------------------------------------------------
       ## Plot UI
       ## ------------------------------------------------------------------
@@ -236,9 +277,9 @@ upload_module_normalizationSC_server <- function(
               ),
               PlotModuleUI(
                 ns("plot2"),
-                title = "Highly variable features",
-                info.text = dotplot.infotext,
-                caption = dotplot.infotext,
+                title = "Sequencing depth & contaminations",
+                ## info.text = dotplot.infotext, ## update
+                ## caption = dotplot.infotext,
                 ## options = dotplot.options,
                 height = c("auto", "100%"),
                 show.maximize = FALSE,
