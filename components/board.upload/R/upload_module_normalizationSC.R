@@ -30,54 +30,86 @@ upload_module_normalizationSC_server <- function(
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      normalizedCounts <- shiny::reactive({
+      ## downsampled and normalized data
+      ## downsample or still use full dataset if ncells < threshold
+      ds_norm_Counts <- shiny::reactive({ 
 
         shiny::req(r_counts())
+        shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
         if (is.null(counts)) { return(NULL) }
+
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
         
+        ncells <- ncol(counts)
         cells_trs <- 2000
-        ref_tissue <- input$ref_atlas
-        celltype_compute <- TRUE
-        if (celltype_compute) {
-        ## if (input$infercelltypes) {
-
-          ss <- c("celltype","cell_type","cell.type","CELL_TYPE")
-          kk <- which(!colnames(samples) %in% ss)
-          samples <- samples[, kk, drop = FALSE]
-
-          dbg("[normalizationSC_server:normalizedCounts:] N.cells in dataset ", ncol(counts))
-
-          if (ncol(counts) > cells_trs) {
-            dbg("[normalizationSC_server:normalizedCounts:] Performing random sampling of 1000 cells.")
-            kk <- sample(colnames(counts), 1000)
-            counts1 <- counts[, kk, drop = FALSE] 
-            samples1 <- samples[kk, , drop = FALSE]
-          } else {
-            counts1 <- counts
-            samples1 <- samples
-          }
-
-          dbg("[normalizationSC_server:normalizedCounts:] Inferring cell types with Azimuth!")
-          dbg("[normalizationSC_server:normalizedCounts:] Reference atlas:", ref_tissue)
-          azm <- playbase::pgx.runAzimuth(counts = counts1, reference = ref_tissue)
-          dbg("[normalizationSC_server:normalizedCounts:] Cell types inference completed.")
-          celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
-          samples1 <- cbind(samples1, celltype = celltype)
-          nX <- playbase::logCPM(as.matrix(counts1), 1, total = 1e4)
-          return(list(counts = nX, samples = samples1))
-          
-        } else {
-
-          dbg("[normalizationSC_server:normalizedCounts:] Cell type already pre-defined.")
-          nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
-          return(list(counts = nX, samples = samples))
-
+        if (ncells > cells_trs) {
+          dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset ", ncells)
+          dbg("[normalizationSC_server:ds_norm_Counts:] Performing random sampling of 1K cells.")
+          kk <- sample(colnames(counts), 1000)
+          counts <- counts[, kk, drop = FALSE] 
+          samples <- samples[kk, , drop = FALSE]
         }
+
+        celltype_compute <- TRUE
+        ref_tissue <- input$ref_atlas
+        if (!is.null(ref_tissue) && celltype_compute) {
+          ## if (input$infercelltypes) {
+          dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
+          dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
+          shiny::withProgress(
+            message = "Inferring cell types with Azimuth...",
+            value = 0.4,
+            {
+              azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
+              dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inference completed.")
+              celltype.azm <- azm[,grep("^predicted.*l2$", colnames(azm))]
+              samples <- cbind(samples, celltype.azm = celltype.azm)
+            }
+          )
+        } else {
+          dbg("[normalizationSC_server:ds_norm_Counts:] Reference missing or cell types presents.")
+        }
+
+        nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
+        return(list(counts = nX, samples = samples))
+
+      })
+
+      ## Dim reductions: top 1000 features
+      dimred_norm_Counts <- shiny::reactive({ 
+        
+        shiny::req(dim(ds_norm_Counts()$counts), dim(ds_norm_Counts()$samples)) 
+        counts <- ds_norm_Counts()$counts
+        samples <- ds_norm_Counts()$samples
+
+        counts <- as.matrix(counts)
+        jj <- head(order(-matrixStats::rowSds(counts, na.rm = TRUE)), 1000)
+        counts1 <- counts[jj, , drop = FALSE]
+        counts1 <- counts1 - rowMeans(counts1, na.rm = TRUE)
+        nb <- ceiling(min(15, dim(counts) / 8))
+        pos.list <- list()
+        shiny::withProgress(
+          message = "Performing PCA, tSNE, UMAP...",
+          value = 0.4,
+          {
+            pos.list[["pca"]] <- irlba::irlba(counts1, nv = 2, nu = 0)$v
+            pos.list[["tsne"]] <- Rtsne::Rtsne(t(counts1), perplexity = 2*nb, check_duplicates=F)$Y
+            pos.list[["umap"]] <- uwot::umap(t(counts1), n_neighbors = max(2, nb))
+            pos.list <- lapply(pos.list, function(x) { rownames(x)=colnames(counts1); return(x) })
+          }
+        )
+        LL <- list(
+          samples = samples,
+          pos.pca = pos.list[["pca"]],
+          pos.tsne = pos.list[["tsne"]],
+          pos.umap = pos.list[["umap"]]
+        )
+
+        return(LL)
 
       })
 
@@ -86,101 +118,75 @@ upload_module_normalizationSC_server <- function(
       ## ------------------------------------------------------------------
 
       plot1 <- function() {
-        shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
-        counts <- normalizedCounts()$counts
-        samples <- normalizedCounts()$samples
-        cluster_vars <- input$clusterBy
-        kk <- intersect(rownames(samples), colnames(counts))
-        samples <- samples[kk, , drop = FALSE]
-        counts <- counts[, kk, drop = FALSE]
-        method <- tolower(input$dimred_plottype)
-        par(mfrow = c(1,length(cluster_vars)))
-        for(i in 1:length(cluster_vars)) {
-          v <- cluster_vars[i]
-          playbase::pgx.dimPlot(counts, samples[, v], method = method)
+        shiny::req(
+          dim(dimred_norm_Counts()$samples),
+          dim(dimred_norm_Counts()$pos.pca),
+          dim(dimred_norm_Counts()$pos.tsne),
+          dim(dimred_norm_Counts()$pos.umap)
+        ) 
+        samples <- dimred_norm_Counts()$samples
+        pos.list <-  list(
+          pca = dimred_norm_Counts()$pos.pca,
+          tsne = dimred_norm_Counts()$pos.tsne,
+          umap = dimred_norm_Counts()$pos.umap
+        )
+        vars <- input$clusterBy
+        m <- tolower(input$dimred_plottype)
+        if (length(vars) <= 2) {
+          par(mfrow = c(1, length(vars)))
+        } else if (length(vars) > 2 & length(vars) <= 4) {
+          par(mfrow = c(2, 2))
+        } else if (length(vars) > 4) {
+          par(mfrow = c(2, length(vars)))
+        }
+        i <- 1
+        for(i in 1:length(vars)) {
+          v <- samples[, vars[i]]
+          playbase::pgx.scatterPlotXY.BASE(
+            pos = pos.list[[m]], var = v, title = m,
+            xlab = "Dim1", ylab = "Dim2"
+          )
         }
       }
-
+      
       plot2 <- function() {
-        shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
-        counts <- normalizedCounts()$counts
-        samples <- normalizedCounts()$samples
-        cluster_vars <- input$clusterBy
-        kk <- intersect(rownames(samples), colnames(counts))
-        samples <- samples[kk, , drop = FALSE]
+        shiny::req(r_counts())
+        counts <- r_counts()
+        shiny::req(dim(ds_norm_Counts()$samples)) 
+        samples <- ds_norm_Counts()$samples
+        kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
-        SO <- playbase::pgx.justSeuratObject(counts, samples)        
-
-        ##----Mitocondrial %
-        ## mt.humans <- grep("^MT-", rownames(SO@assays$RNA))
-        SO[["percent.mt"]] <- PercentageFeatureSet(SO, pattern = "^MT-")
-        ## mt.mouse <- grep("^Mt-", rownames(SO@assays$RNA))
-        ## SO[["percent.mt.mouse"]] <- PercentageFeatureSet(SO, pattern = "^Mt-")
-
-        ##----Hemoglobins %
-        hb.humans <- grep("^HB", rownames(SO@assays$RNA))
-        hb.mouse <- grep("^Hb", rownames(SO@assays$RNA))
-        if (any(hb.humans)) {
-          SO[["percent.hb"]] <- Seurat::PercentageFeatureSet(SO, pattern = "^HB")
+        samples <- samples[kk, , drop = FALSE]
+        options(Seurat.object.assay.calcn = TRUE)
+        getOption("Seurat.object.assay.calcn")
+        shiny::withProgress(
+          message = "Creating and pre-processing Seurat Object...",
+          value = 0.4,
+          {
+            SO <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
+            SO <- Seurat::PercentageFeatureSet(SO, pattern = "^MT-|^Mt-", col.name = "percent.mt")
+            SO <- Seurat::PercentageFeatureSet(SO, pattern = "^HB|^Hb", col.name = "percent.hb")
+            SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+          }
+        )
+        kk <- setdiff(colnames(samples), colnames(SO@meta.data))
+        if (length(kk) > 1) {
+          SO@meta.data <- cbind(SO@meta.data, samples[, kk])
         }
-        if (any(hb.mouse)) {
-          SO[["percent.hb"]] <- Seurat::PercentageFeatureSet(SO, pattern = "^Hb")
-        }
-
-        ##------Cellcycle genes
-        ## ....
-        ## ....
-        ## ....
-        
-        ff <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.hb")
-        pl <- Seurat::VlnPlot(SO, features = ff, ncol = length(ff))
-        pl <- pl + ggplot2::xlab("")
-        plist <- list(pl)
-        cowplot::plot_grid(plotlist = plist)
-        ## SO <- Seurat::NormalizeData(SO)
-        ## SO <- Seurat::FindVariableFeatures(SO)
-        ## SO <- Seurat::ScaleData(SO)
-        ## hvf <- Seurat::VariableFeatures(SO)[1:10]
-        ## if (length(cluster_vars) > 1) hvf <- hvf[1:5]
-        ## require(ggplot2)
-        ## plist <- list()
-        ## for(i in 1:length(cluster_vars)) {
-        ##  v <- as.character(cluster_vars[i])
-        ##  if (! v %in% colnames(SO@meta.data)) {
-        ##    SO@meta.data <- cbind(SO@meta.data, samples[, v])
-        ##    colnames(SO@meta.data)[ncol(SO@meta.data)] <- v
-        ##  }
-        ##  ug <- length(unique(samples[, v]))
-        ##  scaling <- ifelse(ug < 3, FALSE, TRUE)
-        ##  pl <- Seurat::DotPlot(SO, features = hvf, group.by = v, scale = scaling)
-        ##  pl <- pl + RotatedAxis() + ggplot2::ylab("") + ggplot2::xlab("")
-        ##  plist[[i]] <- pl
-        ## }
-        ## cowplot::plot_grid(plotlist = plist)
+        require(scplotter)
+        scplotter::FeatureStatPlot(SO,
+          features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.hb"),
+          ident = "celltype.azm", facet_scales = "free_y",
+          theme_args = list(base_size = 18))
       }
 
-      ## TO DO: SAVE DIMPLOT. SO PLOTS ARE SAME.
-      ## TO DO: MAKE UPLOAD_SAMPLES FAST. ONCE CLICK NEXT IT WILL START AZIMUTH.
-      ## TO DO: add pgx.createSingleCellPGX into pgx.createPGX
-      
-      ## plot3 <- function() { PIE CHART
-      ##   shiny::req(dim(normalizedCounts()$counts), dim(normalizedCounts()$samples)) 
-      ##   counts <- normalizedCounts()$counts
-      ##   samples <- normalizedCounts()$samples
-      ##   cluster_vars <- input$clusterBy
-      ##   kk <- intersect(rownames(samples), colnames(counts))
-      ##   samples <- samples[kk, , drop = FALSE]
-      ##   counts <- counts[, kk, drop = FALSE]
-      ## }
-
-      
       ## ------------------------------------------------------------------
       ## Plot UI
       ## ------------------------------------------------------------------
       output$normalization <- shiny::renderUI({
 
-        shiny::req(dim(normalizedCounts()$samples))
-        samples <- normalizedCounts()$samples
+        shiny::req(dim(ds_norm_Counts()$samples))
+        samples <- ds_norm_Counts()$samples
         metadata_vars <- colnames(samples)
                 
         dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
@@ -191,7 +197,7 @@ upload_module_normalizationSC_server <- function(
           shiny::radioButtons(
             ns("dimred_plottype"),
             label = "Plot type:",
-            choices = c("tSNE", "UMAP"),
+            choices = c("PCA", "tSNE", "UMAP"),
             selected = "tSNE", inline = FALSE
           )
         )
@@ -212,7 +218,8 @@ upload_module_normalizationSC_server <- function(
                 shiny::checkboxInput(
                   ns("infercelltypes"),
                   label = "Infer cell types with Azimuth",
-                  value = TRUE),
+                  value = TRUE
+                ),
                 shiny::conditionalPanel(
                   "input.infercelltypes == true",
                   ns = ns,
@@ -277,7 +284,7 @@ upload_module_normalizationSC_server <- function(
               ),
               PlotModuleUI(
                 ns("plot2"),
-                title = "Sequencing depth & contaminations",
+                title = "Sequencing depth & samples' QC by cell type",
                 ## info.text = dotplot.infotext, ## update
                 ## caption = dotplot.infotext,
                 ## options = dotplot.options,
@@ -315,17 +322,34 @@ upload_module_normalizationSC_server <- function(
         add.watermark = FALSE
       )
 
-      ## log2 counts
-      cX <- shiny::reactive({
-        shiny::req(dim(normalizedCounts()$counts))
-        log2(normalizedCounts()$counts + 1)
+      ## counts
+      counts <- shiny::reactive({
+        shiny::req(r_counts())
+        counts <- r_counts()
+        counts
       })
 
+      ## normalized counts
+      X <- shiny::reactive({
+        shiny::req(r_counts())
+        counts <- r_counts()
+        X <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
+        X
+      })
+
+      ## smples
+      samples <- shiny::reactive({
+        shiny::req(r_samples())
+        samples <- r_samples()
+        samples
+      })
+      
+      
       return(
         list(
-          counts = shiny::reactive(normalizedCounts()$counts),
-          samples = shiny::reactive(normalizedCounts()$samples),
-          X = cX,
+          counts = counts,
+          samples = samples, ## shiny::reactive(ds_norm_Counts()$samples),
+          X = X,
           impX = shiny::reactive(NULL),
           norm_method = shiny::reactive("CPM")
         )
