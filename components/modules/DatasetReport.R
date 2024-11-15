@@ -240,6 +240,7 @@ DatasetReportServer <- function(
                   "-P", paste0("pgxdir:", pgx_path),
                   "-P", paste0("comparison:", ct),
                   "-P", paste0("dataset:", sel_dataset),
+                  "-M", paste0("dataset:", sel_dataset),
                   "-M", paste0("user:", user),
                   "-M", paste0("title:", ct)
                 ),
