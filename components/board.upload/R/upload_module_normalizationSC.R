@@ -13,8 +13,7 @@ upload_module_normalizationSC_ui <- function(id, height = "100%") {
   uiOutput(ns("normalization"), fill = TRUE)
 }
 
-upload_module_normalizationSC_server <- function(
-                                                 id,
+upload_module_normalizationSC_server <- function(id,
                                                  r_counts,
                                                  r_samples,
                                                  r_contrasts,
@@ -343,7 +342,6 @@ upload_module_normalizationSC_server <- function(
         samples <- r_samples()
         samples
       })
-      
       
       return(
         list(

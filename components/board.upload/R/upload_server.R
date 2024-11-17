@@ -1160,7 +1160,6 @@ UploadBoard <- function(id,
       is.count = TRUE,
       height = height
     )
-
     
     ## correctedX <- upload_module_batchcorrect_server(
     ##   id = "batchcorrect",
