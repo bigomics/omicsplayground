@@ -196,7 +196,7 @@ app_server <- function(input, output, session) {
 
   ## Modules needed from the start
   recompute_pgx <- shiny::reactiveVal(NULL)
-  recompute_info <- shiny::reactiveVal(NULL)
+
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
@@ -220,7 +220,6 @@ app_server <- function(input, output, session) {
       reload_pgxdir = reload_pgxdir,
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
-      recompute_info = recompute_info,
       inactivityCounter = inactivityCounter,
       new_upload = new_upload
     )
@@ -568,13 +567,17 @@ app_server <- function(input, output, session) {
   observeEvent(input$dataset_click, {
     shiny::req(PGX$name)
     pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    fields <- c("name", "datatype", "description", "date", "norm_method", "imputation_method", "bc_method", "remove_outliers")
+    ##    fields <- c("name", "datatype", "description", "date", "norm_method", "imputation_method", "bc_method", "remove_outliers")
+    fields <- c("name", "datatype", "description", "date", "settings")
     fields <- intersect(fields, names(PGX))
     body <- ""
+    listcollapse <- function(lst) paste0(names(lst),"=",lst, collapse="; ")
     for (f in fields) {
       if (length(PGX[[f]]) > 1) {
         for (n in names(PGX[[f]])) {
-          txt1 <- paste0("<b>", paste(f, n), ":</b>&nbsp; ", PGX[[f]][[n]], "<br>")
+          val <- PGX[[f]][[n]]
+          if(length(val) > 1) val <- listcollapse(val)
+          txt1 <- paste0("<b>", paste0(f,".",n), ":</b>&nbsp; ", val, "<br>", collapse="")
           body <- paste(body, txt1)
         }
       } else {
@@ -582,6 +585,7 @@ app_server <- function(input, output, session) {
         body <- paste(body, txt1)
       }
     }
+
     shiny::showModal(shiny::modalDialog(
       title = pgx.name,
       div(HTML(body), style = "font-size: 1.1em;"),
