@@ -568,12 +568,19 @@ app_server <- function(input, output, session) {
   observeEvent(input$dataset_click, {
     shiny::req(PGX$name)
     pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    fields <- c("name", "datatype", "description", "date")
+    fields <- c("name", "datatype", "description", "date", "norm_method", "imputation_method", "bc_method", "remove_outliers")
     fields <- intersect(fields, names(PGX))
     body <- ""
     for (f in fields) {
-      txt1 <- paste0("<b>", f, ":</b>&nbsp; ", PGX[[f]], "<br>")
-      body <- paste(body, txt1)
+      if (length(PGX[[f]]) > 1) {
+        for (n in names(PGX[[f]])) {
+          txt1 <- paste0("<b>", paste(f, n), ":</b>&nbsp; ", PGX[[f]][[n]], "<br>")
+          body <- paste(body, txt1)
+        }
+      } else {
+        txt1 <- paste0("<b>", f, ":</b>&nbsp; ", PGX[[f]], "<br>")
+        body <- paste(body, txt1)
+      }
     }
     shiny::showModal(shiny::modalDialog(
       title = pgx.name,
