@@ -1198,6 +1198,9 @@ UploadBoard <- function(id,
         compute_input$X <- normalized$X()
         compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
+        compute_input$imputation_method <- normalized$imputation_method()
+        compute_input$bc_method <- normalized$bc_method()
+        compute_input$remove_outliers <- normalized$remove_outliers()
       }
     })
 
@@ -1207,6 +1210,9 @@ UploadBoard <- function(id,
       countsX = reactive(compute_input$X),
       impX = reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
+      imputation_method = shiny::reactive(compute_input$imputation_method),
+      bc_method = shiny::reactive(compute_input$bc_method),
+      remove_outliers = shiny::reactive(compute_input$remove_outliers),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
