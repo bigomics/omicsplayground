@@ -158,6 +158,7 @@ upload_module_normalizationSC_server <- function(id,
 
         shiny::req(r_counts())
         shiny::req(r_samples())
+        ## shiny::req(input$infercelltypes)
         counts <- r_counts()
         samples <- r_samples()
         if (is.null(counts)) { return(NULL) }
@@ -176,10 +177,10 @@ upload_module_normalizationSC_server <- function(id,
           samples <- samples[kk, , drop = FALSE]
         }
 
-        celltype_compute <- TRUE
+        ## celltype_compute <- TRUE
         ref_tissue <- input$ref_atlas
-        if (!is.null(ref_tissue) && celltype_compute) {
-          ## if (input$infercelltypes) {
+        ## if ( celltype_compute) {
+        if (!is.null(ref_tissue) && input$infercelltypes) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
           shiny::withProgress(
