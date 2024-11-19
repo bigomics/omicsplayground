@@ -589,7 +589,8 @@ upload_module_computepgx_server <- function(
             ## compute settings only for info
             imputation_method = compute_settings$imputation_method,
             bc_method = compute_settings$bc_method,
-            remove_outliers = compute_settings$remove_outliers
+            remove_outliers = compute_settings$remove_outliers,
+            norm_method = norm_method()
           ),
           ## normalize = do.normalization,
           prune.samples = TRUE,
