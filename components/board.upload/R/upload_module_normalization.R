@@ -997,12 +997,48 @@ upload_module_normalization_server <- function(
         m
       })
 
+      imputation_method <- reactive({
+        if (input$impute == FALSE) {
+          return(list(
+            zero_as_na = input$zero_as_na,
+            imputation = "no_imputation"
+          ))
+        } else {
+          return(list(
+            zero_as_na = input$zero_as_na,
+            imputation = input$impute_method
+          ))
+        }
+      })
+
+      remove_outliers <- reactive({
+        if (input$remove_outliers == FALSE) {
+          return("no_outlier_removal")
+        } else {
+          return(input$outlier_threshold)
+        }
+      })
+
+      bc_method <- reactive({
+        if (input$batchcorrect == FALSE) {
+          return("no_batch_correct")
+        } else {
+          return(list(
+            method = input$bec_method,
+            param = input$bec_param
+          ))
+        }
+      })
+
       return(
         list(
           counts = correctedCounts,
           X = cX,
           impX = impX,
-          norm_method = norm_method
+          norm_method = norm_method,
+          imputation_method = imputation_method,
+          bc_method = bc_method,
+          remove_outliers = remove_outliers
           ## results = results_correction_methods  ## IK reallz needed??
         )
       ) ## pointing to reactive
