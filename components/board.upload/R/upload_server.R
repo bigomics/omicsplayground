@@ -34,7 +34,7 @@ UploadBoard <- function(id,
     probetype <- shiny::reactiveVal("running")
 
     compute_settings <- shiny::reactiveValues()
-    
+
     # add task to detect probetype using annothub
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
       future_promise({
@@ -973,10 +973,9 @@ UploadBoard <- function(id,
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
 
-              ##compute_info(list( "name" = pgx$name,"description" = pgx$description))
+              ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
-              
             }
           } else {
             shinyalert::shinyalert(
@@ -1212,9 +1211,9 @@ UploadBoard <- function(id,
       countsX = reactive(compute_input$X),
       impX = reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
-#      imputation_method = shiny::reactive(compute_input$imputation_method),
-#      bc_method = shiny::reactive(compute_input$bc_method),
-#      remove_outliers = shiny::reactive(compute_input$remove_outliers),
+      #      imputation_method = shiny::reactive(compute_input$imputation_method),
+      #      bc_method = shiny::reactive(compute_input$bc_method),
+      #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),

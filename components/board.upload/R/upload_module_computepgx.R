@@ -355,15 +355,16 @@ upload_module_computepgx_server <- function(
       # Input name and description. NEED CHECK!!! seems not to
       # work. 18.11.24IK.
       shiny::observeEvent(list(metaRT(), compute_settings), {
-
         meta <- metaRT()
         pgx_info <- compute_settings
-        if(is.null(meta) && is.null(pgx_info)) return(NULL)
+        if (is.null(meta) && is.null(pgx_info)) {
+          return(NULL)
+        }
 
-        if (!is.null(pgx_info) && length(pgx_info)>0 ) {
+        if (!is.null(pgx_info) && length(pgx_info) > 0) {
           meta <- pgx_info
         }
-        
+
         # If the user recomputes, recycle old names/description
         if (!is.null(meta$name)) {
           shiny::updateTextInput(

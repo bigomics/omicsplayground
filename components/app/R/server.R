@@ -571,13 +571,13 @@ app_server <- function(input, output, session) {
     fields <- c("name", "datatype", "description", "date", "settings")
     fields <- intersect(fields, names(PGX))
     body <- ""
-    listcollapse <- function(lst) paste0(names(lst),"=",lst, collapse="; ")
+    listcollapse <- function(lst) paste0(names(lst), "=", lst, collapse = "; ")
     for (f in fields) {
       if (length(PGX[[f]]) > 1) {
         for (n in names(PGX[[f]])) {
           val <- PGX[[f]][[n]]
-          if(length(val) > 1) val <- listcollapse(val)
-          txt1 <- paste0("<b>", paste0(f,".",n), ":</b>&nbsp; ", val, "<br>", collapse="")
+          if (length(val) > 1) val <- listcollapse(val)
+          txt1 <- paste0("<b>", paste0(f, ".", n), ":</b>&nbsp; ", val, "<br>", collapse = "")
           body <- paste(body, txt1)
         }
       } else {
