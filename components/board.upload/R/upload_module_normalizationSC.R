@@ -177,9 +177,7 @@ upload_module_normalizationSC_server <- function(id,
           samples <- samples[kk, , drop = FALSE]
         }
 
-        ## celltype_compute <- TRUE
         ref_tissue <- input$ref_atlas
-        ## if ( celltype_compute) {
         if (!is.null(ref_tissue) && input$infercelltypes) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
@@ -268,7 +266,7 @@ upload_module_normalizationSC_server <- function(id,
           SO,
           features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
           ident = "celltype.azm", facet_scales = "free_y",
-          theme_args = list(base_size = 18)
+          theme_args = list(base_size = 16.5)
         )
       }
 
