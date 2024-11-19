@@ -33,14 +33,14 @@ upload_module_normalizationSC_server <- function(id,
 
         shiny::req(dim(ds_norm_Counts()$samples))
         samples <- ds_norm_Counts()$samples
-        metadata_vars <- c("celltype.azm", 
+        metadata_vars <- c("celltype", 
           "orig.ident", "nCount_RNA", "nFeature_RNA",
           "percent.mt", "percent.ribo", "seurat_clusters")
         metadata_vars <- unique(c(metadata_vars, colnames(samples)))
 
         dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
 
-        dotplot.infotext <- "Dot plot of top 10 highly variable features in the data. The dot plot allows to visualize the expression changes across different user-defined identity classes (e.g., cell clusters, cell types, phenotype classes). The size of each dot reflects the percentage of cells within a class; the color of each dot indicates the average expression level (computed using Seurat's AverageExpression function) across all cells within a class (blue is high)."
+        qc.infotext <- "Data QC. Violin plots of total number of cDNA molecules (e.g., UMI) detected in each cell (nCount_RNA), number of unique genes detected in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo)."
         
         dimred.options <- tagList(
           shiny::radioButtons(
@@ -97,7 +97,7 @@ upload_module_normalizationSC_server <- function(id,
                   label = "Visualize cell cluster by",
                   choices = metadata_vars, ## reactive
                   multiple = TRUE,
-                  selected = "celltype.azm"
+                  selected = "celltype"
                 ),
                 shiny::br()
               )
@@ -125,9 +125,8 @@ upload_module_normalizationSC_server <- function(id,
               PlotModuleUI(
                 ns("plot1"),
                 title = "Sequencing depth & samples' QC by cell type",
-                ## info.text = dotplot.infotext, ## update
-                ## caption = dotplot.infotext,
-                ## options = dotplot.options,
+                info.text = qc.infotext,
+                caption = qc.infotext,
                 height = c("auto", "100%"),
                 show.maximize = FALSE,
                 ),
@@ -156,9 +155,10 @@ upload_module_normalizationSC_server <- function(id,
       ## downsample or still use full dataset if ncells < threshold
       ds_norm_Counts <- shiny::reactive({ 
 
+        options(future.globals.maxSize= 4*1024^4) 
+
         shiny::req(r_counts())
         shiny::req(r_samples())
-        ## shiny::req(input$infercelltypes)
         counts <- r_counts()
         samples <- r_samples()
         if (is.null(counts)) { return(NULL) }
@@ -179,6 +179,16 @@ upload_module_normalizationSC_server <- function(id,
 
         ref_tissue <- input$ref_atlas
         if (!is.null(ref_tissue) && input$infercelltypes) {
+          kk <- c(
+            "celltype", "cell.type", "cell_type",
+            "CellType", "Celltype", "celltypes"
+          )
+          kk <- unique(c(kk, tolower(kk), toupper(kk)))
+          kk <- intersect(kk, colnames(samples))
+          if (length(kk) > 0) {
+            jj <- which(!colnames(samples) %in% kk)
+            samples <- samples[, jj, drop = FALSE]
+          }
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
           shiny::withProgress(
@@ -187,8 +197,8 @@ upload_module_normalizationSC_server <- function(id,
             {
               azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
               dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inference completed.")
-              celltype.azm <- azm[,grep("^predicted.*l2$", colnames(azm))]
-              samples <- cbind(samples, celltype.azm = celltype.azm)
+              celltype <- azm[,grep("^predicted.*l2$", colnames(azm))]
+              samples <- cbind(samples, celltype = celltype)
             }
           )
         } else {
@@ -198,11 +208,16 @@ upload_module_normalizationSC_server <- function(id,
         nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
         return(list(counts = nX, samples = samples))
 
+        rm(counts)
+        rm(samples)
+        
       })
 
       ## Dim reductions: top 1000 features
       dimred_norm_Counts <- shiny::reactive({ 
-        
+
+        options(future.globals.maxSize= 4*1024^4)         
+
         shiny::req(dim(ds_norm_Counts()$counts))
         shiny::req(dim(ds_norm_Counts()$samples))
         counts <- ds_norm_Counts()$counts
@@ -231,9 +246,8 @@ upload_module_normalizationSC_server <- function(id,
           message = "Creating & preprocessing Seurat object...",
           value = 0.4,
           {
-            SO <- Seurat::CreateSeuratObject(counts = counts, meta.data = samples)
-            SO <- Seurat::PercentageFeatureSet(SO, pattern = "^MT-|^Mt-", col.name = "percent.mt")
-            SO <- Seurat::PercentageFeatureSet(SO, pattern = "^RP[LS]|^Rp[ls]", col.name = "percent.ribo")
+            SO <- playbase::pgx.createSeuratObject(counts, samples,
+              batch = NULL, filter = FALSE, preprocess = FALSE)
             SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
           }
         )
@@ -265,8 +279,8 @@ upload_module_normalizationSC_server <- function(id,
         scplotter::FeatureStatPlot(
           SO,
           features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
-          ident = "celltype.azm", facet_scales = "free_y",
-          theme_args = list(base_size = 16.5)
+          ident = "celltype", facet_scales = "free_y",
+          theme_args = list(base_size = 15)
         )
       }
 
@@ -300,8 +314,12 @@ upload_module_normalizationSC_server <- function(id,
         }
         i <- 1
         for(i in 1:length(vars)) {
+          v <- samples[, vars[i]]
+          if (vars[i] %in% c("nFeature_RNA", "nCount_RNA")) {
+            v <- log2(v + 1)
+          }
           playbase::pgx.scatterPlotXY.BASE(
-            pos = pos.list[[m]], var = samples[, vars[i]],
+            pos = pos.list[[m]], var = v,
             title = paste0(m, "; ", vars[i]),
             xlab = "Dim1", ylab = "Dim2"
           )
