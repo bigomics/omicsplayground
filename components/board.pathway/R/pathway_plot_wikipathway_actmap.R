@@ -123,9 +123,10 @@ functional_plot_wikipathway_actmap_server <- function(id,
 
       plot_RENDER <- function() {
         res <- plot_data()
-        if (is.null(res) || nrow(res) == 0) {
-          return(NULL)
-        }
+
+        shiny::validate(shiny::need(
+          !is.null(res), "Enrichment table is too small to plot an activation matrix."
+        ))
 
         playbase::pgx.plotActivation(
           pgx,
