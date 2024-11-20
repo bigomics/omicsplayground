@@ -98,7 +98,7 @@ clustering_plot_clustpca_server <- function(id,
     create_plot <- function(pgx, pos, method, colvar, shapevar, label, cex) {
       do3d <- (ncol(pos) == 3)
       sel <- rownames(pos)
-      df <- cbind(pos, pgx$Y[sel, ])
+      df <- cbind(pos, pgx$samples[sel, ])
 
       textvar <- NULL
       if (colvar %in% colnames(df)) colvar <- factor(df[, colvar])
