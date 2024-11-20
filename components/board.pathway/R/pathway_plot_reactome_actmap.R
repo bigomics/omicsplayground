@@ -122,6 +122,9 @@ functional_plot_reactome_actmap_server <- function(id,
 
       plot_RENDER <- function() {
         res <- plot_data()
+        shiny::validate(shiny::need(
+          !is.null(res), "Enrichment table is too small to plot an activation matrix."
+        ))
 
         playbase::pgx.plotActivation(
           pgx,
