@@ -142,6 +142,7 @@ app_ui <- function(x) {
           cell = "Cell profiling",
           pcsf = "PCSF",
           wgcna = "WGCNA",
+          mofa = "MOFA",
           tcga = "TCGA survival (beta)"
         )
       )
@@ -401,6 +402,12 @@ app_ui <- function(x) {
                     allows one to define modules (clusters), intramodular hubs, and
                     network nodes with regard to module membership, to study the
                     relationships between co-expression modules.")
+          ),
+          bigdash::sidebarTabHelp(
+            "mofa-tab",
+            "MOFA",
+            tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
+                    integration method based on multi-omcis factor analysis.")
           ),
           bigdash::sidebarTabHelp(
             "pcsf-tab",

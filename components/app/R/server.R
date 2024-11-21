@@ -330,7 +330,12 @@ app_server <- function(input, output, session) {
           "tcga-tab",
           TcgaInputs("tcga"),
           TcgaUI("tcga")
-        )
+        ),
+        mofa = bigdash::bigTabItem(
+          "mofa-tab",
+          MofaInputs("mofa"),
+          MofaUI("mofa")
+        )        
       )
 
 
@@ -466,6 +471,12 @@ app_server <- function(input, output, session) {
             info("[SERVER] calling WgcnaBoard module")
             insertBigTabItem("wgcna")
             WgcnaBoard("wgcna", pgx = PGX)
+          }
+
+          if (ENABLED["mofa"]) {
+            info("[SERVER] calling MofaBoard module")
+            insertBigTabItem("mofa")
+            MofaBoard("mofa", pgx = PGX)
           }
 
           shiny::incProgress(0.1)
@@ -657,7 +668,6 @@ app_server <- function(input, output, session) {
 
       ## Beta features
       info("[SERVER] disabling beta features")
-      ## bigdash.toggleTab(session, "pcsf-tab", show.beta) ## wgcna
       bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
       toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
       toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
