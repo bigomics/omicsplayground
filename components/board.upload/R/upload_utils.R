@@ -331,7 +331,7 @@ read_query_files <- function(url, encryption_key = NULL) {
   return(destination)
 }
 
-# Decrypt email
+# Decrypt utility, used in email-encrypted authentication + population of data upload (only on that auth)
 decrypt_util <- function(query, encryption_key) {
   ciphertext <- base64enc::base64decode(query)
   decrypted_query <- rawToChar(sodium::data_decrypt(ciphertext, encryption_key))
