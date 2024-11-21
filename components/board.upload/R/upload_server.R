@@ -978,9 +978,14 @@ UploadBoard <- function(id,
               compute_settings$description <- pgx$description
             } else if (opt$AUTHENTICATION == "email-encrypted") { # Only data preloading on email-encrypted authentication
               query_files <- check_query_files()
-              # TODO unencrypt links!!! to do inside check_query_files
+              # Get encryption key
+              encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+              if (!file.exists(encryption_key)) {
+                encryption_key <- NULL
+              }
+              # Populate upload data with available
               if (!is.null(query_files$counts)) {
-                file <- read_query_files(query_files$counts)
+                file <- read_query_files(query_files$counts, encryption_key)
                 df <- playbase::read_counts(file)
                 uploaded$counts.csv <- df
                 ## if counts file contains annotation
@@ -988,12 +993,12 @@ UploadBoard <- function(id,
                 uploaded$annot.csv <- af
               }
               if (!is.null(query_files$samples)) {
-                file <- read_query_files(query_files$samples)
+                file <- read_query_files(query_files$samples, encryption_key)
                 df <- playbase::read_samples(file)
                 uploaded$samples.csv <- df
               }
               if (!is.null(query_files$contrasts)) {
-                file <- read_query_files(query_files$contrasts)
+                file <- read_query_files(query_files$contrasts, encryption_key)
                 df <- playbase::read_contrasts(file)
                 uploaded$contrasts.csv <- df
               }

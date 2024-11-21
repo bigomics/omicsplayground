@@ -1236,7 +1236,7 @@ EmailEncryptedAuthenticationModule <- function(
     message("[AuthenticationModule] >>>> using EmailEncrypted authentication <<<<")
     ns <- session$ns
 
-    # TODO add key and uncomment this code
+    # Get encryption key
     encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
     if (!file.exists(encryption_key)) {
       ## we continue without decryption, just to test, unsafe
