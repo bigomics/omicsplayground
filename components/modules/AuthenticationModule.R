@@ -1237,11 +1237,12 @@ EmailEncryptedAuthenticationModule <- function(
     ns <- session$ns
 
     # Get encryption key
-    encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
-    if (!file.exists(encryption_key)) {
+    encryption_key <- tryCatch({
+      readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+    }, error = function(w){NULL})
+    if (is.null(encryption_key)) {
       ## we continue without decryption, just to test, unsafe
       warning("[EmailEncryptedAuthenticationModule] ERROR : missing encryption_key file!!!")
-      encryption_key <- NULL
     }
 
     USER <- shiny::reactiveValues(
@@ -1296,25 +1297,22 @@ EmailEncryptedAuthenticationModule <- function(
     })
 
     ## --------------------------------------
-    ## Step 2: Decrypt email query field
+    ## Step 2: Decrypt and Login user
     ## --------------------------------------
-
-    if (!is.null(encryption_key)) {
-      query_email <- decrypt_mail(query_email, encryption_key)
-    }
-
-    ## --------------------------------------
-    ## Step 3: Login user
-    ## --------------------------------------
-    # TODO place decrypted email instead of query_email
     shiny::observeEvent(input$login_submit_btn, {
       if (is.null(query_email())) {
-        dbg("[EmailEncryptedAuthenticationModule] invalid email")
+        dbg("[EmailEncryptedAuthenticationModule] invalid email hash")
         output$login_warning <- shiny::renderText("invalid email hash")
         # TODO show some error on the UI
       } else {
-        USER$email <- query_email()
-        USER$username <- query_email()
+        # Decrypt
+        if (!is.null(encryption_key)) {
+          query_email <- decrypt_util(query_email(), encryption_key)
+        } else {
+          query_email <- query_email()
+        }
+        USER$email <- query_email
+        USER$username <- query_email
         USER$logged <- TRUE
         # TODO Use some sort of user_database to see if email allowed??
         # TODO check domain (?)
