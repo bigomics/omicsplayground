@@ -403,23 +403,16 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         # k.est
         # k.est <- pmax(pmin(k.est, 3), 2)
         k.est <- 2 ## for now...
-
+        km <- kmeans(gx, centers = k.est)
+        km.rnk <- rank(km$centers, ties.method = "random")        
         if (k.est == 2) {
-          km <- kmeans(gx, centers = 2)
-          km.rnk <- rank(km$centers, ties.method = "random")
-          grp.labels <- c("low", "high")[km.rnk]
-          grp <- grp.labels[km$cluster]
+          grp.labels <- grp.labels <- c("low", "high")[km.rnk]
         } else if (k.est == 3) {
-          km <- kmeans(gx, centers = 3)
-          km.rnk <- rank(km$centers, ties.method = "random")
           grp.labels <- c("low", "mid", "high")[km.rnk]
-          grp <- grp.labels[km$cluster]
         } else if (k.est == 4) {
-          km <- kmeans(gx, centers = 4)
-          km.rnk <- rank(km$centers, ties.method = "random")
           grp.labels <- c("low", "mid-low", "mid-high", "high")[km.rnk]
-          grp <- grp.labels[km$cluster]
         }
+        grp <- grp.labels[km$cluster]
         grp <- paste0(splitvar, ":", grp)
         names(grp) <- colnames(zx)
       }
