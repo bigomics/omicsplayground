@@ -31,8 +31,10 @@ upload_module_normalizationSC_server <- function(id,
       ## ------------------------------------------------------------------
       output$normalization <- shiny::renderUI({
 
-        shiny::req(dim(ds_norm_Counts()$samples))
-        samples <- ds_norm_Counts()$samples
+        ## shiny::req(dim(ds_norm_Counts()$samples))
+        ## samples <- ds_norm_Counts()$samples
+        shiny::req(r_samples())
+        samples <- r_samples()
         metadata_vars <- c("celltype.azimuth",
           "orig.ident", "nCount_RNA", "nFeature_RNA",
           "percent.mt", "percent.ribo", "seurat_clusters")
@@ -168,7 +170,7 @@ upload_module_normalizationSC_server <- function(id,
 
         shiny::req(r_counts())
         shiny::req(r_samples())
-        ## shiny::req(input$infercelltypes)
+        shiny::req(input$infercelltypes)
         counts <- r_counts()
         samples <- r_samples()
         if (is.null(counts)) { return(NULL) }
@@ -187,12 +189,7 @@ upload_module_normalizationSC_server <- function(id,
           samples <- samples[kk, , drop = FALSE]
         }
         
-        if (!is.null(input$ref_atlas)) {
-          ref_tissue <- input$ref_atlas
-        } else {
-          ref_tissue <- "pbmcref"
-        }
-
+        ref_tissue <- input$ref_atlas
         dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
         dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
         shiny::withProgress(
@@ -218,6 +215,7 @@ upload_module_normalizationSC_server <- function(id,
 
         shiny::req(dim(ds_norm_Counts()$counts))
         shiny::req(dim(ds_norm_Counts()$samples))
+        ## shiny::req(input$infercelltypes)
         counts <- ds_norm_Counts()$counts
         counts <- as.matrix(counts)
         samples <- ds_norm_Counts()$samples
@@ -340,14 +338,15 @@ upload_module_normalizationSC_server <- function(id,
         group_var <- "stim" ## code for it
         pp1 <- scplotter::CellStatPlot(
           SO, group_by = group_var,
-          ident = "seurat_clusters", position = "stack"
+           ident = "seurat_clusters", position = "stack"
         ) + ggplot2::theme(legend.position="none") 
         pp2 <- scplotter::CellStatPlot(
           SO, group_by = group_var, x_text_angle = 60,
-          ident = "celltype", position = "stack",
+          ident = "celltype.azimuth", position = "stack",
           theme_args = list(base_size = 15)
         ) + ggplot2::xlab("") + ggplot2::ylab("")
         pp1 | pp2
+          ## plot_layout(widths = c(1, 1))
       }
 
       ## ------------------------------------------------------------------
