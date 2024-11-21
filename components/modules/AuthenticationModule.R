@@ -1237,11 +1237,12 @@ EmailEncryptedAuthenticationModule <- function(
     ns <- session$ns
 
     # TODO add key and uncomment this code
-    # encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
-    # if (!file.exists(crypto_key)) {
-    #   ## we continue but email is not working
-    #   warning("[EmailHeaderAuthenticationModule] ERROR : missing crypto_key file!!!")
-    # }
+    encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+    if (!file.exists(encryption_key)) {
+      ## we continue without decryption, just to test, unsafe
+      warning("[EmailEncryptedAuthenticationModule] ERROR : missing encryption_key file!!!")
+      encryption_key <- NULL
+    }
 
     USER <- shiny::reactiveValues(
       method = "email-encrypted",
@@ -1290,7 +1291,6 @@ EmailEncryptedAuthenticationModule <- function(
     ## --------------------------------------
 
     query_email <- shiny::reactive({
-      # aqui fer que pilli el header enlloc del query string
       query_email <- shiny::getQueryString()$email
       query_email
     })
@@ -1299,7 +1299,9 @@ EmailEncryptedAuthenticationModule <- function(
     ## Step 2: Decrypt email query field
     ## --------------------------------------
 
-    # TODO decrypt email
+    if (!is.null(encryption_key)) {
+      query_email <- decrypt_mail(query_email, encryption_key)
+    }
 
     ## --------------------------------------
     ## Step 3: Login user

@@ -327,3 +327,10 @@ read_query_files <- function(url) {
   download.file(url, destination)
   return(destination)
 }
+
+# Decrypt email
+decrypt_email <- function(query_email, encryption_key) {
+  ciphertext <- base64enc::base64decode(query_email)
+  email <- rawToChar(sodium::data_decrypt(ciphertext, encryption_key))
+  return(email)
+}
