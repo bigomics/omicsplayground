@@ -1227,6 +1227,112 @@ LoginCodeAuthenticationModule <- function(id,
 }
 
 
+EmailEncryptedAuthenticationModule <- function(
+  id = "auth",
+  show_modal = TRUE,
+  # TODO add argument for location of crypto key (probably on ETC)
+  domain = opt$DOMAIN) {
+  shiny::moduleServer(id, function(input, output, session) {
+    message("[AuthenticationModule] >>>> using EmailEncrypted authentication <<<<")
+    ns <- session$ns
+
+    # TODO add key and uncomment this code
+    # encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+    # if (!file.exists(crypto_key)) {
+    #   ## we continue but email is not working
+    #   warning("[EmailHeaderAuthenticationModule] ERROR : missing crypto_key file!!!")
+    # }
+
+    USER <- shiny::reactiveValues(
+      method = "email-encrypted",
+      logged = FALSE,
+      username = NA,
+      email = NA,
+      level = "",
+      limit = "",
+      options = opt, ## global
+      user_dir = PGX.DIR ## global
+    )
+
+    if (show_modal) {
+      m <- splashLoginModal(
+        ns = ns,
+        with.username = FALSE,
+        with.email = FALSE,
+        with.password = FALSE,
+        title = "Sign in",
+        subtitle = "Ready to explore your data?",
+        button.text = "Sure I am!"
+      )
+      shiny::showModal(m)
+    }
+
+    resetUSER <- function() {
+      dbg("[EmailEncryptedAuthenticationModule] resetUSER called")
+      USER$logged <- FALSE
+      USER$username <- NA
+      USER$email <- NA
+      USER$password <- NA
+      USER$level <- ""
+      USER$limit <- ""
+
+      PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+    }
+
+    output$showLogin <- shiny::renderUI({
+      resetUSER()
+    })
+
+    output$login_warning <- shiny::renderText("")
+
+    ## --------------------------------------
+    ## Step 1: Get email query field
+    ## --------------------------------------
+
+    query_email <- shiny::reactive({
+      # aqui fer que pilli el header enlloc del query string
+      query_email <- shiny::getQueryString()$email
+      query_email
+    })
+
+    ## --------------------------------------
+    ## Step 2: Decrypt email query field
+    ## --------------------------------------
+
+    # TODO decrypt email
+
+    ## --------------------------------------
+    ## Step 3: Login user
+    ## --------------------------------------
+    # TODO place decrypted email instead of query_email
+    shiny::observeEvent(input$login_submit_btn, {
+      if (is.null(query_email())) {
+        dbg("[EmailEncryptedAuthenticationModule] invalid email")
+        output$login_warning <- shiny::renderText("invalid email hash")
+        # TODO show some error on the UI
+      } else {
+        USER$email <- query_email()
+        USER$username <- query_email()
+        USER$logged <- TRUE
+        # TODO Use some sort of user_database to see if email allowed??
+        # TODO check domain (?)
+        USER$user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+        if (!opt$ENABLE_USERDIR) {
+          USER$user_dir <- file.path(PGX.DIR)
+        }
+        dbg("[EmailEncryptedAuthenticationModule] using user OPTIONS")
+        USER$options <- read_user_options(USER$user_dir)
+        session$sendCustomMessage("set-user", list(user = USER$email))
+      }
+    })
+
+    ## export as 'public' functions
+    USER$resetUSER <- resetUSER
+
+    return(USER)
+  })
+}
 ## ================================================================================
 ## ================================= END OF FILE ==================================
 ## ================================================================================

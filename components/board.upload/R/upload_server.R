@@ -945,7 +945,7 @@ UploadBoard <- function(id,
         wizardR::reset("upload_wizard")
 
         # skip upload trigger at first startup
-        if (new_upload() == 0) {
+        if (new_upload() == 1) {
           return(NULL)
         }
 
@@ -976,6 +976,27 @@ UploadBoard <- function(id,
               ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
+            } else if (opt$AUTHENTICATION == "email-encrypted") { # Only data preloading on email-encrypted authentication
+              query_files <- check_query_files()
+              # TODO unencrypt links!!! to do inside check_query_files
+              if (!is.null(query_files$counts)) {
+                file <- read_query_files(query_files$counts)
+                df <- playbase::read_counts(file)
+                uploaded$counts.csv <- df
+                ## if counts file contains annotation
+                af <- playbase::read_annot(file)
+                uploaded$annot.csv <- af
+              }
+              if (!is.null(query_files$samples)) {
+                file <- read_query_files(query_files$samples)
+                df <- playbase::read_samples(file)
+                uploaded$samples.csv <- df
+              }
+              if (!is.null(query_files$contrasts)) {
+                file <- read_query_files(query_files$contrasts)
+                df <- playbase::read_contrasts(file)
+                uploaded$contrasts.csv <- df
+              }
             }
           } else {
             shinyalert::shinyalert(

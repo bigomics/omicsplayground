@@ -117,6 +117,13 @@ app_server <- function(input, output, session) {
       allow_new_users = opt$ALLOW_NEW_USERS,
       redirect_login = TRUE
     )
+  } else if (authentication == "email-encrypted") {
+    auth <- EmailEncryptedAuthenticationModule(
+      id = "auth",
+      show_modal = TRUE,
+      # TODO add argument for location of crypto key (probably on ETC)
+      domain = opt$DOMAIN
+    )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
     auth <- NoAuthenticationModule(
