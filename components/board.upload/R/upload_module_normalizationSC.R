@@ -31,34 +31,56 @@ upload_module_normalizationSC_server <- function(id,
       ## ------------------------------------------------------------------
       output$normalization <- shiny::renderUI({
 
-        ## shiny::req(dim(ds_norm_Counts()$samples))
-        ## samples <- ds_norm_Counts()$samples
         shiny::req(r_samples())
         samples <- r_samples()
-        metadata_vars <- c("celltype.azimuth",
-          "orig.ident", "nCount_RNA", "nFeature_RNA",
-          "percent.mt", "percent.ribo", "seurat_clusters")
+        metadata_vars <- c(
+          "celltype.azimuth", "orig.ident",
+          "nCount_RNA", "nFeature_RNA",
+          "percent.mt", "percent.ribo",
+          "seurat_clusters",
+          "G2M.Score", "S.Score"
+        )
         metadata_vars <- unique(c(metadata_vars, colnames(samples)))
 
         dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
 
-        qc.infotext <- "Data QC. Violin plots of total number of cDNA molecules (e.g., UMI) detected in each cell (nCount_RNA), number of unique genes detected in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo)."
+        cellqc.infotext <- "Data QC. Violin plots of total number of cDNA molecules (e.g., UMI) detected in each cell (nCount_RNA), number of unique genes detected in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo), percentage of globin gene expression in each cell (percent_hb), G2M cell cysle score, S cell cycle score."
         
         dimred.options <- tagList(
           shiny::radioButtons(
             ns("dimred_plottype"),
-            label = "Plot type:",
+            label = "Dimensional reduction method:",
             choices = c("PCA", "tSNE", "UMAP"),
-            selected = "tSNE", inline = FALSE
+            selected = "tSNE",
+            inline = FALSE
           )
         )
 
-        cellstats.options <- tagList(
-          shiny::radioButtons(
-            ns("group_var"),
-            label = "Grouping variable",
-            choices = c("celltype.azimuth", "seurat_clusters", "orig.ident"),
-            selected = "celltype.azimuth", inline = FALSE
+        ## cellqc.options <- tagList(
+        ##   shiny::radioButtons(
+        ##     ns("sample_var"),
+        ##     label = "",
+        ##     choices = c(
+        ##       "nFeature_RNA", "nCount_RNA",
+        ##       "percent.mt", "percent.ribo", "percent.hb",
+        ##       "G2M.Score", "S.Score"
+        ##     ),
+        ##     selected = "nFeature_RNA",
+        ##     inline = FALSE
+        ##   )
+        ## )
+
+        cellqc.options <- tagList(
+          shiny::checkboxGroupInput(
+            ns("qc_var"),
+            label = "Select variable for QC:",
+            choices = c(
+              "nFeature_RNA", "nCount_RNA",
+              "percent.mt", "percent.ribo", "percent.hb",
+              "G2M.Score", "S.Score"
+            ),
+            selected = c("nFeature_RNA", "nCount_RNA"),
+            inline = FALSE
           )
         )
 
@@ -136,8 +158,9 @@ upload_module_normalizationSC_server <- function(id,
               PlotModuleUI(
                 ns("plot1"),
                 title = "Samples' QC by cell type",
-                info.text = qc.infotext,
-                caption = qc.infotext,
+                info.text = cellqc.infotext,
+                caption = cellqc.infotext,
+                options = cellqc.options,
                 height = c("auto", "100%"),
                 show.maximize = FALSE,
                 ),
@@ -180,7 +203,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
         
         ncells <- ncol(counts)
-        cells_trs <- 500
+        cells_trs <- 1500
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -193,34 +216,28 @@ upload_module_normalizationSC_server <- function(id,
         if(ref_tissue != "<select>") {
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
-          shiny::withProgress(
-            message = "Inferring cell types with Azimuth...",
-            value = 0.4,
-            {
-              counts <- as(counts, "dgCMatrix")
-              azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
-              dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
-            }
-          )
+          counts <- as(counts, "dgCMatrix")
+          msg <- "Inferring cell types with Azimuth..."
+          shiny::withProgress(message = msg, value = 0.1, {
+            azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
+            dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
+          })
           if (class(azm) %in% c("matrix", "data.frame")) {
-            celltype.azimuth <- azm[, grep("^predicted.*l2$", colnames(azm))]
-            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
-            nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
-            return(list(counts = nX, samples = samples)) ##ref_tissue = ref_tissue))
-            rm(counts, samples)
+            celltype.azimuth <- azm[, grep("^predicted.*l*2$", colnames(azm))]
+            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)          
           } else if (is.vector(azm)) {
             dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth reference atlas *might* be incorrect. Please double check.")
             samples <- cbind(samples, celltype.azimuth = azm)
-            nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
-            return(list(counts = nX, samples = samples)) ##ref_tissue = ref_tissue))
-            rm(counts, samples)
-            return(NULL)
           }
+          nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
+          return(list(counts = nX, samples = samples, ref_tissue = ref_tissue))
+          rm(counts, samples)
+          return(NULL)
         } else {
           rm(counts, samples)
           return(NULL)
         }
-
+        
       })
 
       ## Dim reductions
@@ -239,10 +256,8 @@ upload_module_normalizationSC_server <- function(id,
         nb <- ceiling(min(15, dim(counts) / 8))
         pos.list <- list()
         dbg("[normalizationSC_server:dimred_norm_Counts:] Performing PCA, tSNE and UMAP...")
-        shiny::withProgress(
-          message = "Performing PCA, tSNE, UMAP...",
-          value = 0.4,
-          {
+        msg <- "Performing PCA, tSNE, UMAP..."
+        shiny::withProgress(message = msg, value = 0.5, {
             pos.list[["pca"]] <- irlba::irlba(counts1, nv = 2, nu = 0)$v
             pos.list[["tsne"]] <- Rtsne::Rtsne(t(counts1), perplexity = 2*nb, check_duplicates=F)$Y
             pos.list[["umap"]] <- uwot::umap(t(counts1), n_neighbors = max(2, nb))
@@ -250,24 +265,20 @@ upload_module_normalizationSC_server <- function(id,
               rownames(x) <- colnames(counts1);
               return(x)
             })
-          }
-        )
+          })
         dbg("[normalizationSC_server:dimred_norm_Counts:] PCA, tSNE & UMAP completed.")
         
         options(Seurat.object.assay.calcn = TRUE)
         getOption("Seurat.object.assay.calcn")
         dbg("[normalizationSC_server:dimred_norm_Counts:] Creating & preprocessing Seurat object..")
-        shiny::withProgress(
-          message = "Creating & preprocessing Seurat object...",
-          value = 0.4,
-          {
-            options(future.globals.maxSize= 4*1024^5)
-            counts <- as(counts, "dgCMatrix")
-            SO <- playbase::pgx.createSeuratObject(counts, samples,
-              batch = NULL, filter = FALSE, preprocess = FALSE)
-            SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
-          }
-        )
+        options(future.globals.maxSize= 4*1024^5)
+        counts <- as(counts, "dgCMatrix")
+        msg <- "Creating & preprocessing Seurat object..."
+        shiny::withProgress(message = msg, value = 0.9, {
+          SO <- playbase::pgx.createSeuratObject(counts, samples,
+            batch = NULL, filter = FALSE, preprocess = FALSE)
+          SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+        })
         dbg("[normalizationSC_server:dimred_norm_Counts:] Seurat object created & preprocessed.")
         kk <- setdiff(colnames(samples), colnames(SO@meta.data))
         if (length(kk) > 1) {
@@ -295,12 +306,21 @@ upload_module_normalizationSC_server <- function(id,
         SO <- dimred_norm_Counts()$SO
         require(scplotter)
         require(ggplot2)
-        ff <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo")
-        scplotter::FeatureStatPlot(SO,
-          features = ff, ident = "celltype.azimuth",
+        vars <- input$qc_var
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For QC, please select a QC variable from the options."
+        ))        
+        shiny::validate(shiny::need(
+          length(vars)<=4,
+          "Please select up to 4 QC variables for visualization."
+        ))        
+        pp <- scplotter::FeatureStatPlot(
+          SO, features = vars, ident = "celltype.azimuth",
           facet_scales = "free_y",  drop = FALSE,
-          theme_args = list(base_size = 15)
-        ) + ggplot2::theme(axis.text.x = element_text(size = 10))
+          theme_args = list(base_size = 15))
+        size <- ifelse(length(vars)==1, 10, 8)
+        pp + ggplot2::theme(axis.text.x = element_text(size = size))
       }
 
       plot2 <- function() {
