@@ -53,6 +53,15 @@ upload_module_normalizationSC_server <- function(id,
           )
         )
 
+        cellstats.options <- tagList(
+          shiny::radioButtons(
+            ns("group_var"),
+            label = "Grouping variable",
+            choices = c("celltype.azimuth", "seurat_clusters", "orig.ident"),
+            selected = "celltype.azimuth", inline = FALSE
+          )
+        )
+
         navmenu <- tagList(
           
           bslib::card(bslib::card_body(
@@ -69,7 +78,7 @@ upload_module_normalizationSC_server <- function(id,
                 shiny::checkboxInput(
                   ns("infercelltypes"),
                   label = "Infer cell types with Azimuth",
-                  value = TRUE
+                  value = FALSE
                 ),
                 shiny::conditionalPanel(
                   "input.infercelltypes == true",
@@ -81,9 +90,9 @@ upload_module_normalizationSC_server <- function(id,
                       "adiposeref", "bonemarrowref", "fetusref",
                       "heartref", "humancortexref", "kidneyref",
                       "lungref", "mousecortexref", "pancreasref",
-                      "pbmcref", "tonsilref"
+                      "pbmcref", "tonsilref", "<select>"
                     ),
-                    selected = "pbmcref"
+                    selected = "<select>"
                   )
                 ),
                 br()
@@ -126,7 +135,7 @@ upload_module_normalizationSC_server <- function(id,
               heights_equal = "row",
               PlotModuleUI(
                 ns("plot1"),
-                title = "Sequencing depth & samples' QC by cell type",
+                title = "Samples' QC by cell type",
                 info.text = qc.infotext,
                 caption = qc.infotext,
                 height = c("auto", "100%"),
@@ -141,15 +150,6 @@ upload_module_normalizationSC_server <- function(id,
                 height = c("auto", "100%"),
                 show.maximize = FALSE
               ),
-              PlotModuleUI(
-                ns("plot3"),
-                title = "Cell stats QC",
-                info.text = dimred.infotext,
-                caption = dimred.infotext,
-                options = dimred.options,
-                height = c("auto", "100%"),
-                show.maximize = FALSE
-              )
             )
           ),
           div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE),
@@ -168,9 +168,9 @@ upload_module_normalizationSC_server <- function(id,
 
         options(future.globals.maxSize= 4*1024^4) 
 
+        shiny::req(input$infercelltypes)
         shiny::req(r_counts())
         shiny::req(r_samples())
-        shiny::req(input$infercelltypes)
         counts <- r_counts()
         samples <- r_samples()
         if (is.null(counts)) { return(NULL) }
@@ -180,47 +180,60 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
         
         ncells <- ncol(counts)
-        cells_trs <- 2000
+        cells_trs <- 500
         if (ncells > cells_trs) {
-          dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset ", ncells)
-          dbg("[normalizationSC_server:ds_norm_Counts:] Performing random sampling of 1K cells.")
-          kk <- sample(colnames(counts), 1000)
+          dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
+          dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
+          kk <- sample(colnames(counts), cells_trs)
           counts <- counts[, kk, drop = FALSE] 
           samples <- samples[kk, , drop = FALSE]
         }
-        
+
         ref_tissue <- input$ref_atlas
-        dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
-        dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
-        shiny::withProgress(
-          message = "Inferring cell types with Azimuth...",
-          value = 0.4,
-          {
-            azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
-            dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inference completed.")
+        if(ref_tissue != "<select>") {
+          dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
+          dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
+          shiny::withProgress(
+            message = "Inferring cell types with Azimuth...",
+            value = 0.4,
+            {
+              counts <- as(counts, "dgCMatrix")
+              azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
+              dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
+            }
+          )
+          if (class(azm) %in% c("matrix", "data.frame")) {
             celltype.azimuth <- azm[, grep("^predicted.*l2$", colnames(azm))]
             samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
+            nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
+            return(list(counts = nX, samples = samples)) ##ref_tissue = ref_tissue))
+            rm(counts, samples)
+          } else if (is.vector(azm)) {
+            dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth reference atlas *might* be incorrect. Please double check.")
+            samples <- cbind(samples, celltype.azimuth = azm)
+            nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
+            return(list(counts = nX, samples = samples)) ##ref_tissue = ref_tissue))
+            rm(counts, samples)
+            return(NULL)
           }
-        )
+        } else {
+          rm(counts, samples)
+          return(NULL)
+        }
 
-        nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
-        return(list(counts = nX, samples = samples)) ##ref_tissue = ref_tissue))
-        
       })
 
-      ## Dim reductions: top 1000 features
+      ## Dim reductions
       dimred_norm_Counts <- shiny::reactive({ 
-
-        options(future.globals.maxSize= 4*1024^4)
 
         shiny::req(dim(ds_norm_Counts()$counts))
         shiny::req(dim(ds_norm_Counts()$samples))
-        ## shiny::req(input$infercelltypes)
+        shiny::req(input$infercelltypes)
         counts <- ds_norm_Counts()$counts
         counts <- as.matrix(counts)
         samples <- ds_norm_Counts()$samples
-        
-        jj <- head(order(-matrixStats::rowSds(counts, na.rm = TRUE)), 500)
+
+        jj <- head(order(-matrixStats::rowSds(counts, na.rm = TRUE)), 250)
         counts1 <- counts[jj, , drop = FALSE]
         counts1 <- counts1 - rowMeans(counts1, na.rm = TRUE)
         nb <- ceiling(min(15, dim(counts) / 8))
@@ -239,21 +252,23 @@ upload_module_normalizationSC_server <- function(id,
             })
           }
         )
-        dbg("[normalizationSC_server:dimred_norm_Counts:] PCA, tSNE and UMAP completed.")
+        dbg("[normalizationSC_server:dimred_norm_Counts:] PCA, tSNE & UMAP completed.")
         
         options(Seurat.object.assay.calcn = TRUE)
         getOption("Seurat.object.assay.calcn")
-        dbg("[normalizationSC_server:dimred_norm_Counts:] Creating and preprocessing Seurat object....")
+        dbg("[normalizationSC_server:dimred_norm_Counts:] Creating & preprocessing Seurat object..")
         shiny::withProgress(
           message = "Creating & preprocessing Seurat object...",
           value = 0.4,
           {
+            options(future.globals.maxSize= 4*1024^5)
+            counts <- as(counts, "dgCMatrix")
             SO <- playbase::pgx.createSeuratObject(counts, samples,
               batch = NULL, filter = FALSE, preprocess = FALSE)
             SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
           }
         )
-        dbg("[normalizationSC_server:dimred_norm_Counts:] Creation and preprocessing of Seurat object completed.")
+        dbg("[normalizationSC_server:dimred_norm_Counts:] Seurat object created & preprocessed.")
         kk <- setdiff(colnames(samples), colnames(SO@meta.data))
         if (length(kk) > 1) {
           SO@meta.data <- cbind(SO@meta.data, samples[, kk, drop = FALSE])
@@ -266,7 +281,7 @@ upload_module_normalizationSC_server <- function(id,
           pos.tsne = pos.list[["tsne"]],
           pos.umap = pos.list[["umap"]]
         )
-
+        rm(counts, samples, SO)
         return(LL)
 
       })
@@ -280,10 +295,10 @@ upload_module_normalizationSC_server <- function(id,
         SO <- dimred_norm_Counts()$SO
         require(scplotter)
         require(ggplot2)
-        scplotter::FeatureStatPlot(
-          SO,
-          features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
-          ident = "celltype.azimuth", facet_scales = "free_y",
+        ff <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo")
+        scplotter::FeatureStatPlot(SO,
+          features = ff, ident = "celltype.azimuth",
+          facet_scales = "free_y",  drop = FALSE,
           theme_args = list(base_size = 15)
         ) + ggplot2::theme(axis.text.x = element_text(size = 10))
       }
@@ -323,30 +338,10 @@ upload_module_normalizationSC_server <- function(id,
             v <- log2(v + 1)
           }
           playbase::pgx.scatterPlotXY.BASE(
-            pos = pos.list[[m]], var = v,
-            title = paste0(m, "; ", vars[i]),
+            pos = pos.list[[m]], var = v, title = vars[i],
             xlab = "Dim1", ylab = "Dim2"
           )
         }
-      }
-
-      plot3 <- function() {
-        shiny::req(dim(dimred_norm_Counts()$SO))
-        SO <- dimred_norm_Counts()$SO
-        require(scplotter)
-        require(ggplot2)
-        group_var <- "stim" ## code for it
-        pp1 <- scplotter::CellStatPlot(
-          SO, group_by = group_var,
-           ident = "seurat_clusters", position = "stack"
-        ) + ggplot2::theme(legend.position="none") 
-        pp2 <- scplotter::CellStatPlot(
-          SO, group_by = group_var, x_text_angle = 60,
-          ident = "celltype.azimuth", position = "stack",
-          theme_args = list(base_size = 15)
-        ) + ggplot2::xlab("") + ggplot2::ylab("")
-        pp1 | pp2
-          ## plot_layout(widths = c(1, 1))
       }
 
       ## ------------------------------------------------------------------
@@ -366,15 +361,6 @@ upload_module_normalizationSC_server <- function(id,
         "plot2",
         plotlib = "base",
         func = plot2,
-        res = c(75, 120),
-        pdf.width = 12,
-        pdf.height = 6,
-        add.watermark = FALSE
-      )
-      PlotModuleServer(
-        "plot3",
-        plotlib = "base",
-        func = plot3,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -418,7 +404,7 @@ upload_module_normalizationSC_server <- function(id,
           samples = samples, ## shiny::reactive(ds_norm_Counts()$samples),
           X = X,
           impX = shiny::reactive(NULL),
-          ## azimuth_ref = azimuth_ref, ## NEW AZ 
+          ## azimuth_ref = azimuth_ref, ## NEW AZ # TODO
           norm_method = shiny::reactive("CPM")
         )
       ) ## pointing to reactive
