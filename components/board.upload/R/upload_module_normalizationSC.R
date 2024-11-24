@@ -65,7 +65,10 @@ upload_module_normalizationSC_server <- function(id,
               "percent.mt", "percent.ribo", "percent.hb",
               "G2M.Score", "S.Score"
             ),
-            selected = c("nFeature_RNA", "nCount_RNA"),
+            selected = c(
+              "nFeature_RNA", "nCount_RNA",
+              "percent.mt", "percent.ribo"
+            ),
             inline = FALSE
           )
         )
@@ -311,9 +314,6 @@ upload_module_normalizationSC_server <- function(id,
         SO <- dimred_norm_Counts()$SO
         require(scplotter)
         require(ggplot2)
-
-        if(!is.null(SO)) dbg("----------MNT2: ", paste0(colnames(SO@meta.data), sep=","))
-
         vars <- input$qc_var
         shiny::validate(shiny::need(
           !is.null(vars),
@@ -350,9 +350,6 @@ upload_module_normalizationSC_server <- function(id,
           "For clustering, please select a metadata variable from the menu on the left."
         ))        
         m <- tolower(input$dimred_plottype)
-
-        if(!is.null(samples)) dbg("----------MNT3: ", paste0(colnames(samples), sep=","))
-
         if (length(vars) <= 2) {
           par(mfrow = c(1, length(vars)))
         } else if (length(vars) > 2 & length(vars) <= 4) {
