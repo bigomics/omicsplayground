@@ -56,20 +56,6 @@ upload_module_normalizationSC_server <- function(id,
           )
         )
 
-        ## cellqc.options <- tagList(
-        ##   shiny::radioButtons(
-        ##     ns("sample_var"),
-        ##     label = "",
-        ##     choices = c(
-        ##       "nFeature_RNA", "nCount_RNA",
-        ##       "percent.mt", "percent.ribo", "percent.hb",
-        ##       "G2M.Score", "S.Score"
-        ##     ),
-        ##     selected = "nFeature_RNA",
-        ##     inline = FALSE
-        ##   )
-        ## )
-
         cellqc.options <- tagList(
           shiny::checkboxGroupInput(
             ns("qc_var"),
@@ -130,7 +116,7 @@ upload_module_normalizationSC_server <- function(id,
                   label = "Visualize cell cluster by",
                   choices = metadata_vars, ## reactive
                   multiple = TRUE,
-                  selected = c("celltype.azimuth", "stim")
+                  selected = c("celltype.azimuth")
                 ),
                 shiny::br()
               )
@@ -223,12 +209,31 @@ upload_module_normalizationSC_server <- function(id,
             dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
           })
           if (class(azm) %in% c("matrix", "data.frame")) {
-            celltype.azimuth <- azm[, grep("^predicted.*l*2$", colnames(azm))]
+            kk <- grep("^predicted.*l*2$", colnames(azm))
+            if (any(kk)) {
+              celltype.azimuth <- azm[, kk]
+              if (length(unique(celltype.azimuth)) > 15) {
+                ## allows better representation
+                kk <- grep("^predicted.*l*1$", colnames(azm))
+                celltype.azimuth <- azm[, kk]
+              }
+            } else {
+              kk <- grep("^predicted.*subclass*$", colnames(azm))
+              celltype.azimuth <- azm[, kk]
+              if (length(unique(celltype.azimuth)) > 15) {
+                ## allows better representation
+                kk <- grep("^predicted.class*$", colnames(azm))
+                celltype.azimuth <- azm[, kk]
+              }
+            }
             samples <- cbind(samples, celltype.azimuth = celltype.azimuth)          
           } else if (is.vector(azm)) {
             dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth reference atlas *might* be incorrect. Please double check.")
             samples <- cbind(samples, celltype.azimuth = azm)
           }
+
+          if(!is.null(samples)) dbg("----------MNT1: ", paste0(colnames(samples), sep=","))
+
           nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
           return(list(counts = nX, samples = samples, ref_tissue = ref_tissue))
           rm(counts, samples)
@@ -306,6 +311,9 @@ upload_module_normalizationSC_server <- function(id,
         SO <- dimred_norm_Counts()$SO
         require(scplotter)
         require(ggplot2)
+
+        if(!is.null(SO)) dbg("----------MNT2: ", paste0(colnames(SO@meta.data), sep=","))
+
         vars <- input$qc_var
         shiny::validate(shiny::need(
           !is.null(vars),
@@ -342,6 +350,9 @@ upload_module_normalizationSC_server <- function(id,
           "For clustering, please select a metadata variable from the menu on the left."
         ))        
         m <- tolower(input$dimred_plottype)
+
+        if(!is.null(samples)) dbg("----------MNT3: ", paste0(colnames(samples), sep=","))
+
         if (length(vars) <= 2) {
           par(mfrow = c(1, length(vars)))
         } else if (length(vars) > 2 & length(vars) <= 4) {
