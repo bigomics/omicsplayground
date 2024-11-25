@@ -71,7 +71,11 @@ DrugConnectivityBoard <- function(id, pgx) {
       pv <- round(dr$P[, contr], 4)
       qv <- round(dr$Q[, contr], 4)
       drug <- rownames(dr$X)
-      stats <- dr$stats[, contr]
+      if (is.null(ncol(dr$stats))) {
+        stats <- dr$stats
+      } else {
+        stats <- dr$stats[, contr]
+      }
       annot <- dr$annot
       nes[is.na(nes)] <- 0
       qv[is.na(qv)] <- 1
