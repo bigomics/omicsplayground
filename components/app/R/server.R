@@ -1129,6 +1129,8 @@ app_server <- function(input, output, session) {
       err_traceback <- append(error$message, err_traceback)
     }
 
+    # Errors to ignore
+    if (error$message %in% c("figure margins too large", "invalid graphics state")) return()
     # Get inputs to reproduce state
     board_inputs <- names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))]
 
