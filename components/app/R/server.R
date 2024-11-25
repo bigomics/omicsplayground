@@ -240,6 +240,7 @@ app_server <- function(input, output, session) {
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
+      
       additional_ui_tabs <- tagList(
         dataview = bigdash::bigTabItem(
           "dataview-tab",
@@ -330,22 +331,37 @@ app_server <- function(input, output, session) {
           "tcga-tab",
           TcgaInputs("tcga"),
           TcgaUI("tcga")
-        ),
-        mofa = bigdash::bigTabItem(
-          "mofa-tab",
-          MofaInputs("mofa"),
-          MofaUI("mofa")
-        )        
+        )
+        ## mofa = bigdash::bigTabItem(
+        ##   "mofa-tab",
+        ##   MofaInputs("mofa"),
+        ##   MofaUI("mofa")
+        ## ),        
+        ## mgsea = bigdash::bigTabItem(
+        ##   "mgsea-tab",
+        ##   MGseaInputs("mgsea"),
+        ##   MGseaUI("mgsea")
+        ## ),        
+        ## snf = bigdash::bigTabItem(
+        ##   "snf-tab",
+        ##   SNF_Inputs("snf"),
+        ##   SNF_UI("snf")
+        ## )        
       )
 
-
+      insertBigTabUI <- function(ui) {
+        ##if( inherits(class(ui),"list")) ui <- list(ui)
+        for(i in 1:length(ui)) {
+          shiny::insertUI(
+            selector = "#big-tabs",
+            where = "beforeEnd",
+            ui = ui[[i]],
+            immediate = TRUE
+          )
+        }
+      }
       insertBigTabItem <- function(tab) {
-        shiny::insertUI(
-          selector = "#big-tabs",
-          where = "beforeEnd",
-          ui = additional_ui_tabs[[tab]],
-          immediate = TRUE
-        )
+        insertBigTabUI(additional_ui_tabs[tab]) 
       }
 
       shiny::withProgress(
@@ -473,11 +489,6 @@ app_server <- function(input, output, session) {
             WgcnaBoard("wgcna", pgx = PGX)
           }
 
-          if (ENABLED["mofa"]) {
-            info("[SERVER] calling MofaBoard module")
-            insertBigTabItem("mofa")
-            MofaBoard("mofa", pgx = PGX)
-          }
 
           shiny::incProgress(0.1)
 
@@ -490,9 +501,19 @@ app_server <- function(input, output, session) {
           if (ENABLED["comp"]) {
             info("[SERVER] calling CompareBoard module")
             insertBigTabItem("comp")
-            CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir), labeltype = labeltype)
+            CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir),
+                         labeltype = labeltype)
           }
-
+          
+          if (MODULES_ENABLED["MultiOmics"] && exists("MODULE.multiomics")) {
+            info("[SERVER] initializing MultiOmics module")
+            mod <- MODULE.multiomics
+            dbg("class.tab_items = ", class(mod$tab_items()))
+            dbg("len.tab_items = ", length(mod$tab_items()))            
+            insertBigTabUI( mod$tab_items() ) 
+            mod$init_board(PGX)
+          }
+          
           info("[SERVER] calling modules done!")
         }
       )

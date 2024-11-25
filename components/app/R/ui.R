@@ -142,8 +142,12 @@ app_ui <- function(x) {
           cell = "Cell profiling",
           pcsf = "PCSF",
           wgcna = "WGCNA",
-          mofa = "MOFA",
           tcga = "TCGA survival (beta)"
+        ),
+        "MultiOmics" = c(
+          mofa = "MOFA",
+          mgsea = "multiGSEA",
+          snf = "SNF"          
         )
       )
 
@@ -151,8 +155,12 @@ app_ui <- function(x) {
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
 
-      menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
-
+      dbg("names(menu_tree) = ", names(menu_tree))
+      dbg("names.ENABLED = ", names(ENABLED))
+      menu_tree <- menu_tree[MODULES_ENABLED]      
+      ##menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+      ENABLED <<- array( BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
+            
       populateSidebar <- function(menu_tree) {
         sidebar_item <- function(title, name) {
           div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
@@ -407,7 +415,17 @@ app_ui <- function(x) {
             "mofa-tab",
             "MOFA",
             tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
-                    integration method based on multi-omcis factor analysis.")
+                  integration method based on multi-omcis factor analysis.")
+          ),
+          bigdash::sidebarTabHelp(
+            "mgsea-tab",
+            "multiGSEA",
+            tspan("multiGSEA perform multi-omics integration on gene set level.")
+          ),
+          bigdash::sidebarTabHelp(
+            "snf-tab",
+            "SNF",
+            tspan("SNF clustering")
           ),
           bigdash::sidebarTabHelp(
             "pcsf-tab",
