@@ -187,7 +187,7 @@ SignatureBoard <- function(id, pgx,
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         ## take top 100 features
         top.genes <- fx[order(-abs(fx))]
-        top.genes <- head(top.genes, 100)
+        top.genes <- head(top.genes, min(100,length(fx)/4))
         features <- names(top.genes)
       } else if (input$type %in% c("hallmark", "KEGG", "geneset") &&
         input$feature[1] %in% colnames(pgx$GMT)) {
