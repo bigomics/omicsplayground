@@ -37,11 +37,11 @@ upload_module_normalizationSC_server <- function(id,
           "celltype.azimuth", "orig.ident",
           "nCount_RNA", "nFeature_RNA",
           "percent.mt", "percent.ribo",
-          "seurat_clusters",
-          "G2M.Score", "S.Score"
+          "percent.hb", "seurat_clusters",
+          "G2M.Score", "S.Score", "Phase"
         )
         metadata_vars <- unique(c(metadata_vars, colnames(samples)))
-
+        
         dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
 
         cellqc.infotext <- "Data QC. Violin plots of total number of cDNA molecules (e.g., UMI) detected in each cell (nCount_RNA), number of unique genes detected in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo), percentage of globin gene expression in each cell (percent_hb), G2M cell cysle score, S cell cycle score."
@@ -56,22 +56,30 @@ upload_module_normalizationSC_server <- function(id,
           )
         )
 
-        cellqc.options <- tagList(
-          shiny::checkboxGroupInput(
-            ns("qc_var"),
-            label = "Select variable for QC:",
-            choices = c(
-              "nFeature_RNA", "nCount_RNA",
-              "percent.mt", "percent.ribo", "percent.hb",
-              "G2M.Score", "S.Score"
-            ),
-            selected = c(
-              "nFeature_RNA", "nCount_RNA",
-              "percent.mt", "percent.ribo"
-            ),
-            inline = FALSE
+        cellstats.options <- tagList(
+          shiny::checkboxInput(
+            ns("groupby_celltype"),
+            label = "Group by cell type",
+            value = FALSE
           )
         )
+
+        ## cellqc.options <- tagList(
+        ##   shiny::checkboxGroupInput(
+        ##     ns("qc_var"),
+        ##     label = "Select variable for QC:",
+        ##     choices = c(
+        ##       "nFeature_RNA", "nCount_RNA",
+        ##       "percent.mt", "percent.ribo", "percent.hb",
+        ##       "G2M.Score", "S.Score"
+        ##     ),
+        ##     selected = c(
+        ##       "nFeature_RNA", "nCount_RNA",
+        ##       "percent.mt", "percent.ribo"
+        ##     ),
+        ##     inline = FALSE
+        ##   )
+        ## )
 
         navmenu <- tagList(
           
@@ -106,7 +114,7 @@ upload_module_normalizationSC_server <- function(id,
                     selected = "<select>"
                   )
                 ),
-                br()
+                shiny::br()
               ),
 
               bslib::accordion_panel(
@@ -119,7 +127,21 @@ upload_module_normalizationSC_server <- function(id,
                   label = "Visualize cell cluster by",
                   choices = metadata_vars, ## reactive
                   multiple = TRUE,
-                  selected = c("celltype.azimuth")
+                  selected = c("celltype.azimuth", "stim")
+                ),
+                shiny::br()
+              ),
+
+              bslib::accordion_panel(
+                title = "Phenotype of interest",
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;"
+                ),
+                shiny::selectInput(
+                  ns("pheno"),
+                  label = "Phenotype of interest",
+                  choices = metadata_vars, ## reactive
+                  selected = "<select>"
                 ),
                 shiny::br()
               )
@@ -146,12 +168,12 @@ upload_module_normalizationSC_server <- function(id,
               heights_equal = "row",
               PlotModuleUI(
                 ns("plot1"),
-                title = "Samples' QC by cell type",
+                title = "Cell statistics",
                 info.text = cellqc.infotext,
                 caption = cellqc.infotext,
-                options = cellqc.options,
+                options = cellstats.options,
                 height = c("auto", "100%"),
-                show.maximize = FALSE,
+                show.maximize = TRUE,
                 ),
               PlotModuleUI(
                 ns("plot2"),
@@ -160,7 +182,7 @@ upload_module_normalizationSC_server <- function(id,
                 caption = dimred.infotext,
                 options = dimred.options,
                 height = c("auto", "100%"),
-                show.maximize = FALSE
+                show.maximize = TRUE
               ),
             )
           ),
@@ -190,11 +212,11 @@ upload_module_normalizationSC_server <- function(id,
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
-        
+
         ncells <- ncol(counts)
-        cells_trs <- 1500
+        cells_trs <- 3000
+        dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
-          dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
           kk <- sample(colnames(counts), cells_trs)
           counts <- counts[, kk, drop = FALSE] 
@@ -212,6 +234,7 @@ upload_module_normalizationSC_server <- function(id,
             dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
           })
           if (class(azm) %in% c("matrix", "data.frame")) {
+
             kk <- grep("^predicted.*l*2$", colnames(azm))
             if (any(kk)) {
               celltype.azimuth <- azm[, kk]
@@ -230,15 +253,14 @@ upload_module_normalizationSC_server <- function(id,
               }
             }
             samples <- cbind(samples, celltype.azimuth = celltype.azimuth)          
+
           } else if (is.vector(azm)) {
             dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth reference atlas *might* be incorrect. Please double check.")
             samples <- cbind(samples, celltype.azimuth = azm)
           }
 
-          if(!is.null(samples)) dbg("----------MNT1: ", paste0(colnames(samples), sep=","))
-
           nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
-          return(list(counts = nX, samples = samples, ref_tissue = ref_tissue))
+          return(list(counts = nX, samples = samples))
           rm(counts, samples)
           return(NULL)
         } else {
@@ -253,7 +275,7 @@ upload_module_normalizationSC_server <- function(id,
 
         shiny::req(dim(ds_norm_Counts()$counts))
         shiny::req(dim(ds_norm_Counts()$samples))
-        shiny::req(input$infercelltypes)
+        shiny::req(input$infercelltypes)        
         counts <- ds_norm_Counts()$counts
         counts <- as.matrix(counts)
         samples <- ds_norm_Counts()$samples
@@ -312,24 +334,60 @@ upload_module_normalizationSC_server <- function(id,
       plot1 <- function() {
         shiny::req(dim(dimred_norm_Counts()$SO))
         SO <- dimred_norm_Counts()$SO
+        meta <- SO@meta.data
         require(scplotter)
         require(ggplot2)
-        vars <- input$qc_var
+        require(vioplot)
+        ## vars <- input$qc_var
+        vars <- input$clusterBy        
         shiny::validate(shiny::need(
           !is.null(vars),
           "For QC, please select a QC variable from the options."
         ))        
         shiny::validate(shiny::need(
-          length(vars)<=4,
+          length(vars) <= 4,
           "Please select up to 4 QC variables for visualization."
         ))        
-        pp <- scplotter::FeatureStatPlot(
-          SO, features = vars, ident = "celltype.azimuth",
-          facet_scales = "free_y",  drop = FALSE,
-          theme_args = list(base_size = 15))
-        size <- ifelse(length(vars)==1, 10, 8)
-        pp + ggplot2::theme(axis.text.x = element_text(size = size))
+
+        class.vars <- c()
+        i=1; for(i in 1:length(vars)) {
+          class.vars <- c(class.vars, class(meta[, vars[i]]))
+        }
+        ## apply(meta, 2, class) ## not good
+        names(class.vars) <- vars        
+        message(paste0(class.vars,sep=","))
+        
+        SO@meta.data$ident0 <- "Dataset"
+        ident <- ifelse(input$groupby_celltype, "celltype.azimuth", "ident0")
+
+        ## if (all(class.vars %in% c("numeric","integer"))) {
+        ##  pp <- scplotter::FeatureStatPlot(
+        ##    SO, features = vars, ident = ident,
+        ##    facet_scales = "free_y",  drop = FALSE,
+        ##    theme_args = list(base_size = 15))
+        ##  size <- ifelse(length(vars)==1, 10, 8)
+        ## if (!input$groupby_celltype) {
+        ##  pp + xlab("") + theme(legend.position = "none")
+        ## } else {
+        ##  pp + ggplot2::theme(axis.text.x = element_text(size = size))
+        ## }
+        ## } else {
+        num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
+        par(mfrow = c(1,length(num.vars)))
+        i=1;
+        for(i in 1:length(num.vars)) {
+          v <- num.vars[i]
+          vioplot::vioplot(
+            SO@meta.data[, v],
+            col = "lightblue", rectCol = "red",
+            lineCol = "white", colMed = "green",
+            border = "black", pchMed = 16,
+            las = 1, xlab="A", main="B"
+          )
+        }
+
       }
+
 
       plot2 <- function() {
         shiny::req(
@@ -362,9 +420,9 @@ upload_module_normalizationSC_server <- function(id,
         i <- 1
         for(i in 1:length(vars)) {
           v <- samples[, vars[i]]
-          if (vars[i] %in% c("nFeature_RNA", "nCount_RNA")) {
-            v <- log2(v + 1)
-          }
+          ## if (vars[i] %in% c("nFeature_RNA", "nCount_RNA")) {
+          ##  v <- log2(v + 1)
+          ## }
           playbase::pgx.scatterPlotXY.BASE(
             pos = pos.list[[m]], var = v, title = vars[i],
             xlab = "Dim1", ylab = "Dim2"
@@ -402,7 +460,7 @@ upload_module_normalizationSC_server <- function(id,
         counts
       })
 
-      ## normalized counts
+      ## CPM normalized counts
       X <- shiny::reactive({
         shiny::req(r_counts())
         counts <- r_counts()
@@ -416,26 +474,35 @@ upload_module_normalizationSC_server <- function(id,
         samples <- r_samples()
         samples
       })
+      
+      azimuth_ref <- shiny::reactive({
+         shiny::req(input$infercelltypes)
+         if (input$ref_atlas != "<select>") {
+           ref <- input$ref_atlas
+           return(ref)
+         } else {
+           return(NULL)
+         }
+      })
 
-      ## Azimuth ref
-      ## azimuth_ref <- shiny::reactive({
-      ##  shiny::req(ds_norm_Counts())
-      ##  ref <- as.character(ds_norm_Counts()$ref_tissue())
-      ##  dbg("-----MNT1:", ref)
-      ##  return(ref)
-      ## })
-      ## observe({ if(!is.null(samples)) { dbg("MNT2----", azimuth_ref()) } })
+      sc_pheno <- shiny::reactive({
+        sc_pheno <- input$pheno
+        
+        return(sc_pheno)
+      })
 
-      return(
-        list(
-          counts = counts,
-          samples = samples, ## shiny::reactive(ds_norm_Counts()$samples),
-          X = X,
-          impX = shiny::reactive(NULL),
-          ## azimuth_ref = azimuth_ref, ## NEW AZ # TODO
-          norm_method = shiny::reactive("CPM")
-        )
-      ) ## pointing to reactive
+      LL <- list(
+        counts = counts,
+        samples = samples,
+        X = X,
+        impX = shiny::reactive(NULL),
+        azimuth_ref = shiny::reactive(azimuth_ref()),
+        sc_pheno = shiny::reactive(sc_pheno()),
+        norm_method = shiny::reactive("CPM")
+      )
+
+      return(LL) ## pointing to reactive
+
     } ## end-of-server
   )
 }

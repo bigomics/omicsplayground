@@ -1140,7 +1140,7 @@ UploadBoard <- function(id,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
-
+    
     normalized <- upload_module_normalization_server(
       id = "checkqc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1150,7 +1150,7 @@ UploadBoard <- function(id,
       is.count = TRUE,
       height = height
     )
-
+    
     sc_normalized <- upload_module_normalizationSC_server(
       id = "checkqc_sc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1169,10 +1169,10 @@ UploadBoard <- function(id,
     ##   r_results = modified_ct,
     ##   is.count = TRUE
     ## )
-
+    
     ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
-
+    
     observe({
       if (input$selected_datatype == "scRNA-seq") {
         compute_input$counts <- sc_normalized$counts()
@@ -1180,6 +1180,8 @@ UploadBoard <- function(id,
         compute_input$impX <- NULL
         compute_input$norm_method <- sc_normalized$norm_method()
         compute_input$samples <- sc_normalized$samples()
+        compute_input$azimuth_ref <- sc_normalized$azimuth_ref() ## NEW AZ
+        compute_input$sc_pheno <- sc_normalized$sc_pheno() ## NEW AZ
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
@@ -1188,7 +1190,7 @@ UploadBoard <- function(id,
         compute_input$samples <- checked_samples_counts()$SAMPLES
       }
     })
-    
+
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = shiny::reactive(compute_input$counts),
@@ -1196,6 +1198,8 @@ UploadBoard <- function(id,
       impX = shiny::reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
+      azimuth_ref = shiny::reactive(compute_input$azimuth_ref), ## NEW AZ
+      sc_pheno = shiny::reactive(compute_input$sc_pheno), ## NEW AZ
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,
