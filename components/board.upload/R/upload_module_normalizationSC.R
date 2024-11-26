@@ -140,7 +140,7 @@ upload_module_normalizationSC_server <- function(id,
                 shiny::selectInput(
                   ns("pheno"),
                   label = "Phenotype of interest",
-                  choices = metadata_vars, ## reactive
+                  choices = colnames(samples), ## reactive
                   selected = "<select>"
                 ),
                 shiny::br()
