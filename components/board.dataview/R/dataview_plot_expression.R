@@ -245,7 +245,17 @@ dataview_plot_expression_server <- function(id,
             plotly::plot_ly(
               x = ~group,
               y = ~x,
-              type = "violin" # ,
+              split = ~group,
+              type = "violin",
+              box = list(
+                visible = TRUE
+              ),
+              meanline = list(
+                visible = TRUE
+              ),
+              x0 = "",
+              color = ~group,
+              colors = omics_pal_d()(length(unique(df$group)))
             ) %>%
             plotly::layout(
               yaxis = list(
@@ -255,11 +265,16 @@ dataview_plot_expression_server <- function(id,
           ## fig
         } else {
           ## boxplot
-          fig <- df %>% plotly::plot_ly(
-            x = ~group,
+          fig <- plotly::plot_ly(
+            df,
             y = ~x,
+            split = ~group,
+            boxpoints = "all",
             jitter = 0.3,
-            type = "box" # ,
+            pointpos = 0.0,
+            type = "box",
+            color = ~group,
+            colors = omics_pal_d()(length(unique(df$group)))
           )
           ## fig
         }
