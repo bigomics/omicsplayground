@@ -64,23 +64,6 @@ upload_module_normalizationSC_server <- function(id,
           )
         )
 
-        ## cellqc.options <- tagList(
-        ##   shiny::checkboxGroupInput(
-        ##     ns("qc_var"),
-        ##     label = "Select variable for QC:",
-        ##     choices = c(
-        ##       "nFeature_RNA", "nCount_RNA",
-        ##       "percent.mt", "percent.ribo", "percent.hb",
-        ##       "G2M.Score", "S.Score"
-        ##     ),
-        ##     selected = c(
-        ##       "nFeature_RNA", "nCount_RNA",
-        ##       "percent.mt", "percent.ribo"
-        ##     ),
-        ##     inline = FALSE
-        ##   )
-        ## )
-
         navmenu <- tagList(
           
           bslib::card(bslib::card_body(
@@ -214,7 +197,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 3000
+        cells_trs <- 1500
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -335,10 +318,11 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(dim(dimred_norm_Counts()$SO))
         SO <- dimred_norm_Counts()$SO
         meta <- SO@meta.data
+        write.csv(meta, "~/Desktop/meta00.csv")
         require(scplotter)
         require(ggplot2)
+        library(ggpubr)
         require(vioplot)
-        ## vars <- input$qc_var
         vars <- input$clusterBy        
         shiny::validate(shiny::need(
           !is.null(vars),
@@ -348,18 +332,101 @@ upload_module_normalizationSC_server <- function(id,
           length(vars) <= 4,
           "Please select up to 4 QC variables for visualization."
         ))        
-
+        i <- 1
         class.vars <- c()
-        i=1; for(i in 1:length(vars)) {
+        for(i in 1:length(vars)) {
           class.vars <- c(class.vars, class(meta[, vars[i]]))
         }
-        ## apply(meta, 2, class) ## not good
-        names(class.vars) <- vars        
-        message(paste0(class.vars,sep=","))
-        
-        SO@meta.data$ident0 <- "Dataset"
-        ident <- ifelse(input$groupby_celltype, "celltype.azimuth", "ident0")
+        names(class.vars) <- vars
+        num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
+        char.vars <- vars[which(class.vars %in% c("character"))]
 
+        if (!input$groupby_celltype) {
+          meta$IDENT0 <- "IDENT"
+          plist <- list()
+          i=1
+          for(i in 1:length(vars)) {
+            v <- vars[i]
+            if(v %in% num.vars) {
+              pp <- ggplot(meta, aes_string(x = "IDENT0", y = v))
+              ## pp <- pp + geom_violin(trim = FALSE, fill = "gray", color = "blue")
+              pp <- pp + geom_point(col = "white") + geom_jitter(col = "gray")
+              pp <- pp + scale_x_discrete(labels = "Dataset")
+              pp <- pp + theme(axis.text.x = element_text(size = 14))
+              pp <- pp + theme(axis.text.y = element_text(size = 14))
+              pp <- pp + RotatedAxis() + xlab("")
+              plist[[v]] <- pp
+            }
+            if(v %in% char.vars) {
+              tt <- data.frame(table(meta[, v]))
+              pp <- ggplot(tt, aes(x = Var1, y = Freq))
+              pp <- pp + geom_bar(stat = "identity", fill = "gray75")
+              pp <- pp + theme(axis.text.x = element_text(size = 14))
+              pp <- pp + theme(axis.text.y = element_text(size = 14))
+              pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
+              plist[[v]] <- pp
+            }
+          }
+          i <- 1
+          if (length(plist) == 1) {
+            plist[[1]]
+          } else if (length(plist) == 2) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
+          } else if (length(plist) == 3) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
+          } else if (length(plist) == 4) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+          }
+        } else {
+          grp <- "celltype.azimuth"
+          plist <- list()
+          i=1
+          for(i in 1:length(vars)) {
+            v <- vars[i]
+            if(v %in% num.vars) {
+              pp <- ggplot(meta, aes_string(y = v, x = grp, fill = grp))
+              pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
+              if (i == 1) { pp <- pp + theme(legend.position = "none") }
+              plist[[v]] <- pp
+            }
+            if(v %in% char.vars) {
+              tt <- data.frame(t(table(meta[, v], meta[, grp])))
+              colnames(tt)[1:2] <- c("celltype.azimuth", v)
+              pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
+              pp <- pp + geom_bar(stat = "identity", position = position_dodge())
+              pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
+              if (i == 1) { pp <- pp + theme(legend.position = "none") }
+              plist[[v]] <- pp 
+            }
+          }
+          i <- 1
+          if (length(plist) == 1) {
+            plist[[1]]
+          } else if (length(plist) == 2) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
+          } else if (length(plist) == 3) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
+          } else if (length(plist) == 4) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+          }
+        }
+        ##   vioplot::vioplot(
+        ##     SO@meta.data[, v],
+        ##     col = "lightblue", rectCol = "red",
+        ##     lineCol = "white", colMed = "green",
+        ##     border = "black", pchMed = 16,
+        ##     las = 1, names = "", xlab = "", main = v
+        ##   )
+        ## } else if (v %in% char.vars) {            
+        ##   tt <- table(SO@meta.data[, v])
+        ##   bp <- barplot(
+        ##     tt, main = v, xlab = "",
+        ##     ylab = "Number of cells",
+        ##     xaxt="n", col = "skyblue", las = 1)
+        ##   text(bp, par("usr")[3], labels=names(tt), srt=55, adj=1, xpd=TRUE)
+        ## }
+        ## SO@meta.data$ident0 <- "Dataset"
+        ## ident <- ifelse(input$groupby_celltype, "celltype.azimuth", "ident0")
         ## if (all(class.vars %in% c("numeric","integer"))) {
         ##  pp <- scplotter::FeatureStatPlot(
         ##    SO, features = vars, ident = ident,
@@ -372,22 +439,7 @@ upload_module_normalizationSC_server <- function(id,
         ##  pp + ggplot2::theme(axis.text.x = element_text(size = size))
         ## }
         ## } else {
-        num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
-        par(mfrow = c(1,length(num.vars)))
-        i=1;
-        for(i in 1:length(num.vars)) {
-          v <- num.vars[i]
-          vioplot::vioplot(
-            SO@meta.data[, v],
-            col = "lightblue", rectCol = "red",
-            lineCol = "white", colMed = "green",
-            border = "black", pchMed = 16,
-            las = 1, xlab="A", main="B"
-          )
-        }
-
       }
-
 
       plot2 <- function() {
         shiny::req(
@@ -476,13 +528,13 @@ upload_module_normalizationSC_server <- function(id,
       })
       
       azimuth_ref <- shiny::reactive({
-         shiny::req(input$infercelltypes)
-         if (input$ref_atlas != "<select>") {
-           ref <- input$ref_atlas
-           return(ref)
-         } else {
-           return(NULL)
-         }
+        shiny::req(input$infercelltypes)
+        if (input$ref_atlas != "<select>") {
+          ref <- input$ref_atlas
+          return(ref)
+        } else {
+          return(NULL)
+        }
       })
 
       sc_pheno <- shiny::reactive({
