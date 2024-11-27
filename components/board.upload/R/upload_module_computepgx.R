@@ -45,43 +45,77 @@ upload_module_computepgx_server <- function(
 
       ## statistical method for GENE level testing
       GENETEST.METHODS <- shiny::eventReactive(
-        {
-          upload_datatype()
-        },
-        {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else {
-            mm <- c(
-              "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-              "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-            )
-          }
-          return(mm)
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+        } else {
+          mm <- c(
+            "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
+            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
+          )
         }
+        return(mm)
+      }
       )
 
       GENETEST.SELECTED <- shiny::eventReactive(
-        {
-          upload_datatype()
-        },
-        {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else {
-            mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-          }
-          return(mm)
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("ttest", "ttest.welch")
+        } else {
+          mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
         }
+        return(mm)
+      }
       )
 
-      ## statistical method for GENESET level testing
+      ## ## statistical method for GENESET level testing
       GENESET.METHODS <- c(
         "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
-        ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
+        "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
         "fgsea"
       )
-      GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
+     GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
+      
+      ## statistical method for GENESET level testing
+      ##GENESET.METHODS <-  shiny::eventReactive(
+      ##{
+      ##   upload_datatype()
+      ##},
+      ##{
+      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+      ##     mm <- c("ssgsea", "gsva", "fgsea", "fry")
+      ##   } else {
+      ##     mm <- c("fisher", "ssgsea", "gsva", "spearman", "camera", "fry", "fgsea")
+      ##     ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR"
+      ##   }
+      ##   return(mm)
+      ##}
+      ##)
+      
+      ## GENESET.SELECTED <- shiny::eventReactive(
+      ## {
+      ##   upload_datatype()
+      ## },
+      ## {
+      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+      ##     mm <- c("fgsea")
+      ##   } else {
+      ##     mm <- c("fisher", "gsva", "ssgsea", "fgsea")
+      ##   }
+      ##   return(mm)
+      ## }
+      ## )
 
       ## batch correction and extrs methods
       EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
