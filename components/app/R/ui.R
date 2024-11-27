@@ -219,6 +219,10 @@ app_ui <- function(x) {
       div.invitebutton <- InviteFriendUI("invite")
 
       ## ------------------------- bigPage ----------------------------------
+      bigdash.sidebarHelp2 <- function(...) {
+        do.call(bigdash::sidebarHelp, rlang::list2(...))
+      }
+
       bigdash::bigPage(
         shiny.i18n::usei18n(i18n),
         header,
@@ -368,7 +372,8 @@ app_ui <- function(x) {
         settings = bigdash::settings(
           "Settings"
         ),
-        bigdash::sidebarHelp(
+        ## bigdash::sidebarHelp(
+        bigdash.sidebarHelp2(
           bigdash::sidebarTabHelp(
             "welcome-tab",
             "BigOmics Playground",
@@ -517,7 +522,8 @@ app_ui <- function(x) {
             "Single-Cell Profiling",
             tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
-          )
+          ),
+          !!!MODULE.multiomics$module_help()  ### HELP!!! DOES NOT WORK!!!
         ),
         bigdash::bigTabs(
           bigdash::bigTabItem(

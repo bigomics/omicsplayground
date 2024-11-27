@@ -241,7 +241,7 @@ app_server <- function(input, output, session) {
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
       
-      additional_ui_tabs <- tagList(
+      additional_ui_tabs <- list(
         dataview = bigdash::bigTabItem(
           "dataview-tab",
           DataViewInputs("dataview"),
@@ -361,7 +361,7 @@ app_server <- function(input, output, session) {
         }
       }
       insertBigTabItem <- function(tab) {
-        insertBigTabUI(additional_ui_tabs[tab]) 
+        insertBigTabUI( additional_ui_tabs[tab] ) 
       }
 
       shiny::withProgress(
@@ -508,10 +508,8 @@ app_server <- function(input, output, session) {
           if (MODULES_ENABLED["MultiOmics"] && exists("MODULE.multiomics")) {
             info("[SERVER] initializing MultiOmics module")
             mod <- MODULE.multiomics
-            dbg("class.tab_items = ", class(mod$tab_items()))
-            dbg("len.tab_items = ", length(mod$tab_items()))            
-            insertBigTabUI( mod$tab_items() ) 
-            mod$init_board(PGX)
+            insertBigTabUI( mod$module_ui() ) 
+            mod$module_server(PGX)
           }
           
           info("[SERVER] calling modules done!")
