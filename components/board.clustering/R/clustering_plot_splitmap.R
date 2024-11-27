@@ -177,6 +177,10 @@ clustering_plot_splitmap_server <- function(id,
       cex2 <- ifelse(nrow(zx) > 60, 0.8, 0.9)
       cex1 <- as.numeric(input$hm_cexCol) * 0.85
       cex2 <- as.numeric(input$hm_cexRow) * 0.75
+      shiny::validate(shiny::need(
+        all(is.numeric(input$hm_cexCol), is.numeric(input$hm_cexRow)),
+        "cexRow and cexCol must not be empty."
+      ))
       cex0 <- ifelse(!is.null(splitx) && length(splitx) <= 10, 1.05, 0.85) ## title
 
       crot <- 0
@@ -249,6 +253,10 @@ clustering_plot_splitmap_server <- function(id,
 
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
+      shiny::validate(shiny::need(
+        all(is.numeric(input$hm_cexCol), is.numeric(input$hm_cexRow)),
+        "cexRow and cexCol must not be empty."
+      ))
 
       tooltips <- NULL
       if (hm_level() == "gene") {
