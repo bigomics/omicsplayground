@@ -208,6 +208,7 @@ app_ui <- function(x) {
       }
 
       div.invitebutton <- InviteFriendUI("invite")
+      div.upgradebutton <- UpgradeModuleUI("upgrade")
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(
@@ -260,6 +261,7 @@ app_ui <- function(x) {
             ##   )
             ## ))
           ),
+          div.upgradebutton,
           div.invitebutton,
           div.chirpbutton,
           div(

@@ -117,7 +117,7 @@ modalUI <- function(
 
 modalDialog2 <- function(
     ..., header = NULL, footer = modalButton("Dismiss"),
-    size = c("m", "s", "l", "xl", "fullscreen"), easyClose = FALSE, fade = TRUE) {
+    size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE) {
   size <- match.arg(size)
   backdrop <- if (!easyClose) {
     "static"
@@ -137,7 +137,8 @@ modalDialog2 <- function(
         m = NULL,
         l = "modal-lg",
         xl = "modal-xl",
-        fullscreen = "modal-fullscreen"
+        fullscreen = "modal-fullscreen",
+        midscreen = "modal-midscreen"
       ),
       div(
         class = "modal-content",
