@@ -554,6 +554,9 @@ PlotModuleServer <- function(id,
       } else {
         output$editor_frame <- renderUI({
           plot <- func()
+          for (i in 1:length(plot$x$data)) {
+            plot$x$data[[i]]$hovertemplate <- NULL
+          }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
             "plotly_graph", json$x$data,
