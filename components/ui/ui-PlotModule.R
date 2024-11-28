@@ -516,16 +516,21 @@ PlotModuleServer <- function(id,
         )
       )
 
-      getEditorUrl <- function(session, path_object) {
+      getEditorUrl <- function(session, path_object, path_object2) {
         cd <- session$clientData
         sprintf(
-          "%s/?plotURL=%s//%s:%s%s%s",
+          "%s/?plotURL=%s//%s:%s%s%s&plotDS=%s//%s:%s%s%s",
           "custom/editor/index.html",
           cd$url_protocol,
           cd$url_hostname,
           cd$url_port,
           cd$url_pathname,
-          path_object
+          path_object,
+          cd$url_protocol,
+          cd$url_hostname,
+          cd$url_port,
+          cd$url_pathname,
+          path_object2
         )
       }
 
@@ -560,7 +565,17 @@ PlotModuleServer <- function(id,
               )
             }
           )
-          url <- getEditorUrl(session, res)
+          res2 <- session$registerDataObj(
+            "plotly_graph2",jsonlite::toJSON(list(data = list(expression = csvFunc()[[1]]$expression))),
+            function(data, req) {
+              httpResponse(
+                status = 200,
+                content_type = "application/json",
+                content = data
+              )
+            }
+          )
+          url <- getEditorUrl(session, res, res2)
           tags$iframe(src = url, style = "height: 85vh; width: 100%;")
         })
       }
