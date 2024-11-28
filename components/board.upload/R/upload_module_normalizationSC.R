@@ -183,7 +183,7 @@ upload_module_normalizationSC_server <- function(id,
       ## downsample or still use full dataset if ncells < threshold
       ds_norm_Counts <- shiny::reactive({ 
 
-        options(future.globals.maxSize= 4*1024^4) 
+        options(future.globals.maxSize= 4*1024^100)
 
         shiny::req(input$infercelltypes)
         shiny::req(r_counts())
@@ -197,7 +197,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 1500
+        cells_trs <- 9000
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -260,7 +260,7 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(dim(ds_norm_Counts()$samples))
         shiny::req(input$infercelltypes)        
         counts <- ds_norm_Counts()$counts
-        counts <- as.matrix(counts)
+        ## counts <- as.matrix(counts)
         samples <- ds_norm_Counts()$samples
 
         jj <- head(order(-matrixStats::rowSds(counts, na.rm = TRUE)), 250)
@@ -290,7 +290,8 @@ upload_module_normalizationSC_server <- function(id,
         shiny::withProgress(message = msg, value = 0.9, {
           SO <- playbase::pgx.createSeuratObject(counts, samples,
             batch = NULL, filter = FALSE, preprocess = FALSE)
-          SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+          ## SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+          SO <- playbase::seurat.preprocess(SO, sct = TRUE, tsne = FALSE, umap = FALSE)
         })
         dbg("[normalizationSC_server:dimred_norm_Counts:] Seurat object created & preprocessed.")
         kk <- setdiff(colnames(samples), colnames(SO@meta.data))
@@ -318,7 +319,6 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(dim(dimred_norm_Counts()$SO))
         SO <- dimred_norm_Counts()$SO
         meta <- SO@meta.data
-        write.csv(meta, "~/Desktop/meta00.csv")
         require(scplotter)
         require(ggplot2)
         library(ggpubr)
@@ -350,7 +350,7 @@ upload_module_normalizationSC_server <- function(id,
             if(v %in% num.vars) {
               pp <- ggplot(meta, aes_string(x = "IDENT0", y = v))
               ## pp <- pp + geom_violin(trim = FALSE, fill = "gray", color = "blue")
-              pp <- pp + geom_point(col = "white") + geom_jitter(col = "gray")
+              pp <- pp + geom_point(col = "white") + geom_jitter(col = "black")
               pp <- pp + scale_x_discrete(labels = "Dataset")
               pp <- pp + theme(axis.text.x = element_text(size = 14))
               pp <- pp + theme(axis.text.y = element_text(size = 14))
@@ -360,7 +360,7 @@ upload_module_normalizationSC_server <- function(id,
             if(v %in% char.vars) {
               tt <- data.frame(table(meta[, v]))
               pp <- ggplot(tt, aes(x = Var1, y = Freq))
-              pp <- pp + geom_bar(stat = "identity", fill = "gray75")
+              pp <- pp + geom_bar(stat = "identity", fill = "black")
               pp <- pp + theme(axis.text.x = element_text(size = 14))
               pp <- pp + theme(axis.text.y = element_text(size = 14))
               pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
@@ -509,7 +509,7 @@ upload_module_normalizationSC_server <- function(id,
       counts <- shiny::reactive({
         shiny::req(r_counts())
         counts <- r_counts()
-        counts
+        return(counts)
       })
 
       ## CPM normalized counts
@@ -517,14 +517,14 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(r_counts())
         counts <- r_counts()
         X <- playbase::logCPM(as.matrix(counts), total = 1e4, prior = 1)
-        X
+        return(X)
       })
 
       ## smples
       samples <- shiny::reactive({
         shiny::req(r_samples())
         samples <- r_samples()
-        samples
+        return(samples)
       })
       
       azimuth_ref <- shiny::reactive({
@@ -539,7 +539,6 @@ upload_module_normalizationSC_server <- function(id,
 
       sc_pheno <- shiny::reactive({
         sc_pheno <- input$pheno
-        
         return(sc_pheno)
       })
 
