@@ -19,7 +19,7 @@ UserProfileUI <- function(id) {
           wellPanel(
             shiny::h4("Subscription"),
             uiOutput(ns("plan")),
-            shiny::tableOutput(ns("userdata")),
+            shiny::tableOutput(ns("userdata"))
           ),
           bslib::layout_columns(
             col_widths = 12,
