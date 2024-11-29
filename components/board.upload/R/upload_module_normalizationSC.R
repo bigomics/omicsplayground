@@ -440,7 +440,7 @@ upload_module_normalizationSC_server <- function(id,
             if(v %in% num.vars) {
               pp <- ggplot(meta, aes_string(y = v, x = grp, fill = grp))
               pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
-              if (i == 1) { pp <- pp + theme(legend.position = "none") }
+              if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
               plist[[v]] <- pp
             }
             if(v %in% char.vars) {
@@ -449,7 +449,7 @@ upload_module_normalizationSC_server <- function(id,
               pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
               pp <- pp + geom_bar(stat = "identity", position = position_dodge())
               pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
-              if (i == 1) { pp <- pp + theme(legend.position = "none") }
+              if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
               plist[[v]] <- pp 
             }
           }
@@ -464,35 +464,6 @@ upload_module_normalizationSC_server <- function(id,
             ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
           }
         }
-        ##   vioplot::vioplot(
-        ##     SO@meta.data[, v],
-        ##     col = "lightblue", rectCol = "red",
-        ##     lineCol = "white", colMed = "green",
-        ##     border = "black", pchMed = 16,
-        ##     las = 1, names = "", xlab = "", main = v
-        ##   )
-        ## } else if (v %in% char.vars) {            
-        ##   tt <- table(SO@meta.data[, v])
-        ##   bp <- barplot(
-        ##     tt, main = v, xlab = "",
-        ##     ylab = "Number of cells",
-        ##     xaxt="n", col = "skyblue", las = 1)
-        ##   text(bp, par("usr")[3], labels=names(tt), srt=55, adj=1, xpd=TRUE)
-        ## }
-        ## SO@meta.data$ident0 <- "Dataset"
-        ## ident <- ifelse(input$groupby_celltype, "celltype.azimuth", "ident0")
-        ## if (all(class.vars %in% c("numeric","integer"))) {
-        ##  pp <- scplotter::FeatureStatPlot(
-        ##    SO, features = vars, ident = ident,
-        ##    facet_scales = "free_y",  drop = FALSE,
-        ##    theme_args = list(base_size = 15))
-        ##  size <- ifelse(length(vars)==1, 10, 8)
-        ## if (!input$groupby_celltype) {
-        ##  pp + xlab("") + theme(legend.position = "none")
-        ## } else {
-        ##  pp + ggplot2::theme(axis.text.x = element_text(size = size))
-        ## }
-        ## } else {
       }
 
       plot2 <- function() {
