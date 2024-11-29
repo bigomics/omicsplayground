@@ -537,6 +537,12 @@ PlotModuleServer <- function(id,
       if (!is.null(card)) {
         output[[paste0("editor_frame", card)]] <- renderUI({
           plot <- func()
+          for (i in 1:length(plot$x$data)) {
+            plot$x$data[[i]]$hovertemplate <- NULL
+          }
+          for (i in 1:length(plot$x$attrs)) {
+            plot$x$attrs[[i]]$hovertemplate <- NULL
+          }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
             "plotly_graph", json$x$data,
@@ -556,6 +562,9 @@ PlotModuleServer <- function(id,
           plot <- func()
           for (i in 1:length(plot$x$data)) {
             plot$x$data[[i]]$hovertemplate <- NULL
+          }
+          for (i in 1:length(plot$x$attrs)) {
+            plot$x$attrs[[i]]$hovertemplate <- NULL
           }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
