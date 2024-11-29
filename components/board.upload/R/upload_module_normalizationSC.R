@@ -131,7 +131,7 @@ upload_module_normalizationSC_server <- function(id,
 
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 0.9em;'> Filter #1: Mitochondrial expression rate</span>"),
-                shiny::p("Detect & remove cells with high MT expression"),
+                shiny::p("Remove cells with high MT expression"),
                 shiny::checkboxInput(
                   ns("remove_cells_1"),
                   label = "Remove cells",
@@ -141,7 +141,7 @@ upload_module_normalizationSC_server <- function(id,
                   "input.remove_cells_1 == true",
                   ns = ns,
                   shiny::sliderInput(
-                    ns("mt_threshold"), "Select threshold (%):", 1, 100, 10, 1
+                    ns("mt_threshold"), "Select threshold (%):", 1, 100, 10, 0
                   )
                 ),
                 shiny::br()
@@ -149,7 +149,7 @@ upload_module_normalizationSC_server <- function(id,
 
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 0.9em;'> Filter #2: Globins' expression rate</span>"),
-                shiny::p("Detect & remove cells with high globins' expression"),
+                shiny::p("Remove cells with high globins' expression"),
                 shiny::checkboxInput(
                   ns("remove_cells_2"),
                   label = "Remove cells",
@@ -159,7 +159,7 @@ upload_module_normalizationSC_server <- function(id,
                   "input.remove_cells_2 == true",
                   ns = ns,
                   shiny::sliderInput(
-                    ns("hb_threshold"), "Select threshold (%):", 1, 100, 10, 1
+                    ns("hb_threshold"), "Select threshold (%):", 1, 100, 10, 0
                   )
                 ),
                 shiny::br()
@@ -167,7 +167,7 @@ upload_module_normalizationSC_server <- function(id,
 
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 0.9em;'> Filter #3: Number of detected genes per cell</span>"),
-                shiny::p("Detect & remove cells with too few or too many detected genes"),
+                shiny::p("Remove cells with too few or too many detected genes"),
                 shiny::checkboxInput(
                   ns("remove_cells_3"),
                   label = "Remove cells",
