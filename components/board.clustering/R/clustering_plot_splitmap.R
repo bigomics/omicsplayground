@@ -102,8 +102,6 @@ clustering_plot_splitmap_server <- function(id,
     })
 
     plot_data <- shiny::reactive({
-      ## ComplexHeatmap based splitted heatmap ##########
-
       filt <- getTopMatrix()
       shiny::req(filt)
 
@@ -111,9 +109,25 @@ clustering_plot_splitmap_server <- function(id,
       annot <- filt$annot
       zx.idx <- filt$idx
 
+      ## For large scRNAseq data
+      if (ncol(zx) > 3000) {
+        dbg("[clustering_plot_splitmap] More than 3K samples detected in data matrix.")
+        dbg("[clustering_plot_splitmap] Balanced downsampling of 40 cells per celltype.")
+        grp <- annot$celltype
+        sel <- tapply(1:ncol(zx), grp, function(ii) head(sample(ii), 40))
+        ii <- unname(unlist(sel))
+        zx <- zx[, ii]
+        annot <- annot[colnames(zx), , drop = FALSE]
+        filt$mat <- zx
+        filt$annot <- annot
+        filt$samples <- colnames(zx)
+      }
+      
       shiny::validate(shiny::need(
         ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
       ))
+
+      sel <- selected_phenotypes()
 
       return(list(
         zx = zx,
@@ -124,33 +138,29 @@ clustering_plot_splitmap_server <- function(id,
     })
 
     base_splitmap.RENDER <- function() {
-      ## extract from plot data
       pd <- plot_data()
       zx <- pd[["zx"]]
       annot <- pd[["annot"]]
       zx.idx <- pd[["zx.idx"]]
       filt <- pd[["filt"]]
 
-      if (nrow(zx) <= 1) {
-        return(NULL)
-      }
-
+      if (nrow(zx) <= 1) { return(NULL) }
       show_rownames <- TRUE
-      if (nrow(zx) > 100) show_rownames <- FALSE
+      if (nrow(zx) > 100) { show_rownames <- FALSE }
 
       cex1 <- ifelse(ncol(zx) > 50, 0.75, 1)
       cex1 <- ifelse(ncol(zx) > 100, 0.5, cex1)
       cex1 <- ifelse(ncol(zx) > 200, 0, cex1)
 
       scale.mode <- "none"
-      if (hm_scale() == "relative") scale.mode <- "row.center"
-      if (hm_scale() == "BMC") scale.mode <- "row.bmc"
+      if (hm_scale() == "relative") { scale.mode <- "row.center" }
+      if (hm_scale() == "BMC") { scale.mode <- "row.bmc" }
       scale.mode
 
       ## split genes dimension in 5 groups
       splity <- 5
       splity <- 6
-      if (!is.null(zx.idx)) splity <- zx.idx
+      if (!is.null(zx.idx)) { splity <- zx.idx }
 
       ## split samples
       splitx <- NULL
@@ -158,21 +168,18 @@ clustering_plot_splitmap_server <- function(id,
 
       show_legend <- show_colnames <- TRUE
       show_legend <- input$hm_legend
-      if (hm_level() == "geneset" || !is.null(splitx)) show_legend <- FALSE
+      if (hm_level() == "geneset" || !is.null(splitx)) { show_legend <- FALSE }
 
       show_colnames <- (input$hm_cexCol != 0)
-
       rownames(zx) <- sub("HALLMARK:HALLMARK_", "HALLMARK:", rownames(zx))
       rownames(zx) <- gsub(playdata::GSET_PREFIX_REGEX, "", rownames(zx))
       rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
       if (hm_level() == "gene") {
-        ## strip any prefix
         rownames(zx) <- sub(".*:", "", rownames(zx))
-
         rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
       }
-
-      if (hm_level() == "geneset") rownames(zx) <- tolower(rownames(zx))
+      
+      if (hm_level() == "geneset") { rownames(zx) <- tolower(rownames(zx)) }
 
       cex2 <- ifelse(nrow(zx) > 60, 0.8, 0.9)
       cex1 <- as.numeric(input$hm_cexCol) * 0.85
@@ -183,14 +190,13 @@ clustering_plot_splitmap_server <- function(id,
       totnchar <- nchar(paste0(unique(splitx), collapse = ""))
       totnchar
       nx <- length(unique(splitx))
-      if (!is.null(splitx) & (totnchar > 44 || nx >= 6)) crot <- 90
-
+      if (!is.null(splitx) & (totnchar > 44 || nx >= 6)) { crot <- 90 }
       nrownames <- 60
       nrownames <- 9999
-      if (input$hm_cexRow == 0) nrownames <- 0
+      if (input$hm_cexRow == 0) { nrownames <- 0 }
 
       shiny::showNotification("Rendering heatmap...")
-
+      
       playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
@@ -207,25 +213,18 @@ clustering_plot_splitmap_server <- function(id,
       )
       p <- grDevices::recordPlot()
       p
-
-      # plt
     }
 
     plotly_splitmap.RENDER_get <- function() {
-      ## iHeatmap based splitted heatmap #########
-
       shiny::req(pgx$genes)
 
       ## -------------- variable to split samples
       scale <- "none"
-      if (hm_scale() == "relative") scale <- "row.center"
-      if (hm_scale() == "BMC") scale <- "row.bmc"
+      if (hm_scale() == "relative") { scale <- "row.center" }
+      if (hm_scale() == "BMC") { scale <- "row.bmc" }
 
       plt <- NULL
-
-      ## extract from plot data
       pd <- plot_data()
-
       filt <- pd[["filt"]]
       X <- pd[["zx"]]
       annot <- pd[["annot"]]
@@ -261,7 +260,6 @@ clustering_plot_splitmap_server <- function(id,
         }
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
-
         rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
@@ -290,9 +288,7 @@ clustering_plot_splitmap_server <- function(id,
         plt <- plotly::as_widget(plt)
       }
       plt <- plt %>%
-        plotly::layout(
-          margin = list(l = 10, r = 5, t = 5, b = 5)
-        )
+        plotly::layout(margin = list(l = 10, r = 5, t = 5, b = 5))
       return(plt)
     }
 
@@ -300,10 +296,8 @@ clustering_plot_splitmap_server <- function(id,
       list(plotlib = "plotly", func = plotly_splitmap.RENDER, card = 1),
       list(plotlib = "base", func = base_splitmap.RENDER, card = 2)
     )
-
-    plot_data_csv <- function() {
-      plotly_splitmap.RENDER_get()$X
-    }
+    
+    plot_data_csv <- function() { plotly_splitmap.RENDER_get()$X }
 
     lapply(plot_grid, function(x) {
       PlotModuleServer(
