@@ -30,7 +30,6 @@ UserProfileBoard <- function(id, auth, nav_count) {
       {
         dbg("[UserBoard::userdata]  renderDataTable")
         cl <- "badge badge-info"
-        browser()
         values <- c(
           Name   = auth$username,
           Email  = auth$email,
