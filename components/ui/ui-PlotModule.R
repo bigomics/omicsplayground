@@ -578,7 +578,7 @@ PlotModuleServer <- function(id,
             }
           )
           res2 <- session$registerDataObj(
-            "plotly_graph2",jsonlite::toJSON(list(data = as.list(csvFunc()[[1]]))),
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(csvFunc()[[1]]))),
             function(data, req) {
               httpResponse(
                 status = 200,
