@@ -433,7 +433,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         for (g in unique(grp)) {
           jj <- which(grp == g)
           zx1 <- zx[, jj, drop = FALSE]
+          dbg("------MNT1")
           zx[, jj] <- zx1 - rowMeans(zx1, na.rm = TRUE)
+          dbg("------MNT1.1")
         }
       }
 
@@ -458,7 +460,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       grp.zx <- NULL
       if (topmode == "pca") {
         NPCA <- 5
+        dbg("------MNT2")
         svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
+        dbg("------MNT2.1")
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
         gg <- rownames(zx)
