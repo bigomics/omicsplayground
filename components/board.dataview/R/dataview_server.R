@@ -149,9 +149,16 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       samples <- colnames(pgx$X)
 
       if (!is.null(input$data_samplefilter)) {
-        samples <- tryCatch({playbase::selectSamplesFromSelectedLevels(
-          pgx$samples, input$data_samplefilter
-        )}, error = function(w) {NULL})
+        samples <- tryCatch(
+          {
+            playbase::selectSamplesFromSelectedLevels(
+              pgx$samples, input$data_samplefilter
+            )
+          },
+          error = function(w) {
+            NULL
+          }
+        )
       }
       # validate samples
       validate(need(length(samples) > 0, "No samples remaining after filtering."))
