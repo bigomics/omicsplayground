@@ -343,9 +343,9 @@ upload_module_normalization_server <- function(
         main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
         if (input$norm_plottype == "boxplot") {
-          if (ncol(X0) > 40) {
-            jj <- sample(ncol(X0), 40)
-            ii <- rownames(X0) ## names!
+          if (ncol(X1) > 40) {
+            jj <- sample(ncol(X1), 40)
+            ii <- rownames(X1) ## names!
             ## just downsampling for boxplots
             if (length(ii) > 2000) ii <- sample(ii, 2000)
             X0 <- X0[ii, jj]
