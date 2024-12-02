@@ -554,7 +554,17 @@ PlotModuleServer <- function(id,
               )
             }
           )
-          url <- getEditorUrl(session, res)
+          res2 <- session$registerDataObj(
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(csvFunc()[[1]]))),
+            function(data, req) {
+              httpResponse(
+                status = 200,
+                content_type = "application/json",
+                content = data
+              )
+            }
+          )
+          url <- getEditorUrl(session, res, res2)
           tags$iframe(src = url, style = "height: 85vh; width: 100%;")
         })
       } else {
