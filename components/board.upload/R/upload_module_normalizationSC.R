@@ -110,7 +110,7 @@ upload_module_normalizationSC_server <- function(id,
                   label = "Visualize cell cluster by",
                   choices = metadata_vars, ## reactive
                   multiple = TRUE,
-                  selected = c("celltype.azimuth", "stim")
+                  selected = c("nCount_RNA", "nFeature_RNA", "percent.mt", "celltype.azimuth")
                 ),
                 shiny::br()
               ),
@@ -307,6 +307,8 @@ upload_module_normalizationSC_server <- function(id,
         
       })
 
+      ##------------PUT IN SAME REACTIVE OBJECT: IK
+      ##------------ADD horizontal line in plots
       ## Dim reductions
       dimred_norm_Counts <- shiny::reactive({ 
 
@@ -368,7 +370,6 @@ upload_module_normalizationSC_server <- function(id,
       ## ------------------------------------------------------------------
       ## Plot functions
       ## ------------------------------------------------------------------
-
       plot1 <- function() {
         shiny::req(dim(dimred_norm_Counts()$SO))
         SO <- dimred_norm_Counts()$SO
@@ -394,7 +395,7 @@ upload_module_normalizationSC_server <- function(id,
         names(class.vars) <- vars
         num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
         char.vars <- vars[which(class.vars %in% c("character"))]
-
+        
         if (!input$groupby_celltype) {
           meta$IDENT0 <- "IDENT"
           plist <- list()
@@ -403,20 +404,20 @@ upload_module_normalizationSC_server <- function(id,
             v <- vars[i]
             if(v %in% num.vars) {
               pp <- ggplot(meta, aes_string(x = "IDENT0", y = v))
-              ## pp <- pp + geom_violin(trim = FALSE, fill = "gray", color = "blue")
-              pp <- pp + geom_point(col = "white") + geom_jitter(col = "black")
+              pp <- pp + geom_point(col = "white", shape = "diamond") + geom_jitter(col = "gray60")
               pp <- pp + scale_x_discrete(labels = "Dataset")
-              pp <- pp + theme(axis.text.x = element_text(size = 14))
-              pp <- pp + theme(axis.text.y = element_text(size = 14))
+              pp <- pp + theme(axis.text.x = element_text(size = 13))
+              pp <- pp + theme(axis.text.y = element_text(size = 16))
               pp <- pp + RotatedAxis() + xlab("")
+              if(v %in% c("percent.ribo","percent.hb")) { pp <- pp + ylim(0, 100) }
               plist[[v]] <- pp
             }
             if(v %in% char.vars) {
               tt <- data.frame(table(meta[, v]))
               pp <- ggplot(tt, aes(x = Var1, y = Freq))
-              pp <- pp + geom_bar(stat = "identity", fill = "black")
-              pp <- pp + theme(axis.text.x = element_text(size = 14))
-              pp <- pp + theme(axis.text.y = element_text(size = 14))
+              pp <- pp + geom_bar(stat = "identity", fill = "gray60")
+              pp <- pp + theme(axis.text.x = element_text(size = 13))
+              pp <- pp + theme(axis.text.y = element_text(size = 16))
               pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
               plist[[v]] <- pp
             }
@@ -441,16 +442,30 @@ upload_module_normalizationSC_server <- function(id,
               pp <- ggplot(meta, aes_string(y = v, x = grp, fill = grp))
               pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
               if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
+              if(v %in% c("percent.ribo","percent.hb")) { pp <- pp + ylim(0, 100) }
+                ## add percent.mito
               plist[[v]] <- pp
             }
             if(v %in% char.vars) {
-              tt <- data.frame(t(table(meta[, v], meta[, grp])))
-              colnames(tt)[1:2] <- c("celltype.azimuth", v)
-              pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
-              pp <- pp + geom_bar(stat = "identity", position = position_dodge())
-              pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
-              if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
-              plist[[v]] <- pp 
+              if(v == "celltype.azimuth") {
+                tt <- data.frame(table(meta[, v]))
+                pp <- ggplot(tt, aes(x = Var1, y = Freq))
+                pp <- pp + geom_bar(stat = "identity", fill = "gray60")
+                pp <- pp + theme(axis.text.x = element_text(size = 13))
+                pp <- pp + theme(axis.text.y = element_text(size = 16))
+                pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
+                plist[[v]] <- pp
+              } else {
+                tt <- data.frame(t(table(meta[, v], meta[, grp])))
+                colnames(tt)[1:2] <- c("celltype.azimuth", v)
+                pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
+                pp <- pp + geom_bar(stat = "identity", position = position_dodge())
+                pp <- pp + theme(axis.text.x = element_text(size = 13))
+                pp <- pp + theme(axis.text.y = element_text(size = 16))
+                pp <- pp + RotatedAxis() + xlab("") + ylab("Number of cells")
+                if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
+                plist[[v]] <- pp
+              }
             }
           }
           i <- 1
