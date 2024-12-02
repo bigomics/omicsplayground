@@ -534,9 +534,18 @@ PlotModuleServer <- function(id,
         )
       }
 
+
       if (!is.null(card)) {
         output[[paste0("editor_frame", card)]] <- renderUI({
           plot <- func()
+          if (exists("csvFunc") && is.function(csvFunc)) {
+            plot_data_csv <- csvFunc()
+            if (inherits(plot_data_csv, "list")) {
+              plot_data_csv <- plot_data_csv[[1]]
+            }
+          } else {
+            plot_data_csv <- NULL
+          }
           for (i in 1:length(plot$x$data)) {
             plot$x$data[[i]]$hovertemplate <- NULL
           }
@@ -555,7 +564,7 @@ PlotModuleServer <- function(id,
             }
           )
           res2 <- session$registerDataObj(
-            "plotly_graph2", jsonlite::toJSON(list(data = as.list(csvFunc()[[1]]))),
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(plot_data_csv))),
             function(data, req) {
               httpResponse(
                 status = 200,
@@ -570,6 +579,14 @@ PlotModuleServer <- function(id,
       } else {
         output$editor_frame <- renderUI({
           plot <- func()
+          if (exists("csvFunc") && is.function(csvFunc)) {
+            plot_data_csv <- csvFunc()
+            if (inherits(plot_data_csv, "list")) {
+              plot_data_csv <- plot_data_csv[[1]]
+            }
+          } else {
+            plot_data_csv <- NULL
+          }
           for (i in 1:length(plot$x$data)) {
             plot$x$data[[i]]$hovertemplate <- NULL
           }
@@ -588,7 +605,7 @@ PlotModuleServer <- function(id,
             }
           )
           res2 <- session$registerDataObj(
-            "plotly_graph2", jsonlite::toJSON(list(data = as.list(csvFunc()[[1]]))),
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(plot_data_csv))),
             function(data, req) {
               httpResponse(
                 status = 200,
