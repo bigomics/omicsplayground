@@ -16,7 +16,7 @@ upload_module_computepgx_server <- function(
     norm_method,
     samplesRT,
     azimuth_ref, ## NEW AZ
-    sc_pheno, ## NEW AZ
+    ## sc_pheno, ## NEW AZ
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -620,7 +620,7 @@ upload_module_computepgx_server <- function(
           countsX = countsX,
           impX = impX,
           azimuth_ref = azimuth_ref(), ## NEW AZ
-          sc_pheno = sc_pheno(), ## NEW AZ
+          ## sc_pheno = sc_pheno(), ## NEW AZ
           contrasts = contrasts,
           probe_type = probetype(),
           # Extra tables

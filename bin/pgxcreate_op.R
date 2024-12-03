@@ -33,7 +33,7 @@ pgx <- playbase::pgx.createPGX(
   samples = params$samples,
   contrasts = params$contrasts,
   azimuth_ref = params$azimuth_ref, ## NEW AZ
-  sc_pheno = params$sc_pheno, ## NEW AZ
+  ## sc_pheno = params$sc_pheno, ## NEW AZ
   name = params$name,
   datatype = params$datatype,
   probe_type = params$probe_type,

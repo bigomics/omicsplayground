@@ -1181,7 +1181,7 @@ UploadBoard <- function(id,
         compute_input$norm_method <- sc_normalized$norm_method()
         compute_input$samples <- sc_normalized$samples()
         compute_input$azimuth_ref <- sc_normalized$azimuth_ref() ## NEW AZ
-        compute_input$sc_pheno <- sc_normalized$sc_pheno() ## NEW AZ
+        ## compute_input$sc_pheno <- sc_normalized$sc_pheno() ## NEW AZ
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
@@ -1199,7 +1199,7 @@ UploadBoard <- function(id,
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref), ## NEW AZ
-      sc_pheno = shiny::reactive(compute_input$sc_pheno), ## NEW AZ
+      ## sc_pheno = shiny::reactive(compute_input$sc_pheno), ## NEW AZ
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,
