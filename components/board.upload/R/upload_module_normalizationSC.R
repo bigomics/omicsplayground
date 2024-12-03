@@ -362,7 +362,7 @@ upload_module_normalizationSC_server <- function(id,
         shiny::withProgress(message = msg, value = 0.9, {
           SO <- playbase::pgx.createSeuratObject(counts, samples,
             batch = NULL, filter = FALSE, preprocess = FALSE)
-          SO <- playbase::seurat.preprocess(SO, sct = TRUE, tsne = FALSE, umap = FALSE)
+          SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
         })
         dbg("[normalizationSC_server:dimred_norm_Counts:] Seurat object created & preprocessed.")
         kk <- setdiff(colnames(samples), colnames(SO@meta.data))
@@ -474,61 +474,61 @@ upload_module_normalizationSC_server <- function(id,
             if(v %in% num.vars) {
               pp <- ggplot(meta, aes_string(y = v, x = grp, fill = grp))
               pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
-              if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
+              ylab <- v
+              ## if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
+              pp <- pp + theme(legend.position = "none")
               if (grepl("percent", v)) {
                 pp <- pp + ylim(0, 100)
                 ylab <- "Percentage"
               } else if (min(meta[, v]) >= 0) {
                 pp <- pp + scale_y_continuous(limits = c(0, NA))
               }
+              if (v %in% c("percent.hb","percent.mt")) {
+                pp <- pp + geom_hline(yintercept = 10, col = "firebrick2")
+              }
+              if (v == "nFeature_RNA") {
+                pp <- pp + geom_hline(yintercept = c(100, 2000), col = "firebrick2")
+              }
+              ## pp <- pp + scale_x_discrete(labels = "Cells")
+              plist[[v]] <- pp + labs(title = v) + ylab(ylab)
             }
-            if (v %in% c("percent.hb","percent.mt")) {
-              pp <- pp + geom_hline(yintercept = 10, col = "firebrick2")
-            }
-            if (v == "nFeature_RNA") {
-              pp <- pp + geom_hline(yintercept = c(100, 2000), col = "firebrick2")
-            }
-            pp <- pp + scale_x_discrete(labels = "Cells")
-            plist[[v]] <- pp + labs(title = v) + ylab(ylab)
-            ## pp <- pp + ylab(ylab)
-            ## plist[[v]] <- pp
-          }
-          if (v %in% char.vars) {
-            if (v == "celltype.azimuth") {
-              tt <- data.frame(table(meta[, v]))
-              pp <- ggplot(tt, aes(x = Var1, y = Freq))
-              pp <- pp + geom_bar(stat = "identity", fill = "dim gray")
-              pp <- pp + ylab("Number of cells")
-              plist[[v]] <- pp
-            } else {
-              tt <- data.frame(t(table(meta[, v], meta[, grp])))
-              colnames(tt)[1:2] <- c("celltype.azimuth", v)
-              pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
-              pp <- pp + geom_bar(stat = "identity", position = position_dodge())
-              pp <- pp + ylab("Number of cells")
-              if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
-              plist[[v]] <- pp
+            if (v %in% char.vars) {
+              if (v == "celltype.azimuth") {
+                tt <- data.frame(table(meta[, v]))
+                pp <- ggplot(tt, aes(x = Var1, y = Freq))
+                pp <- pp + geom_bar(stat = "identity", fill = "dim gray")
+                pp <- pp + ylab("Number of cells")
+                plist[[v]] <- pp
+              } else {
+                tt <- data.frame(t(table(meta[, v], meta[, grp])))
+                colnames(tt)[1:2] <- c("celltype.azimuth", v)
+                pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
+                pp <- pp + geom_bar(stat = "identity", position = position_dodge())
+                pp <- pp + ylab("Number of cells")
+                if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
+                plist[[v]] <- pp
+              }
             }
           }
-        }
-        plist <- lapply(plist, function(x) {
-          x <- x + theme(axis.text.x = element_text(size = 13));
-          x <- x + theme(axis.text.y = element_text(size = 13));
-          x <- x + RotatedAxis() + xlab("")
-          x <- x + theme(panel.border = element_rect(color = "black", fill = NA, size = 1));
-        })
-        i <- 1
-        if (length(plist) == 1) {
-          plist[[1]]
-        } else if (length(plist) == 2) {
-          ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
-        } else if (length(plist) == 3) {
-          ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
-        } else if (length(plist) == 4) {
-          ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+          plist <- lapply(plist, function(x) {
+            x <- x + theme(axis.text.x = element_text(size = 13));
+            x <- x + theme(axis.text.y = element_text(size = 13));
+            x <- x + RotatedAxis() + xlab("")
+            x <- x + theme(panel.border = element_rect(color = "black", fill = NA, size = 1));
+          })
+          i <- 1
+          if (length(plist) == 1) {
+            plist[[1]]
+          } else if (length(plist) == 2) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
+          } else if (length(plist) == 3) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
+          } else if (length(plist) == 4) {
+            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+          }
         }
       }
-      
+
       plot2 <- function() {
         shiny::req(
           dim(dimred_norm_Counts()$samples),
@@ -647,3 +647,12 @@ upload_module_normalizationSC_server <- function(id,
     } ## end-of-server
   )
 }
+
+## ADD WILCOXON TEST
+## ADD LOW AND HIGH THRESHOLD FOR nFeature_RNA
+## REMOVE ALL THOSE GSET METHODS. USE Fisher, fgsea, spearman.
+## FIX REMAINING ISSUES AT UPLOAD BOARD.
+## TEST ON MORE DATASETS.
+## ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
+## IDENTIFY SLOW MODULES.
+
