@@ -787,7 +787,8 @@ app_server <- function(input, output, session) {
     callbackR = inviteCallback
   )
   UpgradeModuleServer(
-    id = "upgrade"
+    id = "upgrade",
+    auth = auth
   )
   inviteCallback <- function() {
     ## After succesful invite, we extend the session

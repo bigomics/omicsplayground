@@ -11,7 +11,7 @@ UpgradeModuleUI <- function(id) {
   )
 }
 
-UpgradeModuleServer <- function(id) {
+UpgradeModuleServer <- function(id, auth) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -40,12 +40,32 @@ UpgradeModuleServer <- function(id) {
       shiny::showModal(modal)
     }
 
+    allowed_domains <- shiny::reactive({
+      domains_path <- paste0(ETC, "/allowed_domains.csv")
+      if (file.exists(domains_path)) {
+        domains <- read.csv(domains_path)$x
+        logged_in_domain <- strsplit(auth$email, "@")[[1]][2]
+        if (is.na(logged_in_domain)) logged_in_domain <- ""
+        if (logged_in_domain %in% domains) {
+          return(TRUE)
+        } else {
+          return(FALSE)
+        }
+      } else {
+        return(FALSE)
+      }
+    })
+
     shiny::observeEvent(
       {
         input$action
       },
       {
-        showModal()
+        if (allowed_domains()) {
+          showModal()
+        } else {
+          browseURL("https://bigomics.ch/pricing/")
+        }
       }
     )
   }) ## end of moduleServer
