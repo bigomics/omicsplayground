@@ -40,29 +40,13 @@ UpgradeModuleServer <- function(id) {
       shiny::showModal(modal)
     }
 
-    r_click <- shiny::reactiveVal(0)
-    ext_click <- function() {
-      r_click(r_click() + 1)
-    }
-
-    click <- shiny::reactive({
-      r_click() + input$action
-    })
-
     shiny::observeEvent(
       {
-        list(r_click(), input$action)
+        input$action
       },
       {
-        if (r_click() || input$action) {
-          showModal()
-        }
+        showModal()
       }
-    )
-
-    ## return
-    list(
-      click = ext_click ## exported function!
     )
   }) ## end of moduleServer
 }
