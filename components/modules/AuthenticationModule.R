@@ -99,7 +99,7 @@ AuthenticationModuleApacheCookie <- function(id,
       USER <- shiny::reactiveValues(
         method = "none",
         logged = FALSE,
-        username = "",
+        username = email,
         email = email,
         level = "",
         limit = "",
@@ -131,7 +131,7 @@ AuthenticationModuleApacheCookie <- function(id,
         } else {
           USER$logged <- TRUE
         }
-        USER$username <- username
+        USER$username <- email
         USER$email <- email
       }
 
