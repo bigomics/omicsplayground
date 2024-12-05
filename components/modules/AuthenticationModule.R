@@ -94,7 +94,7 @@ AuthenticationModuleApacheCookie <- function(id,
   shiny::moduleServer(
     id, function(input, output, session) {
       message("[NoAuthenticationModule] >>>> no authentication -- reading user from apache cookie <<<<")
-      email <- extract_cookie_value(session$request$HTTP_COOKIE, "user")
+      email <- extract_cookie_value(session, "user")
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
