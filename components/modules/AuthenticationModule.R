@@ -98,7 +98,7 @@ AuthenticationModuleApacheCookie <- function(id,
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
-        logged = FALSE,
+        logged = TRUE,
         username = email,
         email = email,
         level = "",
