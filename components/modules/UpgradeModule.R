@@ -18,7 +18,7 @@ UpgradeModuleServer <- function(id, auth) {
     showModal <- function() {
       body <- tagList(
         tags$iframe(
-          src = "https://email.bigomics.ch/buy-now/", # Replace with the desired URL
+          src = "https://upgrade.bigomics.ch/buy-now/", # Replace with the desired URL
           width = "100%",
           # height = "82vh",
           frameborder = "0"
