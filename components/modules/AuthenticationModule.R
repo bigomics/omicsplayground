@@ -104,7 +104,7 @@ AuthenticationModuleApacheCookie <- function(id,
         level = "",
         limit = "",
         options = opt, ## init from global
-        user_dir = PGX.DIR ## global
+        user_dir = file.path(PGX.DIR) ## global
       )
 
       if (show_modal) {
