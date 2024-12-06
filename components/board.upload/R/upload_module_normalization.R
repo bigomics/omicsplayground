@@ -545,7 +545,7 @@ upload_module_normalization_server <- function(
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
-          Z[which(is.infinite(Z) | is.nan(Z))] <- NA 
+          Z[which(is.infinite(Z) | is.nan(Z))] <- NA
           barplot(zscore,
             main = "outlier score", ylab = "z-score",
             las = 1, ylim = c(0, max(7, 1.2 * max(Z, na.rm = TRUE))),
