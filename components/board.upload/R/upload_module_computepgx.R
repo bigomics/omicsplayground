@@ -52,11 +52,11 @@ upload_module_computepgx_server <- function(
         if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma", "notrend.limma")
         } else {
           mm <- c(
-            "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
+            "ttest", "ttest.welch", "voom.limma", "trend.limma",
+            "notrend.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
         }
         return(mm)
@@ -71,7 +71,7 @@ upload_module_computepgx_server <- function(
         if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("ttest", "ttest.welch")
+          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum","trend.limma")
         } else {
           mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
         }
@@ -80,43 +80,43 @@ upload_module_computepgx_server <- function(
       )
 
       ## ## statistical method for GENESET level testing
-      GENESET.METHODS <- c(
-        "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
-        "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
-        "fgsea"
-      )
-     GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
-      
-      ## statistical method for GENESET level testing
-      ##GENESET.METHODS <-  shiny::eventReactive(
-      ##{
-      ##   upload_datatype()
-      ##},
-      ##{
-      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-      ##     mm <- c("ssgsea", "gsva", "fgsea", "fry")
-      ##   } else {
-      ##     mm <- c("fisher", "ssgsea", "gsva", "spearman", "camera", "fry", "fgsea")
-      ##     ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR"
-      ##   }
-      ##   return(mm)
-      ##}
-      ##)
-      
-      ## GENESET.SELECTED <- shiny::eventReactive(
-      ## {
-      ##   upload_datatype()
-      ## },
-      ## {
-      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-      ##     mm <- c("fgsea")
-      ##   } else {
-      ##     mm <- c("fisher", "gsva", "ssgsea", "fgsea")
-      ##   }
-      ##   return(mm)
-      ## }
+      ## GENESET.METHODS <- c(
+      ##    "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
+      ##    "plage","enricher", "gsea.permPH", "gsea.permGS", "gseaPR",
+      ##    "fgsea"
       ## )
+      ## GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
+      
+      GENESET.METHODS <- shiny::eventReactive(
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "spearman", "gsva")
+        } else {
+          mm <- c(
+            "fisher", "ssgsea", "gsva", "spearman", "camera",
+            "fry", "plage","enricher", "fgsea")
+        }
+        return(mm)
+      }
+      )
 
+      GENESET.SELECTED <- shiny::eventReactive(
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "spearman")
+        } else {
+          mm <- c("fisher", "gsva", "ssgsea", "fgsea")
+        }
+        return(mm)
+      }
+      )
+                
       ## batch correction and extrs methods
       EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
       EXTRA.NAMES <- c(
@@ -242,8 +242,8 @@ upload_module_computepgx_server <- function(
                     </div>
                   "),
                   # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
-                  GENESET.METHODS,
-                  selected = GENESET.SELECTED
+                  GENESET.METHODS(),
+                  selected = GENESET.SELECTED()
                 ),
               ),
               bslib::card(
@@ -452,8 +452,8 @@ upload_module_computepgx_server <- function(
           )
           shiny::updateCheckboxGroupInput(session,
             "gset_methods",
-            choices = GENESET.METHODS,
-            sel = GENESET.SELECTED
+            choices = GENESET.METHODS(),
+            sel = GENESET.SELECTED()
           )
         }
       })

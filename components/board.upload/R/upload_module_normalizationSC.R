@@ -624,11 +624,6 @@ upload_module_normalizationSC_server <- function(id,
         }
       })
       
-      ## sc_pheno <- shiny::reactive({
-      ##   sc_pheno <- input$pheno
-      ##  return(sc_pheno)
-      ## })
-
       LL <- list(
         counts = counts,
         samples = samples,
