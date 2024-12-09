@@ -33,15 +33,16 @@ upload_module_normalizationSC_server <- function(id,
 
         shiny::req(r_samples())
         samples <- r_samples()
-        metadata_vars <- c(
-          "celltype.azimuth", "orig.ident",
+        metadata_vars0 <- colnames(samples)
+        metadata_vars1 <- c(
+          "orig.ident", "seurat_clusters",
           "nCount_RNA", "nFeature_RNA",
           "percent.mt", "percent.ribo",
-          "percent.hb", "seurat_clusters",
-          "G2M.Score", "S.Score", "Phase"
+          "percent.hb", "G2M.Score",
+          "S.Score", "celltype.azimuth"
         )
-        metadata_vars <- unique(c(metadata_vars, colnames(samples)))
-        
+        metadata_vars <- unique(c(metadata_vars0, metadata_vars1))
+                
         dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
 
         cellqc.infotext <- "Data QC. Violin plots of total number of cDNA molecules (e.g., UMI) detected in each cell (nCount_RNA), number of unique genes detected in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo), percentage of globin gene expression in each cell (percent_hb), G2M cell cysle score, S cell cycle score."
@@ -110,24 +111,10 @@ upload_module_normalizationSC_server <- function(id,
                   label = "Visualize cell cluster by",
                   choices = metadata_vars,
                   multiple = TRUE,
-                  selected = c("nCount_RNA", "nFeature_RNA", "percent.mt", "celltype.azimuth")
+                  selected = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.ribo")
                 ),
                 shiny::br()
               ),
-
-              ## bslib::accordion_panel(
-              ##   title = HTML("<span style='font-size: 0.9em;'> Phenotype of interest</span>"),
-              ##   shiny::div(
-              ##     style = "display: flex; align-items: center; justify-content: space-between;"
-              ##   ),
-              ##   shiny::selectInput(
-              ##     ns("pheno"),
-              ##     label = "Phenotype of interest",
-              ##     choices = colnames(samples), ## reactive
-              ##     selected = "<select>"
-              ##   ),
-              ##   shiny::br()
-              ## ),
 
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 0.9em;'> Cell filtering</span>"),
@@ -140,66 +127,13 @@ upload_module_normalizationSC_server <- function(id,
                 shiny::conditionalPanel(
                   "input.remove_cells == true",
                   ns = ns,
-                  shiny::sliderInput(ns("nfeature_threshold"), "Detected genes per cell:", 0, 25000, 2000, 100),
+                  shiny::sliderInput(ns("nfeature_threshold"), "Detected genes per cell:",
+                    min = 0, max = 2500, value = c(100, 2000)),
                   shiny::sliderInput(ns("mt_threshold"), "MT expresssion threshold (%):", 1, 100, 10, 0),
                   shiny::sliderInput(ns("hb_threshold"), "HB expression threshold (%):", 1, 100, 10, 0)
                 ),
                 shiny::br()
               )
-              ##---------------------------
-              ## bslib::accordion_panel(
-              ##   title = HTML("<span style='font-size: 0.9em;'> Filter #1: Mitochondrial expression rate</span>"),
-              ##   shiny::p("Remove cells with high MT expression"),
-              ##   shiny::checkboxInput(
-              ##     ns("remove_cells_1"),
-              ##     label = "Remove cells",
-              ##     value = FALSE
-              ##   ),
-              ##   shiny::conditionalPanel(
-              ##     "input.remove_cells_1 == true",
-              ##     ns = ns,
-              ##     shiny::sliderInput(
-              ##       ns("mt_threshold"), "Select threshold (%):", 1, 100, 10, 0
-              ##     )
-              ##   ),
-              ##   shiny::br()
-              ## ),
-              ##---------------------------
-              ## bslib::accordion_panel(
-              ##   title = HTML("<span style='font-size: 0.9em;'> Filter #2: Globins' expression rate</span>"),
-              ##   shiny::p("Remove cells with high globins' expression"),
-              ##   shiny::checkboxInput(
-              ##     ns("remove_cells_2"),
-              ##     label = "Remove cells",
-              ##     value = FALSE
-              ##   ),
-              ##   shiny::conditionalPanel(
-              ##     "input.remove_cells_2 == true",
-              ##     ns = ns,
-              ##     shiny::sliderInput(
-              ##       ns("hb_threshold"), "Select threshold (%):", 1, 100, 10, 0
-              ##     )
-              ##   ),
-              ##   shiny::br()
-              ## ),
-              ##---------------------------
-              ## bslib::accordion_panel(
-              ##   title = HTML("<span style='font-size: 0.9em;'> Filter #3: Number of detected genes per cell</span>"),
-              ##   shiny::p("Remove cells with too few or too many detected genes"),
-              ##   shiny::checkboxInput(
-              ##     ns("remove_cells_3"),
-              ##     label = "Remove cells",
-              ##     value = FALSE
-              ##   ),
-              ##   shiny::conditionalPanel(
-              ##     "input.remove_cells_3 == true",
-              ##     ns = ns,
-              ##     shiny::sliderInput(
-              ##       ns("nFeatureRNA_threshold"), "Select threshold:", 50, 500, 200, 100
-              ##     )
-              ##   ),
-              ##   shiny::br()
-              ## )
             ))
           )
 
@@ -250,8 +184,8 @@ upload_module_normalizationSC_server <- function(id,
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## downsampled and normalized data
-      ## downsample or still use full dataset if ncells < threshold
+      ## downsampled & normalized data
+      ## downsample if ncells > threshold
       ds_norm_Counts <- shiny::reactive({ 
 
         options(future.globals.maxSize= 4*1024^100)
@@ -268,7 +202,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 9000
+        cells_trs <- 1e200 ## 2000
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -402,6 +336,9 @@ upload_module_normalizationSC_server <- function(id,
           length(vars) <= 4,
           "Please select up to 4 QC variables for visualization."
         ))        
+        if ("seurat_clusters" %in% colnames(meta)) {
+          meta$seurat_clusters <- as.character(meta$seurat_clusters) 
+        }
         i <- 1
         class.vars <- c()
         for(i in 1:length(vars)) {
@@ -432,7 +369,7 @@ upload_module_normalizationSC_server <- function(id,
                   pp <- pp + scale_y_continuous(limits = c(0, NA))
                 }
               }
-              ## yintercept make from reactive values
+              ## make yintercept from reactive values
               if(v %in% c("percent.hb", "percent.mt")) {
                 pp <- pp + geom_hline(yintercept = 10, col = "firebrick2")
               }
@@ -450,10 +387,11 @@ upload_module_normalizationSC_server <- function(id,
             }
           }
           plist <- lapply(plist, function(x) {
-            x <- x + theme(axis.text.x = element_text(size = 13));
-            x <- x + theme(axis.text.y = element_text(size = 13));
+            x <- x + theme(axis.text.x = element_text(size = 13))
+            x <- x + theme(axis.text.y = element_text(size = 13))
             x <- x + RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black", fill = NA, size = 1));
+            x <- x + theme(panel.border = element_rect(color = "black", fill = NA,
+              size = 1, linewidth = 2))
           })
           i <- 1
           if (length(plist) == 1) {
@@ -472,10 +410,9 @@ upload_module_normalizationSC_server <- function(id,
           for(i in 1:length(vars)) {
             v <- vars[i]
             if(v %in% num.vars) {
-              pp <- ggplot(meta, aes_string(y = v, x = grp, fill = grp))
+              pp <- ggplot(meta, aes_string(y = v, x = grp)) ## , fill = grp))
               pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
               ylab <- v
-              ## if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
               pp <- pp + theme(legend.position = "none")
               if (grepl("percent", v)) {
                 pp <- pp + ylim(0, 100)
@@ -489,7 +426,6 @@ upload_module_normalizationSC_server <- function(id,
               if (v == "nFeature_RNA") {
                 pp <- pp + geom_hline(yintercept = c(100, 2000), col = "firebrick2")
               }
-              ## pp <- pp + scale_x_discrete(labels = "Cells")
               plist[[v]] <- pp + labs(title = v) + ylab(ylab)
             }
             if (v %in% char.vars) {
@@ -497,24 +433,23 @@ upload_module_normalizationSC_server <- function(id,
                 tt <- data.frame(table(meta[, v]))
                 pp <- ggplot(tt, aes(x = Var1, y = Freq))
                 pp <- pp + geom_bar(stat = "identity", fill = "dim gray")
-                pp <- pp + ylab("Number of cells")
-                plist[[v]] <- pp
+                plist[[v]] <- pp + ylab("Number of cells")
               } else {
                 tt <- data.frame(t(table(meta[, v], meta[, grp])))
                 colnames(tt)[1:2] <- c("celltype.azimuth", v)
                 pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
-                pp <- pp + geom_bar(stat = "identity", position = position_dodge())
-                pp <- pp + ylab("Number of cells")
+                pp <- pp + geom_bar(stat = "identity")
                 if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
-                plist[[v]] <- pp
+                plist[[v]] <- pp + labs(title = v) + ylab("Number of cells")
               }
             }
           }
           plist <- lapply(plist, function(x) {
-            x <- x + theme(axis.text.x = element_text(size = 13));
-            x <- x + theme(axis.text.y = element_text(size = 13));
+            x <- x + theme(axis.text.x = element_text(size = 13))
+            x <- x + theme(axis.text.y = element_text(size = 13))
             x <- x + RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black", fill = NA, size = 1));
+            x <- x + theme(panel.border = element_rect(color = "black", fill = NA,
+              size = 1, linewidth = 2))
           })
           i <- 1
           if (length(plist) == 1) {
