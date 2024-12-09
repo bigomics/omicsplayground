@@ -679,9 +679,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
       colnames(rho) <- idxx
-      rownames(rho) <- sub("_", ":", sub(".*:", "", rownames(ref)))
+      rownames(rho) <- sub(".*:", "", rownames(ref))
 
-      i <- 1
       if (nrow(ref) > 0) {
         for (i in 1:length(idxx)) {
           gg <- rownames(zx)[which(idx == idxx[i])]
@@ -696,7 +695,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
-        gmt <- playbase::getGSETS_playbase(rownames(rho))
+        gmt <- playbase::getGSETS_playbase(sub("_", ":", rownames(rho)))
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {
@@ -711,12 +710,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           P <- cbind(P, odd.prob)
         }
         colnames(P) <- colnames(rho)
-        rownames(P) <- names(gmt)
+        rownames(P) <- sub(":", "_", names(gmt))
         rho <- rho[rownames(P),]
+        browser()
         rho <- rho * (P / max(P))
       }
 
-      dim(rho)
       return(rho)
     })
 
