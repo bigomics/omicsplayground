@@ -370,11 +370,16 @@ upload_module_normalizationSC_server <- function(id,
                 }
               }
               ## make yintercept from reactive values
-              if(v %in% c("percent.hb", "percent.mt")) {
-                pp <- pp + geom_hline(yintercept = 10, col = "firebrick2")
+              if(v == "percent.mt") {
+                pp <- pp + geom_hline(yintercept = input$mt_threshold, col = "firebrick2")
+              }
+              if(v == "percent.hb") {
+                pp <- pp + geom_hline(yintercept = input$hb_threshold, col = "firebrick2")
               }
               if(v == "nFeature_RNA") {
-                pp <- pp + geom_hline(yintercept = c(100, 2000), col = "firebrick2")
+                minv <- input$nfeature_threshold[1]
+                maxv <- input$nfeature_threshold[2]
+                pp <- pp + geom_hline(yintercept = c(minv, maxv), col = "firebrick2")
               }
               pp <- pp + scale_x_discrete(labels = "Cells")
               plist[[v]] <- pp + labs(title = v) + ylab(ylab)
@@ -420,11 +425,16 @@ upload_module_normalizationSC_server <- function(id,
               } else if (min(meta[, v]) >= 0) {
                 pp <- pp + scale_y_continuous(limits = c(0, NA))
               }
-              if (v %in% c("percent.hb","percent.mt")) {
-                pp <- pp + geom_hline(yintercept = 10, col = "firebrick2")
+              if(v == "percent.mt") {
+                pp <- pp + geom_hline(yintercept = input$mt_threshold, col = "firebrick2")
+              }
+              if(v == "percent.hb") {
+                pp <- pp + geom_hline(yintercept = input$hb_threshold, col = "firebrick2")
               }
               if (v == "nFeature_RNA") {
-                pp <- pp + geom_hline(yintercept = c(100, 2000), col = "firebrick2")
+                minv <- input$nfeature_threshold[1]
+                maxv <- input$nfeature_threshold[2]
+                pp <- pp + geom_hline(yintercept = c(minv, maxv), col = "firebrick2")
               }
               plist[[v]] <- pp + labs(title = v) + ylab(ylab)
             }
@@ -578,8 +588,9 @@ upload_module_normalizationSC_server <- function(id,
   )
 }
 
-## ADD LOW AND HIGH THRESHOLD FOR nFeature_RNA
-## FIX REMAINING ISSUES AT UPLOAD BOARD.
+##--------------FIX PHENO 
+##--------------SC OPTION LIST
+
 ## TEST ON MORE DATASETS.
 ## ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
 ## IDENTIFY SLOW MODULES.
