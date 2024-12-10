@@ -144,7 +144,7 @@ app_ui <- function(x) {
           wgcna = "WGCNA",
           tcga = "TCGA survival (beta)"
         ),
-        "MultiOmics" = MODULE.multiomics$module_menu()
+        "MultiOmics (beta)" = MODULE.multiomics$module_menu()
       )
 
       ## filter disabled modules
