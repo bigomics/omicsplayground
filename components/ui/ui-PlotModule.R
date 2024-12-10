@@ -516,22 +516,42 @@ PlotModuleServer <- function(id,
         )
       )
 
-      getEditorUrl <- function(session, path_object) {
+      getEditorUrl <- function(session, path_object, path_object2) {
         cd <- session$clientData
         sprintf(
-          "%s/?plotURL=%s//%s:%s%s%s",
+          "%s/?plotURL=%s//%s:%s%s%s&plotDS=%s//%s:%s%s%s",
           "custom/editor/index.html",
           cd$url_protocol,
           cd$url_hostname,
           cd$url_port,
           cd$url_pathname,
-          path_object
+          path_object,
+          cd$url_protocol,
+          cd$url_hostname,
+          cd$url_port,
+          cd$url_pathname,
+          path_object2
         )
       }
+
 
       if (!is.null(card)) {
         output[[paste0("editor_frame", card)]] <- renderUI({
           plot <- func()
+          if (exists("csvFunc") && is.function(csvFunc)) {
+            plot_data_csv <- csvFunc()
+            if (inherits(plot_data_csv, "list")) {
+              plot_data_csv <- plot_data_csv[[1]]
+            }
+          } else {
+            plot_data_csv <- NULL
+          }
+          for (i in 1:length(plot$x$data)) {
+            plot$x$data[[i]]$hovertemplate <- NULL
+          }
+          for (i in 1:length(plot$x$attrs)) {
+            plot$x$attrs[[i]]$hovertemplate <- NULL
+          }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
             "plotly_graph", json$x$data,
@@ -543,12 +563,36 @@ PlotModuleServer <- function(id,
               )
             }
           )
-          url <- getEditorUrl(session, res)
+          res2 <- session$registerDataObj(
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(plot_data_csv))),
+            function(data, req) {
+              httpResponse(
+                status = 200,
+                content_type = "application/json",
+                content = data
+              )
+            }
+          )
+          url <- getEditorUrl(session, res, res2)
           tags$iframe(src = url, style = "height: 85vh; width: 100%;")
         })
       } else {
         output$editor_frame <- renderUI({
           plot <- func()
+          if (exists("csvFunc") && is.function(csvFunc)) {
+            plot_data_csv <- csvFunc()
+            if (inherits(plot_data_csv, "list")) {
+              plot_data_csv <- plot_data_csv[[1]]
+            }
+          } else {
+            plot_data_csv <- NULL
+          }
+          for (i in 1:length(plot$x$data)) {
+            plot$x$data[[i]]$hovertemplate <- NULL
+          }
+          for (i in 1:length(plot$x$attrs)) {
+            plot$x$attrs[[i]]$hovertemplate <- NULL
+          }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
             "plotly_graph", json$x$data,
@@ -560,7 +604,17 @@ PlotModuleServer <- function(id,
               )
             }
           )
-          url <- getEditorUrl(session, res)
+          res2 <- session$registerDataObj(
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(plot_data_csv))),
+            function(data, req) {
+              httpResponse(
+                status = 200,
+                content_type = "application/json",
+                content = data
+              )
+            }
+          )
+          url <- getEditorUrl(session, res, res2)
           tags$iframe(src = url, style = "height: 85vh; width: 100%;")
         })
       }

@@ -131,7 +131,8 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         # Get pathway image using WPID and fc values
-        svg <- wikipathview(wp = pathway.id, val = fc)
+        shiny::req(pathway.id)
+        svg <- playbase::wikipathview(wp = pathway.id, val = fc)
         if (is.null(svg)) {
           return(NULL)
         }

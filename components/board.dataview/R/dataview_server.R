@@ -149,8 +149,15 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       samples <- colnames(pgx$X)
 
       if (!is.null(input$data_samplefilter)) {
-        samples <- playbase::selectSamplesFromSelectedLevels(
-          pgx$Y, input$data_samplefilter
+        samples <- tryCatch(
+          {
+            playbase::selectSamplesFromSelectedLevels(
+              pgx$samples, input$data_samplefilter
+            )
+          },
+          error = function(w) {
+            NULL
+          }
         )
       }
       # validate samples
@@ -384,8 +391,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
         ## align
         ss <- names(total.counts)
-        prop.counts <- prop.counts[, ss, drop = FALSE]
-        counts <- counts[, ss, drop = FALSE]
+        ss2 <- match(ss, colnames(prop.counts))
+        prop.counts <- prop.counts[, ss2, drop = FALSE]
+        counts <- counts[, ss2, drop = FALSE]
         if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
           offset <- 1e-6
         } else {

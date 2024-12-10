@@ -10,7 +10,7 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        recompute_info,
+                        ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
   moduleServer(id, function(input, output, session) {
@@ -32,6 +32,8 @@ UploadBoard <- function(id,
     selected_contrast_input <- shiny::reactiveVal(TRUE)
     reset_upload_text_input <- shiny::reactiveVal(0)
     probetype <- shiny::reactiveVal("running")
+
+    compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
@@ -690,7 +692,7 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
-      recompute_pgx(NULL) ## need to reset
+      recompute_pgx(NULL) ## need to reset ???
     })
 
     observeEvent(c(input$start_upload, recompute_pgx()), {
@@ -970,12 +972,10 @@ UploadBoard <- function(id,
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
-              recompute_info(
-                list(
-                  "name" = pgx$name,
-                  "description" = pgx$description
-                )
-              )
+
+              ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
+              compute_settings$name <- pgx$name
+              compute_settings$description <- pgx$description
             }
           } else {
             shinyalert::shinyalert(
@@ -1198,6 +1198,10 @@ UploadBoard <- function(id,
         compute_input$X <- normalized$X()
         compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
+
+        compute_settings$imputation_method <- normalized$imputation_method()
+        compute_settings$bc_method <- normalized$bc_method()
+        compute_settings$remove_outliers <- normalized$remove_outliers()
       }
     })
 
@@ -1207,6 +1211,9 @@ UploadBoard <- function(id,
       countsX = reactive(compute_input$X),
       impX = reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
+      #      imputation_method = shiny::reactive(compute_input$imputation_method),
+      #      bc_method = shiny::reactive(compute_input$bc_method),
+      #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
@@ -1217,7 +1224,7 @@ UploadBoard <- function(id,
       create_raw_dir = create_raw_dir,
       alertready = FALSE,
       height = "100%",
-      recompute_info = recompute_info,
+      compute_settings = compute_settings,
       inactivityCounter = inactivityCounter,
       upload_wizard = reactive(input$upload_wizard),
       upload_name = upload_name,

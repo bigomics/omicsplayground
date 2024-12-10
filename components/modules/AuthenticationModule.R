@@ -94,17 +94,17 @@ AuthenticationModuleApacheCookie <- function(id,
   shiny::moduleServer(
     id, function(input, output, session) {
       message("[NoAuthenticationModule] >>>> no authentication -- reading user from apache cookie <<<<")
-      email <- extract_cookie_value(session$request$HTTP_COOKIE, "user")
+      email <- extract_cookie_value(session, "user")
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
-        logged = FALSE,
-        username = "",
+        logged = TRUE,
+        username = email,
         email = email,
         level = "",
         limit = "",
         options = opt, ## init from global
-        user_dir = PGX.DIR ## global
+        user_dir = file.path(PGX.DIR) ## global
       )
 
       if (show_modal) {
@@ -131,7 +131,7 @@ AuthenticationModuleApacheCookie <- function(id,
         } else {
           USER$logged <- TRUE
         }
-        USER$username <- username
+        USER$username <- email
         USER$email <- email
       }
 

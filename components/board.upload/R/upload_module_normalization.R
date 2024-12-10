@@ -343,9 +343,9 @@ upload_module_normalization_server <- function(
         main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
         if (input$norm_plottype == "boxplot") {
-          if (ncol(X0) > 40) {
-            jj <- sample(ncol(X0), 40)
-            ii <- rownames(X0) ## names!
+          if (ncol(X1) > 40) {
+            jj <- sample(ncol(X1), 40)
+            ii <- rownames(X1) ## names!
             ## just downsampling for boxplots
             if (length(ii) > 2000) ii <- sample(ii, 2000)
             X0 <- X0[ii, jj]
@@ -545,9 +545,10 @@ upload_module_normalization_server <- function(
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+          Z[which(is.infinite(Z) | is.nan(Z))] <- NA
           barplot(zscore,
             main = "outlier score", ylab = "z-score",
-            las = 1, ylim = c(0, max(7, 1.2 * max(Z))),
+            las = 1, ylim = c(0, max(7, 1.2 * max(Z, na.rm = TRUE))),
           )
           abline(h = z0, lty = 3, lwd = 1.5, col = "red")
           plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
@@ -997,12 +998,48 @@ upload_module_normalization_server <- function(
         m
       })
 
+      imputation_method <- reactive({
+        if (input$impute == FALSE) {
+          return(list(
+            zero_as_na = input$zero_as_na,
+            imputation = "no_imputation"
+          ))
+        } else {
+          return(list(
+            zero_as_na = input$zero_as_na,
+            imputation = input$impute_method
+          ))
+        }
+      })
+
+      remove_outliers <- reactive({
+        if (input$remove_outliers == FALSE) {
+          return("no_outlier_removal")
+        } else {
+          return(input$outlier_threshold)
+        }
+      })
+
+      bc_method <- reactive({
+        if (input$batchcorrect == FALSE) {
+          return("no_batch_correct")
+        } else {
+          return(list(
+            method = input$bec_method,
+            param = input$bec_param
+          ))
+        }
+      })
+
       return(
         list(
           counts = correctedCounts,
           X = cX,
           impX = impX,
-          norm_method = norm_method
+          norm_method = norm_method,
+          imputation_method = imputation_method,
+          bc_method = bc_method,
+          remove_outliers = remove_outliers
           ## results = results_correction_methods  ## IK reallz needed??
         )
       ) ## pointing to reactive

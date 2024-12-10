@@ -61,7 +61,7 @@ enrichment_table_n_sig_gsets_server <- function(id,
       colnames(sig.up)[1] <- paste("UP   FDR = ", colnames(sig.up)[1])
       colnames(sig.down)[1] <- paste("DOWN   FDR = ", colnames(sig.down)[1])
       colnames(sig.down) <- paste0("  ", colnames(sig.down))
-      sigcount <- cbind(sig.down, sig.up[rownames(sig.down), ])
+      sigcount <- cbind(sig.down, sig.up[rownames(sig.down), , drop = FALSE])
       dim(sigcount)
       maxsig <- 0.99 * max(sigcount, na.rm = TRUE)
 

@@ -103,7 +103,7 @@ functional_plot_reactome_graph_server <- function(id,
         fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
 
         sel.row <- reactome_table$rows_selected()
-        if (is.null(sel.row) || length(sel.row) == 0) {
+        if (is.null(sel.row) || length(sel.row) == 0 || nrow(df) == 0) {
           return(NULL.IMG)
         }
 

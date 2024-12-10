@@ -24,7 +24,7 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     alertready = TRUE,
     height = 720,
-    recompute_info,
+    compute_settings,
     inactivityCounter,
     upload_wizard,
     upload_name,
@@ -349,40 +349,35 @@ upload_module_computepgx_server <- function(
             style = "display: flex; justify-content: center; align-items: center; color: red;",
             shiny::tags$p("Probes not recognized, please check organism or your probe names.")
           )
-        } else {
-          #          shiny::div(
-          #            style = "display: flex; justify-content: center; align-items: center",
-          #            shiny::tags$p("Probe type detected: ", p)
-          #          )
         }
       })
 
-      # Input name and description
-      shiny::observeEvent(list(metaRT(), recompute_info()), {
+      # Input name and description. NEED CHECK!!! seems not to
+      # work. 18.11.24IK.
+      shiny::observeEvent(list(metaRT(), compute_settings), {
         meta <- metaRT()
-        pgx_info <- recompute_info()
+        pgx_info <- compute_settings
+        if (is.null(meta) && is.null(pgx_info)) {
+          return(NULL)
+        }
+
+        if (!is.null(pgx_info) && length(pgx_info) > 0) {
+          meta <- pgx_info
+        }
+
         # If the user recomputes, recycle old names/description
-        if (is.null(pgx_info)) {
-          if (!is.null(meta[["name"]])) {
-            shiny::updateTextInput(session,
-              "selected_name",
-              value = meta[["name"]]
-            )
-          }
-          if (!is.null(meta[["description"]])) {
-            shiny::updateTextAreaInput(session,
-              "selected_description",
-              value = meta[["description"]]
-            )
-          }
-        } else {
-          shiny::updateTextInput(session,
+        if (!is.null(meta$name)) {
+          shiny::updateTextInput(
+            session,
             "selected_name",
-            value = gsub(".pgx$", "", pgx_info[["name"]])
+            value = gsub(".pgx$", "", meta$name)
           )
-          shiny::updateTextAreaInput(session,
+        }
+        if (!is.null(meta$description)) {
+          shiny::updateTextAreaInput(
+            session,
             "selected_description",
-            value = pgx_info[["description"]]
+            value = meta$description
           )
         }
       })
@@ -591,6 +586,13 @@ upload_module_computepgx_server <- function(
           # Options
           batch.correct = FALSE,
           norm_method = norm_method(),
+          settings = list(
+            ## compute settings only for info
+            imputation_method = compute_settings$imputation_method,
+            bc_method = compute_settings$bc_method,
+            remove_outliers = compute_settings$remove_outliers,
+            norm_method = norm_method()
+          ),
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
