@@ -15,6 +15,9 @@ run.tee:
 run.profvis:
 	Rscript dev/run_app_profvis.R
 
+run.browser: rm.locks
+	R --interactive < dev/run_app.R
+
 sass: FORCE
 	Rscript dev/sass.R
 	Rscript dev/create_source_all.R
@@ -87,7 +90,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "v3.5.0"
+VERSION = "v3.99.0"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
