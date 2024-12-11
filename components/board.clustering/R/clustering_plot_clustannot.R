@@ -35,6 +35,11 @@ clustering_plot_clusterannot_ui <- function(
     withTooltip(shiny::selectInput(ns("xann_refset"), "Reference set:", choices = "", width = "80%"),
       "Specify a reference set to be used in the annotation.",
       placement = "left", options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("cluster_bar_text"), "Add cluster label to bar", TRUE),
+      "Add the cluster label to each bar on the plot.",
+      placement = "left", options = list(container = "body")
     )
   )
 
@@ -168,7 +173,7 @@ clustering_plot_clusterannot_server <- function(id,
             type = "bar",
             orientation = "h",
             hoverinfo = "text",
-            text = colnames(rho)[i],
+            text = if(input$cluster_bar_text) {colnames(rho)[i]} else {NULL},
             hovertemplate = ~ paste0(
               "Annotation: <b>%{y}</b><br>",
               "Cluster: <b>%{text}</b><br>",
