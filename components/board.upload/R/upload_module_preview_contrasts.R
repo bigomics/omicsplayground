@@ -336,16 +336,9 @@ upload_table_preview_contrasts_server <- function(
         playbase::read.as_matrix(input$contrasts_csv$datapath)
       }, error = function(w) {NULL})
       if (is.null(ct)) {
-        shiny::showModal(
-          shiny::modalDialog(
-            size = "l",
-            title = "Upload error",
-            shiny::HTML("There seems to be an issue with your data file. It could be the data has been wrongly exported, <b><a href='https://raw.githubusercontent.com/bigomics/playbase/refs/heads/main/inst/extdata/contrasts.csv' target='_blank'>here</a></b> you can find a correct data file, and <b><a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/' target='_blank'>here</a></b> you can find the file specification documentation. Here are the 10 first lines of your input file, we suggest visualizing it using a plain text editor (rather than Excel) to check on your end the file is correct."),
-            shiny::HTML("<br><br>"),
-            shiny::tags$pre(
-              paste(readLines(input$contrasts_csv$datapath, n = 10), collapse = "\n")
-            )
-          )
+        data_error_modal(
+          path = input$contrasts_csv$datapath,
+          data_type = "contrasts"
         )
       } else {
         ## IK: should we do contrasts.convertToLabelMatrix here

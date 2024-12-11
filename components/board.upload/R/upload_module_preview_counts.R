@@ -275,16 +275,9 @@ upload_table_preview_counts_server <- function(
           playbase::read_counts(input$counts_csv$datapath[sel[1]])
         }, error = function(w) {NULL})
         if (is.null(df)) {
-          shiny::showModal(
-            shiny::modalDialog(
-              size = "l",
-              title = "Upload error",
-              shiny::HTML("There seems to be an issue with your data file. It could be the data has been wrongly exported, <b><a href='https://github.com/bigomics/playbase/blob/main/inst/extdata/counts.csv' target='_blank'>here</a></b> you can find a correct data file, and <b><a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/' target='_blank'>here</a></b> you can find the file specification documentation. Here are the 10 first lines of your input file, we suggest visualizing it using a plain text editor (rather than Excel) to check on your end the file is correct."),
-              shiny::HTML("<br><br>"),
-              shiny::tags$pre(
-                paste(readLines(input$counts_csv$datapath[sel[1]], n = 10), collapse = "\n")
-              )
-            )
+          data_error_modal(
+            path = input$counts_csv$datapath[sel[1]],
+            data_type = "counts"
           )
         } else {
           uploaded$counts.csv <- df
@@ -301,16 +294,9 @@ upload_table_preview_counts_server <- function(
           playbase::read_samples(input$counts_csv$datapath[sel[1]])
         }, error = function(w) {NULL})
         if (is.null(df)) {
-          shiny::showModal(
-            shiny::modalDialog(
-              size = "l",
-              title = "Upload error",
-              shiny::HTML("There seems to be an issue with your data file. It could be the data has been wrongly exported, <b><a href='https://raw.githubusercontent.com/bigomics/playbase/refs/heads/main/inst/extdata/samples.csv' target='_blank'>here</a></b> you can find a correct data file, and <b><a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/' target='_blank'>here</a></b> you can find the file specification documentation. Here are the 10 first lines of your input file, we suggest visualizing it using a plain text editor (rather than Excel) to check on your end the file is correct."),
-              shiny::HTML("<br><br>"),
-              shiny::tags$pre(
-                paste(readLines(input$counts_csv$datapath[sel[1]], n = 10), collapse = "\n")
-              )
-            )
+          data_error_modal(
+            path = input$counts_csv$datapath[sel[1]],
+            data_type = "samples"
           )
         } else {
           uploaded$samples.csv <- df
@@ -323,16 +309,9 @@ upload_table_preview_counts_server <- function(
           playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
         }, error = function(w) {NULL})
         if (is.null(df)) {
-          shiny::showModal(
-            shiny::modalDialog(
-              size = "l",
-              title = "Upload error",
-              shiny::HTML("There seems to be an issue with your data file. It could be the data has been wrongly exported, <b><a href='https://raw.githubusercontent.com/bigomics/playbase/refs/heads/main/inst/extdata/contrasts.csv' target='_blank'>here</a></b> you can find a correct data file, and <b><a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/contrasts/' target='_blank'>here</a></b> you can find the file specification documentation. Here are the 10 first lines of your input file, we suggest visualizing it using a plain text editor (rather than Excel) to check on your end the file is correct."),
-              shiny::HTML("<br><br>"),
-              shiny::tags$pre(
-                paste(readLines(input$counts_csv$datapath[sel[1]], n = 10), collapse = "\n")
-              )
-            )
+          data_error_modal(
+            path = input$counts_csv$datapath[sel[1]],
+            data_type = "contrasts"
           )
         } else {
           uploaded$contrasts.csv <- df
