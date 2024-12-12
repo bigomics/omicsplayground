@@ -271,9 +271,14 @@ upload_table_preview_counts_server <- function(
 
       sel <- grep("count|expression|abundance", tolower(input$counts_csv$name))
       if (length(sel)) {
-        df <- tryCatch({
-          playbase::read_counts(input$counts_csv$datapath[sel[1]])
-        }, error = function(w) {NULL})
+        df <- tryCatch(
+          {
+            playbase::read_counts(input$counts_csv$datapath[sel[1]])
+          },
+          error = function(w) {
+            NULL
+          }
+        )
         if (is.null(df)) {
           data_error_modal(
             path = input$counts_csv$datapath[sel[1]],
@@ -290,9 +295,14 @@ upload_table_preview_counts_server <- function(
 
       sel <- grep("samples", tolower(input$counts_csv$name))
       if (length(sel)) {
-        df <- tryCatch({
-          playbase::read_samples(input$counts_csv$datapath[sel[1]])
-        }, error = function(w) {NULL})
+        df <- tryCatch(
+          {
+            playbase::read_samples(input$counts_csv$datapath[sel[1]])
+          },
+          error = function(w) {
+            NULL
+          }
+        )
         if (is.null(df)) {
           data_error_modal(
             path = input$counts_csv$datapath[sel[1]],
@@ -305,9 +315,14 @@ upload_table_preview_counts_server <- function(
 
       sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
       if (length(sel)) {
-        df <- tryCatch({
-          playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
-        }, error = function(w) {NULL})
+        df <- tryCatch(
+          {
+            playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
+          },
+          error = function(w) {
+            NULL
+          }
+        )
         if (is.null(df)) {
           data_error_modal(
             path = input$counts_csv$datapath[sel[1]],

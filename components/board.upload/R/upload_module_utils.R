@@ -2,9 +2,14 @@ data_error_modal <- function(path, data_type) {
   con <- file(path, "rb")
   text_raw <- readBin(con, "raw", n = 1000)
   close(con)
-  is_bin <- tryCatch({
-    paste(rawToChar(text_raw), collapse = "")
-  }, error = function(w) {NULL})
+  is_bin <- tryCatch(
+    {
+      paste(rawToChar(text_raw), collapse = "")
+    },
+    error = function(w) {
+      NULL
+    }
+  )
   if (!is.null(is_bin)) {
     shinyalert::shinyalert(
       title = "Upload error",

@@ -332,9 +332,14 @@ upload_table_preview_contrasts_server <- function(
         return()
       }
 
-      ct <- tryCatch({
-        playbase::read.as_matrix(input$contrasts_csv$datapath)
-      }, error = function(w) {NULL})
+      ct <- tryCatch(
+        {
+          playbase::read.as_matrix(input$contrasts_csv$datapath)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
       if (is.null(ct)) {
         data_error_modal(
           path = input$contrasts_csv$datapath,
