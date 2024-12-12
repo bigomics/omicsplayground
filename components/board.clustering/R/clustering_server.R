@@ -318,6 +318,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         zx <- zx[which(!is.ribomito), , drop = FALSE]
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
+      shiny::validate(shiny::need(
+        ncol(zx) > 0, "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
 
       flt <- list(
         zx = zx,
