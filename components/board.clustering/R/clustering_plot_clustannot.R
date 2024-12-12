@@ -168,7 +168,7 @@ clustering_plot_clusterannot_server <- function(id,
             type = "bar",
             orientation = "h",
             hoverinfo = "text",
-            text = colnames(rho)[i],
+            text = NULL,
             hovertemplate = ~ paste0(
               "Annotation: <b>%{y}</b><br>",
               "Cluster: <b>%{text}</b><br>",
