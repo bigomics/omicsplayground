@@ -714,7 +714,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         colnames(P) <- colnames(rho)
         rownames(P) <- sub(":", "_", names(gmt))
-        rho <- rho[rownames(P),]
+        rho <- rho[rownames(P), ]
         rho <- rho * (P / max(P))
       }
 
