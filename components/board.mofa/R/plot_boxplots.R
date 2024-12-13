@@ -48,7 +48,7 @@ mofa_plot_boxplots_server <- function(id,
       phenos <- colnames(data$samples)
       updateSelectInput(session, "selected_pheno",
         choices = phenos,
-        selected = head(phenos,4))
+        selected = head(phenos,12))
     })
 
     plot.RENDER <- function() {
@@ -61,12 +61,14 @@ mofa_plot_boxplots_server <- function(id,
       if(!is.null(pheno)) shiny::req(all(pheno %in% colnames(res$samples)))
       nph <- length(pheno)
       shiny::validate( shiny::need(nph>0,"Must select at least one phenotype"))
-      
+
       samples <- data.frame( res$samples )
-      nq <- ceiling(sqrt(nph))
-      par(mfrow=c(nq,nq), mar=c(4,4,2.8,0.5))      
+      nr <- ceiling(sqrt(nph))
+      nc <- ceiling(nph / nr)
+      par(mfrow=c(nr,nc), mar=c(4,4,2.8,0.5))      
       for(ph in pheno) {
         y <- samples[,ph]
+        if(all(is.na(y))) next
         f1 <- res$F[,k]
         if(class(y) %in% c("numeric","integer") &&
              all(y %in% c(NA,0:9))) y <- factor(y)

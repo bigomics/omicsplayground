@@ -3,8 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-load("~/Playground/public-db/pathbank.org/PATHBANK-matrix.rda",verbose=TRUE)
-
 LasagnaBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE

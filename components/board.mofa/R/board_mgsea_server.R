@@ -88,6 +88,7 @@ MGseaBoard <- function(id, pgx) {
     
     mofa_plot_enrichment_server(
       "menrichment",
+      pgx = pgx,
       gsea = reactive({ mofa()$fc.gsea }),
       input_k = reactive(input$contrast),
       select = mgsea_table_selected,

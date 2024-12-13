@@ -59,12 +59,11 @@ mofa_plot_pathbank_server <- function(id,
       getPathwayImage <- shiny::reactive({
 
         # Get pathway image using WPID and fc values
-        ## svg <- wikipathview(wp = "WP2446", val = fc)
         ##source("function_getpathbank.R")
         wp = "SMP0080852"        
         ##wp.features <- gmt[grep(wp, names(gmt))]
-
-        svg <- get_pathbank_svg(wp = wp, val=NULL) 
+        svg <- wikipathview(wp = "WP2446", val=NULL)
+        ##svg <- get_pathbank_svg(wp = wp, val=NULL) 
         if (is.null(svg)) {
           return(NULL)
         }

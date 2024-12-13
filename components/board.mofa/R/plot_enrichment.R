@@ -26,6 +26,7 @@ mofa_plot_enrichment_ui <- function(
 }
 
 mofa_plot_enrichment_server <- function(id,
+                                        pgx,
                                         gsea,
                                         input_k = reactive(1),
                                         req.selection = FALSE,
@@ -40,26 +41,31 @@ mofa_plot_enrichment_server <- function(id,
 
       k <- input_k()
       shiny::req(k)
-      ## shiny::req(gsea$gsea)
-      ##if(req.selection) shiny::req(select())
-      
       shiny::req(k %in% names(gsea))
+      sel <- select()
       
-      if(FALSE && length(select()==1)) {
-        ## DOES NOT WORK...
-        gs <- select()
-        gset <- names(which(PATHBANK[gs,]!=0))
-        datatypes <- colnames(gsea[[k]]$score)
-        dt=datatypes[1]
-        for(dt in datatypes) {
-          rnk <- gsea$rnk
-          gset1 <- intersect(gset, names(rnk))
-          gsea.enplot( rnk, gset1, main=dt)
+      nx <- grep("[:]",rownames(pgx$X),value=TRUE)      
+      dtypes <- unique(sub(":.*","",nx))
+      dtypes
+      dbg("[mofa_plot_enrichment_server] dtypes = ",dtypes)
+      if(length(sel)==1) {
+        if(length(dtypes) > 1) {
+          par(mfrow = c(1,length(dtypes)))
+          par(mar=c(4,4,0.5,1))
+          if(length(dtypes)>3) par(mfrow=c(2,ceiling(length(dtypes)/2)))
+          for(dt in dtypes) {
+            tt <- paste0(k, " (",toupper(dt),")")
+            playbase::pgx.Volcano(pgx, contrast=k,
+              hilight=sel, label=sel, ntop=10, plotlib="base",
+              datatype=dt, cex=0.8, fc=0.5, title=tt)
+          }
+        } else {
+          playbase::pgx.Volcano(pgx, contrast=k, hilight=sel,
+            datatype=NULL, cex=0.8)
         }
-        
       } else {
         if(par) {
-          par(mfrow=c(1,2), mar=c(4,4,2,2))
+          par(mfrow=c(1,2), mar=c(4,4,0.5,1))
           plot.new()
         }
         playbase::mofa.plot_enrichment(

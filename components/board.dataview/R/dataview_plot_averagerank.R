@@ -65,7 +65,8 @@ dataview_plot_averagerank_server <- function(id,
         ylab <- tspan("average counts (log2)", js = FALSE)
       }
 
-      sel <- which(sub(".*:", "", names(mean.fc)) == gene)
+      sel <- which(sub(".*:", "", names(mean.fc)) == sub(".*:", "",gene))
+      #sel <- which(names(mean.fc) == gene)      
 
       pd <- list(
         df = data.frame(mean.fc = mean.fc),

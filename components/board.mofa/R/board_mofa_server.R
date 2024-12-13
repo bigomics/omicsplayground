@@ -35,7 +35,7 @@ MofaBoard <- function(id, pgx) {
     ## ======================= PRECOMPUTE FUNCTION ===========================
     ## =======================================================================
     
-    mofa <- shiny::eventReactive(input$compute, {
+    mofa <- shiny::eventReactive( input$compute, {
 
       shiny::req(pgx$X, input$kernel, input$numfactors)
             
@@ -49,11 +49,6 @@ MofaBoard <- function(id, pgx) {
 
       message(paste("[mofa] >>> Calculating ",kernel,"..."))
 
-      ## Select dataset: current PGX or one of the example datasets
-      dataset <- input$dataset
-      message("[mofa] dataset = ", dataset)
-      shiny::req(dataset)
-
       numfactors <- as.integer(input$numfactors)
       dbg("[MofaBoard] numfactors = ", numfactors)      
 
@@ -62,13 +57,14 @@ MofaBoard <- function(id, pgx) {
       has.mofa <- ("mofa" %in% names(pgx))
 
       dbg("[MofaBoard] names(pgx$mofa) = ", names(pgx$mofa))
+      dbg("[MofaBoard] input$compute = ", input$compute )
       
-      if( dataset == "<this pgx>" && has.mofa) {
+      if( input$compute==0 && has.mofa) {
 
         dbg("[MofaBoard] using internal MOFA for PGX")
         mofa <- pgx$mofa
         
-      } else if( dataset == "<this pgx>" && !has.mofa) {
+      } else {
 
         dbg("[MofaBoard] NO MOFA!!! calculating MOFA for PGX")
         numfactors <- min( numfactors, min(dim(pgx$X)) )
@@ -78,70 +74,7 @@ MofaBoard <- function(id, pgx) {
           kernel = kernel,
           numfactors = numfactors,
           add_gsets = add_gsets)
-        
-        
-      } else {
-
-        ##--------------------dev only ----------------------
-        ##--------------------dev only ----------------------
-        ##--------------------dev only ----------------------
-        
-        dbg("[MofaBoard] using EXAMPLE data")
-        
-        data <- playbase::mofa.exampledata(dataset)
-        numfactors <- min( numfactors, min(dim(data$X[[1]])) )
-
-        ## add geneset layers if asked
-        if(add_gsets) {
-          gsetX <- playbase::mofa.add_genesets(data$X, GMT=NULL) 
-          names(gsetX)
-          if(!is.null(gsetX$gset.px)) {
-            gsetX$gset.px <- gsetX$gset.px[grep("^GO",rownames(gsetX$gset.px)),]
-          }
-          if(!is.null(gsetX$gset.gx)) {          
-            gsetX$gset.gx <- gsetX$gset.gx[grep("^GO",rownames(gsetX$gset.gx)),]
-          }
-          if(!is.null(gsetX$gset.mx)) {                    
-            gsetX$gset.mx <- gsetX$gset.mx[grep("SMP[0-9]*",rownames(gsetX$gset.mx)),]
-          }
-          lapply(gsetX,dim)
-          data$X <- c( data$X, gsetX)
-        }
-      
-        mofa <- playbase::mofa.compute(
-          data$X,
-          data$samples,
-          contrasts = data$contrasts,
-          pheno = NULL,
-          kernel = kernel,
-          scale_views = TRUE, 
-          ntop = 1000,
-          max_iter = 200,
-          num_factors = numfactors)
-
-        ## LASAGNA computation
-        message("computing LASAGNA model...")            
-        las.data <- list(
-          X = data$X,
-          samples = data$samples,
-          contrasts = data$contrasts
-        )
-        lasagna <- playbase::lasagna.create_model(
-          las.data, pheno="contrasts", ntop=1000, nc=20,
-          use.graphite = FALSE)
-        
-        ## pre-compute cluster positions
-        xx <- playbase::mofa.split_data(lasagna$X)
-        xx <- xx[names(data$X)]
-        mofa$posx <- playbase::mofa.compute_clusters(xx, along="samples")
-        mofa$posf <- playbase::mofa.compute_clusters(xx, along="features")       
-        mofa$lasagna <- lasagna
-        pgx$mofa <- mofa
       } 
-      ##--------------------dev only ----------------------
-      ##--------------------dev only ----------------------
-      ##--------------------dev only ----------------------
-
       
       mofa <- pgx$mofa
       names(mofa)
@@ -149,18 +82,19 @@ MofaBoard <- function(id, pgx) {
       ## update factors in selectInput
       factors <- colnames(mofa$F)
       dtypes <- names(mofa$ww)
+      sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
       contrasts <- colnames(mofa$contrasts)
       phenotypes <- colnames(mofa$samples)
       updateSelectInput(session, "selected_factor", choices = factors,
                         selected = factors[1])
       updateSelectInput(session, "show_types", choices = dtypes,
-                        selected = dtypes)
+                        selected = sel.dtypes)
       shiny::removeModal()
       
       message("[mofa] compute MOFA done!")
       
       mofa
-    }, ignoreNULL = TRUE)
+    }, ignoreNULL = FALSE)
 
 
     ## ========================================================================
@@ -227,6 +161,7 @@ MofaBoard <- function(id, pgx) {
     
     mofa_plot_enrichment_server(
       "enrichment",
+      pgx = pgx,
       gsea = reactive({ mofa()$gsea }),
       input_k = reactive(input$selected_factor),
       ntop = 15,

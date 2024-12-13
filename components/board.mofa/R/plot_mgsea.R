@@ -47,7 +47,7 @@ mofa_plot_mgsea_server <- function(id,
       if(!is.null(selected) && length(selected)<100) {
         hilight <- selected
       }
-
+      par(mar=c(4.5,4.5,1,0.5))
       playbase::mofa.plot_multigsea(
         gsea, type1=types[1], type2=types[2],
         k=k, hilight = hilight)

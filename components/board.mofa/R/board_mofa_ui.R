@@ -21,8 +21,6 @@ MofaInputs <- function(id) {
       "input.options % 2 == 1",
       ns = ns,
       shiny::tagList(
-        shiny::selectInput(ns("dataset"), "Select dataset",
-          choices = c("<this pgx>","geiger","brca","cll","tf")),
         shiny::selectInput(
           ns("kernel"), "Kernel",
           choices = c("MOFA","PCA","DIABLO","MCIA","wmfcna"),
