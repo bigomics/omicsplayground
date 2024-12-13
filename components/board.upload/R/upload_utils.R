@@ -314,10 +314,14 @@ check_query_files <- function() {
   counts <- shiny::getQueryString()$counts
   samples <- shiny::getQueryString()$samples
   contrasts <- shiny::getQueryString()$contrasts
+  datatype <- shiny::getQueryString()$datatype
+  organism <- shiny::getQueryString()$organism
   return(list(
     counts = counts,
     samples = samples,
-    contrasts = contrasts
+    contrasts = contrasts,
+    datatype = datatype,
+    organism = organism
   ))
 }
 
@@ -333,6 +337,7 @@ read_query_files <- function(url, encryption_key = NULL) {
 
 # Decrypt utility, used in email-encrypted authentication + population of data upload (only on that auth)
 decrypt_util <- function(query, encryption_key) {
+  if (is.null(encryption_key)) return(query)
   ciphertext <- base64enc::base64decode(query)
   decrypted_query <- rawToChar(sodium::data_decrypt(ciphertext, encryption_key))
   return(decrypted_query)

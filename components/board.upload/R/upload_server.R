@@ -684,11 +684,31 @@ UploadBoard <- function(id,
     # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
+      query_files <- check_query_files()
+      if (!is.null(query_files$datatype)) {
+        # Get encryption key
+        encryption_key <- NULL# readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+        # if (!file.exists(encryption_key)) {
+        #   encryption_key <- NULL
+        # }
+        datatype <- decrypt_util(query_files$datatype, encryption_key)
+        upload_datatype(datatype)
+      }
     })
 
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+      query_files <- check_query_files()
+      if (!is.null(query_files$organism)) {
+        # Get encryption key
+        encryption_key <- NULL# readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+        # if (!file.exists(encryption_key)) {
+        #   encryption_key <- NULL
+        # }
+        organism <- decrypt_util(query_files$organism, encryption_key)
+        upload_organism(organism)
+      }
     })
 
     observeEvent(input$start_upload, {
@@ -979,10 +999,10 @@ UploadBoard <- function(id,
             } else if (opt$AUTHENTICATION == "email-encrypted") { # Only data preloading on email-encrypted authentication
               query_files <- check_query_files()
               # Get encryption key
-              encryption_key <- readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
-              if (!file.exists(encryption_key)) {
-                encryption_key <- NULL
-              }
+              encryption_key <- NULL# readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+              # if (!file.exists(encryption_key)) {
+              #   encryption_key <- NULL
+              # }
               # Populate upload data with available
               if (!is.null(query_files$counts)) {
                 file <- read_query_files(query_files$counts, encryption_key)
