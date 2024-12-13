@@ -202,7 +202,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 1000
+        cells_trs <- 2000
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -247,81 +247,64 @@ upload_module_normalizationSC_server <- function(id,
             samples <- cbind(samples, celltype.azimuth = azm)
           }
 
-          nX <- playbase::logCPM(as.matrix(counts), 1, total = 1e4)
-          return(list(counts = nX, samples = samples))
-          rm(counts, samples)
-          return(NULL)
+          ## Normalization & Dimensional reduction
+          dbg("[normalizationSC_server] Performing logCPM normalization...")
+          nX <- playbase::logCPM(as.matrix(counts), prior = 1, total = 1e4)
+          jj <- head(order(-matrixStats::rowSds(nX, na.rm = TRUE)), 250)
+          nX1 <- nX[jj, , drop = FALSE]
+          nX1 <- nX1 - rowMeans(nX1, na.rm = TRUE)
+          nb <- ceiling(min(15, dim(nX) / 8))
+          pos.list <- list()
+          dbg("[normalizationSC_server] Performing PCA, tSNE and UMAP...")
+          msg <- "Performing PCA, tSNE, UMAP..."
+          shiny::withProgress(message = msg, value = 0.5, {
+            pos.list[["pca"]] <- irlba::irlba(nX1, nv = 2, nu = 0)$v
+            pos.list[["tsne"]] <- Rtsne::Rtsne(t(nX1), perplexity = 2*nb, check_duplicates=F)$Y
+            pos.list[["umap"]] <- uwot::umap(t(nX1), n_neighbors = max(2, nb))
+            pos.list <- lapply(pos.list, function(x) {
+              rownames(x) <- colnames(nX1);
+              return(x)
+            })
+          })
+          dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
+
+          dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
+          options(Seurat.object.assay.calcn = TRUE)
+          getOption("Seurat.object.assay.calcn")
+          counts <- as(counts, "dgCMatrix")
+          msg <- "Creating & preprocessing Seurat object..."
+          shiny::withProgress(message = msg, value = 0.9, {
+            SO <- playbase::pgx.createSeuratObject(counts, samples,
+              batch = NULL, filter = FALSE, preprocess = FALSE)
+            SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+          })
+          dbg("[normalizationSC_server] Seurat object created & preprocessed.")
+          kk <- setdiff(colnames(samples), colnames(SO@meta.data))
+          if (length(kk) > 1) {
+            SO@meta.data <- cbind(SO@meta.data, samples[, kk, drop = FALSE])
+          }
+          LL <- list(
+            SO = SO,
+            samples = SO@meta.data,
+            pos.pca = pos.list[["pca"]],
+            pos.tsne = pos.list[["tsne"]],
+            pos.umap = pos.list[["umap"]]
+          )
+          rm(counts, nX, nX1, samples, SO)
+          return(LL)
         } else {
           rm(counts, samples)
           return(NULL)
         }
         
       })
-
-      ##------------PUT IN SAME REACTIVE OBJECT: IK
-      ## Dim reductions
-      dimred_norm_Counts <- shiny::reactive({ 
-
-        shiny::req(dim(ds_norm_Counts()$counts))
-        shiny::req(dim(ds_norm_Counts()$samples))
-        shiny::req(input$infercelltypes)        
-        counts <- ds_norm_Counts()$counts
-        ## counts <- as.matrix(counts)
-        samples <- ds_norm_Counts()$samples
-
-        jj <- head(order(-matrixStats::rowSds(counts, na.rm = TRUE)), 250)
-        counts1 <- counts[jj, , drop = FALSE]
-        counts1 <- counts1 - rowMeans(counts1, na.rm = TRUE)
-        nb <- ceiling(min(15, dim(counts) / 8))
-        pos.list <- list()
-        dbg("[normalizationSC_server:dimred_norm_Counts:] Performing PCA, tSNE and UMAP...")
-        msg <- "Performing PCA, tSNE, UMAP..."
-        shiny::withProgress(message = msg, value = 0.5, {
-            pos.list[["pca"]] <- irlba::irlba(counts1, nv = 2, nu = 0)$v
-            pos.list[["tsne"]] <- Rtsne::Rtsne(t(counts1), perplexity = 2*nb, check_duplicates=F)$Y
-            pos.list[["umap"]] <- uwot::umap(t(counts1), n_neighbors = max(2, nb))
-            pos.list <- lapply(pos.list, function(x) {
-              rownames(x) <- colnames(counts1);
-              return(x)
-            })
-          })
-        dbg("[normalizationSC_server:dimred_norm_Counts:] PCA, tSNE & UMAP completed.")
-        
-        options(Seurat.object.assay.calcn = TRUE)
-        getOption("Seurat.object.assay.calcn")
-        dbg("[normalizationSC_server:dimred_norm_Counts:] Creating & preprocessing Seurat object..")
-        options(future.globals.maxSize= 4*1024^5)
-        counts <- as(counts, "dgCMatrix")
-        msg <- "Creating & preprocessing Seurat object..."
-        shiny::withProgress(message = msg, value = 0.9, {
-          SO <- playbase::pgx.createSeuratObject(counts, samples,
-            batch = NULL, filter = FALSE, preprocess = FALSE)
-          SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
-        })
-        dbg("[normalizationSC_server:dimred_norm_Counts:] Seurat object created & preprocessed.")
-        kk <- setdiff(colnames(samples), colnames(SO@meta.data))
-        if (length(kk) > 1) {
-          SO@meta.data <- cbind(SO@meta.data, samples[, kk, drop = FALSE])
-        }
-
-        LL <- list(
-          SO = SO,
-          samples = SO@meta.data,
-          pos.pca = pos.list[["pca"]],
-          pos.tsne = pos.list[["tsne"]],
-          pos.umap = pos.list[["umap"]]
-        )
-        rm(counts, samples, SO)
-        return(LL)
-
-      })
-
+      
       ## ------------------------------------------------------------------
       ## Plot functions
       ## ------------------------------------------------------------------
       plot1 <- function() {
-        shiny::req(dim(dimred_norm_Counts()$SO))
-        SO <- dimred_norm_Counts()$SO
+        shiny::req(dim(ds_norm_Counts()$SO))
+        SO <- ds_norm_Counts()$SO
         meta <- SO@meta.data
         require(scplotter)
         require(ggplot2)
@@ -415,7 +398,7 @@ upload_module_normalizationSC_server <- function(id,
           for(i in 1:length(vars)) {
             v <- vars[i]
             if(v %in% num.vars) {
-              pp <- ggplot(meta, aes_string(y = v, x = grp)) ## , fill = grp))
+              pp <- ggplot(meta, aes_string(y = v, x = grp))
               pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
               ylab <- v
               pp <- pp + theme(legend.position = "none")
@@ -476,17 +459,17 @@ upload_module_normalizationSC_server <- function(id,
 
       plot2 <- function() {
         shiny::req(
-          dim(dimred_norm_Counts()$samples),
-          dim(dimred_norm_Counts()$pos.pca),
-          dim(dimred_norm_Counts()$pos.tsne),
-          dim(dimred_norm_Counts()$pos.umap)
+          dim(ds_norm_Counts()$samples),
+          dim(ds_norm_Counts()$pos.pca),
+          dim(ds_norm_Counts()$pos.tsne),
+          dim(ds_norm_Counts()$pos.umap)
         )
         pos.list <-  list(
-          pca = dimred_norm_Counts()$pos.pca,
-          tsne = dimred_norm_Counts()$pos.tsne,
-          umap = dimred_norm_Counts()$pos.umap
+          pca = ds_norm_Counts()$pos.pca,
+          tsne = ds_norm_Counts()$pos.tsne,
+          umap = ds_norm_Counts()$pos.umap
         )
-        samples <- dimred_norm_Counts()$samples
+        samples <- ds_norm_Counts()$samples
         vars <- input$clusterBy
         shiny::validate(shiny::need(
           !is.null(vars),
@@ -544,7 +527,7 @@ upload_module_normalizationSC_server <- function(id,
         return(counts)
       })
 
-      ## CPM normalized counts
+      ## Normalized counts
       X <- shiny::reactive({
         shiny::req(r_counts())
         counts <- r_counts()
@@ -552,7 +535,7 @@ upload_module_normalizationSC_server <- function(id,
         return(X)
       })
 
-      ## smples
+      ## samples
       samples <- shiny::reactive({
         shiny::req(r_samples())
         samples <- r_samples()
