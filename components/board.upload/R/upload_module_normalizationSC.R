@@ -595,9 +595,6 @@ upload_module_normalizationSC_server <- function(id,
 ## ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
 ## WRS TEST MAKE AVAILABLE TO ANY DATATYPE.
 
-## Remove Cluster samples > parallel Plot: or group by celltypes
-## ideally group by celltype on in the parallel plot. Default splitby is "none" for all other datatypes
-
 ## Fix Correlation analysis > Correlation > Scatterplot (not showing up)
 ## Fix Correlation analysis > Graph
 ## Need to fix corpora::fisherpval in OPG.
