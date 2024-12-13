@@ -202,7 +202,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 2000
+        cells_trs <- 1000
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -571,12 +571,13 @@ upload_module_normalizationSC_server <- function(id,
   )
 }
 
-##--------------FIX PHENO 
-##--------------SC OPTION LIST
 
+##--------------SC OPTION LIST
+##--------------FIX PHENO 
+##--------------ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
+##--------------WRS TEST MAKE AVAILABLE TO ANY DATATYPE. Default for scRNA-seq
 ## TEST ON MORE DATASETS.
-## ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
-## WRS TEST MAKE AVAILABLE TO ANY DATATYPE.
+
 
 ## Fix Correlation analysis > Correlation > Scatterplot (not showing up)
 ## Fix Correlation analysis > Graph
