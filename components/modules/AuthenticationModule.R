@@ -1324,6 +1324,14 @@ EmailEncryptedAuthenticationModule <- function(
         dbg("[EmailEncryptedAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(USER$user_dir)
         session$sendCustomMessage("set-user", list(user = USER$email))
+        # If data is sent, trigger upload, if not, go to datasets
+        query_files <- check_query_files() |> unlist()
+        if (!is.null(query_files)) {
+          bigdash.selectTab(session, "upload-tab")
+          shinyjs::runjs("$('#upload-start_upload').click();")
+        } else {
+          bigdash.selectTab(session, "load-tab")
+        }
       }
     })
 
