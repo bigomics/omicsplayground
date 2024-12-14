@@ -49,7 +49,8 @@ pgx <- playbase::pgx.createPGX(
   convert.hugo = params$convert.hugo,
   custom.geneset = params$custom.geneset,
   max.genesets = params$max.genesets,
-  annot_table = params$annot_table
+  annot_table = params$annot_table,
+  sc_settings = params$sc_settings ## NEW AZ
 )
 
 message("[create PGX process] : PGX created successfully")
