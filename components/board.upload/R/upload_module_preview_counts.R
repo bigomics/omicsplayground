@@ -272,24 +272,66 @@ upload_table_preview_counts_server <- function(
 
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
-        df <- playbase::read_counts(input$counts_csv$datapath[sel[1]])
-        uploaded$counts.csv <- df
+        df <- tryCatch(
+          {
+            playbase::read_counts(input$counts_csv$datapath[sel[1]])
+          },
+          error = function(w) {
+            NULL
+          }
+        )
+        if (is.null(df)) {
+          data_error_modal(
+            path = input$counts_csv$datapath[sel[1]],
+            data_type = "counts"
+          )
+        } else {
+          uploaded$counts.csv <- df
 
-        ## if counts file contains annotation
-        af <- playbase::read_annot(input$counts_csv$datapath[sel[1]])
-        uploaded$annot.csv <- af
+          # if counts file contains annotation
+          af <- playbase::read_annot(input$counts_csv$datapath[sel[1]])
+          uploaded$annot.csv <- af
+        }
       }
 
       sel <- grep("samples", tolower(input$counts_csv$name))
       if (length(sel)) {
-        df <- playbase::read_samples(input$counts_csv$datapath[sel[1]])
-        uploaded$samples.csv <- df
+        df <- tryCatch(
+          {
+            playbase::read_samples(input$counts_csv$datapath[sel[1]])
+          },
+          error = function(w) {
+            NULL
+          }
+        )
+        if (is.null(df)) {
+          data_error_modal(
+            path = input$counts_csv$datapath[sel[1]],
+            data_type = "samples"
+          )
+        } else {
+          uploaded$samples.csv <- df
+        }
       }
 
       sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
       if (length(sel)) {
-        df <- playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
-        uploaded$contrasts.csv <- df
+        df <- tryCatch(
+          {
+            playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
+          },
+          error = function(w) {
+            NULL
+          }
+        )
+        if (is.null(df)) {
+          data_error_modal(
+            path = input$counts_csv$datapath[sel[1]],
+            data_type = "contrasts"
+          )
+        } else {
+          uploaded$contrasts.csv <- df
+        }
       }
 
       sel <- grep("params.RData", input$counts_csv$name)

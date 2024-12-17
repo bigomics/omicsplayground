@@ -168,11 +168,10 @@ clustering_plot_clusterannot_server <- function(id,
             type = "bar",
             orientation = "h",
             hoverinfo = "text",
-            text = colnames(rho)[i],
+            text = NULL,
             hovertemplate = ~ paste0(
               "Annotation: <b>%{y}</b><br>",
-              "Cluster: <b>%{text}</b><br>",
-              "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
+              "Correlation (R): <b>%{x:1.2f}</b>",
               "<extra></extra>"
             ),
             ## NOTE: I suggest to not use a categorical palette for the different clusters;
