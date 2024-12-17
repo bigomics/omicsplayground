@@ -104,6 +104,7 @@ functional_plot_wikipathway_actmap_server <- function(id,
         rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
         kk <- rownames(fx)
         kk <- as.character(df$pathway)
+        kk <- kk[kk %in% rownames(fx)]
         if (length(kk) < 3) {
           return(NULL)
         }
