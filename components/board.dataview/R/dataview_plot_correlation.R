@@ -21,8 +21,6 @@ dataview_plot_correlation_ui <- function(
     label = label,
     plotlib = "plotly",
     caption = caption,
-    #
-    #
     info.text = info.text,
     info.methods = info.methods,
     info.extra_link = info.extra_link,
@@ -48,7 +46,7 @@ dataview_plot_correlation_server <- function(id,
       if (!gene %in% rownames(pgx$X)) {
         return(NULL)
       }
-
+      
       samples <- intersect(samples, colnames(pgx$X))
       probe <- gene
 
@@ -114,13 +112,11 @@ dataview_plot_correlation_server <- function(id,
       shiny::req(pd)
 
       df <- pd[[1]]
+      gg <- unique(df$genes)
+      df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- factor(df$genes, levels = df$genes)
-
-      ay <- list(
-        overlaying = "y",
-        side = "right",
-        title = ""
-      )
+      
+      ay <- list(overlaying = "y", side = "right", title = "")
 
       ## plot as regular bar plot
       plotly::plot_ly(
