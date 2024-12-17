@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-MPCSF_Board <- function(id, pgx) {
+MPCSF_Board <- function(id, pgx, board_observers=NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page

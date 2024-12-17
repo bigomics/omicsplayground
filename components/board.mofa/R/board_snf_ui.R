@@ -54,9 +54,9 @@ SNF_UI <- function(id) {
           bslib::layout_columns(
             ##col_widths = c(6,6),
             col_widths = breakpoints(
-              xxxl = c(7, 5),
-              xl = c(7, 5),              
-              sm = c(12, 12)
+              xxxl = c(5, 4, 3),
+              xl = c(5, 4, 3),              
+              sm = c(12, 12, 12)
             ),
             mofa_plot_snf_ui(
               ns("snf_affinity"),
@@ -66,16 +66,16 @@ SNF_UI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
+            mofa_plot_snf_ui(
+              ns("snf_heatmap"),
+              title = "SNF heatmap",
+              info.text = "SNF affinity matrices",
+              caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             bslib::layout_columns(
               col_widths = 12,
-              mofa_plot_snf_ui(
-                ns("snf_heatmap"),
-                title = "SNF heatmap",
-                info.text = "SNF affinity matrices",
-                caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
               mofa_plot_snfgraph_ui(
                 ns("snf_cluster"),
                 title = "SNF clustering of samples",
@@ -83,16 +83,16 @@ SNF_UI <- function(id) {
                 caption = "Module enrichment plot of top most enriched genesets.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
+              ),
+              mofa_plot_dummy_ui(
+                ns("snf_dummy"),
+                label = "c",
+                title = "SNF data",
+                info.text = "Partial correlation graph",
+                caption = "Module enrichment plot of top most enriched genesets.",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
               )
-              ## mofa_plot_dummy_ui(
-              ##   ns("snf_dummy"),
-              ##   label = "c",
-              ##   title = "SNF data",
-              ##   info.text = "Partial correlation graph",
-              ##   caption = "Module enrichment plot of top most enriched genesets.",
-              ##   height = c("100%", TABLE_HEIGHT_MODAL),
-              ##   width = c("auto", "100%")
-              ## )
             )
           )
         )

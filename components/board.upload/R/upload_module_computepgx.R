@@ -82,12 +82,12 @@ upload_module_computepgx_server <- function(
       GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
 
       ## batch correction and extrs methods
-      EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+      EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna", "mofa")
       EXTRA.NAMES <- c(
         "celltype deconvolution", "drugs connectivity",
-        "wordcloud", "experiment similarity", "WGCNA"
+        "wordcloud", "experiment similarity", "WGCNA", "MOFA"
       )
-      EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+      EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity")
 
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))

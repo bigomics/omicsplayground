@@ -12,7 +12,8 @@
 #' @param pgx Reactive expression that provides the input pgx data object
 #'
 #' @export
-DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
+DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"), 
+                          board_observers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     rowH <- 355 ## row height of panels
@@ -29,9 +30,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
 
-
+    my_observers <- list()
+    
     ## ------- observe functions -----------
-    shiny::observeEvent(input$board_info, {
+    my_observers[[1]] <- shiny::observeEvent(input$board_info, {
+      dbg("[DataViewBoard] observer1")
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>DataView Board</strong>"),
         shiny::HTML(data_infotext),
@@ -40,9 +43,10 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     })
 
     ## update filter choices upon change of data set
-    shiny::observe({
-      shiny::req(pgx$Y, pgx$samples)
+    my_observers[[2]] <- shiny::observe({
+      dbg("[DataViewBoard] observer2")
 
+      shiny::req(pgx$Y, pgx$samples)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "data_samplefilter", choices = levels)
@@ -66,22 +70,24 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
       "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type"))
     )
-    shiny::observeEvent(input$tabs, {
+    
+    my_observers[[3]] <- shiny::observeEvent(input$tabs, {
+      dbg("[DataViewBoard] observer3")      
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-
-    shiny::observeEvent(
-      {
+    my_observers[[4]] <- shiny::observeEvent(
+    {
         list(
           input$data_type,
           pgx$X,
           pgx$counts,
           labeltype()
         )
-      },
-      {
-        shiny::req(input$data_type)
+    },
+    {
+      dbg("[DataViewBoard] observer4")      
+      shiny::req(input$data_type)
 
 
         # X should be labelled as features, so rownames(counts) and rownames(x) shoud match (???)
@@ -127,7 +133,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         )
       }
     )
-
+    
     last_search_gene <- reactiveVal()
 
     input_search_gene <- reactive({
@@ -140,6 +146,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     })
 
 
+    ## assign to r list of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    lapply( my_observers, function(b) b$suspend() )
+    board_observers[[id]] <- my_observers
+        
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
@@ -420,7 +431,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
 
     ## ================================================================================
-    ## ================================= END ====================================
+    ## =================================== END ========================================
     ## ================================================================================
   })
 }

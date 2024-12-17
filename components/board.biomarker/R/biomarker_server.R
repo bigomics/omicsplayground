@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-BiomarkerBoard <- function(id, pgx) {
+BiomarkerBoard <- function(id, pgx, board_observers) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -33,6 +33,8 @@ BiomarkerBoard <- function(id, pgx) {
     ## ======================= REACTIVE/OBSERVE FUNCTIONS =============================
     ## ================================================================================
 
+    my_observers <- list()
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Feature selection" = list(
@@ -44,11 +46,11 @@ BiomarkerBoard <- function(id, pgx) {
         disable = c("pdx_predicted", "pdx_filter")
       )
     )
-    shiny::observeEvent(input$tabs1, {
+    my_observers[[1]] <- shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
-    shiny::observeEvent(input$pdx_info, {
+    my_observers[[2]] <- shiny::observeEvent(input$pdx_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Biomarker Board</strong>"),
         shiny::HTML(pdx_infotext),
@@ -70,13 +72,13 @@ BiomarkerBoard <- function(id, pgx) {
       return(gg)
     }) %>% shiny::debounce(1000)
 
-    shiny::observe({
+    my_observers[[3]] <- shiny::observe({
       shiny::req(pgx$X)
       ct <- colnames(pgx$Y)
       shiny::updateSelectInput(session, "pdx_predicted", choices = ct)
     })
 
-    shiny::observe({
+    my_observers[[4]] <- shiny::observe({
       shiny::req(pgx$Y)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
@@ -96,8 +98,8 @@ BiomarkerBoard <- function(id, pgx) {
         samples
       }
     )
-
-    shiny::observe({
+    
+    my_observers[[5]] <- shiny::observe({
       shiny::req(pgx$X)
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
@@ -120,7 +122,7 @@ BiomarkerBoard <- function(id, pgx) {
 
     # Enable or disable the run button in the UI
     # if the pdx_predicted overlaps with the pdx_samplefilter variable
-    shiny::observeEvent(
+    my_observers[[6]] <- shiny::observeEvent(
       list(
         pgx$Y,
         input$pdx_samplefilter,
@@ -142,7 +144,7 @@ BiomarkerBoard <- function(id, pgx) {
     )
 
     is_computed <- reactiveVal(FALSE)
-    observeEvent(
+    my_observers[[7]] <- observeEvent(
       {
         list(
           input$pdx_predicted,
@@ -156,6 +158,15 @@ BiomarkerBoard <- function(id, pgx) {
       }
     )
 
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    lapply( my_observers, function(b) b$suspend() )
+    board_observers[[id]] <- my_observers
+
+    ## =========================================================================
+    ## ============================= REACTIVES =================================
+    ## =========================================================================
+    
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
       ## This code also features a progress indicator.
       shiny::req(pgx$X, input$pdx_predicted)

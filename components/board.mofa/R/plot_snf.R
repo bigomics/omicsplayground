@@ -45,11 +45,13 @@ mofa_plot_snf_server <- function(id,
       ph <- factor(input_pheno())
       
       if(type == "affinity") {
-        par(mfrow=c(2,2), mar=c(6,1,2,8))
+        par(mar=c(6,1,2,8))
         ndim <- ncol(snf$affinityMatrix[[1]])
         if(ndim>20) par(mar=c(3,1,2,4))
         nmat <- length(snf$affinityMatrix)+1
-        if(nmat>4) par(mfrow=c(3,3)) 
+        par(mfrow=c(2,1))
+        if(nmat>2) par(mfrow=c(3,2))
+        if(nmat>6) par(mfrow=c(4,3))         
         playbase::snf.plot_affinity(snf, k=0.5, par=FALSE) 
       }
 

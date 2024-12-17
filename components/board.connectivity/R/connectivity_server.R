@@ -7,7 +7,9 @@ ConnectivityBoard <- function(
     id,
     auth = NoAuthenticationModule(id = "auth", show_modal = FALSE),
     pgx,
-    reload_pgxdir = reactive(auth$user_dir)) {
+    reload_pgxdir = reactive(auth$user_dir),
+    board_observers = board_observers
+    ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
@@ -29,7 +31,9 @@ ConnectivityBoard <- function(
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    my_observers <- list()
+    
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Connectivity Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -38,7 +42,7 @@ ConnectivityBoard <- function(
     })
 
     ## update choices upon change of data set
-    shiny::observeEvent(pgx$model.parameters$contr.matrix, {
+    my_observers[[2]] <- shiny::observeEvent(pgx$model.parameters$contr.matrix, {
       shiny::req(pgx$model.parameters$contr.matrix)
       ## update contrasts
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
@@ -49,7 +53,7 @@ ConnectivityBoard <- function(
       )
     })
 
-    shiny::observe({
+    my_observers[[3]] <- shiny::observe({
       shiny::req(pgx$X, pgx$connectivity)
       ## update sigdb choices
       my_sigdb <- "datasets-sigdb.h5"
@@ -63,34 +67,15 @@ ConnectivityBoard <- function(
       shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
     })
 
-    shiny::observeEvent(pgx$X, {
+    my_observers[[4]] <- shiny::observeEvent(pgx$X, {
       shiny::updateTextAreaInput(
         session,
         inputId = "genelist",
         placeholder = tspan("Paste your gene list", js = FALSE)
       )
     })
-
-    getCurrentContrast <- shiny::reactive({
-      shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)
-      ct <- input$contrast
-      meta1 <- pgx$gx.meta$meta
-      meta2 <- pgx$gset.meta$meta
-      has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
-      shiny::req(has.contrast)
-
-      ## convert to human symbols so we can match different organism
-      fc <- meta1[[ct]]$meta.fx
-      names(fc) <- rownames(meta1[[ct]])
-      fc <- playbase::collapse_by_humansymbol(fc, pgx$genes)
-
-      gs <- meta2[[ct]]$meta.fx
-      names(gs) <- rownames(meta2[[ct]])
-
-      list(name = ct, fc = fc, gs = gs)
-    })
-
-    observe({
+    
+    my_observers[[5]] <- observe({
       contr <- getCurrentContrast()
       shiny::req(contr)
       ntop <- as.integer(input$genelist_ntop)
@@ -98,6 +83,11 @@ ConnectivityBoard <- function(
       top50 <- paste(top50, collapse = " ")
       updateTextAreaInput(session, "genelist", value = top50)
     })
+
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## ================================================================================
     ## =============================  FUNCTIONS =======================================
@@ -160,6 +150,25 @@ ConnectivityBoard <- function(
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
+
+    getCurrentContrast <- shiny::reactive({
+      shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)
+      ct <- input$contrast
+      meta1 <- pgx$gx.meta$meta
+      meta2 <- pgx$gset.meta$meta
+      has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
+      shiny::req(has.contrast)
+
+      ## convert to human symbols so we can match different organism
+      fc <- meta1[[ct]]$meta.fx
+      names(fc) <- rownames(meta1[[ct]])
+      fc <- playbase::collapse_by_humansymbol(fc, pgx$genes)
+
+      gs <- meta2[[ct]]$meta.fx
+      names(gs) <- rownames(meta2[[ct]])
+
+      list(name = ct, fc = fc, gs = gs)
+    })
 
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb

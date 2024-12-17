@@ -4,7 +4,7 @@
 ##
 
 
-SNF_Board <- function(id, pgx) {
+SNF_Board <- function(id, pgx, board_observers=NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -20,17 +20,18 @@ SNF_Board <- function(id, pgx) {
 </ol>
 ", js = FALSE)
 
-
     ## =============================================================================
     ## ======================= OBSERVE FUNCTIONS ===================================
     ## =============================================================================
 
+    my_observers <- list()
+    
     infotext <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -39,6 +40,16 @@ SNF_Board <- function(id, pgx) {
       ))
     })
 
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    lapply( my_observers, function(b) b$suspend() )
+    board_observers[[id]] <- my_observers
+
+    ## =========================================================================
+    ## ============================= REACTIVES =================================
+    ## =========================================================================
+
+    
     mofa <- shiny::eventReactive( pgx$mofa, {
 
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))      

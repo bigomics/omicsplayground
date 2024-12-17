@@ -7,7 +7,9 @@ IntersectionBoard <- function(
     id,
     pgx,
     selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
-    selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
+    selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc)),
+    board_observers = NULL
+    ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 800 # row height of panel
@@ -31,7 +33,9 @@ IntersectionBoard <- function(
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    my_observers <- list()
+    
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Intersection Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -40,7 +44,7 @@ IntersectionBoard <- function(
     })
 
     ## update choices upon change of data set
-    shiny::observe({
+    my_observers[[2]] <- shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -52,7 +56,7 @@ IntersectionBoard <- function(
       )
     })
 
-    shiny::observeEvent(pgx$X, {
+    my_observers[[3]] <- shiny::observeEvent(pgx$X, {
       choices <- c("gene", "geneset")
       choices_names <- c(tspan("gene", js = FALSE), tspan("geneset", js = FALSE))
       names(choices) <- choices_names
@@ -62,7 +66,7 @@ IntersectionBoard <- function(
 
     ## update choices upon change of feature level
     ## observeEvent( input$level, {
-    shiny::observe({
+    my_observers[[4]] <- shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -87,11 +91,15 @@ IntersectionBoard <- function(
       ## "Signature clustering" = list(disable = c("comparisons"))
       "Signature clustering" = list(disable = NULL)
     )
-    shiny::observeEvent(input$tabs1, {
+    my_observers[[5]] <- shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
-
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
+    
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================

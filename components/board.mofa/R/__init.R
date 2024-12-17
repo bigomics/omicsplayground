@@ -13,18 +13,18 @@ MODULE.multiomics <- list(
     )
   },
   
-  module_server = function(PGX) {
+  module_server = function(PGX, board_observers = NULL) {
     info("[SERVER] calling MofaBoard module")
-    MofaBoard("mofa", pgx = PGX)
+    MofaBoard("mofa", pgx = PGX, board_observers)
 
     info("[SERVER] calling MGseaBoard module")
-    MGseaBoard("mgsea", pgx = PGX)
+    MGseaBoard("mgsea", pgx = PGX, board_observers)
           
     info("[SERVER] calling SNF_Board module")
-    SNF_Board("snf", pgx = PGX)
+    SNF_Board("snf", pgx = PGX, board_observers)
 
     info("[SERVER] calling LasagnaBoard module")
-    LasagnaBoard("lasagna", pgx = PGX)
+    LasagnaBoard("lasagna", pgx = PGX, board_observers)
   },
 
   module_ui = function() {
