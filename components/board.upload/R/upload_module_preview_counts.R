@@ -244,7 +244,8 @@ upload_table_preview_counts_server <- function(
       }
 
       # if counts not in file name, give warning and return
-      if (!any(grepl("count|expression|abundance|params.rdata", tolower(input$counts_csv$name)))) {
+      if (!any(grepl("count|expression|abundance|concentration|params.rdata",
+                     tolower(input$counts_csv$name)))) {
         shinyalert::shinyalert(
           title = tspan("Counts not in filename.", js = FALSE),
           text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.", js = FALSE),
@@ -269,7 +270,7 @@ upload_table_preview_counts_server <- function(
         )
       }
 
-      sel <- grep("count|expression|abundance", tolower(input$counts_csv$name))
+      sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
         df <- playbase::read_counts(input$counts_csv$datapath[sel[1]])
         uploaded$counts.csv <- df

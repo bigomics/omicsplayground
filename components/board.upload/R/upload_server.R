@@ -1041,30 +1041,32 @@ UploadBoard <- function(id,
 
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
-        e1 <- is.null(detected$probetype[organism])
-        e2 <- is.na(detected$probetype[organism])
-        e3 <- !(organism %in% detected$species)
-        task_failed <- (e1 || e2 || e3)
+        e0 <- length(detected)==0
+        e1 <- is.null(detected[[organism]])
+        e2 <- all(is.na(detected[[organism]]))
+        e3 <- !(organism %in% names(detected))
+        task_failed <- (e0 || e1 || e2 || e3)
         if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
-          alt.species <- paste(detected$species, collapse = " or ")
+          detected_species <- names(detected)
+          alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
             alt.species <- paste0("<b>", alt.species, "</b>")
             # check if ANY organism matched the probes, if yes add a hint to the user
-            if (length(detected$species) >= 1) {
+            if (length(detected_species) >= 1) {
               alt.text <- paste0("Are these perhaps ", alt.species, "?")
             }
             if (upload_datatype() == "metabolomics") {
               # overwrite alt.text for metabolomics
-              alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN"), collapse = ", ")
+              alt.text <- "ChEBI (recommended), HMDB, PubChem, KEGG"
               alt.text <- paste0("<b>", alt.text, "</b>")
               alt.text <- paste0("Valid probes are: ", alt.text, ".")
             }
           }
         } else {
-          # handle probetype matching success: assign detected probetype to detected_probetype
-          detected_probetype <- detected$probetype[organism]
+          # handle success: assign detected probetype to detected_probetype
+          detected_probetype <- paste(detected[[organism]],collapse='+')
         }
 
         probetype(detected_probetype) ## set RV
