@@ -316,7 +316,7 @@ SignatureBoard <- function(id, pgx,
       ## fisher test
       G <- Matrix::t(pgx$GMT)
       ii <- setdiff(match(genes, colnames(G)), NA)
-      
+
       N <- cbind(
         k1 = Matrix::rowSums(G != 0),
         n1 = ncol(G),
@@ -326,7 +326,7 @@ SignatureBoard <- function(id, pgx,
       rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
-      
+
       ## WOW THIS IS FAST!!!!!!!
       ## pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
       pv <- try(
@@ -348,15 +348,15 @@ SignatureBoard <- function(id, pgx,
           tt[2, 1] <- N[i, 3]
           tt[2, 2] <- N[i, 4] - N[i, 3]
           ## pv[i] <- stats::fisher.test(tt, alternative = "greater")$p.value ## ??
-          pv[i] <- stats::fisher.test(tt)$p.value 
+          pv[i] <- stats::fisher.test(tt)$p.value
         }
         names(pv) <- rownames(N)
         pv <- pv[match(names(odds.ratio), names(pv))]
         qv <- p.adjust(pv, method = "bonferroni")
       }
-      
+
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
-      
+
       ## get shared genes
       aa <- rownames(A)
       y <- 1 * (colnames(G) %in% genes)
@@ -365,14 +365,14 @@ SignatureBoard <- function(id, pgx,
       ntotal <- Matrix::rowSums(G[aa, , drop = FALSE] != 0)
       A$ratio <- ncommon / ntotal
       ratio.kk <- paste0(ncommon, "/", ntotal)
-      
+
       ## determine top genes
       meta <- playbase::pgx.getMetaMatrix(pgx)
       fx <- sqrt(rowMeans(meta$fc**2, na.rm = TRUE))
       gg <- colnames(G)
       fx <- fx[match(gg, names(fx))]
       names(fx) <- gg
-     
+
       gset <- names(y)[which(y != 0)]
       G1 <- G[aa, which(y != 0), drop = FALSE]
 

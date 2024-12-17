@@ -46,7 +46,7 @@ dataview_plot_correlation_server <- function(id,
       if (!gene %in% rownames(pgx$X)) {
         return(NULL)
       }
-      
+
       samples <- intersect(samples, colnames(pgx$X))
       probe <- gene
 
@@ -115,7 +115,7 @@ dataview_plot_correlation_server <- function(id,
       gg <- unique(df$genes)
       df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- factor(df$genes, levels = df$genes)
-      
+
       ay <- list(overlaying = "y", side = "right", title = "")
 
       ## plot as regular bar plot
