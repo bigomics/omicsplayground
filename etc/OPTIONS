@@ -33,4 +33,6 @@ DEVMODE              = FALSE
 HUBSPOT_CHECK        = TRUE
 
 #BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
-#BOARDS_ENABLED = welcome;load;upload;cmap
+#BOARDS_ENABLED = welcome;load;upload;wgcna;mofa;mgsea
+MODULES_ENABLED = Welcome;Datasets;MultiOmics
+
