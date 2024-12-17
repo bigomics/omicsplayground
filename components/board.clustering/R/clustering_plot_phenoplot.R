@@ -58,6 +58,10 @@ clustering_plot_phenoplot_server <- function(id,
       kk <- selected_phenotypes()
       kk <- kk[which(kk %in% colnames(Y))]
       pos <- pos[jj, , drop = FALSE]
+      shiny::validate(shiny::need(
+        nrow(pos) > 0,
+        "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
       Y <- Y[jj, kk, drop = FALSE]
       ## complete dataframe for downloading
       df <- data.frame(pos, Y, check.names = FALSE)
