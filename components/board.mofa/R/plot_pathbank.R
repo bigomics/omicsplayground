@@ -44,8 +44,8 @@ mofa_plot_pathbank_ui <- function(
 #' @export
 mofa_plot_pathbank_server <- function(id,
                                       pgx,
-                                      ## pathbank_table
-                                      ##fa_contrast,
+                                      sel_pathway = reactive(NULL),
+                                      sel_contrast = reactive(NULL),
                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -59,20 +59,30 @@ mofa_plot_pathbank_server <- function(id,
       getPathwayImage <- shiny::reactive({
 
         # Get pathway image using WPID and fc values
-        ##source("function_getpathbank.R")
-        wp = "SMP0080852"        
-        ##wp.features <- gmt[grep(wp, names(gmt))]
-        svg <- wikipathview(wp = "WP2446", val=NULL)
-        ##svg <- get_pathbank_svg(wp = wp, val=NULL) 
-        if (is.null(svg)) {
-          return(NULL)
-        }
-        list(
-          src = normalizePath(svg),
-          contentType = "image/svg+xml",
-          width = "100%", height = "100%", ## actual size: 1040x800
-          alt = "pathway SVG"
-        )
+        wp.name <- sel_pathway()
+        dbg("[mofa_plot_pathbank_server] selected wp.name = ", wp.name )
+        if(length(wp.name)==0 || length(wp.name) > 1) return(NULL)
+        
+        ##wp.name = "TF_ARCHS4:NCOA3 human tf ARCHS4 coexpression [SMP0080852]"
+        wp <- stringr::str_match(wp.name, "SMP[0-9]+|WP[0-9]+|R-HSA-[0-9]+")[,1]
+        shiny::validate( shiny::need(!is.na(wp), "pathway diagram not available"))
+        if(length(wp)>1) wp <- wp[1]
+        
+        k <- sel_contrast()
+        val <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+
+        ## convert to UNIPROT and PATHBANK ID
+        ##newnames <- convert2pathbankid(names(val))
+        ##names(val) <- newnames
+
+        val = NULL ## temporary...
+        
+        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
+        sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
+        ##wp = "SMP0080852"        
+        img <- playbase::getPathwayImage(
+          wp, val=val, sbgn.dir=sbgn.dir, as.img=TRUE)
+        return(img)
       })
 
       plot_RENDER <- function() {
@@ -80,7 +90,7 @@ mofa_plot_pathbank_server <- function(id,
         validate(
           need(!is.null(img), "Could not retrieve pathway image")
         )
-        shiny::req(img$width, img$height)
+        shiny::req(img$src)
         filename <- img$src
         img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(

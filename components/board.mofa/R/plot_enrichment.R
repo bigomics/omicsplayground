@@ -13,10 +13,16 @@ mofa_plot_enrichment_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    shiny::selectInput(ns("labeltype"), "Label type",
+      choices = c("feature","symbol","gene_title"))
+  )
+  
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     caption = caption,
     height = height,
@@ -56,12 +62,13 @@ mofa_plot_enrichment_server <- function(id,
           for(dt in dtypes) {
             tt <- paste0(k, " (",toupper(dt),")")
             playbase::pgx.Volcano(pgx, contrast=k,
-              hilight=sel, label=sel, ntop=10, plotlib="base",
+              hilight=sel, label=sel, labeltype=input$labeltype,
+              ntop=10, plotlib="base",
               datatype=dt, cex=0.8, fc=0.5, title=tt)
           }
         } else {
           playbase::pgx.Volcano(pgx, contrast=k, hilight=sel,
-            datatype=NULL, cex=0.8)
+            labeltype=input$labeltype, datatype=NULL, cex=0.8)
         }
       } else {
         if(par) {
@@ -89,7 +96,7 @@ mofa_plot_enrichment_server <- function(id,
       func = plot.RENDER,
       func2 = plot.RENDER2,
       pdf.width = 9, pdf.height = 5,
-      res = c(72, 110),
+      res = c(80, 130),
       add.watermark = watermark
     )
 

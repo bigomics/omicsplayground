@@ -93,7 +93,8 @@ LoadingUI <- function(id) {
           title = "Public datasets",
           info.text = "This table shows available public datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
           caption = "Table with public datasets available in the platform.",
-          height = c("calc(100vh - 330px)", 700),
+          ##height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
           width = c("100%", "100%")
         ),
         loading_tsne_ui(
@@ -109,7 +110,8 @@ LoadingUI <- function(id) {
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-          height = c("calc(100vh - 330px)", 700),
+          ##height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr

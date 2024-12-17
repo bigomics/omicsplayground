@@ -40,14 +40,8 @@ SNF_Board <- function(id, pgx) {
     })
 
     mofa <- shiny::eventReactive( pgx$mofa, {
-      
-      if(is.null(pgx$mofa) || !"mofa" %in% names(pgx)) {
-        shinyalert::shinyalert(
-          title = "Error",
-          text = "Please compute MOFA first"
-        )
-        return(NULL)
-      }
+
+      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))      
 
       data <- pgx$mofa
       snf <- playbase::snf.cluster(data$xx, pheno=NULL, plot=FALSE) 

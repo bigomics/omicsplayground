@@ -285,5 +285,5 @@ i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
 ## Setup reticulate
-reticulate::use_virtualenv("reticulate")
+##reticulate::use_virtualenv("reticulate")
 

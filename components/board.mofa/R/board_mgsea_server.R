@@ -41,14 +41,9 @@ MGseaBoard <- function(id, pgx) {
     
     
     mofa <- shiny::eventReactive( pgx$mofa, {
-      
-      if(is.null(pgx$mofa) || !"mofa" %in% names(pgx)) {
-        shinyalert::shinyalert(
-          title = "Error",
-          text = "Please compute MOFA first"
-        )
-        return(NULL)
-      }
+
+      has.mofa <- "mofa" %in% names(pgx) && !is.null(pgx$mofa)
+      shiny::validate( shiny::need( has.mofa, "missing MOFA slot"))      
       
       ## update factors in selectInputs
       enr <- pgx$mofa$fc.gsea      
@@ -107,7 +102,8 @@ MGseaBoard <- function(id, pgx) {
     mofa_plot_pathbank_server(
       "pathbank_pathway",
       pgx = pgx,
-      ##pathbank_table
+      sel_pathway = mgsea_table_selected,
+      sel_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
 

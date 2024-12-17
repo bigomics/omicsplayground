@@ -81,9 +81,14 @@ mofa_table_lasagnaSP_ui <- function(
     ) {
   ns <- shiny::NS(id)
 
+  options = tagList(
+    checkboxInput(ns("showpath"),"Show path details",FALSE)
+  )
+  
   TableModuleUI(
     ns("table"),
     title = title,
+    options = options,
     info.text = info.text,
     caption = caption,
     width = width,
@@ -221,11 +226,17 @@ mofa_lasagnaSP_server <- function(id,
     
     table.RENDER <- function() {
       df <- sp_data()
+      df <- cbind( feature=rownames(df), df)
+      df$feature <- stringr::str_trunc(df$feature, 100)
+      if(!input$showpath) {
+        df$path <- NULL
+      }
+      
       numeric.cols <- grep("score|rho", colnames(df))
 
       DT::datatable(
         df,
-        rownames = TRUE,
+        rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
         class = "compact cell-border stripe hover",

@@ -53,10 +53,11 @@ mofa_table_mgsea_server <- function(id,
       sign <- paste0( c("-","+")[1+(sign(S[,1])==1)],
                      c("-","+")[1+(sign(S[,2])==1)] )
       
-      df <- data.frame( pathway = snames, sign, multi.score, S)
+      ##df <- data.frame( pathway = snames, sign, multi.score, S)
+      df <- data.frame( pathway = snames, multi.score, S)
       rownames(df) <- rownames(S)
       df <- df[order(-df$multi.score),]
-      numeric.cols <- 3:ncol(df)
+      numeric.cols <- grep("score",colnames(df))
       
       DT::datatable(
         df,
@@ -65,12 +66,14 @@ mofa_table_mgsea_server <- function(id,
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
+        plugins = "scrollResize",
         options = list(
           dom = "lfrtip", #
           ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, #
           scrollY = "70vh",
           scroller = TRUE,
+          scrollResize = TRUE,
           deferRender = TRUE
         ) ## end of options.list
       ) %>%

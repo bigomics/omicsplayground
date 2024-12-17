@@ -35,65 +35,90 @@ MofaBoard <- function(id, pgx) {
     ## ======================= PRECOMPUTE FUNCTION ===========================
     ## =======================================================================
     
-    mofa <- shiny::eventReactive( input$compute, {
+    mofa <- shiny::eventReactive(
+      list(
+        pgx$X,
+        pgx$mofa
+      ), {
+        shiny::req(pgx$X)
+        dbg("[MofaBoard] *** eventReactive triggered ***")
+
+        mofa <- NULL
+        has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
+        shiny::validate( shiny::need( has.mofa, "No MOFA slot in object. Please recompute MOFA"))
+        
+#        if(!has.mofa) {
+#          shinyalert::shinyalert("Warning","No MOFA slot in object. Please recompute MOFA.")
+#          return(NULL)
+#        }
+
+        dbg("[MofaBoard] *** using precomputed MOFA results ***")
+        dbg("[MofaBoard] names(input) = ", names(input))
+        
+        mofa <- pgx$mofa
+        
+        ## update factors in selectInput
+        factors <- colnames(mofa$F)
+        dtypes <- names(mofa$ww)
+        sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
+        contrasts <- colnames(mofa$contrasts)
+        phenotypes <- colnames(mofa$samples)
+        updateSelectInput(session, "selected_factor", choices = factors,
+          selected = factors[1])
+        updateSelectInput(session, "show_types", choices = dtypes,
+          selected = sel.dtypes)
+
+        dbg("[MofaBoard]  names(mofa) = ", names(mofa))
+        dbg("[MofaBoard] eventReactive done!")
+        return( mofa )
+      }
+    )
+
+    shiny::observeEvent(
+      list(
+        input$compute
+      ), {
 
       shiny::req(pgx$X, input$kernel, input$numfactors)
-            
-      kernel <- input$kernel
+
+      dbg("[mofa] input$compute =  ",input$compute)
+      if(input$compute==0) return(NULL)
       
-      ##source("~/Playground/playbase/dev/include.R",chdir=TRUE)
+      kernel <- input$kernel
+      dbg("[mofa] kernel =  ",kernel,"...")      
+
       pgx.showSmallModal(paste("Calculating",kernel,"...<br>please wait"))
       progress <- shiny::Progress$new()
       on.exit(progress$close())
       progress$set(message = paste("Calculating",kernel,"..."), value = 0)
-
-      message(paste("[mofa] >>> Calculating ",kernel,"..."))
-
+      
       numfactors <- as.integer(input$numfactors)
+      numfactors <- min( numfactors, min(dim(pgx$X)) )        
       dbg("[MofaBoard] numfactors = ", numfactors)      
 
-      add_gsets <- input$add_gsets
-      mofa <- NULL
-      has.mofa <- ("mofa" %in% names(pgx))
-
-      dbg("[MofaBoard] names(pgx$mofa) = ", names(pgx$mofa))
-      dbg("[MofaBoard] input$compute = ", input$compute )
-      
-      if( input$compute==0 && has.mofa) {
-
-        dbg("[MofaBoard] using internal MOFA for PGX")
-        mofa <- pgx$mofa
-        
-      } else {
-
-        dbg("[MofaBoard] NO MOFA!!! calculating MOFA for PGX")
-        numfactors <- min( numfactors, min(dim(pgx$X)) )
-        
-        pgx$mofa <- playbase::pgx.compute_mofa(
+      dbg("[MofaBoard] *** recalculating MOFA ***")
+      mofa <- playbase::pgx.compute_mofa(
           pgx,
           kernel = kernel,
           numfactors = numfactors,
-          add_gsets = add_gsets)
-      } 
+          add_gsets = input$add_gsets)
+            
+      ## ## update factors in selectInput
+      ## factors <- colnames(mofa$F)
+      ## dtypes <- names(mofa$ww)
+      ## sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
+      ## contrasts <- colnames(mofa$contrasts)
+      ## phenotypes <- colnames(mofa$samples)
+      ## updateSelectInput(session, "selected_factor", choices = factors,
+      ##                   selected = factors[1])
+      ## updateSelectInput(session, "show_types", choices = dtypes,
+      ##                   selected = sel.dtypes)
       
-      mofa <- pgx$mofa
-      names(mofa)
-      
-      ## update factors in selectInput
-      factors <- colnames(mofa$F)
-      dtypes <- names(mofa$ww)
-      sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
-      contrasts <- colnames(mofa$contrasts)
-      phenotypes <- colnames(mofa$samples)
-      updateSelectInput(session, "selected_factor", choices = factors,
-                        selected = factors[1])
-      updateSelectInput(session, "show_types", choices = dtypes,
-                        selected = sel.dtypes)
       shiny::removeModal()
-      
       message("[mofa] compute MOFA done!")
       
-      mofa
+      pgx$mofa <- mofa  ## should trigger new mofa
+      
     }, ignoreNULL = FALSE)
 
 

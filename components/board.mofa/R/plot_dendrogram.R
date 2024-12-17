@@ -42,11 +42,13 @@ mofa_plot_dendrogram_server <- function(id,
     
     plot.RENDER <- function() {
       res <- mofa()
-      datatype <- sub(":.*","",rownames(res$W))
-      datatypeColors <- rainbow(8)[factor(datatype)]
 
+      shiny::req(res)
+      
       TOM <- cor(t(res$X))
       geneTree <- hclust(as.dist(1-TOM), method="complete")
+      datatype <- sub(":.*","",rownames(res$W))
+      datatypeColors <- rainbow(8)[factor(datatype)]      
 
       if(input$show_cormatrix) {
         par(mar=c(1,1,0,0))

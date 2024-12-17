@@ -39,17 +39,21 @@ LasagnaBoard <- function(id, pgx) {
     })
 
     data <- shiny::eventReactive( pgx$mofa, {
-      
-      if(is.null(pgx$mofa) || !"mofa" %in% names(pgx)) {
-        shinyalert::shinyalert(
-          title = "Error",
-          text = "Please compute MOFA first"
-        )
-        return(NULL)
-      }
-      
-      shiny::req(pgx$mofa$lasagna)
 
+      ##shiny::req(pgx$mofa)
+      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
+
+      ## if(is.null(pgx$mofa) || !"mofa" %in% names(pgx)) {
+      ##   shinyalert::shinyalert(
+      ##     title = "Error",
+      ##     text = "Please compute MOFA first"
+      ##   )
+      ##   return(NULL)
+      ## }
+      
+      ##shiny::req(pgx$mofa$lasagna)
+      shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
+      
       dbg("[LasagnaBoard] names(pgx$mofa) = ", names(pgx$mofa))      
       dbg("[LasagnaBoard] names(pgx$mofa$lasagna) = ", names(pgx$mofa$lasagna))
       
