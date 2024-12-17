@@ -170,6 +170,7 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   ENABLE_ANNOT = FALSE,
   ENABLE_STARTUP_MODAL = TRUE,
+  INTEGRATION_TRANSLATION = FALSE,
   MAX_DATASETS = 25,
   MAX_SAMPLES = 1000,
   MAX_COMPARISONS = 20,
@@ -277,3 +278,10 @@ library(shiny.i18n)
 DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
+
+## Init integration translator
+if (opt$INTEGRATION_TRANSLATION) {
+  DICTIONARY2 <- file.path(FILES, "translation_integration.json")
+  i18n_int <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY2)
+  i18n_int$set_translation_language("integration")
+}
