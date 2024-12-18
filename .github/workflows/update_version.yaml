@@ -2,9 +2,7 @@ name: update OPG version
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [closed]
-    branches: [main]
+
 
 jobs:
   bump-version:
