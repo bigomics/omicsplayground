@@ -1,4 +1,4 @@
-name: update R package version
+name: update OPG version
 
 on:
   pull_request:
