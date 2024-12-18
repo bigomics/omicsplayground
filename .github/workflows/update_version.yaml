@@ -1,0 +1,43 @@
+name: update R package version
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Bump version
+        run: |
+            # Read the version from VERSION file
+            current_version=$(cat VERSION)
+            number_version=$(echo "$current_version" | grep -oP '^v\K\d+\.\d+\.\d+')
+
+            # Increment the last part of the version
+            parts=(${number_version//./ })
+            parts[2]=$((parts[2] + 1))
+            new_version="${parts[0]}.${parts[1]}.${parts[2]}"
+
+            # Replace the version in the VERSION file
+            DATE=`date +%y%m%d|sed 's/\ //g'`
+            BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
+            BUILD="v"$new_version"+"$BRANCH""$DATE
+
+            # Write the VERSION file
+            echo $BUILD > VERSION
+
+      - name: Commit changes
+        run: |
+            git config --local user.name "$GITHUB_ACTOR"
+            git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+            git add DESCRIPTION
+            git commit -m "Update version"
+            git pull --ff-only
+            git push origin
