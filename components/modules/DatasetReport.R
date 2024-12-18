@@ -263,6 +263,7 @@ DatasetReportServer <- function(
           setwd(cur_wd)
           unlink(tmpdir)
 
+          record_report_download(input$report_type)
           shinyalert::shinyalert(
             title = "Yay! Your report is ready",
             text = "We finished your report. Please check your downloads folder.",
