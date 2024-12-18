@@ -2,12 +2,14 @@ name: update OPG version
 
 on:
   workflow_dispatch:
-
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 jobs:
   bump-version:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
 
     steps:
       - name: Check out code
@@ -36,7 +38,7 @@ jobs:
         run: |
             git config --local user.name "$GITHUB_ACTOR"
             git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-            git add DESCRIPTION
+            git add VERSION
             git commit -m "Update version"
             git pull --ff-only
             git push origin
