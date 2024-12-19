@@ -27,7 +27,7 @@ UploadUI <- function(id) {
               "mRNA microarray",
               "proteomics",
               "scRNA-seq",
-              "metabolomics (beta)" = "metabolomics"
+              ## "metabolomics (beta)" = "metabolomics"
               ## "scRNA-seq",
               ## "other"
             ),
