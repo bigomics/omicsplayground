@@ -82,31 +82,12 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       },
       {
         shiny::req(input$data_type)
-
-
-        # X should be labelled as features, so rownames(counts) and rownames(x) shoud match (???)
+        
         features <- rownames(pgx$X)
-        # if (input$data_type %in% c("counts", "abundance")) {
-        #   features <- rownames(pgx$counts)
-        # } else {
-        #   ## log2CPM
-        #   features <- rownames(pgx$X)
-        # }
-
-        ## gene filter.
         fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2, na.rm = TRUE)
         features <- intersect(names(sort(-fc2)), features) ## most var gene??
         sel.feature <- features[1]
         features <- sort(features)
-        p1 <- head(rownames(pgx$genes), 1000)
-        p2 <- head(pgx$genes$symbol, 1000)
-        by.symbol <- mean(p1 == p2, na.rm = TRUE) > 0.8
-        if (0 && !by.symbol) {
-          gene <- pgx$genes[match(features, rownames(pgx$genes)), "symbol"]
-          feature_gene <- paste0(gene, "_", features)
-          names(features) <- feature_gene
-          features <- features[order(names(features))]
-        }
         i <- match(sel.feature, features)
         features <- c(features[i], features[-i])
         if (length(features) > 1000) {
