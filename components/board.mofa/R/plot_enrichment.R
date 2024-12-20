@@ -96,7 +96,7 @@ mofa_plot_enrichment_server <- function(id,
       func = plot.RENDER,
       func2 = plot.RENDER2,
       pdf.width = 9, pdf.height = 5,
-      res = c(80, 130),
+      res = c(75, 125),
       add.watermark = watermark
     )
 
