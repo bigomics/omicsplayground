@@ -573,12 +573,8 @@ upload_module_normalizationSC_server <- function(id,
 
 
 ##--------------SC OPTION LIST
-##--------------FIX PHENO 
 ##--------------ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
 ##--------------WRS TEST MAKE AVAILABLE TO ANY DATATYPE. Default for scRNA-seq
-## TEST ON MORE DATASETS.
-
-
-## Fix Correlation analysis > Correlation > Scatterplot (not showing up)
-## Fix Correlation analysis > Graph
-## Need to fix corpora::fisherpval in OPG.
+##--------------TEST ON MORE DATASETS.
+##--------------Fix Correlation analysis > Correlation > Scatterplot (not showing up)
+##--------------Fix Correlation analysis > Graph
