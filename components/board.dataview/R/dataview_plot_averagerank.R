@@ -44,7 +44,7 @@ dataview_plot_averagerank_server <- function(id,
       gene <- r.gene()
       samples <- r.samples()
       data_type <- r.data_type()
-
+      
       if (!all(samples %in% colnames(pgx$X))) {
         return(NULL)
       }
@@ -65,8 +65,9 @@ dataview_plot_averagerank_server <- function(id,
         ylab <- tspan("average counts (log2)", js = FALSE)
       }
 
-      sel <- which(sub(".*:", "", names(mean.fc)) == sub(".*:", "",gene))
-      #sel <- which(names(mean.fc) == gene)      
+      ## NEED IMPROVEMENT??
+      ##sel <- which(sub(".*:", "", names(mean.fc)) == sub(".*:", "",gene))
+      sel <- which(names(mean.fc) == gene)      
 
       pd <- list(
         df = data.frame(mean.fc = mean.fc),
@@ -105,6 +106,12 @@ dataview_plot_averagerank_server <- function(id,
       gene <- pd$gene
       ylab <- pd$ylab
       xanchor <- "center"
+
+      dbg("[plot_averagerank_server:plot.RENDER] gene = ", gene)
+      if(length(sel)>1) {
+        dbg("[plot_averagerank_server:plot.RENDER] WARNING multiple sel = ", sel)
+      }
+      
       if (sel < length(mean.fc) / 5) xanchor <- "left"
       if (sel > length(mean.fc) * 4 / 5) xanchor <- "right"
 
