@@ -22,17 +22,32 @@ wgcna_plot_gdendogram_ui <- function(id, label, info.text, caption, height, widt
 
 wgcna_plot_gdendogram_server <- function(id,
                                          wgcna.compute,
-                                         labels2rainbow,
+                                         power,
+                                         networktype,
+                                         tomtype,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    geneDendro.RENDER <- shiny::reactive({
+
+    geneDendro.RENDER <- function() {
+#      shiny::req(power())
+#      shiny::req(networktype())
+#      shiny::req(tomtype())      
+
       out <- wgcna.compute()
       net <- out$net
 
+      ## playbase::plotDendroFromResults(
+      ##   out,
+      ##   power = as.numeric(power()),
+      ##   networktype = networktype(),
+      ##   tomtype = tomtype(),
+      ##   nSelect = 1000
+      ## ) 
+          
       ## Convert labels to colors for plotting
-      mergedColors <- labels2rainbow(net)
+      mergedColors <- playbase::labels2rainbow(net)
       ## Plot the dendrogram and the module colors underneath
-      plotDendroAndColors(
+      WGCNA::plotDendroAndColors(
         dendro = net$dendrograms[[1]],
         colors = mergedColors[net$blockGenes[[1]]],
         dendroLabels = FALSE, hang = 0.03,
@@ -40,9 +55,8 @@ wgcna_plot_gdendogram_server <- function(id,
         marAll = c(0.2, 5, 0.4, 0.2),
         main = NULL
       )
-      p <- grDevices::recordPlot()
-      p
-    })
+
+    }
 
     PlotModuleServer(
       "plot",

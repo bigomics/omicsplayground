@@ -10,14 +10,11 @@ WgcnaInputs <- function(id) {
 
     ## data set parameters
     shiny::selectInput(ns("selected_module"), "select module", choices = NULL),
-    shiny::actionButton(ns("compute"), "Compute!",
-      icon = icon("running"),
-      class = "btn-outline-primary"
-    ),
     shiny::br(),
     shiny::br(),
-    shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), br(), br(),
+    shiny::br(),    
+    shiny::actionLink(ns("options"), "Recompute", icon = icon("cog", lib = "glyphicon")),
+    shiny::br(), 
     shiny::conditionalPanel(
       "input.options % 2 == 1",
       ns = ns,
@@ -26,16 +23,23 @@ WgcnaInputs <- function(id) {
           choices = c(500, 1000, 2000, 4000, 8000),
           selected = 1000
         ),
-        shiny::selectInput(ns("minmodsize"), "Min. module size",
-          choices = c(10, 30, 100, 250),
-          selected = 30
+        shiny::selectInput(ns("networktype"), "Network type",
+          choices = c("unsigned","signed","signed hybrid"), selected = "signed"
         ),
-        shiny::selectInput(ns("power"), "Power", c(2, 4, 6, 10), selected = 6),
-        shiny::selectInput(ns("deepsplit"), "deepsplit", 0:4, selected = 2),
-        shiny::selectInput(ns("cutheight"), "Merge cut height",
-          choices = c(0.05, 0.10, 0.25, 0.5, 0.9, 0.999),
-          selected = 0.25
-        )
+        shiny::selectInput(ns("tomtype"), "TOM type",
+          choices = c("signed","unsigned","signed Nowick","none"), selected = "signed"
+        ),
+        shiny::sliderInput(ns("power"), "Power", 1, 20, 6),
+        shiny::sliderInput(ns("deepsplit"), "Deepsplit", 0, 4, 2),        
+        shiny::selectInput(ns("minmodsize"), "Min. module size",
+          choices = c(10, 20, 50, 100),  selected = 20
+        ),
+        shiny::br(),
+        shiny::actionButton(
+          ns("compute"), "Recompute!",
+          icon = icon("running"),
+          class = "btn-outline-primary"
+        )        
       )
     )
   )
