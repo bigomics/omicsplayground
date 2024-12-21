@@ -35,7 +35,7 @@ PcsfInputs <- function(id) {
       br(),
       withTooltip(
         shiny::radioButtons(ns("pcsf_ntop"), "Initial network size:",
-          choices = c("xs" = 100, "s" = 200, "M" = 500, "L" = 1000),
+          choices = c("S" = 150, "M" = 500, "L" = 1500),
           selected = 500, inline = TRUE
         ),
         "Select initial network size (number of top genes) for ."
@@ -63,7 +63,7 @@ PcsfUI <- function(id) {
           height = "calc(100vh - 190px)",
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
-            col_widths = c(7, 5),
+            col_widths = c(6, 6),
             height = "calc(100vh - 190px)",
             pcsf_plot_network_ui(
               ns("pcsf_network"),
