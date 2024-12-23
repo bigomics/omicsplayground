@@ -531,7 +531,7 @@ UploadBoard <- function(id,
       )
 
       contrasts_ui <- wizardR::wizard_step(
-        step_title = tspan("Step 3: Create comparisons", js = FALSE),
+        step_title = "Step 3: Create comparisons",
         step_id = "step_comparisons",
         server = TRUE,
         upload_table_preview_contrasts_ui(
@@ -540,7 +540,7 @@ UploadBoard <- function(id,
       )
 
       normalization_panel <- wizardR::wizard_step(
-        step_title = tspan("Step 4: QC/BC", js = FALSE),
+        step_title = "Step 4: QC/BC",
         step_id = "step_qc",
         server = TRUE,
         upload_module_normalization_ui(ns("checkqc"))

@@ -1,0 +1,13 @@
+{
+    "cultural_date_format": "%d-%m-%Y",
+    "languages": [
+        "default",
+        "integration"
+    ],
+    "translation": [
+        {
+            "default": "Upload",
+            "integration": "Review"
+        }
+    ]
+}

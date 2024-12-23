@@ -485,7 +485,7 @@ tspan <- function(text, js = TRUE) {
   # Integration translator (does not accept JS TRUE)
   if (opt$INTEGRATION_TRANSLATION) {
     keys <- c(
-      "Step"
+      "Upload"
     )
     i18n.tr <- function(key) as.character(i18n_int$get_translations()[key, "integration"])
     for (k in keys) {
