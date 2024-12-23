@@ -66,6 +66,9 @@ dataview_plot_averagerank_server <- function(id,
       }
 
       sel <- which(sub(".*:", "", names(mean.fc)) == gene)
+      if (is.null(sel) || length(sel) == 0) {
+        sel <- which(names(mean.fc) == gene)
+      }
 
       pd <- list(
         df = data.frame(mean.fc = mean.fc),
