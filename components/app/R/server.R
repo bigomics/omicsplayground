@@ -121,6 +121,7 @@ app_server <- function(input, output, session) {
     auth <- EmailEncryptedAuthenticationModule(
       id = "auth",
       show_modal = TRUE,
+      skip_modal = TRUE,
       # TODO add argument for location of crypto key (probably on ETC)
       domain = opt$DOMAIN
     )

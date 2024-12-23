@@ -1267,6 +1267,9 @@ EmailEncryptedAuthenticationModule <- function(
         button.text = "Sure I am!"
       )
       shiny::showModal(m)
+      if (skip_modal) {
+        shinyjs::runjs("$('#auth-login_submit_btn').click();")
+      }
     }
 
     resetUSER <- function() {
