@@ -577,7 +577,7 @@ upload_module_normalization_server <- function(
         shiny::req(res)
         shiny::req(out.res)
         samples <- r_samples()
-        
+
         methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
         ## methods <- intersect(methods, names(res$pos))
         ## pos.list <- res$pos[methods]
@@ -591,7 +591,7 @@ upload_module_normalization_server <- function(
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
         col1 <- factor(samples[, colorby_var]) ## as.numeric(col1)
-        
+
         pheno <- res$pheno
         xdim <- length(pheno)
         ## col1 <- factor(pheno)
@@ -668,47 +668,47 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
 
       getBatchParams <- eventReactive(
-      {
-        list(r_counts(), r_samples(), r_contrasts())
-      },
-      {
-        shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
-        X <- r_counts()
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        pars <- playbase::get_model_parameters(
-          X,
-          samples,
-          pheno = NULL,
-          contrasts = contrasts
-        )
-        all.pars <- setdiff(colnames(samples), pars$pheno.pars)
-        all.pars <- union(all.pars, pars$batch.pars)
-        names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
-          paste(all.pars, "*"), all.pars
-        )
-        ##        all.pars <- c("<autodetect>","<none>",all.pars)
-        all.pars <- c("<autodetect>", all.pars)
-        return(all.pars)
-      }
+        {
+          list(r_counts(), r_samples(), r_contrasts())
+        },
+        {
+          shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
+          X <- r_counts()
+          samples <- r_samples()
+          contrasts <- r_contrasts()
+          pars <- playbase::get_model_parameters(
+            X,
+            samples,
+            pheno = NULL,
+            contrasts = contrasts
+          )
+          all.pars <- setdiff(colnames(samples), pars$pheno.pars)
+          all.pars <- union(all.pars, pars$batch.pars)
+          names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
+            paste(all.pars, "*"), all.pars
+          )
+          ##        all.pars <- c("<autodetect>","<none>",all.pars)
+          all.pars <- c("<autodetect>", all.pars)
+          return(all.pars)
+        }
       )
 
       getMetadataVars <- eventReactive(
-      {
-        list(r_samples())
-      },
-      {
-        shiny::req(dim(r_samples()))
-        samples <- r_samples()
-        return(colnames(samples))
-      }
+        {
+          list(r_samples())
+        },
+        {
+          shiny::req(dim(r_samples()))
+          samples <- r_samples()
+          return(colnames(samples))
+        }
       )
 
       output$normalization <- shiny::renderUI({
         ## reactive
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
-        
+
         score.infotext <-
           "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
 
@@ -751,9 +751,9 @@ upload_module_normalization_server <- function(
             ns("colorby_var"),
             label = "Annotate by:",
             choices = metadata_vars,
-             selected = metadata_vars[1],
-             inline = FALSE
-           )
+            selected = metadata_vars[1],
+            inline = FALSE
+          )
         )
 
         navmenu <- tagList(
