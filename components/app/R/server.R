@@ -1042,6 +1042,7 @@ app_server <- function(input, output, session) {
       session = session,
       comment = nav_count.str,
       comment2 = isolate(PLOT_DOWNLOAD_LOGGER$str),
+      comment3 = isolate(REPORT_DOWNLOAD_LOGGER$str),
       num_datasets = num_pgxfiles,
       ip = session$request$HTTP_X_REAL_IP
     )
