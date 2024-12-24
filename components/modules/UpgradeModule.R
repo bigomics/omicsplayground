@@ -61,6 +61,7 @@ UpgradeModuleServer <- function(id, auth) {
         input$action
       },
       {
+        record_UPGRADE()
         if (allowed_domains()) {
           showModal()
         } else {

@@ -275,6 +275,9 @@ PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 ## Initialize report download logger
 REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 
+## Initialize upgrade button logger
+UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
+
 ## Initialize translator
 library(shiny.i18n)
 DICTIONARY <- file.path(FILES, "translation.json")

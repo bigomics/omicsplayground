@@ -907,6 +907,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
       REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+      UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
 
       shiny::showModal(login_modal)
     }
