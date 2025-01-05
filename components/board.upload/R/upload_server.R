@@ -33,7 +33,7 @@ UploadBoard <- function(id,
     reset_upload_text_input <- shiny::reactiveVal(0)
     probetype <- shiny::reactiveVal("running")
 
-    sc_compute_settings <- shiny::reactiveValues() ## NEW AZ
+    ## sc_compute_settings <- shiny::reactiveValues() ## NEW AZ
     
     # add task to detect probetype using annothub
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
@@ -961,8 +961,8 @@ UploadBoard <- function(id,
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
 
-              sc_compute_settings$name <- pgx$name ## NEW AZ
-              sc_compute_settings$description <- pgx$description ## NEW AZ
+              ## sc_compute_settings$name <- pgx$name ## NEW AZ
+              ## sc_compute_settings$description <- pgx$description ## NEW AZ
 
               recompute_info(
                 list(
@@ -1189,9 +1189,9 @@ UploadBoard <- function(id,
         compute_input$azimuth_ref <- sc_normalized$azimuth_ref() ## NEW AZ
         ## compute_input$sc_pheno <- sc_normalized$sc_pheno() ## NEW AZ. TO REMOVE
         
-        sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold() ## NEW AZ
-        sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold() ## NEW AZ
-        sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold() ## NEW AZ
+        ## sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold() ## NEW AZ
+        ## sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold() ## NEW AZ
+        ## sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold() ## NEW AZ
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
@@ -1210,7 +1210,7 @@ UploadBoard <- function(id,
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref), ## NEW AZ
       ## sc_pheno = shiny::reactive(compute_input$sc_pheno), ## NEW AZ
-      sc_compute_settings = sc_compute_settings, ## NEW AZ
+      ## sc_compute_settings = sc_compute_settings, ## NEW AZ
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,

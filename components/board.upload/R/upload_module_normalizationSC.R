@@ -572,9 +572,9 @@ upload_module_normalizationSC_server <- function(id,
 }
 
 
+##--------------ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>10K.
+
 ##--------------SC OPTION LIST
-##--------------ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>20K.
-##--------------WRS TEST MAKE AVAILABLE TO ANY DATATYPE. Default for scRNA-seq
 ##--------------TEST ON MORE DATASETS.
 ##--------------Fix Correlation analysis > Correlation > Scatterplot (not showing up)
 ##--------------Fix Correlation analysis > Graph

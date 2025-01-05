@@ -17,7 +17,7 @@ upload_module_computepgx_server <- function(
     samplesRT,
     azimuth_ref, ## NEW AZ
     ## sc_pheno, ## NEW AZ
-    sc_compute_settings, ## NEW AZ
+    ## sc_compute_settings, ## NEW AZ
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -56,7 +56,7 @@ upload_module_computepgx_server <- function(
           mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma", "notrend.limma")
         } else {
           mm <- c(
-            "ttest", "ttest.welch", "voom.limma", "trend.limma",
+            "ttest", "ttest.welch", "wilcoxon.ranksum", "voom.limma", "trend.limma",
             "notrend.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
         }
@@ -396,31 +396,31 @@ upload_module_computepgx_server <- function(
 
       ##----------------------- NEW AZ
       ##-----------------------
-      shiny::observeEvent(list(metaRT(), sc_compute_settings), {
-        meta <- metaRT()
-        pgx_info <- sc_compute_settings
-        if (is.null(meta) && is.null(pgx_info)) {
-          return(NULL)
-        }
-        if (!is.null(pgx_info) && length(pgx_info) > 0) {
-          meta <- pgx_info
-        }
-        ## If the user recomputes, recycle old names/description
-        if (!is.null(meta$name)) {
-          shiny::updateTextInput(
-            session,
-            "selected_name",
-            value = gsub(".pgx$", "", meta$name)
-          )
-        }
-        if (!is.null(meta$description)) {
-          shiny::updateTextAreaInput(
-            session,
-            "selected_description",
-            value = meta$description
-          )
-        }
-      })
+      ## shiny::observeEvent(list(metaRT(), sc_compute_settings), {
+      ##   meta <- metaRT()
+      ##   pgx_info <- sc_compute_settings
+      ##   if (is.null(meta) && is.null(pgx_info)) {
+      ##     return(NULL)
+      ##   }
+      ##   if (!is.null(pgx_info) && length(pgx_info) > 0) {
+      ##     meta <- pgx_info
+      ##   }
+      ##   ## If the user recomputes, recycle old names/description
+      ##   if (!is.null(meta$name)) {
+      ##     shiny::updateTextInput(
+      ##       session,
+      ##       "selected_name",
+      ##       value = gsub(".pgx$", "", meta$name)
+      ##     )
+      ##   }
+      ##   if (!is.null(meta$description)) {
+      ##     shiny::updateTextAreaInput(
+      ##       session,
+      ##       "selected_description",
+      ##       value = meta$description
+      ##     )
+      ##   }
+      ## })
       ##----------------------- NEW AZ
       ##-----------------------
       
@@ -661,15 +661,15 @@ upload_module_computepgx_server <- function(
           batch.correct = FALSE,
           norm_method = norm_method(),
 
-          ##-----------NEW AZ
-          sc_settings = list(
-            ## compute settings only for info
-            nfeature_threshold = sc_compute_settings$nfeature_threshold,
-            mt_threshold = sc_compute_settings$mt_threshold,
-            hb_threshold = sc_compute_settings$hb_threshold,
-            norm_method = norm_method()
-          ),
-          ##-----------NEW AZ
+          ## ##-----------NEW AZ
+          ## sc_settings = list(
+          ##   ## compute settings only for info
+          ##   nfeature_threshold = sc_compute_settings$nfeature_threshold,
+          ##   mt_threshold = sc_compute_settings$mt_threshold,
+          ##   hb_threshold = sc_compute_settings$hb_threshold,
+          ##   norm_method = norm_method()
+          ## ),
+          ## ##-----------NEW AZ
           
           ## normalize = do.normalization,
           prune.samples = TRUE,
