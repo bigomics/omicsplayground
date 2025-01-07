@@ -1178,6 +1178,7 @@ UploadBoard <- function(id,
     
     ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
+    sc_compute_settings <- reactiveValues()
     
     observe({
       if (input$selected_datatype == "scRNA-seq") {
@@ -1188,10 +1189,9 @@ UploadBoard <- function(id,
         compute_input$samples <- sc_normalized$samples()
         compute_input$azimuth_ref <- sc_normalized$azimuth_ref() ## NEW AZ
         ## compute_input$sc_pheno <- sc_normalized$sc_pheno() ## NEW AZ. TO REMOVE
-        
-        ## sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold() ## NEW AZ
-        ## sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold() ## NEW AZ
-        ## sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold() ## NEW AZ
+        sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold() ## NEW AZ
+        sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold() ## NEW AZ
+        sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold() ## NEW AZ
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
@@ -1200,7 +1200,7 @@ UploadBoard <- function(id,
         compute_input$samples <- checked_samples_counts()$SAMPLES
       }
     })
-
+    
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = shiny::reactive(compute_input$counts),
@@ -1210,7 +1210,7 @@ UploadBoard <- function(id,
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref), ## NEW AZ
       ## sc_pheno = shiny::reactive(compute_input$sc_pheno), ## NEW AZ
-      ## sc_compute_settings = sc_compute_settings, ## NEW AZ
+      sc_compute_settings = shiny::reactive(sc_compute_settings), ## NEW AZ
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,

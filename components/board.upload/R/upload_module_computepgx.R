@@ -17,7 +17,6 @@ upload_module_computepgx_server <- function(
     samplesRT,
     azimuth_ref, ## NEW AZ
     ## sc_pheno, ## NEW AZ
-    ## sc_compute_settings, ## NEW AZ
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -27,6 +26,7 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     alertready = TRUE,
     height = 720,
+    sc_compute_settings, ## NEW AZ
     recompute_info,
     inactivityCounter,
     upload_wizard,
@@ -342,7 +342,6 @@ upload_module_computepgx_server <- function(
         shiny::updateTextAreaInput(session, "selected_description", value = "")
       })
 
-
       # change upload_name to selected_name
       observeEvent(input$selected_name, {
         upload_name(input$selected_name)
@@ -423,7 +422,7 @@ upload_module_computepgx_server <- function(
       ## })
       ##----------------------- NEW AZ
       ##-----------------------
-      
+
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -518,7 +517,6 @@ upload_module_computepgx_server <- function(
           gmt <- gmt[!duplicated(names(gmt))]
           gset_size <- sapply(gmt, length)
           gmt <- gmt[gset_size >= 3] ## how many?
-
 
           # an additional check to verify that items in lists are
           # genes
@@ -643,6 +641,10 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
+        nfeature_threshold <- sc_compute_settings()$nfeature_threshold
+        mt_threshold <- sc_compute_settings()$mt_threshold
+        hb_threshold <- sc_compute_settings()$hb_threshold
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -661,15 +663,13 @@ upload_module_computepgx_server <- function(
           batch.correct = FALSE,
           norm_method = norm_method(),
 
-          ## ##-----------NEW AZ
-          ## sc_settings = list(
-          ##   ## compute settings only for info
-          ##   nfeature_threshold = sc_compute_settings$nfeature_threshold,
-          ##   mt_threshold = sc_compute_settings$mt_threshold,
-          ##   hb_threshold = sc_compute_settings$hb_threshold,
-          ##   norm_method = norm_method()
-          ## ),
-          ## ##-----------NEW AZ
+          ##-----------NEW AZ
+          sc_compute_settings = list(
+            nfeature_threshold = nfeature_threshold,
+            mt_threshold = mt_threshold,
+            hb_threshold = hb_threshold
+          ),
+          ##-----------NEW AZ
           
           ## normalize = do.normalization,
           prune.samples = TRUE,
@@ -830,7 +830,6 @@ upload_module_computepgx_server <- function(
                 user_email = auth$email,
                 pgx_path   = raw_dir
               )
-
 
               # if auth$email is empty, then the user is not logged in
               if (auth$email == "") {

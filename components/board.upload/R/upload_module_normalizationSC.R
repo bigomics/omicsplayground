@@ -500,7 +500,6 @@ upload_module_normalizationSC_server <- function(id,
       ## ------------------------------------------------------------------
       ## Plot modules
       ## ------------------------------------------------------------------
-
       PlotModuleServer(
         "plot1",
         plotlib = "base",
@@ -551,6 +550,24 @@ upload_module_normalizationSC_server <- function(id,
           return(NULL)
         }
       })
+
+      nfeat_thr <- shiny::reactive({
+        shiny::req(input$remove_cells)
+        nfeat_thr <- input$nfeature_threshold
+        return(nfeat_thr)
+      })
+
+      mt_thr <- shiny::reactive({
+        shiny::req(input$remove_cells)
+        mt_thr <- input$mt_threshold
+        return(mt_thr)
+      })
+
+      hb_thr <- shiny::reactive({
+        shiny::req(input$remove_cells)
+        hb_thr <- input$hb_threshold
+        return(hb_thr)
+      })
       
       LL <- list(
         counts = counts,
@@ -559,9 +576,9 @@ upload_module_normalizationSC_server <- function(id,
         impX = shiny::reactive(NULL),
         azimuth_ref = shiny::reactive(azimuth_ref()),
         ## sc_pheno = shiny::reactive(sc_pheno()),
-        ## nfeature_threshold = shiny::reactive(nfeature_threshold()),
-        ## mt_threshold = shiny::reactive(mt_threshold()),
-        ## hb_threshold = shiny::reactive(hb_threshold()),
+        nfeature_threshold = shiny::reactive(nfeat_thr()),
+        mt_threshold = shiny::reactive(mt_thr()),
+        hb_threshold = shiny::reactive(hb_thr()),
         norm_method = shiny::reactive("CPM")
       )
       
@@ -573,8 +590,6 @@ upload_module_normalizationSC_server <- function(id,
 
 
 ##--------------ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>10K.
-
-##--------------SC OPTION LIST
 ##--------------TEST ON MORE DATASETS.
 ##--------------Fix Correlation analysis > Correlation > Scatterplot (not showing up)
 ##--------------Fix Correlation analysis > Graph
