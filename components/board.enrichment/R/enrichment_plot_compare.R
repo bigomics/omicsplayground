@@ -89,7 +89,7 @@ enrichment_plot_compare_server <- function(id,
           playbase::gsea.enplot(
             rnk0,
             genes,
-            names = NULL, #
+            names = NULL,
             main = cmp,
             xlab = "",
             cex.main = 0.80,
@@ -122,7 +122,7 @@ enrichment_plot_compare_server <- function(id,
           playbase::gsea.enplot(
             rnk0,
             genes,
-            names = NULL, #
+            names = NULL,
             main = cmp,
             xlab = "",
             cex.main = 0.80,
