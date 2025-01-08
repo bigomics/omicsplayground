@@ -247,9 +247,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           if (length(gg1) == 1 && is.regx) {
             gg1 <- grep(gg1, genes, ignore.case = TRUE, value = TRUE)
           }
-          if (length(gg1) == 1 && !is.regx) {
-            gg1 <- c(gg1, gg1) ## heatmap does not like single gene
-          }
+          # heatmap does not like single gene
+          shiny::validate(shiny::need(
+            length(gg1) > 1 && !is.regx,
+            tspan("Please input more than 1 gene.", js = FALSE)
+          ))
 
           gg1 <- gg1[toupper(gg1) %in% toupper(genes) | grepl("---", gg1)]
           idx <- NULL
