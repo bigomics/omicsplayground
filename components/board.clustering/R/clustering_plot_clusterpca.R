@@ -101,16 +101,23 @@ clustering_plot_clustpca_server <- function(id,
       df <- cbind(pos, pgx$samples[sel, ])
 
       textvar <- NULL
-      if (colvar %in% colnames(df)) colvar <- factor(df[, colvar])
-      if (shapevar %in% colnames(df)) shapevar <- factor(df[, shapevar])
-      ann.text <- rep(" ", nrow(df))
+      if (colvar %in% colnames(df)) {
+        colvar <- factor(df[, colvar])
+      }
 
+      if (shapevar %in% colnames(df)) {
+        shapevar <- factor(df[, shapevar])
+      }
+
+      ann.text <- rep(" ", nrow(df))
+      
       label.samples <- (label == "<b>Sample</b>")
 
       if (!do3d && label.samples) ann.text <- rownames(df)
       if (!is.null(colvar)) {
         textvar <- factor(colvar)
       }
+
       symbols <- c(
         "circle", "square", "star", "triangle-up", "triangle-down", "pentagon",
         "bowtie", "hexagon", "asterisk", "hash", "cross", "triangle-left",
@@ -123,7 +130,8 @@ clustering_plot_clustpca_server <- function(id,
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
       clrs.length <- length(unique(colvar))
       clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(clrs.length / 8))[1:clrs.length]
-      clrs <- clrs[colvar]
+      ## clrs <- clrs[colvar]
+
       if (do3d) {
         ## 3D plot
         plt <- plotly::plot_ly(df, mode = "markers") %>%
@@ -161,7 +169,6 @@ clustering_plot_clustpca_server <- function(id,
             showarrow = FALSE
           )
         }
-
         if (label == "<none>") {
           plt <- plt %>%
             plotly::layout(showlegend = FALSE)
@@ -262,6 +269,7 @@ clustering_plot_clustpca_server <- function(id,
         if (do3d) m1 <- paste0(m, "3d")
         pos <- pgx$cluster$pos[[m1]]
         pos <- pos[samples, ]
+
         plist[[i]] <- create_plot(
           pgx = pgx,
           pos = pos,
