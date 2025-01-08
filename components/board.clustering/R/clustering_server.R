@@ -178,7 +178,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     })
 
     ## assign to global list of observers. suspend by default.
-    lapply( my_observers, function(b) b$suspend() )
+    # lapply( my_observers, function(b) b$suspend() )
     board_observers[[id]] <- my_observers
     
     ## ===================================================================================

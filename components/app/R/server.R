@@ -166,7 +166,7 @@ app_server <- function(input, output, session) {
     non_actives <- setdiff(names(board_observers), active_board)
     dbg("[MAIN] suspending boards: ", non_actives)
     for (notact in non_actives) {
-      lapply(board_observers[[notact]], function(b) b$suspend())
+      # lapply(board_observers[[notact]], function(b) b$suspend())
     }
   })
 

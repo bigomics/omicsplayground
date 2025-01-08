@@ -105,7 +105,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     ## add to list global of observers. suspend by default.
     my_observers <- my_observers[!sapply(my_observers,is.null)]
-    lapply( my_observers, function(b) b$suspend() )
+    # lapply( my_observers, function(b) b$suspend() )
     board_observers[[id]] <- my_observers
 
     ## =========================================================================
