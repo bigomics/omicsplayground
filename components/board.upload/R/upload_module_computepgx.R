@@ -44,7 +44,7 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-      ## statistical method for GENE level testing
+      ## statistical methods for GENE level testing
       GENETEST.METHODS <- shiny::eventReactive(
       {
         upload_datatype()
@@ -80,14 +80,7 @@ upload_module_computepgx_server <- function(
       }
       )
 
-      ## ## statistical method for GENESET level testing
-      ## GENESET.METHODS <- c(
-      ##    "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
-      ##    "plage","enricher", "gsea.permPH", "gsea.permGS", "gseaPR",
-      ##    "fgsea"
-      ## )
-      ## GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
-      
+      ## statistical methods for GENESET level testing
       GENESET.METHODS <- shiny::eventReactive(
       {
         upload_datatype()
@@ -118,14 +111,57 @@ upload_module_computepgx_server <- function(
       }
       )
                 
-      ## batch correction and extrs methods
-      EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
-      EXTRA.NAMES <- c(
-        "celltype deconvolution", "drugs connectivity",
-        "wordcloud", "experiment similarity", "WGCNA"
+      ## EXTRA METHODS
+      EXTRA.METHODS <- shiny::eventReactive(
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
+        } else {
+          mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+        }
+        return(mm)
+      }
       )
-      EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
 
+      EXTRA.SELECTED <- shiny::eventReactive(
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
+        } else {
+          mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+        }
+        return(mm)
+      }
+      )
+
+      EXTRA.NAMES <- shiny::eventReactive(
+      {
+        upload_datatype()
+      },
+      {
+        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drugs connectivity", "wordcloud", "experiment similarity", "WGCNA")
+        } else {
+          mm <- c("celltype deconvolution", "drugs connectivity", "wordcloud",
+            "experiment similarity", "WGCNA")
+        }
+        return(mm)
+      }
+      )
+      
+      ##EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+      ##EXTRA.NAMES <- c(
+      ##  "celltype deconvolution", "drugs connectivity",
+      ##  "wordcloud", "experiment similarity", "WGCNA"
+      ##)
+      ##EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+             
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
       DEV.METHODS <- c("noLM.prune")
@@ -251,9 +287,9 @@ upload_module_computepgx_server <- function(
                 shiny::checkboxGroupInput(
                   ns("extra_methods"),
                   shiny::HTML("<h4>Extra analysis:</h4>"),
-                  choiceValues = EXTRA.METHODS,
-                  choiceNames = EXTRA.NAMES,
-                  selected = EXTRA.SELECTED
+                  choiceValues = EXTRA.METHODS(),
+                  choiceNames = EXTRA.NAMES(),
+                  selected = EXTRA.SELECTED()
                 ),
                 shiny::checkboxGroupInput(
                   ns("dev_options"),
