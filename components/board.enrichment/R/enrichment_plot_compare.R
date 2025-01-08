@@ -80,6 +80,11 @@ enrichment_plot_compare_server <- function(id,
 
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
+
+          names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
+            x0 = strsplit(x, "_")[[1]]
+            return(x0[length(x0)])
+          }))
           
           playbase::gsea.enplot(
             rnk0,
@@ -108,6 +113,11 @@ enrichment_plot_compare_server <- function(id,
 
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
+
+          names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
+            x0 = strsplit(x, "_")[[1]]
+            return(x0[length(x0)])
+          }))
 
           playbase::gsea.enplot(
             rnk0,
