@@ -17,23 +17,28 @@ MODULE.systems <- list(
     list(
       bigdash::bigTabItem(
         "drug-tab",
-        DrugConnectivityInputs("drug")
+        DrugConnectivityInputs("drug"),
+        create_loader("drug-loader")
       ),
       bigdash::bigTabItem(
-        "wgcna-tab", 
-        WgcnaInputs("wgcna")
+        "wgcna-tab",
+        WgcnaInputs("wgcna"),
+        create_loader("wgcna-loader")
       ),
       bigdash::bigTabItem(
         "tcga-tab",
-        TcgaInputs("tcga") 
+        TcgaInputs("tcga"),
+        create_loader("tcga-loader")
       ),
       bigdash::bigTabItem(
         "cell-tab",
-        SingleCellInputs("cell")
+        SingleCellInputs("cell"),
+        create_loader("cell-loader")
       ),
       bigdash::bigTabItem(
         "pcsf-tab",
-        PcsfInputs("pcsf")
+        PcsfInputs("pcsf"),
+        create_loader("pcsf-loader")
       )
     )
   },

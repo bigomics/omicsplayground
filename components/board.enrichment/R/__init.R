@@ -32,19 +32,31 @@ MODULE.enrichment <- list(
     list(
       bigdash::bigTabItem(
         "enrich-tab",
-        EnrichmentInputs("enrich")
+        tagList(
+          create_loader("enrich-loader"),
+          EnrichmentInputs("enrich")
+        )
       ),
       bigdash::bigTabItem(
         "sig-tab",
-        SignatureInputs("sig")
+        tagList(
+          create_loader("sig-loader"),
+          SignatureInputs("sig")
+        )
       ),
       bigdash::bigTabItem(
         "pathway-tab",
-        PathwayInputs("pathway")
+        tagList(
+          create_loader("pathway-loader"),
+          PathwayInputs("pathway")
+        )
       ),
       bigdash::bigTabItem(
         "wordcloud-tab",
-        WordCloudInputs("wordcloud")
+        tagList(
+          create_loader("wordcloud-loader"),
+          WordCloudInputs("wordcloud")
+        )
       )
     )
   },

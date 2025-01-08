@@ -15,15 +15,18 @@ MODULE.compare <- list(
     list(
       bigdash::bigTabItem(
         "isect-tab",
-        IntersectionInputs("isect")
+        IntersectionInputs("isect"),
+        create_loader("isect-loader")
       ),
       bigdash::bigTabItem(
         "comp-tab",
-        CompareInputs("comp")
+        CompareInputs("comp"),
+        create_loader("comp-loader")
       ),
       bigdash::bigTabItem(
         "cmap-tab",
-        ConnectivityInputs("cmap")
+        ConnectivityInputs("cmap"),
+        create_loader("cmap-loader")
       )
     )
   },

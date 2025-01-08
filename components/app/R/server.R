@@ -262,107 +262,7 @@ app_server <- function(input, output, session) {
           "dataview-tab",
           DataViewInputs("dataview"),
           DataViewUI("dataview")
-        ),
-        # diffexpr = bigdash::bigTabItem(
-        #   "diffexpr-tab",
-        #   ExpressionInputs("diffexpr"),
-        #   ExpressionUI("diffexpr")
-        # ),
-        # enrich = bigdash::bigTabItem(
-        #   "enrich-tab",
-        #   EnrichmentInputs("enrich"),
-        #   EnrichmentUI("enrich")
-        # ),
-        # clustersamples = bigdash::bigTabItem(
-        #   "clustersamples-tab",
-        #   ClusteringInputs("clustersamples"),
-        #   ClusteringUI("clustersamples")
-        # ),
-        # clusterfeatures = bigdash::bigTabItem(
-        #   "clusterfeatures-tab",
-        #   FeatureMapInputs("clusterfeatures"),
-        #   FeatureMapUI("clusterfeatures")
-        # ),
-        wgcna = bigdash::bigTabItem(
-          "wgcna-tab",
-          WgcnaInputs("wgcna"),
-          WgcnaUI("wgcna")
-        ),
-        pcsf = bigdash::bigTabItem(
-          "pcsf-tab",
-          PcsfInputs("pcsf"),
-          PcsfUI("pcsf")
-        ),
-        # corr = bigdash::bigTabItem(
-        #   "corr-tab",
-        #   CorrelationInputs("corr"),
-        #   CorrelationUI("corr")
-        # ),
-        # pathway = bigdash::bigTabItem(
-        #   "pathway-tab",
-        #   PathwayInputs("pathway"),
-        #   PathwayUI("pathway")
-        # ),
-        # wordcloud = bigdash::bigTabItem(
-        #   "wordcloud-tab",
-        #   WordCloudInputs("wordcloud"),
-        #   WordCloudUI("wordcloud")
-        # ),
-        drug = bigdash::bigTabItem(
-          "drug-tab",
-          DrugConnectivityInputs("drug"),
-          DrugConnectivityUI("drug")
-        ),
-        # isect = bigdash::bigTabItem(
-        #   "isect-tab",
-        #   IntersectionInputs("isect"),
-        #   IntersectionUI("isect")
-        # ),
-        # sig = bigdash::bigTabItem(
-        #   "sig-tab",
-        #   SignatureInputs("sig"),
-        #   SignatureUI("sig")
-        # ),
-        # bio = bigdash::bigTabItem(
-        #   "bio-tab",
-        #   BiomarkerInputs("bio"),
-        #   BiomarkerUI("bio")
-        # ),
-        # cmap = bigdash::bigTabItem(
-        #   "cmap-tab",
-        #   ConnectivityInputs("cmap"),
-        #   ConnectivityUI("cmap")
-        # ),
-        # comp = bigdash::bigTabItem(
-        #   "comp-tab",
-        #   CompareInputs("comp"),
-        #   CompareUI("comp")
-        # ),
-        cell = bigdash::bigTabItem(
-          "cell-tab",
-          SingleCellInputs("cell"),
-          SingleCellUI("cell")
-        ),
-        tcga = bigdash::bigTabItem(
-          "tcga-tab",
-          TcgaInputs("tcga"),
-          TcgaUI("tcga")
         )
-        ## mofa = bigdash::bigTabItem(
-        ##   "mofa-tab",
-        ##   MofaInputs("mofa"),
-        ##   MofaUI("mofa")
-        ## ),
-        ## mgsea = bigdash::bigTabItem(
-        ##   "mgsea-tab",
-        ##   MGseaInputs("mgsea"),
-        ##   MGseaUI("mgsea")
-        ## ),
-        ## snf = bigdash::bigTabItem(
-        ##   "snf-tab",
-        ##   SNF_Inputs("snf"),
-        ##   SNF_UI("snf")
-        ## )
       )
 
       insertBigTabUI <- function(ui) {
@@ -443,25 +343,6 @@ app_server <- function(input, output, session) {
             mod <- MODULE.systems
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling SystemsBio module")
-            # info("[SERVER] calling DrugConnectivityBoard module")
-            # # insertBigTabItem("drug")
-            # # DrugConnectivityBoard("drug", PGX, board_observers )
-
-            # info("[SERVER] calling SingleCellBoard module")
-            # # insertBigTabItem("cell")
-            # # SingleCellBoard("cell", pgx = PGX, board_observers)
-
-            # info("[SERVER] calling PcsfBoard module")
-            # # insertBigTabItem("pcsf")
-            # # PcsfBoard("pcsf", pgx = PGX, board_observers)
-
-            # info("[SERVER] calling WgcnaBoard module")
-            # # insertBigTabItem("wgcna")
-            # # WgcnaBoard("wgcna", pgx = PGX, board_observers)
-
-            # info("[SERVER] calling TcgaBoard module")
-            # # insertBigTabItem("tcga")
-            # # TcgaBoard("tcga", pgx = PGX, board_observers)
           }
           shiny::incProgress(0.1)
 
@@ -538,6 +419,8 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2())
+      shinyjs::hide(id = "clustersamples-loader")
+      shinyjs::hide(id = "clusterfeatures-loader")
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
       loaded$clustering <- 1
     }
@@ -545,6 +428,9 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2())
+      shinyjs::hide(id = "diffexpr-loader")
+      shinyjs::hide(id = "corr-loader")
+      shinyjs::hide(id = "bio-loader")
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
       loaded$expression <- 1
     }
@@ -552,6 +438,10 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2())
+      shinyjs::hide(id = "enrich-loader")
+      shinyjs::hide(id = "sig-loader")
+      shinyjs::hide(id = "pathway-loader")
+      shinyjs::hide(id = "wordcloud-loader")
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
     }
@@ -559,6 +449,9 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Compare module")
       mod <- MODULE.compare
       insertBigTabUI2(mod$module_ui2())
+      shinyjs::hide(id = "isect-loader")
+      shinyjs::hide(id = "comp-loader")
+      shinyjs::hide(id = "cmap-loader")
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
       loaded$compare <- 1
     }
@@ -566,6 +459,11 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Systems module") 
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2())
+      shinyjs::hide(id = "drug-loader")
+      shinyjs::hide(id = "wgcna-loader")
+      shinyjs::hide(id = "tcga-loader")
+      shinyjs::hide(id = "cell-loader")
+      shinyjs::hide(id = "pcsf-loader")
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
     }
