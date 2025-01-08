@@ -10,7 +10,6 @@
 #'     DO NOT REMOVE.
 #' @export
 app_server <- function(input, output, session) {
-  
   info("[ui.R] >>> creating SERVER")
   message("\n===========================================================")
   message("======================== SERVER ===========================")
@@ -154,29 +153,29 @@ app_server <- function(input, output, session) {
   ## Call modules
   ## -------------------------------------------------------------
 
-  board_observers = reactiveValues()
-  ##board_observers = list()  
+  board_observers <- reactiveValues()
+  ## board_observers = list()
   observeEvent(input$nav, {
     dbg("[MAIN] react on input.nav = ", input$nav)
     dbg("[MAIN] names(board_observers) = ", names(board_observers))
-    active_board <- sub("-tab","",input$nav)
-    dbg("[MAIN] resuming board: ", active_board)    
-    if(active_board %in% names(board_observers)) {
-      lapply( board_observers[[active_board]], function(b) b$resume() )
+    active_board <- sub("-tab", "", input$nav)
+    dbg("[MAIN] resuming board: ", active_board)
+    if (active_board %in% names(board_observers)) {
+      lapply(board_observers[[active_board]], function(b) b$resume())
     }
     non_actives <- setdiff(names(board_observers), active_board)
     dbg("[MAIN] suspending boards: ", non_actives)
-    for(notact in non_actives) {
-      lapply( board_observers[[notact]], function(b) b$suspend() )
+    for (notact in non_actives) {
+      lapply(board_observers[[notact]], function(b) b$suspend())
     }
   })
-  
+
   ## communication "environment"
-  env <- list() 
+  env <- list()
 
   ## Global reactive value for PGX object
   PGX <- reactiveValues()
- 
+
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
   load_uploaded_data <- reactiveVal(NULL)
@@ -258,33 +257,32 @@ app_server <- function(input, output, session) {
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     if (env$load$is_data_loaded() == 1) {
-      
       additional_ui_tabs <- list(
         dataview = bigdash::bigTabItem(
           "dataview-tab",
           DataViewInputs("dataview"),
           DataViewUI("dataview")
         ),
-        diffexpr = bigdash::bigTabItem(
-          "diffexpr-tab",
-          ExpressionInputs("diffexpr"),
-          ExpressionUI("diffexpr")
-        ),
-        enrich = bigdash::bigTabItem(
-          "enrich-tab",
-          EnrichmentInputs("enrich"),
-          EnrichmentUI("enrich")
-        ),
-        clustersamples = bigdash::bigTabItem(
-          "clustersamples-tab",
-          ClusteringInputs("clustersamples"),
-          ClusteringUI("clustersamples")
-        ),
-        clusterfeatures = bigdash::bigTabItem(
-          "clusterfeatures-tab",
-          FeatureMapInputs("clusterfeatures"),
-          FeatureMapUI("clusterfeatures")
-        ),
+        # diffexpr = bigdash::bigTabItem(
+        #   "diffexpr-tab",
+        #   ExpressionInputs("diffexpr"),
+        #   ExpressionUI("diffexpr")
+        # ),
+        # enrich = bigdash::bigTabItem(
+        #   "enrich-tab",
+        #   EnrichmentInputs("enrich"),
+        #   EnrichmentUI("enrich")
+        # ),
+        # clustersamples = bigdash::bigTabItem(
+        #   "clustersamples-tab",
+        #   ClusteringInputs("clustersamples"),
+        #   ClusteringUI("clustersamples")
+        # ),
+        # clusterfeatures = bigdash::bigTabItem(
+        #   "clusterfeatures-tab",
+        #   FeatureMapInputs("clusterfeatures"),
+        #   FeatureMapUI("clusterfeatures")
+        # ),
         wgcna = bigdash::bigTabItem(
           "wgcna-tab",
           WgcnaInputs("wgcna"),
@@ -295,51 +293,51 @@ app_server <- function(input, output, session) {
           PcsfInputs("pcsf"),
           PcsfUI("pcsf")
         ),
-        corr = bigdash::bigTabItem(
-          "corr-tab",
-          CorrelationInputs("corr"),
-          CorrelationUI("corr")
-        ),
-        pathway = bigdash::bigTabItem(
-          "pathway-tab",
-          PathwayInputs("pathway"),
-          PathwayUI("pathway")
-        ),
-        wordcloud = bigdash::bigTabItem(
-          "wordcloud-tab",
-          WordCloudInputs("wordcloud"),
-          WordCloudUI("wordcloud")
-        ),
+        # corr = bigdash::bigTabItem(
+        #   "corr-tab",
+        #   CorrelationInputs("corr"),
+        #   CorrelationUI("corr")
+        # ),
+        # pathway = bigdash::bigTabItem(
+        #   "pathway-tab",
+        #   PathwayInputs("pathway"),
+        #   PathwayUI("pathway")
+        # ),
+        # wordcloud = bigdash::bigTabItem(
+        #   "wordcloud-tab",
+        #   WordCloudInputs("wordcloud"),
+        #   WordCloudUI("wordcloud")
+        # ),
         drug = bigdash::bigTabItem(
           "drug-tab",
           DrugConnectivityInputs("drug"),
           DrugConnectivityUI("drug")
         ),
-        isect = bigdash::bigTabItem(
-          "isect-tab",
-          IntersectionInputs("isect"),
-          IntersectionUI("isect")
-        ),
-        sig = bigdash::bigTabItem(
-          "sig-tab",
-          SignatureInputs("sig"),
-          SignatureUI("sig")
-        ),
-        bio = bigdash::bigTabItem(
-          "bio-tab",
-          BiomarkerInputs("bio"),
-          BiomarkerUI("bio")
-        ),
-        cmap = bigdash::bigTabItem(
-          "cmap-tab",
-          ConnectivityInputs("cmap"),
-          ConnectivityUI("cmap")
-        ),
-        comp = bigdash::bigTabItem(
-          "comp-tab",
-          CompareInputs("comp"),
-          CompareUI("comp")
-        ),
+        # isect = bigdash::bigTabItem(
+        #   "isect-tab",
+        #   IntersectionInputs("isect"),
+        #   IntersectionUI("isect")
+        # ),
+        # sig = bigdash::bigTabItem(
+        #   "sig-tab",
+        #   SignatureInputs("sig"),
+        #   SignatureUI("sig")
+        # ),
+        # bio = bigdash::bigTabItem(
+        #   "bio-tab",
+        #   BiomarkerInputs("bio"),
+        #   BiomarkerUI("bio")
+        # ),
+        # cmap = bigdash::bigTabItem(
+        #   "cmap-tab",
+        #   ConnectivityInputs("cmap"),
+        #   ConnectivityUI("cmap")
+        # ),
+        # comp = bigdash::bigTabItem(
+        #   "comp-tab",
+        #   CompareInputs("comp"),
+        #   CompareUI("comp")
+        # ),
         cell = bigdash::bigTabItem(
           "cell-tab",
           SingleCellInputs("cell"),
@@ -354,22 +352,22 @@ app_server <- function(input, output, session) {
         ##   "mofa-tab",
         ##   MofaInputs("mofa"),
         ##   MofaUI("mofa")
-        ## ),        
+        ## ),
         ## mgsea = bigdash::bigTabItem(
         ##   "mgsea-tab",
         ##   MGseaInputs("mgsea"),
         ##   MGseaUI("mgsea")
-        ## ),        
+        ## ),
         ## snf = bigdash::bigTabItem(
         ##   "snf-tab",
         ##   SNF_Inputs("snf"),
         ##   SNF_UI("snf")
-        ## )        
+        ## )
       )
 
       insertBigTabUI <- function(ui) {
-        ##if( inherits(class(ui),"list")) ui <- list(ui)
-        for(i in 1:length(ui)) {
+        ## if( inherits(class(ui),"list")) ui <- list(ui)
+        for (i in 1:length(ui)) {
           shiny::insertUI(
             selector = "#big-tabs",
             where = "beforeEnd",
@@ -379,7 +377,7 @@ app_server <- function(input, output, session) {
         }
       }
       insertBigTabItem <- function(tab) {
-        insertBigTabUI( additional_ui_tabs[tab] ) 
+        insertBigTabUI(additional_ui_tabs[tab])
       }
 
       shiny::withProgress(
@@ -388,144 +386,92 @@ app_server <- function(input, output, session) {
         {
           if (MODULES_ENABLED["DataView"]) {
             info("[SERVER] calling DataView module")
+            beginning <- Sys.time()
             insertBigTabItem("dataview")
-            DataViewBoard("dataview", pgx = PGX, labeltype = labeltype,
-                          board_observers = board_observers)
-          }
-          shiny::incProgress(0.1)
-
-          if(MODULES_ENABLED['Clustering']) {
-            info("[SERVER] calling ClusteringBoard module")
-            insertBigTabItem("clustersamples")
-            ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype,
-                            board_observers = board_observers)                            
-
-            info("[SERVER] calling FeatureMapBoard module")
-            insertBigTabItem("clusterfeatures")
-            FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype,
-                            board_observers = board_observers)
-          }
-          shiny::incProgress(0.1)
-          
-          if(MODULES_ENABLED['Expression']) {
-            
-            info("[SERVER] calling ExpressionBoard module")
-            insertBigTabItem("diffexpr")
-            ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype,
-                            board_observers = board_observers ) -> env$diffexpr
-            
-            info("[SERVER] calling CorrelationBoard module")
-            insertBigTabItem("corr")
-            CorrelationBoard("corr", pgx = PGX, labeltype = labeltype,
-                             board_observers = board_observers )
-            
-            info("[SERVER] calling BiomarkerBoard module")
-            insertBigTabItem("bio")
-            BiomarkerBoard(
-              "bio",
-              pgx = PGX,
+            end <- Sys.time()
+            print(end - beginning)
+            beginning <- Sys.time()
+            DataViewBoard("dataview",
+              pgx = PGX, labeltype = labeltype,
               board_observers = board_observers
             )
-
+            end <- Sys.time()
+            print(end - beginning)
           }
           shiny::incProgress(0.1)
-          
-          if(MODULES_ENABLED['GeneSets']) {
-            
+
+          if (MODULES_ENABLED["Clustering"]) {
+            mod <- MODULE.clustering
+            insertBigTabUI(mod$module_ui())
+            info("[UI:1] calling Clustering module")
+          }
+          shiny::incProgress(0.1)
+
+          if (MODULES_ENABLED["Expression"]) {
+            mod <- MODULE.expression
+            insertBigTabUI(mod$module_ui())
+            info("[UI:1] calling Expression module")
+            info("[SERVER] calling DiffExprBoard module")
+            ExpressionBoard("diffexpr",
+              pgx = PGX, labeltype = labeltype,
+              board_observers = board_observers
+            ) ->> env$diffexpr
+          }
+          shiny::incProgress(0.1)
+
+          if (MODULES_ENABLED["GeneSets"]) {
+            mod <- MODULE.enrichment
+            insertBigTabUI(mod$module_ui())
+            info("[UI:1] calling GeneSets module")
             info("[SERVER] calling EnrichmentBoard module")
-            insertBigTabItem("enrich")
             EnrichmentBoard("enrich",
               pgx = PGX,
               selected_gxmethods = env$diffexpr$selected_gxmethods,
               board_observers = board_observers
-            ) -> env$enrich
-            
-            info("[SERVER] calling SignatureBoard module")
-            insertBigTabItem("sig")
-            SignatureBoard("sig",
-              pgx = PGX,
-              selected_gxmethods = env$diffexpr$selected_gxmethods,
-              board_observers = board_observers              
-            )
-
-            info("[SERVER] calling PathwayBoard module")
-            insertBigTabItem("pathway")
-            PathwayBoard("pathway",
-              pgx = PGX,
-              selected_gsetmethods = env$enrich$selected_gsetmethods,
-              board_observers = board_observers
-            )
-          
-            info("[SERVER] calling WordCloudBoard module")
-            insertBigTabItem("wordcloud")
-            WordCloudBoard("wordcloud", pgx = PGX)
+            ) ->> env$enrich
           }
           shiny::incProgress(0.1)
 
-          if(MODULES_ENABLED['Compare']) {
-
-            info("[SERVER] calling IntersectionBoard module")
-            insertBigTabItem("isect")
-            IntersectionBoard("isect",
-              pgx = PGX,
-              selected_gxmethods = env$diffexpr$selected_gxmethods,
-              selected_gsetmethods = env$enrich$selected_gsetmethods,
-              board_observers = board_observers              
-            )
-
-            info("[SERVER] calling CompareBoard module")
-            insertBigTabItem("comp")
-            CompareBoard(
-              "comp",
-              pgx = PGX,
-              pgx_dir = reactive(auth$user_dir),
-              labeltype = labeltype,
-              board_observers = board_observers
-            )
-
-            info("[SERVER] calling ConnectivityBoard module")
-            insertBigTabItem("cmap")
-            ConnectivityBoard("cmap",
-              pgx = PGX,
-              auth = auth,
-              reload_pgxdir = reload_pgxdir,
-              board_observers = board_observers
-            )
+          if (MODULES_ENABLED["Compare"]) {
+            mod <- MODULE.compare
+            insertBigTabUI(mod$module_ui())
+            info("[UI:1] calling Compare module")
           }
           shiny::incProgress(0.1)
 
           if (MODULES_ENABLED["SystemsBio"]) {
-            
-            info("[SERVER] calling DrugConnectivityBoard module")
-            insertBigTabItem("drug")
-            DrugConnectivityBoard("drug", PGX, board_observers )
-            
-            info("[SERVER] calling SingleCellBoard module")
-            insertBigTabItem("cell")
-            SingleCellBoard("cell", pgx = PGX, board_observers)
+            mod <- MODULE.systems
+            insertBigTabUI(mod$module_ui())
+            info("[UI:1] calling SystemsBio module")
+            # info("[SERVER] calling DrugConnectivityBoard module")
+            # # insertBigTabItem("drug")
+            # # DrugConnectivityBoard("drug", PGX, board_observers )
 
-            info("[SERVER] calling PcsfBoard module")
-            insertBigTabItem("pcsf")
-            PcsfBoard("pcsf", pgx = PGX, board_observers)
+            # info("[SERVER] calling SingleCellBoard module")
+            # # insertBigTabItem("cell")
+            # # SingleCellBoard("cell", pgx = PGX, board_observers)
 
-            info("[SERVER] calling WgcnaBoard module")
-            insertBigTabItem("wgcna")
-            WgcnaBoard("wgcna", pgx = PGX, board_observers)
+            # info("[SERVER] calling PcsfBoard module")
+            # # insertBigTabItem("pcsf")
+            # # PcsfBoard("pcsf", pgx = PGX, board_observers)
 
-            info("[SERVER] calling TcgaBoard module")
-            insertBigTabItem("tcga")
-            TcgaBoard("tcga", pgx = PGX, board_observers)
+            # info("[SERVER] calling WgcnaBoard module")
+            # # insertBigTabItem("wgcna")
+            # # WgcnaBoard("wgcna", pgx = PGX, board_observers)
 
+            # info("[SERVER] calling TcgaBoard module")
+            # # insertBigTabItem("tcga")
+            # # TcgaBoard("tcga", pgx = PGX, board_observers)
           }
           shiny::incProgress(0.1)
-          
+
           if (MODULES_ENABLED["MultiOmics"] && exists("MODULE.multiomics")) {
             info("[SERVER] initializing MultiOmics module")
             mod <- MODULE.multiomics
-            insertBigTabUI( mod$module_ui() ) 
-            mod$module_server(PGX, board_observers)
+            insertBigTabUI(mod$module_ui())
+            # mod$module_server(PGX, board_observers)
           }
-          
+
           info("[SERVER] calling modules done!")
         }
       )
@@ -536,14 +482,14 @@ app_server <- function(input, output, session) {
       # make the settings sidebar show up for the inserted tabs
       shinyjs::runjs(
         "  $('.big-tab')
-    .each((index, el) => {
-      let settings = $(el)
-        .find('.tab-settings')
-        .first();
+          .each((index, el) => {
+            let settings = $(el)
+              .find('.tab-settings')
+              .first();
 
-      $(settings).data('target', $(el).data('name'));
-      $(settings).appendTo('#settings-content');
-    });"
+            $(settings).data('target', $(el).data('name'));
+            $(settings).appendTo('#settings-content');
+          });"
       )
     }
 
@@ -555,6 +501,76 @@ app_server <- function(input, output, session) {
 
     bigdash.showTabsGoToDataView(session)
   })
+
+  insertBigTabUI2 <- function(ui) {
+    for (i in 1:length(ui)) {
+      for (j in 2:length(ui[[i]])) {
+        shiny::insertUI(
+          selector = paste0("div.big-tab[data-name='", ui[[i]][[1]], "']"),
+          where = "beforeEnd",
+          ui = ui[[i]][[j]],
+          immediate = TRUE
+        )
+      }
+    }
+    shinyjs::runjs(
+      "  $('.big-tab')
+    .each((index, el) => {
+      let settings = $(el)
+        .find('.tab-settings')
+        .first();
+
+      $(settings).data('target', $(el).data('name'));
+      $(settings).appendTo('#settings-content');
+    });"
+    )
+    bigdash.openSettings()
+  }
+  loaded <- shiny::reactiveValues(
+    clustering = 0,
+    expression = 0,
+    enrichment = 0,
+    compare = 0,
+    systems = 0
+  )
+  observeEvent(input$nav, {
+    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
+      info("[UI:SERVER] reacted: calling Clustering module")
+      mod <- MODULE.clustering
+      insertBigTabUI2(mod$module_ui2())
+      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
+      loaded$clustering <- 1
+    }
+    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab") && loaded$expression == 0) {
+      info("[UI:SERVER] reacted: calling Clustering module")
+      mod <- MODULE.expression
+      insertBigTabUI2(mod$module_ui2())
+      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
+      loaded$expression <- 1
+    }
+    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
+      info("[UI:SERVER] reacted: calling Enrichment module")
+      mod <- MODULE.enrichment
+      insertBigTabUI2(mod$module_ui2())
+      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
+      loaded$enrichment <- 1
+    }
+    if (input$nav %in% c("isect-tab", "comp-tab", "cmap-tab") && loaded$compare == 0) {
+      info("[UI:SERVER] reacted: calling Compare module")
+      mod <- MODULE.compare
+      insertBigTabUI2(mod$module_ui2())
+      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
+      loaded$compare <- 1
+    }
+    if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
+      info("[UI:SERVER] reacted: calling Systems module") 
+      mod <- MODULE.systems
+      insertBigTabUI2(mod$module_ui2())
+      mod$module_server(PGX, board_observers = NULL)
+      loaded$systems <- 1
+    }
+  })
+
 
 
   ## --------------------------------------------------------------------------
@@ -716,8 +732,8 @@ app_server <- function(input, output, session) {
       bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
       toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
       toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-      
-      
+
+
       ## Dynamically show upon availability in pgx object
       info("[SERVER] disabling extra features")
       tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
