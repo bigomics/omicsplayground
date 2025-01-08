@@ -3,30 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_plot_factortrait_ui <- function(
+plot_deepnet_lossplot_ui <- function(
     id,
     title = "",
     info.text = "",
     caption = "",
     label = "",
-    height = 400,
-    width = 400) {
+    height = c("100%", TABLE_HEIGHT_MODAL),
+    width = c("auto", "100%"))
+{
   ns <- shiny::NS(id)
-
-  options <- shiny::tagList(
-    shiny::checkboxInput(
-      inputId = ns("cluster"),
-      label = "Cluster heatmap",
-      value = TRUE
-    )
-  )
   
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
     info.text = info.text,
-    options = options,
     caption = caption,
     height = height,
     width = width,
@@ -34,34 +26,29 @@ mofa_plot_factortrait_ui <- function(
   )
 }
 
-mofa_plot_factortrait_server <- function(id,
-                                         mofa,
+plot_deepnet_lossplot_server <- function(id,
+                                         net,
+                                         update,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
-    plot.RENDER <- function() {
-      shiny::req(mofa())
 
-      par(mar=c(7.5,5,2,1))    
-      playbase::mofa.plot_factor_trait(
-        mofa(),
-        main = NULL,
-        par = FALSE,
-        cluster = input$cluster,
-        type = "wgcna",
-        cex.lab=0.85,
-        cex_text = NULL )       
+    plot.RENDER <- function() {
+      update()  ## react on updates
+      net <- net()
+      dbg("[deepnet_aescatter_server] triggered...")
+      n <- length(net$loss_history)
+      shiny::validate(shiny::need(n>0, "please run network"))
+
+      par(mfrow=c(1,1), mar=c(4,4,2,1))
+      net$plot_loss()
     }
 
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      pdf.width = 8,
-      pdf.height = 8,
-      res = c(70, 110),
+      pdf.width = 10, pdf.height = 10,
+      res = c(75, 100),
       add.watermark = watermark
     )
-
-    
   })
 }

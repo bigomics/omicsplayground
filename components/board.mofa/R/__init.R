@@ -9,7 +9,8 @@ MODULE.multiomics <- list(
       mofa = "MOFA",
       mgsea = "multiGSEA",
       snf = "SNF",
-      lasagna = "Lasagna"          
+      lasagna = "Lasagna",
+      deepnet = "DeepLearning"                
     )
   },
   
@@ -25,6 +26,9 @@ MODULE.multiomics <- list(
 
     info("[SERVER] calling LasagnaBoard module")
     LasagnaBoard("lasagna", pgx = PGX)
+
+    info("[SERVER] calling DeepNetBoard module")
+    DeepNetBoard("deepnet", pgx = PGX)
   },
 
   module_ui = function() {
@@ -48,6 +52,11 @@ MODULE.multiomics <- list(
         "lasagna-tab",
         LasagnaInputs("lasagna"),
         LasagnaUI("lasagna")
+      ),
+      bigdash::bigTabItem(
+        "deepnet-tab",
+        DeepNetInputs("deepnet"),
+        DeepNetUI("deepnet")
       )        
     )
   },    

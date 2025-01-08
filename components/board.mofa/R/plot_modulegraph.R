@@ -61,8 +61,8 @@ mofa_plot_modulegraph_server <- function(id,
       vis <- playbase::mofa.plot_module(
         gr, mst = input$mst,
         rm.single = input$rm_singles,
-        nlabel = 100,
-        cex = 0.33,
+        nlabel = 999,
+        cex = 0.5,
         plotlib = "visnet")
       
       vis <- vis %>%
@@ -70,7 +70,7 @@ mofa_plot_modulegraph_server <- function(id,
           barnesHut = list(
             gravitationalConstant = -1000,
             centralGravity = 0.3,
-            springLength = 15
+            springLength = 18
           )
         )
 

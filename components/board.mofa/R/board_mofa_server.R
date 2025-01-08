@@ -41,7 +41,6 @@ MofaBoard <- function(id, pgx) {
         pgx$mofa
       ), {
         shiny::req(pgx$X)
-        dbg("[MofaBoard] *** eventReactive triggered ***")
 
         mofa <- NULL
         has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
@@ -51,9 +50,6 @@ MofaBoard <- function(id, pgx) {
 #          shinyalert::shinyalert("Warning","No MOFA slot in object. Please recompute MOFA.")
 #          return(NULL)
 #        }
-
-        dbg("[MofaBoard] *** using precomputed MOFA results ***")
-        dbg("[MofaBoard] names(input) = ", names(input))
         
         mofa <- pgx$mofa
         
@@ -68,8 +64,6 @@ MofaBoard <- function(id, pgx) {
         updateSelectInput(session, "show_types", choices = dtypes,
           selected = sel.dtypes)
 
-        dbg("[MofaBoard]  names(mofa) = ", names(mofa))
-        dbg("[MofaBoard] eventReactive done!")
         return( mofa )
       }
     )
@@ -81,12 +75,9 @@ MofaBoard <- function(id, pgx) {
 
       shiny::req(pgx$X, input$kernel, input$numfactors)
 
-      dbg("[mofa] input$compute =  ",input$compute)
       if(input$compute==0) return(NULL)
       
       kernel <- input$kernel
-      dbg("[mofa] kernel =  ",kernel,"...")      
-
       pgx.showSmallModal(paste("Calculating",kernel,"...<br>please wait"))
       progress <- shiny::Progress$new()
       on.exit(progress$close())
@@ -94,7 +85,6 @@ MofaBoard <- function(id, pgx) {
       
       numfactors <- as.integer(input$numfactors)
       numfactors <- min( numfactors, min(dim(pgx$X)) )        
-      dbg("[MofaBoard] numfactors = ", numfactors)      
 
       dbg("[MofaBoard] *** recalculating MOFA ***")
       mofa <- playbase::pgx.compute_mofa(

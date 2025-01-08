@@ -24,7 +24,7 @@ MofaInputs <- function(id) {
         shiny::selectInput(
           ns("kernel"), "Kernel",
           choices = c("MOFA","PCA","DIABLO","MCIA","wmfcna"),
-          selected = "PCA"                 
+          selected = "MOFA"                 
         ),
         shiny::selectInput(ns("numfactors"), "Number of factors",
           choices = c(3,5,10,15,25),
@@ -207,14 +207,14 @@ MofaUI <- function(id) {
             ),
             mofa_plot_modulegraph_ui(
               ns("modulegraph"),
-              title = "Features graph",
+              title = "Factor feature graph",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),              
             mofa_plot_centrality_ui(
               ns("centrality"),
-              title = "Feature importance",
+              title = "Centrality vs. logFC",
               info.text = "...",
               caption = "Module heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
