@@ -36,30 +36,35 @@ WgcnaBoard <- function(id, pgx) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
           me <- names(pgx$wgcna$me.genes)
           shiny::updateSelectInput(session, "selected_module", choices = me, selected = "ME1")
+
+          ## old style had these settings
+          if(is.null(pgx$wgcna$networktype)) pgx$wgcna$networktype <- "unsigned"
+          if(is.null(pgx$wgcna$tomtype)) pgx$wgcna$tomtype <- "signed"
+          if(is.null(pgx$wgcna$power)) pgx$wgcna$power <- 6
+          
           return(pgx$wgcna)
         }
 
-        pgx.showSmallModal("Calculating WGCNA using new parameters...<br>please wait")
+        pgx.showSmallModal("Calculating WGCNA using new parameters...")
         progress <- shiny::Progress$new()
         on.exit(progress$close())
         progress$set(message = "Calculating WGCNA...", value = 0)
         message("[wgcna.compute] >>> Calculating WGCNA...")
-
-        WGCNA::enableWGCNAThreads()
-
+        
         out <- playbase::pgx.wgcna(
           pgx = pgx,
           ngenes = as.integer(input$ngenes),
           minmodsize = as.integer(input$minmodsize),
           power = as.numeric(input$power),
-          cutheight = as.numeric(input$cutheight),
-          deepsplit = as.integer(input$deepsplit)
+          deepsplit = as.integer(input$deepsplit),
+          networktype = input$networktype,
+          tomtype = input$tomtype
         )
 
         me <- names(out$me.genes)
         shiny::updateSelectInput(session, "selected_module", choices = me, sel = "ME1")
 
-        beepr::beep(2)
+        ##beepr::beep(2)
         shiny::removeModal()
 
         out
@@ -68,7 +73,7 @@ WgcnaBoard <- function(id, pgx) {
 
 
     ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
+    ## ========================== OBSERVE FUNCTIONS ===================================
     ## ================================================================================
 
     infotext <-
@@ -122,7 +127,9 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_gdendogram_server(
       "geneDendro",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
+      power = shiny::reactive(input$power),
+      networktype = shiny::reactive(input$networktype),
+      tomtype = shiny::reactive(input$tomtype),            
       watermark = WATERMARK
     )
 
@@ -135,12 +142,13 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # TOM heatmap
-
+    
     wgcna_plot_TOMheatmap_server(
       "TOMplot",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
       power = shiny::reactive(input$power),
+      networktype = shiny::reactive(input$networktype),
+      tomtype = shiny::reactive(input$tomtype),            
       watermark = WATERMARK
     )
 
@@ -166,7 +174,6 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_MTrelationships_server(
       "moduleTrait",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 

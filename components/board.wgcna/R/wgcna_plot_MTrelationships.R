@@ -32,7 +32,6 @@ wgcna_plot_MTrelationships_ui <- function(
 
 wgcna_plot_MTrelationships_server <- function(id,
                                               wgcna.compute,
-                                              labels2rainbow,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     moduleTrait.RENDER <- function() {
@@ -40,7 +39,7 @@ wgcna_plot_MTrelationships_server <- function(id,
       net <- out$net
       datExpr <- out$datExpr
       datTraits <- out$datTraits
-      moduleColors <- labels2rainbow(out$net)
+      moduleColors <- playbase::labels2rainbow(out$net)
       MEs <- out$net$MEs
 
       ## Define numbers of genes and samples
@@ -68,12 +67,10 @@ wgcna_plot_MTrelationships_server <- function(id,
       sel2 <- sort(head(order(-colMeans(pmax(moduleTraitCor, 0), na.rm = TRUE)), 40)) ## conditions
       sel1 <- sort(head(order(-rowMeans(pmax(moduleTraitCor[, sel2], 0), na.rm = TRUE)), 12)) ## eigenv
 
-      message("[moduleTrait.RENDER] sel1 = ", paste(sel1, collapse = " "))
-      message("[moduleTrait.RENDER] sel2 = ", paste(sel2, collapse = " "))
 
       par(mar = c(3, 12, 1.6, 1.5))
       ## Display the correlation values within a heatmap plot
-      labeledHeatmap(
+      WGCNA::labeledHeatmap(
         Matrix = t(moduleTraitCor[sel1, sel2]),
         yLabels = colnames(out$datTraits)[sel2],
         xLabels = colnames(MEs)[sel1],
