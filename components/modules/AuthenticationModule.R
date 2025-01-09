@@ -1228,18 +1228,24 @@ LoginCodeAuthenticationModule <- function(id,
 
 
 EmailEncryptedAuthenticationModule <- function(
-  id = "auth",
-  show_modal = TRUE,
-  # TODO add argument for location of crypto key (probably on ETC)
-  domain = opt$DOMAIN) {
+    id = "auth",
+    show_modal = TRUE,
+    skip_modal = FALSE,
+    # TODO add argument for location of crypto key (probably on ETC)
+    domain = opt$DOMAIN) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using EmailEncrypted authentication <<<<")
     ns <- session$ns
 
     # Get encryption key
-    encryption_key <- tryCatch({
-      readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
-    }, error = function(w){NULL})
+    encryption_key <- tryCatch(
+      {
+        readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+      },
+      error = function(w) {
+        NULL
+      }
+    )
     if (is.null(encryption_key)) {
       ## we continue without decryption, just to test, unsafe
       warning("[EmailEncryptedAuthenticationModule] ERROR : missing encryption_key file!!!")
