@@ -258,7 +258,23 @@ upload_module_computepgx_server <- function(
                     ),
                   selected = PROBE_FILTER_SELECTED
                 )
-              ),
+              ),              
+              if (upload_datatype() == "scRNA-seq") {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("compute_supercells"),
+                    shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Compute supercells:</h4>
+                      <a href='https://cran.r-project.org/web/packages/SuperCell/index.html' target='_blank' class='info-link' style='margin-left: 15px;'>
+                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>
+                    </div>
+                    "),
+                    choices = c("Compute supercells")
+                  )
+                )
+              },
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
@@ -278,7 +294,6 @@ upload_module_computepgx_server <- function(
                       </a>
                     </div>
                   "),
-                  # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
