@@ -16,7 +16,6 @@ upload_module_computepgx_server <- function(
     norm_method,
     samplesRT,
     azimuth_ref, ## NEW AZ
-    ## sc_pheno, ## NEW AZ
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -664,9 +663,13 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
+        ##------scRNA-seq options: added into a list.
+        ## azimuth_ref <- to add
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
         mt_threshold <- sc_compute_settings()$mt_threshold
         hb_threshold <- sc_compute_settings()$hb_threshold
+        compute_supercells <- input$compute_supercells
+        ##--------
         
         ## Define create_pgx function arguments
         params <- list(
@@ -687,8 +690,9 @@ upload_module_computepgx_server <- function(
           sc_compute_settings = list(
             nfeature_threshold = nfeature_threshold,
             mt_threshold = mt_threshold,
-            hb_threshold = hb_threshold
-          ),          
+            hb_threshold = hb_threshold,
+            compute_supercells = compute_supercells ## NEW AZ
+          ),
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
@@ -724,7 +728,7 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
-
+        
         # Remove global variables
         try(rm(annot_table))
         try(rm(custom_geneset))

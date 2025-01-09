@@ -575,7 +575,6 @@ upload_module_normalizationSC_server <- function(id,
         X = X,
         impX = shiny::reactive(NULL),
         azimuth_ref = shiny::reactive(azimuth_ref()),
-        ## sc_pheno = shiny::reactive(sc_pheno()),
         nfeature_threshold = shiny::reactive(nfeat_thr()),
         mt_threshold = shiny::reactive(mt_thr()),
         hb_threshold = shiny::reactive(hb_thr()),
@@ -588,8 +587,6 @@ upload_module_normalizationSC_server <- function(id,
   )
 }
 
-
-##--------------ADD COMPUTATION OPTION. WE DO METACELL IF NCOL(X)>10K.
 ##--------------TEST ON MORE DATASETS.
 ##--------------Fix Correlation analysis > Correlation > Scatterplot (not showing up)
 ##--------------Fix Correlation analysis > Graph
