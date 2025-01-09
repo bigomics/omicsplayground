@@ -446,36 +446,6 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      ##----------------------- NEW AZ
-      ##-----------------------
-      ## shiny::observeEvent(list(metaRT(), sc_compute_settings), {
-      ##   meta <- metaRT()
-      ##   pgx_info <- sc_compute_settings
-      ##   if (is.null(meta) && is.null(pgx_info)) {
-      ##     return(NULL)
-      ##   }
-      ##   if (!is.null(pgx_info) && length(pgx_info) > 0) {
-      ##     meta <- pgx_info
-      ##   }
-      ##   ## If the user recomputes, recycle old names/description
-      ##   if (!is.null(meta$name)) {
-      ##     shiny::updateTextInput(
-      ##       session,
-      ##       "selected_name",
-      ##       value = gsub(".pgx$", "", meta$name)
-      ##     )
-      ##   }
-      ##   if (!is.null(meta$description)) {
-      ##     shiny::updateTextAreaInput(
-      ##       session,
-      ##       "selected_description",
-      ##       value = meta$description
-      ##     )
-      ##   }
-      ## })
-      ##----------------------- NEW AZ
-      ##-----------------------
-
       # Input name and description
       shiny::observeEvent(list(metaRT(), recompute_info()), {
         meta <- metaRT()
@@ -706,7 +676,6 @@ upload_module_computepgx_server <- function(
           countsX = countsX,
           impX = impX,
           azimuth_ref = azimuth_ref(), ## NEW AZ
-          ## sc_pheno = sc_pheno(), ## NEW AZ
           contrasts = contrasts,
           probe_type = probetype(),
           # Extra tables
