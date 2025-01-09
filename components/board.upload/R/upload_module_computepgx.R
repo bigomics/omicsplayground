@@ -265,14 +265,16 @@ upload_module_computepgx_server <- function(
                     ns("compute_supercells"),
                     shiny::HTML("
                     <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
-                      <h4>Compute supercells:</h4>
+                      <h4>Supercells:</h4>
                       <a href='https://cran.r-project.org/web/packages/SuperCell/index.html' target='_blank' class='info-link' style='margin-left: 15px;'>
                         <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>
                     </div>
                     "),
-                    choices = c("Compute supercells")
-                  )
+                    choices = c("Compute supercells*"),
+                    selected = NULL
+                  ),
+                  shiny::HTML("<small>*Supercells will be always computed for datasets with > 10K cells. </small>")
                 )
               },
               bslib::card(
@@ -713,15 +715,11 @@ upload_module_computepgx_server <- function(
           # Options
           batch.correct = FALSE,
           norm_method = norm_method(),
-
-          ##-----------NEW AZ
           sc_compute_settings = list(
             nfeature_threshold = nfeature_threshold,
             mt_threshold = mt_threshold,
             hb_threshold = hb_threshold
-          ),
-          ##-----------NEW AZ
-          
+          ),          
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
