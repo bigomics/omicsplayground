@@ -653,9 +653,7 @@ upload_module_computepgx_server <- function(
 
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
-        if (is.null(raw_dir())) {
-          raw_dir(create_raw_dir(auth))
-        }
+        if (is.null(raw_dir())) { raw_dir(create_raw_dir(auth)) }
 
         dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
