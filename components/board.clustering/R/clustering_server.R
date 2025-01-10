@@ -28,7 +28,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     ## ===================================================================================
 
     my_observers <- list()
-    
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Heatmap" = list(
@@ -44,7 +44,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         disable = c("selected_phenotypes", "hm_clustmethod", "pheno_bar")
       )
     )
-    
+
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
@@ -58,7 +58,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       ))
     })
 
-    my_observers[[1]] <- shiny::observeEvent( pgx$Y, {
+    my_observers[[1]] <- shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
       var.types <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
@@ -171,7 +171,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     )
 
     ## update filter choices upon change of data set
-##    my_observers[[5]] <-
+    ##    my_observers[[5]] <-
     shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
@@ -179,8 +179,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     ## assign to global list of observers. suspend by default.
     # lapply( my_observers, function(b) b$suspend() )
+    browser()
     board_observers[[id]] <- my_observers
-    
+
     ## ===================================================================================
     ## ============================= REACTIVES ===========================================
     ## ===================================================================================

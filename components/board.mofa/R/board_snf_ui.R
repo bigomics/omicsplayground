@@ -12,9 +12,9 @@ SNF_Inputs <- function(id) {
     shiny::selectInput(ns("selected_pheno"), "Select phenotype", choices = NULL),
     shiny::br(),
     shiny::br(),
-    shiny::br(),    
+    shiny::br(),
     shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
+    shiny::br(),
     shiny::conditionalPanel(
       "input.options % 2 == 1",
       ns = ns,
@@ -44,7 +44,7 @@ SNF_UI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "SNF Clustering",
         bslib::layout_columns(
@@ -52,10 +52,10 @@ SNF_UI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>Similarity Network Fusion</b> (SNF) is a network-based method for multi-omics integration by taking multiple views of a network and fusing them together to construct an overall status matrix (Wang et al., 2014).")),
           bslib::layout_columns(
-            ##col_widths = c(6,6),
-            col_widths = breakpoints(
+            ## col_widths = c(6,6),
+            col_widths = bslib::breakpoints(
               xxxl = c(5, 4, 3),
-              xl = c(5, 4, 3),              
+              xl = c(5, 4, 3),
               sm = c(12, 12, 12)
             ),
             mofa_plot_snf_ui(
@@ -97,7 +97,6 @@ SNF_UI <- function(id) {
           )
         )
       )
-
     )
   )
 }

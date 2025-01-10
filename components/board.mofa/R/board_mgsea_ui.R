@@ -12,9 +12,9 @@ MGseaInputs <- function(id) {
     shiny::selectInput(ns("contrast"), "Select contrast", choices = NULL),
     shiny::br(),
     shiny::br(),
-    shiny::br(),    
+    shiny::br(),
     shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
+    shiny::br(),
     shiny::conditionalPanel(
       "input.options % 2 == 1",
       ns = ns,
@@ -40,12 +40,14 @@ MGseaUI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   shiny::div(
-    boardHeader(title = "Multi-Omics GSEA",
-                info_link = ns("info")),
+    boardHeader(
+      title = "Multi-Omics GSEA",
+      info_link = ns("info")
+    ),
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "multiGSEA",
         bslib::layout_columns(
@@ -53,9 +55,9 @@ MGseaUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>MultiGSEA</b> combines pathway enrichment on multiple omics layers to create a robust composite multi-omics pathway enrichment measure.")),
           bslib::layout_columns(
-            col_widths = breakpoints(
+            col_widths = bslib::breakpoints(
               sm = c(12, 12, 12, 12),
-              xl = c(7, 5, 7, 5),              
+              xl = c(7, 5, 7, 5),
               xxxl = c(4, 3, 5, 4)
             ),
             mofa_plot_enrichment_ui(
@@ -65,7 +67,7 @@ MGseaUI <- function(id) {
               caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
-            ),            
+            ),
             mofa_plot_mgsea_ui(
               ns("mgsea_plot"),
               title = "MultiGSEA plot",
@@ -88,12 +90,10 @@ MGseaUI <- function(id) {
               caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
-            )                        
+            )
           )
         )
       )
-
-      
     )
   )
 }

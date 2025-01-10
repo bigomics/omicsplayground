@@ -29,22 +29,22 @@ MODULE.multiomics <- list(
       bigdash::bigTabItem( ## call this in app.R??
         "mofa-tab",
         MofaInputs("mofa"),
-        # MofaUI("mofa")
+        create_loader("mofa-loader")
       ),
       bigdash::bigTabItem(
         "mgsea-tab",
-        # MGseaInputs("mgsea"),
-        # MGseaUI("mgsea")
+        MGseaInputs("mgsea"),
+        create_loader("mgsea-loader")
       ),
       bigdash::bigTabItem(
         "snf-tab",
-        # SNF_Inputs("snf"),
-        # SNF_UI("snf")
+        SNF_Inputs("snf"),
+        create_loader("snf-loader")
       ),
       bigdash::bigTabItem(
         "lasagna-tab",
-        # LasagnaInputs("lasagna"),
-        # LasagnaUI("lasagna")
+        LasagnaInputs("lasagna"),
+        create_loader("lasagna-loader")
       )
     )
   },
@@ -52,22 +52,18 @@ MODULE.multiomics <- list(
     list(
       list( ## call this in app.R??
         "mofa-tab",
-        # MofaInputs("mofa"),
         MofaUI("mofa")
       ),
       list(
         "mgsea-tab",
-        MGseaInputs("mgsea"),
         MGseaUI("mgsea")
       ),
       list(
         "snf-tab",
-        SNF_Inputs("snf"),
         SNF_UI("snf")
       ),
       list(
         "lasagna-tab",
-        LasagnaInputs("lasagna"),
         LasagnaUI("lasagna")
       )
     )

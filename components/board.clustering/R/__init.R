@@ -5,8 +5,8 @@ MODULE.clustering <- list(
   ## MODULES[["multiomics"]] <- list(
   module_menu = function() {
     c(
-      samples = "Samples",
-      features = "Features"
+      clustersamples = "Samples",
+      clusterfeatures = "Features"
     )
   },
   module_server = function(PGX, board_observers = NULL, labeltype = NULL) {

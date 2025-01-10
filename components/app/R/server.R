@@ -256,7 +256,99 @@ app_server <- function(input, output, session) {
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
+    # depending on datatpye, subset modules enabled and create modules active,
+    if (tolower(PGX$datatype) == "multi-omics") {
+      MODULES_ACTIVE <- MODULES_MULTIOMICS
+    } else {
+      MODULES_ACTIVE <- MODULES_TRANSCRIPTOMICS
+    }
+    # if (env$load$is_data_loaded() == 2) {
+    #   MODULES_ACTIVE <- MODULES_MULTIOMICS
+    # }
     if (env$load$is_data_loaded() == 1) {
+      bigdash.hideMenuElement(session, "Clustering")
+      bigdash.hideMenuElement(session, "Expression")
+      bigdash.hideMenuElement(session, "GeneSets")
+      bigdash.hideMenuElement(session, "Compare")
+      bigdash.hideMenuElement(session, "SystemsBio")
+      bigdash.hideMenuElement(session, "MultiOmics (beta)")
+    }
+    # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # bigdash.unloadSidebar()
+    MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
+    MODULES_TO_LOAD <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_ACTIVE
+    lapply(names(MODULES_TO_REMOVE[MODULES_TO_REMOVE]), function(x) {
+      if (x == "DataView") {
+        # lapply(board_observers[["dataview"]], function(b) b$destroy())
+        bigdash.removeTab(session, "dataview-tab")
+        bigdash.hideMenuElement(session, "DataView")
+      }
+      if (x == "Clustering") {
+        # lapply(board_observers[["clustersamples"]], function(b) b$destroy())
+        # lapply(board_observers[["clusterfeatures"]], function(b) b$destroy())
+        lapply(names(MODULE.clustering$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "Clustering")
+        loaded$clustering <- 0
+      }
+      if (x == "Expression") {
+        # lapply(board_observers[["diffexpr"]], function(b) b$destroy())
+        # lapply(board_observers[["corr"]], function(b) b$destroy())
+        # lapply(board_observers[["bio"]], function(b) b$destroy())
+        lapply(names(MODULE.expression$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "Expression")
+        loaded$expression <- 0
+      }
+      if (x == "GeneSets") {
+        # lapply(board_observers[["enrich"]], function(b) b$destroy())
+        # lapply(board_observers[["sig"]], function(b) b$destroy())
+        # lapply(board_observers[["pathway"]], function(b) b$destroy())
+        # lapply(board_observers[["wordcloud"]], function(b) b$destroy())
+        lapply(names(MODULE.enrichment$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "GeneSets")
+        loaded$enrichment <- 0
+      }
+      if (x == "Compare") {
+        # lapply(board_observers[["isect"]], function(b) b$destroy())
+        # lapply(board_observers[["comp"]], function(b) b$destroy())
+        # lapply(board_observers[["cmap"]], function(b) b$destroy())
+        lapply(names(MODULE.compare$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "Compare")
+        loaded$compare <- 0
+      }
+      if (x == "SystemsBio") {
+        # lapply(board_observers[["drug"]], function(b) b$destroy())
+        # lapply(board_observers[["wgcna"]], function(b) b$destroy())
+        # lapply(board_observers[["tcga"]], function(b) b$destroy())
+        # lapply(board_observers[["cell"]], function(b) b$destroy())
+        # lapply(board_observers[["pcsf"]], function(b) b$destroy())
+        lapply(names(MODULE.systems$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "SystemsBio")
+        loaded$systems <- 0
+      }
+      if (x == "MultiOmics") {
+        # lapply(board_observers[["mofa"]], function(b) b$destroy())
+        # lapply(board_observers[["mgsea"]], function(b) b$destroy())
+        # lapply(board_observers[["snf"]], function(b) b$destroy())
+        # lapply(board_observers[["lasagna"]], function(b) b$destroy())
+        lapply(names(MODULE.multiomics$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "MultiOmics (beta)")
+        loaded$multiomics <- 0
+      }
+    })
+
+    if (env$load$is_data_loaded()) { # == 1) {
       additional_ui_tabs <- list(
         dataview = bigdash::bigTabItem(
           "dataview-tab",
@@ -284,7 +376,7 @@ app_server <- function(input, output, session) {
         message = "Preparing your dashboard (server)...",
         value = 0,
         {
-          if (MODULES_ENABLED["DataView"]) {
+          if (MODULES_TO_LOAD["DataView"]) {
             info("[SERVER] calling DataView module")
             beginning <- Sys.time()
             insertBigTabItem("dataview")
@@ -300,14 +392,18 @@ app_server <- function(input, output, session) {
           }
           shiny::incProgress(0.1)
 
-          if (MODULES_ENABLED["Clustering"]) {
+          if (MODULES_TO_LOAD["Clustering"]) {
             mod <- MODULE.clustering
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling Clustering module")
+            bigdash.showMenuElement(session, "Clustering")
+            lapply(names(MODULE.clustering$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
           }
           shiny::incProgress(0.1)
 
-          if (MODULES_ENABLED["Expression"]) {
+          if (MODULES_TO_LOAD["Expression"]) {
             mod <- MODULE.expression
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling Expression module")
@@ -316,10 +412,13 @@ app_server <- function(input, output, session) {
               pgx = PGX, labeltype = labeltype,
               board_observers = board_observers
             ) ->> env$diffexpr
+            lapply(names(MODULE.expression$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
           }
           shiny::incProgress(0.1)
 
-          if (MODULES_ENABLED["GeneSets"]) {
+          if (MODULES_TO_LOAD["GeneSets"]) {
             mod <- MODULE.enrichment
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling GeneSets module")
@@ -329,29 +428,43 @@ app_server <- function(input, output, session) {
               selected_gxmethods = env$diffexpr$selected_gxmethods,
               board_observers = board_observers
             ) ->> env$enrich
+            lapply(names(MODULE.enrichment$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
           }
           shiny::incProgress(0.1)
 
-          if (MODULES_ENABLED["Compare"]) {
+          if (MODULES_TO_LOAD["Compare"]) {
             mod <- MODULE.compare
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling Compare module")
+            lapply(names(MODULE.compare$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
           }
           shiny::incProgress(0.1)
 
-          if (MODULES_ENABLED["SystemsBio"]) {
+          if (MODULES_TO_LOAD["SystemsBio"]) {
             mod <- MODULE.systems
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling SystemsBio module")
+            lapply(names(MODULE.systems$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
           }
           shiny::incProgress(0.1)
 
-          if (MODULES_ENABLED["MultiOmics"] && exists("MODULE.multiomics")) {
+          if (MODULES_TO_LOAD["MultiOmics"] && exists("MODULE.multiomics")) {
             info("[SERVER] initializing MultiOmics module")
             mod <- MODULE.multiomics
             insertBigTabUI(mod$module_ui())
-            # mod$module_server(PGX, board_observers)
+            bigdash.showMenuElement(session, "MultiOmics (beta)")
+            lapply(names(MODULE.multiomics$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
           }
+
+          MODULES_LOADED <<- MODULES_ACTIVE
 
           info("[SERVER] calling modules done!")
         }
@@ -412,7 +525,8 @@ app_server <- function(input, output, session) {
     expression = 0,
     enrichment = 0,
     compare = 0,
-    systems = 0
+    systems = 0,
+    multiomics = 0
   )
   observeEvent(input$nav, {
     if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
@@ -421,7 +535,7 @@ app_server <- function(input, output, session) {
       insertBigTabUI2(mod$module_ui2())
       shinyjs::hide(id = "clustersamples-loader")
       shinyjs::hide(id = "clusterfeatures-loader")
-      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
+      mod$module_server(PGX, board_observers = board_observers, labeltype = labeltype)
       loaded$clustering <- 1
     }
     if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab") && loaded$expression == 0) {
@@ -456,7 +570,7 @@ app_server <- function(input, output, session) {
       loaded$compare <- 1
     }
     if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
-      info("[UI:SERVER] reacted: calling Systems module") 
+      info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2())
       shinyjs::hide(id = "drug-loader")
@@ -466,6 +580,17 @@ app_server <- function(input, output, session) {
       shinyjs::hide(id = "pcsf-loader")
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
+    }
+    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab") && loaded$multiomics == 0) {
+      info("[UI:SERVER] reacted: calling Systems module")
+      mod <- MODULE.multiomics
+      insertBigTabUI2(mod$module_ui2())
+      shinyjs::hide(id = "mofa-loader")
+      shinyjs::hide(id = "mgsea-loader")
+      shinyjs::hide(id = "snf-loader")
+      shinyjs::hide(id = "lasagna-loader")
+      mod$module_server(PGX, board_observers = NULL)
+      loaded$multiomics <- 1
     }
   })
 

@@ -90,3 +90,21 @@ bigdash.toggleTab <- function(session, tab, state) {
   if (state) bigdash.showTab(session, tab)
   if (!state) bigdash.hideTab(session, tab)
 }
+
+bigdash.removeTab <- function(session, tab) {
+  shiny:::validate_session_object(session)
+  msg <- shiny:::dropNulls(list(value = tab))
+  session$sendCustomMessage("bigdash-remove-tab", msg)
+}
+
+bigdash.hideMenuElement <- function(session, name) {
+  shiny:::validate_session_object(session)
+  msg <- shiny:::dropNulls(list(value = name))
+  session$sendCustomMessage("bigdash-hide-menu-element", msg)
+}
+
+bigdash.showMenuElement <- function(session, name) {
+  shiny:::validate_session_object(session)
+  msg <- shiny:::dropNulls(list(value = name))
+  session$sendCustomMessage("bigdash-show-menu-element", msg)
+}

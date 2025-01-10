@@ -6,7 +6,7 @@
 MODULE.systems <- list(
   module_menu = function() {
     c(
-      drug = "Drug connectivity", 
+      drug = "Drug connectivity",
       wgcna = "Network analysis",
       tcga = "TCGA analysis",
       cell = "Single cell",
@@ -93,3 +93,4 @@ MODULE.systems <- list(
     )
   }
 )
+
