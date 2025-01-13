@@ -33,8 +33,6 @@ UploadBoard <- function(id,
     reset_upload_text_input <- shiny::reactiveVal(0)
     probetype <- shiny::reactiveVal("running")
 
-    ## sc_compute_settings <- shiny::reactiveValues() ## NEW AZ
-    
     # add task to detect probetype using annothub
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
       future_promise({
@@ -961,9 +959,6 @@ UploadBoard <- function(id,
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
 
-              ## sc_compute_settings$name <- pgx$name ## NEW AZ
-              ## sc_compute_settings$description <- pgx$description ## NEW AZ
-
               recompute_info(
                 list(
                   "name" = pgx$name,
@@ -1188,7 +1183,6 @@ UploadBoard <- function(id,
         compute_input$norm_method <- sc_normalized$norm_method()
         compute_input$samples <- sc_normalized$samples()
         compute_input$azimuth_ref <- sc_normalized$azimuth_ref() ## NEW AZ
-        ## compute_input$sc_pheno <- sc_normalized$sc_pheno() ## NEW AZ. TO REMOVE
         sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold() ## NEW AZ
         sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold() ## NEW AZ
         sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold() ## NEW AZ
@@ -1209,7 +1203,6 @@ UploadBoard <- function(id,
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref), ## NEW AZ
-      ## sc_pheno = shiny::reactive(compute_input$sc_pheno), ## NEW AZ
       sc_compute_settings = shiny::reactive(sc_compute_settings), ## NEW AZ
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
