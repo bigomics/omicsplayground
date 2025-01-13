@@ -666,7 +666,8 @@ upload_module_computepgx_server <- function(
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
         mt_threshold <- sc_compute_settings()$mt_threshold
         hb_threshold <- sc_compute_settings()$hb_threshold
-        compute_supercells <- input$compute_supercells
+        cc <- (input$compute_supercells == "Compute supercells*")
+        compute_supercells <- ifelse(cc, TRUE, FALSE)
         ##--------
         
         ## Define create_pgx function arguments
