@@ -687,7 +687,15 @@ UploadBoard <- function(id,
       query_files <- check_query_files()
       if (!is.null(query_files$datatype)) {
         # Get encryption key
-        encryption_key <- NULL# readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+        encryption_key <- tryCatch(
+          {
+            readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+          },
+          error = function(w) {
+            warning("[UploadServer] ERROR: missing encryption_key file!!!")
+            NULL
+          }
+        )
         # if (!file.exists(encryption_key)) {
         #   encryption_key <- NULL
         # }
@@ -702,7 +710,15 @@ UploadBoard <- function(id,
       query_files <- check_query_files()
       if (!is.null(query_files$organism)) {
         # Get encryption key
-        encryption_key <- NULL# readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+        encryption_key <- tryCatch(
+          {
+            readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+          },
+          error = function(w) {
+            warning("[UploadServer] ERROR: missing encryption_key file!!!")
+            NULL
+          }
+        )
         # if (!file.exists(encryption_key)) {
         #   encryption_key <- NULL
         # }
@@ -999,13 +1015,29 @@ UploadBoard <- function(id,
             } else if (opt$AUTHENTICATION == "email-encrypted") { # Only data preloading on email-encrypted authentication
               query_files <- check_query_files()
               # Get encryption key
-              encryption_key <- NULL# readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+              encryption_key <- tryCatch(
+                {
+                  readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+                },
+                error = function(w) {
+                  warning("[UploadServer] ERROR: missing encryption_key file!!!")
+                  NULL
+                }
+              )
               # if (!file.exists(encryption_key)) {
               #   encryption_key <- NULL
               # }
               # Populate upload data with available
               if (!is.null(query_files$counts)) {
-                file <- read_query_files(query_files$counts, encryption_key)
+                # Decrypt the URL if encryption key is available
+                counts_url <- if (!is.null(encryption_key)) {
+                  decrypt_util(query_files$counts, encryption_key)
+                } else {
+                  warning("[UploadServer] No encryption key available, using raw URL")
+                  query_files$counts
+                }
+
+                file <- read_query_files(counts_url)
                 df <- playbase::read_counts(file)
                 uploaded$counts.csv <- df
                 ## if counts file contains annotation
@@ -1013,12 +1045,28 @@ UploadBoard <- function(id,
                 uploaded$annot.csv <- af
               }
               if (!is.null(query_files$samples)) {
-                file <- read_query_files(query_files$samples, encryption_key)
+                # Decrypt the URL if encryption key is available  
+                samples_url <- if (!is.null(encryption_key)) {
+                  decrypt_util(query_files$samples, encryption_key)
+                } else {
+                  warning("[UploadServer] No encryption key available, using raw URL")
+                  query_files$samples
+                }
+
+                file <- read_query_files(samples_url)
                 df <- playbase::read_samples(file)
                 uploaded$samples.csv <- df
               }
               if (!is.null(query_files$contrasts)) {
-                file <- read_query_files(query_files$contrasts, encryption_key)
+                # Decrypt the URL if encryption key is available
+                contrasts_url <- if (!is.null(encryption_key)) {
+                  decrypt_util(query_files$contrasts, encryption_key)
+                } else {
+                  warning("[UploadServer] No encryption key available, using raw URL")
+                  query_files$contrasts
+                }
+
+                file <- read_query_files(contrasts_url)
                 df <- playbase::read_contrasts(file)
                 uploaded$contrasts.csv <- df
               }

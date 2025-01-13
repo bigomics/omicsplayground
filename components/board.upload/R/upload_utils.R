@@ -326,19 +326,8 @@ check_query_files <- function() {
 }
 
 # Read query files
-read_query_files <- function(url, encryption_key = NULL) {
-  if (!is.null(encryption_key)) {
-    url <- decrypt_util(url, encryption_key)
-  }
+read_query_files <- function(url) {
   destination <- tempfile(fileext = ".csv")
   download.file(url, destination)
   return(destination)
-}
-
-# Decrypt utility, used in email-encrypted authentication + population of data upload (only on that auth)
-decrypt_util <- function(query, encryption_key) {
-  if (is.null(encryption_key)) return(query)
-  ciphertext <- base64enc::base64decode(query)
-  decrypted_query <- rawToChar(sodium::data_decrypt(ciphertext, encryption_key))
-  return(decrypted_query)
 }

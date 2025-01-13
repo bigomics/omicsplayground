@@ -1226,12 +1226,14 @@ LoginCodeAuthenticationModule <- function(id,
   })
 }
 
+## ================================================================================
+## Utility functions for authentication
+## ================================================================================
 
 EmailEncryptedAuthenticationModule <- function(
     id = "auth",
     show_modal = TRUE,
     skip_modal = FALSE,
-    # TODO add argument for location of crypto key (probably on ETC)
     domain = opt$DOMAIN) {
   shiny::moduleServer(id, function(input, output, session) {
     message("[AuthenticationModule] >>>> using EmailEncrypted authentication <<<<")
@@ -1312,35 +1314,49 @@ EmailEncryptedAuthenticationModule <- function(
       if (is.null(query_email())) {
         dbg("[EmailEncryptedAuthenticationModule] invalid email hash")
         output$login_warning <- shiny::renderText("invalid email hash")
-        # TODO show some error on the UI
+        return(NULL)
+      }
+
+      # Decrypt email if encryption key is available
+      decrypted_email <- if (!is.null(encryption_key)) {
+        decrypt_util(query_email(), encryption_key)
       } else {
-        # Decrypt
-        if (!is.null(encryption_key)) {
-          query_email <- decrypt_util(query_email(), encryption_key)
-        } else {
-          query_email <- query_email()
-        }
-        USER$email <- query_email
-        USER$username <- query_email
-        USER$logged <- TRUE
-        # TODO Use some sort of user_database to see if email allowed??
-        # TODO check domain (?)
-        USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          USER$user_dir <- file.path(PGX.DIR)
-        }
-        dbg("[EmailEncryptedAuthenticationModule] using user OPTIONS")
-        USER$options <- read_user_options(USER$user_dir)
-        session$sendCustomMessage("set-user", list(user = USER$email))
-        # If data is sent, trigger upload, if not, go to datasets
-        query_files <- check_query_files() |> unlist()
-        if (!is.null(query_files)) {
-          bigdash.selectTab(session, "upload-tab")
-          shinyjs::runjs("$('#upload-start_upload').click();")
-        } else {
-          bigdash.selectTab(session, "load-tab")
-        }
+        warning("[EmailEncryptedAuthenticationModule] No encryption key available, using raw email")
+        query_email()
+      }
+
+      # Validate decrypted email
+      if (is.null(decrypted_email)) {
+        dbg("[EmailEncryptedAuthenticationModule] failed to decrypt email")
+        output$login_warning <- shiny::renderText("invalid email format")
+        return(NULL)
+      }
+
+      USER$email <- decrypted_email
+      USER$username <- decrypted_email
+      USER$logged <- TRUE
+
+      # TODO Use some sort of user_database to see if email allowed??
+      # TODO check domain (?)
+
+      # Set up user directory
+      USER$user_dir <- file.path(PGX.DIR, USER$email)
+      create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      if (!opt$ENABLE_USERDIR) {
+        USER$user_dir <- file.path(PGX.DIR)
+      }
+
+      dbg("[EmailEncryptedAuthenticationModule] using user OPTIONS")
+      USER$options <- read_user_options(USER$user_dir)
+      session$sendCustomMessage("set-user", list(user = USER$email))
+
+      # Handle query files and navigation
+      query_files <- check_query_files() |> unlist()
+      if (!is.null(query_files)) {
+        bigdash.selectTab(session, "upload-tab")
+        shinyjs::runjs("$('#upload-start_upload').click();")
+      } else {
+        bigdash.selectTab(session, "load-tab")
       }
     })
 
