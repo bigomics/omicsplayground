@@ -15,7 +15,7 @@ upload_module_computepgx_server <- function(
     impX,
     norm_method,
     samplesRT,
-    azimuth_ref, ## NEW AZ
+    azimuth_ref,
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -25,7 +25,7 @@ upload_module_computepgx_server <- function(
     create_raw_dir,
     alertready = TRUE,
     height = 720,
-    sc_compute_settings, ## NEW AZ
+    sc_compute_settings,
     recompute_info,
     inactivityCounter,
     upload_wizard,
@@ -677,7 +677,7 @@ upload_module_computepgx_server <- function(
           counts = counts,
           countsX = countsX,
           impX = impX,
-          azimuth_ref = azimuth_ref(), ## NEW AZ
+          azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
           # Extra tables
@@ -690,7 +690,7 @@ upload_module_computepgx_server <- function(
             nfeature_threshold = nfeature_threshold,
             mt_threshold = mt_threshold,
             hb_threshold = hb_threshold,
-            compute_supercells = compute_supercells ## NEW AZ
+            compute_supercells = compute_supercells
           ),
           ## normalize = do.normalization,
           prune.samples = TRUE,
