@@ -1182,10 +1182,10 @@ UploadBoard <- function(id,
         compute_input$impX <- NULL
         compute_input$norm_method <- sc_normalized$norm_method()
         compute_input$samples <- sc_normalized$samples()
-        compute_input$azimuth_ref <- sc_normalized$azimuth_ref() ## NEW AZ
-        sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold() ## NEW AZ
-        sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold() ## NEW AZ
-        sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold() ## NEW AZ
+        compute_input$azimuth_ref <- sc_normalized$azimuth_ref()
+        sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold()
+        sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold()
+        sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold()
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
@@ -1202,8 +1202,8 @@ UploadBoard <- function(id,
       impX = shiny::reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
-      azimuth_ref = shiny::reactive(compute_input$azimuth_ref), ## NEW AZ
-      sc_compute_settings = shiny::reactive(sc_compute_settings), ## NEW AZ
+      azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
+      sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,
