@@ -74,29 +74,29 @@ upload_module_normalizationSC_server <- function(id,
               style = "background-color: #F7FAFD99;",
 
               bslib::accordion_panel(
-                title = HTML("<span style='font-size: 0.9em;'> Cell type inference</span>"),
+                title = HTML("<span style='font-size: 0.9em;'> Define cell types.<br>Infer cell types with Azimuth</span>"),
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;"
                 ),
-                shiny::checkboxInput(
-                  ns("infercelltypes"),
-                  label = "Infer cell types with Azimuth",
-                  value = FALSE
-                ),
-                shiny::conditionalPanel(
-                  "input.infercelltypes == true",
-                  ns = ns,
-                  shiny::selectInput(
-                    ns("ref_atlas"),
-                    label = "Select reference atlas",
-                    choices = c(
-                      "adiposeref", "bonemarrowref", "fetusref",
-                      "heartref", "humancortexref", "kidneyref",
-                      "lungref", "mousecortexref", "pancreasref",
-                      "pbmcref", "tonsilref", "<select>"
-                    ),
-                    selected = "<select>"
-                  )
+                ##shiny::checkboxInput(
+                ##  ns("infercelltypes"),
+                ##  label = "Infer cell types with Azimuth",
+                ##  value = FALSE
+                ##),
+                ## shiny::conditionalPanel(
+                ##  "input.infercelltypes == true",
+                ##  ns = ns,
+                shiny::selectInput(
+                  ns("ref_atlas"),
+                  label = "Select reference atlas",
+                  choices = c(
+                    "adiposeref", "bonemarrowref", "fetusref",
+                    "heartref", "humancortexref", "kidneyref",
+                    "lungref", "mousecortexref", "pancreasref",
+                    "pbmcref", "tonsilref", "<select>"
+                  ),
+                  selected = "<select>"
+                ##)
                 ),
                 shiny::br()
               ),
@@ -190,7 +190,7 @@ upload_module_normalizationSC_server <- function(id,
 
         options(future.globals.maxSize= 4*1024^100)
 
-        shiny::req(input$infercelltypes)
+        ## shiny::req(input$infercelltypes)
         shiny::req(r_counts())
         shiny::req(r_samples())
         counts <- r_counts()
@@ -542,13 +542,13 @@ upload_module_normalizationSC_server <- function(id,
       })
       
       azimuth_ref <- shiny::reactive({
-        shiny::req(input$infercelltypes)
-        if (input$ref_atlas != "<select>") {
+        ## shiny::req(input$infercelltypes)
+        ##if (input$ref_atlas != "<select>") {
           ref <- input$ref_atlas
           return(ref)
-        } else {
-          return(NULL)
-        }
+        ##} else {
+        ##  return(NULL)
+        ##}
       })
 
       nfeat_thr <- shiny::reactive({
@@ -580,13 +580,11 @@ upload_module_normalizationSC_server <- function(id,
         hb_threshold = shiny::reactive(hb_thr()),
         norm_method = shiny::reactive("CPM")
       )
-      
+
       return(LL) ## pointing to reactive
 
     } ## end-of-server
   )
 }
-
-##--------------TEST ON MORE DATASETS.
 ##--------------Fix Correlation analysis > Correlation > Scatterplot (not showing up)
 ##--------------Fix Correlation analysis > Graph
