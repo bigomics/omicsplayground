@@ -86,7 +86,7 @@ upload_module_computepgx_server <- function(
       },
       {
         if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "spearman", "gsva")
+          mm <- c("fisher", "fgsea", "spearman")
         } else {
           mm <- c(
             "fisher", "ssgsea", "gsva", "spearman", "camera",
