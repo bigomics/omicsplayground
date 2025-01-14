@@ -378,17 +378,11 @@ app_server <- function(input, output, session) {
         {
           if (MODULES_TO_LOAD["DataView"]) {
             info("[SERVER] calling DataView module")
-            beginning <- Sys.time()
             insertBigTabItem("dataview")
-            end <- Sys.time()
-            print(end - beginning)
-            beginning <- Sys.time()
             DataViewBoard("dataview",
               pgx = PGX, labeltype = labeltype,
               board_observers = board_observers
             )
-            end <- Sys.time()
-            print(end - beginning)
           }
           shiny::incProgress(0.1)
 
@@ -408,6 +402,7 @@ app_server <- function(input, output, session) {
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling Expression module")
             info("[SERVER] calling DiffExprBoard module")
+            bigdash.showMenuElement(session, "Expression")
             ExpressionBoard("diffexpr",
               pgx = PGX, labeltype = labeltype,
               board_observers = board_observers
@@ -423,6 +418,7 @@ app_server <- function(input, output, session) {
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling GeneSets module")
             info("[SERVER] calling EnrichmentBoard module")
+            bigdash.showMenuElement(session, "GeneSets")
             EnrichmentBoard("enrich",
               pgx = PGX,
               selected_gxmethods = env$diffexpr$selected_gxmethods,
@@ -438,6 +434,7 @@ app_server <- function(input, output, session) {
             mod <- MODULE.compare
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling Compare module")
+            bigdash.showMenuElement(session, "Compare")
             lapply(names(MODULE.compare$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
@@ -448,6 +445,7 @@ app_server <- function(input, output, session) {
             mod <- MODULE.systems
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling SystemsBio module")
+            bigdash.showMenuElement(session, "SystemsBio")
             lapply(names(MODULE.systems$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
