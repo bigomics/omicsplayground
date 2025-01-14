@@ -449,6 +449,7 @@ app_server <- function(input, output, session) {
             lapply(names(MODULE.systems$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
+            bigdash.toggleTab(session, "tcga-tab", env$user_settings$enable_beta() && dir.exists(file.path(OPG, "libx")))
           }
           shiny::incProgress(0.1)
 
@@ -554,6 +555,7 @@ app_server <- function(input, output, session) {
       shinyjs::hide(id = "sig-loader")
       shinyjs::hide(id = "pathway-loader")
       shinyjs::hide(id = "wordcloud-loader")
+      toggleTab("pathway-tabs", "Enrichment Map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
     }
@@ -576,6 +578,7 @@ app_server <- function(input, output, session) {
       shinyjs::hide(id = "tcga-loader")
       shinyjs::hide(id = "cell-loader")
       shinyjs::hide(id = "pcsf-loader")
+      toggleTab("drug-tabs", "Connectivity map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
     }
