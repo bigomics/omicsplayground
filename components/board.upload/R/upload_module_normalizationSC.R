@@ -128,7 +128,7 @@ upload_module_normalizationSC_server <- function(id,
                   "input.remove_cells == true",
                   ns = ns,
                   shiny::sliderInput(ns("nfeature_threshold"), "Detected genes per cell:",
-                    min = 0, max = 2500, value = c(100, 2000)),
+                    min = 0, max = 10000, value = c(100, 4000)),
                   shiny::sliderInput(ns("mt_threshold"), "MT expresssion threshold (%):", 1, 100, 10, 0),
                   shiny::sliderInput(ns("hb_threshold"), "HB expression threshold (%):", 1, 100, 10, 0)
                 ),
