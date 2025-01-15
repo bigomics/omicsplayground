@@ -45,12 +45,12 @@ upload_module_computepgx_server <- function(
       ## NOTE (IK): these eventReactive can better go directly inside
       ## output$UI which is already reactive. Less reactives is good.
 
-      
+
       ## statistical method for GENE level testing
       GENETEST.METHODS <- shiny::eventReactive(
-      {
+        {
           upload_datatype()
-      },
+        },
         {
           if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
@@ -63,7 +63,7 @@ upload_module_computepgx_server <- function(
           return(mm)
         }
       )
-      
+
       GENETEST.SELECTED <- shiny::eventReactive(
         {
           upload_datatype()
@@ -92,9 +92,9 @@ upload_module_computepgx_server <- function(
         "celltype deconvolution", "drugs connectivity",
         "wordcloud", "experiment similarity", "WGCNA", "MOFA"
       )
-      
+
       EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
-      
+
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
       DEV.METHODS <- c("noLM.prune")
@@ -109,10 +109,10 @@ upload_module_computepgx_server <- function(
       output$UI <- shiny::renderUI({
         upload_annot_table_ui <- NULL
 
-        if(upload_datatype() == "multi-omics") {
+        if (upload_datatype() == "multi-omics") {
           EXTRA.SELECTED <- c(EXTRA.SELECTED, "mofa")
         }
-        
+
         if (auth$options$ENABLE_ANNOT) {
           upload_annot_table_ui <- fileInput2(
             ns("upload_annot_table"),
@@ -121,7 +121,7 @@ upload_module_computepgx_server <- function(
             accept = c(".csv")
           )
         }
-        
+
         div(
           style = "overflow: auto;",
           bslib::as_fill_carrier(),

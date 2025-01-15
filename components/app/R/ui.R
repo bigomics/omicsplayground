@@ -153,10 +153,10 @@ app_ui <- function(x) {
 
       dbg("names(menu_tree) = ", names(menu_tree))
       dbg("names.ENABLED = ", names(ENABLED))
-      menu_tree <- menu_tree[MODULES_ENABLED]      
-      ##menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
-      ENABLED <<- array( BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
-            
+      menu_tree <- menu_tree[MODULES_ENABLED]
+      ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+      ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
+
       populateSidebar <- function(menu_tree) {
         sidebar_item <- function(title, name) {
           div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
@@ -519,7 +519,7 @@ app_ui <- function(x) {
             tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
           ),
-          !!!MODULE.multiomics$module_help()  ### HELP!!! DOES NOT WORK!!!
+          !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),
         bigdash::bigTabs(
           bigdash::bigTabItem(

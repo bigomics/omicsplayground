@@ -3,7 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
+EnrichmentBoard <- function(id, pgx,
+                            selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
+                            board_observers = NULL
+                            ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
