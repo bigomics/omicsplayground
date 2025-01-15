@@ -99,13 +99,13 @@ LasagnaUI <- function(id) {
           #height = "calc(100vh - 180px)",
           ## bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for 'a Layered Approach to Simultaneous Analysis of Genomic and Network Associations'.")),
           bslib::layout_columns(
-            col_widths = breakpoints(
+            col_widths = bslib::breakpoints(
               xxxl = c(6, 6),
               xl = c(12, 12),              
               sm = c(12, 12)
             ),
             bslib::layout_columns(
-              col_widths = breakpoints(
+              col_widths = bslib::breakpoints(
                 xxxl = c(6, 6, 12),
                 xl = c(5, 3, 4),              
                 sm = c(12, 12, 12)

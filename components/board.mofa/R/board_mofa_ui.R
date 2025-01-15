@@ -125,13 +125,13 @@ MofaUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>Factor response analysis.</b> We quantify associations of factors with our trait of interest (weight) by the correlation between the factor and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.")),
           bslib::layout_columns(
-            col_widths = breakpoints(
+            col_widths = bslib::breakpoints(
               xxxl = c(12, 12),
               lg = c(7,5),
               sm = c(12, 12)               
             ),
             bslib::layout_columns(
-              col_widths = breakpoints(
+              col_widths = bslib::breakpoints(
                 xxxl = c(5, 3, 4),
                 lg = c(12, 6, 6),
                 sm = c(12, 12, 12, 12, 12)
@@ -181,7 +181,7 @@ MofaUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
           bslib::layout_columns(
-            col_widths = breakpoints(
+            col_widths = bslib::breakpoints(
               lg = c(7, 5, 4, 4, 4),
               sm = c(12, 12, 12, 12, 12)
             ),

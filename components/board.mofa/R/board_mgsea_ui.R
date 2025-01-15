@@ -53,7 +53,7 @@ MGseaUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>MultiGSEA</b> combines pathway enrichment on multiple omics layers to create a robust composite multi-omics pathway enrichment measure.")),
           bslib::layout_columns(
-            col_widths = breakpoints(
+            col_widths = bslib::breakpoints(
               sm = c(12, 12, 12, 12),
               xl = c(7, 5, 7, 5),              
               xxxl = c(4, 3, 5, 4)
