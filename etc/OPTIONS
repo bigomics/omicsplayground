@@ -1,5 +1,40 @@
-The following paths are ignored by one of your .gitignore files:
-etc
-hint: Use -f if you really want to add them.
-hint: Turn this message off by running
-hint: "git config advice.addIgnoredFile false"
+TITLE                = 'Omics Playground'
+AUTHENTICATION       = none
+#AUTHENTICATION      = password
+#AUTHENTICATION      = login-code-redirect
+#AUTHENTICATION       = login-code
+ALLOW_NEW_USERS      = TRUE
+ALLOW_PERSONAL_EMAIL = FALSE
+USE_CREDENTIALS      = FALSE
+#DOMAIN              = bigomics.ch|demo.com
+BLOCKED_DOMAIN       = bigomics.com|massdynamics.com|pluto.bio|rosalind.bio
+ENABLE_CHIRP         = TRUE
+ENABLE_DELETE        = TRUE
+ENABLE_PGX_DOWNLOAD  = TRUE
+ENABLE_PUBLIC_SHARE  = TRUE
+ENABLE_UPLOAD        = TRUE
+ENABLE_USERDIR       = TRUE
+ENABLE_USER_SHARE    = TRUE
+ENABLE_USER_LOCK     = TRUE
+ENABLE_HEARTBEAT     = TRUE 
+ENABLE_INACTIVITY    = TRUE
+ENABLE_ANNOT         = FALSE
+MAX_DATASETS         = 100
+MAX_SAMPLES          = 1000
+MAX_COMPARISONS      = 20
+MAX_GENES            = 20000
+MAX_GENESETS         = 5000
+MAX_SHARED_QUEUE     = 3
+MAX_SESSIONS         = 2
+TIMEOUT              = 0
+WATERMARK            = TRUE
+APACHE_COOKIE_PATH   = /app/omicsplayground/
+DEVMODE              = FALSE
+HUBSPOT_CHECK        = TRUE
+
+#BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
+#BOARDS_ENABLED = welcome;load;upload;cmap
+
+MODULES_ENABLED = Welcome;Datasets;DataView;Clustering;MultiOmics
+MODULES_MULTIOMICS = Welcome;Datasets;DataView;MultiOmics
+MODULES_TRANSCRIPTOMICS = Welcome;Datasets;DataView;Clustering
