@@ -44,7 +44,7 @@ UploadBoard <- function(id,
           datatype = datatype,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
         )
-        if (is.null(detected)) detected <- "error"
+        ##if (is.null(detected)) detected <- "error"
         detected
       })
     })
@@ -1046,23 +1046,21 @@ UploadBoard <- function(id,
         e2 <- all(is.na(detected[[organism]]))
         e3 <- !(organism %in% names(detected))
         task_failed <- (e0 || e1 || e2 || e3)
+        alt.text <- ""
+        detected_probetype <- NULL
         if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
-          detected_species <- names(detected)
+          detected_species <- setdiff(names(detected),organism)
           alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
-            alt.species <- paste0("<b>", alt.species, "</b>")
             # check if ANY organism matched the probes, if yes add a hint to the user
-            if (length(detected_species) >= 1) {
-              alt.text <- paste0("Are these perhaps ", alt.species, "?")
-            }
-            if (upload_datatype() == "metabolomics") {
-              # overwrite alt.text for metabolomics
-              alt.text <- "ChEBI (recommended), HMDB, PubChem, KEGG"
-              alt.text <- paste0("<b>", alt.text, "</b>")
-              alt.text <- paste0("Valid probes are: ", alt.text, ".")
-            }
+            alt.text <- c(alt.text, paste0("Are these perhaps <b>",
+              alt.species, "</b>?"))
+          }
+          if (upload_datatype() == "metabolomics") {
+            # overwrite alt.text for metabolomics
+            alt.text <- c(alt.text, paste0("Valid probes are: <b>ChEBI (recommended), HMDB, PubChem, or KEGG</b>"))
           }
         } else {
           # handle success: assign detected probetype to detected_probetype
@@ -1079,7 +1077,7 @@ UploadBoard <- function(id,
             text = paste0(
               "Error. Your probes do not match any probe type for <b>",
               organism, "</b>. Please check your probe names and select ",
-              "another organism. ", alt.text
+              "another organism. ", paste(alt.text,collapse=" ")
             ),
             type = "error",
             size = "s",

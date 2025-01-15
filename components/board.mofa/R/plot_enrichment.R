@@ -46,6 +46,7 @@ mofa_plot_enrichment_server <- function(id,
       validate(need(!is.null(gsea), "missing MOFA data."))      
 
       k <- input_k()
+
       shiny::req(k)
       shiny::req(k %in% names(gsea))
       sel <- select()
@@ -53,7 +54,7 @@ mofa_plot_enrichment_server <- function(id,
       nx <- grep("[:]",rownames(pgx$X),value=TRUE)      
       dtypes <- unique(sub(":.*","",nx))
       dtypes
-      dbg("[mofa_plot_enrichment_server] dtypes = ",dtypes)
+
       if(length(sel)==1) {
         if(length(dtypes) > 1) {
           par(mfrow = c(1,length(dtypes)))

@@ -33,7 +33,7 @@ mofa_table_mgsea_server <- function(id,
 {
   moduleServer(id, function(input, output, session) {
 
-    table.RENDER <- function() {
+    table.RENDER <- function(full=FALSE) {
       gsea <- gsea()
 
       validate(need(!is.null(gsea), "missing GSEA data."))            
@@ -41,23 +41,31 @@ mofa_table_mgsea_server <- function(id,
       k <- input_k()  ## which factor/phenotype
       shiny::req(k)
       
-      if(is.null(datatypes)) datatypes <- head(colnames(gsea[[1]]$score),2)
+      if(is.null(datatypes)) datatypes <- head(colnames(gsea[[1]]$pval),2)
       if(length(datatypes)==1) datatypes <- rep(datatypes,2)
       
-      S <- unclass(gsea[[k]]$score[,datatypes,drop=FALSE])
-      Q <- unclass(gsea[[k]]$qval[,datatypes,drop=FALSE])
-      multi.score <- gsea[[k]]$multi.score
-            
-      colnames(S) <- paste0(colnames(S),".score")
+      shiny::req(gsea[[k]])
+      
+      S <- as.matrix(unclass(gsea[[k]]$rho[,datatypes,drop=FALSE]))
+      P <- as.matrix(unclass(gsea[[k]]$pval[,datatypes,drop=FALSE]))
+      multi.score <- gsea[[k]]$multi$score
+      multi <- data.frame(unclass(gsea[[k]]$multi))
+      colnames(S) <- paste0(colnames(S),".rho")
+      colnames(P) <- paste0(colnames(P),".pval")
+      colnames(multi) <- paste0("multi.",colnames(multi))
       snames <- stringr::str_trunc(rownames(S),72)      
       sign <- paste0( c("-","+")[1+(sign(S[,1])==1)],
                      c("-","+")[1+(sign(S[,2])==1)] )
-      
-      ##df <- data.frame( pathway = snames, sign, multi.score, S)
-      df <- data.frame( pathway = snames, multi.score, S)
-      rownames(df) <- rownames(S)
-      df <- df[order(-df$multi.score),]
-      numeric.cols <- grep("score",colnames(df))
+      if(full) {
+        df <- data.frame( pathway = snames, multi, S, P)
+        rownames(df) <- rownames(S)
+        df <- df[order(-multi$multi.score),]
+      } else {
+        df <- data.frame( pathway = snames, multi.score, S)
+        rownames(df) <- rownames(S)
+        df <- df[order(-multi.score),]
+      }
+      numeric.cols <- grep("score|pval|p$|q$|rho",colnames(df))
       
       DT::datatable(
         df,
@@ -81,9 +89,14 @@ mofa_table_mgsea_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
+    table.RENDER2 <- function(full=FALSE) {
+      table.RENDER(full=TRUE)
+    }
+    
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
+      func2 = table.RENDER2,
       selector = "single"
     )
 

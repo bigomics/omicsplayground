@@ -93,16 +93,6 @@ MofaBoard <- function(id, pgx) {
           numfactors = numfactors,
           add_gsets = input$add_gsets)
             
-      ## ## update factors in selectInput
-      ## factors <- colnames(mofa$F)
-      ## dtypes <- names(mofa$ww)
-      ## sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
-      ## contrasts <- colnames(mofa$contrasts)
-      ## phenotypes <- colnames(mofa$samples)
-      ## updateSelectInput(session, "selected_factor", choices = factors,
-      ##                   selected = factors[1])
-      ## updateSelectInput(session, "show_types", choices = dtypes,
-      ##                   selected = sel.dtypes)
       
       shiny::removeModal()
       message("[mofa] compute MOFA done!")

@@ -35,7 +35,7 @@ mofa_plot_factorheatmap_server <- function(id,
       shiny::req(mofa())
       par(mar=c(6,5,2,1))    
       playbase::mofa.plot_factor_correlation(
-        mofa(), main=NULL, marx=0.7) 
+        mofa(), main=NULL, marx=0.8, cexRow=1.3, cexCol=1.3) 
     }
 
     PlotModuleServer(

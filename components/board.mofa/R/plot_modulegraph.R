@@ -70,7 +70,7 @@ mofa_plot_modulegraph_server <- function(id,
           barnesHut = list(
             gravitationalConstant = -1000,
             centralGravity = 0.3,
-            springLength = 18
+            springLength = 20
           )
         )
 

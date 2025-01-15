@@ -17,7 +17,7 @@ mofa_plot_moduleheatmap_ui <- function(
     shiny::checkboxInput(
       inputId = ns("split"),
       label = "Split heatmap by data types",
-      value = FALSE
+      value = TRUE
     )
   )
 

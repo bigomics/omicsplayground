@@ -13,10 +13,15 @@ mofa_plot_mgsea_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    shiny::radioButtons(ns("size.par"), "size by", c("p-value"="p", "q-value"="q"))
+  )
+  
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     caption = caption,
     height = height,
@@ -39,7 +44,7 @@ mofa_plot_mgsea_server <- function(id,
       k <- input_k()
       shiny::req(k)
       
-      types <- colnames(gsea[[k]]$score)
+      types <- colnames(gsea[[k]]$pval)
       types <- intersect( types, c("mx","px","gx"))
       if(length(types)==1) types <- rep(types,2)
       hilight <- NULL
@@ -47,9 +52,11 @@ mofa_plot_mgsea_server <- function(id,
       if(!is.null(selected) && length(selected)<100) {
         hilight <- selected
       }
+      
       par(mar=c(4.5,4.5,1,0.5))
       playbase::mofa.plot_multigsea(
         gsea, type1=types[1], type2=types[2],
+        size.par = input$size.par,
         k=k, hilight = hilight)
     }
 

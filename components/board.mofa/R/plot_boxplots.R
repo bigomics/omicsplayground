@@ -17,11 +17,7 @@ mofa_plot_boxplots_ui <- function(
   options <- shiny::tagList(
     shiny::selectizeInput(
       ns("selected_pheno"), "Select phenotype",
-      choices=NULL, multiple=TRUE), 
-    shiny::checkboxInput(
-      inputId = ns("collapse"),
-      label = "Collapse covariates"
-    )
+      choices=NULL, multiple=TRUE)
   )
   
   PlotModuleUI(

@@ -23,12 +23,16 @@ MofaInputs <- function(id) {
       shiny::tagList(
         shiny::selectInput(
           ns("kernel"), "Kernel",
-          choices = c("MOFA","PCA","DIABLO","MCIA","wmfcna"),
+          choices = c("MOFA","PCA","DIABLO","MCIA","WGCNA"),
           selected = "MOFA"                 
         ),
-        shiny::selectInput(ns("numfactors"), "Number of factors",
-          choices = c(3,5,10,15,25),
-          selected = 10
+        shiny::conditionalPanel(
+          "input.kernel != 'WGCNA'",
+          ns = ns,
+          shiny::selectInput(ns("numfactors"), "Number of factors",
+            choices = c(3,5,10,15,25),
+            selected = 10
+          )
         ),
         shiny::checkboxInput(ns("add_gsets"), "Add gene set layers",
           value = FALSE
@@ -76,7 +80,7 @@ MofaUI <- function(id) {
               mofa_plot_dendrogram_ui(
                 ns("dendrogram"),
                 title = "Feature clustering",
-                caption = "MOFA factor heatmap",                
+                caption = "Factor heatmap",                
                 info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -119,7 +123,7 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>MOFA factor response.</b> We quantify associations of factors with our trait of interest (weight) by the correlation between the factor and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.")),
+          bs_alert(HTML("<b>Factor response analysis.</b> We quantify associations of factors with our trait of interest (weight) by the correlation between the factor and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.")),
           bslib::layout_columns(
             col_widths = breakpoints(
               xxxl = c(12, 12),
@@ -129,7 +133,7 @@ MofaUI <- function(id) {
             bslib::layout_columns(
               col_widths = breakpoints(
                 xxxl = c(5, 3, 4),
-                lg = c(12, 5, 7),
+                lg = c(12, 6, 6),
                 sm = c(12, 12, 12, 12, 12)
               ),
               mofa_plot_factortrait_ui(
@@ -148,11 +152,11 @@ MofaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              mofa_plot_moduleheatmap_ui(
-                ns("module_heatmap"),
-                title = "Factor heatmap",
-                info.text = "...",
-                caption = "Factor heatmap.",
+              mofa_plot_factorgraph_ui(
+                ns("factorgraph"),
+                title = "Between-factors graph",
+                info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
+                caption = "",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
@@ -197,11 +201,11 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),            
-            mofa_plot_factorgraph_ui(
-              ns("factorgraph"),
-              title = "Between-factors graph",
-              info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
-              caption = "",
+            mofa_plot_moduleheatmap_ui(
+              ns("module_heatmap"),
+              title = "Factor heatmap",
+              info.text = "...",
+              caption = "Factor heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),

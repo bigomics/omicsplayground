@@ -52,7 +52,7 @@ mofa_plot_factorgraph_server <- function(id,
           barnesHut = list(
             gravitationalConstant = -1000,
             centralGravity = 0.3,
-            springLength = 15
+            springLength = 30
           )
         )
       vis
