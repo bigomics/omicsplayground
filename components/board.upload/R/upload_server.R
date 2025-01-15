@@ -686,20 +686,7 @@ UploadBoard <- function(id,
       upload_datatype(input$selected_datatype)
       query_files <- check_query_files()
       if (!is.null(query_files$datatype)) {
-        # Get encryption key
-        encryption_key <- tryCatch(
-          {
-            readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
-          },
-          error = function(w) {
-            warning("[UploadServer] ERROR: missing encryption_key file!!!")
-            NULL
-          }
-        )
-        # if (!file.exists(encryption_key)) {
-        #   encryption_key <- NULL
-        # }
-        datatype <- decrypt_util(query_files$datatype, encryption_key)
+        datatype <- query_files$datatype
         upload_datatype(datatype)
       }
     })
@@ -709,20 +696,7 @@ UploadBoard <- function(id,
       upload_organism(input$selected_organism)
       query_files <- check_query_files()
       if (!is.null(query_files$organism)) {
-        # Get encryption key
-        encryption_key <- tryCatch(
-          {
-            readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
-          },
-          error = function(w) {
-            warning("[UploadServer] ERROR: missing encryption_key file!!!")
-            NULL
-          }
-        )
-        # if (!file.exists(encryption_key)) {
-        #   encryption_key <- NULL
-        # }
-        organism <- decrypt_util(query_files$organism, encryption_key)
+        organism <- query_files$organism
         upload_organism(organism)
       }
     })
