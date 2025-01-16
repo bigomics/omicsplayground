@@ -29,6 +29,11 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # RUN apt update && apt install -y fonts-lato
 
 #------------------------------------------------------------
+# Install quarto tinytext, to be removed when new image is built
+#------------------------------------------------------------
+RUN quarto install tinytex
+
+#------------------------------------------------------------
 # Add supporting R libraries
 #------------------------------------------------------------
 WORKDIR /
