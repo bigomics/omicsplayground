@@ -674,13 +674,14 @@ upload_module_computepgx_server <- function(
 
         ##-----------------------------------------------
         ## Params for scRNA-seq
-        sc.covs = as.character(input$regress_covariates)
+        do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
+        sc.covs <- as.character(input$regress_covariates)
         sc_compute_settings <- list(
           ## azimuth_ref <- to add
           nfeature_threshold = sc_compute_settings()$nfeature_threshold,
           mt_threshold = sc_compute_settings()$mt_threshold,
           hb_threshold = sc_compute_settings()$hb_threshold,
-          compute_supercells = ifelse(input$compute_supercells=="Compute supercells", TRUE, FALSE),
+          compute_supercells = ifelse(do.supercells, TRUE, FALSE),
           regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
           regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
           regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
