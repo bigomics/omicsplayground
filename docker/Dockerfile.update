@@ -30,8 +30,10 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
 #------------------------------------------------------------
 # Install quarto tinytext, to be removed when new image is built
+# + other stuff
 #------------------------------------------------------------
 RUN quarto install tinytex
+RUN R -e "install.packages('shinyFiles')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
