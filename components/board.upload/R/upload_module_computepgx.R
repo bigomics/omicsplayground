@@ -264,24 +264,35 @@ upload_module_computepgx_server <- function(
                     ns("compute_supercells"),
                     shiny::HTML("
                     <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
-                      <h4>Supercells:</h4>
+                      <h4>Supercells</h4>
                       <a href='https://cran.r-project.org/web/packages/SuperCell/index.html' target='_blank' class='info-link' style='margin-left: 15px;'>
                         <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>
                     </div>
                     "),
-                    choices = c("Compute supercells*"),
+                    choices = c("Compute supercells"),
                     selected = NULL
                   ),
-                  shiny::HTML("<small>*Supercells will be always computed for datasets with > 10K cells. </small>")
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Supercells always computed if >10K cells.</small>"),
+                  shiny::checkboxGroupInput(
+                    ns("regress_covariates"),
+                    shiny::HTML("<h4>Remove heterogeneity related to:</h4>"),
+                    choices = c(
+                      "Mitochondrial contamination",
+                      "Haemoglobin (blood) contamination",
+                      "Ribosomal expression",
+                      "Cell cycle scores"
+                    ),
+                    selected = NULL
+                  )
                 )
               },
               bslib::card(
-                shiny::checkboxGroupInput(
-                  ns("gene_methods"),
-                  shiny::HTML("<h4>Gene tests:</h4>"),
-                  GENETEST.METHODS(),
-                  selected = GENETEST.SELECTED()
+                  shiny::checkboxGroupInput(
+                    ns("gene_methods"),
+                    shiny::HTML("<h4>Gene tests:</h4>"),
+                    choices = GENETEST.METHODS(),
+                    selected = GENETEST.SELECTED()
                 )
               ),
               bslib::card(
@@ -661,15 +672,20 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
-        ##------scRNA-seq options: added into a list.
+        ##-----------------------------------------------
+        ## Params for scRNA-seq.
         ## azimuth_ref <- to add
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
         mt_threshold <- sc_compute_settings()$mt_threshold
         hb_threshold <- sc_compute_settings()$hb_threshold
-        cc <- (input$compute_supercells == "Compute supercells*")
-        compute_supercells <- ifelse(cc, TRUE, FALSE)
-        ##--------
-        
+        compute_supercells <- ifelse(input$compute_supercells=="Compute supercells", TRUE, FALSE)
+        sc.covs <- as.character(input$regress_covariates)
+        regress_mt <- ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE)
+        regress_hb <- ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE)
+        regress_ribo <- ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE)
+        regress_ccs <- ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+        ##-------------------------------------------------
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -690,7 +706,11 @@ upload_module_computepgx_server <- function(
             nfeature_threshold = nfeature_threshold,
             mt_threshold = mt_threshold,
             hb_threshold = hb_threshold,
-            compute_supercells = compute_supercells
+            compute_supercells = compute_supercells,
+            regress_mt = regress_mt,
+            regress_hb = regress_hb,
+            regress_ribo = regress_ribo,
+            regress_ccs = regress_ccs
           ),
           ## normalize = do.normalization,
           prune.samples = TRUE,
