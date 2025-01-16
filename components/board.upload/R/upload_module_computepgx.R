@@ -673,17 +673,19 @@ upload_module_computepgx_server <- function(
         pgx_save_folder <- auth$user_dir
 
         ##-----------------------------------------------
-        ## Params for scRNA-seq.
-        ## azimuth_ref <- to add
-        nfeature_threshold <- sc_compute_settings()$nfeature_threshold
-        mt_threshold <- sc_compute_settings()$mt_threshold
-        hb_threshold <- sc_compute_settings()$hb_threshold
-        compute_supercells <- ifelse(input$compute_supercells=="Compute supercells", TRUE, FALSE)
-        sc.covs <- as.character(input$regress_covariates)
-        regress_mt <- ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE)
-        regress_hb <- ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE)
-        regress_ribo <- ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE)
-        regress_ccs <- ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+        ## Params for scRNA-seq
+        sc.covs = as.character(input$regress_covariates)
+        sc_compute_settings <- list(
+          ## azimuth_ref <- to add
+          nfeature_threshold = sc_compute_settings()$nfeature_threshold,
+          mt_threshold = sc_compute_settings()$mt_threshold,
+          hb_threshold = sc_compute_settings()$hb_threshold,
+          compute_supercells = ifelse(input$compute_supercells=="Compute supercells", TRUE, FALSE),
+          regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
+          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
+          regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
+          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+        )
         ##-------------------------------------------------
 
         ## Define create_pgx function arguments
@@ -702,17 +704,18 @@ upload_module_computepgx_server <- function(
           # Options
           batch.correct = FALSE,
           norm_method = norm_method(),
-          sc_compute_settings = list(
-            nfeature_threshold = nfeature_threshold,
-            mt_threshold = mt_threshold,
-            hb_threshold = hb_threshold,
-            compute_supercells = compute_supercells,
-            regress_mt = regress_mt,
-            regress_hb = regress_hb,
-            regress_ribo = regress_ribo,
-            regress_ccs = regress_ccs
-          ),
-          ## normalize = do.normalization,
+          sc_compute_settings = sc_compute_settings,
+          ## sc_compute_settings = list(
+          ##   nfeature_threshold = nfeature_threshold,
+          ##   mt_threshold = mt_threshold,
+          ##   hb_threshold = hb_threshold,
+          ##   compute_supercells = compute_supercells,
+          ##   regress_mt = regress_mt,
+          ##   regress_hb = regress_hb,
+          ##   regress_ribo = regress_ribo,
+          ##   regress_ccs = regress_ccs
+          ## ),
+          ## ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = remove.unknown,
