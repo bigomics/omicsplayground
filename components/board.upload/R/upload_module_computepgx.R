@@ -71,7 +71,7 @@ upload_module_computepgx_server <- function(
         if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum","trend.limma")
+          mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
         } else {
           mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
         }
