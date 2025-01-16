@@ -82,10 +82,10 @@ enrichment_plot_compare_server <- function(id,
           cmp <- paste0(gset, "\n@", cmp)
 
           names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
-            x0 = strsplit(x, "_")[[1]]
+            x0 <- strsplit(x, "_")[[1]]
             return(x0[length(x0)])
           }))
-          
+
           playbase::gsea.enplot(
             rnk0,
             genes,
@@ -115,7 +115,7 @@ enrichment_plot_compare_server <- function(id,
           cmp <- paste0(gset, "\n@", cmp)
 
           names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
-            x0 = strsplit(x, "_")[[1]]
+            x0 <- strsplit(x, "_")[[1]]
             return(x0[length(x0)])
           }))
 
@@ -132,12 +132,15 @@ enrichment_plot_compare_server <- function(id,
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-
     }
 
-    compare.RENDER <- function() { render_compare() }
+    compare.RENDER <- function() {
+      render_compare()
+    }
 
-    compare.RENDER2 <- function() { render_compare() }
+    compare.RENDER2 <- function() {
+      render_compare()
+    }
 
     PlotModuleServer(
       "plot",
