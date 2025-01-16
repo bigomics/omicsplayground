@@ -221,7 +221,9 @@ app_server <- function(input, output, session) {
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
       inactivityCounter = inactivityCounter,
-      new_upload = new_upload
+      new_upload = new_upload,
+      fileBrowser = opt$UPLOAD_BROWSER,
+      fileBrowserRoot = opt$UPLOAD_ROOT
     )
 
 

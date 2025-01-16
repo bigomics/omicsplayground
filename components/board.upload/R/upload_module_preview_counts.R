@@ -24,7 +24,9 @@ upload_table_preview_counts_server <- function(
     height,
     title,
     info.text,
-    caption) {
+    caption,
+    fileBrowser,
+    fileBrowserRoot) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -121,7 +123,8 @@ upload_table_preview_counts_server <- function(
                 shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
-                width = "100%"
+                width = "100%",
+                fileBrowser = fileBrowser
               ),
               style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
@@ -168,6 +171,7 @@ upload_table_preview_counts_server <- function(
         } ## end of if-else
       ) ## end of div
     })
+    shinyFiles::shinyFileChoose(input, 'counts_csv', root=c(root=fileBrowserRoot), filetypes=c('RData', 'csv'))
 
     output$error_summary <- renderUI({
       div(
@@ -232,8 +236,16 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
+      shiny::req("list" %in% class(input$counts_csv))
+      if (!is.null(input$counts_csv$files)) {
+        name <- tail(input$counts_csv$files[[1]],1)[[1]]
+        datapath <- paste0(fileBrowserRoot, paste(input$counts_csv$files[[1]], collapse = "/"))
+      } else {
+        name <- input$counts_csv$name
+        datapath <- input$counts_csv$datapath
+      }
       # check if counts is csv (necessary due to drag and drop of any file)
-      ext <- tools::file_ext(input$counts_csv$name)
+      ext <- tools::file_ext(name)
       if (!all(ext %in% c("csv", "RData"))) {
         shinyalert::shinyalert(
           title = "File format not supported.",
@@ -244,7 +256,7 @@ upload_table_preview_counts_server <- function(
       }
 
       # if counts not in file name, give warning and return
-      if (!any(grepl("count|expression|abundance|params.rdata", tolower(input$counts_csv$name)))) {
+      if (!any(grepl("count|expression|abundance|params.rdata", tolower(name)))) {
         shinyalert::shinyalert(
           title = tspan("Counts not in filename.", js = FALSE),
           text = tspan("Please make sure the file name contains 'counts', such as counts_dataset.csv or counts.csv.", js = FALSE),
@@ -256,24 +268,24 @@ upload_table_preview_counts_server <- function(
       # Save file
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
         file.copy(
-          from = input$counts_csv$datapath,
+          from = datapath,
           to = paste0(raw_dir(), "/counts.csv"),
           overwrite = TRUE
         )
       } else { # At first raw_dir will not exist, if the user deletes and uploads a different counts it will already exist
         raw_dir(create_raw_dir(auth))
         file.copy(
-          from = input$counts_csv$datapath,
+          from = datapath,
           to = paste0(raw_dir(), "/counts.csv"),
           overwrite = TRUE
         )
       }
 
-      sel <- grep("count|expression|abundance", tolower(input$counts_csv$name))
+      sel <- grep("count|expression|abundance", tolower(name))
       if (length(sel)) {
         df <- tryCatch(
           {
-            playbase::read_counts(input$counts_csv$datapath[sel[1]])
+            playbase::read_counts(datapath[sel[1]])
           },
           error = function(w) {
             NULL
@@ -281,23 +293,23 @@ upload_table_preview_counts_server <- function(
         )
         if (is.null(df)) {
           data_error_modal(
-            path = input$counts_csv$datapath[sel[1]],
+            path = datapath[sel[1]],
             data_type = "counts"
           )
         } else {
           uploaded$counts.csv <- df
 
           # if counts file contains annotation
-          af <- playbase::read_annot(input$counts_csv$datapath[sel[1]])
+          af <- playbase::read_annot(datapath[sel[1]])
           uploaded$annot.csv <- af
         }
       }
 
-      sel <- grep("samples", tolower(input$counts_csv$name))
+      sel <- grep("samples", tolower(name))
       if (length(sel)) {
         df <- tryCatch(
           {
-            playbase::read_samples(input$counts_csv$datapath[sel[1]])
+            playbase::read_samples(datapath[sel[1]])
           },
           error = function(w) {
             NULL
@@ -305,7 +317,7 @@ upload_table_preview_counts_server <- function(
         )
         if (is.null(df)) {
           data_error_modal(
-            path = input$counts_csv$datapath[sel[1]],
+            path = datapath[sel[1]],
             data_type = "samples"
           )
         } else {
@@ -313,11 +325,11 @@ upload_table_preview_counts_server <- function(
         }
       }
 
-      sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
+      sel <- grep("contrast|comparison", tolower(name))
       if (length(sel)) {
         df <- tryCatch(
           {
-            playbase::read_contrasts(input$counts_csv$datapath[sel[1]])
+            playbase::read_contrasts(datapath[sel[1]])
           },
           error = function(w) {
             NULL
@@ -325,7 +337,7 @@ upload_table_preview_counts_server <- function(
         )
         if (is.null(df)) {
           data_error_modal(
-            path = input$counts_csv$datapath[sel[1]],
+            path = datapath[sel[1]],
             data_type = "contrasts"
           )
         } else {
@@ -333,10 +345,10 @@ upload_table_preview_counts_server <- function(
         }
       }
 
-      sel <- grep("params.RData", input$counts_csv$name)
+      sel <- grep("params.RData", name)
       if (length(sel)) {
         if (opt$DEVMODE) {
-          params <- readRDS(input$counts_csv$datapath[sel[1]])
+          params <- readRDS(datapath[sel[1]])
           uploaded$samples.csv <- params$samples
           uploaded$contrasts.csv <- params$contrasts
           uploaded$counts.csv <- params$counts

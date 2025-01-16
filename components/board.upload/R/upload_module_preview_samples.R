@@ -17,7 +17,9 @@ upload_table_preview_samples_server <- function(
     height,
     title,
     info.text,
-    caption) {
+    caption,
+    fileBrowser,
+    fileBrowserRoot) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -109,7 +111,8 @@ upload_table_preview_samples_server <- function(
                 shiny::h4("Choose samples.csv", class = "mb-0"),
                 multiple = FALSE,
                 accept = c(".csv"),
-                width = "100%"
+                width = "100%",
+                fileBrowser = fileBrowser
               ),
               style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
@@ -154,6 +157,8 @@ upload_table_preview_samples_server <- function(
         }
       )
     })
+    shinyFiles::shinyFileChoose(input, 'samples_csv', root=c(root=fileBrowserRoot), filetypes=c('RData', 'csv'))
+
 
     output$error_summary <- renderUI({
       chk1 <- checklist$samples.csv$checks
@@ -260,8 +265,16 @@ upload_table_preview_samples_server <- function(
 
     ## pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
+      shiny::req("list" %in% class(input$samples_csv))
+      if (!is.null(input$samples_csv$files)) {
+        name <- tail(input$samples_csv$files[[1]],1)[[1]]
+        datapath <- paste0(fileBrowserRoot, paste(input$samples_csv$files[[1]], collapse = "/"))
+      } else {
+        name <- input$samples_csv$name
+        datapath <- input$samples_csv$datapath
+      }
       # check if samples is csv (necessary due to drag and drop of any file)
-      ext <- tools::file_ext(input$samples_csv$name)[1]
+      ext <- tools::file_ext(name)[1]
       if (ext != "csv") {
         shinyalert::shinyalert(
           title = "File format not supported.",
@@ -271,7 +284,7 @@ upload_table_preview_samples_server <- function(
         return()
       }
       # if samples not in file name, give warning and return
-      if (!grepl("sample", input$samples_csv$name, ignore.case = TRUE)) {
+      if (!grepl("sample", name, ignore.case = TRUE)) {
         shinyalert::shinyalert(
           title = "Samples not in filename.",
           text = "Please make sure the file name contains 'samples', such as samples_dataset.csv or samples.csv.",
@@ -282,14 +295,14 @@ upload_table_preview_samples_server <- function(
 
       # Save file
       file.copy(
-        from = input$samples_csv$datapath,
+        from = datapath,
         to = paste0(raw_dir(), "/samples.csv"),
         overwrite = TRUE
       )
 
       df <- tryCatch(
         {
-          playbase::read.as_matrix(input$samples_csv$datapath)
+          playbase::read.as_matrix(datapath)
         },
         error = function(w) {
           NULL
@@ -297,7 +310,7 @@ upload_table_preview_samples_server <- function(
       )
       if (is.null(df)) {
         data_error_modal(
-          path = input$samples_csv$datapath,
+          path = datapath,
           data_type = "samples"
         )
       } else {
