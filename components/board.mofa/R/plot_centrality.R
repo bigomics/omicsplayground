@@ -45,7 +45,7 @@ mofa_plot_centrality_server <- function(id,
       par(mar=c(4,4,1,0.5))
       playbase::mofa.plot_centrality(
         res, k=k, y=y, show_types=show_types,
-        main = "")
+        transpose=TRUE, main = "")
     }
 
     PlotModuleServer(

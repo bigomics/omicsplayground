@@ -9,11 +9,9 @@ DeepNetInputs <- function(id) {
     shiny::hr(), shiny::br(),
 
     ## data set parameters
-    shiny::selectInput(ns("selected_pheno"), "Select phenotype:", choices = NULL),    
-    shiny::selectInput(ns("show_conditions"), "Show conditions:", choices = NULL,
-                       multiple = TRUE),
-    shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL,
-                       multiple = TRUE),    
+    shiny::selectInput(ns("selected_pheno"), "Select phenotype:", choices = NULL, multiple = FALSE),
+    shiny::selectInput(ns("show_conditions"), "Show conditions:", choices = NULL, multiple = TRUE),
+    shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),    
 
     p("Network learning:"),
     shiny::actionButton(ns("step"), "Step1", size="xs"),
@@ -28,17 +26,18 @@ DeepNetInputs <- function(id) {
       "input.options % 2 == 1",
       ns = ns,
       shiny::tagList(
+        shiny::selectInput(ns("model"), "Model", choices = c("minimal","medium","deep"),
+                           selected="medium"),
+        shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
         shiny::checkboxInput(ns("augment"), "augment data (10x)", FALSE),
         # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),
         # shiny::checkboxInput(ns("sdweight"), "gradient SD weight", TRUE),
-        shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
+        # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
         #shiny::checkboxInput(ns("dropout"), "use dropout", FALSE),
         shiny::checkboxInput(ns("addnoise"), "add internal noise", TRUE),
         shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE),
-        shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),        
-        shiny::selectInput(ns("model"), "Model", choices = c("minimal","default","deep"),
-                           selected="default"),
-        shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8)
+        shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE)
+        #shiny::checkboxInput(ns("multitarget"), "multi target", FALSE)        
         #shiny::selectInput(ns("optim"), "Optimizer",
         #  choices = c("adam","adamw","sgd","lbfgs"), selected="adam"),
         #shiny::selectInput(ns("actfun"), "Activation function",

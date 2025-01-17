@@ -34,7 +34,7 @@ PcsfInputs <- function(id) {
       ns = ns,
       br(),
       withTooltip(
-        shiny::radioButtons(ns("pcsf_ntop"), "Initial network size:",
+        shiny::radioButtons(ns("pcsf_ntop"), "Network size:",
           choices = c("S" = 150, "M" = 500, "L" = 1500),
           selected = 500, inline = TRUE
         ),

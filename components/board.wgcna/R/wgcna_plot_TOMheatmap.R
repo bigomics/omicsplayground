@@ -40,7 +40,7 @@ wgcna_plot_TOMheatmap_server <- function(id,
 
       out <- wgcna.compute()
 
-      playbase::plotTOMfromResults(
+      playbase::wgcna.plotTOM(
         out,
         power = as.numeric(power()),
         tomtype = tomtype(),

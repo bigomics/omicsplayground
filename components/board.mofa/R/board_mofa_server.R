@@ -44,8 +44,7 @@ MofaBoard <- function(id, pgx) {
 
         mofa <- NULL
         has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
-        shiny::validate( shiny::need( has.mofa, "No MOFA slot in object. Please recompute MOFA"))
-        
+        shiny::validate( shiny::need( has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
 #        if(!has.mofa) {
 #          shinyalert::shinyalert("Warning","No MOFA slot in object. Please recompute MOFA.")
 #          return(NULL)
@@ -55,7 +54,8 @@ MofaBoard <- function(id, pgx) {
         
         ## update factors in selectInput
         factors <- colnames(mofa$F)
-        dtypes <- names(mofa$ww)
+        factors <- sort(factors)
+        dtypes  <- names(mofa$ww)
         sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
         contrasts <- colnames(mofa$contrasts)
         phenotypes <- colnames(mofa$samples)
@@ -76,6 +76,11 @@ MofaBoard <- function(id, pgx) {
       shiny::req(pgx$X, input$kernel, input$numfactors)
 
       if(input$compute==0) return(NULL)
+
+      if(!is.null(pgx$datatype) && pgx$datatype != "multi-omics") {
+        shinyalert::shinyalert("Error", "This is not a multi-omics dataset.")
+        return(NULL)
+      }
       
       kernel <- input$kernel
       pgx.showSmallModal(paste("Calculating",kernel,"...<br>please wait"))

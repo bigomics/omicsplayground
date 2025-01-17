@@ -32,7 +32,7 @@ WgcnaInputs <- function(id) {
         shiny::sliderInput(ns("power"), "Power", 1, 20, 6),
         shiny::sliderInput(ns("deepsplit"), "Deepsplit", 0, 4, 2),        
         shiny::selectInput(ns("minmodsize"), "Min. module size",
-          choices = c(10, 20, 50, 100),  selected = 20
+          choices = c(5, 10, 20, 50, 100),  selected = 20
         ),
         shiny::br(),
         shiny::actionButton(

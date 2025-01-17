@@ -47,17 +47,24 @@ DeepNetBoard <- function(id, pgx) {
     })
 
     update <- reactiveVal(0)
-    update_diagram <- reactiveVal(0)
     
-    shiny::observeEvent( pgx$samples, {
+    shiny::observeEvent(
+      #list(pgx$samples, pgx$multitarget)
+      list(pgx$samples)
+     , {
       phenotypes <- playbase::pgx.getCategoricalPhenotypes(pgx$samples)
-      shiny::updateSelectInput(session, "selected_pheno", choices = phenotypes)
+      shiny::updateSelectInput(session, "selected_pheno", choices = phenotypes,
+                               ## options = list(maxItems=2),
+                               selected = phenotypes[1] )
       update( update() + 1)
     })
-
+    
+    
     shiny::observeEvent( input$selected_pheno, {
       shiny::req(input$selected_pheno)
+      dbg("[DeepNetBoard] input$selected_pheno = ", input$selected_pheno)
       conditions <- sort(unique(pgx$samples[, input$selected_pheno]))
+      dbg("[DeepNetBoard] conditions = ", conditions)
       shiny::updateSelectInput(session, "show_conditions", choices = conditions,
                                selected = head(conditions,3) )      
     })
@@ -125,13 +132,23 @@ DeepNetBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
                                selected = sel.datatype[1] )
 
-      ## update_diagram(update_diagram()+1)
     })
+
+    ## update network diagram if model changes and reset
+    update_diagram <- reactiveVal("")
+    observeEvent({
+      input$reset
+    },{
+      if(is.null(input$model)) return(NULL)
+      if( input$model == update_diagram()) return()
+      update_diagram(input$model)
+    })
+
     
     ## ================================================================================
     ## ========================== BOARD FUNCTIONS =====================================
     ## ================================================================================
-       
+
     
     ## create reactive DeepNet object
     net <- shiny::eventReactive({
@@ -139,18 +156,19 @@ DeepNetBoard <- function(id, pgx) {
     }, {
       
       pheno <- input$selected_pheno
+      shiny::req(pheno)
+
       dbg("[DeepNetBoard] initialize deepnet model for",pheno)
       X <- pgx$X
       if(any(is.na(X))) {
         dbg("[DeepNetBoard] imputing missing values in X")
         X <- playbase::svdImpute2(X)
       }
-      y <- pgx$samples[, pheno]
-      ii <- which(!is.na(y))
-      y <- y[ii]
+      y <- pgx$samples[, pheno, drop=FALSE]
+      ii <- which(rowSums(is.na(y)) == 0)
+      y <- y[ii,,drop=FALSE]
       X <- X[,ii]
-      sdX <- matrixStats::rowSds(X)
-
+      sdX <- matrixStats::rowSds(X, na.rm=TRUE)
       dbg("[DeepNetBoard] 1: dim(X) = ", dim(X))
       dbg("[DeepNetBoard] 1: length(y) = ", length(y))                
       xx <- playbase::mofa.split_data(X)  ## also handles single-omics
@@ -159,25 +177,27 @@ DeepNetBoard <- function(id, pgx) {
         dbg("[DeepNetBoard] adding genesets ")
         gsetx <- pgx$gsetX[,ii]
         xx <- c( xx, list(gset=gsetx))
-        update_diagram(update_diagram()+1)
       }
       
       if(input$augment) {
         ntime = 10
         xx <- playbase::mofa.augment(xx, ntime, z=1)
-        y <- rep(y, ntime)
+        y  <- do.call( rbind, rep(list(y),ntime))
         dbg("[DeepNetBoard] augmented X: dim(xx[[1]]) = ", dim(xx[[1]]))
-        dbg("[DeepNetBoard] augmented y: length(y) = ", length(y))                
+        dbg("[DeepNetBoard] augmented y: dim(y) = ", dim(y))                
       }
       
-      l1 = l2 = 1.00
+      l1 = 1
+      l2 = 100
 #      l1 <- as.numeric(10^input$l1regularization)
 #      l2 <- as.numeric(10^input$l2regularization)      
       loss_weights <- c(y=1, ae=10, l1=l1, l2=l2)
 
       ## create the Neural network
-      yy <- list(PHENO = as.factor(y))  ## one target for now...
-
+      yy <- as.list(y)  ## one target for now...
+      yy <- lapply(yy, as.factor)
+      names(yy) <- pheno
+      
       dbg("[DeepNetBoard] creating Torch NN model: ", input$model)                
       latent_dim <- input$latent_dim
 
@@ -201,7 +221,8 @@ DeepNetBoard <- function(id, pgx) {
         #actfun = input$actfun,
         actfun = "leaky",        
         use_glu = 2*input$useGLU,  ## GLU mode
-        use_bn = input$useBN        
+        use_bn = TRUE
+        # use_bn = input$useBN                
         # scale = input$scaleinput,
         # sd_weight = input$sdweight
       )

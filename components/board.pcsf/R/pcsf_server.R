@@ -152,7 +152,8 @@ PcsfBoard <- function(id, pgx) {
           beta = 10^beta,
           use.corweight = TRUE,
           dir = "both",
-          rm.negedge = TRUE
+          rm.negedge = TRUE,
+          as.name = c("mx")
         )
         if (is.null(pcsf)) {
           validate()

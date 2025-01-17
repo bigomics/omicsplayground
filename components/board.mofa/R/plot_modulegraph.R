@@ -41,7 +41,7 @@ mofa_plot_modulegraph_server <- function(id,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function() {
+    plot.RENDER <- function(springLength=25) {
       graphs <- mofa()$graphs
       k <- input_k()
       shiny::req(k %in% names(graphs$features))
@@ -70,16 +70,21 @@ mofa_plot_modulegraph_server <- function(id,
           barnesHut = list(
             gravitationalConstant = -1000,
             centralGravity = 0.3,
-            springLength = 20
+            springLength = springLength
           )
         )
 
       vis
     }
 
+    plot.RENDER2 <- function() {
+      plot.RENDER2(springLength=50) 
+    }
+    
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
+      func2 = plot.RENDER2,      
       plotlib = "visnetwork",
       pdf.width = 8, pdf.height = 8,
       res = c(80, 100),

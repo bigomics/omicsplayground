@@ -67,12 +67,12 @@ MODULE.multiomics <- list(
         "mofa-tab",
         "MOFA",
         tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
-                  integration method based on multi-omcis factor analysis.")
+                  integration method based on matrix factorization.")
       ),
       bigdash::sidebarTabHelp(
         "mgsea-tab",
         "multiGSEA",
-        tspan("multiGSEA perform multi-omics integration on gene set level.")
+        tspan("multiGSEA performs multi-omics integration on gene set level.")
       ),
       bigdash::sidebarTabHelp(
         "snf-tab",
