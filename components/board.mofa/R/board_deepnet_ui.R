@@ -69,13 +69,13 @@ DeepNetUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>Multi-Omics integration by deep learning network</b>. Here we integrate multi-omics data using a multi-view supervised auto-encoder. This architecture is a combination of (multiple) auto-encoders and a multilayer perceptron (MLP) classifier that uses a merge of the bottleneck layers for prediction.")),
           bslib::layout_columns(
-            col_widths = breakpoints(
+            col_widths = bslib::breakpoints(
               xxxl = c(6, 6),
               xl = c(12, 12),              
               sm = c(12, 12)
             ),
             bslib::layout_columns(
-              col_widths = breakpoints(
+              col_widths = bslib::breakpoints(
                 xxxl = c(12, 6, 6),
                 xl = c(6, 3, 3),              
                 sm = c(12, 12, 12)
@@ -100,7 +100,7 @@ DeepNetUI <- function(id) {
               )
             ),
             bslib::layout_columns(
-              col_widths = breakpoints(
+              col_widths = bslib::breakpoints(
                 xl = c(6, 3, 3),              
                 sm = c(12, 12, 12, 12)
               ),

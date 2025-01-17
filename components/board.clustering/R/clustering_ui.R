@@ -243,7 +243,7 @@ ClusteringUI <- function(id) {
           height = fullH,
           bs_alert(HTML(pca_info)),
           bslib::layout_columns(
-            col_widths = c(7, 5),
+            col_widths = c(6, 6),
             height = fullH,
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
