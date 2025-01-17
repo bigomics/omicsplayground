@@ -31,8 +31,14 @@ upload_module_normalizationSC_server <- function(id,
       ## ------------------------------------------------------------------
       output$normalization <- shiny::renderUI({
 
+        shiny::req(r_counts())
+        counts <- r_counts()        
+        nFeature_RNA <- Matrix::colSums(counts > 0, na.rm = TRUE)
+        qF <- quantile(nFeature_RNA, probs = c(0.01, 0.99))
+        
         shiny::req(r_samples())
         samples <- r_samples()
+
         metadata_vars0 <- colnames(samples)
         metadata_vars1 <- c(
           "orig.ident", "seurat_clusters",
@@ -78,14 +84,6 @@ upload_module_normalizationSC_server <- function(id,
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;"
                 ),
-                ##shiny::checkboxInput(
-                ##  ns("infercelltypes"),
-                ##  label = "Infer cell types with Azimuth",
-                ##  value = FALSE
-                ##),
-                ## shiny::conditionalPanel(
-                ##  "input.infercelltypes == true",
-                ##  ns = ns,
                 shiny::selectInput(
                   ns("ref_atlas"),
                   label = "Select reference atlas",
@@ -96,7 +94,6 @@ upload_module_normalizationSC_server <- function(id,
                     "pbmcref", "tonsilref", "<select>"
                   ),
                   selected = "<select>"
-                ##)
                 ),
                 shiny::br()
               ),
@@ -128,7 +125,7 @@ upload_module_normalizationSC_server <- function(id,
                   "input.remove_cells == true",
                   ns = ns,
                   shiny::sliderInput(ns("nfeature_threshold"), "Detected genes per cell:",
-                    min = 0, max = 10000, value = c(100, 4000)),
+                    min = 0, max = max(nFeature_RNA), value = c(qF[1], qF[2])),
                   shiny::sliderInput(ns("mt_threshold"), "MT expresssion threshold (%):", 1, 100, 10, 0),
                   shiny::sliderInput(ns("hb_threshold"), "HB expression threshold (%):", 1, 100, 10, 0)
                 ),
@@ -352,14 +349,15 @@ upload_module_normalizationSC_server <- function(id,
                   pp <- pp + scale_y_continuous(limits = c(0, NA))
                 }
               }
+
               ## make yintercept from reactive values
-              if(v == "percent.mt") {
+              if (v == "percent.mt") {
                 pp <- pp + geom_hline(yintercept = input$mt_threshold, col = "firebrick2")
               }
-              if(v == "percent.hb") {
+              if (v == "percent.hb") {
                 pp <- pp + geom_hline(yintercept = input$hb_threshold, col = "firebrick2")
               }
-              if(v == "nFeature_RNA") {
+              if (v == "nFeature_RNA") {
                 minv <- input$nfeature_threshold[1]
                 maxv <- input$nfeature_threshold[2]
                 pp <- pp + geom_hline(yintercept = c(minv, maxv), col = "firebrick2")
@@ -367,7 +365,7 @@ upload_module_normalizationSC_server <- function(id,
               pp <- pp + scale_x_discrete(labels = "Cells")
               plist[[v]] <- pp + labs(title = v) + ylab(ylab)
             }
-            if(v %in% char.vars) {
+            if (v %in% char.vars) {
               tt <- data.frame(table(meta[, v]))
               pp <- ggplot(tt, aes(x = Var1, y = Freq))
               pp <- pp + geom_bar(stat = "identity", fill = "dim gray")
@@ -397,7 +395,7 @@ upload_module_normalizationSC_server <- function(id,
           i = 1
           for(i in 1:length(vars)) {
             v <- vars[i]
-            if(v %in% num.vars) {
+            if (v %in% num.vars) {
               pp <- ggplot(meta, aes_string(y = v, x = grp))
               pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
               ylab <- v
@@ -542,13 +540,8 @@ upload_module_normalizationSC_server <- function(id,
       })
       
       azimuth_ref <- shiny::reactive({
-        ## shiny::req(input$infercelltypes)
-        ##if (input$ref_atlas != "<select>") {
           ref <- input$ref_atlas
           return(ref)
-        ##} else {
-        ##  return(NULL)
-        ##}
       })
 
       nfeat_thr <- shiny::reactive({
