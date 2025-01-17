@@ -78,7 +78,7 @@ mofa_plot_modulegraph_server <- function(id,
     }
 
     plot.RENDER2 <- function() {
-      plot.RENDER2(springLength=50) 
+      plot.RENDER(springLength=50) 
     }
     
     PlotModuleServer(
