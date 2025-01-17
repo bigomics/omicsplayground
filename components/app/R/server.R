@@ -117,6 +117,12 @@ app_server <- function(input, output, session) {
       allow_new_users = opt$ALLOW_NEW_USERS,
       redirect_login = TRUE
     )
+  } else if (authentication == "endpoint") {
+    auth <- EndpointAuthenticationModule(
+      id = "auth",
+      auth_url = opt$AUTH_ENDPOINT,
+      redirect_login = FALSE
+    )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
     auth <- NoAuthenticationModule(

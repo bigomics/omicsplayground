@@ -181,6 +181,7 @@ opt.default <- list(
   TIMEOUT = 0,
   WATERMARK = TRUE,
   APACHE_COOKIE_PATH = OPG,
+  AUTH_ENDPOINT = "http://localhost:8000",
   DEVMODE = FALSE
 )
 

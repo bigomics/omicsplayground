@@ -1227,6 +1227,264 @@ LoginCodeAuthenticationModule <- function(id,
   })
 }
 
+## ================================================================================
+## EndpointAuthenticationModule (using external auth endpoints)
+## ================================================================================
+
+EndpointAuthenticationModule <- function(id,
+                                       auth_url = "http://localhost:8000",
+                                       redirect_login = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    message("[EndpointAuthenticationModule] >>>> using external authentication endpoints <<<<")
+    ns <- session$ns
+
+    iv <- shinyvalidate::InputValidator$new()
+    iv$add_rule("login_email", shinyvalidate::sv_required())
+    iv$add_rule("login_email", shinyvalidate::sv_email())
+    iv$enable()
+
+    USER <- shiny::reactiveValues(
+      method = "endpoint",
+      logged = FALSE,
+      username = NA,
+      email = NA,
+      level = "",
+      limit = "",
+      options = opt, ## global
+      user_dir = PGX.DIR ## global
+    )
+
+    email_sent <- FALSE
+
+    login_modal <- NULL
+    if (!redirect_login) {
+      login_modal <- splashLoginModal(
+        ns = ns,
+        with.email = TRUE,
+        with.username = FALSE,
+        with.password = FALSE,
+        title = "Enter Email",
+        subtitle = "To register or sign in, enter your email and we'll send you a login code.",
+        button.text = "Send code!"
+      )
+    } else {
+      login_modal <- splashLoginModal(
+        ns = ns,
+        with.email = FALSE,
+        with.username = FALSE,
+        with.password = FALSE,
+        with.link = TRUE,
+        link = "https://auth.bigomics.ch/#!/login",
+        title = "Welcome!",
+        subtitle = "To register or sign in, click the Log in button.",
+        button.text = "Log in"
+      )
+    }
+
+    ## Show login modal on start
+    shiny::showModal(login_modal)
+
+    resetUSER <- function() {
+      dbg("[EndpointAuthenticationModule] resetUSER called")
+      USER$logged <- FALSE
+      USER$username <- NA
+      USER$email <- NA
+      USER$password <- NA
+      USER$level <- ""
+      USER$limit <- ""
+
+      email_sent <<- FALSE
+      updateTextInput(session, "login_email", value = "")
+      updateTextInput(session, "login_password", value = "")
+
+      PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+      REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+
+      shiny::showModal(login_modal)
+    }
+
+    output$showLogin <- shiny::renderUI({
+      email_sent <<- FALSE
+      shiny::showModal(login_modal)
+    })
+
+    output$login_warning <- shiny::renderText("")
+
+    email_waiter <- waiter::Waiter$new(
+      id = ns("login_submit_btn"),
+      html = div(waiter::spin_3(),
+        style = "transform: scale(0.6);"
+      ),
+      color = waiter::transparent(.8)
+    )
+
+    ## --------------------------------------
+    ## Step 1: react on send email button
+    ## --------------------------------------
+    query_email <- shiny::reactive({
+      query_email <- shiny::getQueryString()$email
+      query_email
+    })
+
+    shiny::observeEvent(
+      list(input$login_submit_btn, query_email()),
+      {
+        if (is.null(query_email())) {
+          shiny::req(input$login_email)
+          login_email <- input$login_email
+        } else {
+          login_email <- query_email()
+        }
+
+        if (email_sent) {
+          info("[EndpointAuthenticationModule] email already sent. waiting for code.")
+        } else {
+          dbg("[EndpointAuthenticationModule] initiating sending code")
+
+          login_email <- tolower(login_email)
+
+          # Call verify-email endpoint
+          response <- tryCatch({
+            httr::POST(
+              paste0(auth_url, "/auth/verify-email"), 
+              body = list(email = login_email),
+              encode = "json"
+            )
+          }, error = function(e) {
+            # Handle the error (e.g., log it, show a message to the user)
+            shiny::showNotification("Server is unreachable. Please try again later.", type = "error")
+            return(NULL) # Return NULL or handle as needed
+          })
+
+          if (is.null(response)) {
+            output$login_warning <- shiny::renderText("Server is unreachable. Please try again later.")
+            shinyjs::delay(4000, {
+              output$login_warning <- shiny::renderText("")
+            })
+            return(NULL)
+          }
+
+          # Check if response indicates success
+          if (httr::status_code(response) != 200) {
+            error_msg <- tryCatch({
+              httr::content(response)$message
+            }, error = function(e) {
+              "Authentication failed. Please try again."
+            })
+            output$login_warning <- shiny::renderText(error_msg)
+            shinyjs::delay(4000, {
+              output$login_warning <- shiny::renderText("")
+            })
+            return(NULL)
+          }
+
+          USER$email <- login_email
+          USER$username <- login_email
+          USER$logged <- FALSE
+          email_sent <<- TRUE
+
+          ## change buttons and field
+          login_modal2 <- splashLoginModal(
+            ns = ns,
+            id = "login2",
+            with.email = FALSE,
+            with.username = FALSE,
+            with.password = TRUE,
+            hide.password = FALSE,
+            title = "Enter Code",
+            subtitle = "Enter the login code that we have just sent to you.",
+            button.text = "Submit",
+            add.cancel = TRUE,
+            cancel.text = "Cancel"
+          )
+          shiny::removeModal()
+          shiny::showModal(login_modal2)
+          updateTextInput(session, "login2_email", value = "")
+          updateTextInput(session, "login2_password", value = "", placeholder = "enter code")
+
+          shinyalert::shinyalert(
+            title = "",
+            text = "We have emailed you a login code. Please check your mailbox.",
+            size = "xs"
+          )
+        }
+      }
+    )
+
+    entered_code <- shiny::reactiveVal("")
+    observeEvent(input$login2_submit_btn, {
+      shiny::req(input$login2_password)
+      entered_code(input$login2_password)
+    })
+
+    ## --------------------------------------
+    ## Step 2: react on submit CODE button
+    ## --------------------------------------
+    shiny::observeEvent(entered_code(), {
+      shiny::req(entered_code())
+
+      if (email_sent) {
+        input_code <- entered_code()
+        input_code <- gsub(" ", "", input_code)
+
+        # Call verify-code endpoint
+        response <- httr::POST(
+          paste0(auth_url, "/auth/verify-code"),
+          body = list(
+            email = USER$email,
+            login_code = input_code
+          ),
+          encode = "json"
+        )
+
+        if (httr::status_code(response) != 200) {
+          output$login2_warning <- shiny::renderText(
+            if (is.null(httr::content(response)$message)) "Invalid code" else httr::content(response)$message
+          )
+          entered_code("")
+          shinyjs::delay(4000, {
+            output$login2_warning <- shiny::renderText("")
+          })
+          updateTextInput(session, "login2_password", value = "")
+          return(NULL)
+        }
+
+        output$login_warning <- shiny::renderText("")
+
+        # create user_dir (always), set path, and set options
+        USER$user_dir <- file.path(PGX.DIR, USER$email)
+        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+        if (!opt$ENABLE_USERDIR) {
+          USER$user_dir <- file.path(PGX.DIR)
+        }
+        USER$options <- read_user_options(USER$user_dir)
+        session$sendCustomMessage("set-user", list(user = USER$email))
+        entered_code("") ## important for next user
+        shiny::removeModal()
+
+        USER$logged <- TRUE
+        email_sent <<- FALSE
+      }
+    })
+
+    shiny::observeEvent(
+      list(
+        input$login2_cancel_btn
+      ),
+      {
+        if (is.null(input$login2_cancel_btn) || input$login2_cancel_btn == 0) {
+          return(NULL)
+        }
+        resetUSER()
+      }
+    )
+
+    ## export as 'public' functions
+    USER$resetUSER <- resetUSER
+
+    return(USER)
+  })
+}
 
 ## ================================================================================
 ## ================================= END OF FILE ==================================
