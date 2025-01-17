@@ -582,7 +582,7 @@ app_server <- function(input, output, session) {
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
     }
-    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab") && loaded$multiomics == 0) {
+    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2())
@@ -590,6 +590,7 @@ app_server <- function(input, output, session) {
       shinyjs::hide(id = "mgsea-loader")
       shinyjs::hide(id = "snf-loader")
       shinyjs::hide(id = "lasagna-loader")
+      shinyjs::hide(id = "deepnet-loader")
       mod$module_server(PGX, board_observers = NULL)
       loaded$multiomics <- 1
     }

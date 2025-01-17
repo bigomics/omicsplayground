@@ -4,7 +4,7 @@
 ##
 
 
-MofaBoard <- function(id, pgx) {
+MofaBoard <- function(id, pgx, board_observers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page

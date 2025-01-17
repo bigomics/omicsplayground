@@ -2,8 +2,6 @@
 ## object id.
 
 MODULE.multiomics <- list( 
-##MODULES[["multiomics"]] <- list(
-
   module_menu = function() {
     c(
       mofa = "MOFA",
@@ -13,53 +11,87 @@ MODULE.multiomics <- list(
       deepnet = "DeepLearning"                
     )
   },
-  
-  module_server = function(PGX) {
-    info("[SERVER] calling MofaBoard module")
-    MofaBoard("mofa", pgx = PGX)
-
-    info("[SERVER] calling MGseaBoard module")
-    MGseaBoard("mgsea", pgx = PGX)
-          
-    info("[SERVER] calling SNF_Board module")
-    SNF_Board("snf", pgx = PGX)
-
-    info("[SERVER] calling LasagnaBoard module")
-    LasagnaBoard("lasagna", pgx = PGX)
-
-    info("[SERVER] calling DeepNetBoard module")
-    DeepNetBoard("deepnet", pgx = PGX)
-  },
-
+ 
   module_ui = function() {
     list(
       bigdash::bigTabItem(   ## call this in app.R??
         "mofa-tab",
         MofaInputs("mofa"),
-        MofaUI("mofa")
+        create_loader("mofa-loader")        
       ),        
       bigdash::bigTabItem(
         "mgsea-tab",
         MGseaInputs("mgsea"),
-        MGseaUI("mgsea")
+        create_loader("mgsea-loader")        
       ),        
       bigdash::bigTabItem(
         "snf-tab",
         SNF_Inputs("snf"),
-        SNF_UI("snf")
+        create_loader("snf-loader")
       ),        
       bigdash::bigTabItem(
         "lasagna-tab",
         LasagnaInputs("lasagna"),
-        LasagnaUI("lasagna")
+        create_loader("lasagna-loader")
       ),
       bigdash::bigTabItem(
         "deepnet-tab",
-        DeepNetInputs("deepnet"),
+        create_loader("deepnet-loader")
+      )        
+    )
+  },    
+
+  module_ui2 = function() {
+    list(
+      list(   ## call this in app.R??
+        "mofa-tab",
+        MofaUI("mofa")
+      ),        
+      list(
+        "mgsea-tab",
+        MGseaUI("mgsea")
+      ),        
+      list(
+        "snf-tab",
+        SNF_UI("snf")
+      ),        
+      list(
+        "lasagna-tab",
+        LasagnaUI("lasagna")
+      ),
+      list(
+        "deepnet-tab",
         DeepNetUI("deepnet")
       )        
     )
   },    
+
+  module_server = function(PGX, board_observers = NULL) {
+    info("[SERVER] calling MofaBoard module")
+    MofaBoard("mofa", pgx = PGX,
+      board_observers = board_observers
+    )
+
+    info("[SERVER] calling MGseaBoard module")
+    MGseaBoard("mgsea", pgx = PGX,
+      board_observers = board_observers
+    )
+          
+    info("[SERVER] calling SNF_Board module")
+    SNF_Board("snf", pgx = PGX,
+      board_observers = board_observers
+    )
+
+    info("[SERVER] calling LasagnaBoard module")
+    LasagnaBoard("lasagna", pgx = PGX,
+      board_observers = board_observers
+    )
+
+    info("[SERVER] calling DeepNetBoard module")
+    DeepNetBoard("deepnet", pgx = PGX,
+      board_observers = board_observers
+    )
+  },
 
   module_help = function() {
     list(
