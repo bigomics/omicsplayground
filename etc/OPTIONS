@@ -1,5 +1,5 @@
 TITLE                = 'Omics Playground'
-AUTHENTICATION       = none
+AUTHENTICATION       = endpoint
 #AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
