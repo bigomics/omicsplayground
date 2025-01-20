@@ -36,6 +36,7 @@ MODULE.multiomics <- list(
       ),
       bigdash::bigTabItem(
         "deepnet-tab",
+        DeepNetInputs("deepnet"),
         create_loader("deepnet-loader")
       )        
     )
@@ -110,6 +111,16 @@ MODULE.multiomics <- list(
         "snf-tab",
         "SNF",
         tspan("SNF clustering")
+      ),
+      bigdash::sidebarTabHelp(
+        "lasagna-tab",
+        "Lasagna",
+        tspan("LASAGNA")
+      ),
+      bigdash::sidebarTabHelp(
+        "deepnet-tab",
+        "DeepLearning",
+        tspan("Integration using DeepLearning")
       )
       ## bigdash::sidebarTabHelp(
       ##   "mpcsf-tab",

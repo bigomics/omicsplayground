@@ -47,7 +47,6 @@ plot_deepnet_confusionmatrix_server <- function(id,
         list( matrix = mat )
       )
     })
-
     
     plot.RENDER <- function(n=12) {
       pd <- plot_data()
@@ -63,9 +62,33 @@ plot_deepnet_confusionmatrix_server <- function(id,
       mtext( "predicted", side=2, line=0.5, cex=1.5 )
     }
 
+    plot.RENDER2 <- function(n=12) {
+
+      mat1 <- playbase::deep.getConfusionMatrix(net(), what = "train")
+      mat2 <- playbase::deep.getConfusionMatrix(net(), what = "test")
+
+      mr <- min(10, 2 + max(nchar(rownames(mat)))/1.8)
+      par(mfrow=c(1,2), mar=c(mr,2,2,mr))
+      klrpal <- RColorBrewer::brewer.pal(n = 8, "Blues")
+
+      playbase::gx.imagemap( t(log(1+mat1)), clust=FALSE, cex=1.5, col=klrpal)      
+      idx <- which(!is.na(mat1),arr.ind=TRUE)
+      text( idx[,1], idx[,2], labels = mat1[idx], col="orange", cex=1.5)
+      mtext( "actual", side=3, line=0.5, cex=1.5 )
+      mtext( "predicted", side=2, line=0.5, cex=1.5 )
+
+      playbase::gx.imagemap( t(log(1+mat2)), clust=FALSE, cex=1.5, col=klrpal)      
+      idx <- which(!is.na(mat2),arr.ind=TRUE)
+      text( idx[,1], idx[,2], labels = mat2[idx], col="orange", cex=1.5)
+      mtext( "actual", side=3, line=0.5, cex=1.5 )
+      mtext( "predicted", side=2, line=0.5, cex=1.5 )
+      
+    }
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
+      func2 = plot.RENDER2,
       pdf.width = 10, pdf.height = 10,
       res = c(75, 120),
       csvFunc = plot_data,

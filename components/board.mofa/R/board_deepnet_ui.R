@@ -26,8 +26,8 @@ DeepNetInputs <- function(id) {
       "input.options % 2 == 1",
       ns = ns,
       shiny::tagList(
-        shiny::selectInput(ns("model"), "Model", choices = c("minimal","medium","deep"),
-                           selected="medium"),
+        shiny::selectInput(ns("model"), "Model", choices = c("mini","medium","deep"),
+                           selected="mini"),
         shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
         shiny::checkboxInput(ns("augment"), "augment data (10x)", FALSE),
         # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),

@@ -35,12 +35,20 @@ plot_deepnet_diagram_server <- function(id,
 
     plot.RENDER <- function(n=12) {
       update()
-      shiny::req(pgx$X)  ## react on pgx change
-      net <- isolate(net()) ## do not react everytime
-      shiny::req(net)
+      dbg("[deepnet_diagram_server] 0: update = ", update())      
+      dbg("[deepnet_diagram_server] 0: reacted!")
 
-      dbg("[deepnet_diagram_server] reacted!")
-      dbg("[deepnet_diagram_server] names(net$xx) = ", names(net$xx))
+      ## shiny::req(pgx$X)  ## react on pgx change
+      net <- isolate(net()) ## do not react everytime
+
+      dbg("[deepnet_diagram_server] 1: is.null.net = ", is.null(net))
+      dbg("[deepnet_diagram_server] 1: length.net = ", length(net))
+      dbg("[deepnet_diagram_server] 1: names.net = ", names(net))
+      
+      ##shiny::req(net)
+
+      dbg("[deepnet_diagram_server] 2: reacted!")
+      dbg("[deepnet_diagram_server] 2: names(net$xx) = ", names(net$xx))
       
       svgfile <- playbase::deep.plotNeuralNet(net, outfile=NULL)
       validate(

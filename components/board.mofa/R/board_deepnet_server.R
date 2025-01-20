@@ -135,20 +135,22 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
 
     ## update network diagram if model changes and reset
-    update_diagram <- reactiveVal("")
-    observeEvent({
-      input$reset
-    },{
-      if(is.null(input$model)) return(NULL)
-      if( input$model == update_diagram()) return()
-      update_diagram(input$model)
-    })
+    update_diagram <- reactiveVal("abc")
+    ## shiny::observeEvent({
+    ##   input$reset
+    ## },{
+    ##   if(is.null(input$model)) return(NULL)
+    ##   dbg("[DeepNetBoard] input$model = ",input$model)
+    ##   if( input$model == update_diagram()) return()
+    ##   dbg("[DeepNetBoard] update_diagram() = ",update_diagram())
+    ##   dbg("[DeepNetBoard] UPDATE! ")
+    ##   update_diagram(input$model)
+    ## }, ignoreInit = FALSE)
 
     
     ## ================================================================================
     ## ========================== BOARD FUNCTIONS =====================================
     ## ================================================================================
-
     
     ## create reactive DeepNet object
     net <- shiny::eventReactive({
@@ -201,7 +203,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       dbg("[DeepNetBoard] creating Torch NN model: ", input$model)                
       latent_dim <- input$latent_dim
 
-      if(input$model == "minimal") {
+      if(input$model == "mini") {
         num_layers = list(c(latent_dim), c(), c())
       } else if(input$model == "deep") {
         num_layers = list(c(0.5, latent_dim), c(0.99, 0.5, 025), c(0.99, 0.5, 0.25))
@@ -228,6 +230,9 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       )
       dbg("[DeepNetBoard] finished creating model!")
 
+      if( input$model != update_diagram()) {
+        update_diagram(input$model)
+      }
       warned <<- FALSE
       return(net)
     })
