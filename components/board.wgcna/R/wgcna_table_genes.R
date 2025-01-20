@@ -5,16 +5,21 @@
 
 wgcna_table_genes_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
+    height = 400,
+    width = 400) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    shiny::checkboxInput(ns("showpvalues"),"Show p-values", FALSE)
+  )
+  
   TableModuleUI(
     ns("datasets"),
+    options = options,
     info.text = info.text,
     width = width,
     height = height,
@@ -25,52 +30,56 @@ wgcna_table_genes_ui <- function(
 }
 
 wgcna_table_genes_server <- function(id,
-                                     wgcna.compute,
-                                     selected_module) {
+                                     wgcna,
+                                     selected_module,
+                                     selected_trait
+                                     ) {
   moduleServer(id, function(input, output, session) {
-    geneTable.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
 
-      k <- selected_module()
-      genes <- out$me.genes[[k]]
-      shiny::req(genes)
-      tt <- playdata::GENE_TITLE[toupper(genes)]
-      rho <- cor(out$datExpr[, genes], out$net$MEs[, k])[, 1]
-
-      df <- data.frame(module = k, gene = genes, me.rho = rho, title = tt)
-      numeric.cols <- grep("score|value|ratio|rho", colnames(df))
+    RENDER <- function() {
+      res <- wgcna()
+      module <- selected_module()
+      trait <- selected_trait()      
+      
+      df <- playbase::wgcna.getGeneStats(res, module=module, trait=trait, plot=FALSE) 
+      if(input$showpvalues==FALSE) {
+        df <- df[, grep("Pvalue", colnames(df), invert=TRUE), drop=FALSE]
+      }
+      df <- df[ which(df$module == module), , drop=FALSE ]
+      
+      numeric.cols <- grep("^module$", colnames(df), invert=TRUE)
 
       DT::datatable(
         df,
-        rownames = FALSE, #
-        #
+        rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
+        plugins = "scrollResize",
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
         options = list(
           dom = "lfrtip", #
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, #
-          #
           scrollY = "70vh",
-          scroller = TRUE, deferRender = TRUE
-        ) ## end of options.list
+          scrollResize = TRUE,
+          scroller = TRUE,
+          deferRender = TRUE
+        ) 
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-    })
+        DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%")
+    }
 
-    geneTable.RENDER_modal <- shiny::reactive({
-      dt <- geneTable.RENDER()
+    RENDER_modal <- function() {
+      dt <- RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    })
+    }
 
     geneTable_module <- TableModuleServer(
       "datasets",
-      func = geneTable.RENDER,
-      func2 = geneTable.RENDER_modal,
+      func = RENDER,
+      func2 = RENDER_modal,
       selector = "none"
     )
 

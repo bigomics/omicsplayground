@@ -5,18 +5,23 @@
 
 wgcna_plot_eigengene_clustering_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
     height,
     width) {
   ns <- shiny::NS(id)
+
+  options <- shiny::tagList(
+    shiny::checkboxInput(ns("addtraits"),"Add traits", TRUE)
+  )
 
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     height = height,
     caption = caption,
@@ -29,28 +34,19 @@ wgcna_plot_eigengene_clustering_server <- function(id,
                                                    wgcna.compute,
                                                    watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    eigenClustering.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
 
-      MET <- out$net$MEs
-      if (NCOL(MET) <= 2) MET <- cbind(MET, MET) ## error if ncol(MET)<=2 !!!!
-
+    plot.RENDER <- function() {
+      res <- wgcna.compute()
       ## Plot the relationships among the eigengenes and the trait
-      WGCNA::plotEigengeneNetworks(
-        MET, "",
-        marDendro = c(0, 4, 1, 2),
-        marHeatmap = c(3, 4, 1, 2), cex.lab = 0.8,
-        xLabelsAngle = 90
-      )
-      p <- grDevices::recordPlot()
-      p
-    })
+      playbase::wgcna.plotEigenGeneClusterDendrogram(
+        res, add_traits = input$addtraits, main="")
+    }
 
     PlotModuleServer(
       "plot",
-      func = eigenClustering.RENDER,
+      func = plot.RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(80, 90),
+      res = c(80, 100),
       add.watermark = watermark
     )
   })

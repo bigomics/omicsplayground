@@ -5,53 +5,46 @@
 
 wgcna_plot_TOMheatmap_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
+    height = 400,
+    width = 400,
+    ... ) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
-    ns("plot"),
+    ns("plotmodule"),
     title = title,
     label = label,
     info.text = info.text,
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "csv"),
+    ...
   )
 }
 
 wgcna_plot_TOMheatmap_server <- function(id,
                                          wgcna.compute,
-                                         power,
-                                         tomtype,
-                                         networktype,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    TOMplot.RENDER <- function() {
-      shiny::req(power())
-      shiny::req(networktype())
-      shiny::req(tomtype())      
-
-      out <- wgcna.compute()
-
-      playbase::wgcna.plotTOM(
-        out,
-        power = as.numeric(power()),
-        tomtype = tomtype(),
-        networktype = networktype(),
-        nSelect = 1000
-      ) 
+    csvFunc <- function() {
+      playbase::wgcna.plotTOM(res, justdata=TRUE)
+    }
+    
+    RENDER <- function() {
+      res <- wgcna.compute()
+      playbase::wgcna.plotTOM(res)
     }
 
     PlotModuleServer(
-      "plot",
-      func = TOMplot.RENDER,
+      "plotmodule",
+      func = RENDER,
+      csvFunc = csvFunc,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 90),
       add.watermark = watermark

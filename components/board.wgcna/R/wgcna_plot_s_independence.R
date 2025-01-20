@@ -5,12 +5,13 @@
 
 wgcna_plot_s_independence_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = info.text,
     height,
-    width) {
+    width,
+    ... ) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -21,7 +22,8 @@ wgcna_plot_s_independence_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf"),
+    ...
   )
 }
 
@@ -29,7 +31,8 @@ wgcna_plot_s_independence_server <- function(id,
                                              wgcna.compute,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    topologyPlots.RENDER <- shiny::reactive({
+
+    RENDER <- shiny::reactive({
       out <- wgcna.compute()
       shiny::req(out)
 
@@ -43,7 +46,7 @@ wgcna_plot_s_independence_server <- function(id,
         out$datExpr,
         powerVector = powers,
         networkType = networktype,
-        verbose = 5
+        verbose = 0
       )
 
       ## Plot the results:
@@ -77,9 +80,9 @@ wgcna_plot_s_independence_server <- function(id,
 
     PlotModuleServer(
       "plot",
-      func = topologyPlots.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(72, 100),
+      res = c(80, 120),
       add.watermark = watermark
     )
   })
