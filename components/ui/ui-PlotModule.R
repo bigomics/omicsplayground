@@ -70,6 +70,7 @@ PlotModuleUI <- function(id,
       image = shiny::imageOutput,
       base = shiny::plotOutput,
       svgPanZoom = svgPanZoom::svgPanZoomOutput,
+      ggiraph = ggiraph::ggiraphOutput,
       renderUI = shiny::htmlOutput,
       shiny::plotOutput
     )
@@ -315,6 +316,9 @@ PlotModuleUI <- function(id,
   ## --------------- modal UI (former output$popupfig) ----------------------
   ## ------------------------------------------------------------------------
 
+  height.2="100%"
+  height.2="calc(80vh - 100px)"
+  
   if (cards) {
     tabs_modal <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
@@ -359,6 +363,27 @@ PlotModuleUI <- function(id,
         class = "popup-plot",
         plot_cards_modal
       ),
+      caption2
+    )
+  }
+
+  popupfigUI.BSLIB <- function() {
+    if (any(class(caption2) == "reactive")) {
+      caption2 <- caption2()
+    }
+    caption2 <- shiny::div(
+      class = "caption2 popup-plot-caption",
+      shiny::HTML(paste0(
+        "<b>", as.character(title), ".</b>&nbsp;&nbsp;",
+        as.character(caption2)
+      ))
+    )
+    bslib::layout_columns(
+      class = "popup-plot-body",
+      height = "80vh",
+      col_widths = 12,
+      row_heights = list(1,"auto"),
+      shiny::div(class = "popup-plot", plot_cards_modal),
       caption2
     )
   }
@@ -798,6 +823,14 @@ PlotModuleServer <- function(id,
                     url = HTMLFILE, file = PDFFILE,
                     vwidth = pdf.width * 100, vheight = pdf.height * 100
                   )
+                } else if (plotlib == "ggiraph") {
+                  p <- func()
+                  SVGFILE <- tempfile(fileext=".svg")
+                  ggiraph::dsvg(SVGFILE)
+                  print(p)
+                  dev.off()
+                  system(paste("convert ",SVGFILE," ",PDFFILE))
+                  unlink(SVGFILE)
                 } else { ## end base
                   pdf(PDFFILE, pointsize = pdf.pointsize)
                   plot.new()
@@ -830,10 +863,10 @@ PlotModuleServer <- function(id,
       } ## end if do.pdf
 
       saveHTML <- function() {
-        if (plotlib == "plotly") {
+        if (plotlib %in% c("plotly")) {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
-        } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
+        } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3", "ggiraph")) {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
         } else if (plotlib == "iheatmapr") {
@@ -869,7 +902,7 @@ PlotModuleServer <- function(id,
                 if (plotlib == "plotly") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
+                } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3", "ggiraph")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
                 } else if (plotlib == "iheatmapr") {
@@ -1060,6 +1093,7 @@ PlotModuleServer <- function(id,
           image = shiny::renderImage,
           base = shiny::renderPlot,
           svgPanZoom = svgPanZoom::renderSvgPanZoom,
+          ggiraph = ggiraph::renderggiraph,
           renderUI = shiny::renderUI,
           shiny::renderPlot
         )
