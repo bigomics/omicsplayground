@@ -5,10 +5,10 @@
 
 wgcna_plot_enrichment_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
     height,
     width) {
   ns <- shiny::NS(id)
@@ -53,8 +53,8 @@ wgcna_plot_enrichment_server <- function(id,
     PlotModuleServer(
       "plot",
       func = enrichPlot.RENDER,
-      pdf.width = 5, pdf.height = 5,
-      res = c(72, 80),
+      pdf.width = 10, pdf.height = 5,
+      res = c(80, 110),
       add.watermark = watermark
     )
   })
