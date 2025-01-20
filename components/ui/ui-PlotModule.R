@@ -400,7 +400,8 @@ PlotModuleUI <- function(id,
           title = title,
           size = "fullscreen",
           footer = NULL,
-          popupfigUI()
+          popupfigUI(),
+          track_open = TRUE
         )
       ),
       if (cards) {
@@ -578,7 +579,11 @@ PlotModuleServer <- function(id,
         })
       } else {
         output$editor_frame <- renderUI({
-          plot <- func()
+          if (input$plotPopup_is_open) {
+            plot <- func2()
+          } else {
+            plot <- func()
+          }
           if (exists("csvFunc") && is.function(csvFunc)) {
             plot_data_csv <- csvFunc()
             if (inherits(plot_data_csv, "list")) {
