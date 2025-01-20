@@ -5,10 +5,10 @@
 
 wgcna_plot_correlation_network_ui <- function(
     id,
-    title,
-    info.text,
-    caption,
-    label,
+    title = "",
+    info.text = "",
+    caption = "",
+    label = "",
     height,
     width) {
   ns <- shiny::NS(id)
@@ -30,7 +30,8 @@ wgcna_plot_correlation_network_server <- function(id,
                                                   selected_module,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    corGraph.RENDER <- shiny::reactive({
+
+    RENDER <- function() {
       out <- wgcna.compute()
 
       k <- selected_module()
@@ -43,7 +44,6 @@ wgcna_plot_correlation_network_server <- function(id,
       rho1 <- cor(xx, out$net$MEs[, k], use = "pairwise.complete.obs")[, 1]
       ntop <- min(nrow(xx) - 1, 20)
       topgg <- names(sort(rho1, decreasing = TRUE))
-
       topgg <- head(topgg, ntop)
 
       ## rho <- Matrix::nearPD(cor(xx[, topgg]))$mat
@@ -53,7 +53,8 @@ wgcna_plot_correlation_network_server <- function(id,
       color1 <- c("white", me.color)[1 + 1 * (colnames(rho) == k)]
       size1 <- c(7, 10)[1 + 1 * (colnames(rho) == k)]
 
-      qgraph::qgraph(rho,
+      qgraph::qgraph(
+        rho,
         graph = "glasso",
         layout = "spring",
         sampleSize = nrow(xx),
@@ -66,13 +67,11 @@ wgcna_plot_correlation_network_server <- function(id,
         border.width = 1.5,
         threshold = TRUE
       )
-      p <- grDevices::recordPlot()
-      p
-    })
+    }
 
     PlotModuleServer(
       "plot",
-      func = corGraph.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 80),
       add.watermark = watermark

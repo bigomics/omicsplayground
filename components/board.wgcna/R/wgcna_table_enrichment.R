@@ -5,10 +5,10 @@
 
 wgcna_table_enrichment_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
     width,
     height) {
   ns <- shiny::NS(id)
@@ -35,6 +35,7 @@ wgcna_table_enrichment_server <- function(id,
         df,
         rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
+        plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
@@ -42,11 +43,12 @@ wgcna_table_enrichment_server <- function(id,
           dom = "lfrtip",
           scrollX = TRUE,
           scrollY = "70vh",
+          scrollResize = TRUE,
           scroller = TRUE, deferRender = TRUE
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%")
     })
 
     enrichTable.RENDER_modal <- shiny::reactive({
