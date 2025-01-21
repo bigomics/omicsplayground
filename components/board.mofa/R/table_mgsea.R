@@ -26,7 +26,6 @@ mofa_table_mgsea_ui <- function(
 
 mofa_table_mgsea_server <- function(id,
                                    gsea,
-                                   datatypes = NULL,
                                    input_k = reactive(1),
                                    top = 20
                                    )
@@ -41,30 +40,8 @@ mofa_table_mgsea_server <- function(id,
       k <- input_k()  ## which factor/phenotype
       shiny::req(k)
       
-      if(is.null(datatypes)) datatypes <- head(colnames(gsea[[1]]$pval),2)
-      if(length(datatypes)==1) datatypes <- rep(datatypes,2)
-      
       shiny::req(gsea[[k]])
-      
-      S <- as.matrix(unclass(gsea[[k]]$rho[,datatypes,drop=FALSE]))
-      P <- as.matrix(unclass(gsea[[k]]$pval[,datatypes,drop=FALSE]))
-      multi.score <- gsea[[k]]$multi$score
-      multi <- data.frame(unclass(gsea[[k]]$multi))
-      colnames(S) <- paste0(colnames(S),".rho")
-      colnames(P) <- paste0(colnames(P),".pval")
-      colnames(multi) <- paste0("multi.",colnames(multi))
-      snames <- stringr::str_trunc(rownames(S),72)      
-      sign <- paste0( c("-","+")[1+(sign(S[,1])==1)],
-                     c("-","+")[1+(sign(S[,2])==1)] )
-      if(full) {
-        df <- data.frame( pathway = snames, multi, S, P)
-        rownames(df) <- rownames(S)
-        df <- df[order(-multi$multi.score),]
-      } else {
-        df <- data.frame( pathway = snames, multi.score, S)
-        rownames(df) <- rownames(S)
-        df <- df[order(-multi.score),]
-      }
+      df <- playbase::mofa.enrichment_table(gsea, pheno=k, datatypes=NULL, full=full) 
       numeric.cols <- grep("score|pval|p$|q$|rho",colnames(df))
       
       DT::datatable(

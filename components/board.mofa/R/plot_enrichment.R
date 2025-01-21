@@ -41,7 +41,7 @@ mofa_plot_enrichment_server <- function(id,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function(ntop=20, par=TRUE) {
+    plot.RENDER <- function(ntop=16, par=TRUE) {
       gsea <- gsea()      
       validate(need(!is.null(gsea), "missing MOFA data."))      
 
@@ -89,7 +89,7 @@ mofa_plot_enrichment_server <- function(id,
     plot.RENDER2 <- function() {
       par(mfrow=c(1,2), mar=c(4,14,2,2))
       plot.new()
-      plot.RENDER(ntop=25, par=FALSE) 
+      plot.RENDER(ntop=30, par=FALSE) 
     }
     
     PlotModuleServer(
@@ -97,7 +97,7 @@ mofa_plot_enrichment_server <- function(id,
       func = plot.RENDER,
       func2 = plot.RENDER2,
       pdf.width = 9, pdf.height = 5,
-      res = c(75, 125),
+      res = c(72, 110),
       add.watermark = watermark
     )
 

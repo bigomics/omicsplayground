@@ -38,7 +38,7 @@ mofa_plot_weights_server <- function(id,
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function(n=12) {
+    plot.RENDER <- function(ntop=8) {
       res <- mofa()
       k <- input_factor()
       factors <- colnames(res$F)
@@ -52,15 +52,15 @@ mofa_plot_weights_server <- function(id,
                            "Please select at least one datatype"))
       ww <- res$ww[show_types]
       ntypes <- length(ww)
-      ntop <- ifelse(input$show_top, 10, -1)
+      ntop <- ifelse(input$show_top, ntop, -1)
 
       mfrow=c(1,ntypes)
-      par(mfrow=mfrow, mar=c(4,8,2,0))
+      par(mfrow=mfrow, mar=c(4,8,1.5,0))
       playbase::mofa.plot_weights(ww, k=k, ntop=ntop, maxchar=60)
     }
 
     plot.RENDER2 <- function() {
-      plot.RENDER(n=24) 
+      plot.RENDER(n=16) 
     }
 
     PlotModuleServer(

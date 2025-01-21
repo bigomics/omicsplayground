@@ -28,7 +28,6 @@ mofa_plot_centrality_ui <- function(
 mofa_plot_centrality_server <- function(id,
                                         mofa,
                                         input_factor = reactive(NULL),
-                                        ## input_pheno = reactive(NULL),
                                         show_types = reactive(NULL),
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -44,8 +43,8 @@ mofa_plot_centrality_server <- function(id,
       
       par(mar=c(4,4,1,0.5))
       playbase::mofa.plot_centrality(
-        res, k=k, y=y, show_types=show_types,
-        transpose=TRUE, main = "")
+        res, k=k, show_types=show_types,
+        transpose=FALSE, main = "")
     }
 
     PlotModuleServer(

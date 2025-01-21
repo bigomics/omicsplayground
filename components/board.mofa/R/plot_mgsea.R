@@ -43,9 +43,10 @@ mofa_plot_mgsea_server <- function(id,
       validate(need(!is.null(gsea), "missing GSEA data."))        
       k <- input_k()
       shiny::req(k)
-      
-      types <- colnames(gsea[[k]]$pval)
-      types <- intersect( types, c("mx","px","gx"))
+
+      cn <- colnames(gsea[[k]])
+      types <- sub("^pval.","",grep("^pval",cn,value=TRUE))
+      types <- intersect(c("mx","px","gx",types), types)
       if(length(types)==1) types <- rep(types,2)
       hilight <- NULL
       selected <- select()
@@ -64,7 +65,7 @@ mofa_plot_mgsea_server <- function(id,
       "plot",
       func = plot.RENDER,
       pdf.width = 8, pdf.height = 8,
-      res = c(80, 110),
+      res = c(72, 110),
       add.watermark = watermark
     )
 

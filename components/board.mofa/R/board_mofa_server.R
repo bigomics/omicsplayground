@@ -25,7 +25,8 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     tab_elements <- list(
       "Overview" = list(disable = c("selected_factor","selected_pheno","show_types")),
       "Response" = list(disable = c("show_types","selected_pheno")),
-      "Factor" = list(disable = c())
+      "Weights" = list(disable = c()),
+      "Enrichment" = list(disable = c())      
     )
     shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -48,8 +49,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
 #        if(!has.mofa) {
 #          shinyalert::shinyalert("Warning","No MOFA slot in object. Please recompute MOFA.")
 #          return(NULL)
-#        }
-        
+#        }        
         mofa <- pgx$mofa
         
         ## update factors in selectInput
@@ -178,6 +178,13 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       watermark = WATERMARK
     )
 
+    mofa_table_mofa_enrichment_server(
+      "enrichmentTable",
+      gsea = reactive({ mofa()$gsea }),
+      input_k = reactive(input$selected_factor),
+      watermark = WATERMARK
+    )
+
     mofa_plot_loadingheatmap_server(
       "loading_heatmap",
       mofa = mofa,
@@ -244,12 +251,19 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "centrality",
       mofa = mofa,
       input_factor = reactive(input$selected_factor),
-      ## input_pheno = reactive(input$selected_pheno),
       show_types = reactive(input$show_types),
       watermark = WATERMARK
     )
     
-    ## # Table Modules
+    ## ------------- Table Modules --------------------------
+    mofa_table_mofa_gene_server(
+      "mofa_genetable",
+      mofa = mofa,
+      selected_factor = reactive(input$selected_factor),
+      ## datatypes = reactive(input$show_types),
+      annot = reactive(pgx$genes)
+    )
+
     ## mofa_table_mgsea_server(
     ##   "gsea_table1",
     ##   mofa = mofa,

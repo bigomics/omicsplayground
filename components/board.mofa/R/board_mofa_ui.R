@@ -175,32 +175,24 @@ MofaUI <- function(id) {
       
       ##----------------------------------------------------------------
       shiny::tabPanel(
-        "Factor",
+        "Weights",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(7, 5, 4, 4, 4),
-              sm = c(12, 12, 12, 12, 12)
+              lg = c(6,6,6,3,3),
+              sm = c(12, 12, 12, 12)
             ),
             mofa_plot_weights_ui(
               ns("weights"),
-              title = "Factor loading",
+              title = "Factor weights",
               info.text = "",
               caption = "Module-trait analysis identifies modules that are significantly associated with the measured traits by quantifying the association as the correlation of the eigengenes with external traits.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            mofa_plot_enrichment_ui(
-              ns("enrichment"),
-              title = "Functional enrichment analysis",
-              info.text = "",
-              caption = "Functional analysis of factor",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),            
             mofa_plot_moduleheatmap_ui(
               ns("module_heatmap"),
               title = "Factor heatmap",
@@ -209,25 +201,79 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
+            mofa_table_mofa_gene_ui(
+              ns("mofa_genetable"),
+              title = "Factor features",
+              info.text = "",
+              caption = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("100%", "100%")
+            ),
             mofa_plot_modulegraph_ui(
               ns("modulegraph"),
               title = "Factor feature graph",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),              
+            ),
             mofa_plot_centrality_ui(
               ns("centrality"),
-              title = "Centrality vs. logFC",
+              title = "Centrality vs. weight",
               info.text = "...",
               caption = "Module heatmap.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )                          
+          )
+        )
+      ), ## tabPanel
+ 
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "Enrichment",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
+          bslib::layout_columns(
+            col_widths = bslib::breakpoints(
+              lg = c(6, 6, 6, 6),
+              sm = c(12, 12, 12, 12)
+            ),
+            mofa_plot_enrichment_ui(
+              ns("enrichment"),
+              title = "Enrichment analysis",
+              info.text = "",
+              caption = "Functional analysis of factor",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),            
+            mofa_plot_moduleheatmap_ui(
+              ns("module_heatmap2"),
+              title = "Factor heatmap",
+              info.text = "...",
+              caption = "Factor heatmap.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            mofa_plot_modulegraph_ui(
+              ns("modulegraph2"),
+              title = "Factor feature graph",
+              info.text = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),              
+            mofa_plot_modulegraph_ui(
+              ns("modulegraph3"),
+              title = "Factor feature graph",
+              info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )              
           )
         )
       ) ## tabPanel
-      
+
     )
   )
 }

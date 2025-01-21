@@ -106,13 +106,11 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
       sel_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
-
     
     # Table Modules
     mgsea_table <- mofa_table_mgsea_server(
       "mgsea_table",
       gsea = reactive(mofa()$fc.gsea),
-      datatypes = NULL,
       input_k = reactive(input$contrast)            
     )
 

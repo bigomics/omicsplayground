@@ -136,16 +136,6 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
 
     ## update network diagram if model changes and reset
     update_diagram <- reactiveVal("abc")
-    ## shiny::observeEvent({
-    ##   input$reset
-    ## },{
-    ##   if(is.null(input$model)) return(NULL)
-    ##   dbg("[DeepNetBoard] input$model = ",input$model)
-    ##   if( input$model == update_diagram()) return()
-    ##   dbg("[DeepNetBoard] update_diagram() = ",update_diagram())
-    ##   dbg("[DeepNetBoard] UPDATE! ")
-    ##   update_diagram(input$model)
-    ## }, ignoreInit = FALSE)
 
     
     ## ================================================================================
@@ -191,21 +181,25 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       
       l1 = 1
       l2 = 100
-#      l1 <- as.numeric(10^input$l1regularization)
-#      l2 <- as.numeric(10^input$l2regularization)      
-      loss_weights <- c(y=1, ae=10, l1=l1, l2=l2)
-
+      ae.wt=1e6
+      ae.wt <- 3
+      if( input$model == "AE")  ae.wt <- 1e3
+      if( input$model == "MLP") ae.wt <- 1e-3      
+      loss_weights <- c(y=1/ae.wt, ae=ae.wt, l1=l1, l2=l2)
+      dbg("[DeepNetBoard] loss_weights = ", loss_weights)                
+      
       ## create the Neural network
       yy <- as.list(y)  ## one target for now...
       yy <- lapply(yy, as.factor)
       names(yy) <- pheno
       
-      dbg("[DeepNetBoard] creating Torch NN model: ", input$model)                
+      dbg("[DeepNetBoard] creating DeepNet model: ", input$model)
+      dbg("[DeepNetBoard] layers = ", input$layers)                      
       latent_dim <- input$latent_dim
 
-      if(input$model == "mini") {
+      if(input$layers == "mini") {
         num_layers = list(c(latent_dim), c(), c())
-      } else if(input$model == "deep") {
+      } else if(input$layers == "deep") {
         num_layers = list(c(0.5, latent_dim), c(0.99, 0.5, 025), c(0.99, 0.5, 0.25))
       } else {
         num_layers = list(c(0.5,latent_dim), c(0.5), c(0.5))
@@ -230,8 +224,8 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       )
       dbg("[DeepNetBoard] finished creating model!")
 
-      if( input$model != update_diagram()) {
-        update_diagram(input$model)
+      if( input$layers != update_diagram()) {
+        update_diagram(input$layers)
       }
       warned <<- FALSE
       return(net)

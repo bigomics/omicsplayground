@@ -64,11 +64,11 @@ plot_deepnet_confusionmatrix_server <- function(id,
 
     plot.RENDER2 <- function(n=12) {
 
-      mat1 <- playbase::deep.getConfusionMatrix(net(), what = "train")
-      mat2 <- playbase::deep.getConfusionMatrix(net(), what = "test")
+      mat1 <- playbase::deep.getConfusionMatrix(net(), what="train")[[1]]
+      mat2 <- playbase::deep.getConfusionMatrix(net(), what="test")[[1]]
 
-      mr <- min(10, 2 + max(nchar(rownames(mat)))/1.8)
-      par(mfrow=c(1,2), mar=c(mr,2,2,mr))
+      mr <- min(10, 2 + max(nchar(rownames(mat1)))/1.8)
+      par(mfrow=c(1,2), mar = 1.8*c(mr,2,2,mr))
       klrpal <- RColorBrewer::brewer.pal(n = 8, "Blues")
 
       playbase::gx.imagemap( t(log(1+mat1)), clust=FALSE, cex=1.5, col=klrpal)      
