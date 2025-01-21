@@ -685,7 +685,7 @@ UploadBoard <- function(id,
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
       query_files <- check_query_files()
-      if (!is.null(query_files$datatype)) {
+      if (!is.null(query_files$datatype) && new_upload() == 2) {
         datatype <- query_files$datatype
         upload_datatype(datatype)
       }
@@ -695,7 +695,7 @@ UploadBoard <- function(id,
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
       query_files <- check_query_files()
-      if (!is.null(query_files$organism)) {
+      if (!is.null(query_files$organism) && new_upload() == 2) {
         organism <- query_files$organism
         upload_organism(organism)
       }
@@ -1002,7 +1002,7 @@ UploadBoard <- function(id,
               #   encryption_key <- NULL
               # }
               # Populate upload data with available
-              if (!is.null(query_files$counts)) {
+              if (!is.null(query_files$counts) && new_upload() == 2) {
                 # Decrypt the URL if encryption key is available
                 counts_url <- if (!is.null(encryption_key)) {
                   decrypt_util(query_files$counts, encryption_key)
@@ -1018,8 +1018,8 @@ UploadBoard <- function(id,
                 af <- playbase::read_annot(file)
                 uploaded$annot.csv <- af
               }
-              if (!is.null(query_files$samples)) {
-                # Decrypt the URL if encryption key is available  
+              if (!is.null(query_files$samples) && new_upload() == 2) {
+                # Decrypt the URL if encryption key is available
                 samples_url <- if (!is.null(encryption_key)) {
                   decrypt_util(query_files$samples, encryption_key)
                 } else {
@@ -1031,7 +1031,7 @@ UploadBoard <- function(id,
                 df <- playbase::read_samples(file)
                 uploaded$samples.csv <- df
               }
-              if (!is.null(query_files$contrasts)) {
+              if (!is.null(query_files$contrasts) && new_upload() == 2) {
                 # Decrypt the URL if encryption key is available
                 contrasts_url <- if (!is.null(encryption_key)) {
                   decrypt_util(query_files$contrasts, encryption_key)
