@@ -363,9 +363,20 @@ decrypt_util <- function(encrypted_text, key, remove_suffix = FALSE) {
     decrypted_text <- rawToChar(decrypted)
 
     if (remove_suffix) {
+      BLACKLIST_FILE <- file.path(ETC, "blacklisted_suffixes.txt")
+      suffix <- substr(decrypted_text, nchar(decrypted_text) - 7, nchar(decrypted_text))
+      if (!file.exists(BLACKLIST_FILE)) {
+        dir.create(dirname(BLACKLIST_FILE), recursive = TRUE, showWarnings = FALSE)
+        file.create(BLACKLIST_FILE)
+      }
+      if (system(paste("grep -q", shQuote(suffix), shQuote(BLACKLIST_FILE)), 
+                 ignore.stdout = TRUE, ignore.stderr = TRUE) == 0) {
+        warning("[decrypt_util] Blacklisted suffix detected")
+        return(NULL)
+      }
       decrypted_text <- substr(decrypted_text, 1, nchar(decrypted_text) - 8)
+      write(suffix, file = BLACKLIST_FILE, append = TRUE)
     }
- 
     decrypted_text
   }, error = function(e) {
     warning("[decrypt_util] Decryption failed: ", e$message)
