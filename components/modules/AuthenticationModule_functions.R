@@ -336,7 +336,7 @@ chueckHubspotData <- function(user_email) {
 #' @param encrypted_text The encrypted text to decrypt
 #' @param key The encryption key as a string
 #' @return The decrypted text
-decrypt_util <- function(encrypted_text, key) {
+decrypt_util <- function(encrypted_text, key, remove_suffix = FALSE) {
   if (is.null(encrypted_text) || is.null(key)) return(NULL)
 
   # Convert key to raw bytes
@@ -360,7 +360,13 @@ decrypt_util <- function(encrypted_text, key) {
       key = key_raw,
       iv = iv
     )
-    rawToChar(decrypted)
+    decrypted_text <- rawToChar(decrypted)
+
+    if (remove_suffix) {
+      decrypted_text <- substr(decrypted_text, 1, nchar(decrypted_text) - 8)
+    }
+ 
+    decrypted_text
   }, error = function(e) {
     warning("[decrypt_util] Decryption failed: ", e$message)
     NULL

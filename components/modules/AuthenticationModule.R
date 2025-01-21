@@ -1319,7 +1319,7 @@ EmailEncryptedAuthenticationModule <- function(
 
       # Decrypt email if encryption key is available
       decrypted_email <- if (!is.null(encryption_key)) {
-        decrypt_util(query_email(), encryption_key)
+        decrypt_util(query_email(), encryption_key, remove_suffix = TRUE)
       } else {
         warning("[EmailEncryptedAuthenticationModule] No encryption key available, using raw email")
         query_email()
