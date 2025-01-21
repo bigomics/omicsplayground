@@ -35,10 +35,11 @@ wgcna_plot_enrichment_server <- function(id,
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
       }
+
       ii <- enrichTable_module$rows_all()
       shiny::req(ii)
       df <- df[ii, , drop = FALSE]
-      df <- head(df, 20)
+      df <- head(df, 20)      
       gs.top <- df$geneset
       xlim0 <- c(0, max(df$score))
       col1 <- c("lightskyblue1", "lightpink")[1 + 1 * (df$q.value < 0.05)]

@@ -27,7 +27,8 @@ wgcna_table_enrichment_ui <- function(
 wgcna_table_enrichment_server <- function(id,
                                           enrich_table) {
   moduleServer(id, function(input, output, session) {
-    enrichTable.RENDER <- shiny::reactive({
+
+    RENDER <- shiny::reactive({
       df <- enrich_table()
       numeric.cols <- grep("score|value|ratio", colnames(df))
 
@@ -51,19 +52,19 @@ wgcna_table_enrichment_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%")
     })
 
-    enrichTable.RENDER_modal <- shiny::reactive({
-      dt <- enrichTable.RENDER()
+    RENDER_modal <- shiny::reactive({
+      dt <- RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     })
 
-    enrichTable_module <- TableModuleServer(
+    tablemodule <- TableModuleServer(
       "datasets",
-      func = enrichTable.RENDER,
-      func2 = enrichTable.RENDER_modal,
+      func = RENDER,
+      func2 = RENDER_modal,
       selector = "none"
     )
 
-    return(enrichTable_module)
+    return(tablemodule)
   })
 }

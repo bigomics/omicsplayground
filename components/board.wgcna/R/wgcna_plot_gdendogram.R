@@ -9,8 +9,8 @@ wgcna_plot_gdendogram_ui <- function(
   label = "",
   info.text = "",
   caption = "",
-  height,
-  width,
+  height = 400,
+  width = 400,
   ...
   ) {
   ns <- shiny::NS(id)

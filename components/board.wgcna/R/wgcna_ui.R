@@ -9,8 +9,8 @@ WgcnaInputs <- function(id) {
     shiny::hr(), shiny::br(),
 
     ## data set parameters
-    shiny::selectInput(ns("selected_module"), "select module", choices = NULL),
-    shiny::selectInput(ns("selected_trait"), "select trait", choices = NULL),    
+    shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
+    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),    
     shiny::br(),
     shiny::br(),
     shiny::br(),    

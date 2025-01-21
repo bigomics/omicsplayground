@@ -127,15 +127,18 @@ WgcnaBoard <- function(id, pgx, board_observers) {
 
     enrich_table <- shiny::reactive({
       out <- wgcna.compute()
-      df <- out$gse
+      gse <- out$gse
       k <- input$selected_module
-      message("[enrichTable.RENDER] 1 : k = ", k)
       if (length(k) == 0 || k == "") k <- "<all>"
-      message("[enrichTable.RENDER] 2 : k = ", k)
-      if (k %in% df$module) {
-        df <- df[df$module == k, , drop = FALSE]
+      if (k %in% names(gse)) {
+        df <- gse[[k]]
+      } else {
+        df <- do.call(rbind, gse)
       }
-      df$score <- df$odd.ratio * -log10(df$p.value)
+      if(!"score" %in% colnames(df)) {
+        df$odd.ratio[is.infinite(df$odd.ratio)] <- 99
+        df$score <- df$odd.ratio * -log10(df$p.value)
+      }
       df <- df[, c(
         "module", "geneset", "score", "p.value", "q.value",
         "odd.ratio", "overlap", "genes"
@@ -206,7 +209,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     wgcna_plot_enrichment_server(
       "enrichPlot",
       enrich_table = enrich_table,
-      enrichTable_module = enrichTable_module,
+      enrichTable_module = enrichTableModule,
       watermark = WATERMARK
     )
 
@@ -219,7 +222,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     )
 
     # Module enrichment
-    enrichTable_module <- wgcna_table_enrichment_server(
+    enrichTableModule <- wgcna_table_enrichment_server(
       "enrichTable",
       enrich_table
     )
