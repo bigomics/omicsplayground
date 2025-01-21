@@ -80,10 +80,20 @@ upload_module_normalizationSC_server <- function(id,
               style = "background-color: #F7FAFD99;",
 
               bslib::accordion_panel(
-                title = HTML("<span style='font-size: 0.9em;'> Define cell types.<br>Infer cell types with Azimuth</span>"),
+                title = HTML("<span style='font-size: 1em;'> Single-cell transcriptomics</span>"),
+                shiny::div(style = "display: flex; align-items: center; justify-content: space-between;"),
                 shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;"
-                ),
+                  style = "background-color: #f0f0f0; padding: 2px; border-radius: 5px; margin-top: 0.01px;",
+                  HTML(paste0("<span style='font-size: 1em;'>Number of features: </span>",
+                    "<span style='font-size: 1em;'>", nrow(counts), "</span><br>",
+                    "<span style='font-size: 1em;'>Number of cells: </span>",
+                    "<span style='font-size: 1em;'>", ncol(counts), "</span>"))
+                )
+              ),
+              
+              bslib::accordion_panel(
+                title = HTML("<span style='font-size: 1em;'> Define cell types with Azimuth</span>"),
+                shiny::div(style = "display: flex; align-items: center; justify-content: space-between;"),
                 shiny::selectInput(
                   ns("ref_atlas"),
                   label = "Select reference atlas",
@@ -97,12 +107,10 @@ upload_module_normalizationSC_server <- function(id,
                 ),
                 shiny::br()
               ),
-
+              
               bslib::accordion_panel(
-                title = HTML("<span style='font-size: 0.9em;'> Visualize cell clusters</span>"),
-                shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;"
-                ),
+                title = HTML("<span style='font-size: 1em;'> Visualize cell clusters</span>"),
+                shiny::div(style = "display: flex; align-items: center; justify-content: space-between;"),
                 shiny::selectInput(
                   ns("clusterBy"),
                   label = "Visualize cell cluster by",
@@ -114,7 +122,7 @@ upload_module_normalizationSC_server <- function(id,
               ),
 
               bslib::accordion_panel(
-                title = HTML("<span style='font-size: 0.9em;'> Cell filtering</span>"),
+                title = HTML("<span style='font-size: 1em;'> Cell filtering</span>"),
                 shiny::p("Remove cells based on QC variables"),
                 shiny::checkboxInput(
                   ns("remove_cells"),
