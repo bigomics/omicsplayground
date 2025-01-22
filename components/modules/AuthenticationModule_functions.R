@@ -52,11 +52,15 @@ read_user_options <- function(user_dir) {
   new_opt
 }
 
-read_user_options_db <- function(email, user_database = NULL) {
-  connection <- connect_db(user_database)
-  user_opt <- query_by_email(email, connection)
+read_user_options_db <- function(email, user_database = NULL, options_list = NULL) {
+  if (is.null(options_list)) {
+    connection <- connect_db(user_database)
+    user_opt <- query_by_email(email, connection)
+    disconnect_db(connection)
+  } else {
+    user_opt <- options_list
+  }
   new_opt <- opt ## opt from global
-  disconnect_db(connection)
   if (!is.null(user_opt)) {
     ## restrict user options only to these options.
     ALLOWED_USER_OPTS <- c(

@@ -270,7 +270,6 @@ FirebaseAuthenticationModule.DEPRECATED <- function(id,
 
       ## >>> We could check here for email validaty and intercept the
       ## login process for not authorized people with wrong domain
-      ## or against a subscription list.
       email <- tolower(input$emailInput)
       check <- checkEmail(
         email = email,
@@ -1449,21 +1448,43 @@ EndpointAuthenticationModule <- function(id,
           return(NULL)
         }
 
-        output$login_warning <- shiny::renderText("")
+        # Parse the response and extract user options
+        response_content <- httr::content(response)
+        if (!is.null(response_content$user)) {
+          user_data <- data.frame(response_content$user)
 
-        # create user_dir (always), set path, and set options
-        USER$user_dir <- file.path(PGX.DIR, USER$email)
-        create_user_dir_if_needed(USER$user_dir, PGX.DIR)
-        if (!opt$ENABLE_USERDIR) {
-          USER$user_dir <- file.path(PGX.DIR)
+          USER$username <- user_data$username
+          USER$email <- user_data$email
+
+          USER$options <- read_user_options_db(
+            USER$email,
+            user_database = NULL,
+            options_list = user_data
+          )
+
+          # Set up user directory
+          USER$user_dir <- file.path(PGX.DIR, USER$email)
+          create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+          if (!opt$ENABLE_USERDIR) {
+            USER$user_dir <- file.path(PGX.DIR)
+          }
+
+          # Update UI with user info
+          session$sendCustomMessage("set-user", list(user = USER$email))
+          entered_code("") ## important for next user
+          shiny::removeModal()
+
+          USER$logged <- TRUE
+          email_sent <<- FALSE
+        } else {
+          output$login2_warning <- shiny::renderText("Invalid response from server")
+          entered_code("")
+          shinyjs::delay(4000, {
+            output$login2_warning <- shiny::renderText("")
+          })
+          updateTextInput(session, "login2_password", value = "")
+          return(NULL)
         }
-        USER$options <- read_user_options(USER$user_dir)
-        session$sendCustomMessage("set-user", list(user = USER$email))
-        entered_code("") ## important for next user
-        shiny::removeModal()
-
-        USER$logged <- TRUE
-        email_sent <<- FALSE
       }
     })
 
