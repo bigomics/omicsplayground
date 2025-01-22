@@ -9,8 +9,9 @@ MofaInputs <- function(id) {
     shiny::hr(), shiny::br(),
 
     ## data set parameters
-    shiny::selectInput(ns("selected_factor"), "Select factor", choices = NULL),
-    shiny::selectizeInput(ns("show_types"), "Show datatypes",
+    shiny::selectInput(ns("selected_factor"), "Select factor:", choices = NULL),
+    shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),    
+    shiny::selectizeInput(ns("show_types"), "Show datatypes:",
                           choices=NULL, multiple=TRUE),
     shiny::br(),
     shiny::br(),
@@ -237,39 +238,47 @@ MofaUI <- function(id) {
           bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(6, 6, 6, 6),
+              lg = c(4, 4, 4, 12),
               sm = c(12, 12, 12, 12)
             ),
-            mofa_plot_enrichment_ui(
-              ns("enrichment"),
-              title = "Enrichment analysis",
+            mofa_plot_factortrait_ui(
+              ns("factortrait2"),
+              title = "Factor-Trait correlation",
               info.text = "",
-              caption = "Functional analysis of factor",
+              caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),            
-            mofa_plot_moduleheatmap_ui(
-              ns("module_heatmap2"),
-              title = "Factor heatmap",
+            ),
+            mofa_plot_gsetmofa_traitCor_ui(
+              ns("gset_traitcor"),
+              title = "Geneset-trait correlation",
               info.text = "...",
               caption = "Factor heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            mofa_plot_modulegraph_ui(
-              ns("modulegraph2"),
-              title = "Factor feature graph",
+            mofa_plot_gsetmofa_factorCor_ui(
+              ns("gset_factorcor"),
+              title = "Module-factor correlation",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),              
-            mofa_plot_modulegraph_ui(
-              ns("modulegraph3"),
-              title = "Factor feature graph",
+            ),
+            mofa_table_gsetmofa_ui(
+              ns("gsetmofa_table"),
+              title = "Geneset MOFA table",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )              
+            )                          
+            ## mofa_plot_enrichment_ui(
+            ##   ns("enrichment"),
+            ##   title = "Enrichment analysis",
+            ##   info.text = "",
+            ##   caption = "Functional analysis of factor",
+            ##   height = c("100%", TABLE_HEIGHT_MODAL),
+            ##   width = c("auto", "100%")
+            ## )            
           )
         )
       ) ## tabPanel

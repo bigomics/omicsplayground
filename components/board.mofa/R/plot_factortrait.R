@@ -42,23 +42,23 @@ mofa_plot_factortrait_server <- function(id,
     plot.RENDER <- function() {
       shiny::req(mofa())
 
-      par(mar=c(7.5,5,2,1))    
-      playbase::mofa.plot_factor_trait(
+      par(mar=c(6,5,1,1))    
+      playbase::mofa.plot_factor_trait_correlation(
         mofa(),
-        main = NULL,
+        main = "",
         par = FALSE,
         cluster = input$cluster,
         type = "wgcna",
-        cex.lab=0.85,
+        cex.lab=0.9,
         cex_text = NULL )       
     }
 
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      pdf.width = 8,
+      pdf.width = 12,
       pdf.height = 8,
-      res = c(70, 110),
+      res = c(75, 110),
       add.watermark = watermark
     )
 

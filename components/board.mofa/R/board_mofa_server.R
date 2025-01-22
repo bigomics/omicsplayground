@@ -23,10 +23,10 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor","selected_pheno","show_types")),
-      "Response" = list(disable = c("show_types","selected_pheno")),
-      "Weights" = list(disable = c()),
-      "Enrichment" = list(disable = c())      
+      "Overview" = list(disable = c("selected_factor","selected_module","show_types")),
+      "Response" = list(disable = c("show_types","selected_module")),
+      "Weights" = list(disable = c("selected_module")),
+      "Enrichment" = list(disable = c("show_types","selected_factor"))      
     )
     shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -46,21 +46,32 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
         mofa <- NULL
         has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
         shiny::validate( shiny::need( has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
-#        if(!has.mofa) {
-#          shinyalert::shinyalert("Warning","No MOFA slot in object. Please recompute MOFA.")
-#          return(NULL)
-#        }        
         mofa <- pgx$mofa
+
+        if(!"gset.mofa" %in% names(mofa)) {
+          progress <- shiny::Progress$new(session, min=0, max=1)
+          on.exit(progress$close())
+          progress$set(message = paste("Calculating geneset MOFA..."), value = 0.33)
+          mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
+            mofa,
+            kernel = input$kernel,
+            factorname = "Module",
+            #GMT = pgx$GMT,
+            numfactors = 20
+          )
+        }
         
         ## update factors in selectInput
-        factors <- colnames(mofa$F)
-        factors <- sort(factors)
+        factors <- colnames(mofa$W)
         dtypes  <- names(mofa$ww)
         sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
         contrasts <- colnames(mofa$contrasts)
         phenotypes <- colnames(mofa$samples)
+        modules <- colnames(mofa$gset.mofa$W)
         updateSelectInput(session, "selected_factor", choices = factors,
           selected = factors[1])
+        updateSelectInput(session, "selected_module", choices = modules,
+          selected = modules[1])
         updateSelectInput(session, "show_types", choices = dtypes,
           selected = sel.dtypes)
 
@@ -84,20 +95,31 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       
       kernel <- input$kernel
       pgx.showSmallModal(paste("Calculating",kernel,"...<br>please wait"))
-      progress <- shiny::Progress$new()
+      progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
-      progress$set(message = paste("Calculating",kernel,"..."), value = 0)
-      
+
+
       numfactors <- as.integer(input$numfactors)
       numfactors <- min( numfactors, min(dim(pgx$X)) )        
 
       dbg("[MofaBoard] *** recalculating MOFA ***")
+      progress$set(message = paste("Calculating",kernel,"..."), value = 0.33)
       mofa <- playbase::pgx.compute_mofa(
           pgx,
           kernel = kernel,
           numfactors = numfactors,
           add_gsets = input$add_gsets)
-            
+
+      if(!"gset.mofa" %in% names(mofa)) {
+        progress$set(message = paste("Calculating geneset MOFA..."), value = 0.66)
+        mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
+          mofa,
+          kernel = kernel,
+          factorname = "Module",
+          #GMT = pgx$GMT,
+          numfactors = 20
+        )
+      }
       
       shiny::removeModal()
       message("[mofa] compute MOFA done!")
@@ -198,6 +220,12 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       watermark = WATERMARK
     )
 
+    mofa_plot_factortrait_server(
+      "factortrait2",
+      mofa = mofa,
+      watermark = WATERMARK
+    )
+
     mofa_plot_factorheatmap_server(
       "factor_heatmap",
       mofa = mofa,
@@ -254,6 +282,18 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       show_types = reactive(input$show_types),
       watermark = WATERMARK
     )
+
+    mofa_plot_gsetmofa_traitCor_server(
+      "gset_traitcor",
+      mofa = mofa,
+      watermark = WATERMARK
+    )
+
+    mofa_plot_gsetmofa_factorCor_server(
+      "gset_factorcor",
+      mofa = mofa,
+      watermark = WATERMARK
+    )
     
     ## ------------- Table Modules --------------------------
     mofa_table_mofa_gene_server(
@@ -264,6 +304,12 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       annot = reactive(pgx$genes)
     )
 
+    mofa_table_gsetmofa_server(
+      "gsetmofa_table",
+      mofa = mofa,
+      selected_module = reactive(input$selected_module)
+    )
+    
     ## mofa_table_mgsea_server(
     ##   "gsea_table1",
     ##   mofa = mofa,
