@@ -48,6 +48,7 @@ dataview_plot_averagerank_server <- function(id,
                                              labeltype,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y)
       shiny::req(r.gene())
@@ -64,6 +65,8 @@ dataview_plot_averagerank_server <- function(id,
         return(NULL)
       }
 
+      dbg("[dataview_plot_averagerank_server:plot_data] 1:")
+      
       nsamples <- length(samples)
 
       if (data_type %in% c("counts", "abundance")) {
@@ -78,8 +81,8 @@ dataview_plot_averagerank_server <- function(id,
       }
 
       ann <- pgx$genes[names(mean.fc), , drop = FALSE]
-      sel <- which(sub(".*:", "", names(mean.fc)) == gene)
-
+      sel <- which(names(mean.fc) == gene)
+      
       if (input$show_all_isoforms && labeltype() != "feature") {
         symbol <- playbase::probe2symbol(gene, ann, "symbol", fill_na = TRUE)
         sel2 <- which(ann$symbol == symbol) ## isoforms
@@ -109,19 +112,12 @@ dataview_plot_averagerank_server <- function(id,
       ylab <- pd$ylab
       xanchor <- "center"
 
-      dbg("[plot_averagerank_server:plot.RENDER] gene = ", gene)
-      if(length(sel)>1) {
-        dbg("[plot_averagerank_server:plot.RENDER] WARNING multiple sel = ", sel)
-      }      
-      if (sel < length(mean.fc) / 5) xanchor <- "left"
-      if (sel > length(mean.fc) * 4 / 5) xanchor <- "right"
-
       # subsample for speed
       ii <- 1:length(mean.fc)
       if (length(ii) > 200) {
         ii <- c(1:200, seq(201, length(mean.fc), 10))
       }
-
+      
       fig <- plotly::plot_ly(
         x = ii,
         y = mean.fc[ii],
