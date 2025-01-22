@@ -1003,7 +1003,6 @@ UploadBoard <- function(id,
               # }
               # Populate upload data with available
               if (!is.null(query_files$counts) && new_upload() == 2) {
-                # Decrypt the URL if encryption key is available
                 counts_url <- if (!is.null(encryption_key)) {
                   decrypt_util(query_files$counts, encryption_key)
                 } else {
@@ -1011,12 +1010,21 @@ UploadBoard <- function(id,
                   query_files$counts
                 }
 
-                file <- read_query_files(counts_url)
-                df <- playbase::read_counts(file)
-                uploaded$counts.csv <- df
-                ## if counts file contains annotation
-                af <- playbase::read_annot(file)
-                uploaded$annot.csv <- af
+                future_promise({
+                  file <- read_query_files(counts_url)
+                  df <- playbase::read_counts(file)
+                  af <- playbase::read_annot(file)
+                  list(counts = df, annot = af)
+                }) %...>% 
+                (function(result) {
+                  message("[UploadServer] Future completed successfully")
+                  uploaded$counts.csv <- result$counts
+                  uploaded$annot.csv <- result$annot
+                }) %...!% 
+                (function(error) {
+                  message("[UploadServer] Future failed with error: ", error$message)
+                  warning("[UploadServer] Error processing counts file: ", error)
+                })
               }
               if (!is.null(query_files$samples) && new_upload() == 2) {
                 # Decrypt the URL if encryption key is available
