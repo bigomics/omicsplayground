@@ -259,7 +259,7 @@ MofaUI <- function(id) {
             ),
             mofa_plot_gsetmofa_factorCor_ui(
               ns("gset_factorcor"),
-              title = "Module-factor correlation",
+              title = "Factor-geneset correlation",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
