@@ -150,7 +150,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          labels = NULL, zlim = NULL, cex = 0.9, cex.label = 1,
-                         source = "", plotlib = "base") {
+                         source = "", plotlib = "base", ...) {
       opc.low <- 1
       if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
@@ -195,8 +195,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         hilight2 = hilight2,
         labels = labels,
         title = title,
-        source = source,
-        key = rownames(pos)
+        ...
       )
 
       p

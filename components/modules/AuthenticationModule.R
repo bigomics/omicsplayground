@@ -919,6 +919,7 @@ LoginCodeAuthenticationModule <- function(id,
       updateTextInput(session, "login_password", value = "")
 
       PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+      REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 
       # Reset loaded modules
       MODULES_LOADED[] <<- FALSE

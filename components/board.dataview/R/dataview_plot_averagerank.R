@@ -4,14 +4,26 @@
 ##
 
 dataview_plot_averagerank_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    caption) {
+                                         id,
+                                         label = "",
+                                         height,
+                                         width,
+                                         title,
+                                         info.text,
+                                         caption) {
   ns <- shiny::NS(id)
+
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_all_isoforms"),
+        "Show all available feature isoforms",
+        FALSE
+      ),
+      "Show all available isoforms (e.g., transcripts, PTMs) for each feature",
+      placement = "top"
+    )
+  )
 
   PlotModuleUI(
     ns("pltsrv"),
@@ -20,7 +32,7 @@ dataview_plot_averagerank_ui <- function(
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
-    options = NULL,
+    options = options,
     caption = caption,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
@@ -65,12 +77,19 @@ dataview_plot_averagerank_server <- function(id,
         ylab <- tspan("average counts (log2)", js = FALSE)
       }
 
-      ## NEED IMPROVEMENT??
-      ##sel <- which(sub(".*:", "", names(mean.fc)) == sub(".*:", "",gene))
-      sel <- which(names(mean.fc) == gene)      
+      ann <- pgx$genes[names(mean.fc), , drop = FALSE]
+      sel <- which(sub(".*:", "", names(mean.fc)) == gene)
 
+      if (input$show_all_isoforms && labeltype() != "feature") {
+        symbol <- playbase::probe2symbol(gene, ann, "symbol", fill_na = TRUE)
+        sel2 <- which(ann$symbol == symbol) ## isoforms
+        sel <- unique(c(sel2, sel))
+      } else {
+        sel <- sel
+      }
+      
       pd <- list(
-        df = data.frame(mean.fc = mean.fc),
+        df = data.frame(mean.fc = mean.fc, gene = names(mean.fc)),
         sel = sel,
         gene = gene,
         ylab = ylab
@@ -78,30 +97,13 @@ dataview_plot_averagerank_server <- function(id,
       pd
     })
 
-    plot.RENDER.save <- function() {
-      pd <- plot_data()
-      req(pd)
-
-      mean.fc <- pd$df$mean.fc
-      sel <- pd$sel
-      gene <- pd$gene
-      ylab <- pd$ylab
-
-      par(mar = c(2.3, 3.0, 1, 0), mgp = c(2.0, 0.6, 0))
-      base::plot(mean.fc,
-        type = "h", lwd = 0.4,
-        col = "#bbd4ee", cex.axis = 0.9,
-        ylab = ylab, xlab = "ordered genes", xaxt = "n"
-      )
-      points(sel, mean.fc[sel], type = "h", lwd = 2, col = "black")
-      text(sel, mean.fc[sel], gene, pos = 3, cex = 0.9)
-    }
-
     plot.RENDER <- function() {
+
       pd <- plot_data()
       req(pd)
 
       mean.fc <- pd$df$mean.fc
+      names(mean.fc) <- pd$df$gene
       sel <- pd$sel
       gene <- pd$gene
       ylab <- pd$ylab
@@ -110,53 +112,42 @@ dataview_plot_averagerank_server <- function(id,
       dbg("[plot_averagerank_server:plot.RENDER] gene = ", gene)
       if(length(sel)>1) {
         dbg("[plot_averagerank_server:plot.RENDER] WARNING multiple sel = ", sel)
-      }
-      
+      }      
       if (sel < length(mean.fc) / 5) xanchor <- "left"
       if (sel > length(mean.fc) * 4 / 5) xanchor <- "right"
 
-      ## subsample for speed
+      # subsample for speed
       ii <- 1:length(mean.fc)
       if (length(ii) > 200) {
         ii <- c(1:200, seq(201, length(mean.fc), 10))
       }
 
-      # Translate gene to labeltype
-      gene <- playbase::probe2symbol(gene, pgx$genes, labeltype(), fill_na = TRUE)
-
-      fig <-
-        plotly::plot_ly(
-          x = ii,
-          y = mean.fc[ii],
-          type = "scatter",
-          mode = "lines",
-          fill = "tozeroy",
-          fillcolor = omics_colors("light_blue"),
-          line = list(
-            width = 0
-          ),
-          hovertemplate = ~ paste(
-            ## NOTE: currently x and y cannot be shown explicitly as the format doesnt comply with the chart
-            ## TODO: check if the format can be adjusted (if information is needed in tooltip)
-            # "Gene rank: <b>", floor(ii), "</b><br>",
-            # "Density: <b>", sprintf("%1.3f", mean.fc[ii]), "</b>",
-            "<extra></extra>"
+      fig <- plotly::plot_ly(
+        x = ii,
+        y = mean.fc[ii],
+        type = "scatter",
+        mode = "lines",
+        fill = "tozeroy",
+        fillcolor = omics_colors("light_blue"),
+        line = list(width = 0),
+        hovertemplate = ~ paste("<extra></extra>")
+      )
+      
+      i = 1
+      for (i in 1:length(sel)) {
+        fig <- fig %>%
+          plotly::add_lines(
+            x = sel[i],
+            y = c(0, mean.fc[sel[i]]),
+            type = "scatter",
+            mode = "lines",
+            line = list(color = omics_colors("orange"), width = 5)
           )
-        )
-
+      }
+        
+      ## add a second density curve with transparent filling
+      ## to add an outline overwriting annotation line
       fig <- fig %>%
-        plotly::add_lines(
-          x = sel,
-          y = c(0, mean.fc[sel]),
-          type = "scatter",
-          mode = "lines",
-          line = list(
-            color = omics_colors("orange"),
-            width = 5
-          )
-        ) %>%
-        ## add a second density curve with transparent filling
-        ## to add an outline overwriting annotation line
         plotly::add_lines(
           x = ii,
           y = mean.fc[ii],
@@ -164,19 +155,25 @@ dataview_plot_averagerank_server <- function(id,
           mode = "lines",
           fill = "tozeroy",
           fillcolor = "#00000000",
-          line = list(
-            color = omics_colors("brand_blue"),
-            width = 2.5
-          )
-        ) %>%
-        plotly::add_annotations(
-          x = sel,
-          y = mean.fc[sel],
-          ax = ifelse(sel < length(mean.fc) / 2, 40, -40),
-          ay = -40,
-          xanchor = xanchor,
-          text = gene
+          line = list(color = omics_colors("brand_blue"), width = 2.5)
         )
+
+      i = 1
+      for (i in 1:length(sel)) {
+        if (sel[i] < length(mean.fc) / 5) xanchor <- "left"
+        if (sel[i] > length(mean.fc) * 4 / 5) xanchor <- "right"
+        gene <- names(mean.fc)[sel[i]]
+        text <- playbase::probe2symbol(gene, pgx$genes, labeltype(), fill_na = TRUE)
+        fig <- fig %>%
+          plotly::add_annotations(
+            x = sel[i],
+            y = mean.fc[sel[i]],
+            ax = ifelse(sel[i] < length(mean.fc) / 2, 40, -40),
+            ay = -40,
+            xanchor = xanchor,
+            text = text
+          )
+      }
 
       fig <- fig %>%
         plotly::layout(
@@ -191,7 +188,6 @@ dataview_plot_averagerank_server <- function(id,
     modal_plot.RENDER <- function() {
       fig <- plot.RENDER() %>%
         plotly_modal_default()
-      #
       fig
     }
 

@@ -576,6 +576,7 @@ upload_module_normalization_server <- function(
         out.res <- results_outlier_methods()
         shiny::req(res)
         shiny::req(out.res)
+        samples <- r_samples()
 
         methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
         ## methods <- intersect(methods, names(res$pos))
@@ -587,9 +588,13 @@ upload_module_normalization_server <- function(
         #        names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
         #        names(pos.list) <- sub("limma", "auto-limma", names(pos.list))
 
+        colorby_var <- input$colorby_var
+        colorby_var <- intersect(colorby_var, colnames(samples))
+        col1 <- factor(samples[, colorby_var]) ## as.numeric(col1)
+
         pheno <- res$pheno
         xdim <- length(pheno)
-        col1 <- factor(pheno)
+        ## col1 <- factor(pheno)
         cex1 <- cut(xdim,
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
@@ -688,9 +693,21 @@ upload_module_normalization_server <- function(
         }
       )
 
+      getMetadataVars <- eventReactive(
+        {
+          list(r_samples())
+        },
+        {
+          shiny::req(dim(r_samples()))
+          samples <- r_samples()
+          return(colnames(samples))
+        }
+      )
+
       output$normalization <- shiny::renderUI({
         ## reactive
         batch_params <- getBatchParams()
+        metadata_vars <- getMetadataVars()
 
         score.infotext <-
           "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
@@ -723,9 +740,19 @@ upload_module_normalization_server <- function(
           shiny::checkboxInput(ns("outlier_shownames"), "show sample names", FALSE)
         )
 
+        ## bec.options <- tagList(
+        ##   shiny::radioButtons(ns("bec_plottype"), "Plot type:", c("pca", "tsne", "heatmap"),
+        ##     inline = TRUE
+        ##   )
+        ## )
+
         bec.options <- tagList(
-          shiny::radioButtons(ns("bec_plottype"), "Plot type:", c("pca", "tsne", "heatmap"),
-            inline = TRUE
+          shiny::radioButtons(
+            ns("colorby_var"),
+            label = "Annotate by:",
+            choices = metadata_vars,
+            selected = metadata_vars[1],
+            inline = FALSE
           )
         )
 
@@ -918,7 +945,7 @@ upload_module_normalization_server <- function(
               PlotModuleUI(
                 ns("plot4"),
                 title = "Batch-effects correction",
-                options = NULL,
+                options = bec.options,
                 info.text = batcheff.infotext,
                 height = c("auto", "100%"),
                 show.maximize = FALSE
