@@ -1010,6 +1010,9 @@ UploadBoard <- function(id,
                   query_files$counts
                 }
 
+                # Set initial loading state
+                uploaded$counts.csv <- matrix(data = 1, nrow = 1, ncol = 1)
+                
                 future_promise({
                   file <- read_query_files(counts_url)
                   df <- playbase::read_counts(file)
