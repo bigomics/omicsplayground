@@ -675,13 +675,25 @@ upload_module_computepgx_server <- function(
         ##-----------------------------------------------
         ## Params for scRNA-seq
         do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
+
+        nfeature_threshold <- sc_compute_settings()$nfeature_threshold
+        if (!any(nfeature_threshold)) nfeature_threshold = FALSE
+
+        mt_threshold <- sc_compute_settings()$mt_threshold
+        if (!any(mt_threshold)) mt_threshold = FALSE
+
+        hb_threshold <- sc_compute_settings()$hb_threshold
+        if (!any(hb_threshold)) hb_threshold = FALSE
+
         sc.covs <- as.character(input$regress_covariates)
+
         sc_compute_settings <- list(
-          ## azimuth_ref <- to add
-          nfeature_threshold = sc_compute_settings()$nfeature_threshold,
-          mt_threshold = sc_compute_settings()$mt_threshold,
-          hb_threshold = sc_compute_settings()$hb_threshold,
-          compute_supercells = ifelse(do.supercells, TRUE, FALSE),
+          ##azimuth_ref <- to add
+          ##nfeature_threshold = sc_compute_settings()$nfeature_threshold,
+          nfeature_threshold = nfeature_threshold,
+          mt_threshold = mt_threshold,
+          hb_threshold = hb_threshold,
+          compute_supercells = ifelse(any(do.supercells), TRUE, FALSE),
           regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
           regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
           regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
@@ -689,6 +701,16 @@ upload_module_computepgx_server <- function(
         )
         ##-------------------------------------------------
 
+        ##---------------------------
+        dbg("--------------MNT1: nfeature_threshold=", sc_compute_settings$nfeature_threshold)
+        dbg("--------------MNT2: mt_threshold=", sc_compute_settings$mt_threshold)
+        dbg("--------------MNT3: hb_threshold=", sc_compute_settings$hb_threshold)
+        dbg("--------------MNT4: compute_supercells=", sc_compute_settings$compute_supercells)
+        dbg("--------------MNT5: regress_mt=", sc_compute_settings$regress_mt)
+        dbg("--------------MNT6: regress_hb=", sc_compute_settings$regress_hb)
+        ##---------------------------
+
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -706,17 +728,7 @@ upload_module_computepgx_server <- function(
           batch.correct = FALSE,
           norm_method = norm_method(),
           sc_compute_settings = sc_compute_settings,
-          ## sc_compute_settings = list(
-          ##   nfeature_threshold = nfeature_threshold,
-          ##   mt_threshold = mt_threshold,
-          ##   hb_threshold = hb_threshold,
-          ##   compute_supercells = compute_supercells,
-          ##   regress_mt = regress_mt,
-          ##   regress_hb = regress_hb,
-          ##   regress_ribo = regress_ribo,
-          ##   regress_ccs = regress_ccs
-          ## ),
-          ## ## normalize = do.normalization,
+          ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
           only.known = remove.unknown,
