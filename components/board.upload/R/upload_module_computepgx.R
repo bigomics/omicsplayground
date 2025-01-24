@@ -687,6 +687,7 @@ upload_module_computepgx_server <- function(
 
         sc.covs <- as.character(input$regress_covariates)
 
+        ##-------------IF I CLICK AND UNCLICK "REMOVE CELLS", IT STAYS ON. TO FIX."
         sc_compute_settings <- list(
           ##azimuth_ref <- to add
           ##nfeature_threshold = sc_compute_settings()$nfeature_threshold,
