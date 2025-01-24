@@ -36,10 +36,7 @@ mofa_plot_loadingheatmap_server <- function(id,
       shiny::req(res)
       ntop <- 40 / length(res$ww)
       k <- input_factor()
-      dbg("[mofa_plot_loading_heatmap_server] k = ", k)
-      dbg("[mofa_plot_loading_heatmap_server] names(res) = ", names(res))
       factors <- colnames(res$F)
-      dbg("[mofa_plot_loading_heatmap_server] factors = ", factors)
       shiny::req(k %in% factors)
       playbase::mofa.plot_loading_heatmap(
         res, k=k, ntop=ntop, type="splitmap", annot = "scores",

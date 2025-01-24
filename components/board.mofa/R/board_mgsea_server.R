@@ -46,7 +46,7 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
       shiny::validate( shiny::need( has.mofa, "missing MOFA slot"))      
       
       ## update factors in selectInputs
-      enr <- pgx$mofa$fc.gsea      
+      enr <- pgx$mofa$mgsea      
       contrasts <- names(enr)
       updateSelectInput(session, "contrast", choices = contrasts)
       
@@ -81,10 +81,10 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
       sel
     })
     
-    mofa_plot_enrichment_server(
+    mgsea_plot_enrichment_server(
       "menrichment",
       pgx = pgx,
-      gsea = reactive({ mofa()$fc.gsea }),
+      gsea = reactive({ mofa()$mgsea }),
       input_k = reactive(input$contrast),
       select = mgsea_table_selected,
       req.selection = TRUE,
@@ -93,7 +93,7 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
 
     mofa_plot_mgsea_server(
       "mgsea_plot",
-      gsea = reactive(mofa()$fc.gsea),
+      mgsea = reactive(mofa()$mgsea),
       input_k = reactive(input$contrast),
       select = mgsea_table_selected,
       watermark = WATERMARK
@@ -110,7 +110,7 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
     # Table Modules
     mgsea_table <- mofa_table_mgsea_server(
       "mgsea_table",
-      gsea = reactive(mofa()$fc.gsea),
+      mgsea = reactive(mofa()$mgsea),
       input_k = reactive(input$contrast)            
     )
 

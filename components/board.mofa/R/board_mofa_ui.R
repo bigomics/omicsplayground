@@ -202,7 +202,7 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            mofa_table_mofa_gene_ui(
+            mofa_table_genetable_ui(
               ns("mofa_genetable"),
               title = "Factor features",
               info.text = "",
@@ -238,20 +238,50 @@ MofaUI <- function(id) {
           bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(4, 4, 4, 12),
+              lg = c(6, 6, 12),
               sm = c(12, 12, 12, 12)
             ),
-            mofa_plot_factortrait_ui(
-              ns("factortrait2"),
-              title = "Factor-Trait correlation",
+            mofa_plot_enrichment_ui(
+              ns("enrichmentplot"),
+              title = "Factor enrichment",
               info.text = "",
-              caption = "",
+              caption = "Functional analysis of factor",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
+            ),            
+            mofa_plot_pathbank_ui(
+              ns("pathway"),
+              title = "Multi-omics pathway",
+              caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("100%", "100%")
+            ),                        
+            mofa_table_enrichment_ui(
+              ns("mofa_enrichmenttable"),
+              title = "Enrichment table",
+              info.text = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )                          
+          )
+        )
+      ), ## tabPanel
+
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "gsetMOFA",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("<b>Geneset MOFA.</b> Instead of performing factor analysis on the genes, we can use MOFA directly on a (single-samples) geneset expression matrix. In this way we can find 'genesets modules' (GM) and similarly correlated the modules with traits. The GenesetModule-Factor correlation shows how modules correlate with (gene) factors.")),
+          bslib::layout_columns(
+            col_widths = bslib::breakpoints(
+              lg = c(6, 6, 12),
+              sm = c(12, 12, 12, 12)
             ),
             mofa_plot_gsetmofa_traitCor_ui(
               ns("gset_traitcor"),
-              title = "Geneset-trait correlation",
+              title = "GenesetModule-Trait correlation",
               info.text = "...",
               caption = "Factor heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -259,7 +289,7 @@ MofaUI <- function(id) {
             ),
             mofa_plot_gsetmofa_factorCor_ui(
               ns("gset_factorcor"),
-              title = "Factor-geneset correlation",
+              title = "GenesetModule-Factor correlation",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
@@ -271,18 +301,10 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )                          
-            ## mofa_plot_enrichment_ui(
-            ##   ns("enrichment"),
-            ##   title = "Enrichment analysis",
-            ##   info.text = "",
-            ##   caption = "Functional analysis of factor",
-            ##   height = c("100%", TABLE_HEIGHT_MODAL),
-            ##   width = c("auto", "100%")
-            ## )            
           )
         )
       ) ## tabPanel
-
+      
     )
   )
 }

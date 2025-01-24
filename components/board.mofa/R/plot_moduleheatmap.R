@@ -54,11 +54,15 @@ mofa_plot_moduleheatmap_server <- function(id,
                            "Please select at least one datatype"))
       
       playbase::mofa.plot_loading_heatmap(
-        res, k=k, main=k,
-        ntop = 50, split = input$split,
-        type="splitmap", annot = "pheno",
-        maxchar = 40, show_types = show_types,
-        mar = c(3,0,0,0), annot.ht = 3.5,
+        res, k=k, ## main=k,
+        ntop = 50,
+        split = input$split,
+        type="splitmap",
+        annot = "pheno",
+        maxchar = 40,
+        show_types = show_types,
+        mar = c(3,0,0,0),
+        annot.ht = 1 ,
         cexRow = 0.9 )
     }
 
@@ -66,7 +70,7 @@ mofa_plot_moduleheatmap_server <- function(id,
       "plot",
       func = plot.RENDER,
       pdf.width = 8, pdf.height = 12,
-      res = c(80, 90),
+      res = c(80, 100),
       add.watermark = watermark
     )
 

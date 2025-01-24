@@ -61,7 +61,7 @@ mofa_plot_boxplots_server <- function(id,
       samples <- data.frame( res$samples )
       nr <- ceiling(sqrt(nph))
       nc <- ceiling(nph / nr)
-      par(mfrow=c(nr,nc), mar=c(4,4,2.8,0.5))      
+      par(mfrow=c(nr,nc), mar=c(3,4,2.8,0.5))      
       for(ph in pheno) {
         y <- samples[,ph]
         if(all(is.na(y))) next
@@ -72,9 +72,9 @@ mofa_plot_boxplots_server <- function(id,
         ylab <- paste(k,"score")
         if(isfactor) {
           y <- factor(y)
-          boxplot( f1 ~ y, main="", ylab=ylab, xlab=ph)
+          boxplot( f1 ~ y, main="", ylab=ylab, xlab="")
         } else {
-          plot( y, f1, main="", ylab=ylab, xlab=ph)
+          plot( y, f1, main="", ylab=ylab, xlab="")
         }
         title(ph, cex.main=1.2)
       }

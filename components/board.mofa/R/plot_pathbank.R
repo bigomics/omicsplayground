@@ -68,15 +68,15 @@ mofa_plot_pathbank_server <- function(id,
         shiny::validate( shiny::need(!is.na(wp), "pathway diagram not available"))
         if(length(wp)>1) wp <- wp[1]
         
+        val = NULL ## temporary...
         k <- sel_contrast()
-        val <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+        if(FALSE && !is.null(k)) {
+          val <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+        }
 
         ## convert to UNIPROT and PATHBANK ID
         ##newnames <- convert2pathbankid(names(val))
         ##names(val) <- newnames
-
-        val = NULL ## temporary...
-        
         sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
         sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         ##wp = "SMP0080852"        

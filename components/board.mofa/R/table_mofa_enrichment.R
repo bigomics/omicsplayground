@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_table_mofa_enrichment_ui <- function(
+mofa_table_enrichment_ui <- function(
     id,
     label = "",
     title = "",
@@ -13,9 +13,14 @@ mofa_table_mofa_enrichment_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
+  options = tagList(
+    shiny::checkboxInput(ns("onlymetabo"),"only with metabolites",FALSE)
+  )
+  
   TableModuleUI(
     ns("table"),
     info.text = info.text,
+    options = options,
     width = width,
     height = height,
     title = title,
@@ -24,24 +29,35 @@ mofa_table_mofa_enrichment_ui <- function(
   )
 }
 
-mofa_table_mofa_enrichment_server <- function(id,
-                                              gsea,
-                                              input_k = reactive(1),
-                                              watermark = TRUE
-                                              )
+mofa_table_enrichment_server <- function(id,
+                                         gsea,
+                                         selected_factor = reactive(1)
+                                         )
 {
   moduleServer(id, function(input, output, session) {
 
     table.RENDER <- function(full=FALSE) {
+
       gsea <- gsea()
 
-      validate(need(!is.null(gsea), "missing GSEA data."))            
+      validate(need(!is.null(table), "missing GSEA data."))            
       k=1
-      k <- input_k()  ## which factor/phenotype
+      k <- selected_factor()  ## which factor/phenotype
       shiny::req(k)
-
-      df <- gsea[[k]]
-      numeric.cols <- grep("score|pval|p$|q$|rho",colnames(df))
+     
+      df <- gsea$table[[k]]
+      df <- df[order(-df$NES),]
+      df <- df[,grep("pathway|NES|pval|padj|size|leadingEdge",colnames(df))]      
+      if( input$onlymetabo && "size.mx" %in% colnames(df)) {
+        df <- df[ which(df$size.mx >0), ]
+      }
+      df <- data.frame(factor=k, df, check.names=FALSE)
+      if(!full) {
+        ## filter out pvalue columns
+        df <- df[,grep("leadingEdge",colnames(df),invert=TRUE)]
+      }
+      
+      numeric.cols <- grep("NES|score|pval|padj|rho",colnames(df))
       
       DT::datatable(
         df,
@@ -64,10 +80,15 @@ mofa_table_mofa_enrichment_server <- function(id,
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
-    
+
+    table.RENDER2 <- function(full=FALSE) {
+      table.RENDER(full=TRUE)
+    }
+        
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
+      func2 = table.RENDER2,      
       selector = "single"
     )
 

@@ -58,7 +58,7 @@ MGseaUI <- function(id) {
               xl = c(7, 5, 7, 5),              
               xxxl = c(4, 3, 5, 4)
             ),
-            mofa_plot_enrichment_ui(
+            mgsea_plot_enrichment_ui(
               ns("menrichment"),
               title = "multiGSEA enrichment",
               info.text = "",

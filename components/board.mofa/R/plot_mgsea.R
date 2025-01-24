@@ -32,19 +32,19 @@ mofa_plot_mgsea_ui <- function(
 
 
 mofa_plot_mgsea_server <- function(id,
-                                   gsea,
+                                   mgsea,
                                    input_k = reactive(1),
                                    select = reactive(NULL),
                                    watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
     plot.RENDER <- function() {
-      gsea <- gsea()
-      validate(need(!is.null(gsea), "missing GSEA data."))        
+      mgsea <- mgsea()
+      validate(need(!is.null(mgsea), "missing GSEA data."))        
       k <- input_k()
       shiny::req(k)
 
-      cn <- colnames(gsea[[k]])
+      cn <- colnames(mgsea[[k]])
       types <- sub("^pval.","",grep("^pval",cn,value=TRUE))
       types <- intersect(c("mx","px","gx",types), types)
       if(length(types)==1) types <- rep(types,2)
@@ -55,10 +55,10 @@ mofa_plot_mgsea_server <- function(id,
       }
       
       par(mar=c(4.5,4.5,1,0.5))
-      playbase::mofa.plot_multigsea(
-        gsea, type1=types[1], type2=types[2],
+      playbase::mgsea.plot_enrichment_scatter(
+        mgsea[[k]], type1=types[1], type2=types[2],
         size.par = input$size.par,
-        k=k, hilight = hilight)
+        hilight = hilight)
     }
 
     PlotModuleServer(

@@ -26,7 +26,8 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "Overview" = list(disable = c("selected_factor","selected_module","show_types")),
       "Response" = list(disable = c("show_types","selected_module")),
       "Weights" = list(disable = c("selected_module")),
-      "Enrichment" = list(disable = c("show_types","selected_factor"))      
+      "Enrichment" = list(disable = c("selected_module")),
+      "gsetMOFA" = list(disable = c("show_types","selected_factor"))      
     )
     shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -155,6 +156,24 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     ## ----------------------------------------
     ## --------- enrichment table -------------
     ## ----------------------------------------
+    enrichmentTable_selected <- reactive({
+
+      tbl <- enrichmentTable
+      shiny::req(tbl$data())
+      
+      has.selection <- length(tbl$rownames_selected())>0 
+      search_key <- tbl$search()
+      has.search <- length(search_key)>0 && search_key[1]!=""
+      
+      if(has.search && !has.selection) {
+        sel <- tbl$rownames_all()
+      } else if(has.selection) {
+        sel <- tbl$rownames_selected()
+      } else {
+        sel <- head( tbl$rownames_all(), 20)
+      }
+      sel
+    })
 
 
     ## ========================================================================
@@ -192,18 +211,21 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     )
     
     mofa_plot_enrichment_server(
-      "enrichment",
+      "enrichmentplot",
+      mofa = mofa,
       pgx = pgx,
-      gsea = reactive({ mofa()$gsea }),
       input_k = reactive(input$selected_factor),
       ntop = 15,
+      select = enrichmentTable_selected,
+      req.selection = TRUE,      
       watermark = WATERMARK
     )
 
-    mofa_table_mofa_enrichment_server(
-      "enrichmentTable",
-      gsea = reactive({ mofa()$gsea }),
-      input_k = reactive(input$selected_factor),
+    mofa_plot_pathbank_server(
+      "pathway",
+      pgx = pgx,
+      sel_pathway = enrichmentTable_selected,
+      sel_contrast = reactive(NULL),
       watermark = WATERMARK
     )
 
@@ -216,12 +238,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
 
     mofa_plot_factortrait_server(
       "factortrait",
-      mofa = mofa,
-      watermark = WATERMARK
-    )
-
-    mofa_plot_factortrait_server(
-      "factortrait2",
       mofa = mofa,
       watermark = WATERMARK
     )
@@ -295,13 +311,21 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       watermark = WATERMARK
     )
     
+
     ## ------------- Table Modules --------------------------
-    mofa_table_mofa_gene_server(
+
+    mofa_table_genetable_server(
       "mofa_genetable",
       mofa = mofa,
       selected_factor = reactive(input$selected_factor),
       ## datatypes = reactive(input$show_types),
       annot = reactive(pgx$genes)
+    )
+    
+    enrichmentTable <- mofa_table_enrichment_server(
+      "mofa_enrichmenttable",
+      gsea = reactive(mofa()$gsea),
+      selected_factor = reactive(input$selected_factor)            
     )
 
     mofa_table_gsetmofa_server(
@@ -309,14 +333,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       mofa = mofa,
       selected_module = reactive(input$selected_module)
     )
-    
-    ## mofa_table_mgsea_server(
-    ##   "gsea_table1",
-    ##   mofa = mofa,
-    ##   datatype = 1,
-    ##   input_factor = reactive(input$selected_factor)            
-    ## )
-
 
     return(NULL)
   })

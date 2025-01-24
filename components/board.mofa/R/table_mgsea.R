@@ -25,7 +25,7 @@ mofa_table_mgsea_ui <- function(
 }
 
 mofa_table_mgsea_server <- function(id,
-                                   gsea,
+                                   mgsea,
                                    input_k = reactive(1),
                                    top = 20
                                    )
@@ -33,15 +33,15 @@ mofa_table_mgsea_server <- function(id,
   moduleServer(id, function(input, output, session) {
 
     table.RENDER <- function(full=FALSE) {
-      gsea <- gsea()
+      mgsea <- mgsea()
 
-      validate(need(!is.null(gsea), "missing GSEA data."))            
+      validate(need(!is.null(mgsea), "missing GSEA data."))            
       k=1
       k <- input_k()  ## which factor/phenotype
       shiny::req(k)
       
-      shiny::req(gsea[[k]])
-      df <- playbase::mofa.enrichment_table(gsea, pheno=k, datatypes=NULL, full=full) 
+      shiny::req(mgsea[[k]])
+      df <- playbase::mofa.enrichment_table(mgsea, pheno=k, datatypes=NULL, full=full) 
       numeric.cols <- grep("score|pval|p$|q$|rho",colnames(df))
       
       DT::datatable(

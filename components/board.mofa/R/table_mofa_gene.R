@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_table_mofa_gene_ui <- function(
+mofa_table_genetable_ui <- function(
     id,
     label = "",
     title = "",
@@ -24,7 +24,7 @@ mofa_table_mofa_gene_ui <- function(
   )
 }
 
-mofa_table_mofa_gene_server <- function(id,
+mofa_table_genetable_server <- function(id,
                                         mofa,
                                         ## datatypes = reactive(NULL),
                                         selected_factor = reactive(NULL),
