@@ -55,7 +55,7 @@ mofa_plot_mgsea_server <- function(id,
       }
       
       par(mar=c(4.5,4.5,1,0.5))
-      playbase::mgsea.plot_enrichment_scatter(
+      playbase::mgsea.plot_scatter(
         mgsea[[k]], type1=types[1], type2=types[2],
         size.par = input$size.par,
         hilight = hilight)

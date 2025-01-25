@@ -242,8 +242,8 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       watermark = WATERMARK
     )
 
-    mofa_plot_factorheatmap_server(
-      "factor_heatmap",
+    mofa_plot_factorcorheatmap_server(
+      "factorcorheatmap",
       mofa = mofa,
       watermark = WATERMARK
     )
@@ -291,6 +291,14 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       watermark = WATERMARK
     )
     
+    mofa_plot_pathwayheatmap_server(
+      "pathwayheatmap",
+      mofa = mofa,
+      input_factor = reactive(NULL),            
+      selected = enrichmentTable_selected,
+      watermark = WATERMARK
+    )
+
     mofa_plot_centrality_server(
       "centrality",
       mofa = mofa,

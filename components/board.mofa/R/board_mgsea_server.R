@@ -106,6 +106,14 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
       sel_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
+
+    mofa_plot_pathwayheatmap_server(
+      "pathwayheatmap",
+      mofa = mofa,
+      input_factor = reactive(NULL),            
+      selected = mgsea_table_selected,
+      watermark = WATERMARK
+    )
     
     # Table Modules
     mgsea_table <- mofa_table_mgsea_server(

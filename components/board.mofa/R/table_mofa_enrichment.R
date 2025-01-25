@@ -14,7 +14,7 @@ mofa_table_enrichment_ui <- function(
   ns <- shiny::NS(id)
 
   options = tagList(
-    shiny::checkboxInput(ns("onlymetabo"),"only with metabolites",FALSE)
+    shiny::checkboxInput(ns("onlyshared"),"only shared pathways",FALSE)
   )
   
   TableModuleUI(
@@ -48,8 +48,10 @@ mofa_table_enrichment_server <- function(id,
       df <- gsea$table[[k]]
       df <- df[order(-df$NES),]
       df <- df[,grep("pathway|NES|pval|padj|size|leadingEdge",colnames(df))]      
-      if( input$onlymetabo && "size.mx" %in% colnames(df)) {
-        df <- df[ which(df$size.mx >0), ]
+      if( input$onlyshared) {
+        size.cols <- grep("^size", colnames(df))
+        sel <- apply(df[, size.cols], 1, function(x) all(x>0))
+        df <- df[sel, ]
       }
       df <- data.frame(factor=k, df, check.names=FALSE)
       if(!full) {

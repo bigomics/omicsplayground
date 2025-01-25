@@ -81,7 +81,7 @@ MofaUI <- function(id) {
               mofa_plot_dendrogram_ui(
                 ns("dendrogram"),
                 title = "Feature clustering",
-                caption = "Factor heatmap",                
+                caption = "Factor clustering",                
                 info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -145,8 +145,8 @@ MofaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              mofa_plot_factorheatmap_ui(
-                ns("factor_heatmap"),
+              mofa_plot_factorcorheatmap_ui(
+                ns("factorcorheatmap"),
                 title = "Between-factor correlation",
                 info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
                 caption = "",
@@ -238,7 +238,7 @@ MofaUI <- function(id) {
           bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(6, 6, 12),
+              lg = c(4, 4, 4, 12),
               sm = c(12, 12, 12, 12)
             ),
             mofa_plot_enrichment_ui(
@@ -249,9 +249,17 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),            
+            mofa_plot_pathwayheatmap_ui(
+              ns("pathwayheatmap"),
+              title = "Pathway heatmap",
+              info.text = "...",
+              caption = "Integrated Multi-omics heatmap.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             mofa_plot_pathbank_ui(
               ns("pathway"),
-              title = "Multi-omics pathway",
+              title = "Pathway diagram",
               caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")

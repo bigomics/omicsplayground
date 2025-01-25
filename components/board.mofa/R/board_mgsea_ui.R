@@ -55,7 +55,7 @@ MGseaUI <- function(id) {
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               sm = c(12, 12, 12, 12),
-              xl = c(7, 5, 7, 5),              
+              xl = c(5, 3, 4, 7, 5),              
               xxxl = c(4, 3, 5, 4)
             ),
             mgsea_plot_enrichment_ui(
@@ -71,6 +71,14 @@ MGseaUI <- function(id) {
               title = "MultiGSEA plot",
               info.text = "MultiGSEA plot",
               caption = "The plot simultaneously visualizes the enrichment scores of two omics types in one figure. Pathway/genesets that are enriched in both modalities have a higher multi-score (see Table).",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            mofa_plot_pathwayheatmap_ui(
+              ns("pathwayheatmap"),
+              title = "Pathway heatmap",
+              info.text = "...",
+              caption = "Integrated Multi-omics heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),

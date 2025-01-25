@@ -53,17 +53,17 @@ mofa_plot_moduleheatmap_server <- function(id,
       shiny::validate(need(length(show_types)>0,
                            "Please select at least one datatype"))
       
-      playbase::mofa.plot_loading_heatmap(
+      playbase::mofa.plot_heatmap(
         res, k=k, ## main=k,
-        ntop = 50,
+        ntop = 40,
         split = input$split,
         type="splitmap",
         annot = "pheno",
         maxchar = 40,
         show_types = show_types,
         mar = c(3,0,0,0),
-        annot.ht = 1 ,
-        cexRow = 0.9 )
+        annot.ht = 0.9,
+        cexRow = 0.9)
     }
 
     PlotModuleServer(

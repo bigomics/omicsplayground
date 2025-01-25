@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_plot_factorheatmap_ui <- function(
+mofa_plot_factorcorheatmap_ui <- function(
     id,
     title = "",
     info.text = "",
@@ -26,7 +26,7 @@ mofa_plot_factorheatmap_ui <- function(
   )
 }
 
-mofa_plot_factorheatmap_server <- function(id,
+mofa_plot_factorcorheatmap_server <- function(id,
                                            mofa,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -34,7 +34,7 @@ mofa_plot_factorheatmap_server <- function(id,
     plot.RENDER <- function() {
       shiny::req(mofa())
       par(mar=c(6,5,2,1))    
-      playbase::mofa.plot_factor_correlation(
+      playbase::mofa.plot_factor_corheatmap(
         mofa(), main=NULL, marx=0.8, cexRow=1.3, cexCol=1.3) 
     }
 
