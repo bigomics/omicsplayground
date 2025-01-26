@@ -121,6 +121,7 @@ clustering_plot_splitmap_server <- function(id,
         filt$mat <- zx
         filt$annot <- annot
         filt$samples <- colnames(zx)
+        filt$grp <- annot$celltype
       }
       
       shiny::validate(shiny::need(
@@ -225,6 +226,7 @@ clustering_plot_splitmap_server <- function(id,
 
       plt <- NULL
       pd <- plot_data()
+      saveRDS(pd, "~/Desktop/MNT/pd.RDS")
       filt <- pd[["filt"]]
       X <- pd[["zx"]]
       annot <- pd[["annot"]]
@@ -269,7 +271,6 @@ clustering_plot_splitmap_server <- function(id,
         names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
-
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X, annot = annotF, ytips = tooltips,
         idx = splity, splitx = splitx, scale = scale,
