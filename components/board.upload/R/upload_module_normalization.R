@@ -27,7 +27,6 @@ upload_module_normalization_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
@@ -63,9 +62,15 @@ upload_module_normalization_server <- function(
         }
 
         m <- input$normalization_method
-        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
-        X <- log2(counts + prior) ## NEED RETHINK
 
+        prior0 <- 0  ## no offset if minimum is not zero
+        if(min(counts, na.rm=TRUE)==0) {
+          prior0 <- min(counts[counts>0],na.rm=TRUE)  ## smallest non-zero value
+        }
+        ## prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
+        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0) ## NEW        
+        X <- log2(counts + prior) ## NEED RETHINK
+        
         ## if (input$remove_xxl) {
         ##     dbg("[normalization_server:imputedX]: Assign NA to outlier features")
         ##     X[playbase::is.xxl(X, z = 10)] <- NA
@@ -83,7 +88,7 @@ upload_module_normalization_server <- function(
         }
 
         dbg("[normalization_server:imputedX] Checking for duplicated features")
-        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)        
         X
       })
 
@@ -94,7 +99,6 @@ upload_module_normalization_server <- function(
         if (input$normalize) {
           m <- input$normalization_method
           dbg("[normalization_server:normalizedX] Normalizing data using ", m)
-          ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
           ref <- NULL
           if (m == "reference") {
             ref <- input$ref_gene
@@ -104,7 +108,12 @@ upload_module_normalization_server <- function(
             ))
             shiny::req(ref)
           }
-          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+
+          ## NEED RETHINK: would be better to rewrite Normalization in
+          ## log2-space (IK) to avoid log/unlog and priors
+          prior0 <- 1e-4
+          ##prior0 <- min(2**X, na.rm=TRUE)  ## smallest non-zero value
+          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
           m0 <- m
           if (m == "CPM+quantile") m0 <- "CPM"
           normCounts <- playbase::pgx.countNormalization(
@@ -112,6 +121,7 @@ upload_module_normalization_server <- function(
             method = m0, ref = ref
           )
           X <- log2(normCounts + prior)
+          
           ## if (FALSE && input$quantile_norm) {
           if (m == "CPM+quantile") {
             dbg("[normalization_server:normalizedX] Applying quantile normalization")
@@ -120,6 +130,7 @@ upload_module_normalization_server <- function(
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
+        
         return(X)
       })
 
@@ -142,7 +153,7 @@ upload_module_normalization_server <- function(
           pos <- irlba::irlba(X, nv = 2)$v
           rownames(pos) <- colnames(X)
         }
-        dbg("[normalization_server:cleanX] dim.cleanX = ", dim(X))
+        
         list(X = X, pos = pos)
       })
 
@@ -152,7 +163,7 @@ upload_module_normalization_server <- function(
         X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
-
+        
         ## recompute chosed correction method with full
         ## matrix. previous was done on shortened matrix.
         kk <- intersect(colnames(X1), rownames(samples))
@@ -160,7 +171,7 @@ upload_module_normalization_server <- function(
         X1 <- X1[, kk, drop = FALSE]
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
-
+        
         nmissing <- sum(is.na(X1))
         if (!input$batchcorrect) {
           dbg("[normalization_server:correctedX] Data not corrected for batch effects")
@@ -219,18 +230,24 @@ upload_module_normalization_server <- function(
             cx <- list(X = xlist[[m]], impX1 = bc_impX1)
           }
         }
-        shiny::removeModal()
-
+        shiny::removeModal()        
         return(cx)
       })
 
       ## return object
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
+
         X <- correctedX()$X
-        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-        dbg("[normalization_server:correctedCounts] Generating counts. Prior=", prior)
-        counts <- pmax(2**X - prior, 0)
+#        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+#        prior <- 2**min(X,na.rm=TRUE)  ## new
+#        dbg("[normalization_server:correctedCounts] Generating counts. Prior=", prior)
+#        counts <- pmax(2**X - prior, 0)
+
+        ## NEED RETHINK!! should we return the original not-corrected
+        ## counts????
+        counts <- r_counts()[rownames(X),colnames(X)]
+        
         counts
       })
 
