@@ -43,14 +43,10 @@ UpgradeModuleServer <- function(id, auth) {
     allowed_domains <- shiny::reactive({
       domains_path <- paste0(ETC, "/allowed_domains.csv")
       if (file.exists(domains_path)) {
-        domains <- read.csv(domains_path)$x
         logged_in_domain <- strsplit(auth$email, "@")[[1]][2]
         if (is.na(logged_in_domain)) logged_in_domain <- ""
-        if (logged_in_domain %in% domains) {
-          return(TRUE)
-        } else {
-          return(FALSE)
-        }
+        domain_found <- length(system(paste0("grep '", logged_in_domain, "' ", domains_path), intern = TRUE)) > 0
+        return(domain_found)
       } else {
         return(FALSE)
       }
