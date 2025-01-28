@@ -36,13 +36,14 @@ UploadBoard <- function(id,
     compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
-    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
+    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes,
+                                                  annot.cols) {
       future_promise({
-        dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
         detected <- playbase::detect_species_probetype(
           probes = probes,
           datatype = datatype,
-          test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
+          test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+          annot.cols = annot.cols
         )
         ##if (is.null(detected)) detected <- "error"
         detected
@@ -1009,12 +1010,14 @@ UploadBoard <- function(id,
       {
         shiny::req(uploaded$counts.csv, upload_organism())
         probes <- rownames(uploaded$counts.csv)
+        annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
 
         checkprobes_task$invoke(
           organism = upload_organism(),
           datatype = upload_datatype(),
-          probes = probes
+          probes = probes,
+          annot.cols = annot.cols
         )
       }
     )
@@ -1023,7 +1026,7 @@ UploadBoard <- function(id,
       checkprobes_task$status(),
       {
         dbg(
-          "[observeEvent:checkprobes_task$result] task status = ",
+          "[UploadServer:observeEvent:checkprobes_task$result] task status = ",
           checkprobes_task$status()
         )
         if (checkprobes_task$status() == "error") {
@@ -1038,7 +1041,7 @@ UploadBoard <- function(id,
         detected <- checkprobes_task$result()
         organism <- upload_organism()
         alt.text <- ""
-
+        
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
         e0 <- length(detected)==0

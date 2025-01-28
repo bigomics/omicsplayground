@@ -185,7 +185,8 @@ upload_table_preview_counts_server <- function(
     output$histogram <- renderPlot({
       counts <- checked_matrix()
       shiny::req(counts)
-      xx <- log2(1 + counts)
+      prior <- min(counts[counts>0],na.rm=TRUE)
+      xx <- log2(prior + counts)
       # Add seed to make it deterministic
       set.seed(123)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
@@ -202,7 +203,8 @@ upload_table_preview_counts_server <- function(
     output$boxplots <- renderPlot({
       counts <- checked_matrix()
       shiny::req(counts)
-      X <- log2(pmax(counts, 0))
+      prior <- min(counts[counts>0],na.rm=TRUE)      
+      X <- log2(pmax(counts, 0) + prior)
       boxplot(X, ylab = tspan("counts (log2)", js = FALSE))
     })
 

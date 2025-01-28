@@ -520,6 +520,7 @@ upload_module_computepgx_server <- function(
         counts <- countsRT()
         countsX <- countsX()
         impX <- impX()
+
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
