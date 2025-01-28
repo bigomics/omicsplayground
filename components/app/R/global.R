@@ -169,6 +169,7 @@ opt.default <- list(
   ENABLE_HEARTBEAT = TRUE,
   ENABLE_INACTIVITY = TRUE,
   ENABLE_ANNOT = FALSE,
+  ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
   MAX_SAMPLES = 1000,
@@ -274,6 +275,9 @@ PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 
 ## Initialize report download logger
 REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+
+## Initialize upgrade button logger
+UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
 
 ## Initialize translator
 library(shiny.i18n)

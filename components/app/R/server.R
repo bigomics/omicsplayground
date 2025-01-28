@@ -786,6 +786,10 @@ app_server <- function(input, output, session) {
     auth = auth,
     callbackR = inviteCallback
   )
+  UpgradeModuleServer(
+    id = "upgrade",
+    auth = auth
+  )
   inviteCallback <- function() {
     ## After succesful invite, we extend the session
     dbg("[MAIN] inviteCB called!")
@@ -1039,6 +1043,7 @@ app_server <- function(input, output, session) {
       comment = nav_count.str,
       comment2 = isolate(PLOT_DOWNLOAD_LOGGER$str),
       comment3 = isolate(REPORT_DOWNLOAD_LOGGER$str),
+      comment4 = isolate(UPGRADE_LOGGER$str),
       num_datasets = num_pgxfiles,
       ip = session$request$HTTP_X_REAL_IP
     )
