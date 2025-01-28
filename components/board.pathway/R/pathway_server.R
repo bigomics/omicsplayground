@@ -228,7 +228,7 @@ PathwayBoard <- function(id,
       # Remove ID not in meta matrix
       jj <- jj[wp.gsets[jj] %in% rownames(pgx$gset.meta$meta[[comparison]])]
       # Remove ID with no logFC on meta matrix
-      jj <- jj[!is.na(pgx$gset.meta$meta[[comparison]][wp.gsets[jj],]$meta.fx)]
+      jj <- jj[!is.na(pgx$gset.meta$meta[[comparison]][wp.gsets[jj], ]$meta.fx)]
       wp.gsets <- wp.gsets[jj]
       wp.ids <- wp.ids[jj]
 

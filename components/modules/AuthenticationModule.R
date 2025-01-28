@@ -1067,6 +1067,10 @@ LoginCodeAuthenticationModule <- function(id,
 
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
+      if (opt$ENCRYPTED_EMAIL) {
+        query_email_nonce <- shiny::getQueryString()$email_nonce
+        query_email <- decrypt_cookie(query_email, query_email_nonce)
+      }
       query_email
     })
 

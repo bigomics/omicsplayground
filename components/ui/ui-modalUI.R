@@ -63,6 +63,7 @@ modalUI <- function(
     title,
     ...,
     size = c("default", "sm", "lg", "xl", "fullscreen"),
+    track_open = FALSE,
     footer = tags$div(
       class = "modal-footer",
       tags$button(
@@ -82,7 +83,7 @@ modalUI <- function(
     ""
   )
 
-  tags$div(
+  modal <- tags$div(
     class = "modal fade",
     id = id,
     tabindex = "-1",
@@ -113,6 +114,23 @@ modalUI <- function(
       )
     )
   )
+
+  if (track_open) {
+    tagList(
+      modal,
+      tags$script(sprintf(
+        "$('#%s').on('shown.bs.modal hidden.bs.modal', function(e) {
+          console.log('Modal event:', e.type, 'for modal:', '%s');
+          Shiny.setInputValue('%s_is_open', e.type === 'shown');
+        });",
+        id,
+        id,
+        id
+      ))
+    )
+  } else {
+    modal
+  }
 }
 
 modalDialog2 <- function(
