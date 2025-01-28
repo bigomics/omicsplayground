@@ -43,12 +43,21 @@ mofa_plot_gsetmofa_factorCor_server <- function(id,
     plot.RENDER <- function() {
       res <- mofa()      
       K <- t(cor(res$F, res$gset.mofa$F))
-      ##gx.heatmap(K, scale='none', mar=c(6,6), keysize=0.8)
+
+      ## if(input$condition) {
+      ##   pheno <- input$pheno
+      ##   z1 <- res$gset.mofa$Z[pheno,]
+      ##   z2 <- res$Z[pheno,]
+      ##   W <- abs(outer(z1, z2))
+      ##   K <- K * W
+      ## }
+      
       if(input$cluster) {
         ii <- hclust(dist(K))$order
         jj <- hclust(dist(t(K)))$order
         K <- K[ii,jj]
       }
+
       ftext <- round(K, digits=2)
       par(mar=c(6,5,1,1))
       WGCNA::labeledHeatmap(

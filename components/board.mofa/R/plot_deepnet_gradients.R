@@ -44,8 +44,6 @@ plot_deepnet_gradients_server <- function(id,
     
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
-
-      dbg("[deepnet_gradients_server:plot.RENDER] reacted!")
             
       cond <- conditions()
       dtypes <- datatypes()
@@ -58,11 +56,9 @@ plot_deepnet_gradients_server <- function(id,
       shiny::req( dtypes %in% names(net$X))
       shiny::req( cond %in% net$labels[[1]])
 
-      dbg("[deepnet_gradients_server:plot.RENDER] get gradients...")
       grad <- net$get_gradients()[[1]]
       fc <- NULL
 
-      dbg("[deepnet_gradients_server:plot.RENDER] names(grad) = ", names(grad))      
       grad <- grad[dtypes]
       grad <- lapply(grad, function(g) g[,cond,drop=FALSE] )
       ngrad <- length(grad) * ncol(grad[[1]])
@@ -71,11 +67,10 @@ plot_deepnet_gradients_server <- function(id,
       nr <- ceiling(ngrad/nc)
       
       if( type == "barplot") {
-        par(mfrow=c(nr,nc), mar=c(8,4,0.5,1))
+        par(mfrow=c(nr,nc), mar=c(8,4,2,1))
         if(nr>1) par(mar=c(4,4,0.5,1))
         n <- round(36/nc)
         cex.names = 0.7 + 0.12*nc
-        dbg("[deepnet_gradients_server:plot.RENDER] run deep.plotMultiOmicsGradients...")        
         playbase::deep.plotMultiOmicsGradients(
           grad, n=n, onlypositive = input$onlypositive,
           par=FALSE, cex.names=cex.names)
@@ -85,13 +80,10 @@ plot_deepnet_gradients_server <- function(id,
         X <- net$X
         y <- net$y
         fc <- phenoFC()
-        dbg("[deepnet_gradients_server:plot.RENDER] run deep.plotGradientVSFoldchange...")
         par(mfrow=c(nr,nc), mar=c(4,4,2,1))
         playbase::deep.plotGradientVSFoldchange(
           grad, fc=fc, par=FALSE)
       }
-
-      dbg("[deepnet_gradients_server:plot.RENDER] done!")
       
     }
 
@@ -100,7 +92,7 @@ plot_deepnet_gradients_server <- function(id,
       func = plot.RENDER,
       ##func2 = plot.RENDER2,      
       pdf.width = 12, pdf.height = 5,
-      res = c(90, 110),
+      res = c(75, 110),
       add.watermark = watermark
     )
 

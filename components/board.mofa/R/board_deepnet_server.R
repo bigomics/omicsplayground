@@ -20,7 +20,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Model training" = list(disable = c("show_conditions")),
+      "Model training" = list(disable = c("show_conditions","show_datatypes")),
       "Gradient vs. foldchange" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs, {
@@ -62,9 +62,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     
     shiny::observeEvent( input$selected_pheno, {
       shiny::req(input$selected_pheno)
-      dbg("[DeepNetBoard] input$selected_pheno = ", input$selected_pheno)
       conditions <- sort(unique(pgx$samples[, input$selected_pheno]))
-      dbg("[DeepNetBoard] conditions = ", conditions)
       shiny::updateSelectInput(session, "show_conditions", choices = conditions,
                                selected = head(conditions,3) )      
     })
@@ -150,10 +148,10 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       pheno <- input$selected_pheno
       shiny::req(pheno)
 
-      dbg("[DeepNetBoard] initialize deepnet model for",pheno)
+      info("[DeepNetBoard] initialize deepnet model for",pheno)
       X <- pgx$X
       if(any(is.na(X))) {
-        dbg("[DeepNetBoard] imputing missing values in X")
+        info("[DeepNetBoard] imputing missing values in X")
         X <- playbase::svdImpute2(X)
       }
       y <- pgx$samples[, pheno, drop=FALSE]
@@ -161,12 +159,10 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       y <- y[ii,,drop=FALSE]
       X <- X[,ii]
       sdX <- matrixStats::rowSds(X, na.rm=TRUE)
-      dbg("[DeepNetBoard] 1: dim(X) = ", dim(X))
-      dbg("[DeepNetBoard] 1: length(y) = ", length(y))                
       xx <- playbase::mofa.split_data(X)  ## also handles single-omics
 
       if(input$addgsets) {
-        dbg("[DeepNetBoard] adding genesets ")
+        info("[DeepNetBoard] adding genesets ")
         gsetx <- pgx$gsetX[,ii]
         xx <- c( xx, list(gset=gsetx))
       }
@@ -175,8 +171,6 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         ntime = 10
         xx <- playbase::mofa.augment(xx, ntime, z=1)
         y  <- do.call( rbind, rep(list(y),ntime))
-        dbg("[DeepNetBoard] augmented X: dim(xx[[1]]) = ", dim(xx[[1]]))
-        dbg("[DeepNetBoard] augmented y: dim(y) = ", dim(y))                
       }
       
       l1 = 1
@@ -193,7 +187,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       yy <- lapply(yy, as.factor)
       names(yy) <- pheno
       
-      dbg("[DeepNetBoard] creating DeepNet model: ", input$model)
+      info("[DeepNetBoard] creating DeepNet model: ", input$model)
       dbg("[DeepNetBoard] layers = ", input$layers)                      
       latent_dim <- input$latent_dim
 
@@ -222,7 +216,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         # scale = input$scaleinput,
         # sd_weight = input$sdweight
       )
-      dbg("[DeepNetBoard] finished creating model!")
+      info("[DeepNetBoard] finished creating model!")
 
       if( input$layers != update_diagram()) {
         update_diagram(input$layers)
@@ -252,14 +246,8 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       y <- y[ii]
       X <- X[,ii]      
       
-      dbg("[DeepNetBoard] pheno = ", pheno )
-      dbg("[DeepNetBoard] y = ", y )
-      
       mx <- model.matrix( ~ 0 + y)
       mx <- t(t(mx) / colSums(mx))
-
-      dbg("[DeepNetBoard] dim.pgx$X = ", dim(X) )
-      dbg("[DeepNetBoard] dim.mx = ", dim(mx) )            
       
       avgX <- X %*% mx
       F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE] - rowMeans(avgX[,-i,drop=FALSE]))
@@ -277,7 +265,6 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     plot_deepnet_diagram_server(
       "deepnet_diagram",
       net = net,  ## not reacting, only read
-      pgx = pgx,  ## react on pgx
       update = update_diagram,
       watermark = WATERMARK
     )
@@ -344,8 +331,8 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     plot_deepnet_biomarkerheatmap_server(
       "deepnet_biomarkerheatmap",
       net = net,
+      pgx = pgx,      
       update = update,
-      datatypes = reactive(input$show_datatypes),
       watermark = WATERMARK
     )
     

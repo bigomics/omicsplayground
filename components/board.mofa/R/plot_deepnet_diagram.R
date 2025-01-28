@@ -28,27 +28,13 @@ plot_deepnet_diagram_ui <- function(
 
 plot_deepnet_diagram_server <- function(id,
                                         net,
-                                        pgx,
                                         update,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     plot.RENDER <- function(n=12) {
       update()
-      dbg("[deepnet_diagram_server] 0: update = ", update())      
-      dbg("[deepnet_diagram_server] 0: reacted!")
-
-      ## shiny::req(pgx$X)  ## react on pgx change
       net <- isolate(net()) ## do not react everytime
-
-      dbg("[deepnet_diagram_server] 1: is.null.net = ", is.null(net))
-      dbg("[deepnet_diagram_server] 1: length.net = ", length(net))
-      dbg("[deepnet_diagram_server] 1: names.net = ", names(net))
-      
-      ##shiny::req(net)
-
-      dbg("[deepnet_diagram_server] 2: reacted!")
-      dbg("[deepnet_diagram_server] 2: names(net$xx) = ", names(net$xx))
       
       svgfile <- playbase::deep.plotNeuralNet(net, outfile=NULL)
       validate(

@@ -13,9 +13,14 @@ wgcna_table_enrichment_ui <- function(
     height) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    checkboxInput(ns("showallmodules"), "Show all modules")
+  )
+  
   TableModuleUI(
     ns("datasets"),
     title = title,
+    options = options,
     info.text = info.text,
     caption = caption,
     width = width,
@@ -25,11 +30,36 @@ wgcna_table_enrichment_ui <- function(
 }
 
 wgcna_table_enrichment_server <- function(id,
-                                          enrich_table) {
+                                          wgcna,
+                                          selected_module
+                                          ## enrich_table
+                                          ) {
   moduleServer(id, function(input, output, session) {
 
+    table_data <- function() {
+      gse <- wgcna()$gse
+      k <- selected_module()
+      if (input$showallmodules) k <- "<all>"
+      if (k %in% names(gse)) {
+        df <- gse[[k]]
+      } else {
+        df <- do.call(rbind, gse)
+      }
+      if(!"score" %in% colnames(df)) {
+        df$odd.ratio[is.infinite(df$odd.ratio)] <- 99
+        df$score <- df$odd.ratio * -log10(df$p.value)
+      }
+      df <- df[, c(
+        "module", "geneset", "score", "p.value", "q.value",
+        "odd.ratio", "overlap", "genes"
+      )]
+      df <- df[order(-df$score), ]
+      df
+    }
+    
     RENDER <- shiny::reactive({
-      df <- enrich_table()
+
+      df <- table_data()
       numeric.cols <- grep("score|value|ratio", colnames(df))
 
       DT::datatable(
@@ -62,6 +92,7 @@ wgcna_table_enrichment_server <- function(id,
       "datasets",
       func = RENDER,
       func2 = RENDER_modal,
+      csvFunc = table_data,
       selector = "none"
     )
 

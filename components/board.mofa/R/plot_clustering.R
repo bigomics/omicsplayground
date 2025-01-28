@@ -38,14 +38,7 @@ mofa_plot_clustering_server <- function(id,
       shiny::req(res$posx)
       shiny::req(res$posf)
       shiny::req(res$Y)      
-
-      dbg("[mofa_clustering_server] k = ", k)      
-      dbg("[mofa_clustering_server] colnames.Y = ", colnames(res$Y))
-      dbg("[mofa_clustering_server] k in colnames.Y = ", k %in% colnames(res$Y))
       if(!is.null(k)) shiny::req(k %in% colnames(res$Y))
-
-      dbg("[mofa_clustering_server] dim(res$posx) = ", dim(res$posx))
-      dbg("[mofa_clustering_server] dim(res$posf) = ", dim(res$posf))      
       
       col1 = 'black'      
       if( type == "samples") {

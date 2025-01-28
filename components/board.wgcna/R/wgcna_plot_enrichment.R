@@ -26,12 +26,12 @@ wgcna_plot_enrichment_ui <- function(
 }
 
 wgcna_plot_enrichment_server <- function(id,
-                                         enrich_table,
                                          enrichTable_module,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     enrichPlot.RENDER <- function() {
-      df <- enrich_table()
+
+      df <- enrichTable_module$data()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
       }

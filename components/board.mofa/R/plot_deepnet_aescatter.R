@@ -35,7 +35,6 @@ plot_deepnet_aescatter_server <- function(id,
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
       net <- net()
-      dbg("[deepnet_aescatter_server] triggered...")
       
       par(mfrow=c(1,1), mar=c(4,4,2,1))
       playbase::deep.plotAutoEncoderReconstructions(

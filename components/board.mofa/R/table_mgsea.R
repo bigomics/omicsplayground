@@ -32,16 +32,26 @@ mofa_table_mgsea_server <- function(id,
 {
   moduleServer(id, function(input, output, session) {
 
-    table.RENDER <- function(full=FALSE) {
+    csvFunc <- function() {
       mgsea <- mgsea()
-
       validate(need(!is.null(mgsea), "missing GSEA data."))            
       k=1
       k <- input_k()  ## which factor/phenotype
-      shiny::req(k)
-      
-      shiny::req(mgsea[[k]])
-      df <- playbase::mofa.enrichment_table(mgsea, pheno=k, datatypes=NULL, full=full) 
+      shiny::req(k,mgsea[[k]])
+      df <- playbase::mofa.enrichment_table(mgsea, pheno=k, full=TRUE) 
+      df
+    }
+    
+    table.RENDER <- function(full=FALSE) {
+      mgsea <- mgsea()
+      validate(need(!is.null(mgsea), "missing GSEA data."))            
+      k <- input_k()  ## which factor/phenotype
+      shiny::req(k,mgsea[[k]])
+      df <- playbase::mofa.enrichment_table(mgsea, pheno=k, datatypes=NULL, full=TRUE) 
+      if(!full) {
+        num.cols <- grep("^num",colnames(df),value=TRUE)
+        df <- df[,c("pathway","multi.score","multi.q",num.cols)]
+      }
       numeric.cols <- grep("score|pval|p$|q$|rho",colnames(df))
       
       DT::datatable(
@@ -74,6 +84,7 @@ mofa_table_mgsea_server <- function(id,
       "table",
       func = table.RENDER,
       func2 = table.RENDER2,
+      csvFunc = csvFunc,
       selector = "single"
     )
 

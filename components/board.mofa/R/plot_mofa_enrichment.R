@@ -50,11 +50,10 @@ mofa_plot_enrichment_server <- function(id,
       shiny::req(k)
       shiny::req(k %in% names(gsea$table))
       sel <- select()
-      
+
       nx <- grep("[:]",rownames(mofa$W),value=TRUE)      
       dtypes <- unique(sub(":.*","",nx))
       dtypes
-
 
       dbg("[mofa_plot_enrichment] length.select = ", length(select()))
       
@@ -62,12 +61,10 @@ mofa_plot_enrichment_server <- function(id,
         rnk <- mofa$W[,k]
         rnk <- playbase::normalize_multirank(rnk)
         gset <- names(which(pgx$GMT[,sel]!=0))
-        ## NEED RETHINK!!!! should have multi-omics gene sets
-        multiset <- names(rnk)
-        multiset <- as.vector(sapply(dtypes,paste0,":",gset))
-        multiset <- intersect(multiset, names(rnk))
+        gset <- as.vector(sapply(dtypes,paste0,":",gset))
+        gset <- intersect(gset, names(rnk))
         par(mfrow=c(1,1), mar=c(3,4,2,1))
-        playbase::gsea.enplot( rnk, multiset, cex=1.3, 
+        playbase::gsea.enplot( rnk, gset, cex=1.3, 
           cex.main = 1.2, main.line = 0.6,
           ylab ="Normalized rank metric",
           cex.lab=1, lab.line=c(1,2.4))

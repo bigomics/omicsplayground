@@ -61,10 +61,19 @@ mgsea_plot_enrichment_server <- function(id,
           if(length(dtypes)>3) par(mfrow=c(2,ceiling(length(dtypes)/2)))
           for(dt in dtypes) {
             tt <- paste0(k, " (",toupper(dt),")")
-            playbase::pgx.Volcano(pgx, contrast=k,
-              hilight=sel, label=sel, labeltype=input$labeltype,
-              ntop=10, plotlib="base",
-              datatype=dt, cex=0.8, fc=0.5, title=tt)
+            playbase::pgx.Volcano(
+              pgx,
+              contrast=k,
+              hilight=sel,
+              label=sel,
+              labeltype=input$labeltype,
+              ntop=10,
+              plotlib="base",
+              datatype=dt,
+              cex=0.8,
+              fc=0.5,
+              title=tt
+            )
           }
         } else {
           playbase::pgx.Volcano(pgx, contrast=k, hilight=sel,

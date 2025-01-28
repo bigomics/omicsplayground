@@ -41,10 +41,12 @@ wgcna_table_genes_server <- function(id,
       module <- selected_module()
       trait <- selected_trait()      
       
-      df <- playbase::wgcna.getGeneStats(res, module=module, trait=trait, plot=FALSE) 
+      df <- playbase::wgcna.getGeneStats(
+        res, module=module, trait=trait, plot=FALSE) 
       if(input$showpvalues==FALSE) {
         df <- df[, grep("Pvalue", colnames(df), invert=TRUE), drop=FALSE]
       }
+      ## only those in module
       df <- df[ which(df$module == module), , drop=FALSE ]
       
       numeric.cols <- grep("^module$", colnames(df), invert=TRUE)

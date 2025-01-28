@@ -12,7 +12,6 @@ wgcna_plot_module_significance_ui <- function(
     height,
     width) {
   ns <- shiny::NS(id)
-
   
   PlotModuleUI(
     ns("plot"),

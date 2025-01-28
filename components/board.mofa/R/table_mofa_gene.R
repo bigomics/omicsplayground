@@ -12,7 +12,7 @@ mofa_table_genetable_ui <- function(
     height = 400,
     width = 400) {
   ns <- shiny::NS(id)
-
+  
   TableModuleUI(
     ns("table"),
     info.text = info.text,

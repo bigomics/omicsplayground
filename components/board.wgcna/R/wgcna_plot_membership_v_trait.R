@@ -12,11 +12,16 @@ wgcna_plot_membership_v_trait_ui <- function(
     height,
     width) {
   ns <- shiny::NS(id)
-
+  
+  options <- shiny::tagList(
+    shiny::checkboxInput(ns("showallmodules"),"Show all modules", FALSE)
+  )
+  
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     height = height,
     caption = caption,
@@ -36,7 +41,11 @@ wgcna_plot_membership_v_trait_server <- function(id,
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
-      df <- playbase::wgcna.getGeneStats(res, module=module, trait=trait, plot=FALSE) 
+      shiny::req(!is.null(input$showallmodules))
+      df <- playbase::wgcna.getGeneStats(
+        res, module=module, trait=trait,
+        showallmodules = input$showallmodules,
+        plot = FALSE) 
       df
     }
     
@@ -44,9 +53,15 @@ wgcna_plot_membership_v_trait_server <- function(id,
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
+      shiny::req(!is.null(input$showallmodules))
+      col <- "black"
+      if(input$showallmodules) col <- NULL
       par(mar=c(2,2,1,1))
-      df <- playbase::wgcna.getGeneStats(res, module=module, trait=trait,
-                                         main="", plot=TRUE) 
+      df <- playbase::wgcna.getGeneStats(
+        res, module=module, trait=trait,
+        showallmodules = input$showallmodules,
+        col = col,
+        main="", plot=TRUE) 
     }
 
     PlotModuleServer(
