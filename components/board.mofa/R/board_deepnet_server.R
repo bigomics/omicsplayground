@@ -130,11 +130,11 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
                                selected = sel.datatype[1] )
 
+      update_diagram <- reactiveVal("abc")
     })
 
     ## update network diagram if model changes and reset
     update_diagram <- reactiveVal("abc")
-
     
     ## ================================================================================
     ## ========================== BOARD FUNCTIONS =====================================

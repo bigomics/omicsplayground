@@ -38,7 +38,7 @@ mofa_table_mgsea_server <- function(id,
       k=1
       k <- input_k()  ## which factor/phenotype
       shiny::req(k,mgsea[[k]])
-      df <- playbase::mofa.enrichment_table(mgsea, pheno=k, full=TRUE) 
+      df <- mgsea[[k]]
       df
     }
     
@@ -47,7 +47,8 @@ mofa_table_mgsea_server <- function(id,
       validate(need(!is.null(mgsea), "missing GSEA data."))            
       k <- input_k()  ## which factor/phenotype
       shiny::req(k,mgsea[[k]])
-      df <- playbase::mofa.enrichment_table(mgsea, pheno=k, datatypes=NULL, full=TRUE) 
+      df <- mgsea[[k]]
+      df <- cbind(pathway=rownames(df), df)
       if(!full) {
         num.cols <- grep("^num",colnames(df),value=TRUE)
         df <- df[,c("pathway","multi.score","multi.q",num.cols)]
