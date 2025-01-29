@@ -1,71 +1,71 @@
 ## make as R6 class?? e.g. add documentation, initialize object,
 ## object id.
 
-MODULE.multiomics <- list( 
+MODULE.multiomics <- list(
   module_menu = function() {
     c(
       mofa = "MOFA",
       mgsea = "multiGSEA",
       snf = "SNF",
       lasagna = "Lasagna",
-      deepnet = "DeepLearning"                
+      deepnet = "DeepLearning"
     )
   },
- 
+
   module_ui = function() {
     list(
       bigdash::bigTabItem(   ## call this in app.R??
         "mofa-tab",
         MofaInputs("mofa"),
-        create_loader("mofa-loader")        
-      ),        
+        MofaUI("mofa")
+      ),
       bigdash::bigTabItem(
         "mgsea-tab",
         MGseaInputs("mgsea"),
-        create_loader("mgsea-loader")        
-      ),        
+        MGseaUI("mgsea")
+      ),
       bigdash::bigTabItem(
         "snf-tab",
         SNF_Inputs("snf"),
-        create_loader("snf-loader")
-      ),        
+        SNF_UI("snf")
+      ),
       bigdash::bigTabItem(
         "lasagna-tab",
         LasagnaInputs("lasagna"),
-        create_loader("lasagna-loader")
+        LasagnaUI("lasagna")
       ),
       bigdash::bigTabItem(
         "deepnet-tab",
         DeepNetInputs("deepnet"),
-        create_loader("deepnet-loader")
-      )        
-    )
-  },    
-
-  module_ui2 = function() {
-    list(
-      list(   ## call this in app.R??
-        "mofa-tab",
-        MofaUI("mofa")
-      ),        
-      list(
-        "mgsea-tab",
-        MGseaUI("mgsea")
-      ),        
-      list(
-        "snf-tab",
-        SNF_UI("snf")
-      ),        
-      list(
-        "lasagna-tab",
-        LasagnaUI("lasagna")
-      ),
-      list(
-        "deepnet-tab",
         DeepNetUI("deepnet")
-      )        
+      )
     )
-  },    
+  },
+
+  # module_ui2 = function() {
+  #   list(
+  #     list(   ## call this in app.R??
+  #       "mofa-tab",
+  #       MofaUI("mofa")
+  #     ),        
+  #     list(
+  #       "mgsea-tab",
+  #       MGseaUI("mgsea")
+  #     ),        
+  #     list(
+  #       "snf-tab",
+  #       SNF_UI("snf")
+  #     ),        
+  #     list(
+  #       "lasagna-tab",
+  #       LasagnaUI("lasagna")
+  #     ),
+  #     list(
+  #       "deepnet-tab",
+  #       DeepNetUI("deepnet")
+  #     )        
+  #   )
+  # },    
 
   module_server = function(PGX, board_observers = NULL) {
     info("[SERVER] calling MofaBoard module")

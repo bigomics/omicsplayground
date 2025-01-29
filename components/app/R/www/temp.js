@@ -212,6 +212,7 @@ Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
 
 Shiny.addCustomMessageHandler('bigdash-remove-tab', (msg) => {
     $(`.big-tab[data-name=${msg.value}]`).remove();
+	$(`.tab-settings:has(a#${msg.value.slice(0, -4)}-options)`).remove();
     // $(`[data-target=${msg.value}]`).addClass("nodisp");
     $(`[data-target=${msg.value}]`).hide();
 });

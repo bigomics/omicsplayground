@@ -497,12 +497,12 @@ tspan.SAVE <- function(label) {
 #' @param id The ID for the loader container
 #' @return A shiny div element containing the loader
 #' @export
-create_loader <- function(id) {
-  div(
-    class = "loader-container",
-    id = id,
-    div(
-      class = "spinner"
-    )
-  )
-} 
+# create_loader <- function(id) {
+#   div(
+#     class = "loader-container",
+#     id = id,
+#     div(
+#       class = "spinner"
+#     )
+#   )
+# } 
