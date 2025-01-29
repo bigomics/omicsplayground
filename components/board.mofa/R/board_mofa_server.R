@@ -23,11 +23,11 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor","selected_module","show_types")),
-      "Response" = list(disable = c("show_types","selected_module")),
-      "Weights" = list(disable = c("selected_module")),
-      "Enrichment" = list(disable = c("selected_module")),
-      "gsetMOFA" = list(disable = c("show_types","selected_factor"))      
+      "Overview" = list(disable = c("selected_factor","selected_module","selected_trait","show_types")),
+      "Response" = list(disable = c("show_types","selected_module","selected_trait")),
+      "Weights" = list(disable = c("selected_module","selected_trait")),
+      "Enrichment" = list(disable = c("selected_module","selected_trait")),
+      "gsetMOFA" = list(disable = c("show_types"))      
     )
     shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -69,12 +69,15 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
         contrasts <- colnames(mofa$contrasts)
         phenotypes <- colnames(mofa$samples)
         modules <- colnames(mofa$gset.mofa$W)
+        traits <- colnames(pgx$mofa$Y)
         updateSelectInput(session, "selected_factor", choices = factors,
-          selected = factors[1])
+                          selected = factors[1])
         updateSelectInput(session, "selected_module", choices = modules,
-          selected = modules[1])
+                          selected = modules[1])
+        updateSelectInput(session, "selected_trait", choices = traits,
+                          selected = traits[1])
         updateSelectInput(session, "show_types", choices = dtypes,
-          selected = sel.dtypes)
+                          selected = sel.dtypes)
 
         return( mofa )
       }
@@ -271,7 +274,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "modulegraph",
       mofa = mofa,
       input_k = reactive(input$selected_factor),
-      input_pheno = reactive(input$selected_pheno),
       filter_types = reactive(input$show_types),
       watermark = WATERMARK
     )
@@ -337,10 +339,19 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     )
 
     mofa_table_gsetmofa_server(
-      "gsetmofa_table",
+      "gsetmofa_module",
       mofa = mofa,
-      selected_module = reactive(input$selected_module)
+      selected_module = reactive(input$selected_module),
+      selected_trait = reactive(input$selected_trait)
     )
+
+    mofa_table_gsetmofa_factor_server(
+      "gsetmofa_factor",
+      mofa = mofa,
+      selected_factor = reactive(input$selected_factor),
+      selected_trait = reactive(input$selected_trait)      
+    )
+    
 
     return(NULL)
   })

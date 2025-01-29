@@ -9,10 +9,11 @@ MofaInputs <- function(id) {
     shiny::hr(), shiny::br(),
 
     ## data set parameters
+    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),        
+    shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_factor"), "Select factor:", choices = NULL),
     shiny::selectizeInput(ns("show_types"), "Show datatypes:",
                           choices=NULL, multiple=TRUE),
-    shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),    
     shiny::br(),
     shiny::br(),
     shiny::br(),    
@@ -284,7 +285,7 @@ MofaUI <- function(id) {
           bs_alert(HTML("<b>Geneset MOFA.</b> Instead of performing factor analysis on the genes, we can use MOFA directly on a (single-samples) geneset expression matrix. In this way we can find 'genesets modules' (GM) and similarly correlated the modules with traits. The GenesetModule-Factor correlation shows how modules correlate with (gene) factors.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(6, 6, 12),
+              lg = c(6, 6, 8, 4),
               sm = c(12, 12, 12, 12)
             ),
             mofa_plot_gsetmofa_traitCor_ui(
@@ -303,8 +304,15 @@ MofaUI <- function(id) {
               width = c("auto", "100%")
             ),
             mofa_table_gsetmofa_ui(
-              ns("gsetmofa_table"),
-              title = "Geneset MOFA table",
+              ns("gsetmofa_module"),
+              title = "Module geneset table",
+              info.text = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),                          
+            mofa_table_gsetmofa_ui(
+              ns("gsetmofa_factor"),
+              title = "Factor gene table",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

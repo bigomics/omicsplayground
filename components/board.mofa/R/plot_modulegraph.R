@@ -36,7 +36,6 @@ mofa_plot_modulegraph_ui <- function(
 mofa_plot_modulegraph_server <- function(id,
                                          mofa,
                                          input_k = reactive(1),
-                                         input_pheno = reactive(NULL),
                                          filter_types = reactive(NULL),
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {

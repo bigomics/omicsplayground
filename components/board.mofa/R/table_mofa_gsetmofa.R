@@ -26,7 +26,8 @@ mofa_table_gsetmofa_ui <- function(
 
 mofa_table_gsetmofa_server <- function(id,
                                        mofa,
-                                       selected_module = reactive(NULL)
+                                       selected_module = reactive(NULL),
+                                       selected_trait = reactive(NULL)
                                        )
 {
   moduleServer(id, function(input, output, session) {
@@ -37,14 +38,15 @@ mofa_table_gsetmofa_server <- function(id,
 
       dbg("[table_gsetmofa] 1:")
       m=1
-      m <- selected_module()  ## which factor/phenotype      
-      shiny::req(m)
+      m  <- selected_module()  ## which factor/phenotype
+      ph <- selected_trait()  ## which factor/phenotype            
+      shiny::req(m,ph)
 
       gset.mofa <- mofa$gset.mofa      
       w <- gset.mofa$W[,m]
       gs <- rownames(gset.mofa$W)
-      Y <- gset.mofa$Y
-      rho <- cor(t(gset.mofa$X), Y)
+      Y <- gset.mofa$Y[,ph]
+      rho <- cor(t(gset.mofa$X), Y)[,1]
       
       df <- data.frame( module=m, geneset = gs, weight=w, rho=rho, check.names=FALSE)
       df <- df[order(-df$w),]
@@ -65,7 +67,18 @@ mofa_table_gsetmofa_server <- function(id,
           scrollY = "70vh",
           scroller = TRUE,
           scrollResize = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs = list(
+            list(
+              targets = "geneset", ## with no rownames column 1 is column 2
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 80 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 80) + '...</span>' : data;",
+                "}"
+              )
+            )
+          )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
