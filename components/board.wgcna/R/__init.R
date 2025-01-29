@@ -18,54 +18,54 @@ MODULE.systems <- list(
       bigdash::bigTabItem(
         "drug-tab",
         DrugConnectivityInputs("drug"),
-        create_loader("drug-loader")
+        DrugConnectivityUI("drug")
       ),
       bigdash::bigTabItem(
         "wgcna-tab",
         WgcnaInputs("wgcna"),
-        create_loader("wgcna-loader")
+        WgcnaUI("wgcna")
       ),
       bigdash::bigTabItem(
         "tcga-tab",
         TcgaInputs("tcga"),
-        create_loader("tcga-loader")
+        TcgaUI("tcga")
       ),
       bigdash::bigTabItem(
         "cell-tab",
         SingleCellInputs("cell"),
-        create_loader("cell-loader")
+        SingleCellUI("cell")
       ),
       bigdash::bigTabItem(
         "pcsf-tab",
         PcsfInputs("pcsf"),
-        create_loader("pcsf-loader")
-      )
-    )
-  },
-  module_ui2 = function() {
-    list(
-      list(
-        "drug-tab",
-        DrugConnectivityUI("drug")
-      ),
-      list(
-        "wgcna-tab",
-        WgcnaUI("wgcna")
-      ),
-      list(
-        "tcga-tab",
-        TcgaUI("tcga")
-      ),
-      list(
-        "cell-tab",
-        SingleCellUI("cell")
-      ),
-      list(
-        "pcsf-tab",
         PcsfUI("pcsf")
       )
     )
   },
+  # module_ui2 = function() {
+  #   list(
+  #     list(
+  #       "drug-tab",
+  #       DrugConnectivityUI("drug")
+  #     ),
+  #     list(
+  #       "wgcna-tab",
+  #       WgcnaUI("wgcna")
+  #     ),
+  #     list(
+  #       "tcga-tab",
+  #       TcgaUI("tcga")
+  #     ),
+  #     list(
+  #       "cell-tab",
+  #       SingleCellUI("cell")
+  #     ),
+  #     list(
+  #       "pcsf-tab",
+  #       PcsfUI("pcsf")
+  #     )
+  #   )
+  # },
   module_server = function(PGX, board_observers = NULL) {
     DrugConnectivityBoard("drug",
       pgx = PGX,
