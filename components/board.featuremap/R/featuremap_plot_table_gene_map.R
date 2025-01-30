@@ -17,10 +17,6 @@ featuremap_plot_gene_map_ui <- function(
   ns <- shiny::NS(id)
 
   plot.opts <- shiny::tagList(
-    shiny::radioButtons(ns("labeltype"), "label type:",
-      c("symbol", "probe"),
-      inline = TRUE
-    ),
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
       c(0, 10, 20, 50, 100, 1000),
       selected = 50
