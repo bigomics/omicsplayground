@@ -23,9 +23,9 @@ PathwayInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(), shiny::br(),
-    shiny::conditionalPanel(
-      "input.fa_options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.fa_options % 2 == 1",
+    #   ns = ns,
       shiny::tagList(
         withTooltip(
           shiny::checkboxInput(
@@ -45,7 +45,7 @@ PathwayInputs <- function(id) {
           "Threshold value for the significant entries."
         )
       )
-    )
+    # )
   )
 }
 

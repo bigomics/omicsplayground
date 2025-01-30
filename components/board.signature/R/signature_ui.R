@@ -20,9 +20,9 @@ SignatureInputs <- function(id) {
       placement = "top", options = list(container = "body")
     ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.type == '<custom>'",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.type == '<custom>'",
+    #   ns = ns,
       shiny::tagList(
         withTooltip(
           shiny::textAreaInput(ns("genelist"), tspan("Genes:"),
@@ -56,11 +56,11 @@ SignatureInputs <- function(id) {
           "Click to compute.",
           placement = "right"
         )
-      )
+     #  )
     ),
-    shiny::conditionalPanel(
-      "input.type != '<custom>'",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.type != '<custom>'",
+    #   ns = ns,
       withTooltip(
         shiny::selectInput(ns("feature"), "Signature:",
           choices = NULL, selected = NULL
@@ -69,7 +69,7 @@ SignatureInputs <- function(id) {
         placement = "top",
         options = list(container = "body")
       )
-    )
+   #  )
   )
 }
 

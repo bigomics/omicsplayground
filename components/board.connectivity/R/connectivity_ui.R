@@ -24,9 +24,9 @@ ConnectivityInputs <- function(id) {
       placement = "right", options = list(container = "body")
     ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
+    ## shiny::conditionalPanel(
+    ##   "input.options % 2 == 1",
+    ##   ns = ns,
       shiny::br(),
       withTooltip(
         shiny::checkboxInput(ns("hideclustcontrasts"), "hide cluster contrasts", TRUE),
@@ -51,8 +51,8 @@ ConnectivityInputs <- function(id) {
         tspan("ngenes:"),
         choices = c(10, 50, 100),
         sel = 50, inline = TRUE
-      )
-    )
+      ),
+    ## ),
   )
 }
 

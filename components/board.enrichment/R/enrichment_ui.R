@@ -37,24 +37,24 @@ EnrichmentInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(), br(),
-    shiny::conditionalPanel(
-      "input.gs_options % 2 == 1",
-      ns = ns,
-      shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
-          "Enbale significant genes filtering. Display only significant genesets in the table.",
-          placement = "top", options = list(container = "body")
-        ),
-        withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
-          "Select a method or multiple methos for the statistical test.",
-          placement = "right", options = list(container = "body")
-        ),
-        withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
-          "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
-          placement = "top", options = list(container = "body")
-        ),
+    ## shiny::conditionalPanel(
+    ##   "input.gs_options % 2 == 1",
+    ##   ns = ns,
+    shiny::tagList(
+      withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
+        "Enbale significant genes filtering. Display only significant genesets in the table.",
+        placement = "top", options = list(container = "body")
+      ),
+      withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
+        "Select a method or multiple methos for the statistical test.",
+        placement = "right", options = list(container = "body")
+      ),
+      withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
+        "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
+        placement = "top", options = list(container = "body")
       )
     )
+    ## ),
   )
 }
 

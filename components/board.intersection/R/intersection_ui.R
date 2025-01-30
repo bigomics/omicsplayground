@@ -17,9 +17,9 @@ IntersectionInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.options % 2 == 1",
+    #   ns = ns,
       withTooltip(
         shiny::radioButtons(ns("level"), "Level:",
           choices = c("gene", "geneset"), inline = TRUE
@@ -31,9 +31,9 @@ IntersectionInputs <- function(id) {
         "Filter features",
         placement = "top"
       ),
-      shiny::conditionalPanel(
-        "input.filter == '<custom>'",
-        ns = ns,
+      # shiny::conditionalPanel(
+      #   "input.filter == '<custom>'",
+      #   ns = ns,
         withTooltip(
           shiny::textAreaInput(ns("customlist"), NULL,
             value = NULL,
@@ -42,8 +42,8 @@ IntersectionInputs <- function(id) {
           "Paste a custom list of genes to highlight.",
           placement = "bottom"
         )
-      )
-    )
+      #)
+    #)
   )
 }
 

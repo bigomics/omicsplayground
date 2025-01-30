@@ -37,9 +37,9 @@ DataViewInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(), shiny::br(),
-    shiny::conditionalPanel(
-      "input.data_options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.data_options % 2 == 1",
+    #   ns = ns,
       withTooltip(
         shiny::radioButtons(
           ns("data_type"), "Scale:",
@@ -51,7 +51,7 @@ DataViewInputs <- function(id) {
         "Choose an input data type for the analysis.",
         placement = "bottom"
       )
-    )
+    # )
   )
 }
 

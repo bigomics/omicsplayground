@@ -28,32 +28,31 @@ TcgaInputs <- function(id) {
       placement = "right",
       options = list(container = "body")
     ),
-    conditionalPanel(
-      "input.sigtype == 'contrast'",
-      ns = ns,
-      withTooltip(
-        selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
-        "Select the contrast that you want to correlate with survival.",
-        placement = "right",
-        options = list(container = "body")
-      ),
+    ## conditionalPanel(
+    ##   "input.sigtype == 'contrast'",
+    ##   ns = ns,
+    withTooltip(
+      selectInput(ns("contrast"), NULL, choices = NULL, multiple = FALSE),
+      "Select the contrast that you want to correlate with survival.",
+      placement = "right",
+      options = list(container = "body")
     ),
-    conditionalPanel(
-      "input.sigtype == 'genelist'",
-      ns = ns,
-      withTooltip(
-        textAreaInput(
-          ns("genelist"),
-          NULL,
-          value = NULL,
-          height = "100px",
-          width = "100%",
-          rows = 4,
-          placeholder = "Paste your custom gene list"
-        ),
-        "Paste a custom list of genes to be used as features.",
-        placement = "bottom"
-      )
+    ## ),
+    ## conditionalPanel(
+    ##   "input.sigtype == 'genelist'",
+    ##   ns = ns,
+    withTooltip(
+      textAreaInput(
+        ns("genelist"),
+        NULL,
+        value = NULL,
+        height = "100px",
+        width = "100%",
+        rows = 4,
+        placeholder = "Paste your custom gene list"
+      ),
+      "Paste a custom list of genes to be used as features.",
+      placement = "bottom"
     ),
     br(),
     withTooltip(

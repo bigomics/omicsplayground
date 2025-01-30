@@ -29,9 +29,9 @@ PcsfInputs <- function(id) {
       "Toggle advanced options.",
       placement = "top"
     ),
-    shiny::conditionalPanel(
-      "input.adv_options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.adv_options % 2 == 1",
+    #   ns = ns,
       br(),
       withTooltip(
         shiny::radioButtons(ns("pcsf_ntop"), "Network size:",
@@ -40,7 +40,7 @@ PcsfInputs <- function(id) {
         ),
         "Select initial network size (number of top genes) for ."
       )
-    )
+   #  )
   )
 }
 

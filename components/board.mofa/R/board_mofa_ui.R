@@ -19,30 +19,30 @@ MofaInputs <- function(id) {
     shiny::br(),    
     shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
     shiny::br(), 
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.options % 2 == 1",
+    #   ns = ns,
       shiny::tagList(
         shiny::selectInput(
           ns("kernel"), "Kernel",
           choices = c("MOFA","PCA","DIABLO","MCIA","WGCNA"),
           selected = "MOFA"                 
         ),
-        shiny::conditionalPanel(
-          "input.kernel != 'WGCNA'",
-          ns = ns,
+        # shiny::conditionalPanel(
+        #   "input.kernel != 'WGCNA'",
+        #   ns = ns,
           shiny::selectInput(ns("numfactors"), "Number of factors",
             choices = c(3,5,10,15,25),
             selected = 10
-          )
-        ),
+          ),
+        # ),
         shiny::checkboxInput(ns("add_gsets"), "Add gene set layers",
           value = FALSE
         ),
         br(),
         shiny::actionButton(ns("compute"),"Compute!")
       )
-    )
+    # )
   )
 }
 
