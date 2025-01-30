@@ -174,16 +174,16 @@ PlotModuleUI <- function(id,
           shiny::br()
         )
       ),
-      shiny::conditionalPanel(
-        condition = "input.downloadOption == 'pdf'",
-        ns = ns,
+      # shiny::conditionalPanel(
+      #   condition = "input.downloadOption == 'pdf'",
+      #   ns = ns,
         shiny::checkboxInput(
           inputId = ns("get_pdf_settings"),
-          label = "Include plot settings",
+          label = "Include plot settings (PDF)",
           TRUE
-        )
-      ),
-      download_buttons,
+        ),
+      # ),
+      download_buttons
     ),
     size = "xs",
     icon = shiny::icon("download"),
@@ -407,9 +407,10 @@ PlotModuleUI <- function(id,
   }
 
   e <- bslib::card(
-    class = "plotmodule",
-    full_screen = FALSE,
-    style = paste0("height:", height.1, ";overflow: visible;"),
+    #bslib::card_header(header),
+    #class = "plotmodule",
+    #full_screen = FALSE,
+    #style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
     bslib::card_body(
       gap = "0px",
@@ -476,6 +477,10 @@ PlotModuleUI <- function(id,
       )
     )
   ) # end of card
+  # e <- bslib::card(
+  #   outputFunc(ns("renderfigure")) %>%
+  #     bigLoaders::useSpinner()
+  # )
   return(e)
 }
 

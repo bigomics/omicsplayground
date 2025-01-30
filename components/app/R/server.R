@@ -281,6 +281,7 @@ app_server <- function(input, output, session) {
     # bigdash.unloadSidebar()
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
     MODULES_TO_LOAD <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_ACTIVE
+ 
     lapply(names(MODULES_TO_REMOVE[MODULES_TO_REMOVE]), function(x) {
       if (x == "DataView") {
         # lapply(board_observers[["dataview"]], function(b) b$destroy())
@@ -371,17 +372,17 @@ app_server <- function(input, output, session) {
             immediate = TRUE
           )
         }
-        shinyjs::runjs(
-          "$('.big-tab')
-          .each((index, el) => {
-          let settings = $(el)
-            .find('.tab-settings')
-            .first();
+        # shinyjs::runjs(
+        #   "$('.big-tab')
+        #   .each((index, el) => {
+        #   let settings = $(el)
+        #     .find('.tab-settings')
+        #     .first();
 
-          $(settings).data('target', $(el).data('name'));
-          $(settings).appendTo('#settings-content');
-        });"
-        )
+        #   $(settings).data('target', $(el).data('name'));
+        #   $(settings).appendTo('#settings-content');
+        # });"
+        # )
         bigdash.openSettings()
       }
       insertBigTabItem <- function(tab) {
@@ -462,7 +463,7 @@ app_server <- function(input, output, session) {
             insertBigTabUI(mod$module_ui())
             info("[UI:1] calling SystemsBio module")
             bigdash.showMenuElement(session, "SystemsBio")
-            lapply(names(MODULE.systems$module_menu()), function(x) {
+            lapply(names(mod$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
             bigdash.toggleTab(session, "tcga-tab", env$user_settings$enable_beta() && dir.exists(file.path(OPG, "libx")))
@@ -511,30 +512,30 @@ app_server <- function(input, output, session) {
     bigdash.showTabsGoToDataView(session)
   })
 
-  # insertBigTabUI2 <- function(ui) {
-  #   for (i in 1:length(ui)) {
-  #     for (j in 2:length(ui[[i]])) {
-  #       shiny::insertUI(
-  #         selector = paste0("div.big-tab[data-name='", ui[[i]][[1]], "']"),
-  #         where = "beforeEnd",
-  #         ui = ui[[i]][[j]],
-  #         immediate = TRUE
-  #       )
-  #     }
-  #   }
-  #   shinyjs::runjs(
-  #     "  $('.big-tab')
-  #   .each((index, el) => {
-  #     let settings = $(el)
-  #       .find('.tab-settings')
-  #       .first();
+  insertBigTabUI2 <- function(ui) {
+    for (i in 1:length(ui)) {
+      for (j in 2:length(ui[[i]])) {
+        shiny::insertUI(
+          selector = paste0("div.big-tab[data-name='", ui[[i]][[1]], "']"),
+          where = "beforeEnd",
+          ui = ui[[i]][[j]],
+          immediate = TRUE
+        )
+      }
+    }
+    shinyjs::runjs(
+      "  $('.big-tab')
+    .each((index, el) => {
+      let settings = $(el)
+        .find('.tab-settings')
+        .first();
 
-  #     $(settings).data('target', $(el).data('name'));
-  #     $(settings).appendTo('#settings-content');
-  #   });"
-  #   )
-  #   bigdash.openSettings()
-  # }
+      $(settings).data('target', $(el).data('name'));
+      $(settings).appendTo('#settings-content');
+    });"
+    )
+    bigdash.openSettings()
+  }
   loaded <- shiny::reactiveValues(
     clustering = 0,
     expression = 0,
@@ -547,7 +548,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
-      # insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2())
       # shinyjs::hide(id = "clustersamples-loader")
       # shinyjs::hide(id = "clusterfeatures-loader")
       mod$module_server(PGX, board_observers = board_observers, labeltype = labeltype)
@@ -556,7 +557,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab") && loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.expression
-      # insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2())
       # shinyjs::hide(id = "diffexpr-loader")
       # shinyjs::hide(id = "corr-loader")
       # shinyjs::hide(id = "bio-loader")
@@ -566,7 +567,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
-      # insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2())
       # shinyjs::hide(id = "enrich-loader")
       # shinyjs::hide(id = "sig-loader")
       # shinyjs::hide(id = "pathway-loader")
@@ -578,7 +579,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("isect-tab", "comp-tab", "cmap-tab") && loaded$compare == 0) {
       info("[UI:SERVER] reacted: calling Compare module")
       mod <- MODULE.compare
-      # insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2())
       # shinyjs::hide(id = "isect-loader")
       # shinyjs::hide(id = "comp-loader")
       # shinyjs::hide(id = "cmap-loader")
@@ -588,7 +589,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
-      # insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2())
       # shinyjs::hide(id = "drug-loader")
       # shinyjs::hide(id = "wgcna-loader")
       # shinyjs::hide(id = "tcga-loader")
@@ -601,7 +602,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.multiomics
-      # insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2())
       # shinyjs::hide(id = "mofa-loader")
       # shinyjs::hide(id = "mgsea-loader")
       # shinyjs::hide(id = "snf-loader")
