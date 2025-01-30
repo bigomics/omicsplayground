@@ -978,9 +978,9 @@ LoginCodeAuthenticationModule <- function(id,
       if (user_in_db) {
         dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
         USER$options <- read_user_options_db(user_email, user_database)
-        USER$username <- read_user_field_db(USER$email, user_database, "firstname")
-        USER$level <- read_user_field_db(USER$email, user_database, "level")
-        USER$expiry <- read_user_field_db(USER$email, user_database, "expiry")
+        USER$username <- read_user_field_db(user_email, user_database, "firstname")
+        USER$level <- read_user_field_db(user_email, user_database, "level")
+        USER$expiry <- read_user_field_db(user_email, user_database, "expiry")
       } else {
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(user_dir)
