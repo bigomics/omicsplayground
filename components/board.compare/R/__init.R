@@ -15,37 +15,34 @@ MODULE.compare <- list(
     list(
       bigdash::bigTabItem(
         "isect-tab",
-        IntersectionInputs("isect"),
-        IntersectionUI("isect")
+        IntersectionInputs("isect")
       ),
       bigdash::bigTabItem(
         "comp-tab",
-        CompareInputs("comp"),
-        CompareUI("comp")
+        CompareInputs("comp")
       ),
       bigdash::bigTabItem(
         "cmap-tab",
-        ConnectivityInputs("cmap"),
+        ConnectivityInputs("cmap")
+      )
+    )
+  },
+  module_ui2 = function() {
+    list(
+      list(
+        "isect-tab",
+        IntersectionUI("isect")
+      ),
+      list(
+        "comp-tab",
+        CompareUI("comp")
+      ),
+      list(
+        "cmap-tab", 
         ConnectivityUI("cmap")
       )
     )
   },
-  # module_ui2 = function() {
-  #   list(
-  #     list(
-  #       "isect-tab",
-  #       IntersectionUI("isect")
-  #     ),
-  #     list(
-  #       "comp-tab",
-  #       CompareUI("comp")
-  #     ),
-  #     list(
-  #       "cmap-tab", 
-  #       ConnectivityUI("cmap")
-  #     )
-  #   )
-  # },
   module_server = function(PGX, board_observers = NULL, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL) {
     IntersectionBoard("isect",
       pgx = PGX,

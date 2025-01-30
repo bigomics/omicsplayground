@@ -64,88 +64,56 @@ WgcnaBoard <- function(id, pgx, board_observers) {
 
     wgcna.compute <- shiny::eventReactive(
       {
-        list(input$compute)
+        list(input$compute, pgx$X)
       },
       {
         require(WGCNA)
-
         all.req <- all(c("stats","TOM") %in% names(pgx$wgcna))
         
+        dbg("[wgcna.compute] 0: input$compute =", input$compute)
+        dbg("[wgcna.compute] 0: pgx$name =", pgx$name)
+
+        ## NEED RETHINK!!! if input$compute >0 !!!
         if (input$compute == 0 && "wgcna" %in% names(pgx) && all.req) {
           message("[wgcna.compute] >>> using pre-computed WGCNA results...")
-          me <- sort(names(pgx$wgcna$me.genes))
-          shiny::updateSelectInput(session, "selected_module", choices = me,
-                                   selected = me[1])
-          tt <- sort(colnames(pgx$wgcna$datTraits))
-          shiny::updateSelectInput(session, "selected_trait", choices = tt,
-                                   selected = tt[1])
-
-
+          out <- pgx$wgcna
           ## old style had these settings
-          if(is.null(pgx$wgcna$networktype)) pgx$wgcna$networktype <- "unsigned"
-          if(is.null(pgx$wgcna$tomtype)) pgx$wgcna$tomtype <- "signed"
-          if(is.null(pgx$wgcna$power)) pgx$wgcna$power <- 6
-          return(pgx$wgcna)
+          if(is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
+          if(is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
+          if(is.null(pgx$wgcna$power)) out$power <- 6
+
+        } else {
+          pgx.showSmallModal("Recomputing WGCNA with new parameters...")
+          progress <- shiny::Progress$new()
+          on.exit(progress$close())
+          progress$set(message = "Calculating WGCNA...", value = 0)
+
+          message("[wgcna.compute] >>> Calculating WGCNA...")          
+          out <- playbase::pgx.wgcna(
+            pgx = pgx,
+            ngenes = as.integer(input$ngenes),
+            minmodsize = as.integer(input$minmodsize),
+            power = as.numeric(input$power),
+#            deepsplit = as.integer(input$deepsplit),
+            cutheight = as.numeric(input$cutheight),
+            networktype = input$networktype,
+            ## tomtype = input$tomtype,
+            numericlabels = FALSE
+          )
+          shiny::removeModal()
         }
 
-        pgx.showSmallModal("Recomputing WGCNA with new parameters...")
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message = "Calculating WGCNA...", value = 0)
-        message("[wgcna.compute] >>> Calculating WGCNA...")
-        
-        out <- playbase::pgx.wgcna(
-          pgx = pgx,
-          ngenes = as.integer(input$ngenes),
-          minmodsize = as.integer(input$minmodsize),
-          power = as.numeric(input$power),
-          deepsplit = as.integer(input$deepsplit),
-          cutheight = as.numeric(input$cutheight),
-          networktype = input$networktype,
-          ## tomtype = input$tomtype,
-          numericlabels = FALSE
-        )
-
+        ## update Inputes
         me <- sort(names(out$me.genes))
         shiny::updateSelectInput(session, "selected_module", choices = me,
                                  sel = me[1])
         tt <- sort(colnames(out$datTraits))
         shiny::updateSelectInput(session, "selected_trait", choices = tt,
-                                 selected = tt[1])
-        
-        ##beepr::beep(2)
-        shiny::removeModal()
+          selected = tt[1])
 
         out
       }
     )
-
-
-    ## ----------------------------------------
-    ## --------- enrichment table -------------
-    ## ----------------------------------------
-
-    ## enrich_table <- shiny::reactive({
-    ##   out <- wgcna.compute()
-    ##   gse <- out$gse
-    ##   k <- input$selected_module
-    ##   if (length(k) == 0 || k == "") k <- "<all>"
-    ##   if (k %in% names(gse)) {
-    ##     df <- gse[[k]]
-    ##   } else {
-    ##     df <- do.call(rbind, gse)
-    ##   }
-    ##   if(!"score" %in% colnames(df)) {
-    ##     df$odd.ratio[is.infinite(df$odd.ratio)] <- 99
-    ##     df$score <- df$odd.ratio * -log10(df$p.value)
-    ##   }
-    ##   df <- df[, c(
-    ##     "module", "geneset", "score", "p.value", "q.value",
-    ##     "odd.ratio", "overlap", "genes"
-    ##   )]
-    ##   df <- df[order(-df$score), ]
-    ##   df
-    ## })
 
     
     ## ================================================================================

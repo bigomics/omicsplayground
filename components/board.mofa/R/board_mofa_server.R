@@ -20,6 +20,28 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
 </ol>
 ", js = FALSE)
 
+
+    ## ========================================================================
+    ## ======================= OBSERVE FUNCTIONS ==============================
+    ## ========================================================================
+    
+    
+    my_observers <- list()
+
+    infotext <-
+      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
+        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
+        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
+
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
+        shiny::HTML(infotext),
+        size = "xl",
+        easyClose = TRUE
+      ))
+    })
+
     
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -29,61 +51,12 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "Enrichment" = list(disable = c("selected_module","selected_trait")),
       "gsetMOFA" = list(disable = c("show_types"))      
     )
-    shiny::observeEvent( input$tabs, {
+
+    my_observers[[2]] <- shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    ## =======================================================================
-    ## ======================= PRECOMPUTE FUNCTION ===========================
-    ## =======================================================================
-    
-    mofa <- shiny::eventReactive(
-      list(
-        pgx$X,
-        pgx$mofa
-      ), {
-        shiny::req(pgx$X)
-
-        mofa <- NULL
-        has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
-        shiny::validate( shiny::need( has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
-        mofa <- pgx$mofa
-
-        if(!"gset.mofa" %in% names(mofa)) {
-          progress <- shiny::Progress$new(session, min=0, max=1)
-          on.exit(progress$close())
-          progress$set(message = paste("Calculating geneset MOFA..."), value = 0.33)
-          mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
-            mofa,
-            kernel = input$kernel,
-            factorname = "Module",
-            #GMT = pgx$GMT,
-            numfactors = 20
-          )
-        }
-        
-        ## update factors in selectInput
-        factors <- colnames(mofa$W)
-        dtypes  <- names(mofa$ww)
-        sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
-        contrasts <- colnames(mofa$contrasts)
-        phenotypes <- colnames(mofa$samples)
-        modules <- colnames(mofa$gset.mofa$W)
-        traits <- colnames(pgx$mofa$Y)
-        updateSelectInput(session, "selected_factor", choices = factors,
-                          selected = factors[1])
-        updateSelectInput(session, "selected_module", choices = modules,
-                          selected = modules[1])
-        updateSelectInput(session, "selected_trait", choices = traits,
-                          selected = traits[1])
-        updateSelectInput(session, "show_types", choices = dtypes,
-                          selected = sel.dtypes)
-
-        return( mofa )
-      }
-    )
-
-    shiny::observeEvent(
+    my_observers[[3]] <- shiny::observeEvent(
       list(
         input$compute
       ), {
@@ -101,7 +74,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       pgx.showSmallModal(paste("Calculating",kernel,"...<br>please wait"))
       progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
-
 
       numfactors <- as.integer(input$numfactors)
       numfactors <- min( numfactors, min(dim(pgx$X)) )        
@@ -131,30 +103,75 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       pgx$mofa <- mofa  ## should trigger new mofa
       
     }, ignoreNULL = FALSE)
-
-
-    ## ========================================================================
-    ## ======================= OBSERVE FUNCTIONS ==============================
-    ## ========================================================================
-
-    infotext <-
-      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
-        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
-        shiny::HTML(infotext),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
-
     
-    ## ========================================================================
-    ## ======================= PLOTTING FUNCTIONS =============================
-    ## ========================================================================
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
+
+    ## =======================================================================
+    ## ======================= PRECOMPUTE FUNCTION ===========================
+    ## =======================================================================
+    
+    mofa <- shiny::eventReactive(
+      list(
+        pgx$X,
+        pgx$mofa
+      ), {
+
+        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 0: reacted!")
+        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 0: names.pgx = ", names(pgx))
+        
+        shiny::req(pgx$X)
+
+        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 0: reacted!")
+        
+        mofa <- NULL
+        has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
+        shiny::validate( shiny::need(has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
+        mofa <- pgx$mofa
+
+        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 1: names(mofa) = ", names(mofa))
+        
+        if(!"gset.mofa" %in% names(mofa)) {
+          dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 1: calculate gsetMOFA...")
+          
+          progress <- shiny::Progress$new(session, min=0, max=1)
+          on.exit(progress$close())
+          progress$set(message = paste("Calculating geneset MOFA..."), value = 0.33)
+          mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
+            mofa,
+            kernel = input$kernel,
+            factorname = "Module",
+            #GMT = pgx$GMT,
+            numfactors = 20
+          )
+        }
+
+        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 2: updating Inputs")
+        
+        ## update factors in selectInput
+        factors <- colnames(mofa$W)
+        dtypes  <- names(mofa$ww)
+        sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
+        contrasts <- colnames(mofa$contrasts)
+        phenotypes <- colnames(mofa$samples)
+        modules <- colnames(mofa$gset.mofa$W)
+        traits <- colnames(pgx$mofa$Y)
+        updateSelectInput(session, "selected_factor", choices = factors,
+                          selected = factors[1])
+        updateSelectInput(session, "selected_module", choices = modules,
+                          selected = modules[1])
+        updateSelectInput(session, "selected_trait", choices = traits,
+                          selected = traits[1])
+        updateSelectInput(session, "show_types", choices = dtypes,
+                          selected = sel.dtypes)
+
+        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] x: done!")
+        
+        return( mofa )
+      }
+    )
 
     ## ----------------------------------------
     ## --------- enrichment table -------------
@@ -177,7 +194,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       }
       sel
     })
-
 
     ## ========================================================================
     ## =========================== MODULES ====================================
@@ -208,6 +224,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_weights_server(
       "weights",
       mofa = mofa,
+      pgx = pgx,
       input_factor = reactive(input$selected_factor),
       show_types = reactive(input$show_types),
       watermark = WATERMARK

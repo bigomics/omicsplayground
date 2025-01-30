@@ -31,7 +31,7 @@ WgcnaInputs <- function(id) {
 #          choices = c("signed","unsigned","signed Nowick","none"), selected = "signed"
 #        ),
         shiny::sliderInput(ns("power"), "Power", 1, 20, 6),
-        shiny::sliderInput(ns("deepsplit"), "Deepsplit", 0, 4, 2),
+#        shiny::sliderInput(ns("deepsplit"), "Deepsplit", 0, 4, 2),
         shiny::sliderInput(ns("cutheight"), "Merge cut height", 0.05, 0.8, 0.15, 0.05),
         shiny::selectInput(ns("minmodsize"), "Min. module size",
           choices = c(5, 10, 20, 50, 100),  selected = 20

@@ -28,35 +28,32 @@ MODULE.expression <- list(
     list(
       bigdash::bigTabItem(
         "diffexpr-tab",
-        ExpressionInputs("diffexpr"),
-        ExpressionUI("diffexpr")
+        ExpressionInputs("diffexpr")
       ),
       bigdash::bigTabItem(
         "corr-tab", 
-        CorrelationInputs("corr"),
-        CorrelationUI("corr")
+        CorrelationInputs("corr")
       ),
       bigdash::bigTabItem(
         "bio-tab",
-        BiomarkerInputs("bio"),
+        BiomarkerInputs("bio")
+      )
+    )
+  },
+  module_ui2 = function() {
+    list(
+      list(
+        "corr-tab",
+        CorrelationUI("corr")
+      ),
+      list(
+        "diffexpr-tab",
+        ExpressionUI("diffexpr")
+      ),
+      list(
+        "bio-tab",
         BiomarkerUI("bio")
       )
     )
-  }#,
-  # module_ui2 = function() {
-  #   list(
-  #     list(
-  #       "corr-tab",
-  #       CorrelationUI("corr")
-  #     ),
-  #     list(
-  #       "diffexpr-tab",
-  #       ExpressionUI("diffexpr")
-  #     ),
-  #     list(
-  #       "bio-tab",
-  #       BiomarkerUI("bio")
-  #     )
-  #   )
-  # }#,
+  }
 )
