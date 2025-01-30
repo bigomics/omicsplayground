@@ -114,9 +114,9 @@ ExpressionInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(), br(),
-    shiny::conditionalPanel(
-      "input.gx_options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.gx_options % 2 == 1",
+    #   ns = ns,
       shiny::tagList( ## gx_showall does not work??
         withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
@@ -142,7 +142,7 @@ ExpressionInputs <- function(id) {
           placement = "right", options = list(container = "body")
         )
       )
-    )
+    # )
   )
 }
 

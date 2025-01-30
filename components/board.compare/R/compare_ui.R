@@ -42,9 +42,9 @@ CompareInputs <- function(id) {
       placement = "right", options = list(container = "body")
     ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
+    ## shiny::conditionalPanel(
+    ##   "input.options % 2 == 1",
+    ##   ns = ns,
       shiny::br(),
       withTooltip(
         shiny::radioButtons(ns("plottype"), "Plot type:",
@@ -63,9 +63,9 @@ CompareInputs <- function(id) {
         "Select highlight type.",
         placement = "right", options = list(container = "body")
       ),
-      shiny::conditionalPanel(
-        "input.hilighttype == 'custom'",
-        ns = ns,
+      ## shiny::conditionalPanel(
+      ##   "input.hilighttype == 'custom'",
+      ##   ns = ns,
         withTooltip(
           shiny::textAreaInput(ns("genelist"), NULL,
             value = NULL,
@@ -74,9 +74,8 @@ CompareInputs <- function(id) {
           ),
           "Paste a custom list of genes to highlight.",
           placement = "right"
-        )
-      ),
-      shiny::br(),
+        ),
+      ## ),
       withTooltip(
         shiny::radioButtons(ns("ntop"), "ntop",
           choices = c(10, 20, 40, 100),
@@ -85,7 +84,7 @@ CompareInputs <- function(id) {
         "number of top genes to show",
         placement = "right", options = list(container = "body")
       )
-    )
+    ## ),
   )
 }
 

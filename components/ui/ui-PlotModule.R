@@ -120,11 +120,11 @@ PlotModuleUI <- function(id,
     )
   } else {
     button_list <- lapply(seq_along(card_names), function(x) {
-      shiny::conditionalPanel(
-        condition = paste0(
-          "input.card_selector == '", card_names[x], "'"
-        ),
-        ns = ns,
+      # shiny::conditionalPanel(
+      #   condition = paste0(
+      #     "input.card_selector == '", card_names[x], "'"
+      #   ),
+      #   ns = ns,
         div(
           shiny::downloadButton(
             outputId = ns(paste0(
@@ -134,7 +134,7 @@ PlotModuleUI <- function(id,
             class = "btn-outline-primary"
           )
         )
-      )
+      #)
     })
     download_buttons <- do.call(div, button_list)
   }

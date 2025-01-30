@@ -18,64 +18,64 @@ FeatureMapInputs <- function(id) {
        or by comparisons (logFC).",
       placement = "right", options = list(container = "body")
     ),
-    shiny::conditionalPanel(
-      "input.showvar == 'phenotype'",
-      ns = ns,
-      withTooltip(
-        shiny::selectInput(ns("sigvar"), NULL, choices = NULL, multiple = FALSE),
-        "Select the phenotype conditions to show in the signatures plot.",
-        placement = "top"
-      ),
-      withTooltip(
-        shiny::selectInput(ns("ref_group"), "Reference:", choices = NULL),
-        "Reference group. If no group is selected the average is used as reference.",
-        placement = "right", options = list(container = "body")
-      )
+    ## shiny::conditionalPanel(
+    ##   "input.showvar == 'phenotype'",
+    ##   ns = ns,
+    withTooltip(
+      shiny::selectInput(ns("sigvar"), NULL, choices = NULL, multiple = FALSE),
+      "Select the phenotype conditions to show in the signatures plot.",
+      placement = "top"
     ),
-    shiny::conditionalPanel(
-      "input.showvar == 'comparisons'",
-      ns = ns,
-      withTooltip(
-        shiny::selectizeInput(ns("selcomp"), NULL, choices = NULL, multiple = TRUE),
-        "Select the comparisons to show in the signatures plot.",
-        placement = "top"
-      )
+    withTooltip(
+      shiny::selectInput(ns("ref_group"), "Reference:", choices = NULL),
+      "Reference group. If no group is selected the average is used as reference.",
+      placement = "right", options = list(container = "body")
     ),
+    ## ),
+    ## shiny::conditionalPanel(
+    ##   "input.showvar == 'comparisons'",
+    ##   ns = ns,
+    withTooltip(
+      shiny::selectizeInput(ns("selcomp"), NULL, choices = NULL, multiple = TRUE),
+      "Select the comparisons to show in the signatures plot.",
+      placement = "top"
+    ),
+    ## ),
     hr(),
-    shiny::conditionalPanel(
-      "input.tabs == 'Gene'",
-      ns = ns,
-      withTooltip(
-        shiny::selectInput(ns("filter_genes"), tspan("Filter genes:"),
-          choices = NULL, multiple = TRUE
-        ),
-        "Filter the genes to highlight on the map.",
-        placement = "right", options = list(container = "body")
-      )
+    ## shiny::conditionalPanel(
+    ##   "input.tabs == 'Gene'",
+    ##   ns = ns,
+    withTooltip(
+      shiny::selectInput(ns("filter_genes"), tspan("Filter genes:"),
+        choices = NULL, multiple = TRUE
+      ),
+      "Filter the genes to highlight on the map.",
+      placement = "right", options = list(container = "body")
     ),
-    shiny::conditionalPanel(
-      "input.tabs == 'Gene' && input.filter_genes.includes('<custom>')",
-      ns = ns,
-      withTooltip(
-        shiny::textAreaInput(ns("customlist"), NULL,
-          value = NULL,
-          rows = 5
-        ),
-        "Paste a custom list of genes to highlight.",
-        placement = "bottom"
-      )
+    ## ),
+    ## shiny::conditionalPanel(
+    ##   "input.tabs == 'Gene' && input.filter_genes.includes('<custom>')",
+    ##   ns = ns,
+    withTooltip(
+      shiny::textAreaInput(ns("customlist"), NULL,
+        value = NULL,
+        rows = 5
+      ),
+      "Paste a custom list of genes to highlight.",
+      placement = "bottom"
     ),
-    shiny::conditionalPanel(
-      "input.tabs == 'Geneset'",
-      ns = ns,
-      withTooltip(
-        shiny::selectInput(ns("filter_gsets"), tspan("Filter genesets:"),
-          choices = NULL, multiple = TRUE
-        ),
-        "Filter the genesets to highlight on the map.",
-        placement = "right", options = list(container = "body")
-      )
-    )
+    ## ),
+    ## shiny::conditionalPanel(
+    ##   "input.tabs == 'Geneset'",
+    ##   ns = ns,
+    withTooltip(
+      shiny::selectInput(ns("filter_gsets"), tspan("Filter genesets:"),
+        choices = NULL, multiple = TRUE
+      ),
+      "Filter the genesets to highlight on the map.",
+      placement = "right", options = list(container = "body")
+    ),
+    ## ),
     ## shiny::br(),
     ## shiny::br(),
     ## withTooltip(shiny::actionLink(ns("options"), "Advanced options",
