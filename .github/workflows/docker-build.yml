@@ -67,10 +67,10 @@ jobs:
           push: true          
           no-cache: true
           build-args: |
-            BRANCH=master
+            BRANCH=${{ github.event.inputs.branch }}
             update_playdata=${{ github.event.inputs.update_playdata }}
             update_bigdash=${{ github.event.inputs.update_bigdash }}
             update_playbase=${{ github.event.inputs.update_playbase }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:${{ steps.get_version.outputs.VERSION }}
+            ${{ github.event.inputs.branch == 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
+            ${{ github.event.inputs.branch != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, github.event.inputs.branch) || '' }}
