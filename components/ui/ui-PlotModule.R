@@ -425,7 +425,8 @@ PlotModuleUI <- function(id,
           title = title,
           size = "fullscreen",
           footer = NULL,
-          popupfigUI()
+          popupfigUI(),
+          track_open = TRUE
         )
       ),
       if (cards) {
@@ -563,6 +564,13 @@ PlotModuleServer <- function(id,
       if (!is.null(card)) {
         output[[paste0("editor_frame", card)]] <- renderUI({
           plot <- func()
+          if (is.null(input$plotPopup_is_open)) {
+            plot <- func()
+          } else if (input$plotPopup_is_open) {
+            plot <- func2()
+          } else {
+            plot <- func()
+          }
           if (exists("csvFunc") && is.function(csvFunc)) {
             plot_data_csv <- csvFunc()
             if (inherits(plot_data_csv, "list")) {
@@ -603,7 +611,13 @@ PlotModuleServer <- function(id,
         })
       } else {
         output$editor_frame <- renderUI({
-          plot <- func()
+          if (is.null(input$plotPopup_is_open)) {
+            plot <- func()
+          } else if (input$plotPopup_is_open) {
+            plot <- func2()
+          } else {
+            plot <- func()
+          }
           if (exists("csvFunc") && is.function(csvFunc)) {
             plot_data_csv <- csvFunc()
             if (inherits(plot_data_csv, "list")) {

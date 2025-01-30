@@ -17,10 +17,6 @@ featuremap_plot_gene_map_ui <- function(
   ns <- shiny::NS(id)
 
   plot.opts <- shiny::tagList(
-    shiny::radioButtons(ns("labeltype"), "label type:",
-      c("symbol", "probe"),
-      inline = TRUE
-    ),
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
       c(0, 10, 20, 50, 100, 1000),
       selected = 50
@@ -139,18 +135,18 @@ featuremap_plot_gene_map_server <- function(id,
           fc,
           hilight,
           labels = labels,
-        nlabel = nlabel,
-        title = "rms(FC)",
-        cex = cex,
-        cex.label = cex.label,
-        plotlib = "plotly",
-        source = ns("gene_umap")
-      ) %>%
-        plotly::layout(
-          dragmode = "select",
-          margin = list(l = 5, r = 5, b = 5, t = 20)
-        )
-      p
+          nlabel = nlabel,
+          title = "rms(FC)",
+          cex = cex,
+          cex.label = cex.label,
+          plotlib = "plotly",
+          source = ns("gene_umap")
+        ) %>%
+          plotly::layout(
+            dragmode = "select",
+            margin = list(l = 5, r = 5, b = 5, t = 20)
+          )
+        p
       } else if (plotlib == "ggplot") {
         p <- plotUMAP(
           pos,

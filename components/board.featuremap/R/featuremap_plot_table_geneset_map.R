@@ -147,24 +147,24 @@ featuremap_plot_table_geneset_map_server <- function(id,
       }
 
       if (plotlib == "plotly") {
-      p <- plotUMAP(
-        pos,
-        fc,
-        hilight,
-        nlabel = nlabel,
-        title = "rms.FC",
-        xlab = "UMAP-x",
-        ylab = "UMAP-y",
-        cex = cex,
-        cex.label = cex.label,
-        source = ns("geneset_umap"),
-        plotlib = "plotly"
-      ) %>%
-        plotly::layout(
-          dragmode = "select",
-          margin = list(l = 5, r = 5, b = 5, t = 20)
-        )
-      p
+        p <- plotUMAP(
+          pos,
+          fc,
+          hilight,
+          nlabel = nlabel,
+          title = "rms.FC",
+          xlab = "UMAP-x",
+          ylab = "UMAP-y",
+          cex = cex,
+          cex.label = cex.label,
+          source = ns("geneset_umap"),
+          plotlib = "plotly"
+        ) %>%
+          plotly::layout(
+            dragmode = "select",
+            margin = list(l = 5, r = 5, b = 5, t = 20)
+          )
+        p
       } else if (plotlib == "ggplot") {
         p <- plotUMAP(
           pos,

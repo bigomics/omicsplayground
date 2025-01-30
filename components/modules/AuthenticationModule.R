@@ -869,6 +869,7 @@ LoginCodeAuthenticationModule <- function(id,
       email = NA,
       level = "",
       limit = "",
+      expiry = "",
       options = opt, ## global
       user_dir = PGX.DIR ## global
     )
@@ -912,6 +913,7 @@ LoginCodeAuthenticationModule <- function(id,
       USER$password <- NA
       USER$level <- ""
       USER$limit <- ""
+      USER$expiry <- ""
 
       email_sent <<- FALSE
       login_code <<- NULL
@@ -920,6 +922,7 @@ LoginCodeAuthenticationModule <- function(id,
 
       PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
       REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+      UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
 
       # Reset loaded modules
       MODULES_LOADED[] <<- FALSE
@@ -993,9 +996,14 @@ LoginCodeAuthenticationModule <- function(id,
       if (user_in_db) {
         dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
         USER$options <- read_user_options_db(user_email, user_database)
+        USER$username <- read_user_field_db(user_email, user_database, "firstname")
+        USER$level <- read_user_field_db(user_email, user_database, "level")
+        USER$expiry <- read_user_field_db(user_email, user_database, "expiry")
       } else {
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(user_dir)
+        USER$level <- "free"
+        USER$expiry <- "unlimited"
       }
       session$sendCustomMessage("set-user", list(user = user_email))
 
@@ -1077,6 +1085,10 @@ LoginCodeAuthenticationModule <- function(id,
 
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
+      if (opt$ENCRYPTED_EMAIL) {
+        query_email_nonce <- shiny::getQueryString()$email_nonce
+        query_email <- decrypt_cookie(query_email, query_email_nonce)
+      }
       query_email
     })
 
@@ -1209,9 +1221,14 @@ LoginCodeAuthenticationModule <- function(id,
           if (user_in_db) {
             dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
             USER$options <- read_user_options_db(USER$email, user_database)
+            USER$username <- read_user_field_db(USER$email, user_database, "firstname")
+            USER$level <- read_user_field_db(USER$email, user_database, "level")
+            USER$expiry <- read_user_field_db(USER$email, user_database, "expiry")
           } else {
             dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
             USER$options <- read_user_options(USER$user_dir)
+            USER$level <- "free"
+            USER$expiry <- "unlimited"
           }
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user

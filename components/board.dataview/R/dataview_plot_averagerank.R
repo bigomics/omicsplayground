@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-dataview_plot_averagerank_ui <- function(
-                                         id,
+dataview_plot_averagerank_ui <- function(id,
                                          label = "",
                                          height,
                                          width,
@@ -57,7 +56,7 @@ dataview_plot_averagerank_server <- function(id,
       gene <- r.gene()
       samples <- r.samples()
       data_type <- r.data_type()
-      
+
       if (!all(samples %in% colnames(pgx$X))) {
         return(NULL)
       }
@@ -87,7 +86,7 @@ dataview_plot_averagerank_server <- function(id,
       } else {
         sel <- sel
       }
-      
+
       pd <- list(
         df = data.frame(mean.fc = mean.fc, gene = names(mean.fc)),
         sel = sel,
@@ -98,7 +97,6 @@ dataview_plot_averagerank_server <- function(id,
     })
 
     plot.RENDER <- function() {
-
       pd <- plot_data()
       req(pd)
 
@@ -125,8 +123,8 @@ dataview_plot_averagerank_server <- function(id,
         line = list(width = 0),
         hovertemplate = ~ paste("<extra></extra>")
       )
-      
-      i = 1
+
+      i <- 1
       for (i in 1:length(sel)) {
         fig <- fig %>%
           plotly::add_lines(
@@ -137,7 +135,7 @@ dataview_plot_averagerank_server <- function(id,
             line = list(color = omics_colors("orange"), width = 5)
           )
       }
-        
+
       ## add a second density curve with transparent filling
       ## to add an outline overwriting annotation line
       fig <- fig %>%
@@ -151,7 +149,7 @@ dataview_plot_averagerank_server <- function(id,
           line = list(color = omics_colors("brand_blue"), width = 2.5)
         )
 
-      i = 1
+      i <- 1
       for (i in 1:length(sel)) {
         if (sel[i] < length(mean.fc) / 5) xanchor <- "left"
         if (sel[i] > length(mean.fc) * 4 / 5) xanchor <- "right"
