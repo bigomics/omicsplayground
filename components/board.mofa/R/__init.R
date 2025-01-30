@@ -16,57 +16,50 @@ MODULE.multiomics <- list(
     list(
       bigdash::bigTabItem(   ## call this in app.R??
         "mofa-tab",
-        MofaInputs("mofa"),
-        MofaUI("mofa")
+        MofaInputs("mofa")
       ),
       bigdash::bigTabItem(
         "mgsea-tab",
-        MGseaInputs("mgsea"),
-        MGseaUI("mgsea")
+        MGseaInputs("mgsea")
       ),
       bigdash::bigTabItem(
         "snf-tab",
-        SNF_Inputs("snf"),
-        SNF_UI("snf")
+        SNF_Inputs("snf")
       ),
       bigdash::bigTabItem(
         "lasagna-tab",
-        LasagnaInputs("lasagna"),
-        LasagnaUI("lasagna")
+        LasagnaInputs("lasagna")
       ),
       bigdash::bigTabItem(
         "deepnet-tab",
-        DeepNetInputs("deepnet"),
+        DeepNetInputs("deepnet")
+      )
+    )
+  },
+  module_ui2 = function() {
+    list(
+      list(   ## call this in app.R??
+        "mofa-tab",
+        MofaUI("mofa")
+      ),
+      list(
+        "mgsea-tab",
+        MGseaUI("mgsea")
+      ),
+      list(
+        "snf-tab",
+        SNF_UI("snf")
+      ),
+      list(
+        "lasagna-tab",
+        LasagnaUI("lasagna")
+      ),
+      list(
+        "deepnet-tab",
         DeepNetUI("deepnet")
       )
     )
   },
-
-  # module_ui2 = function() {
-  #   list(
-  #     list(   ## call this in app.R??
-  #       "mofa-tab",
-  #       MofaUI("mofa")
-  #     ),        
-  #     list(
-  #       "mgsea-tab",
-  #       MGseaUI("mgsea")
-  #     ),        
-  #     list(
-  #       "snf-tab",
-  #       SNF_UI("snf")
-  #     ),        
-  #     list(
-  #       "lasagna-tab",
-  #       LasagnaUI("lasagna")
-  #     ),
-  #     list(
-  #       "deepnet-tab",
-  #       DeepNetUI("deepnet")
-  #     )        
-  #   )
-  # },    
-
   module_server = function(PGX, board_observers = NULL) {
     info("[SERVER] calling MofaBoard module")
     MofaBoard("mofa", pgx = PGX,

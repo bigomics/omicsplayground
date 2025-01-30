@@ -33,51 +33,47 @@ MODULE.enrichment <- list(
       bigdash::bigTabItem(
         "enrich-tab",
         tagList(
-          EnrichmentInputs("enrich"),
-          EnrichmentUI("enrich")
+          EnrichmentInputs("enrich")
         )
       ),
       bigdash::bigTabItem(
         "sig-tab",
         tagList(
-          SignatureInputs("sig"),
-          SignatureUI("sig")
+          SignatureInputs("sig")
         )
       ),
       bigdash::bigTabItem(
         "pathway-tab",
         tagList(
-          PathwayInputs("pathway"),
-          PathwayUI("pathway")
+          PathwayInputs("pathway")
         )
       ),
       bigdash::bigTabItem(
         "wordcloud-tab",
         tagList(
-          WordCloudInputs("wordcloud"),
-          WordCloudUI("wordcloud")
+          WordCloudInputs("wordcloud")
         )
       )
     )
-  }#,
-  # module_ui2 = function() {
-  #   list(
-  #     list(
-  #       "enrich-tab",
-  #       EnrichmentUI("enrich")
-  #     ),
-  #     list(
-  #       "sig-tab",
-  #       SignatureUI("sig")
-  #     ),
-  #     list(
-  #       "pathway-tab",
-  #       PathwayUI("pathway")
-  #     ),
-  #     list(
-  #       "wordcloud-tab",
-  #       WordCloudUI("wordcloud")
-  #     )
-  #   )
-  # }
+  },
+  module_ui2 = function() {
+    list(
+      list(
+        "enrich-tab",
+        EnrichmentUI("enrich")
+      ),
+      list(
+        "sig-tab",
+        SignatureUI("sig")
+      ),
+      list(
+        "pathway-tab",
+        PathwayUI("pathway")
+      ),
+      list(
+        "wordcloud-tab",
+        WordCloudUI("wordcloud")
+      )
+    )
+  }
 )

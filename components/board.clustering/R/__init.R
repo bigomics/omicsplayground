@@ -26,26 +26,24 @@ MODULE.clustering <- list(
     list(
       bigdash::bigTabItem(
         "clustersamples-tab",
-        ClusteringInputs("clustersamples"),
-        ClusteringUI("clustersamples")
+        ClusteringInputs("clustersamples")
       ),
       bigdash::bigTabItem(
         "clusterfeatures-tab",
-        FeatureMapInputs("clusterfeatures"),
+        FeatureMapInputs("clusterfeatures")
+      )
+    )
+  },
+  module_ui2 = function() {
+    list(
+      list(
+        "clustersamples-tab",
+        ClusteringUI("clustersamples")
+      ),
+      list(
+        "clusterfeatures-tab",
         FeatureMapUI("clusterfeatures")
       )
     )
-  }#,
-  # module_ui2 = function() {
-  #   list(
-  #     list(
-  #       "clustersamples-tab",
-  #       ClusteringUI("clustersamples")
-  #     ),
-  #     list(
-  #       "clusterfeatures-tab",
-  #       FeatureMapUI("clusterfeatures")
-  #     )
-  #   )
-  # }
+  }
 )
