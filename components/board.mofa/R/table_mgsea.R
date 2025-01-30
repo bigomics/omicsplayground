@@ -70,7 +70,18 @@ mofa_table_mgsea_server <- function(id,
           scrollY = "70vh",
           scroller = TRUE,
           scrollResize = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs = list(
+            list(
+              targets = "pathway", ## with no rownames column 1 is column 2
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 80 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 80) + '...</span>' : data;",
+                "}"
+              )
+            )
+          )                    
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
