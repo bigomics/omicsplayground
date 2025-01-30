@@ -54,7 +54,8 @@ mofa_plot_variance_server <- function(id,
       if( type == "factor") {
         y <- colSums( res$V )
         par(mar=c(3,4,2,0))
-        barplot(y, names.arg = names(y), ylab="Var. (%)")
+        bp <- barplot(y, ylab="Var. (%)", xaxt = "n")
+        text(bp, par("usr")[3], labels = names(y), srt = 45, adj = 1, xpd = TRUE)
       }
     }
 
