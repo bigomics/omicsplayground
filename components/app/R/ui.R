@@ -208,9 +208,11 @@ app_ui <- function(x) {
       }
 
       div.invitebutton <- InviteFriendUI("invite")
-      div.upgradebutton <- if(opt$ENABLE_UPGRADE) {
+      div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
         UpgradeModuleUI("upgrade")
-      } else {NULL}
+      } else {
+        NULL
+      }
 
       ## ------------------------- bigPage ----------------------------------
       bigdash::bigPage(

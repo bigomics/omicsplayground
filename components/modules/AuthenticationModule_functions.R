@@ -95,7 +95,9 @@ read_user_field_db <- function(email, user_database, field) {
     dbg("[read_user_field] 1 : user: ", email, " ; field: ", field)
     user_config <- user_config[which(names(user_config) %in% ALLOWED_USER_OPTS)]
   }
-  if (nrow(user_config) == 0) return("")
+  if (nrow(user_config) == 0) {
+    return("")
+  }
   user_config |> as.character()
 }
 

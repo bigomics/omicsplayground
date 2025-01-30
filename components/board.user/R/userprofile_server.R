@@ -31,9 +31,9 @@ UserProfileBoard <- function(id, auth, nav_count) {
         dbg("[UserBoard::userdata]  renderDataTable")
         cl <- "badge badge-info"
         values <- c(
-          Name   = auth$username,
-          Email  = auth$email,
-          End    = auth$expiry,
+          Name = auth$username,
+          Email = auth$email,
+          End = auth$expiry,
           Datasets = auth$options$MAX_DATASETS
         )
         values[which(values == "")] <- "(not set)"
