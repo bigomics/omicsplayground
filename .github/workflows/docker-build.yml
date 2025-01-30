@@ -13,12 +13,12 @@ on:
         description: 'Update playdata package'
         required: true
         type: boolean
-        default: false
+        default: true
       update_bigdash:
         description: 'Update bigdash package'
         required: true
         type: boolean
-        default: false
+        default: true
       update_playbase:
         description: 'Update playbase package'
         required: true
