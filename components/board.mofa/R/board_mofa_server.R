@@ -48,7 +48,8 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "Overview" = list(disable = c("selected_factor","selected_module","selected_trait","show_types")),
       "Response" = list(disable = c("show_types","selected_module","selected_trait")),
       "Weights" = list(disable = c("selected_module","selected_trait")),
-      "Enrichment" = list(disable = c("selected_module","selected_trait")),
+      "Enrichment" = list(disable = c("selected_module","selected_trait",
+                                      "show_types")),
       "gsetMOFA" = list(disable = c("show_types"))      
     )
 
@@ -345,14 +346,20 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "mofa_genetable",
       mofa = mofa,
       selected_factor = reactive(input$selected_factor),
-      ## datatypes = reactive(input$show_types),
       annot = reactive(pgx$genes)
     )
     
     enrichmentTable <- mofa_table_enrichment_server(
-      "mofa_enrichmenttable",
+      "mofa_factorenrichment",
       gsea = reactive(mofa()$gsea),
       selected_factor = reactive(input$selected_factor)            
+    )
+
+    mofa_table_enrichmentgenes_server(
+      "mofa_enrichmentgenes",
+      pgx = pgx,
+      selected_factor = reactive(input$selected_factor),
+      selected_pathway = enrichmentTable_selected
     )
 
     mofa_table_gsetmofa_server(
@@ -361,7 +368,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       selected_module = reactive(input$selected_module),
       selected_trait = reactive(input$selected_trait)
     )
-
+    
     mofa_table_gsetmofa_factor_server(
       "gsetmofa_factor",
       mofa = mofa,

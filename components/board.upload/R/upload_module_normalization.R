@@ -239,14 +239,15 @@ upload_module_normalization_server <- function(
         shiny::req(dim(correctedX()$X))
 
         X <- correctedX()$X
-#        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-#        prior <- 2**min(X,na.rm=TRUE)  ## new
-#        dbg("[normalization_server:correctedCounts] Generating counts. Prior=", prior)
-#        counts <- pmax(2**X - prior, 0)
-
-        ## NEED RETHINK!! should we return the original not-corrected
-        ## counts????
-        counts <- r_counts()[rownames(X),colnames(X)]
+        if(1) {
+          ##prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+          prior <- 2**min(X,na.rm=TRUE)  ## new
+          counts <- pmax(2**X - prior, 0)
+        } else {
+          ## NEED RETHINK!! should we return the original not-corrected
+          ## counts???? But EdgeR/Deseq2 need batch-corrected matrix??
+          counts <- r_counts()[rownames(X),colnames(X)]
+        }
         
         counts
       })

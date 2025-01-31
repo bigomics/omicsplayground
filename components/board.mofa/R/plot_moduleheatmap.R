@@ -41,7 +41,7 @@ mofa_plot_moduleheatmap_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function() {
+    plot.RENDER <- function(legend=FALSE) {
       res <- mofa()      
       k <- input_factor()
       factors <- colnames(res$F)
@@ -61,15 +61,22 @@ mofa_plot_moduleheatmap_server <- function(id,
         annot = "pheno",
         maxchar = 40,
         show_types = show_types,
+        show_legend = legend,
         mar = c(3,0,0,0),
         annot.ht = 0.9,
         cexRow = 0.9)
     }
 
+    plot.RENDER2 <- function() {
+      plot.RENDER(legend=TRUE)
+    }
+    
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      pdf.width = 8, pdf.height = 12,
+      func2 = plot.RENDER2,      
+      pdf.width = 8,
+      pdf.height = 12,
       res = c(80, 100),
       add.watermark = watermark
     )

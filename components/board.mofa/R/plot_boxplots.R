@@ -58,7 +58,13 @@ mofa_plot_boxplots_server <- function(id,
       nph <- length(pheno)
       shiny::validate( shiny::need(nph>0,"Must select at least one phenotype"))
 
-      samples <- data.frame( res$samples )
+      samples <- data.frame(res$samples)
+
+      dbg("[mofa_plot_boxplots_server] colnames(samples) = ", colnames(samples))
+      dbg("[mofa_plot_boxplots_server] pheno = ", pheno)
+      dbg("[mofa_plot_boxplots_server] k = ", k)
+      dbg("[mofa_plot_boxplots_server] colnames(res$F) = ", colnames(res$F))
+
       nr <- ceiling(sqrt(nph))
       nc <- ceiling(nph / nr)
       par(mfrow=c(nr,nc), mar=c(3,4,2.8,0.5))      

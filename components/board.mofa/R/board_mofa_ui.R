@@ -239,7 +239,7 @@ MofaUI <- function(id) {
           bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(4, 4, 4, 12),
+              lg = c(4, 4, 4, 8, 4),
               sm = c(12, 12, 12, 12)
             ),
             mofa_plot_enrichment_ui(
@@ -266,8 +266,16 @@ MofaUI <- function(id) {
               width = c("100%", "100%")
             ),                        
             mofa_table_enrichment_ui(
-              ns("mofa_enrichmenttable"),
-              title = "Enrichment table",
+              ns("mofa_factorenrichment"),
+              title = "Factor enrichment table",
+              info.text = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            mofa_table_enrichmentgenes_ui(
+              ns("mofa_enrichmentgenes"),
+              title = "Enrichment gene table",
+              label = "a",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
@@ -310,7 +318,7 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),                          
-            mofa_table_gsetmofa_ui(
+            mofa_table_gsetmofa_factor_ui(
               ns("gsetmofa_factor"),
               title = "Factor gene table",
               info.text = "",

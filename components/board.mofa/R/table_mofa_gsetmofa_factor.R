@@ -35,8 +35,7 @@ mofa_table_gsetmofa_factor_server <- function(id,
     table.RENDER <- function() {
       mofa <- mofa()
       validate(need(!is.null(mofa), "missing MOFA data."))            
-
-      dbg("[table_gsetmofa] 1:")
+      
       m=1
       k <- selected_factor()  ## which factor
       ph <- selected_trait()  ## which phenotype            
