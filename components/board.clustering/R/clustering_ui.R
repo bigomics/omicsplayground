@@ -13,7 +13,6 @@ ClusteringInputs <- function(id) {
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
-    hr(id = ns("pheno_bar")),
     withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
       "Specify the criteria for selecting top features to be shown in the heatmap.",
       placement = "right", options = list(container = "body")
@@ -34,7 +33,6 @@ ClusteringInputs <- function(id) {
       "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
       placement = "right", options = list(container = "body")
     ),
-    hr(id = ns("cluster_bar")),
     withTooltip(
       shiny::radioButtons(
         ns("hm_splitby"), "Split samples by:",
@@ -44,9 +42,9 @@ ClusteringInputs <- function(id) {
       "Split the samples by phenotype or expression level of a gene.",
       placement = "right", options = list(container = "body")
     ),
-    ## shiny::conditionalPanel(
-    ##   "input.hm_splitby != 'none'",
-    ##   ns = ns,
+    shiny::conditionalPanel(
+      "input.hm_splitby != 'none'",
+      ns = ns,
     withTooltip(shiny::selectInput(ns("hm_splitvar"), NULL, choices = ""),
       "Specify phenotype or gene for splitting the columns of the heatmap.",
       placement = "right", options = list(container = "body")
@@ -55,8 +53,7 @@ ClusteringInputs <- function(id) {
       shiny::checkboxInput(ns("hm_average_group"), "average by group", FALSE),
       "Average expression values by group."
     ),
-    ## ),
-    hr(id = ns("spliby_bar")),
+    ),
     withTooltip(
       shiny::selectInput(ns("hm_samplefilter"), "Filter samples:",
         choices = NULL, multiple = TRUE
@@ -70,9 +67,9 @@ ClusteringInputs <- function(id) {
       ),
       "Select a gene family for filtering which genes to show in the heatmap."
     ),
-    ## shiny::conditionalPanel(
-    ##   "input.hm_features == '<custom>'",
-    ##   ns = ns,
+    shiny::conditionalPanel(
+      "input.hm_features == '<custom>'",
+      ns = ns,
       withTooltip(
         shiny::textAreaInput(ns("hm_customfeatures"), NULL,
           value = NULL,
@@ -82,84 +79,33 @@ ClusteringInputs <- function(id) {
         "Paste a custom list of genes to be used as features.",
         placement = "bottom"
       ),
-    ## ),
-    ## shiny::conditionalPanel(
-    ##   "input.hm_features == '<contrast>'",
-    ##   ns = ns,
+    ),
+    shiny::conditionalPanel(
+      "input.hm_features == '<contrast>'",
+      ns = ns,
       withTooltip(
         shiny::selectInput(ns("hm_contrast"), NULL, choices = NULL),
         "Select contrast to be used as signature.",
         placement = "right", options = list(container = "body")
       ),
-    ## ),
-    withTooltip(
-      shiny::actionLink(ns("hm_options"), "Advanced options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      "Toggle advanced options.",
-      placement = "top"
     ),
     shiny::br(),
-    ## shiny::conditionalPanel(
-    ##   "input.hm_options % 2 == 1",
-    ##   ns = ns,
-      shiny::tagList(
+    bslib::accordion(
+      id = ns("hm_options_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Advanced options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(
           shiny::selectInput(ns("hm_clustmethod"), "Layout:",
             choices = c("tsne", "pca", "umap", "pacmap")
           ),
           "Choose the layout method for clustering plots.",
         ),
-        hr(),
         withTooltip(shiny::selectInput(ns("hm_level"), "Level:", choices = c("gene", "geneset")),
           "Specify the level analysis: gene or geneset level.",
           placement = "top", options = list(container = "body")
         ),
-        hr(),
-        withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
-          "Exclude genes on X/Y chromosomes.",
-          placement = "top", options = list(container = "body")
-        ),
-        withTooltip(
-          shiny::checkboxInput(
-            ns("hm_filterMitoRibo"),
-            tspan("exclude mito/ribo genes"), FALSE
-          ),
-          "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.",
-          placement = "top", options = list(container = "body")
-        )
-      ),
-    ## ),
-  )
-
-
-  bigdash::tabSettings(
-    settings_items1,
-    br(),
-    withTooltip(
-      shiny::actionLink(ns("hm_options"), "Advanced options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(),
-    # shiny::conditionalPanel(
-    #   "input.hm_options % 2 == 1",
-    #   ns = ns,
-      shiny::tagList(
-        withTooltip(
-          shiny::selectInput(ns("hm_clustmethod"), "Layout:",
-            choices = c("tsne", "pca", "umap", "pacmap")
-          ),
-          "Choose the layout method for clustering plots.",
-        ),
-        hr(),
-        withTooltip(shiny::selectInput(ns("hm_level"), "Level:", choices = c("gene", "geneset")),
-          "Specify the level analysis: gene or geneset level.",
-          placement = "top", options = list(container = "body")
-        ),
-        hr(),
         withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
           "Exclude genes on X/Y chromosomes.",
           placement = "top", options = list(container = "body")
@@ -173,7 +119,12 @@ ClusteringInputs <- function(id) {
           placement = "top", options = list(container = "body")
         )
       )
-    # )
+    )
+  )
+
+
+  bigdash::tabSettings(
+    settings_items1
   )
 }
 

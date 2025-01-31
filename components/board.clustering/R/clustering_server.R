@@ -37,11 +37,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       ),
       "PCA/tSNE" = list(
         enable = NULL,
-        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale", "cluster_bar", "spliby_bar")
+        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale")
       ),
       "Parallel" = list(
         enable = NULL,
-        disable = c("selected_phenotypes", "hm_clustmethod", "pheno_bar")
+        disable = c("selected_phenotypes", "hm_clustmethod")
       )
     )
 
