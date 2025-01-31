@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: Update master docker image
+name: Build docker update image
 
 on:
   workflow_dispatch:
