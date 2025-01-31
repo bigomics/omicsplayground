@@ -42,8 +42,9 @@ mofa_table_genetable_server <- function(id,
 
       wct <- playbase::mofa.plot_centrality(mofa, k, justdata=TRUE)
       wct <- wct[order(-wct$weight),]
-      aa <- annot()[wct$feature,c("feature","symbol")]
+      aa <- annot()[wct$feature,c("feature","symbol","gene_title")]
       wct$feature <- NULL
+      colnames(aa) <- sub("gene_title","title",colnames(aa))
       df <- data.frame( factor=k, aa, wct, check.names=FALSE )
       numeric.cols <- grep("score|weight|centrality",colnames(df))
       

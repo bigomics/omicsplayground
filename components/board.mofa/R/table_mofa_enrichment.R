@@ -56,7 +56,7 @@ mofa_table_enrichment_server <- function(id,
       df <- data.frame(factor=k, df, check.names=FALSE)
       if(!full) {
         ## filter out pvalue columns
-        df <- df[,grep("leadingEdge",colnames(df),invert=TRUE)]
+        df <- df[,grep("pval|leadingEdge",colnames(df),invert=TRUE)]
       }
       
       numeric.cols <- grep("NES|score|pval|padj|rho",colnames(df))
@@ -82,8 +82,8 @@ mofa_table_enrichment_server <- function(id,
               targets = "pathway", ## with no rownames column 1 is column 2
               render = DT::JS(
                 "function(data, type, row, meta) {",
-                "return type === 'display' && data.length > 120 ?",
-                "'<span title=\"' + data + '\">' + data.substr(0, 120) + '...</span>' : data;",
+                "return type === 'display' && data.length > 80 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 80) + '...</span>' : data;",
                 "}"
               )
             )

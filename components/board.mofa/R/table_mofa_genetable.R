@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_table_gsetmofa_factor_ui <- function(
+mofa_table_genetable_ui <- function(
     id,
     label = "",
     title = "",
@@ -14,7 +14,7 @@ mofa_table_gsetmofa_factor_ui <- function(
   ns <- shiny::NS(id)
 
   TableModuleUI(
-    ns("tablemodule"),
+    ns("table"),
     info.text = info.text,
     width = width,
     height = height,
@@ -24,39 +24,27 @@ mofa_table_gsetmofa_factor_ui <- function(
   )
 }
 
-mofa_table_gsetmofa_factor_server <- function(id,
-                                              mofa,
-                                              selected_factor = reactive(NULL),
-                                              selected_trait = reactive(NULL),
-                                              table
-                                              )
+mofa_table_genetable_server <- function(id,
+                                        mofa,
+                                        selected_factor = reactive(NULL),
+                                        annot 
+                                        )
 {
   moduleServer(id, function(input, output, session) {
 
-    table.RENDER <- function() {
+    table.RENDER <- function(full=FALSE) {
       mofa <- mofa()
       validate(need(!is.null(mofa), "missing MOFA data."))            
-      
-      m=1
-      k <- selected_factor()  ## which factor
-      ph <- selected_trait()  ## which phenotype            
-      shiny::req(k,ph)
+      k=1
+      k <- selected_factor()  ## which factor/phenotype
+      shiny::req(k)
 
-      sel <- table$rownames_selected()
-      dbg("[table_gsetmofa_factor_server:table.RENDER] length(sel) = ", length(sel))
-      dbg("[table_gsetmofa_factor_server:table.RENDER] head(sel) = ", head(sel))
-
-      gs.genes <- mofa$GMT[,sel[1]]
-      dbg("[table_gsetmofa_factor_server:table.RENDER] gs.genes = ", length(gs.genes))
-      
-      w <- mofa$W[,k]
-      g <- rownames(mofa$W)
-      Y <- mofa$Y[,ph]
-      rho <- cor(t(mofa$X), Y)[,1]
-      
-      df <- data.frame( factor=k, gene = g, weight=w, rho=rho, check.names=FALSE)
-      df <- df[order(-df$w),]
-      numeric.cols <- grep("score|weight|rho",colnames(df))
+      wct <- playbase::mofa.plot_centrality(mofa, k, justdata=TRUE)
+      wct <- wct[order(-wct$weight),]
+      aa <- annot()[wct$feature,c("feature","symbol")]
+      wct$feature <- NULL
+      df <- data.frame( factor=k, aa, wct )
+      numeric.cols <- grep("score|weight|centrality",colnames(df))
       
       DT::datatable(
         df,
@@ -79,10 +67,15 @@ mofa_table_gsetmofa_factor_server <- function(id,
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+
+    table.RENDER2 <- function(full=FALSE) {
+      table.RENDER(full=TRUE)
+    }
     
     table <- TableModuleServer(
-      "tablemodule",
+      "table",
       func = table.RENDER,
+      func2 = table.RENDER2,
       selector = "single"
     )
 

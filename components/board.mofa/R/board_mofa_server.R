@@ -118,22 +118,13 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       list(
         pgx$X,
         pgx$mofa
-      ), {
-
-        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 0: reacted!")
-        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 0: names.pgx = ", names(pgx))
-        
+      ), {        
         shiny::req(pgx$X)
-
-        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 0: reacted!")
         
         mofa <- NULL
         has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
         shiny::validate( shiny::need(has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
-        mofa <- pgx$mofa
-
-        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 1: names(mofa) = ", names(mofa))
-        
+        mofa <- pgx$mofa        
         if(!"gset.mofa" %in% names(mofa)) {
           dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 1: calculate gsetMOFA...")
           
@@ -148,8 +139,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
             numfactors = 20
           )
         }
-
-        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 2: updating Inputs")
         
         ## update factors in selectInput
         factors <- colnames(mofa$W)
@@ -167,8 +156,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
                           selected = traits[1])
         updateSelectInput(session, "show_types", choices = dtypes,
                           selected = sel.dtypes)
-
-        dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] x: done!")
         
         return( mofa )
       }
@@ -362,7 +349,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       selected_pathway = enrichmentTable_selected
     )
 
-    mofa_table_gsetmofa_server(
+    gsetmofaTable <- mofa_table_gsetmofa_server(
       "gsetmofa_module",
       mofa = mofa,
       selected_module = reactive(input$selected_module),
@@ -373,7 +360,8 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "gsetmofa_factor",
       mofa = mofa,
       selected_factor = reactive(input$selected_factor),
-      selected_trait = reactive(input$selected_trait)      
+      selected_trait = reactive(input$selected_trait),
+      table = gsetmofaTable
     )
     
 
