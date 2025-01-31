@@ -141,15 +141,15 @@ MofaUI <- function(id) {
               mofa_plot_factortrait_ui(
                 ns("factortrait"),
                 title = "Factor-Trait correlation",
-                info.text = "",
-                caption = "",
+                info.text = "Correlation between MOFA factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). The metadata variables shown correspond to those provided in your uploaded samples.csv file. Covariates may include the phenotype(s) of interest. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Each MOFA factor captures a source of variation across the integrated data types. Therefore, the heatmap helps identification of dominant sources of variation in the data -which may be driven by biological processes- associated with a trait or condition.",
+                caption = "Correlation between MOFA factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
               mofa_plot_factorcorheatmap_ui(
                 ns("factorcorheatmap"),
-                title = "Between-factor correlation",
-                info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
+                title = "Correlation between MOFA factors.",
+                info.text = "Correlation between MOFA factors. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Correlated factors might capture similar sources of variation in the data -which might be driven by shared biological processes.",
                 caption = "",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -166,8 +166,8 @@ MofaUI <- function(id) {
             mofa_plot_boxplots_ui(
               ns("boxplots"),
               title = "Factor scores by response",
-              info.text = "Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection.",
-              caption = "Module enrichment plot of top most enriched genesets.",
+              info.text = "Distribution of MOFA factors' score per metadata variable. Scores of each selected MOFA factor stratified by a trait/condition/phenotype of interest. The metadata variables shown correspond to those provided in your uploaded samples.csv file. Differences in score distribution between two conditions might suggest distinct sources of variation in each group captured by the selected MOFA factor. In such cases, each group would provide a different contribution to variation in the data captured by the selected MOFA factor.",
+              caption = "Distribution of MOFA factors' score per metadata variable.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )

@@ -78,9 +78,9 @@ mofa_plot_boxplots_server <- function(id,
         ylab <- paste(k,"score")
         if(isfactor) {
           y <- factor(y)
-          boxplot( f1 ~ y, main="", ylab=ylab, xlab="")
+          boxplot( f1 ~ y, main="", ylab=ylab, xlab="", las = 1)
         } else {
-          plot( y, f1, main="", ylab=ylab, xlab="")
+          plot( y, f1, main="", ylab=ylab, xlab="", las = 1)
         }
         title(ph, cex.main=1.2)
       }
