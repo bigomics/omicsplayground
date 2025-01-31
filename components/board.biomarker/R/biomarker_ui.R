@@ -8,7 +8,7 @@ BiomarkerInputs <- function(id) {
   bigdash::tabSettings(
     class = "p-1",
     shiny::tagList(
-      shiny::hr(), shiny::br(),
+     #  shiny::hr(), shiny::br(),
       withTooltip(
         shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
           choices = NULL
@@ -30,9 +30,9 @@ BiomarkerInputs <- function(id) {
         "Select a filter for the features.",
         placement = "top"
       ),
-      # shiny::conditionalPanel(
-      #   "input.pdx_filter == '<custom>'",
-      #   ns = ns,
+      shiny::conditionalPanel(
+        "input.pdx_filter == '<custom>'",
+        ns = ns,
         withTooltip(
           shiny::div(
             class = "gene-list",
@@ -45,7 +45,7 @@ BiomarkerInputs <- function(id) {
           "Paste a custom list to be used as features.",
           placement = "top"
         ),
-      # ),
+      ),
       shiny::br(),
       withTooltip(
         shiny::actionButton(ns("pdx_runbutton"),

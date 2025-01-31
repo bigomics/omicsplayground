@@ -8,8 +8,8 @@ style0 <- "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-styl
 SignatureInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::tags$head(shiny::tags$style("#sig-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
-    shiny::hr(), shiny::br(),
+    # shiny::tags$head(shiny::tags$style("#sig-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
+    # shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("type"),
         label = "Signature type:",
@@ -20,9 +20,9 @@ SignatureInputs <- function(id) {
       placement = "top", options = list(container = "body")
     ),
     shiny::br(),
-    # shiny::conditionalPanel(
-    #   "input.type == '<custom>'",
-    #   ns = ns,
+    shiny::conditionalPanel(
+      "input.type == '<custom>'",
+      ns = ns,
       shiny::tagList(
         withTooltip(
           shiny::textAreaInput(ns("genelist"), tspan("Genes:"),
@@ -56,7 +56,7 @@ SignatureInputs <- function(id) {
           "Click to compute.",
           placement = "right"
         )
-     #  )
+      )
     ),
     # shiny::conditionalPanel(
     #   "input.type != '<custom>'",

@@ -6,7 +6,7 @@
 CompareInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
+    # shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("contrast1"), "Dataset1:",
         choices = NULL, multiple = TRUE
@@ -14,7 +14,7 @@ CompareInputs <- function(id) {
       "Select the contrast that you want to compare.",
       placement = "right", options = list(container = "body")
     ),
-    shiny::br(),
+    # shiny::br(),
     withTooltip(shiny::selectInput(ns("dataset2"), "Dataset2:", choices = NULL),
       "Select second dataset to compare.",
       placement = "right", options = list(container = "body")
@@ -34,21 +34,27 @@ CompareInputs <- function(id) {
       "Click to update the comparison plots.",
       placement = "right"
     ),
-    shiny::br(),
-    shiny::br(),
-    shiny::br(),
-    withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "right", options = list(container = "body")
-    ),
+    # shiny::br(),
+    # shiny::br(),
+    # shiny::br(),
+    # withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
+    #   "Toggle advanced options.",
+    #   placement = "right", options = list(container = "body")
+    # ),
     shiny::br(),
     ## shiny::conditionalPanel(
     ##   "input.options % 2 == 1",
     ##   ns = ns,
       shiny::br(),
-      withTooltip(
-        shiny::radioButtons(ns("plottype"), "Plot type:",
-          choices = c("volcano", "MA", "scatter", "UMAP1", "UMAP2"),
+      bslib::accordion(
+        id = ns("compare_accordion"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "Options",
+          icon = icon("cog", lib = "glyphicon"),
+          withTooltip(
+            shiny::radioButtons(ns("plottype"), "Plot type:",
+              choices = c("volcano", "MA", "scatter", "UMAP1", "UMAP2"),
           selected = "UMAP1", inline = TRUE
         ),
         "Select plot type.",
@@ -63,9 +69,9 @@ CompareInputs <- function(id) {
         "Select highlight type.",
         placement = "right", options = list(container = "body")
       ),
-      ## shiny::conditionalPanel(
-      ##   "input.hilighttype == 'custom'",
-      ##   ns = ns,
+      shiny::conditionalPanel(
+        "input.hilighttype == 'custom'",
+        ns = ns,
         withTooltip(
           shiny::textAreaInput(ns("genelist"), NULL,
             value = NULL,
@@ -75,7 +81,7 @@ CompareInputs <- function(id) {
           "Paste a custom list of genes to highlight.",
           placement = "right"
         ),
-      ## ),
+      ),
       withTooltip(
         shiny::radioButtons(ns("ntop"), "ntop",
           choices = c(10, 20, 40, 100),
@@ -84,7 +90,8 @@ CompareInputs <- function(id) {
         "number of top genes to show",
         placement = "right", options = list(container = "body")
       )
-    ## ),
+    )
+      )
   )
 }
 

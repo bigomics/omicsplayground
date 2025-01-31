@@ -6,7 +6,7 @@
 PathwayInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
+    # shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("fa_contrast"), "Contrast:",
         choices = NULL
@@ -14,19 +14,24 @@ PathwayInputs <- function(id) {
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
     ),
-    shiny::br(), shiny::br(), shiny::br(),
-    withTooltip(
-      shiny::actionLink(ns("fa_options"), "Options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      "Show/hide advanced options",
-      placement = "top"
-    ),
-    shiny::br(), shiny::br(),
+    # shiny::br(), shiny::br(), shiny::br(),
+    # withTooltip(
+    #   shiny::actionLink(ns("fa_options"), "Options",
+    #     icon = icon("cog", lib = "glyphicon")
+    #   ),
+    #   "Show/hide advanced options",
+    #   placement = "top"
+    # ),
+    shiny::br(),#  shiny::br(),
     # shiny::conditionalPanel(
     #   "input.fa_options % 2 == 1",
     #   ns = ns,
-      shiny::tagList(
+    bslib::accordion(
+      id = ns("fa_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(
           shiny::checkboxInput(
             ns("fa_filtertable"),
@@ -45,7 +50,7 @@ PathwayInputs <- function(id) {
           "Threshold value for the significant entries."
         )
       )
-    # )
+    )
   )
 }
 
