@@ -31,27 +31,26 @@ DataViewInputs <- function(id) {
       "Select phenotype for grouping the samples.",
       placement = "top"
     ),
-    shiny::br(),
-    withTooltip(shiny::actionLink(ns("data_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
     shiny::br(), shiny::br(),
-    # shiny::conditionalPanel(
-    #   "input.data_options % 2 == 1",
-    #   ns = ns,
-      withTooltip(
-        shiny::radioButtons(
-          ns("data_type"), "Scale:",
-          choiceNames = c("linear", "log2"),
-          choiceValues = c("counts", "log2"),
-          selected = "log2",
-          inline = TRUE
-        ),
-        "Choose an input data type for the analysis.",
-        placement = "bottom"
+      bslib::accordion(
+        id = ns("data_type_accordion"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "Options",
+          icon = icon("cog", lib = "glyphicon"),
+          withTooltip(
+            shiny::radioButtons(
+              ns("data_type"), "Scale:",
+              choiceNames = c("linear", "log2"), 
+              choiceValues = c("counts", "log2"),
+              selected = "log2",
+              inline = TRUE
+            ),
+            "Choose an input data type for the analysis.",
+            placement = "bottom"
+          )
+        )
       )
-    # )
   )
 }
 
