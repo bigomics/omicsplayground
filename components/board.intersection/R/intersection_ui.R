@@ -6,51 +6,42 @@
 IntersectionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    # shiny::br(),
     withTooltip(shiny::selectInput(ns("comparisons"), "Contrasts:", choices = NULL, multiple = TRUE),
       "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
       placement = "top"
     ),
-    shiny::br(),# , shiny::br(),
-    # withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-    #   "Toggle advanced options.",
-    #   placement = "top"
-    # ),
-    # shiny::br(),
-    # shiny::conditionalPanel(
-    #   "input.options % 2 == 1",
-    #   ns = ns,
+    shiny::br(),
     bslib::accordion(
       id = ns("compare_accordion"),
       open = FALSE,
       bslib::accordion_panel(
         "Options",
         icon = icon("cog", lib = "glyphicon"),
-      withTooltip(
-        shiny::radioButtons(ns("level"), "Level:",
-          choices = c("gene", "geneset"), inline = TRUE
-        ),
-        "Select feature level: gene or geneset",
-        placement = "top"
-      ),
-      withTooltip(shiny::selectInput(ns("filter"), "Filter:", choices = "<all>", multiple = FALSE),
-        "Filter features",
-        placement = "top"
-      ),
-      shiny::conditionalPanel(
-        "input.filter == '<custom>'",
-        ns = ns,
         withTooltip(
-          shiny::textAreaInput(ns("customlist"), NULL,
-            value = NULL,
-            rows = 5
+          shiny::radioButtons(ns("level"), "Level:",
+            choices = c("gene", "geneset"), inline = TRUE
           ),
-          "Paste a custom list of genes to highlight.",
-          placement = "bottom"
+          "Select feature level: gene or geneset",
+          placement = "top"
+        ),
+        withTooltip(shiny::selectInput(ns("filter"), "Filter:", choices = "<all>", multiple = FALSE),
+          "Filter features",
+          placement = "top"
+        ),
+        shiny::conditionalPanel(
+          "input.filter == '<custom>'",
+          ns = ns,
+          withTooltip(
+            shiny::textAreaInput(ns("customlist"), NULL,
+              value = NULL,
+              rows = 5
+            ),
+            "Paste a custom list of genes to highlight.",
+            placement = "bottom"
+          )
         )
       )
     )
-  )
   )
 }
 

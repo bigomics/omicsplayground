@@ -6,7 +6,6 @@
 ExpressionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    # shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
       placement = "top"
@@ -18,11 +17,9 @@ ExpressionInputs <- function(id) {
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
-    # shiny::fillRow(
-    #   flex = c(1, 1),
     bslib::layout_column_wrap(
       width = 1/2,
-withTooltip(
+      withTooltip(
         selectInput(ns("gx_fdr"),
           "FDR",
           choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1),
@@ -39,18 +36,14 @@ withTooltip(
         placement = "top"
       )
     ),
-    #),
-    # shiny::br(), shiny::br(),
-    # shiny::br(), shiny::br(),
-    # shiny::br(), br(),
     shiny::br(),
-      bslib::accordion(
-        id = ns("gx_accordion"),
-        open = FALSE,
-        bslib::accordion_panel(
-          "Options",
-          icon = icon("cog", lib = "glyphicon"),
-          withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
+    bslib::accordion(
+      id = ns("gx_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
           placement = "top", options = list(container = "body")
         ),
@@ -64,8 +57,8 @@ withTooltip(
             choices = NULL, inline = TRUE
           ),
           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
-           we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
-           Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
+            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
+            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
         )
       )

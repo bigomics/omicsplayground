@@ -6,7 +6,6 @@
 PathwayInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    # shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("fa_contrast"), "Contrast:",
         choices = NULL
@@ -14,18 +13,7 @@ PathwayInputs <- function(id) {
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
     ),
-    # shiny::br(), shiny::br(), shiny::br(),
-    # withTooltip(
-    #   shiny::actionLink(ns("fa_options"), "Options",
-    #     icon = icon("cog", lib = "glyphicon")
-    #   ),
-    #   "Show/hide advanced options",
-    #   placement = "top"
-    # ),
-    shiny::br(),#  shiny::br(),
-    # shiny::conditionalPanel(
-    #   "input.fa_options % 2 == 1",
-    #   ns = ns,
+    shiny::br(),
     bslib::accordion(
       id = ns("fa_accordion"),
       open = FALSE,
