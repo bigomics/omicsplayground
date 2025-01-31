@@ -54,6 +54,8 @@ upload_module_computepgx_server <- function(
         {
           if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
+            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
           } else {
             mm <- c(
               "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
@@ -70,6 +72,8 @@ upload_module_computepgx_server <- function(
         },
         {
           if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
           } else {
             mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
