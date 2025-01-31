@@ -15,7 +15,7 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
+    # shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
       "Type a gene of interest.",
       placement = "top"
@@ -31,26 +31,26 @@ DataViewInputs <- function(id) {
       "Select phenotype for grouping the samples.",
       placement = "top"
     ),
-    shiny::br(), shiny::br(),
-      bslib::accordion(
-        id = ns("data_type_accordion"),
-        open = FALSE,
-        bslib::accordion_panel(
-          "Options",
-          icon = icon("cog", lib = "glyphicon"),
-          withTooltip(
-            shiny::radioButtons(
-              ns("data_type"), "Scale:",
-              choiceNames = c("linear", "log2"), 
-              choiceValues = c("counts", "log2"),
-              selected = "log2",
-              inline = TRUE
-            ),
-            "Choose an input data type for the analysis.",
-            placement = "bottom"
-          )
+    shiny::br(),
+    bslib::accordion(
+      id = ns("data_type_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::radioButtons(
+            ns("data_type"), "Scale:",
+            choiceNames = c("linear", "log2"), 
+            choiceValues = c("counts", "log2"),
+            selected = "log2",
+            inline = TRUE
+          ),
+          "Choose an input data type for the analysis.",
+          placement = "bottom"
         )
       )
+    )
   )
 }
 

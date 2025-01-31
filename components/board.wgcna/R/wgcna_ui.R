@@ -6,19 +6,25 @@
 WgcnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
+    # shiny::hr(), shiny::br(),
 
     ## data set parameters
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),    
-    shiny::br(),
-    shiny::br(),
-    shiny::br(),    
-    shiny::actionLink(ns("options"), "Recompute", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
+    # shiny::br(),
+    # shiny::br(),
+    # shiny::br(),    
+    # shiny::actionLink(ns("options"), "Recompute", icon = icon("cog", lib = "glyphicon")),
+    # shiny::br(), 
     # shiny::conditionalPanel(
     #   "input.options % 2 == 1",
     #   ns = ns,
+    bslib::accordion(
+      id = ns("compare_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Recompute",
+        icon = icon("cog", lib = "glyphicon"),
       shiny::tagList(
         shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
           choices = c(500, 1000, 2000, 4000, 8000),
@@ -43,7 +49,8 @@ WgcnaInputs <- function(id) {
           class = "btn-outline-primary"
         )        
       )
-    # )
+    )
+    )
   )
 }
 
