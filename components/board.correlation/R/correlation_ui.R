@@ -6,8 +6,6 @@
 CorrelationInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    # shiny::hr(), shiny::br(),
-
     ## data set parameters
     withTooltip(shiny::selectInput(ns("gene"), tspan("Gene:"), choices = NULL),
       "Choose a gene for the correlation analysis.",

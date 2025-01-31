@@ -6,7 +6,6 @@
 FeatureMapInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    # shiny::br(),
     ## data set parameters
     withTooltip(
       shiny::radioButtons(

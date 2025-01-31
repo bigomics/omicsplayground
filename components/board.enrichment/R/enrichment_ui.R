@@ -6,7 +6,6 @@
 EnrichmentInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    # shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gs_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
       placement = "top"
@@ -38,17 +37,17 @@ EnrichmentInputs <- function(id) {
         "Options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-      withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
-        "Enbale significant genes filtering. Display only significant genesets in the table.",
-        placement = "top", options = list(container = "body")
-      ),
-      withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
-        "Select a method or multiple methos for the statistical test.",
-        placement = "right", options = list(container = "body")
-      ),
-      withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
-        "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
+          withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
+            "Enbale significant genes filtering. Display only significant genesets in the table.",
             placement = "top", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
+            "Select a method or multiple methos for the statistical test.",
+            placement = "right", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
+            "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
+                placement = "top", options = list(container = "body")
           )
         )
       )

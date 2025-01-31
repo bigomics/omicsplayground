@@ -8,7 +8,6 @@ BiomarkerInputs <- function(id) {
   bigdash::tabSettings(
     class = "p-1",
     shiny::tagList(
-     #  shiny::hr(), shiny::br(),
       withTooltip(
         shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
           choices = NULL
