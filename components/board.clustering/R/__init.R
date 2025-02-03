@@ -26,11 +26,13 @@ MODULE.clustering <- list(
     list(
       bigdash::bigTabItem(
         "clustersamples-tab",
-        ClusteringInputs("clustersamples")
+        ClusteringInputs("clustersamples"),
+        create_loader("clustersamples-loader")
       ),
       bigdash::bigTabItem(
         "clusterfeatures-tab",
-        FeatureMapInputs("clusterfeatures")
+        FeatureMapInputs("clusterfeatures"),
+        create_loader("clusterfeatures-loader")
       )
     )
   },

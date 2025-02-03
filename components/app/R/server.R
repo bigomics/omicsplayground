@@ -535,6 +535,7 @@ app_server <- function(input, output, session) {
     });"
     )
     bigdash.openSettings()
+    shinyjs::hide(selector = "[id$='-loader']")
   }
   loaded <- shiny::reactiveValues(
     clustering = 0,
@@ -549,8 +550,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2())
-      # shinyjs::hide(id = "clustersamples-loader")
-      # shinyjs::hide(id = "clusterfeatures-loader")
       mod$module_server(PGX, board_observers = board_observers, labeltype = labeltype)
       loaded$clustering <- 1
     }
@@ -558,9 +557,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2())
-      # shinyjs::hide(id = "diffexpr-loader")
-      # shinyjs::hide(id = "corr-loader")
-      # shinyjs::hide(id = "bio-loader")
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
       loaded$expression <- 1
     }
@@ -568,10 +564,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2())
-      # shinyjs::hide(id = "enrich-loader")
-      # shinyjs::hide(id = "sig-loader")
-      # shinyjs::hide(id = "pathway-loader")
-      # shinyjs::hide(id = "wordcloud-loader")
       toggleTab("pathway-tabs", "Enrichment Map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
@@ -580,9 +572,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Compare module")
       mod <- MODULE.compare
       insertBigTabUI2(mod$module_ui2())
-      # shinyjs::hide(id = "isect-loader")
-      # shinyjs::hide(id = "comp-loader")
-      # shinyjs::hide(id = "cmap-loader")
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
       loaded$compare <- 1
     }
@@ -590,11 +579,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2())
-      # shinyjs::hide(id = "drug-loader")
-      # shinyjs::hide(id = "wgcna-loader")
-      # shinyjs::hide(id = "tcga-loader")
-      # shinyjs::hide(id = "cell-loader")
-      # shinyjs::hide(id = "pcsf-loader")
       toggleTab("drug-tabs", "Connectivity map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
@@ -603,11 +587,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2())
-      # shinyjs::hide(id = "mofa-loader")
-      # shinyjs::hide(id = "mgsea-loader")
-      # shinyjs::hide(id = "snf-loader")
-      # shinyjs::hide(id = "lasagna-loader")
-      # shinyjs::hide(id = "deepnet-loader")
       mod$module_server(PGX, board_observers = NULL)
       loaded$multiomics <- 1
     }
