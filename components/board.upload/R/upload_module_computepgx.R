@@ -131,7 +131,7 @@ upload_module_computepgx_server <- function(
       },
       {
         if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
+          mm <- c("drugs", "wordcloud", "wgcna") ## connectivity has an issue. need fixes.
         } else {
           mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
         }
@@ -703,12 +703,12 @@ upload_module_computepgx_server <- function(
         ##-------------------------------------------------
 
         ##---------------------------
-        dbg("--------------MNT1: nfeature_threshold=", sc_compute_settings$nfeature_threshold)
-        dbg("--------------MNT2: mt_threshold=", sc_compute_settings$mt_threshold)
-        dbg("--------------MNT3: hb_threshold=", sc_compute_settings$hb_threshold)
-        dbg("--------------MNT4: compute_supercells=", sc_compute_settings$compute_supercells)
-        dbg("--------------MNT5: regress_mt=", sc_compute_settings$regress_mt)
-        dbg("--------------MNT6: regress_hb=", sc_compute_settings$regress_hb)
+        #dbg("--------------MNT1: nfeature_threshold=", sc_compute_settings$nfeature_threshold)
+        #dbg("--------------MNT2: mt_threshold=", sc_compute_settings$mt_threshold)
+        #dbg("--------------MNT3: hb_threshold=", sc_compute_settings$hb_threshold)
+        #dbg("--------------MNT4: compute_supercells=", sc_compute_settings$compute_supercells)
+        #dbg("--------------MNT5: regress_mt=", sc_compute_settings$regress_mt)
+        #dbg("--------------MNT6: regress_hb=", sc_compute_settings$regress_hb)
         ##---------------------------
 
         
