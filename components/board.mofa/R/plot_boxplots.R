@@ -42,55 +42,58 @@ mofa_plot_boxplots_server <- function(id,
     observeEvent( mofa(),{
       data <- mofa()
       phenos <- colnames(data$samples)
-      updateSelectInput(session, "selected_pheno",
+      updateSelectInput(
+        session,
+        "selected_pheno",
         choices = phenos,
-        selected = head(phenos,12))
+        selected = head(phenos, 12))
     })
 
     plot.RENDER <- function() {
+
       res <- mofa()
       shiny::req(res)
-      k <- input_factor()
-      if(!is.null(k)) shiny::req(k %in% colnames(res$F))
-
-      pheno <- input$selected_pheno
-      if(!is.null(pheno)) shiny::req(all(pheno %in% colnames(res$samples)))
-      nph <- length(pheno)
-      shiny::validate( shiny::need(nph>0,"Must select at least one phenotype"))
-
+      resF <- data.frame(res$F)
       samples <- data.frame(res$samples)
-      colnames(samples) <- c("knn_label", "class", "sub_group")
-      dbg("[mofa_plot_boxplots_server] colnames(samples) = ", colnames(samples))
-      dbg("[mofa_plot_boxplots_server] pheno = ", pheno)
-      dbg("[mofa_plot_boxplots_server] k = ", k)
-      dbg("[mofa_plot_boxplots_server] colnames(res$F) = ", colnames(res$F))
-      saveRDS(list(samples=samples, resF=res$F), "~/Desktop/MNT/pp.RDS")
+      
+      k <- input_factor()
+      if(!is.null(k)) {
+        shiny::req(k %in% colnames(resF))
+      }
+      
+      pheno <- input$selected_pheno
+      shiny::validate(shiny::need(length(pheno)>0, "Please select at least one phenotype."))
+
+      cm <- intersect(pheno, colnames(samples))
+      pheno <- pheno[pheno %in% cm]
+      samples <- samples[, cm, drop = FALSE]
+
+      nph <- length(pheno)
       nr <- ceiling(sqrt(nph))
       nc <- ceiling(nph / nr)
-      par(mfrow=c(nr,nc), mar=c(3,4,2.8,0.5))      
-      i=1
+      par(mfrow = c(nr, nc), mar = c(3, 4, 2.8, 0.5))
+      
+      i <- 1
       for(i in 1:length(pheno))  {
-        ph <- pheno[i]
-        jj <- which(colnames(samples) == ph)
+        jj <- which(colnames(samples) == pheno[i])
         if (!any(jj)) next
-        ## dbg("[mofa_plot_boxplots_server]", ph)
-        ## y <- samples[, ph]
         y <- samples[, jj]
-        if(all(is.na(y))) next
-        f1 <- res$F[, k]
-        if(class(y) %in% c("numeric","integer") &&
-             all(y %in% c(NA,0:9))) y <- factor(y)
+        if (all(is.na(y))) next
+        f1 <- resF[, k]
+        c1 <- (class(y) %in% c("numeric", "integer"))
+        c2 <- (all(y %in% c(NA, 0:9)))
+        if(c1 && c2) y <- factor(y)
         isfactor <- (class(y) %in% c("character", "factor", "logical"))
         ylab <- paste(k, "score")
         if (isfactor) {
           y <- factor(y)
           boxplot(f1 ~ y, main = "", ylab = ylab, xlab = "", las = 1)
         } else {
-          plot(y, f1, main="", ylab=ylab, xlab="", las = 1)
+          plot(y, f1, main = "", ylab = ylab, xlab = "", las = 1)
         }
-        title(ph, cex.main=1.2)
+        title(pheno[i], cex.main = 1.2)
       }
-        
+      
     }
 
     PlotModuleServer(
