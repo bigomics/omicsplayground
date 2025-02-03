@@ -118,7 +118,6 @@ WgcnaBoard <- function(id, pgx) {
     ## ================================================================================
 
     # Gene dendrogram and gene modules
-
     wgcna_plot_gdendogram_server(
       "geneDendro",
       wgcna.compute = wgcna.compute,
@@ -127,7 +126,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Scale independence and mean connectivity
-
     wgcna_plot_s_independence_server(
       "topologyPlots",
       wgcna.compute = wgcna.compute,
@@ -135,7 +133,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # TOM heatmap
-
     wgcna_plot_TOMheatmap_server(
       "TOMplot",
       wgcna.compute = wgcna.compute,
@@ -145,7 +142,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Gene clustering
-
     wgcna_plot_gclustering_server(
       "umap",
       wgcna.compute = wgcna.compute,
@@ -153,7 +149,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module graph
-
     wgcna_plot_module_graph_server(
       "moduleGraph",
       wgcna.compute = wgcna.compute,
@@ -162,7 +157,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module-Trait relationships
-
     wgcna_plot_MTrelationships_server(
       "moduleTrait",
       wgcna.compute = wgcna.compute,
@@ -171,7 +165,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Correlation network
-
     wgcna_plot_correlation_network_server(
       "corGraph",
       wgcna.compute = wgcna.compute,
@@ -180,7 +173,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Enrichment plot
-
     wgcna_plot_enrichment_server(
       "enrichPlot",
       enrich_table = enrich_table,
@@ -189,7 +181,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module genes
-
     wgcna_table_genes_server(
       "geneTable",
       wgcna.compute = wgcna.compute,
@@ -197,14 +188,12 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module enrichment
-
     enrichTable_module <- wgcna_table_enrichment_server(
       "enrichTable",
       enrich_table
     )
 
     # Eigengene clustering
-
     wgcna_plot_eigengene_clustering_server(
       "eigenClustering",
       wgcna.compute = wgcna.compute,
@@ -212,7 +201,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module membership (eigengene correlation)
-
     wgcna_plot_module_membership_server(
       "eigenCorrelation",
       wgcna.compute = wgcna.compute,
@@ -220,7 +208,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Membership-trait heatmap
-
     wgcna_plot_heatmap_membership_server(
       "intraHeatmap",
       wgcna.compute = wgcna.compute,
@@ -228,7 +215,6 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Membership vs. trait correlation
-
     wgcna_plot_membership_v_trait_server(
       "intraScatter",
       wgcna.compute = wgcna.compute,
