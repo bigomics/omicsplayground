@@ -92,9 +92,8 @@ biomarker_plot_importance_server <- function(id,
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
         R <- pmax(R, 0.05)
-
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(5, 3, 0, 1))
+        par(mar = c(7, 3, 1, 0.2))
         R.top <- head(R, 40)
         barplot(t(R.top),
           las = 3, horiz = FALSE,

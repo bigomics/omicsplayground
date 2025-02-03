@@ -29,9 +29,9 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     and provides expression boxplots by phenotype classes for features present in
     the tree.", js = FALSE)
 
-    ## ================================================================================
-    ## ======================= REACTIVE/OBSERVE FUNCTIONS =============================
-    ## ================================================================================
+    ## =========================================================================
+    ## ======================== OBSERVERS ======================================
+    ## =========================================================================
 
     my_observers <- list()
 
@@ -58,19 +58,6 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       ))
     })
 
-    input_pdx_select <- shiny::reactive({
-      gg <- input$pdx_select
-      if (is.null(gg)) {
-        return(NULL)
-      }
-
-      gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
-      if (length(gg) == 0) {
-        return(NULL)
-      }
-      if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
-      return(gg)
-    }) %>% shiny::debounce(1000)
 
     my_observers[[3]] <- shiny::observe({
       shiny::req(pgx$X)
@@ -85,20 +72,6 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       shiny::updateSelectInput(session, "pdx_samplefilter", choices = levels)
     })
 
-    ## get selected samples after sample filtering
-    selected_samples <- shiny::eventReactive(
-      list(pgx$Y, input$pdx_samplefilter),
-      {
-        shiny::req(pgx$Y)
-        samples <- rownames(pgx$Y)
-        sel <- input$pdx_samplefilter
-        if (!is.null(sel) && all(sel != "")) {
-          samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, sel)
-        }
-        samples
-      }
-    )
-    
     my_observers[[5]] <- shiny::observe({
       shiny::req(pgx$X)
       if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
@@ -166,7 +139,36 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     ## =========================================================================
     ## ============================= REACTIVES =================================
     ## =========================================================================
+
+    input_pdx_select <- shiny::reactive({
+      gg <- input$pdx_select
+      if (is.null(gg)) {
+        return(NULL)
+      }
+
+      gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
+      if (length(gg) == 0) {
+        return(NULL)
+      }
+      if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
+      return(gg)
+    }) %>% shiny::debounce(1000)
+
+    ## get selected samples after sample filtering
+    selected_samples <- shiny::eventReactive(
+      list(pgx$Y, input$pdx_samplefilter),
+      {
+        shiny::req(pgx$Y)
+        samples <- rownames(pgx$Y)
+        sel <- input$pdx_samplefilter
+        if (!is.null(sel) && all(sel != "")) {
+          samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, sel)
+        }
+        samples
+      }
+    )
     
+    ## calculate variable importance upon compute button
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
       ## This code also features a progress indicator.
       shiny::req(pgx$X, input$pdx_predicted)
@@ -180,178 +182,56 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
         return(NULL)
       }
 
-      NFEATURES <- 50
-      NFEATURES <- 60
-
       ## Create a Progress object
       progress <- shiny::Progress$new()
       ## Make sure it closes when we exit this reactive, even if there's an error
       on.exit(progress$close())
-
-      progress$set(message = "Variable importance", value = 0)
+      progress$set(message = "", value = 0)
 
       if (!(ct %in% colnames(pgx$Y))) {
         return(NULL)
       }
-      y0 <- as.character(pgx$Y[, ct])
-      names(y0) <- rownames(pgx$Y)
-      y0 <- y0[names(y0) %in% selected_samples()]
-      y <- y0[!is.na(y0)]
 
-      ## augment to at least 100 samples per level :)
-      ii <- tapply(1:length(y), y, function(ii) sample(c(ii, ii), size = 100, replace = TRUE))
-      y <- y[unlist(ii)]
-
-      ## -------------------------------------------
-      ## select features
-      ## -------------------------------------------
-      if (FALSE && shiny::isolate(input$pdx_level) == "geneset") {
-        X <- pgx$gsetX[, names(y)]
-        if (any(is.na(X))) {
-          X <- X[complete.cases(X), , drop = FALSE]
-        }
-      } else {
-        X <- pgx$X[, names(y)]
-        if (any(is.na(X))) {
-          X <- pgx$impX[, names(y)]
-        }
-      }
-      X0 <- X
-
-      ## ----------- filter with selected features
-      progress$inc(1 / 10, detail = "Filtering features")
-
-      ft <- "<all>"
       ft <- shiny::isolate(input$pdx_filter)
       if (is.null(ft)) {
         return(NULL)
       }
       shiny::isolate(sel <- input_pdx_select())
 
-      is.family <- (ft %in% c(names(pgx$families), names(playdata::iGSETS)))
+      dbg("[calcVariableImportance] ct = ",ct)
+      dbg("[calcVariableImportance] colnames(pgx$contrasts) = ",colnames(pgx$contrasts))
+      dbg("[calcVariableImportance] colnames(pgx$samples) = ",colnames(pgx$samples))
+      
+      progress$inc( 0.33, detail = "Calculating variable importance. Please wait...")
+      if(pgx$datatype == "multi-omics") {
 
-      if (ft == "<custom>" && !is.null(sel) && length(sel) > 0) {
-        ## ------------- filter with user selection
-        if (sel[1] != "") {
-          pp <- rownames(X)[which(toupper(rownames(X)) %in% toupper(sel))]
-          X <- X[pp, , drop = FALSE]
-        }
-      } else if (is.family) {
-        pp <- rownames(X)
-        if (ft %in% names(pgx$families)) {
-          gg <- pgx$families[[ft]]
-          pp <- playbase::filterProbes(pgx$genes, gg)
-        } else if (ft %in% names(playdata::iGSETS)) {
-          gg <- unlist(playdata::getGSETS(ft))
-          pp <- playbase::filterProbes(pgx$genes, gg)
-        }
-        pp <- intersect(pp, rownames(X))
-        X <- X[pp, , drop = FALSE]
-      }
+        res <- playbase::pgx.compute_importance(
+          pgx,
+          contrast = ct,
+          level="genes",
+          filter_features = ft,
+          select_features = sel,
+          select_samples = selected_samples(),
+          nfeatures = 60) 
 
-      ## ----------- restrict to top SD -----------
-      X <- head(X[order(-apply(X, 1, sd, na.rm = TRUE)), , drop = FALSE], 10 * NFEATURES) ## top 100
-      sdx0 <- matrixStats::rowSds(X, na.rm = TRUE)
-      sdx1 <- 0.5 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
-      X <- X + 0.25 * sdx1 * matrix(rnorm(length(X)), nrow(X), ncol(X)) ## add some noise
-
-      progress$inc(4 / 10, detail = "computing scores")
-
-      ## -------------------------------------------
-      ## compute importance values
-      ## -------------------------------------------
-      if (do.survival) {
-        time <- abs(y)
-        status <- (y > 0) ## dead is positive time
-        methods <- c("glmnet", "randomforest", "xgboost", "pls")
-        P <- playbase::pgx.survivalVariableImportance(
-          X,
-          time = time, status = status, methods = methods
-        )
       } else {
-        methods <- c("glmnet", "randomforest", "xgboost", "splsda", "correlation", "ftest")
-        X1 <- X
-        y1 <- y
-        names(y1) <- colnames(X1) <- paste0("x", 1:ncol(X))
-        res <- playbase::pgx.variableImportance(
-          X1, y1,
-          methods = methods, reduce = 1000, resample = 0,
-          scale = FALSE, add.noise = 0
-        )
-        P <- res$importance
+        res <- playbase::pgx.compute_importance(
+          pgx,
+          contrast = ct,
+          level="genes",
+          filter_features = ft,
+          select_features = sel,
+          select_samples = selected_samples(),
+          nfeatures = 60) 
       }
-      P <- abs(P) ## sometimes negative according to sign
-
-      P[is.na(P)] <- 0
-      P[is.nan(P)] <- 0
-      P <- t(t(P) / (1e-3 + apply(P, 2, max, na.rm = TRUE)))
-      P <- P[order(-rowSums(P, na.rm = TRUE)), , drop = FALSE]
-
-      R <- P
-      if (nrow(R) > 1) {
-        R <- (apply(P, 2, rank) / nrow(P))**4
-        R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
-      }
-
-      progress$inc(3 / 10, detail = "drawing tree")
-
-      ## ------------------------------
-      ## create partition tree
-      ## ------------------------------
-
-      R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
-      sel <- head(rownames(R), 100)
-      sel <- intersect(sel, rownames(X))
-      sel <- head(rownames(R), NFEATURES) ## top50 features
-      tx <- t(X[sel, , drop = FALSE])
-
-
-      ## formula wants clean names, so save original names
-      colnames(tx) <- gsub("[: +-.,]", "_", colnames(tx))
-      colnames(tx) <- gsub("[')(]", "", colnames(tx))
-      colnames(tx) <- gsub("\\[|\\]", "", colnames(tx))
-      orig.names <- sel
-      names(orig.names) <- colnames(tx)
-      jj <- names(y)
-
-      if (do.survival) {
-        time <- abs(y)
-        status <- (y > 0) ## dead if positive time
-        df <- data.frame(time = time + 0.001, status = status, tx)
-        rf <- rpart::rpart(survival::Surv(time, status) ~ ., data = df)
-      } else {
-        df <- data.frame(y = y, tx)
-        rf <- rpart::rpart(y ~ ., data = df)
-      }
-      table(rf$where)
-      rf$cptable
-      rf$orig.names <- orig.names
-
-      rf.nsplit <- rf$cptable[, "nsplit"]
-      if (grepl("survival", ct)) {
-        MAXSPLIT <- 4 ## maximum five groups....
-      } else {
-        MAXSPLIT <- 1.5 * length(unique(y)) ## maximum N+1 groups
-      }
-      if (max(rf.nsplit) > MAXSPLIT) {
-        cp.idx <- max(which(rf.nsplit <= MAXSPLIT))
-        cp0 <- rf$cptable[cp.idx, "CP"]
-        rf <- rpart::prune(rf, cp = cp0)
-      }
-
-      progress$inc(2 / 10, detail = "done")
-
-      y <- y[rownames(tx)]
-      colnames(tx) <- orig.names[colnames(tx)]
-      res <- list(R = R, y = y, X = t(tx), rf = rf)
-
+      
       is_computed(TRUE)
       return(res)
     })
 
-    ## ================================================================================
-    ## ==================================== PLOTS =====================================
-    ## ================================================================================
+    ## ===========================================================================
+    ## =============================== PLOTS =====================================
+    ## ===========================================================================
 
     biomarker_plot_importance_server(
       "pdx_importance",
