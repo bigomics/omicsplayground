@@ -512,7 +512,7 @@ app_server <- function(input, output, session) {
     bigdash.showTabsGoToDataView(session)
   })
 
-  insertBigTabUI2 <- function(ui) {
+  insertBigTabUI2 <- function(ui, menu) {
     for (i in 1:length(ui)) {
       for (j in 2:length(ui[[i]])) {
         shiny::insertUI(
@@ -535,7 +535,7 @@ app_server <- function(input, output, session) {
     });"
     )
     bigdash.openSettings()
-    shinyjs::hide(selector = "[id$='-loader']")
+    shinyjs::hide(selector = paste0("[id='", names(menu), "-loader']"))
   }
   loaded <- shiny::reactiveValues(
     clustering = 0,
@@ -549,21 +549,21 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
-      insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = board_observers, labeltype = labeltype)
       loaded$clustering <- 1
     }
     if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab") && loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.expression
-      insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
       loaded$expression <- 1
     }
     if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
-      insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       toggleTab("pathway-tabs", "Enrichment Map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
@@ -571,14 +571,14 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("isect-tab", "comp-tab", "cmap-tab") && loaded$compare == 0) {
       info("[UI:SERVER] reacted: calling Compare module")
       mod <- MODULE.compare
-      insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
       loaded$compare <- 1
     }
     if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
-      insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       toggleTab("drug-tabs", "Connectivity map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
@@ -586,7 +586,7 @@ app_server <- function(input, output, session) {
     if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.multiomics
-      insertBigTabUI2(mod$module_ui2())
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL)
       loaded$multiomics <- 1
     }
