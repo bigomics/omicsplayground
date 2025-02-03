@@ -86,17 +86,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
           kernel = kernel,
           numfactors = numfactors,
           add_gsets = input$add_gsets)
-
-      if(!"gset.mofa" %in% names(mofa)) {
-        progress$set(message = paste("Calculating geneset MOFA..."), value = 0.66)
-        mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
-          mofa,
-          kernel = kernel,
-          factorname = "Module",
-          #GMT = pgx$GMT,
-          numfactors = 20
-        )
-      }
       
       shiny::removeModal()
       message("[mofa] compute MOFA done!")
@@ -125,19 +114,41 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
         has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
         shiny::validate( shiny::need(has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
         mofa <- pgx$mofa        
-        if(!"gset.mofa" %in% names(mofa)) {
-          dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 1: calculate gsetMOFA...")
-          
+
+        if(!all(c("gset.mofa","kernel") %in% names(mofa))) {
+
           progress <- shiny::Progress$new(session, min=0, max=1)
           on.exit(progress$close())
-          progress$set(message = paste("Calculating geneset MOFA..."), value = 0.33)
-          mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
-            mofa,
-            kernel = input$kernel,
-            factorname = "Module",
-            #GMT = pgx$GMT,
-            numfactors = 20
-          )
+
+          if(!"gset.mofa" %in% names(mofa)) {
+            progress$set(message = paste("Calculating geneset MOFA..."), value = 0.33)
+            dbg("[MofaBoard:eventReactive(pgx$X,pgx$mofa)] 1: calculate gsetMOFA...")
+
+            numfactors <- as.integer(input$numfactors)
+            numfactors <- min( numfactors, min(dim(pgx$X)) )        
+
+            mofa$gset.mofa <- playbase::mofa.compute_geneset_mofa(
+              mofa,
+              kernel = input$kernel,
+              factorname = "Module",
+              GMT = pgx$GMT,
+              numfactors = numfactors
+            )
+          }
+        
+          if(FALSE && !"kernels" %in% names(mofa)) {
+            progress$set(message = paste("Calculating kernels..."), value = 0.66)
+            all.kernels <- c("mofa","pca","nmf","nmf2","mcia","diablo","wgcna","rgcca","RGCCA.rgcca","RGCCA.rgccda")
+            #all.kernels <- c("mofa","pca","nmf","nmf2","mcia","wgcna","diablo","rgcca")
+            all.res <- mofa.compute_kernels(
+              mofa$xx,
+              mofa$samples,
+              mofa$contrasts,
+              numfactors = numfactors,
+              kernels = all.kernels)
+            mofa$kernels <- all.res
+          }
+          
         }
         
         ## update factors in selectInput
@@ -165,7 +176,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     ## --------- enrichment table -------------
     ## ----------------------------------------
     enrichmentTable_selected <- reactive({
-
       tbl <- enrichmentTable
       shiny::req(tbl$data())
       
@@ -183,6 +193,18 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       sel
     })
 
+    gsetmofaTable_selected <- reactive({
+      tbl <- gsetmofaTable
+      shiny::req(tbl$data())      
+      has.selection <- length(tbl$rownames_selected())>0 
+      if(has.selection) {
+        sel <- tbl$rownames_selected()
+      } else {
+        sel <- NULL
+      }
+      sel
+    })
+    
     ## ========================================================================
     ## =========================== MODULES ====================================
     ## ========================================================================
@@ -359,9 +381,10 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_table_gsetmofa_factor_server(
       "gsetmofa_factor",
       mofa = mofa,
+      pgx = pgx,
       selected_factor = reactive(input$selected_factor),
       selected_trait = reactive(input$selected_trait),
-      table = gsetmofaTable
+      selected_pathway = gsetmofaTable_selected
     )
     
 

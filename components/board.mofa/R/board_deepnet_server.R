@@ -333,6 +333,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       net = net,
       pgx = pgx,      
       update = update,
+      pheno = reactive(input$selecte_pheno),
       watermark = WATERMARK
     )
     

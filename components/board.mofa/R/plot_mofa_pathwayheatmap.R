@@ -41,7 +41,7 @@ mofa_plot_pathwayheatmap_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function() {
+    plot.RENDER <- function(show_legend=FALSE) {
       mofa <- mofa()      
       k <- input_factor()
       factors <- colnames(mofa$F)
@@ -49,15 +49,6 @@ mofa_plot_pathwayheatmap_server <- function(id,
 
       pw <- selected()
       shiny::validate(need(length(pw)==1, "Please select a pathway"))
-
-      dbg("[plot_pathwayheatmap_server] selected_pathway =", pw)
-
-      features <- NULL
-      ## if(!is.null(mofa$GMT)) {
-      ##   if(pw %in% colnames(mofa$GMT)) {
-      ##     features <- names(which(mofa$GMT[,pw] != 0))
-      ##   }
-      ## }
       
       playbase::mofa.plot_heatmap(
         mofa, k=k, ## main=k,
@@ -68,15 +59,21 @@ mofa_plot_pathwayheatmap_server <- function(id,
         type = "splitmap",
         annot = "pheno",
         maxchar = 40,
+        show_legend = show_legend,
         show_types = NULL,
         mar = c(3,0,0,0),
         annot.ht = 0.9,
         cexRow = 0.9)
     }
 
+    plot.RENDER2 <- function() {
+      plot.RENDER(show_legend=TRUE)
+    }
+    
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
+      func2 = plot.RENDER2,      
       pdf.width = 8, pdf.height = 12,
       res = c(80, 100),
       add.watermark = watermark

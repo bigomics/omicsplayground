@@ -26,9 +26,10 @@ mofa_table_gsetmofa_factor_ui <- function(
 
 mofa_table_gsetmofa_factor_server <- function(id,
                                               mofa,
+                                              pgx,
                                               selected_factor = reactive(NULL),
                                               selected_trait = reactive(NULL),
-                                              table
+                                              selected_pathway = reactive(NULL)
                                               )
 {
   moduleServer(id, function(input, output, session) {
@@ -41,21 +42,29 @@ mofa_table_gsetmofa_factor_server <- function(id,
       k <- selected_factor()  ## which factor
       ph <- selected_trait()  ## which phenotype            
       shiny::req(k,ph)
-
-      sel <- table$rownames_selected()
-      dbg("[table_gsetmofa_factor_server:table.RENDER] length(sel) = ", length(sel))
+      
+      sel <- selected_pathway()      
+      ##if(length(sel)==0) return(NULL)
+      validate(need(length(sel)>0, "Please select a geneset"))
+      
+      sel <- sub("^gset.[pmg]x:","",sel)
       dbg("[table_gsetmofa_factor_server:table.RENDER] head(sel) = ", head(sel))
-
-      gs.genes <- mofa$GMT[,sel[1]]
+      gs.genes <- names(which(mofa$GMT[,sel[1]] != 0))
       dbg("[table_gsetmofa_factor_server:table.RENDER] gs.genes = ", length(gs.genes))
+      pp <- playbase::map_probes(pgx$genes, gs.genes)
+      pp <- intersect(pp, rownames(mofa$W))
+      dbg("[table_gsetmofa_factor_server:table.RENDER] len.pp = ", length(pp))
       
-      w <- mofa$W[,k]
-      g <- rownames(mofa$W)
+      w <- mofa$W[pp,k]
+      g <- playbase::probe2symbol(pp, pgx$genes, "symbol")
+      f <- playbase::probe2symbol(pp, pgx$genes, "feature")
+      tt <- playbase::probe2symbol(pp, pgx$genes, "gene_title")            
+      tt <- stringr::str_trunc(tt,40)
       Y <- mofa$Y[,ph]
-      rho <- cor(t(mofa$X), Y)[,1]
+      rho <- cor(t(mofa$X[pp,,drop=FALSE]), Y)[,1]
       
-      df <- data.frame( factor=k, gene = g, weight=w, rho=rho, check.names=FALSE)
-      df <- df[order(-df$w),]
+      df <- data.frame( factor=k, feature=f, title=tt, weight=w, rho=rho, check.names=FALSE)
+      df <- df[order(-df$w),,drop=FALSE]
       numeric.cols <- grep("score|weight|rho",colnames(df))
       
       DT::datatable(
@@ -68,12 +77,22 @@ mofa_table_gsetmofa_factor_server <- function(id,
         plugins = "scrollResize",
         options = list(
           dom = "lfrtip", #
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, #
           scrollY = "70vh",
           scroller = TRUE,
           scrollResize = TRUE,
           deferRender = TRUE
+          ## columnDefs = list(
+          ##   list(
+          ##     targets = "title", 
+          ##     render = DT::JS(
+          ##       "function(data, type, row, meta) {",
+          ##       "return type === 'display' && data.length > 35 ?",
+          ##       "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          ##       "}"
+          ##     )
+          ##   )
+          ## )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%

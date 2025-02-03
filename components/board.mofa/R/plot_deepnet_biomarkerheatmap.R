@@ -30,14 +30,13 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  net,
                                                  pgx,
                                                  update,
+                                                 pheno,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
       net <- net()
-      annot <- pgx$samples
-      
       playbase::deep.plotBiomarkerHeatmap(
         net, ntop = 20, datatypes = NULL,
         cexRow = 0.8, cexCol = 0.8,
@@ -50,6 +49,9 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       nsamples <- ncol(net$X[[1]])
       annot <- t(pgx$samples)[,colnames(net$X[[1]])]
+      pheno <- pheno()
+      sel <- which(rownames(annot)!= pheno)
+      annot <- annot[sel,,drop=FALSE]
       playbase::deep.plotBiomarkerHeatmap(
         net, ntop = 30, datatypes = NULL,
         rownames_width = 80, rowlab.maxlen = 60,

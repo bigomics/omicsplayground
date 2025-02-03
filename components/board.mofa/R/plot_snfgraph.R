@@ -17,7 +17,8 @@ mofa_plot_snfgraph_ui <- function(
     shiny::selectInput(
       ns("labeltype"), "Label type",
       choices = "none"
-    )
+    ),
+    shiny::sliderInput(ns("minrho"),"edge threshold:",0,1,0.5,0.05)
   )
   
   PlotModuleUI(
@@ -69,7 +70,12 @@ mofa_plot_snfgraph_server <- function(id,
         label <- snf$samples[,labeltype]
       }
 
-      playbase::snf.plot_graph(snf, plot=TRUE, label=label)         
+      playbase::snf.plot_graph(
+        snf,
+        min.rho = input$minrho,
+        q.edge = 0.01, 
+        plot = TRUE,
+        label = label)         
       
     }
 
