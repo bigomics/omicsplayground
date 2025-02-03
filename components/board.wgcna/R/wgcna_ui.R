@@ -6,44 +6,37 @@
 WgcnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-
     ## data set parameters
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),    
-    shiny::br(),
-    shiny::br(),
-    shiny::br(),    
-    shiny::actionLink(ns("options"), "Recompute", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
-    # shiny::conditionalPanel(
-    #   "input.options % 2 == 1",
-    #   ns = ns,
-      shiny::tagList(
-        shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
-          choices = c(500, 1000, 2000, 4000, 8000),
-          selected = 1000
-        ),
-        shiny::selectInput(ns("networktype"), "Network type",
-          choices = c("unsigned","signed","signed hybrid"), selected = "signed"
-        ),
-#        shiny::selectInput(ns("tomtype"), "TOM type",
-#          choices = c("signed","unsigned","signed Nowick","none"), selected = "signed"
-#        ),
-        shiny::sliderInput(ns("power"), "Power", 1, 20, 6),
-#        shiny::sliderInput(ns("deepsplit"), "Deepsplit", 0, 4, 2),
-        shiny::sliderInput(ns("cutheight"), "Merge cut height", 0.05, 0.8, 0.15, 0.05),
-        shiny::selectInput(ns("minmodsize"), "Min. module size",
-          choices = c(5, 10, 20, 50, 100),  selected = 20
-        ),
-        shiny::br(),
-        shiny::actionButton(
-          ns("compute"), "Recompute!",
-          icon = icon("running"),
-          class = "btn-outline-primary"
-        )        
+    bslib::accordion(
+      id = ns("compare_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Recompute",
+        icon = icon("cog", lib = "glyphicon"),
+        shiny::tagList(
+          shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
+            choices = c(500, 1000, 2000, 4000, 8000),
+            selected = 1000
+          ),
+          shiny::selectInput(ns("networktype"), "Network type",
+            choices = c("unsigned","signed","signed hybrid"), selected = "signed"
+          ),
+          shiny::sliderInput(ns("power"), "Power", 1, 20, 6),
+          shiny::sliderInput(ns("cutheight"), "Merge cut height", 0.05, 0.8, 0.15, 0.05),
+          shiny::selectInput(ns("minmodsize"), "Min. module size",
+            choices = c(5, 10, 20, 50, 100),  selected = 20
+          ),
+          shiny::br(),
+          shiny::actionButton(
+            ns("compute"), "Recompute!",
+            icon = icon("running"),
+            class = "btn-outline-primary"
+          )
+        )
       )
-    # )
+    )
   )
 }
 

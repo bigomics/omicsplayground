@@ -3,80 +3,9 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-## ExpressionInputs <- function(id) {
-##   ns <- shiny::NS(id) ## namespace
-##   bigdash::tabSettings(
-##     shiny::hr(), shiny::br(),
-##     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
-##       "Select a contrast of interest for the analysis.",
-##       placement = "top"
-##     ),
-##     withTooltip(
-##       shiny::selectInput(ns("gx_features"), tspan("Gene family:"),
-##         choices = NULL, multiple = FALSE
-##       ),
-##       "Choose a specific gene family for the analysis.",
-##       placement = "top"
-##     ),
-##     shiny::fillRow(
-##       flex = c(1, 1),
-##       withTooltip(
-##         shiny::selectInput(ns("gx_fdr"), "FDR",
-##           choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2
-##         ),
-##         "Set the false discovery rate (FDR) threshold.",
-##         placement = "top"
-##       ),
-##       withTooltip(
-##         shiny::selectInput(ns("gx_lfc"), "logFC",
-##           choices = c(0, 0.1, 0.2, 0.5, 1, 2, 5), selected = 0
-##         ),
-##         "Set the logarithmic fold change (logFC) threshold.",
-##         placement = "top"
-##       )
-##     ),
-##     shiny::br(), shiny::br(),
-##     shiny::br(), shiny::br(),
-##     withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-##       "Toggle advanced options.",
-##       placement = "top"
-##     ),
-##     shiny::br(), br(),
-##     shiny::conditionalPanel(
-##       "input.gx_options % 2 == 1",
-##       ns = ns,
-##       shiny::tagList( ## gx_showall does not work??
-##         withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
-##           "Display all genes in the table. Disable filtering of significant genes.",
-##           placement = "top", options = list(container = "body")
-##         ),
-##         withTooltip(shiny::checkboxInput(ns("show_pv"), "Show p-values", FALSE),
-##           "Show p-values in the table. WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
-##           placement = "top", options = list(container = "body")
-##         ),
-##         shiny::radioButtons(ns("labeltype"), "Plot labels:",
-##           c("symbol", "probe"),
-##           inline = TRUE
-##         ),
-##         withTooltip(
-##           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
-##             choices = NULL, inline = TRUE
-##           ),
-##           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
-##            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
-##            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
-##           placement = "right", options = list(container = "body")
-##         )
-##       )
-##     )
-##   )
-## }
-
 ExpressionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
       placement = "top"
@@ -88,8 +17,8 @@ ExpressionInputs <- function(id) {
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
-    shiny::fillRow(
-      flex = c(1, 1),
+    bslib::layout_column_wrap(
+      width = 1/2,
       withTooltip(
         selectInput(ns("gx_fdr"),
           "FDR",
@@ -107,17 +36,13 @@ ExpressionInputs <- function(id) {
         placement = "top"
       )
     ),
-    shiny::br(), shiny::br(),
-    shiny::br(), shiny::br(),
-    withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(), br(),
-    shiny::conditionalPanel(
-      "input.gx_options % 2 == 1",
-      ns = ns,
-      shiny::tagList( ## gx_showall does not work??
+    shiny::br(),
+    bslib::accordion(
+      id = ns("gx_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
           placement = "top", options = list(container = "body")
@@ -127,18 +52,13 @@ ExpressionInputs <- function(id) {
           placement = "top", options = list(container = "body")
         ),
         br(),
-        # shiny::radioButtons(ns("labeltype"), "Plot labels:",
-        #   c("symbol", "feature" = "probe", "name"),
-        #   inline = TRUE
-        # ),
-        br(),
         withTooltip(
           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
             choices = NULL, inline = TRUE
           ),
           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
-           we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
-           Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
+            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
+            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
         )
       )

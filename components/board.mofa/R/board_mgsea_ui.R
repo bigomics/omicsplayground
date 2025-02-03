@@ -15,9 +15,9 @@ MGseaInputs <- function(id) {
     shiny::br(),    
     shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
     shiny::br(), 
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.options % 2 == 1",
+    #   ns = ns,
       shiny::tagList(
         ## shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
         ##   choices = c(500, 1000, 2000, 4000, 8000),
@@ -28,7 +28,7 @@ MGseaInputs <- function(id) {
         ##   selected = 0.25
         ## )
       )
-    )
+    # )
   )
 }
 

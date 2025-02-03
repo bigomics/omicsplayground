@@ -16,23 +16,28 @@ MODULE.multiomics <- list(
     list(
       bigdash::bigTabItem(   ## call this in app.R??
         "mofa-tab",
-        MofaInputs("mofa")
+        MofaInputs("mofa"),
+        create_loader("mofa-loader")
       ),
       bigdash::bigTabItem(
         "mgsea-tab",
-        MGseaInputs("mgsea")
+        MGseaInputs("mgsea"),
+        create_loader("mgsea-loader")
       ),
       bigdash::bigTabItem(
         "snf-tab",
-        SNF_Inputs("snf")
+        SNF_Inputs("snf"),
+        create_loader("snf-loader")
       ),
       bigdash::bigTabItem(
         "lasagna-tab",
-        LasagnaInputs("lasagna")
+        LasagnaInputs("lasagna"),
+        create_loader("lasagna-loader")
       ),
       bigdash::bigTabItem(
         "deepnet-tab",
-        DeepNetInputs("deepnet")
+        DeepNetInputs("deepnet"),
+        create_loader("deepnet-loader")
       )
     )
   },

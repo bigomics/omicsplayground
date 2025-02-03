@@ -120,23 +120,17 @@ PlotModuleUI <- function(id,
     )
   } else {
     button_list <- lapply(seq_along(card_names), function(x) {
-      shiny::conditionalPanel(
-        condition = paste0(
-          "input.card_selector == '", card_names[x], "'"
-        ),
-        ns = ns,
-        div(
-          shiny::downloadButton(
-            outputId = ns(paste0(
-              "download", x
-            )),
-            label = "Download",
-            class = "btn-outline-primary"
-          )
+      div(
+        shiny::downloadButton(
+          outputId = ns(paste0(
+            "download", x
+          )),
+          label = card_names[x],
+          class = "btn-outline-primary"
         )
       )
     })
-    download_buttons <- do.call(div, button_list)
+    download_buttons <- button_list
   }
 
   pdf_size_ui <- shiny::tagList(

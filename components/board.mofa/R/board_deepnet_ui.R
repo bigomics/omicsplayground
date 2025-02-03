@@ -22,9 +22,9 @@ DeepNetInputs <- function(id) {
     shiny::br(),    
     shiny::actionLink(ns("options"), "Network options", icon = icon("cog", lib = "glyphicon")),
     shiny::br(), 
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.options % 2 == 1",
+    #   ns = ns,
       shiny::tagList(
         shiny::radioButtons(ns("model"), "Model:", c("AE","SAE","MLP"), selected="SAE", inline=TRUE),
         shiny::selectInput(ns("layers"), "Layers:", choices = c("mini","medium","deep"),
@@ -46,7 +46,7 @@ DeepNetInputs <- function(id) {
         #shiny::sliderInput(ns("l1regularization"),"L1 regularization (log10):",-4,4,0),
         #shiny::sliderInput(ns("l2regularization"),"L2 regularization (log10):",-4,4,0)
       )
-    )
+    # )
   )
 }
 
