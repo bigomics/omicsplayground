@@ -37,7 +37,6 @@ upload_module_normalization_server <- function(
         )
       })
 
-
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
@@ -64,18 +63,13 @@ upload_module_normalization_server <- function(
         m <- input$normalization_method
 
         prior0 <- 0  ## no offset if minimum is not zero
-        if(min(counts, na.rm=TRUE)==0) {
-          prior0 <- min(counts[counts>0],na.rm=TRUE)  ## smallest non-zero value
+        if(min(counts, na.rm = TRUE) == 0) {
+          prior0 <- min(counts[counts > 0], na.rm = TRUE)  ## smallest non-zero value
         }
         ## prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
         prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0) ## NEW        
         X <- log2(counts + prior) ## NEED RETHINK
         
-        ## if (input$remove_xxl) {
-        ##     dbg("[normalization_server:imputedX]: Assign NA to outlier features")
-        ##     X[playbase::is.xxl(X, z = 10)] <- NA
-        ## }
-
         nmissing <- sum(is.na(X))
         dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
         if (nmissing > 0 && input$impute) {
@@ -824,10 +818,9 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
                     choices = if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-                      c(
-                        "maxMedian", "maxSum", ## "TMM",
-                        "reference"
-                      )
+                      c("maxMedian", "maxSum", "reference") ## "TMM",
+                    } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
+                      c("maxMedian", "maxSum")
                     } else {
                       c(
                         "CPM", "CPM+quantile", ## "quantile",
