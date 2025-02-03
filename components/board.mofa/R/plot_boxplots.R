@@ -59,28 +59,34 @@ mofa_plot_boxplots_server <- function(id,
       shiny::validate( shiny::need(nph>0,"Must select at least one phenotype"))
 
       samples <- data.frame(res$samples)
-
+      colnames(samples) <- c("knn_label", "class", "sub_group")
       dbg("[mofa_plot_boxplots_server] colnames(samples) = ", colnames(samples))
       dbg("[mofa_plot_boxplots_server] pheno = ", pheno)
       dbg("[mofa_plot_boxplots_server] k = ", k)
       dbg("[mofa_plot_boxplots_server] colnames(res$F) = ", colnames(res$F))
-
+      saveRDS(list(samples=samples, resF=res$F), "~/Desktop/MNT/pp.RDS")
       nr <- ceiling(sqrt(nph))
       nc <- ceiling(nph / nr)
       par(mfrow=c(nr,nc), mar=c(3,4,2.8,0.5))      
-      for(ph in pheno) {
-        y <- samples[,ph]
+      i=1
+      for(i in 1:length(pheno))  {
+        ph <- pheno[i]
+        jj <- which(colnames(samples) == ph)
+        if (!any(jj)) next
+        ## dbg("[mofa_plot_boxplots_server]", ph)
+        ## y <- samples[, ph]
+        y <- samples[, jj]
         if(all(is.na(y))) next
-        f1 <- res$F[,k]
+        f1 <- res$F[, k]
         if(class(y) %in% c("numeric","integer") &&
              all(y %in% c(NA,0:9))) y <- factor(y)
-        isfactor <- (class(y) %in% c("character","factor","logical"))
-        ylab <- paste(k,"score")
-        if(isfactor) {
+        isfactor <- (class(y) %in% c("character", "factor", "logical"))
+        ylab <- paste(k, "score")
+        if (isfactor) {
           y <- factor(y)
-          boxplot( f1 ~ y, main="", ylab=ylab, xlab="", las = 1)
+          boxplot(f1 ~ y, main = "", ylab = ylab, xlab = "", las = 1)
         } else {
-          plot( y, f1, main="", ylab=ylab, xlab="", las = 1)
+          plot(y, f1, main="", ylab=ylab, xlab="", las = 1)
         }
         title(ph, cex.main=1.2)
       }
