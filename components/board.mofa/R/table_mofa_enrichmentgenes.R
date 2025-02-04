@@ -70,7 +70,14 @@ mofa_table_enrichmentgenes_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+        DT::formatStyle(
+          "weight",
+          background = color_from_middle(df$weight, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        ) 
+
     }
 
     table <- TableModuleServer(

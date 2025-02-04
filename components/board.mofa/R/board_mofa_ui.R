@@ -125,7 +125,7 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Factor response analysis.</b> We quantify associations of factors with our trait of interest (weight) by the correlation between the factor and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.")),
+          bs_alert(HTML("<b>Factor response analysis.</b> Associations of factors with our trait of interest are quantified by the correlation between factor and trait vectors. Factors with high (absolute) factor-trait correlation show large differences between phenotype conditions.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               xxxl = c(12, 12),
@@ -142,13 +142,13 @@ MofaUI <- function(id) {
                 ns("factortrait"),
                 title = "Factor-Trait correlation",
                 info.text = "Correlation between MOFA factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). The metadata variables shown correspond to those provided in your uploaded samples.csv file. Covariates may include the phenotype(s) of interest. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Each MOFA factor captures a source of variation across the integrated data types. Therefore, the heatmap helps identification of dominant sources of variation in the data -which may be driven by biological processes- associated with a trait or condition.",
-                caption = "Correlation between MOFA factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1.",
+                caption = "Correlation between factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
               mofa_plot_factorcorheatmap_ui(
                 ns("factorcorheatmap"),
-                title = "Correlation between MOFA factors.",
+                title = "Correlation between factors.",
                 info.text = "Correlation between MOFA factors. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Correlated factors might capture similar sources of variation in the data -which might be driven by shared biological processes.",
                 caption = "",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -181,7 +181,7 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
+          bs_alert(HTML("<b>MOFA weights.</b> For all features in the module, we compute the gene significance (GS) as the correlation of its gene expression and the phenotype (or trait). We also define the 'module membership' (MM) as the correlation of the gene expression and the module eigengene. We can identify 'driver genes' that have high GS as well as high MM.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               lg = c(6,6,6,3,3),
@@ -236,7 +236,7 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>MOFA weights.</b> <b>(a)</b>")),
+          bs_alert(HTML("<b>Factor enrichment.</b> To understand the biological function for each factor, we can perform a geneset enrichment analysis using its factor loadings. For a selected geneset, the boxes show the joint enrichment, mixed heatmap, pathwaydiagram and feature table.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               lg = c(4, 4, 4, 8, 4),

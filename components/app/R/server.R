@@ -754,7 +754,7 @@ app_server <- function(input, output, session) {
       toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
       toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
 
-
+      
       ## Dynamically show upon availability in pgx object
       info("[SERVER] disabling extra features")
       tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
@@ -767,12 +767,20 @@ app_server <- function(input, output, session) {
         tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
       }
 
-      ## Hide PCSF and WGCNA for metabolomics
-      # WGCNA will be abailable upon gmt refactoring
+      ## Hide PCSF and WGCNA for metabolomics.
+      # WGCNA will be available upon gmt refactoring
       if (DATATYPEPGX == "metabolomics") {
         info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
         bigdash.hideTab(session, "pcsf-tab")
         bigdash.hideTab(session, "wgcna-tab")
+        bigdash.hideTab(session, "cmap-tab")
+      }
+
+      if (PGX$datatype == "multi-omics") {
+        info("[SERVER] disabling modules for multi-omics data")
+        bigdash.hideTab(session, "drug-tab")
+        bigdash.hideTab(session, "cell-tab")
+        bigdash.hideTab(session, "wordcloud-tab")
         bigdash.hideTab(session, "cmap-tab")
       }
 
@@ -781,7 +789,6 @@ app_server <- function(input, output, session) {
   )
 
   # populate labeltype selector based on pgx$genes
-
   observeEvent(
     {
       PGX$genes

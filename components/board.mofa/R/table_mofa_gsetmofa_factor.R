@@ -48,12 +48,9 @@ mofa_table_gsetmofa_factor_server <- function(id,
       validate(need(length(sel)>0, "Please select a geneset"))
       
       sel <- sub("^gset.[pmg]x:","",sel)
-      dbg("[table_gsetmofa_factor_server:table.RENDER] head(sel) = ", head(sel))
       gs.genes <- names(which(mofa$GMT[,sel[1]] != 0))
-      dbg("[table_gsetmofa_factor_server:table.RENDER] gs.genes = ", length(gs.genes))
       pp <- playbase::map_probes(pgx$genes, gs.genes)
       pp <- intersect(pp, rownames(mofa$W))
-      dbg("[table_gsetmofa_factor_server:table.RENDER] len.pp = ", length(pp))
       
       w <- mofa$W[pp,k]
       g <- playbase::probe2symbol(pp, pgx$genes, "symbol")
@@ -96,7 +93,14 @@ mofa_table_gsetmofa_factor_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+        DT::formatStyle(
+          "weight",
+          background = color_from_middle(df$weight, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        ) 
+  
     }
     
     table <- TableModuleServer(

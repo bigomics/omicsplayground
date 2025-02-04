@@ -113,7 +113,7 @@ MODULE.multiomics <- list(
       bigdash::sidebarTabHelp(
         "lasagna-tab",
         "Lasagna",
-        tspan("LASAGNA")
+        tspan("LASAGNA is a stacked layer model for multi-omics integration where each layer corresponds to a datatype.")
       ),
       bigdash::sidebarTabHelp(
         "deepnet-tab",

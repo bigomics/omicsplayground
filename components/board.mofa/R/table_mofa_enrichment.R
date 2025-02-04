@@ -91,7 +91,13 @@ mofa_table_enrichment_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+        DT::formatStyle(
+          "NES",
+          background = color_from_middle(df$NES, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        ) 
     }
 
     table.RENDER2 <- function(full=FALSE) {

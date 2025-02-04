@@ -36,7 +36,6 @@ mofa_table_gsetmofa_server <- function(id,
       mofa <- mofa()
       validate(need(!is.null(mofa), "missing MOFA data."))            
 
-      dbg("[table_gsetmofa] 1:")
       m=1
       m  <- selected_module()  ## which factor/phenotype
       ph <- selected_trait()  ## which factor/phenotype            
@@ -82,7 +81,14 @@ mofa_table_gsetmofa_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+        DT::formatStyle(
+          "weight",
+          background = color_from_middle(df$weight, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        ) 
+      
     }
     
     table <- TableModuleServer(

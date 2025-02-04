@@ -65,7 +65,20 @@ mofa_table_genetable_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
+        DT::formatStyle(
+          "weight",
+          background = color_from_middle(df$weight, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        ) %>%
+        DT::formatStyle(
+          "centrality",
+          background = color_from_middle(df$centrality, "white", "#fec34d"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        )
+
     }
 
     table.RENDER2 <- function(full=FALSE) {
