@@ -25,7 +25,7 @@ MofaInputs <- function(id) {
       shiny::tagList(
         shiny::selectInput(
           ns("kernel"), "Kernel",
-          choices = c("MOFA","PCA","DIABLO","MCIA","WGCNA"),
+          choices = sort(c("DIABLO","MOFA","PCA","MCIA","WGCNA","RGCCA")),
           selected = "MOFA"                 
         ),
         # shiny::conditionalPanel(
