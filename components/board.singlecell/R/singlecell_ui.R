@@ -38,7 +38,7 @@ SingleCellUI <- function(id) {
         "Cell type",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           singlecell_plot_icpplot_ui(
             id = ns("icpplot"),
             title = "Cell type profiling",
@@ -64,7 +64,7 @@ SingleCellUI <- function(id) {
         "Mapping",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           singlecell_plot_mappingplot_ui(
             id = ns("mappingplot"),
             title = "Cell type mapping",
@@ -91,7 +91,7 @@ SingleCellUI <- function(id) {
         "Markers",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           singlecell_plot_markersplot_ui(
             id = ns("markersplot"),
             title = "Expression of marker genes",

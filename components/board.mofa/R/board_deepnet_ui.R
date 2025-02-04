@@ -6,47 +6,49 @@
 DeepNetInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-
     ## data set parameters
     shiny::selectInput(ns("selected_pheno"), "Select phenotype:", choices = NULL, multiple = FALSE),
     shiny::selectInput(ns("show_conditions"), "Show conditions:", choices = NULL, multiple = TRUE),
-    shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),    
+    shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),
 
     p("Network learning:"),
-    shiny::actionButton(ns("step"), "Step1", size="xs"),
-    shiny::actionButton(ns("step20"), "Step20", size="xs"),
-    shiny::actionButton(ns("step100"), "Step100", size="xs"),    
-    shiny::actionButton(ns("reset"), "Reset", size="xs"),        
-    shiny::br(),
-    shiny::br(),    
-    shiny::actionLink(ns("options"), "Network options", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
-    # shiny::conditionalPanel(
-    #   "input.options % 2 == 1",
-    #   ns = ns,
-      shiny::tagList(
-        shiny::radioButtons(ns("model"), "Model:", c("AE","SAE","MLP"), selected="SAE", inline=TRUE),
-        shiny::selectInput(ns("layers"), "Layers:", choices = c("mini","medium","deep"),
+    bslib::layout_column_wrap(
+      width = 1 / 2,
+      gap = "5px",
+      shiny::actionButton(ns("step"), "Step1", size = "xs"),
+      shiny::actionButton(ns("step20"), "Step20", size = "xs"),
+      shiny::actionButton(ns("step100"), "Step100", size = "xs"),
+      shiny::actionButton(ns("reset"), "Reset", size = "xs")
+    ),
+    bslib::accordion(
+      id = ns("data_type_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Network options",
+        icon = icon("cog", lib = "glyphicon"),
+        shiny::tagList(
+          shiny::radioButtons(ns("model"), "Model:", c("AE","SAE","MLP"), selected="SAE", inline=TRUE),
+          shiny::selectInput(ns("layers"), "Layers:", choices = c("mini","medium","deep"),
                            selected="mini"),
-        shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
-        shiny::checkboxInput(ns("augment"), "augment data (10x)", FALSE),
-        # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),
-        # shiny::checkboxInput(ns("sdweight"), "gradient SD weight", TRUE),
-        # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
-        #shiny::checkboxInput(ns("dropout"), "use dropout", FALSE),
-        shiny::checkboxInput(ns("addnoise"), "add internal noise", TRUE),
-        shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE),
-        shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE)
-        #shiny::checkboxInput(ns("multitarget"), "multi target", FALSE)        
-        #shiny::selectInput(ns("optim"), "Optimizer",
-        #  choices = c("adam","adamw","sgd","lbfgs"), selected="adam"),
-        #shiny::selectInput(ns("actfun"), "Activation function",
-        #  choices = c("relu","gelu","leaky","silu"), selected="leaky"),
-        #shiny::sliderInput(ns("l1regularization"),"L1 regularization (log10):",-4,4,0),
-        #shiny::sliderInput(ns("l2regularization"),"L2 regularization (log10):",-4,4,0)
+          shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
+          shiny::checkboxInput(ns("augment"), "augment data (10x)", FALSE),
+          # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),
+          # shiny::checkboxInput(ns("sdweight"), "gradient SD weight", TRUE),
+          # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
+          #shiny::checkboxInput(ns("dropout"), "use dropout", FALSE),
+          shiny::checkboxInput(ns("addnoise"), "add internal noise", TRUE),
+          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE),
+          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE)
+          #shiny::checkboxInput(ns("multitarget"), "multi target", FALSE)        
+          #shiny::selectInput(ns("optim"), "Optimizer",
+          #  choices = c("adam","adamw","sgd","lbfgs"), selected="adam"),
+          #shiny::selectInput(ns("actfun"), "Activation function",
+          #  choices = c("relu","gelu","leaky","silu"), selected="leaky"),
+          #shiny::sliderInput(ns("l1regularization"),"L1 regularization (log10):",-4,4,0),
+          #shiny::sliderInput(ns("l2regularization"),"L2 regularization (log10):",-4,4,0)
+        )
       )
-    # )
+    )
   )
 }
 

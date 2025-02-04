@@ -6,43 +6,41 @@
 MofaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-
     ## data set parameters
-    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),        
+    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_factor"), "Select factor:", choices = NULL),
     shiny::selectizeInput(ns("show_types"), "Show datatypes:",
-                          choices=NULL, multiple=TRUE),
+                          choices = NULL, multiple = TRUE),
     shiny::br(),
-    shiny::br(),
-    shiny::br(),    
-    shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
-    # shiny::conditionalPanel(
-    #   "input.options % 2 == 1",
-    #   ns = ns,
-      shiny::tagList(
-        shiny::selectInput(
-          ns("kernel"), "Kernel",
-          choices = sort(c("DIABLO","MOFA","PCA","MCIA","WGCNA","RGCCA")),
-          selected = "MOFA"                 
-        ),
-        # shiny::conditionalPanel(
-        #   "input.kernel != 'WGCNA'",
-        #   ns = ns,
-          shiny::selectInput(ns("numfactors"), "Number of factors",
-            choices = c(3,5,10,15,25),
-            selected = 10
+    bslib::accordion(
+      id = ns("data_type_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        shiny::tagList(
+          shiny::selectInput(
+            ns("kernel"), "Kernel",
+            choices = sort(c("DIABLO", "MOFA", "PCA", "MCIA", "WGCNA", "RGCCA")),
+            selected = "MOFA"
           ),
-        # ),
-        shiny::checkboxInput(ns("add_gsets"), "Add gene set layers",
-          value = FALSE
-        ),
-        br(),
-        shiny::actionButton(ns("compute"),"Compute!")
+          shiny::conditionalPanel(
+            "input.kernel != 'WGCNA'",
+            ns = ns,
+            shiny::selectInput(ns("numfactors"), "Number of factors",
+              choices = c(3, 5, 10, 15, 25),
+              selected = 10
+            ),
+          ),
+          shiny::checkboxInput(ns("add_gsets"), "Add gene set layers",
+            value = FALSE
+          ),
+          br(),
+          shiny::actionButton(ns("compute"), "Compute!")
+        )
       )
-    # )
+    )
   )
 }
 

@@ -142,7 +142,7 @@ ClusteringUI <- function(id) {
 
   rowH <- 350
   rowH <- "40vh"
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
 
   div(
     boardHeader(title = "Cluster Samples", info_link = ns("board_info")),

@@ -55,11 +55,11 @@ PcsfUI <- function(id) {
         "PCSF network",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 190px)",
+          height = "calc(100vh - 181px)",
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            height = "calc(100vh - 190px)",
+            height = "calc(100vh - 181px)",
             pcsf_plot_network_ui(
               ns("pcsf_network"),
               caption = paste(

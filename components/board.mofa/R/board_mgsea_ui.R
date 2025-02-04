@@ -6,29 +6,8 @@
 MGseaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-
     ## data set parameters
-    shiny::selectInput(ns("contrast"), "Select contrast", choices = NULL),
-    shiny::br(),
-    shiny::br(),
-    shiny::br(),    
-    shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-    shiny::br(), 
-    # shiny::conditionalPanel(
-    #   "input.options % 2 == 1",
-    #   ns = ns,
-      shiny::tagList(
-        ## shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
-        ##   choices = c(500, 1000, 2000, 4000, 8000),
-        ##   selected = 1000
-        ## ),
-        ## shiny::selectInput(ns("cutheight"), "Merge cut height",
-        ##   choices = c(0.05, 0.10, 0.25, 0.5, 0.9, 0.999),
-        ##   selected = 0.25
-        ## )
-      )
-    # )
+    shiny::selectInput(ns("contrast"), "Select contrast", choices = NULL)
   )
 }
 
@@ -50,7 +29,7 @@ MGseaUI <- function(id) {
         "multiGSEA",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>MultiGSEA</b> combines pathway enrichment on multiple omics layers to create a robust composite multi-omics pathway enrichment measure.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
