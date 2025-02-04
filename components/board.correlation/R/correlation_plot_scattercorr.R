@@ -115,7 +115,6 @@ correlation_plot_scattercorr_server <- function(id,
         colorby = colorby,
         COL = COL
       )
-      saveRDS(dt, "~/Desktop/MNT/dt.RDS")
       return(dt)
     })
 
