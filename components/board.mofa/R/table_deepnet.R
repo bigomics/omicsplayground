@@ -34,7 +34,7 @@ table_deepnet_gradients_server <- function(id,
 {
   moduleServer(id, function(input, output, session) {
 
-    table.RENDER <- function() {
+    table.RENDER <- function(full=FALSE) {
       net <- net()
       grad <- net$get_gradients()[[1]]
       all.fc <- phenoFC()
@@ -56,12 +56,17 @@ table_deepnet_gradients_server <- function(id,
       
       df <- playbase::deep.plotGradientVSFoldchange(
         grad, fc = all.fc, data=TRUE, par=FALSE)
+      
       numeric.cols <- colnames(df)
       
       ## add gene title for readable names (e.g. for metabolomics)
       feature <- rownames(df)
-      gene_title <- stringr::str_trunc(pgx$genes[feature,"gene_title"], 40)
-      df <- cbind( feature=feature, title=gene_title, df)
+      if(full) {
+        gene_title <- stringr::str_trunc(pgx$genes[feature,"gene_title"], 40)
+        df <- cbind( feature=feature, title=gene_title, df)
+      } else {
+        df <- cbind( feature=feature, df)
+      }
 
       DT::datatable(
         df,
@@ -84,9 +89,14 @@ table_deepnet_gradients_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
+    table.RENDER2 <- function() {
+      table.RENDER(full=TRUE)
+    }
+    
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
+      func2 = table.RENDER2,      
       selector = "single"
     )
 

@@ -73,7 +73,8 @@ mofa_plot_snfgraph_server <- function(id,
       playbase::snf.plot_graph(
         snf,
         min.rho = input$minrho,
-        q.edge = 0.01, 
+        q.edge = 0.01,
+        vlabcex = 0.9, 
         plot = TRUE,
         label = label)         
       

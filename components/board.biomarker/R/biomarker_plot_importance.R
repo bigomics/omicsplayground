@@ -94,7 +94,7 @@ biomarker_plot_importance_server <- function(id,
         R <- pmax(R, 0.05)
         #R <- head(R, 40)
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(8, 4, 1, 0.2))
+        par(mar = c(8,4,1,0.2), mgp=c(2.5,0.8,0))
         barplot(t(R),
           las = 3, horiz = FALSE,
           cex.names = 0.8, ylab = "cumulative rank"

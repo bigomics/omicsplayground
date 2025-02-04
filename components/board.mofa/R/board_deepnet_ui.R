@@ -68,7 +68,7 @@ DeepNetUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Multi-Omics integration by deep learning network</b>. Here we integrate multi-omics data using a multi-view supervised auto-encoder. This architecture is a combination of (multiple) auto-encoders and a multilayer perceptron (MLP) classifier that uses a merge of the bottleneck layers for prediction.")),
+          bs_alert(HTML("<b>Multi-Omics integration by deep learning</b>. Here we integrate multi-omics data using a multi-view supervised auto-encoder. This architecture is a combination of (multiple) auto-encoders and a multilayer perceptron (MLP) classifier that uses a merge of the bottleneck layers for prediction.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               xxxl = c(6, 6),
@@ -134,7 +134,7 @@ DeepNetUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Gradient vs foldchange. </b>. This board compares input gradients of the network (i.e. the change of prediction with respect to inputs) with the log-foldchange. Good biomarkers should have both high foldchange and input gradient.")),
+          bs_alert(HTML("<b>Gradient vs foldchange. </b>. This board compares input gradients of the network (i.e. change of prediction with respect to inputs) with the log-foldchange. Good biomarkers should have high foldchange and large input gradient.")),
           bslib::layout_columns(
             col_widths = c(7,5),
             height = "calc(100vh - 180px)",            

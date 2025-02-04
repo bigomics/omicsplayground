@@ -68,7 +68,7 @@ SNF_UI <- function(id) {
             ),
             bslib::layout_columns(
               col_widths = 12,
-              mofa_plot_snf_ui(
+              mofa_plot_snf_heatmap_ui(
                 ns("snf_heatmap"),
                 title = "SNF heatmap",
                 info.text = "SNF affinity matrices",

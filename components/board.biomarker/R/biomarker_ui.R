@@ -103,16 +103,16 @@ BiomarkerUI <- function(id) {
             width = c("auto", "100%"),
             label = "a"
           ),
-          biomarker_plot_boxplots_ui(
-            ns("pdx_boxplots"),
-            title = "Biomarker expression",
-            info.text = "Boxplot displaying the expression for the top genes according to their importance. The expression is grouped by the {Predicted target} selected on the computation.",
+          biomarker_plot_decisiontree_ui(
+            ns("pdx_decisiontree"),
+            title = "Decision tree",
+            info.text = "Decision tree showing a solution for classification based on the top most important features for the {Predicted target}. The plot provides a proportion of the samples that are defined by each biomarker in the boxes.",
             info.methods = "See Variable importance",
             info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
-            caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
-            height = imgH1,
+            caption = "Decision tree indicating expression-based biomarkers that distinguish the selected phenotypic groups.",
+            height = imgH2,
             width = c("auto", "100%"),
-            label = "b"
+            label = "d"
           ),
           biomarker_plot_heatmap_ui(
             ns("pdx_heatmap"),
@@ -131,16 +131,16 @@ BiomarkerUI <- function(id) {
             width = c("auto", "100%"),
             label = "c"
           ),
-          biomarker_plot_decisiontree_ui(
-            ns("pdx_decisiontree"),
-            title = "Decision tree",
-            info.text = "Decision tree showing a solution for classification based on the top most important features for the {Predicted target}. The plot provides a proportion of the samples that are defined by each biomarker in the boxes.",
+          biomarker_plot_boxplots_ui(
+            ns("pdx_boxplots"),
+            title = "Biomarker expression",
+            info.text = "Boxplot displaying the expression for the top genes according to their importance. The expression is grouped by the {Predicted target} selected on the computation.",
             info.methods = "See Variable importance",
             info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
-            caption = "Decision tree indicating expression-based biomarkers that distinguish the selected phenotypic groups.",
-            height = imgH2,
+            caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
+            height = imgH1,
             width = c("auto", "100%"),
-            label = "d"
+            label = "b"
           )
         )
       ), ## tabPanel 1
