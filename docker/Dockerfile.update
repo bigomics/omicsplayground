@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:master
+FROM bigomics/omicsplayground:latest
 
 ARG BRANCH=master
 ARG update_playdata=false

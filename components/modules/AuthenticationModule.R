@@ -936,6 +936,13 @@ LoginCodeAuthenticationModule <- function(id,
     decrypted_cookie <- get_and_decrypt_cookie(session)
     query_email <- shiny::isolate(shiny::getQueryString()$email)
     if (!is.null(query_email) & !is.null(decrypted_cookie)) {
+      if (opt$ENCRYPTED_EMAIL) {
+        query_email_nonce <- shiny::isolate(shiny::getQueryString()$email_nonce)
+        query_email <- decrypt_cookie(query_email, query_email_nonce)
+        if (is.null(query_email)) {
+          query_email <- ""
+        }
+      }
       if (query_email != decrypted_cookie) {
         # If the query email is different than the cookie email
         # we assume that the user wants to login
