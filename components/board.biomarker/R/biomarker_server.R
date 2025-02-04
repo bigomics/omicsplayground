@@ -43,7 +43,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       ),
       "Feature-set ranking" = list(
         enable = NULL,
-        disable = c("pdx_predicted", "pdx_filter")
+        disable = c("pdx_target", "pdx_filter")
       )
     )
     my_observers[[1]] <- shiny::observeEvent(input$tabs1, {
@@ -62,7 +62,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     my_observers[[3]] <- shiny::observe({
       shiny::req(pgx$X)
       ct <- colnames(pgx$Y)
-      shiny::updateSelectInput(session, "pdx_predicted", choices = ct)
+      shiny::updateSelectInput(session, "pdx_target", choices = ct)
     })
 
     my_observers[[4]] <- shiny::observe({
@@ -94,20 +94,20 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     })
 
     # Enable or disable the run button in the UI
-    # if the pdx_predicted overlaps with the pdx_samplefilter variable
+    # if the pdx_target overlaps with the pdx_samplefilter variable
     my_observers[[6]] <- shiny::observeEvent(
       list(
         pgx$Y,
         input$pdx_samplefilter,
-        input$pdx_predicted
+        input$pdx_target
       ),
       {
-        shiny::req(pgx$Y, input$pdx_predicted)
+        shiny::req(pgx$Y, input$pdx_target)
         # check how many levels pgx_predicted has if it has more than
         # 1 level, then enable the run button if it has 1 level, then
         # disable the run button
         kk <- selected_samples()
-        levels_filtered <- unique(pgx$Y[kk, input$pdx_predicted])
+        levels_filtered <- unique(pgx$Y[kk, input$pdx_target])
         if (length(levels_filtered) > 1) {
           shinyjs::enable("pdx_runbutton")
         } else {
@@ -120,7 +120,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     my_observers[[7]] <- observeEvent(
       {
         list(
-          input$pdx_predicted,
+          input$pdx_target,
           input$pdx_samplefilter,
           input$pdx_filter,
           pgx$X
@@ -171,14 +171,11 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     ## calculate variable importance upon compute button
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
       ## This code also features a progress indicator.
-      shiny::req(pgx$X, input$pdx_predicted)
+      shiny::req(pgx$X, input$pdx_target)
 
-      ct <- 2
-      ct <- 12
-      colnames(pgx$Y)
-      shiny::isolate(ct <- input$pdx_predicted)
-      do.survival <- grepl("survival", ct, ignore.case = TRUE)
-      if (is.null(ct)) {
+      shiny::isolate(ph <- input$pdx_target)
+      do.survival <- grepl("survival", ph, ignore.case = TRUE)
+      if (is.null(ph)) {
         return(NULL)
       }
 
@@ -188,7 +185,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       on.exit(progress$close())
       progress$set(message = "", value = 0)
 
-      if (!(ct %in% colnames(pgx$Y))) {
+      if (!(ph %in% colnames(pgx$Y))) {
         return(NULL)
       }
 
@@ -198,7 +195,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       }
       shiny::isolate(sel <- input_pdx_select())
 
-      dbg("[calcVariableImportance] ct = ",ct)
+      dbg("[calcVariableImportance] ph = ",ph)
       dbg("[calcVariableImportance] colnames(pgx$contrasts) = ",colnames(pgx$contrasts))
       dbg("[calcVariableImportance] colnames(pgx$samples) = ",colnames(pgx$samples))
       
@@ -207,22 +204,22 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
 
         res <- playbase::pgx.compute_importance(
           pgx,
-          contrast = ct,
+          pheno = ph,
           level="genes",
           filter_features = ft,
           select_features = sel,
           select_samples = selected_samples(),
-          nfeatures = 60) 
+          nfeatures = 50) 
 
       } else {
         res <- playbase::pgx.compute_importance(
           pgx,
-          contrast = ct,
+          contrast = ph,
           level="genes",
           filter_features = ft,
           select_features = sel,
           select_samples = selected_samples(),
-          nfeatures = 60) 
+          nfeatures = 50) 
       }
       
       is_computed(TRUE)
@@ -244,7 +241,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       "pdx_heatmap",
       calcVariableImportance,
       pgx,
-      reactive(input$pdx_predicted),
+      reactive(input$pdx_target),
       is_computed,
       watermark = WATERMARK
     )

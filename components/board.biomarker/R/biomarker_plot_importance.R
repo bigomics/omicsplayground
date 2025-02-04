@@ -35,7 +35,7 @@ biomarker_plot_importance_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -88,21 +88,22 @@ biomarker_plot_importance_server <- function(id,
         ## }
         shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(res)
-
+        
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
         R <- pmax(R, 0.05)
+        #R <- head(R, 40)
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(7, 3, 1, 0.2))
-        R.top <- head(R, 40)
-        barplot(t(R.top),
+        par(mar = c(8, 4, 1, 0.2))
+        barplot(t(R),
           las = 3, horiz = FALSE,
-          cex.names = 0.85, ylab = "cumulative importance"
+          cex.names = 0.8, ylab = "cumulative rank"
         )
         klr <- grey.colors(ncol(R))
         legend("topright",
           legend = rev(colnames(R)), fill = rev(klr),
-          cex = 0.8, y.intersp = 0.8
+          cex = 0.75, y.intersp = 0.75,
+          inset = c(0.03,-0.03), xpd=TRUE
         )
       }
 

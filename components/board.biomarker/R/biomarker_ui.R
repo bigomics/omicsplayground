@@ -10,7 +10,7 @@ BiomarkerInputs <- function(id) {
     shiny::tagList(
       shiny::hr(), shiny::br(),
       withTooltip(
-        shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
+        shiny::selectInput(ns("pdx_target"), "Prediction target:",
           choices = NULL
         ),
         "Select the target variable for biomarker selection.",

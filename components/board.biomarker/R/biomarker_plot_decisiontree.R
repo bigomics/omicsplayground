@@ -67,30 +67,10 @@ biomarker_plot_decisiontree_server <- function(id,
       })
 
       plot.RENDER <- function() {
-        res <- plot_data()
-        shiny::req(res)
-        
+        imp <- plot_data()
+        shiny::req(imp)
         playbase::plotDecisionTreeFromImportance(
-          res, type = input$plottype )
-        
-        ## par(mfrow = c(1, 1), mar = c(1, 0, 2, 0))
-        ## is.surv <- grepl("Surv", res$rf$call)[2]
-        ## is.surv
-        ## if (is.surv) {
-        ##   rf <- partykit::as.party(res$rf)
-        ##   partykit::plot.party(rf)
-        ## } else {
-        ##   ## rpart.plot::rpart.plot(res$rf)
-        ##   rf <- partykit::as.party(res$rf)
-        ##   is.multinomial <- length(table(res$y)) > 2
-        ##   if (is.multinomial) {
-        ##     ## plot(rf, type="extended")
-        ##     plot(rf, type = "simple")
-        ##   } else {
-        ##     plot(rf, type = "simple")
-        ##   }
-        ## }
-
+          imp=NULL, rf=imp$rf, type = input$plottype )
       }
 
       PlotModuleServer(

@@ -4,10 +4,10 @@
 MODULE.multiomics <- list(
   module_menu = function() {
     c(
-      mofa = "MOFA",
-      mgsea = "multiGSEA",
       snf = "SNF",
       lasagna = "Lasagna",
+      mgsea = "multiGSEA",
+      mofa = "MOFA",
       deepnet = "DeepLearning"
     )
   },
