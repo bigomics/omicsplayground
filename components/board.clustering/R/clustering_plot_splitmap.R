@@ -226,7 +226,6 @@ clustering_plot_splitmap_server <- function(id,
 
       plt <- NULL
       pd <- plot_data()
-      saveRDS(pd, "~/Desktop/MNT/pd.RDS")
       filt <- pd[["filt"]]
       X <- pd[["zx"]]
       annot <- pd[["annot"]]
