@@ -175,6 +175,7 @@ app_server <- function(input, output, session) {
 
   ## Global reactive value for PGX object
   PGX <- reactiveValues()
+  trigger_on_change_dataset <- reactiveVal()
 
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
@@ -482,6 +483,9 @@ app_server <- function(input, output, session) {
 
           MODULES_LOADED <<- MODULES_ACTIVE
 
+          if (env$load$is_data_loaded() > 0) {
+            trigger_on_change_dataset(runif(1))
+          }
           info("[SERVER] calling modules done!")
         }
       )
@@ -564,7 +568,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      toggleTab("pathway-tabs", "Enrichment Map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
     }
@@ -579,7 +582,6 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      toggleTab("drug-tabs", "Connectivity map (beta)", env$user_settings$enable_beta()) ## too slow
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
     }
@@ -699,6 +701,7 @@ app_server <- function(input, output, session) {
       auth$logged
       env$user_settings$enable_beta()
       PGX$name
+      trigger_on_change_dataset()
     },
     {
       ## trigger on change dataset
