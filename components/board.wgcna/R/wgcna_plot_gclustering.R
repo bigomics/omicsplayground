@@ -37,7 +37,7 @@ wgcna_plot_gclustering_server <- function(id,
     umap.RENDER <- shiny::reactive({
       out <- wgcna.compute()
 
-      method <- "tsne2d"
+      method <- "umap2d"
       method <- input$clust_method
 
       par(mfrow = c(1, 1), mar = c(2, 3, 1, 1))
