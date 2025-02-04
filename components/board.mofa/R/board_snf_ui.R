@@ -49,7 +49,7 @@ SNF_UI <- function(id) {
         "SNF Clustering",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Similarity Network Fusion</b> (SNF) is a network-based method for multi-omics integration by taking multiple views of a network and fusing them together to construct an overall status matrix (Wang et al., 2014).")),
           bslib::layout_columns(
             ##col_widths = c(6,6),

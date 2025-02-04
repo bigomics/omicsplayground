@@ -61,7 +61,7 @@ CorrelationUI <- function(id) {
       "Correlation",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bslib::layout_columns(
           col_widths = 12,
           correlation_plot_barplot_ui(
@@ -107,7 +107,7 @@ CorrelationUI <- function(id) {
       "Graph",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         correlation_plot_cor_graph_ui(
           ns("cor_graph"),
           title = "Partial correlation network",

@@ -38,7 +38,7 @@ LoadingUI <- function(id) {
     "My Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       uiOutput(ns("sharing_alert")),
       div(
         shiny::actionButton(
@@ -84,7 +84,7 @@ LoadingUI <- function(id) {
     "Public Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.", translate = FALSE, html = TRUE),
       bslib::layout_columns(
         col_widths = c(8, 4),
@@ -148,11 +148,11 @@ SharedDatasetsUI <- function(id) {
 
   tab_content <- bslib::layout_columns(
     col_widths = 12,
-    height = "calc(100vh - 180px)",
+    height = "calc(100vh - 181px)",
     bs_alert("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets."),
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       uiOutput(ns("sharing_panel_ui"))
       ##      sharing_tabpanel
     )

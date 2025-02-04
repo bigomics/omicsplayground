@@ -29,7 +29,7 @@ DrugConnectivityInputs <- function(id) {
 DrugConnectivityUI <- function(id) {
   ns <- shiny::NS(id)
 
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
   halfH <- "calc(50vh  - 98px)"
 
   panel1 <- shiny::tabPanel(

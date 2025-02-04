@@ -52,7 +52,7 @@ PathwayUI <- function(id) {
       "WikiPathways",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
@@ -102,7 +102,7 @@ PathwayUI <- function(id) {
       "Reactome",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
@@ -149,7 +149,7 @@ PathwayUI <- function(id) {
       "GO graph",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
@@ -195,7 +195,7 @@ PathwayUI <- function(id) {
       "Enrichment Map (beta)",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         functional_plot_enrichmap_ui(
           id = ns("enrichment_map"),
           title = "Enrichment Map",

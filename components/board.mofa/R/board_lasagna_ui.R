@@ -36,7 +36,7 @@ my_navset_card_tab <- function(...) {
   htmltools::tagAppendAttributes(
     bslib::navset_card_tab(
       ... ,
-      tags$style(HTML("@media (min-width: 1200px) {.root_navset { height: calc(100vh - 48px); }}"))
+      tags$style(HTML("@media (min-width: 1200px) {.root_navset { height: calc(100vh - 36px); }}"))
     ),
     class = "root_navset border-0"
   )
@@ -64,11 +64,11 @@ LasagnaUI <- function(id) {
         "Mult-layer model",
         bslib::layout_columns(
           col_widths = 12,
-#          height = "calc(100vh - 180px)",
+#          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for a <u>L</u>ayered <u>A</u>pproach to <u>S</u>imultaneous <u>A</u>nalysis of <u>G</u>enomic and <u>N</u>etwork <u>A</u>ssociations'.")),
           bslib::layout_columns(
             col_widths = c(6,6),
-            height = "calc(100vh - 180px)",            
+            height = "calc(100vh - 181px)",            
             mofa_plot_lasagna_ui(
               ns("lasagna"),
               title = "Multi-layer model",
@@ -96,7 +96,7 @@ LasagnaUI <- function(id) {
         "Path scoring",
         bslib::layout_columns(
           col_widths = 12,
-          #height = "calc(100vh - 180px)",
+          #height = "calc(100vh - 181px)",
           ## bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for 'a Layered Approach to Simultaneous Analysis of Genomic and Network Associations'.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(

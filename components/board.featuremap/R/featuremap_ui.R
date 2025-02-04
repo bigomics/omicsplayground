@@ -83,7 +83,7 @@ FeatureMapUI <- function(id) {
 
   height1 <- c("60%", "70vh")
   height2 <- c("40%", "70vh")
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),

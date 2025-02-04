@@ -86,7 +86,7 @@ CompareInputs <- function(id) {
 CompareUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
   tabH <- "70vh"
 
   tabs <- shiny::tabsetPanel(

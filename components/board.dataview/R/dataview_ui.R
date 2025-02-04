@@ -65,8 +65,8 @@ DataViewUI <- function(id) {
 
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
-  fullH <- "calc(100vh - 180px)"
-  fullH.css <- "height: calc(100vh - 180px);"
+  fullH <- "calc(100vh - 181px)"
+  fullH.css <- "height: calc(100vh - 181px);"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),

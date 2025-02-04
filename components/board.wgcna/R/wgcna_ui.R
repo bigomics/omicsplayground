@@ -60,7 +60,7 @@ WgcnaUI <- function(id) {
         "WGCNA",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Module detection.</b> <b>(a)</b> Modules are detected using the dynamic branch cutting approach. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Multi-dimensional scaling colored by WGCNA module. <b>(e)</b> Size of WGCNA modules.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -132,11 +132,11 @@ WgcnaUI <- function(id) {
         "Eigengenes",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Eigengene analysis.</b> The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(a)</b> Module-trait correlation identifies modules that are significantly associated with the measured traits. <b>(b)</b> Clustering of eigengenes. <b>(c)</b> Clustering of trait vectors. <b>(d)</b> Correlation of eigengene and traits as heatmap, <b>(e)</b> as dendrogram and <b>(f)</b> as graph.")),
           bslib::layout_columns(
             col_widths = c(4,4,4,4,4,4),
-            height = "calc(100vh - 180px)",
+            height = "calc(100vh - 181px)",
             wgcna_plot_MTrelationships_ui(
               ns("moduleTrait"),
               title = "(a) Module-Trait relationships",
@@ -194,7 +194,7 @@ WgcnaUI <- function(id) {
         "Modules",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. </b> <b>(c)</b> Module membership (MM) as the correlation of the genes with the module eigengene. <b>(d)</b> Module enrichment plot of top most enriched genesets. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
           bslib::layout_columns(
             col_widths = c(4,4,4,6,6),
@@ -254,11 +254,11 @@ WgcnaUI <- function(id) {
         "Gene significance",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Significance analysis.</b> <b>(a)</b> For each gene in a module, we define a quantitative measures of significance such as Module Membership (MM), gene Trait Significance (GS), foldChange and network centrality. <b>(b)</b> By calculating the geometric mean of the significance measures, we can define an importance score and identify 'driver genes' of the module.")),
           bslib::layout_columns(
             col_widths = c(7, 5),
-            height = "calc(100vh - 180px)",
+            height = "calc(100vh - 181px)",
             wgcna_plot_membership_v_trait_ui(
               ns("intraScatter"),
               title = "(a) Gene significance",
