@@ -61,7 +61,7 @@ BiomarkerInputs <- function(id) {
 BiomarkerUI <- function(id) {
   ns <- shiny::NS(id)
 
-  imgH1 <- c("calc(40vh - 120px)", "70vh") ## heights for small and fullscreen image
+  imgH1 <- c("calc(40vh - 125px)", "70vh") ## heights for small and fullscreen image
   imgH2 <- c("calc(60vh - 181px)", "70vh")
   fullH <- "calc(100vh - 200px)"
 
