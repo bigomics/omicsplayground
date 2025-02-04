@@ -6,7 +6,6 @@
 SingleCellInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), br(),
     withTooltip(
       shiny::selectInput(ns("samplefilter"), "Filter samples:",
         choices = NULL, multiple = TRUE

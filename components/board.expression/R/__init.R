@@ -28,15 +28,18 @@ MODULE.expression <- list(
     list(
       bigdash::bigTabItem(
         "diffexpr-tab",
-        ExpressionInputs("diffexpr")
+        ExpressionInputs("diffexpr"),
+        create_loader("diffexpr-loader")
       ),
       bigdash::bigTabItem(
-        "corr-tab", 
-        CorrelationInputs("corr")
+        "corr-tab",
+        CorrelationInputs("corr"),
+        create_loader("corr-loader")
       ),
       bigdash::bigTabItem(
         "bio-tab",
-        BiomarkerInputs("bio")
+        BiomarkerInputs("bio"),
+        create_loader("bio-loader")
       )
     )
   },

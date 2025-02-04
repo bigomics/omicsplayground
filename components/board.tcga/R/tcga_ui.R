@@ -14,8 +14,6 @@ TcgaInputs <- function(id) {
   ns <- NS(id)
 
   bigdash::tabSettings(
-    hr(),
-    br(),
     withTooltip(
       radioButtons(
         ns("sigtype"),
