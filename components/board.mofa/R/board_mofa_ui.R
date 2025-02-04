@@ -140,7 +140,7 @@ MofaUI <- function(id) {
               ),
               mofa_plot_factortrait_ui(
                 ns("factortrait"),
-                title = "MOFA factor-Trait correlation",
+                title = "Factor-Trait correlation",
                 info.text = "Correlation between MOFA factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). The metadata variables shown correspond to those provided in your uploaded samples.csv file. Covariates may include the phenotype(s) of interest. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Each MOFA factor captures a source of variation across the integrated data types. Therefore, the heatmap helps identification of dominant sources of variation in the data -which may be driven by biological processes- associated with a trait or condition.",
                 caption = "Correlation between MOFA factors and traits. Correlation between each MOFA factor (y-axis) and each available variable in your metadata (x-axis). Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -165,7 +165,7 @@ MofaUI <- function(id) {
             ),
             mofa_plot_boxplots_ui(
               ns("boxplots"),
-              title = "MOFA factor scores by response",
+              title = "Factor scores by response",
               info.text = "Distribution of MOFA factors' score per metadata variable. Scores of each selected MOFA factor stratified by a trait/condition/phenotype of interest. The metadata variables shown correspond to those provided in your uploaded samples.csv file. Differences in score distribution between two conditions might suggest distinct sources of variation in each group captured by the selected MOFA factor. In such cases, each group would provide a different contribution to variation in the data captured by the selected MOFA factor.",
               caption = "Distribution of MOFA factors' score per metadata variable.",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -189,7 +189,7 @@ MofaUI <- function(id) {
             ),
             mofa_plot_weights_ui(
               ns("weights"),
-              title = "Factor weights",
+              title = "Factor weights (aka loadings)",
               info.text = "",
               caption = "Module-trait analysis identifies modules that are significantly associated with the measured traits by quantifying the association as the correlation of the eigengenes with external traits.",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -290,10 +290,10 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Geneset MOFA.</b> In principle, MOFA can also be performed on gene sets computed in each single sample. Each gene set aggregates features potentially sharing similar functions. In that case, each MOFA factor would capture a source of heterogeneity in the data accounted by a gene set module. The resulting gene set module factors can be correlated with phenotypes/traits/conditions. This analysis may inform on 'genesets modules' (GM) correlated the modules with traits. The GenesetModule-Factor correlation shows how modules correlate with (gene) factors.")),
+          bs_alert(HTML("<b>Geneset MOFA.</b> MOFA can also be performed on gene sets computed in each single sample. The resulting gene set factors (here called 'modules') can be correlated with phenotypes/traits/conditions. This analysis may inform on 'genesets modules' (GM) correlated the modules with traits. The Module-Factor correlation shows how geneset modules correlate with gene factors.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
-              lg = c(6, 6, 8, 4),
+              lg = c(6, 6, 7, 5),
               sm = c(12, 12, 12, 12)
             ),
             mofa_plot_gsetmofa_traitCor_ui(
