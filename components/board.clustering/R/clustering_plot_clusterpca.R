@@ -110,8 +110,8 @@ clustering_plot_clustpca_server <- function(id,
       }
 
       ann.text <- rep(" ", nrow(df))
-      
-      label.samples <- (label == "<b>Sample</b>")
+
+      label.samples <- (label == "sample")
 
       if (!do3d && label.samples) ann.text <- rownames(df)
       if (!is.null(colvar)) {

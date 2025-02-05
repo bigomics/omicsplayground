@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:master
+FROM bigomics/omicsplayground:latest
 
 ARG BRANCH=master
 ARG update_playdata=false
@@ -34,6 +34,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #------------------------------------------------------------
 RUN quarto install tinytex
 RUN R -e "install.packages('shinyFiles')"
+RUN R -e "install.packages('torch')"
 
 #------------------------------------------------------------
 # Add supporting R libraries

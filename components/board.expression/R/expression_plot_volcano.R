@@ -205,7 +205,7 @@ expression_plot_volcano_server <- function(id,
       dt <- plot_data()
       df <- data.frame(dt$x, dt$y)
       colnames(df) <- c("x", "y")
-      rownames(df) <- dt$symbols
+      rownames(df) <- make.unique(dt$symbols)
       return(df)
     }
 

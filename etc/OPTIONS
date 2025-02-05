@@ -1,5 +1,5 @@
 TITLE                = 'Omics Playground'
-AUTHENTICATION       = endpoint
+AUTHENTICATION       = none
 #AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
@@ -19,8 +19,6 @@ ENABLE_USER_LOCK     = TRUE
 ENABLE_HEARTBEAT     = TRUE 
 ENABLE_INACTIVITY    = TRUE
 ENABLE_ANNOT         = FALSE
-UPLOAD_BROWSER       = TRUE
-UPLOAD_ROOT          = "/workspace/data"
 MAX_DATASETS         = 100
 MAX_SAMPLES          = 1000
 MAX_COMPARISONS      = 20
@@ -33,7 +31,6 @@ WATERMARK            = TRUE
 APACHE_COOKIE_PATH   = /app/omicsplayground/
 DEVMODE              = FALSE
 HUBSPOT_CHECK        = TRUE
-AUTH_ENDPOINT        = "auth-endpoint.bigomics.ch"
 
 #BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
 #BOARDS_ENABLED = welcome;load;upload;cmap

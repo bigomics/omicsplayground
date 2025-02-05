@@ -89,6 +89,22 @@ read_user_options_db <- function(email, user_database = NULL, options_list = NUL
   new_opt
 }
 
+read_user_field_db <- function(email, user_database, field) {
+  connection <- connect_db(user_database)
+  user_config <- query_by_email(email, connection)
+  disconnect_db(connection)
+  if (!is.null(user_config)) {
+    ## restrict user options only to these options.
+    ALLOWED_USER_OPTS <- field
+    dbg("[read_user_field] 1 : user: ", email, " ; field: ", field)
+    user_config <- user_config[which(names(user_config) %in% ALLOWED_USER_OPTS)]
+  }
+  if (nrow(user_config) == 0) {
+    return("")
+  }
+  user_config |> as.character()
+}
+
 upgrade.dialog <- function(ns, current.plan) {
   btn_basic <- "Go Basic!"
   btn_starter <- "Get Starter!"
