@@ -157,7 +157,7 @@ upload_table_preview_samples_server <- function(
         }
       )
     })
-    shinyFiles::shinyFileChoose(input, 'samples_csv', root=c(root=fileBrowserRoot), filetypes=c('RData', 'csv'))
+    shinyFiles::shinyFileChoose(input, "samples_csv", root = c(root = fileBrowserRoot), filetypes = c("RData", "csv"))
 
 
     output$error_summary <- renderUI({
@@ -265,9 +265,11 @@ upload_table_preview_samples_server <- function(
 
     ## pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
-      shiny::req("list" %in% class(input$samples_csv))
+      if (fileBrowser) {
+        shiny::req("list" %in% class(input$samples_csv))
+      }
       if (!is.null(input$samples_csv$files)) {
-        name <- tail(input$samples_csv$files[[1]],1)[[1]]
+        name <- tail(input$samples_csv$files[[1]], 1)[[1]]
         datapath <- paste0(fileBrowserRoot, paste(input$samples_csv$files[[1]], collapse = "/"))
       } else {
         name <- input$samples_csv$name

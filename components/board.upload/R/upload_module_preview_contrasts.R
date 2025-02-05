@@ -246,7 +246,7 @@ upload_table_preview_contrasts_server <- function(
       )
       # }
     })
-    shinyFiles::shinyFileChoose(input, 'contrasts_csv', root=c(root=fileBrowserRoot), filetypes=c('csv'))
+    shinyFiles::shinyFileChoose(input, "contrasts_csv", root = c(root = fileBrowserRoot), filetypes = c("csv"))
 
     output$contrasts_stats <- renderPlot({
       ct <- uploaded$contrasts.csv
@@ -315,9 +315,11 @@ upload_table_preview_contrasts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$contrasts_csv, {
-      shiny::req("list" %in% class(input$contrasts_csv))
+      if (fileBrowser) {
+        shiny::req("list" %in% class(input$contrasts_csv))
+      }
       if (!is.null(input$contrasts_csv$files)) {
-        name <- tail(input$contrasts_csv$files[[1]],1)[[1]]
+        name <- tail(input$contrasts_csv$files[[1]], 1)[[1]]
         datapath <- paste0(fileBrowserRoot, paste(input$contrasts_csv$files[[1]], collapse = "/"))
       } else {
         name <- input$contrasts_csv$name

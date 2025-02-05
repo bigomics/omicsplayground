@@ -171,7 +171,7 @@ upload_table_preview_counts_server <- function(
         } ## end of if-else
       ) ## end of div
     })
-    shinyFiles::shinyFileChoose(input, 'counts_csv', root=c(root=fileBrowserRoot), filetypes=c('RData', 'csv'))
+    shinyFiles::shinyFileChoose(input, "counts_csv", root = c(root = fileBrowserRoot), filetypes = c("RData", "csv"))
 
     output$error_summary <- renderUI({
       div(
@@ -236,9 +236,11 @@ upload_table_preview_counts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-      shiny::req("list" %in% class(input$counts_csv))
+      if (fileBrowser) {
+        shiny::req("list" %in% class(input$counts_csv))
+      }
       if (!is.null(input$counts_csv$files)) {
-        name <- tail(input$counts_csv$files[[1]],1)[[1]]
+        name <- tail(input$counts_csv$files[[1]], 1)[[1]]
         datapath <- paste0(fileBrowserRoot, paste(input$counts_csv$files[[1]], collapse = "/"))
       } else {
         name <- input$counts_csv$name
