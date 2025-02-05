@@ -133,18 +133,16 @@ upload_table_preview_samples_server <- function(
                 label = "",
                 show.maximize = FALSE
               ),
-              bslib::card(
-                bslib::navset_pill(
-                  bslib::nav_panel(
-                    title = "UMAP",
-                    br(),
-                    plotOutput(ns("umap"), height = "500px")
-                  ),
-                  bslib::nav_panel(
-                    title = "Distribution",
-                    br(),
-                    plotOutput(ns("phenotype_stats"), height = "500px")
-                  )
+              bslib::navset_card_pill(
+                bslib::nav_panel(
+                  title = "UMAP",
+                  br(),
+                  plotOutput(ns("umap"))
+                ),
+                bslib::nav_panel(
+                  title = "Distribution",
+                  br(),
+                  plotOutput(ns("phenotype_stats"))
                 )
               )
             ),

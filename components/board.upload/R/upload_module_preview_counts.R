@@ -147,18 +147,16 @@ upload_table_preview_counts_server <- function(
                 show.maximize = FALSE,
                 translate_js = FALSE
               ),
-              bslib::card(
-                bslib::navset_pill(
-                  bslib::nav_panel(
-                    title = "Histogram",
-                    br(),
-                    plotOutput(ns("histogram"), height = "500px")
-                  ),
-                  bslib::nav_panel(
-                    title = "Box plots",
-                    br(),
-                    plotOutput(ns("boxplots"), height = "500px")
-                  )
+              bslib::navset_card_pill(
+                bslib::nav_panel(
+                  title = "Histogram",
+                  br(),
+                  plotOutput(ns("histogram"))
+                ),
+                bslib::nav_panel(
+                  title = "Box plots",
+                  br(),
+                  plotOutput(ns("boxplots"))
                 )
               )
             ),
