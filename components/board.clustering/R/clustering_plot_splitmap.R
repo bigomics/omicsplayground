@@ -167,8 +167,7 @@ clustering_plot_splitmap_server <- function(id,
       rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
       if (hm_level() == "gene") {
         ## strip any prefix
-        rownames(zx) <- sub(".*:", "", rownames(zx))
-
+        ##rownames(zx) <- sub(".*:", "", rownames(zx))
         rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
       }
 

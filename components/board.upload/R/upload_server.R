@@ -39,7 +39,7 @@ UploadBoard <- function(id,
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes,
                                                   annot.cols) {
       future_promise({
-        detected <- playbase::detect_species_probetype(
+        detected <- playbase::check_species_probetype(
           probes = probes,
           datatype = datatype,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
@@ -1010,9 +1010,35 @@ UploadBoard <- function(id,
       {
         shiny::req(uploaded$counts.csv, upload_organism())
         probes <- rownames(uploaded$counts.csv)
+        annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
 
+        if(0) {
+          dbg("[*** testing check probes ***]")
+
+          dbg("[UploadServer:uploaded.counts] head.probes = ", head(probes))
+          dbg("[UploadServer:uploaded.counts] upload.organism = ", upload_organism())
+          dbg("[UploadServer:uploaded.counts] upload.datatype = ", upload_datatype())
+          dbg("[UploadServer:uploaded.counts] dim.annot = ", dim(annot))
+          dbg("[UploadServer:uploaded.counts] annot.cols = ", annot.cols)
+          dbg("[UploadServer:uploaded.counts] probetype = ", probetype())
+          
+          organism = upload_organism()
+          datatype = upload_datatype()
+          res <- playbase::check_species_probetype(
+            probes = probes,
+            datatype = datatype,
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols
+          )
+          dbg("[*** testing check probes ***] names.res = ", names(res))
+          if(length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
+          
+        }
+
+
+        
         checkprobes_task$invoke(
           organism = upload_organism(),
           datatype = upload_datatype(),
@@ -1026,7 +1052,7 @@ UploadBoard <- function(id,
       checkprobes_task$status(),
       {
         dbg(
-          "[UploadServer:observeEvent:checkprobes_task$result] task status = ",
+          "[UploadServer:observeEvent:checkprobes_task] task status = ",
           checkprobes_task$status()
         )
         if (checkprobes_task$status() == "error") {
@@ -1034,11 +1060,17 @@ UploadBoard <- function(id,
           return(NULL)
         }
         if (checkprobes_task$status() != "success") {
+          probetype("running")
           return(NULL)
         }
 
         ## inspect ExtendedTask results
         detected <- checkprobes_task$result()
+
+        dbg("[upload_server::checkprobes_task] len.detected = ", length(detected))
+        dbg("[upload_server::checkprobes_task] names.detected = ", names(detected))
+        ##dbg("[upload_server::checkprobes_task] detected[[1]] = ", detected[[1]])
+
         organism <- upload_organism()
         alt.text <- ""
         
