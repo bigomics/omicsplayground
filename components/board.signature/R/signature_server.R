@@ -187,7 +187,7 @@ SignatureBoard <- function(id, pgx,
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         ## take top 100 features
         top.genes <- fx[order(-abs(fx))]
-        top.genes <- head(top.genes, 100)
+        top.genes <- head(top.genes, min(100, length(fx) / 4))
         features <- names(top.genes)
       } else if (input$type %in% c("hallmark", "KEGG", "geneset") &&
         input$feature[1] %in% colnames(pgx$GMT)) {
@@ -318,18 +318,43 @@ SignatureBoard <- function(id, pgx,
       ii <- setdiff(match(genes, colnames(G)), NA)
 
       N <- cbind(
-        k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
-        k2 = Matrix::rowSums(G[, ii, drop = FALSE] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(G != 0),
+        n1 = ncol(G),
+        k2 = Matrix::rowSums(G[, ii, drop = FALSE] != 0),
+        n2 = length(ii)
       )
       rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
 
       ## WOW THIS IS FAST!!!!!!!
-      pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
-      names(pv) <- rownames(N)
-      pv <- pv[match(names(odds.ratio), names(pv))]
-      qv <- p.adjust(pv, method = "bonferroni")
+      ## pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
+      pv <- try(
+        corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE),
+        silent = TRUE
+      )
+      if (class(pv) != "try-error") {
+        names(pv) <- rownames(N)
+        pv <- pv[match(names(odds.ratio), names(pv))]
+        qv <- p.adjust(pv, method = "bonferroni")
+      } else {
+        message("[signature_server] corpora::fisher.pval failed. Using standard fisher.")
+        pv <- c(rep(NA, nrow(N)))
+        i <- 1
+        for (i in 1:nrow(N)) {
+          tt <- matrix(NA, nrow = 2, ncol = 2)
+          tt[1, 1] <- N[i, 1]
+          tt[1, 2] <- N[i, 2] - N[i, 1]
+          tt[2, 1] <- N[i, 3]
+          tt[2, 2] <- N[i, 4] - N[i, 3]
+          ## pv[i] <- stats::fisher.test(tt, alternative = "greater")$p.value ## ??
+          pv[i] <- stats::fisher.test(tt)$p.value
+        }
+        names(pv) <- rownames(N)
+        pv <- pv[match(names(odds.ratio), names(pv))]
+        qv <- p.adjust(pv, method = "bonferroni")
+      }
+
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
 
       ## get shared genes
@@ -350,7 +375,14 @@ SignatureBoard <- function(id, pgx,
 
       gset <- names(y)[which(y != 0)]
       G1 <- G[aa, which(y != 0), drop = FALSE]
+
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
+
+      shiny::validate(shiny::need(
+        length(commongenes) > 0,
+        "No results. Perhaps you need to try on a bigger datasets with more features."
+      ))
+
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
         gg <- gg[order(-abs(fx[gg]))]

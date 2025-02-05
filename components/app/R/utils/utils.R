@@ -108,7 +108,7 @@ tipifyB <- function(...) {
 ## }
 
 tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
-  has.slot <- (slot %in% names(pgx))
+  has.slot <- (slot %in% names(pgx)) && !is.null(pgx[[slot]])
   if (has.slot && enable) {
     bigdash.showTab(session, tabname)
   } else {

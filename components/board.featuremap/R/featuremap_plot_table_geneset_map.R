@@ -33,8 +33,7 @@ featuremap_plot_geneset_map_ui <- function(
     ns("gset_map"),
     title = title,
     label = "a",
-    plotlib = "plotly",
-    plotlib2 = "plotly",
+    plotlib = c("plotly", "ggplot"),
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -43,7 +42,9 @@ featuremap_plot_geneset_map_ui <- function(
     options = plot.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf"),
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
@@ -133,7 +134,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
       )
     })
 
-    render_gsetUMAP <- function(cex = 1, cex.label = 1) {
+    render_gsetUMAP <- function(cex = 1, cex.label = 1, plotlib = "plotly") {
       pd <- plot_data()
       pos <- pd$pos
       fc <- pd$fc
@@ -145,23 +146,43 @@ featuremap_plot_table_geneset_map_server <- function(id,
         fc[!names(fc) %in% hilight] <- NA
       }
 
-      ## filter on table
-      p <- plotUMAP(
-        pos,
-        fc,
-        hilight,
-        nlabel = nlabel,
-        title = "rms.FC",
-        cex = cex,
-        cex.label = cex.label,
-        source = ns("geneset_umap"),
-        plotlib = "plotly"
-      ) %>%
-        plotly::layout(
-          dragmode = "select",
-          margin = list(l = 5, r = 5, b = 5, t = 20)
+      if (plotlib == "plotly") {
+        p <- plotUMAP(
+          pos,
+          fc,
+          hilight,
+          nlabel = nlabel,
+          title = "rms.FC",
+          xlab = "UMAP-x",
+          ylab = "UMAP-y",
+          cex = cex,
+          cex.label = cex.label,
+          source = ns("geneset_umap"),
+          plotlib = "plotly"
+        ) %>%
+          plotly::layout(
+            dragmode = "select",
+            margin = list(l = 5, r = 5, b = 5, t = 20)
+          )
+        p
+      } else if (plotlib == "ggplot") {
+        p <- plotUMAP(
+          pos,
+          fc,
+          hilight,
+          nlabel = nlabel,
+          xlab = "UMAP-x",
+          ylab = "UMAP-y",
+          theme = ggplot2::theme_minimal(),
+          cex = cex * 0.6,
+          cex.label = cex.label * 0.6,
+          cex.axis = cex.label * 0.6,
+          bgcolor = "white",
+          gridcolor = "grey90",
+          plotlib = "ggplot"
         )
-      p
+        p
+      }
     }
 
     gsetUMAP.RENDER <- function() {
@@ -182,16 +203,34 @@ featuremap_plot_table_geneset_map_server <- function(id,
       p
     }
 
-    plotmodule <- PlotModuleServer(
-      "gset_map",
-      plotlib = "plotly",
-      plotlib2 = "plotly",
-      func = gsetUMAP.RENDER,
-      func2 = gsetUMAP.RENDER2,
-      csvFunc = plot_data,
-      pdf.width = 5, pdf.height = 5,
-      add.watermark = watermark
+    gsetUMAP.RENDER_ggplot <- function() {
+      p <- render_gsetUMAP(cex = 1, cex.label = 1, plotlib = "ggplot")
+      p
+    }
+
+    gsetUMAP.RENDER2_ggplot <- function() {
+      p <- render_gsetUMAP(cex = 1.5, cex.label = 1.5, plotlib = "ggplot")
+      p
+    }
+
+    plot_grid <- list(
+      list(plotlib = "plotly", func = gsetUMAP.RENDER, func2 = gsetUMAP.RENDER2, card = 1),
+      list(plotlib = "ggplot", func = gsetUMAP.RENDER_ggplot, func2 = gsetUMAP.RENDER2_ggplot, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "gset_map",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        csvFunc = plot_data,
+        pdf.width = 5,
+        pdf.height = 5,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
 
     table_data <- shiny::reactive({
       shiny::req(pgx$X)
@@ -301,13 +340,6 @@ featuremap_plot_table_geneset_map_server <- function(id,
       func2 = gsetTable.RENDER_modal,
       csvFunc = table_data_csv,
       selector = "none"
-    )
-
-
-    ## combined module return value for any downstream connections
-    list(
-      plotmodule = plotmodule,
-      tablemodule = tablemodule
     )
   })
 }

@@ -287,7 +287,22 @@ upload_table_preview_samples_server <- function(
         overwrite = TRUE
       )
 
-      uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
+      df <- tryCatch(
+        {
+          playbase::read.as_matrix(input$samples_csv$datapath)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
+      if (is.null(df)) {
+        data_error_modal(
+          path = input$samples_csv$datapath,
+          data_type = "samples"
+        )
+      } else {
+        uploaded$samples.csv <- df
+      }
     })
 
     observeEvent(input$remove_samples, {

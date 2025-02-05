@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:master
+FROM bigomics/omicsplayground:latest
 
 ARG BRANCH=master
 ARG update_playdata=false
@@ -27,6 +27,11 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra Ubuntu libs (should be moved to playbase)
 #------------------------------------------------------------
 # RUN apt update && apt install -y fonts-lato
+
+#------------------------------------------------------------
+# Install quarto tinytext, to be removed when new image is built
+#------------------------------------------------------------
+RUN R -e "install.packages('torch')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
