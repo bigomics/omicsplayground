@@ -60,17 +60,11 @@ mofa_plot_pathbank_server <- function(id,
 
         # Get pathway image using WPID and fc values
         wp.name <- sel_pathway()
-        dbg("[mofa_plot_pathbank_server] selected wp.name = ", wp.name )
         if(length(wp.name)==0 || length(wp.name) > 1) return(NULL)
         
         ##wp.name = "TF_ARCHS4:NCOA3 human tf ARCHS4 coexpression [SMP0080852]"
         wp <- stringr::str_match(wp.name, "SMP[0-9]+|WP[0-9]+|R-HSA-[0-9]+")[,1]
         shiny::validate( shiny::need(!is.na(wp), "pathway diagram not available"))
-
-        dbg("[mofa_plot_pathbank_server:getPathwayImage] wp.name =",wp.name)       
-        dbg("[mofa_plot_pathbank_server:getPathwayImage] wp =",wp)       
-        
-        
 
         if(length(wp)>1) wp <- wp[1]
 

@@ -31,7 +31,7 @@ DeepNetInputs <- function(id) {
           shiny::selectInput(ns("layers"), "Layers:", choices = c("mini","medium","deep"),
                            selected="mini"),
           shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
-          shiny::checkboxInput(ns("augment"), "augment data (10x)", FALSE),
+          shiny::checkboxInput(ns("augment"), "augment data (10x)", TRUE),
           # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),
           # shiny::checkboxInput(ns("sdweight"), "gradient SD weight", TRUE),
           # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        

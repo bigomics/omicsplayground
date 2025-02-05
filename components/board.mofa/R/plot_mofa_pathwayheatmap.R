@@ -35,10 +35,11 @@ mofa_plot_pathwayheatmap_ui <- function(
 }
 
 mofa_plot_pathwayheatmap_server <- function(id,
-                                           mofa,
-                                           input_factor = reactive(1),
-                                           selected = reactive(1),
-                                           watermark = FALSE) {
+                                            mofa,
+                                            pgx,
+                                            input_factor = reactive(1),
+                                            selected = reactive(1),
+                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     plot.RENDER <- function(show_legend=FALSE) {
@@ -49,13 +50,22 @@ mofa_plot_pathwayheatmap_server <- function(id,
 
       pw <- selected()
       shiny::validate(need(length(pw)==1, "Please select a pathway"))
+
+      features <- NULL
+      if(pw %in% colnames(pgx$GMT)) {
+        genes <- names(which(pgx$GMT[,pw]!=0))
+        genes <- playbase::mofa.strip_prefix(genes) 
+        features <- playbase::map_probes(pgx$genes, genes)
+      }
       
       playbase::mofa.plot_heatmap(
-        mofa, k=k, ## main=k,
-        ##features = features,
-        pathway = pw,        
+        mofa,
+        gene_table = pgx$genes,
+        k=k, ## main=k,
+        features = features,
         ntop = 40,
-        split = input$split,
+        # split = input$split,
+        split = FALSE,
         type = "splitmap",
         annot = "pheno",
         maxchar = 40,
