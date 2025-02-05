@@ -11,6 +11,11 @@ html {
     .caption:hover {
         overflow: auto;
     }
+
+    .card-header {
+        border-bottom: 0px !important;
+        height: 33px;
+    }
     
     .card-footer {
         background-color: #F7FAFD;
