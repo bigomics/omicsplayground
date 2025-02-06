@@ -25,12 +25,14 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
+    my_observers <- list()
+    
     infotext <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -38,8 +40,16 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
         easyClose = TRUE
       ))
     })
-    
-    
+
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
+            
+    ## =====================================================================
+    ## ===================== REACTIVES =====================================
+    ## =====================================================================
+
     mofa <- shiny::eventReactive( pgx$mofa, {
 
       has.mofa <- "mofa" %in% names(pgx) && !is.null(pgx$mofa)
@@ -53,14 +63,6 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
       return( pgx$mofa )
     })
 
-    
-    ## =====================================================================
-    ## ======================= PLOTTING FUNCTIONS ==========================
-    ## =====================================================================
-
-    ## =====================================================================
-    ## ===================== MODULES =======================================
-    ## =====================================================================
 
     mgsea_table_selected <- reactive({
 
@@ -80,6 +82,10 @@ MGseaBoard <- function(id, pgx, board_observers = NULL) {
       }
       sel
     })
+
+    ## =====================================================================
+    ## ======================= MODULES =====================================
+    ## =====================================================================
     
     mgsea_plot_enrichment_server(
       "menrichment",

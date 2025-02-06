@@ -311,14 +311,14 @@ MofaUI <- function(id) {
             ),
             mofa_table_gsetmofa_ui(
               ns("gsetmofa_module"),
-              title = "Module geneset table",
+              title = "Genesets in module",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),                          
             mofa_table_gsetmofa_factor_ui(
               ns("gsetmofa_factor"),
-              title = "Factor gene table",
+              title = "Features in factor",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

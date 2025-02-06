@@ -287,6 +287,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_pathwayheatmap_server(
       "pathwayheatmap",
       mofa = mofa,
+      pgx = pgx,
       input_factor = reactive(NULL),            
       selected = enrichmentTable_selected,
       watermark = WATERMARK

@@ -47,7 +47,7 @@ mofa_table_enrichmentgenes_server <- function(id,
       
       pp <- intersect(pp, rownames(W))
       ww <- sort( W[pp,k], decreasing = TRUE )
-      aa <- pgx$genes[pp,c("feature","gene_title")]
+      aa <- pgx$genes[pp,c("symbol","gene_title")]
       df <- data.frame( aa, weight=ww, check.names=FALSE )
       numeric.cols <- grep("score|weight|centrality",colnames(df))
       

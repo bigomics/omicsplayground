@@ -138,24 +138,21 @@ DeepNetUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>Gradient vs foldchange. </b>. This board compares input gradients of the network (i.e. change of prediction with respect to inputs) with the log-foldchange. Good biomarkers should have high foldchange and large input gradient.")),
           bslib::layout_columns(
-            col_widths = c(7,5),
+            col_widths = c(6,6,12),
             height = "calc(100vh - 180px)",            
-            bslib::layout_columns(
-              col_widths = c(12,12),
-              plot_deepnet_gradients_ui(
-                ns("deepnet_gradients"),
-                title = "Network gradients",
-                info.text = "SNF affinity matrices",
-                caption = ""
-              ),
-              plot_deepnet_gradients_ui(
-                ns("deepnet_fcvsgrad"),
-                title = "Gradient vs. foldchange",
-                info.text = "Foldchange vs. gradient",
-                caption = "",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              )
+            plot_deepnet_gradients_ui(
+              ns("deepnet_gradients"),
+              title = "Network gradients",
+              info.text = "SNF affinity matrices",
+              caption = ""
+            ),
+            plot_deepnet_gradients_ui(
+              ns("deepnet_fcvsgrad"),
+              title = "Gradient vs. foldchange",
+              info.text = "Foldchange vs. gradient",
+              caption = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             ),
             table_deepnet_gradients_ui(
               ns("deepnet_table"),
@@ -167,7 +164,28 @@ DeepNetUI <- function(id) {
             )
           )
         )
+      ),  ## end of tabPanel
+
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "Biomarker heatmap",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("<b>Biomarker heatmap.</b>.")),
+          bslib::layout_columns(
+            col_widths = c(12),
+            height = "calc(100vh - 180px)",            
+            plot_deepnet_biomarkerheatmap_ui(
+              ns("deepnet_bigheatmap"),
+              title = "Biomarker heatmap",
+              info.text = "",
+              caption = ""
+            )              
+          )
+        )
       )  ## end of tabPanel
+      
       
     )
   )

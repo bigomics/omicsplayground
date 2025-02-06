@@ -18,37 +18,46 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
 <li>Zhang, B. and Horvath, S., 2005. A general framework for weighted gene co-expression network analysis. Statistical applications in genetics and molecular biology, 4(1).
 </ol>", js = FALSE)
 
-    # Observe tabPanel change to update Settings visibility
-    tab_elements <- list(
-      "Model training" = list(disable = c("show_conditions","show_datatypes")),
-      "Gradient vs. foldchange" = list(disable = NULL)
-    )
-    shiny::observeEvent(input$tabs, {
-      bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+
+    ## update network diagram if model changes and reset
+    update <- reactiveVal(0)
+    update_diagram <- reactiveVal("abc")
 
     
     ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
+    ## ============================ OBSERVERS =========================================
     ## ================================================================================
+    
+    
+    my_observers <- list()
+    
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Model training" = list(disable = c("show_conditions","show_datatypes")),
+      "Gradient vs. foldchange" = list(disable = NULL),
+      "Biomarker heatmap" = list(disable = "show_conditions")
+    )
 
-    infotext <-
+    my_observers[[1]] <- shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
+    infotext2 <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    my_observers[[2]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
-        shiny::HTML(infotext),
+        shiny::HTML(infotext2),
         size = "xl",
         easyClose = TRUE
       ))
     })
 
-    update <- reactiveVal(0)
     
-    shiny::observeEvent(
+    my_observers[[3]] <-  shiny::observeEvent(
       #list(pgx$samples, pgx$multitarget)
       list(pgx$samples)
      , {
@@ -60,7 +69,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
     
     
-    shiny::observeEvent( input$selected_pheno, {
+    my_observers[[4]] <- shiny::observeEvent( input$selected_pheno, {
       shiny::req(input$selected_pheno)
       conditions <- sort(unique(pgx$samples[, input$selected_pheno]))
       shiny::updateSelectInput(session, "show_conditions", choices = conditions,
@@ -68,7 +77,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
     
     warned <- TRUE
-    observeEvent( input$step, {
+    my_observers[[5]] <- observeEvent( input$step, {
       optim <- "adam"
       #optim <- input$optim
       net()$fit( niter=1, optim=optim)
@@ -76,7 +85,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       update( update() + 1)
     })
     
-    observeEvent( input$step20, {
+    my_observers[[6]] <- observeEvent( input$step20, {
       pgx.showSmallModal(paste("Fitting model 20 steps... please wait"))
       optim <- "adam"
       #optim <- input$optim
@@ -85,8 +94,8 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       warned <<- FALSE
       update( update() + 1)
     })
-
-    observeEvent( input$step100, {
+    
+    my_observers[[7]] <- observeEvent( input$step100, {
       pgx.showSmallModal(paste("Fitting model 100 steps... please wait"))
       optim <- "adam"
       #optim <- input$optim
@@ -96,7 +105,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       update( update() + 1)
     })
 
-    observeEvent({
+    my_observers[[8]] <- observeEvent({
       list( 
         input$latent_dim,
         input$actfun,
@@ -110,9 +119,9 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       }
     })
 
-
-    shiny::observeEvent({
-      list( pgx$X, input$addgsets)
+    
+    my_observers[[9]] <- shiny::observeEvent({
+      list(pgx$X, input$addgsets)
     },{
       shiny::req(pgx$X)
       shiny::req(!is.null(input$addgsets) && length(input$addgsets))
@@ -130,11 +139,14 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
                                selected = sel.datatype[1] )
 
-      update_diagram <- reactiveVal("abc")
+      ## update??
+      ##update_diagram("abc")
     })
 
-    ## update network diagram if model changes and reset
-    update_diagram <- reactiveVal("abc")
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
     ## ================================================================================
     ## ========================== BOARD FUNCTIONS =====================================
@@ -165,6 +177,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         info("[DeepNetBoard] adding genesets ")
         gsetx <- pgx$gsetX[,ii]
         xx <- c( xx, list(gset=gsetx))
+        update_diagram("abc")        
       }
       
       if(input$augment) {
@@ -207,7 +220,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         ntop = 1000,
         loss_weights = loss_weights,
         #dropout = as.numeric(0.10 * input$dropout),
-        add_noise = as.numeric(0.20 * input$addnoise),
+        add_noise = as.numeric(1.2 * input$addnoise),
         #actfun = input$actfun,
         actfun = "leaky",        
         use_glu = 2*input$useGLU,  ## GLU mode
@@ -331,9 +344,26 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     plot_deepnet_biomarkerheatmap_server(
       "deepnet_biomarkerheatmap",
       net = net,
-      pgx = pgx,      
+      pgx = pgx,
+      ntop = c(20,32),
+      rmar = c(0,40),
+      show_legend = c(0,1),
+      add_annot = c(0,1),
       update = update,
-      pheno = reactive(input$selecte_pheno),
+      watermark = WATERMARK
+    )
+
+    plot_deepnet_biomarkerheatmap_server(
+      "deepnet_bigheatmap",
+      net = net,
+      pgx = pgx,
+      ntop = c(40,40),      
+      plot.res = c(110, 110),
+      add_annot = c(1,1),
+      show_legend = c(1,1),
+      rmar = c(40,40),
+      update = update,
+      datatypes = reactive(input$show_datatypes),      
       watermark = WATERMARK
     )
     

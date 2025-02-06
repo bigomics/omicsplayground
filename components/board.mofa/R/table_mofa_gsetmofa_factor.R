@@ -53,14 +53,15 @@ mofa_table_gsetmofa_factor_server <- function(id,
       pp <- intersect(pp, rownames(mofa$W))
       
       w <- mofa$W[pp,k]
-      g <- playbase::probe2symbol(pp, pgx$genes, "symbol")
+      s <- playbase::probe2symbol(pp, pgx$genes, "symbol")
       f <- playbase::probe2symbol(pp, pgx$genes, "feature")
       tt <- playbase::probe2symbol(pp, pgx$genes, "gene_title")            
       tt <- stringr::str_trunc(tt,40)
       Y <- mofa$Y[,ph]
       rho <- cor(t(mofa$X[pp,,drop=FALSE]), Y)[,1]
       
-      df <- data.frame( factor=k, feature=f, title=tt, weight=w, rho=rho, check.names=FALSE)
+      df <- data.frame( factor=k, symbol=s, title=tt, weight=w,
+                       rho=rho, check.names=FALSE)
       df <- df[order(-df$w),,drop=FALSE]
       numeric.cols <- grep("score|weight|rho",colnames(df))
       
