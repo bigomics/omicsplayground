@@ -32,13 +32,13 @@ DeepNetInputs <- function(id) {
                            selected="mini"),
           shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
           shiny::checkboxInput(ns("augment"), "augment data (10x)", TRUE),
+          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),
           # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),
           # shiny::checkboxInput(ns("sdweight"), "gradient SD weight", TRUE),
           # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
           #shiny::checkboxInput(ns("dropout"), "use dropout", FALSE),
-          shiny::checkboxInput(ns("addnoise"), "add internal noise", TRUE),
-          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE),
-          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE)
+          shiny::checkboxInput(ns("addnoise"), "add noise", TRUE),
+          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE)
           #shiny::checkboxInput(ns("multitarget"), "multi target", FALSE)        
           #shiny::selectInput(ns("optim"), "Optimizer",
           #  choices = c("adam","adamw","sgd","lbfgs"), selected="adam"),
