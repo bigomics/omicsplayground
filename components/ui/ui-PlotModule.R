@@ -187,11 +187,11 @@ PlotModuleUI <- function(id,
       # shiny::conditionalPanel(
       #   condition = "input.downloadOption == 'pdf'",
       #   ns = ns,
-        shiny::checkboxInput(
-          inputId = ns("get_pdf_settings"),
-          label = "Include plot settings (PDF)",
-          TRUE
-        ),
+      shiny::checkboxInput(
+        inputId = ns("get_pdf_settings"),
+        label = "Include plot settings (PDF)",
+        TRUE
+      ),
       # ),
       download_buttons
     ),

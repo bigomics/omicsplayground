@@ -190,7 +190,7 @@ DataViewUI <- function(id) {
                 ns("correlationplot"),
                 label = "d",
                 title = "Top correlated genes",
-                info = info,
+                info = DATAVIEW_CORRELATION_INFO,
 #                info.text = DATAVIEW_CORRELATION_INFO$description,
 #                info.methods = "Correlation between selected gene and top positively and negatively correlated genes performed using Pearson correlation method from the R core stats package.",
 #                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
