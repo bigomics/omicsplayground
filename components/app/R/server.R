@@ -586,7 +586,7 @@ app_server <- function(input, output, session) {
       loaded$systems <- 1
     }
     if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
-      info("[UI:SERVER] reacted: calling Systems module")
+      info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL)

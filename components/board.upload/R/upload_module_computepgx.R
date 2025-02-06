@@ -98,8 +98,7 @@ upload_module_computepgx_server <- function(
           mm <- c("fisher", "fgsea", "spearman", "camera")
         } else {
           mm <- c(
-            "fisher", "ssgsea", "gsva", "spearman", "camera",
-            "fry", "plage","enricher", "fgsea")
+            "fisher", "ssgsea", "gsva", "spearman", "camera","fry", "fgsea")
         }
         return(mm)
       }

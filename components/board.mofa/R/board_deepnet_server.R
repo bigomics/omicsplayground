@@ -229,6 +229,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         # scale = input$scaleinput,
         # sd_weight = input$sdweight
       )
+
       info("[DeepNetBoard] finished creating model!")
 
       if( input$layers != update_diagram()) {

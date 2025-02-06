@@ -173,7 +173,6 @@ upload_module_normalization_server <- function(
             cx <- list(X = X1)
           } else {
             dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
-            dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
             impX1 <- playbase::imputeMissing(X1, method = "SVD2")
             cx <- list(X = X1, impX1 = impX1)
           }
@@ -790,7 +789,8 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
-                      "SVDimpute" = "SVD2"
+                      "SVDimpute" = "SVD2",
+                      "QRILC"
                       # "Zero" = "zero",
                       # "MinDet",
                       # "MinProb"
@@ -818,13 +818,16 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
                     choices = if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-                      c("maxMedian", "maxSum", "reference") ## "TMM",
+                      c("median" = "maxMedian", "sum" = "maxSum", "quantile", "reference")
                     } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-                      c("maxMedian", "maxSum")
+                      c("median" = "maxMedian", "sum" = "maxSum", "quantile")
                     } else {
                       c(
-                        "CPM", "CPM+quantile", ## "quantile",
-                        "maxMedian", "maxSum", ## "TMM",
+                        "CPM",
+                        "CPM+quantile",
+                        "quantile",
+                        "median" = "maxMedian",
+                        "sum" = "maxSum", ## "TMM",
                         "reference"
                       )
                     },

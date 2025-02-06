@@ -36,7 +36,13 @@ plot_deepnet_diagram_server <- function(id,
       update()
       net <- isolate(net()) ## do not react everytime
       shiny::req(net)
+
+      progress <- shiny::Progress$new(session, min=0, max=1)
+      on.exit(progress$close())
+      progress$set(message = paste("Creating diagram..."), value = 0.33)
+
       svgfile <- playbase::deep.plotNeuralNet(net, outfile=NULL)
+
       validate(
         need(!is.null(svgfile), "Could not create model diagram")
       )
