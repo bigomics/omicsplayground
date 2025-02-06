@@ -33,8 +33,7 @@ dataview_plot_averagerank_ui <- function(
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info = info,
-    options = NULL,
-##    caption = caption,
+    options = options,
     download.fmt = c("png", "pdf", "csv"),
     width = width,
     height = height,
@@ -83,6 +82,8 @@ dataview_plot_averagerank_server <- function(id,
       ann <- pgx$genes[names(mean.fc), , drop = FALSE]
       sel <- which(names(mean.fc) == gene)
 
+      dbg("[dataview_plot_averagerank_server] labeltype = ", labeltype())
+      dbg("[dataview_plot_averagerank_server] show_all_isoforms = ", input$show_all_isoforms)
       
       if (input$show_all_isoforms && labeltype() != "feature") {
         symbol <- playbase::probe2symbol(gene, ann, "symbol", fill_na = TRUE)
