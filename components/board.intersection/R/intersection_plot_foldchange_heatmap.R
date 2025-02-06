@@ -73,6 +73,7 @@ foldchange_heatmap_server <- function(id,
 
     FoldchangeHeatmap.PLOT <- function() {
       F1 <- plot_data()
+      shiny::req(F1)
       bh <- 5
       mh <- 6
       bm <- 4

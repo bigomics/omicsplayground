@@ -97,6 +97,7 @@ biomarker_plot_featurerank_server <- function(id,
       ) ## no sample IDs
       Y <- pgx$Y[colnames(X), cvar, drop = FALSE]
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
+      shiny::validate(shiny::need(length(kk) > 0, "Number of samples filtered is too restrictive. Change the 'Filter samples'."))
       Y <- Y[, kk, drop = FALSE]
       dim(Y)
 
@@ -139,6 +140,10 @@ biomarker_plot_featurerank_server <- function(id,
           X1 <- playbase::rename_by(X, pgx$genes, "symbol")
           pp <- intersect(pp, rownames(X1))
           X1 <- X1[pp, , drop = FALSE]
+          if (nrow(X1) == 0) {
+            score[j] <- NA
+            next
+          }
 
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
@@ -154,7 +159,18 @@ biomarker_plot_featurerank_server <- function(id,
           if (method %in% c("p-value", "meta")) {
             jj <- which(!is.na(grp))
             design <- model.matrix(~ grp[jj])
-            suppressWarnings(fit <- limma::eBayes(limma::lmFit(X1[, jj], design)))
+            fit <- tryCatch(
+              {
+                suppressWarnings(limma::eBayes(limma::lmFit(X1[, jj, drop = FALSE], design)))
+              },
+              error = function(w) {
+                NA
+              }
+            )
+            if (all(is.na(fit))) {
+              score[j] <- NA
+              next
+            }
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
             s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE)
           }

@@ -54,6 +54,7 @@ contrast_correlation_server <- function(id,
       shiny::req(pgx$X)
 
       res <- getFoldChangeMatrix()
+      shiny::req(res$fc)
       if (is.null(res)) {
         return(NULL)
       }

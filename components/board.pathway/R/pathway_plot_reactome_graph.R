@@ -64,26 +64,21 @@ functional_plot_reactome_graph_server <- function(id,
 
       ## reactive or function? that's the question...
       plot_data <- function() {
-        ## folder with predownloaded SBGN files
-        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
-        sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         res <- list(
           df = getFilteredReactomeTable(),
           reactome_table = reactome_table,
-          fa_contrast = fa_contrast(),
-          sbgn.dir = sbgn.dir
+          fa_contrast = fa_contrast()
         )
         return(res)
       }
-
-      getPathwayImage <- shiny::reactive({
+      
+      get_image <- shiny::reactive({
         res <- plot_data()
         shiny::req(res, res$df)
 
         df <- res$df
         comparison <- res$fa_contrast
         reactome_table <- res$reactome_table
-        sbgn.dir <- res$sbgn.dir
 
         ###############
         shiny::req(df, comparison, pgx$X)
@@ -103,7 +98,7 @@ functional_plot_reactome_graph_server <- function(id,
         fc <- fc[which(!duplicated(names(fc)) & names(fc) != "")]
 
         sel.row <- reactome_table$rows_selected()
-        if (is.null(sel.row) || length(sel.row) == 0) {
+        if (is.null(sel.row) || length(sel.row) == 0 || nrow(df) == 0) {
           return(NULL.IMG)
         }
 
@@ -111,84 +106,20 @@ functional_plot_reactome_graph_server <- function(id,
         pathway.id <- df[sel.row, "reactome.id"]
         pathway.name <- df[sel.row, "pathway"]
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
+        
+        ## folder with predownloaded SBGN files
+        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
+        sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
+        imgfile <- playbase::getReactomeSVG(
+          pathway.id, val=fc, sbgn.dir=sbgn.dir, as.img=TRUE)
 
-        ## We temporarily switch the working directory to always readable
-        ## TMP folder
-        curwd <- getwd()
-        tmpdir <- tempdir()
-        setwd(tmpdir)
-
-        suppressMessages(require(SBGNview)) ## slow!! but needed!!!
-
-
-        ## this is a trick. the original object in SBGNview.data was 700MB!!
-        sbgn.xmls <- dir(sbgn.dir, ".sbgn")
-        names(sbgn.xmls) <- sbgn.xmls
-
-        if (!interactive()) {
-          progress <- shiny::Progress$new()
-          on.exit(progress$close())
-          progress$set(message = "Rendering pathway...", value = 0.33)
-        }
-
-        obj <- tryCatch(
-          {
-            SBGNview::SBGNview(
-              gene.data = fc,
-              gene.id.type = "SYMBOL",
-              sbgn.dir = sbgn.dir,
-              input.sbgn = pathway.id,
-              output.file = "reactome",
-              output.formats = c("png")
-            )
-          },
-          error = function(w) {
-            SBGNview::SBGNview(
-              gene.data = NULL,
-              gene.id.type = "SYMBOL",
-              sbgn.dir = sbgn.dir,
-              input.sbgn = pathway.id,
-              output.file = "reactome",
-              output.formats = c("png")
-            )
-          }
-        )
-        if (class(obj) == "SBGNview") {
-          try(print(obj))
-        }
-        Sys.sleep(0.2) ## wait for graph
-
-        ## back to previous working folder
-        setwd(curwd)
-
-        imgfile <- "/tmp/hsa00010.png"
-        imgfile <- file.path(tmpdir, paste0("reactome_", pathway.id, ".png"))
-        svgfile <- file.path(tmpdir, paste0("reactome_", pathway.id, ".svg"))
-        file.exists(imgfile)
-
-        if (!file.exists(imgfile)) {
-          return(NULL.IMG)
-        }
-
-        ## parse image dimensions from file
-        img.dim <- NULL
-        if (grepl("png|PNG", imgfile)) img.dim <- dim(png::readPNG(imgfile))[1:2]
-        if (grepl("jpg|JPG", imgfile)) img.dim <- dim(jpeg::readJPEG(imgfile))[1:2]
-        img.dim
-
-        list(
-          src = imgfile,
-          svg = svgfile,
-          contentType = "image/png",
-          width = img.dim[2], height = img.dim[1], ## actual size
-          alt = "reactome pathway"
-        )
+        return(imgfile)
       })
 
       plot_RENDER <- function() {
-        img <- getPathwayImage()
-        shiny::req(img$width, img$height)
-        filename <- img$svg
+        img <- get_image()
+        shiny::req(img$src)
+        filename <- img$src
         img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(
           img.svg,

@@ -70,7 +70,7 @@ compare_plot_expression_server <- function(id,
       xgenes <- intersect(rownames(X1), rownames(X2))
       sel.genes <- head(intersect(sel.genes, xgenes), 8)
       e1 <- playbase::pgx.getContrastMatrix(pgx1)[, ct1, drop = FALSE]
-      e2 <- playbase::pgx.getContrastMatrix(pgx1)[, ct2, drop = FALSE]
+      e2 <- playbase::pgx.getContrastMatrix(pgx2)[, ct2, drop = FALSE]
 
       # Build plots
       sub_plots <- vector("list", length(sel.genes))

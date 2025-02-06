@@ -5,7 +5,9 @@
 
 PathwayBoard <- function(id,
                          pgx,
-                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
+                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc)),
+                         board_observers = NULL
+                         ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750
@@ -40,7 +42,9 @@ PathwayBoard <- function(id,
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$fa_info, {
+    my_observers <- list()
+
+    my_observers[[1]] <- shiny::observeEvent(input$fa_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Functional Analysis Board</strong>"),
         shiny::HTML(fa_infotext),
@@ -48,7 +52,7 @@ PathwayBoard <- function(id,
       ))
     })
 
-    shiny::observe({
+    my_observers[[2]] <- shiny::observe({
       shiny::req(pgx$X)
       ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- sort(ct)
@@ -62,20 +66,21 @@ PathwayBoard <- function(id,
       "GO graph" = list(disable = NULL),
       "Enrichment Map (beta)" = list(disable = NULL)
     )
-    shiny::observeEvent(input$tabs, {
+    my_observers[[3]] <- shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================
     ## ================================================================================
 
 
-    ## =========================================================================
     ## Get Reactome table
-    ## =========================================================================
-
     getReactomeTable <- shiny::reactive({
       shiny::req(pgx$X, input$fa_contrast)
 
@@ -149,8 +154,7 @@ PathwayBoard <- function(id,
 
     functional_plot_reactome_actmap_server(
       "reactome_actmap",
-      reactive(pgx$gset.meta$meta),
-      getReactomeTable,
+      getFilteredReactomeTable,
       pgx = pgx,
       WATERMARK
     )
@@ -226,6 +230,10 @@ PathwayBoard <- function(id,
 
       ## select those with ID
       jj <- which(!is.na(wp.ids) & !duplicated(wp.ids))
+      # Remove ID not in meta matrix
+      jj <- jj[wp.gsets[jj] %in% rownames(pgx$gset.meta$meta[[comparison]])]
+      # Remove ID with no logFC on meta matrix
+      jj <- jj[!is.na(pgx$gset.meta$meta[[comparison]][wp.gsets[jj], ]$meta.fx)]
       wp.gsets <- wp.gsets[jj]
       wp.ids <- wp.ids[jj]
 
@@ -271,7 +279,7 @@ PathwayBoard <- function(id,
     functional_plot_wikipathway_actmap_server(
       "wikipathway_actmap",
       pgx,
-      getWikiPathwayTable,
+      getFilteredWikiPathwayTable,
       WATERMARK
     )
 

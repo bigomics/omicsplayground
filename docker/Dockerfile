@@ -35,7 +35,8 @@ RUN ARCH=$(dpkg --print-architecture) && \
     else \
         echo "Unsupported architecture: $ARCH"; exit 1; \
     fi && \
-    dpkg -i quarto-1.5.56-linux-*.deb
+    dpkg -i quarto-1.5.56-linux-*.deb; \
+    quarto install tinytex
 
 #------------------------------------------------------------
 # Add supporting R libraries

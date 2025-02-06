@@ -113,6 +113,10 @@ clustering_plot_splitmap_server <- function(id,
       annot <- filt$annot
       zx.idx <- filt$idx
 
+      shiny::validate(shiny::need(
+        ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
+
       return(list(
         zx = zx,
         annot = annot,
@@ -165,8 +169,7 @@ clustering_plot_splitmap_server <- function(id,
       rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
       if (hm_level() == "gene") {
         ## strip any prefix
-        rownames(zx) <- sub(".*:", "", rownames(zx))
-
+        ##rownames(zx) <- sub(".*:", "", rownames(zx))
         rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
       }
 
@@ -175,6 +178,10 @@ clustering_plot_splitmap_server <- function(id,
       cex2 <- ifelse(nrow(zx) > 60, 0.8, 0.9)
       cex1 <- as.numeric(input$hm_cexCol) * 0.85
       cex2 <- as.numeric(input$hm_cexRow) * 0.75
+      shiny::validate(shiny::need(
+        all(is.numeric(input$hm_cexCol), is.numeric(input$hm_cexRow)),
+        "cexRow and cexCol must not be empty."
+      ))
       cex0 <- ifelse(!is.null(splitx) && length(splitx) <= 10, 1.05, 0.85) ## title
 
       crot <- 0
@@ -247,6 +254,10 @@ clustering_plot_splitmap_server <- function(id,
 
       colcex <- as.numeric(input$hm_cexCol)
       rowcex <- as.numeric(input$hm_cexRow)
+      shiny::validate(shiny::need(
+        all(is.numeric(input$hm_cexCol), is.numeric(input$hm_cexRow)),
+        "cexRow and cexCol must not be empty."
+      ))
 
       tooltips <- NULL
       if (hm_level() == "gene") {

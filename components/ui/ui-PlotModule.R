@@ -86,6 +86,7 @@ PlotModuleUI <- function(id,
       image = shiny::imageOutput,
       base = shiny::plotOutput,
       svgPanZoom = svgPanZoom::svgPanZoomOutput,
+      ggiraph = ggiraph::ggiraphOutput,
       renderUI = shiny::htmlOutput,
       shiny::plotOutput
     )
@@ -135,23 +136,17 @@ PlotModuleUI <- function(id,
     )
   } else {
     button_list <- lapply(seq_along(card_names), function(x) {
-      shiny::conditionalPanel(
-        condition = paste0(
-          "input.card_selector == '", card_names[x], "'"
-        ),
-        ns = ns,
-        div(
-          shiny::downloadButton(
-            outputId = ns(paste0(
-              "download", x
-            )),
-            label = "Download",
-            class = "btn-outline-primary"
-          )
+      div(
+        shiny::downloadButton(
+          outputId = ns(paste0(
+            "download", x
+          )),
+          label = card_names[x],
+          class = "btn-outline-primary"
         )
       )
     })
-    download_buttons <- do.call(div, button_list)
+    download_buttons <- button_list
   }
 
   pdf_size_ui <- shiny::tagList(
@@ -189,16 +184,16 @@ PlotModuleUI <- function(id,
           shiny::br()
         )
       ),
-      shiny::conditionalPanel(
-        condition = "input.downloadOption == 'pdf'",
-        ns = ns,
+      # shiny::conditionalPanel(
+      #   condition = "input.downloadOption == 'pdf'",
+      #   ns = ns,
         shiny::checkboxInput(
           inputId = ns("get_pdf_settings"),
-          label = "Include plot settings",
-          value = TRUE
-        )
-      ),
-      download_buttons,
+          label = "Include plot settings (PDF)",
+          TRUE
+        ),
+      # ),
+      download_buttons
     ),
     size = "xs",
     icon = shiny::icon("download"),
@@ -341,6 +336,9 @@ PlotModuleUI <- function(id,
   ## --------------- modal UI (former output$popupfig) ----------------------
   ## ------------------------------------------------------------------------
 
+  height.2="100%"
+  height.2="calc(80vh - 100px)"
+  
   if (cards) {
     tabs_modal <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
@@ -389,6 +387,27 @@ PlotModuleUI <- function(id,
     )
   }
 
+  popupfigUI.BSLIB <- function() {
+    if (any(class(caption2) == "reactive")) {
+      caption2 <- caption2()
+    }
+    caption2 <- shiny::div(
+      class = "caption2 popup-plot-caption",
+      shiny::HTML(paste0(
+        "<b>", as.character(title), ".</b>&nbsp;&nbsp;",
+        as.character(caption2)
+      ))
+    )
+    bslib::layout_columns(
+      class = "popup-plot-body",
+      height = "80vh",
+      col_widths = 12,
+      row_heights = list(1,"auto"),
+      shiny::div(class = "popup-plot", plot_cards_modal),
+      caption2
+    )
+  }
+
   popupfigUI_editor <- function(card = NULL) {
     if (!is.null(card)) {
       htmlOutput(ns(paste0("editor_frame", card)))
@@ -412,9 +431,10 @@ PlotModuleUI <- function(id,
   ## ------------------------------------------------------------------------
   
   e <- bslib::card(
-    class = "plotmodule",
-    full_screen = FALSE,
-    style = paste0("height:", height.1, ";overflow: visible;"),
+    #bslib::card_header(header),
+    #class = "plotmodule",
+    #full_screen = FALSE,
+    #style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
     bslib::card_body(
       gap = "0px",
@@ -430,7 +450,8 @@ PlotModuleUI <- function(id,
           title = title,
           size = "fullscreen",
           footer = NULL,
-          popupfigUI()
+          popupfigUI(),
+          track_open = TRUE
         )
       ),
       if (cards) {
@@ -480,6 +501,10 @@ PlotModuleUI <- function(id,
       )
     )
   ) # end of card
+  # e <- bslib::card(
+  #   outputFunc(ns("renderfigure")) %>%
+  #     bigLoaders::useSpinner()
+  # )
   return(e)
 }
 
@@ -548,22 +573,49 @@ PlotModuleServer <- function(id,
         )
       )
 
-      getEditorUrl <- function(session, path_object) {
+      getEditorUrl <- function(session, path_object, path_object2) {
         cd <- session$clientData
         sprintf(
-          "%s/?plotURL=%s//%s:%s%s%s",
+          "%s/?plotURL=%s//%s:%s%s%s&plotDS=%s//%s:%s%s%s",
           "custom/editor/index.html",
           cd$url_protocol,
           cd$url_hostname,
           cd$url_port,
           cd$url_pathname,
-          path_object
+          path_object,
+          cd$url_protocol,
+          cd$url_hostname,
+          cd$url_port,
+          cd$url_pathname,
+          path_object2
         )
       }
+
 
       if (!is.null(card)) {
         output[[paste0("editor_frame", card)]] <- renderUI({
           plot <- func()
+          if (is.null(input$plotPopup_is_open)) {
+            plot <- func()
+          } else if (input$plotPopup_is_open) {
+            plot <- func2()
+          } else {
+            plot <- func()
+          }
+          if (exists("csvFunc") && is.function(csvFunc)) {
+            plot_data_csv <- csvFunc()
+            if (inherits(plot_data_csv, "list")) {
+              plot_data_csv <- plot_data_csv[[1]]
+            }
+          } else {
+            plot_data_csv <- NULL
+          }
+          for (i in 1:length(plot$x$data)) {
+            plot$x$data[[i]]$hovertemplate <- NULL
+          }
+          for (i in 1:length(plot$x$attrs)) {
+            plot$x$attrs[[i]]$hovertemplate <- NULL
+          }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
             "plotly_graph", json$x$data,
@@ -575,12 +627,42 @@ PlotModuleServer <- function(id,
               )
             }
           )
-          url <- getEditorUrl(session, res)
+          res2 <- session$registerDataObj(
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(plot_data_csv))),
+            function(data, req) {
+              httpResponse(
+                status = 200,
+                content_type = "application/json",
+                content = data
+              )
+            }
+          )
+          url <- getEditorUrl(session, res, res2)
           tags$iframe(src = url, style = "height: 85vh; width: 100%;")
         })
       } else {
         output$editor_frame <- renderUI({
-          plot <- func()
+          if (is.null(input$plotPopup_is_open)) {
+            plot <- func()
+          } else if (input$plotPopup_is_open) {
+            plot <- func2()
+          } else {
+            plot <- func()
+          }
+          if (exists("csvFunc") && is.function(csvFunc)) {
+            plot_data_csv <- csvFunc()
+            if (inherits(plot_data_csv, "list")) {
+              plot_data_csv <- plot_data_csv[[1]]
+            }
+          } else {
+            plot_data_csv <- NULL
+          }
+          for (i in 1:length(plot$x$data)) {
+            plot$x$data[[i]]$hovertemplate <- NULL
+          }
+          for (i in 1:length(plot$x$attrs)) {
+            plot$x$attrs[[i]]$hovertemplate <- NULL
+          }
           json <- plotly::plotly_json(plot, TRUE) # requires `listviewer` to work properly
           res <- session$registerDataObj(
             "plotly_graph", json$x$data,
@@ -592,7 +674,17 @@ PlotModuleServer <- function(id,
               )
             }
           )
-          url <- getEditorUrl(session, res)
+          res2 <- session$registerDataObj(
+            "plotly_graph2", jsonlite::toJSON(list(data = as.list(plot_data_csv))),
+            function(data, req) {
+              httpResponse(
+                status = 200,
+                content_type = "application/json",
+                content = data
+              )
+            }
+          )
+          url <- getEditorUrl(session, res, res2)
           tags$iframe(src = url, style = "height: 85vh; width: 100%;")
         })
       }
@@ -776,6 +868,14 @@ PlotModuleServer <- function(id,
                     url = HTMLFILE, file = PDFFILE,
                     vwidth = pdf.width * 100, vheight = pdf.height * 100
                   )
+                } else if (plotlib == "ggiraph") {
+                  p <- func()
+                  SVGFILE <- tempfile(fileext=".svg")
+                  ggiraph::dsvg(SVGFILE)
+                  print(p)
+                  dev.off()
+                  system(paste("convert ",SVGFILE," ",PDFFILE))
+                  unlink(SVGFILE)
                 } else { ## end base
                   pdf(PDFFILE, pointsize = pdf.pointsize)
                   plot.new()
@@ -808,10 +908,10 @@ PlotModuleServer <- function(id,
       } ## end if do.pdf
 
       saveHTML <- function() {
-        if (plotlib == "plotly") {
+        if (plotlib %in% c("plotly")) {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
-        } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
+        } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3", "ggiraph")) {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
         } else if (plotlib == "iheatmapr") {
@@ -847,7 +947,7 @@ PlotModuleServer <- function(id,
                 if (plotlib == "plotly") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
+                } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3", "ggiraph")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
                 } else if (plotlib == "iheatmapr") {
@@ -1083,6 +1183,7 @@ PlotModuleServer <- function(id,
           image = shiny::renderImage,
           base = shiny::renderPlot,
           svgPanZoom = svgPanZoom::renderSvgPanZoom,
+          ggiraph = ggiraph::renderggiraph,
           renderUI = shiny::renderUI,
           shiny::renderPlot
         )

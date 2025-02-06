@@ -66,6 +66,10 @@ clustering_plot_genemodule_server <- function(id,
       mat <- res$mat
       idx <- res$idx
       modx <- sapply(1:ncol(mat), function(i) tapply(mat[, i], idx, mean))
+      if (is.null(dim(modx))) {
+        modx <- matrix(modx, nrow = 1)
+        rownames(modx) <- unique(idx)
+      }
       colnames(modx) <- colnames(mat)
 
       return(list(

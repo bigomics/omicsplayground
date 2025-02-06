@@ -86,18 +86,18 @@ singlecell_plot_crosstabPlot_server <- function(id,
         }
         scores <- pmax(scores, 0) ## ??
       } else {
-        x <- as.character(pgx$Y[, 1])
-        x <- as.character(pgx$Y[, crosstabvar])
+        x <- as.character(pgx$samples[, 1])
+        x <- as.character(pgx$samples[, crosstabvar])
         x[is.na(x)] <- "_"
         scores <- model.matrix(~ 0 + x)
-        rownames(scores) <- rownames(pgx$Y)
+        rownames(scores) <- rownames(pgx$samples)
         colnames(scores) <- sub("^x", "", colnames(scores))
       }
 
       ## restrict to selected sample set
       kk <- head(1:nrow(scores), 1000)
       kk <- 1:nrow(scores)
-      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$samples, samplefilter())
       scores <- scores[kk, , drop = FALSE]
       scores <- scores[, which(colSums(scores) > 0), drop = FALSE]
       scores[which(is.na(scores))] <- 0
@@ -115,7 +115,9 @@ singlecell_plot_crosstabPlot_server <- function(id,
         y <- NULL
         if (is.gene) {
           xgene <- pgx$genes[rownames(pgx$X), ]$symbol
-          gx <- pgx$X[which(xgene == pheno), kk, drop = FALSE]
+          X <- playbase::rename_by(pgx$X, pgx$genes, "symbol")
+          pheno <- pgx$genes[pheno, ]$symbol
+          gx <- X[which(xgene == pheno), kk, drop = FALSE]
           gx.highTH <- mean(gx, na.rm = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
@@ -210,8 +212,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       grp.score1 <- getProportionsTable(pheno, is.gene = FALSE)
       grp.score2 <- NULL
 
-      gene <- gene
-      if (gene != "<none>") {
+      if (!(gene() %in% c("<none>", ""))) {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)
         kk <- colnames(grp.score2)[order(grp.score2[1, ])]
         grp.score2 <- grp.score2[, match(kk, colnames(grp.score2)), drop = F]

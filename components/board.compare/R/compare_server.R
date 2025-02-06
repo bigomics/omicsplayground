@@ -3,7 +3,8 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "mini-example")), labeltype = shiny::reactive("feature")) {
+CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "mini-example")),
+                         labeltype = shiny::reactive("feature"), board_observers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
@@ -19,7 +20,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    my_observers <- list()
+    
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Compare Experiments</strong>"),
         shiny::HTML(infotext),
@@ -43,7 +46,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       )
     )
 
-    shiny::observeEvent(input$tabs1, {
+    my_observers[[2]] <- shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
@@ -52,7 +55,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     })
 
     ## upon new pgx upload
-    shiny::observeEvent(
+    my_observers[[3]] <- shiny::observeEvent(
       {
         list(pgx$X)
       },
@@ -111,7 +114,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## allow trigger on explicit compare button
     contrast1 <- shiny::reactiveVal()
     contrast2 <- shiny::reactiveVal()
-    shiny::observeEvent(
+    my_observers[[4]] <- shiny::observeEvent(
       {
         list(pgx$X, input$compare_button)
       },
@@ -152,6 +155,14 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ignoreNULL = FALSE
     )
 
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
+    
+    ## ============================================================================
+    ## ========================= REACTIVE FUNCTIONS ===============================
+    ## ============================================================================
 
     # Retrieve the 2nd dataset
     dataset2 <- shiny::eventReactive(
@@ -180,10 +191,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       }
     )
 
-    ## ============================================================================
-    ## ========================= REACTIVE FUNCTIONS ===============================
-    ## ============================================================================
-
     # Cummulative FC
     getMatrices <- shiny::reactive({
       pgx1 <- pgx
@@ -205,11 +212,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         return(NULL)
       }
 
-      org1 <- tolower(playbase::pgx.getOrganism(pgx1))
-      org2 <- tolower(playbase::pgx.getOrganism(pgx2))
-
       F1 <- playbase::pgx.getMetaMatrix(pgx1)$fc[, ct1, drop = FALSE]
       F2 <- playbase::pgx.getMetaMatrix(pgx2)$fc[, ct2, drop = FALSE]
+      org1 <- tolower(playbase::pgx.getOrganism(pgx1))
+      org2 <- tolower(playbase::pgx.getOrganism(pgx2))
 
       target_col <- "rownames"
       if (is.null(pgx1$version) && is.null(pgx2$version)) {
@@ -237,7 +243,12 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
       F1 <- playbase::rowmean(F1, rownames(F1))
       F2 <- playbase::rowmean(F2, rownames(F2))
+
       gg <- intersect(rownames(F1), rownames(F2))
+      gg <- setdiff(gg, c("", NA, "NA"))
+      dd1 <- setdiff(gg, rownames(F1))
+      dd2 <- setdiff(gg, rownames(F2))
+
       F1 <- F1[gg, , drop = FALSE]
       F2 <- F2[gg, , drop = FALSE]
       colnames(F1) <- paste0("1:", colnames(F1))
@@ -274,28 +285,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       }
       gene_title <- pgx1$genes[match(rownames(F1), match.target), "gene_title"]
 
-      pos1 <- pos2 <- NULL
-      if (0) {
-        ## we also need collapsed/aligned UMAP positions
-        pos1 <- pgx1$cluster.genes$pos[["umap2d"]]
-        pos2 <- pgx2$cluster.genes$pos[["umap2d"]]
-        if (target_col != "rownames") {
-          pos1 <- playbase::rename_by(pos1, pgx1$genes, target_col)
-          pos2 <- playbase::rename_by(pos2, pgx2$genes, target_col)
-        }
-        pos1 <- playbase::rowmean(pos1, rownames(pos1))
-        pos2 <- playbase::rowmean(pos2, rownames(pos2))
-        pos1 <- pos1[match(rownames(F1), rownames(pos1)), ]
-        pos2 <- pos1[match(rownames(F2), rownames(pos2)), ]
-      }
-
       list(
         F1 = F1,
         F2 = F2,
         X1 = X1,
         X2 = X2,
-        pos1 = pos1,
-        pos2 = pos2,
         rho = rho,
         gene_title = gene_title,
         target_col = target_col
@@ -401,7 +395,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         p <- playbase::pgx.plotContrast(
           pgx,
           contrast = ct,
-          hilight = hilight,
+          hilight = NULL,
+          label = label,
           ntop = ntop,
           cex.lab = cex.lab, #
           par.sq = TRUE,

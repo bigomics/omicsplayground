@@ -38,10 +38,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
     )
 
     packages.RENDER <- function() {
-      pkg <- read.table(file.path(OPG, "RPackageLicenses.txt"), sep = "!", header = TRUE)[, 1]
-      pkg <- strsplit(gsub("[ ]{2,}", ",", trimws(pkg)), split = ",")
-      pkg <- do.call(rbind, pkg)
-      colnames(pkg) <- c("Package", "Version", "License")
+      pkg <- read.table(file.path(OPG, "RPackageLicenses.txt"), sep = "\t", header = TRUE)
       DT::datatable(pkg,
         rownames = FALSE,
         plugins = "scrollResize",

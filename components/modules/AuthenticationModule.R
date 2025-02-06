@@ -52,6 +52,9 @@ NoAuthenticationModule <- function(id,
         }
         USER$username <- username
         USER$email <- email
+
+        # Reset loaded modules
+        MODULES_LOADED[] <<- FALSE
       }
 
       output$showLogin <- shiny::renderUI({
@@ -94,17 +97,17 @@ AuthenticationModuleApacheCookie <- function(id,
   shiny::moduleServer(
     id, function(input, output, session) {
       message("[NoAuthenticationModule] >>>> no authentication -- reading user from apache cookie <<<<")
-      email <- extract_cookie_value(session$request$HTTP_COOKIE, "user")
+      email <- extract_cookie_value(session, "user")
       ns <- session$ns
       USER <- shiny::reactiveValues(
         method = "none",
-        logged = FALSE,
-        username = "",
+        logged = TRUE,
+        username = email,
         email = email,
         level = "",
         limit = "",
         options = opt, ## init from global
-        user_dir = PGX.DIR ## global
+        user_dir = file.path(PGX.DIR) ## global
       )
 
       if (show_modal) {
@@ -131,8 +134,11 @@ AuthenticationModuleApacheCookie <- function(id,
         } else {
           USER$logged <- TRUE
         }
-        USER$username <- username
+        USER$username <- email
         USER$email <- email
+
+        # Reset loaded modules
+        MODULES_LOADED[] <<- FALSE
       }
 
       output$showLogin <- shiny::renderUI({
@@ -233,6 +239,9 @@ FirebaseAuthenticationModule.DEPRECATED <- function(id,
 
       ## login modal
       shiny::showModal(m)
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
     }
 
     ### I don't really understand this???... (IK 10jul23)
@@ -521,6 +530,9 @@ EmailLinkAuthenticationModule.DEPRECATED <- function(id,
 
       ## login modal
       shiny::showModal(m)
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
     }
 
     first_time <- TRUE
@@ -662,6 +674,9 @@ PasswordAuthenticationModule <- function(id,
       USER$level <- ""
       USER$limit <- ""
       shiny::showModal(login_modal)
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
     }
 
     CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
@@ -854,6 +869,7 @@ LoginCodeAuthenticationModule <- function(id,
       email = NA,
       level = "",
       limit = "",
+      expiry = "",
       options = opt, ## global
       user_dir = PGX.DIR ## global
     )
@@ -897,6 +913,7 @@ LoginCodeAuthenticationModule <- function(id,
       USER$password <- NA
       USER$level <- ""
       USER$limit <- ""
+      USER$expiry <- ""
 
       email_sent <<- FALSE
       login_code <<- NULL
@@ -904,6 +921,11 @@ LoginCodeAuthenticationModule <- function(id,
       updateTextInput(session, "login_password", value = "")
 
       PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+      REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+      UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
 
       shiny::showModal(login_modal)
     }
@@ -914,6 +936,13 @@ LoginCodeAuthenticationModule <- function(id,
     decrypted_cookie <- get_and_decrypt_cookie(session)
     query_email <- shiny::isolate(shiny::getQueryString()$email)
     if (!is.null(query_email) & !is.null(decrypted_cookie)) {
+      if (opt$ENCRYPTED_EMAIL) {
+        query_email_nonce <- shiny::isolate(shiny::getQueryString()$email_nonce)
+        query_email <- decrypt_cookie(query_email, query_email_nonce)
+        if (is.null(query_email)) {
+          query_email <- ""
+        }
+      }
       if (query_email != decrypted_cookie) {
         # If the query email is different than the cookie email
         # we assume that the user wants to login
@@ -974,9 +1003,14 @@ LoginCodeAuthenticationModule <- function(id,
       if (user_in_db) {
         dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
         USER$options <- read_user_options_db(user_email, user_database)
+        USER$username <- read_user_field_db(user_email, user_database, "firstname")
+        USER$level <- read_user_field_db(user_email, user_database, "level")
+        USER$expiry <- read_user_field_db(user_email, user_database, "expiry")
       } else {
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(user_dir)
+        USER$level <- "free"
+        USER$expiry <- "unlimited"
       }
       session$sendCustomMessage("set-user", list(user = user_email))
 
@@ -1058,6 +1092,10 @@ LoginCodeAuthenticationModule <- function(id,
 
     query_email <- shiny::reactive({
       query_email <- shiny::getQueryString()$email
+      if (opt$ENCRYPTED_EMAIL) {
+        query_email_nonce <- shiny::getQueryString()$email_nonce
+        query_email <- decrypt_cookie(query_email, query_email_nonce)
+      }
       query_email
     })
 
@@ -1190,9 +1228,14 @@ LoginCodeAuthenticationModule <- function(id,
           if (user_in_db) {
             dbg("[LoginCodeAuthenticationModule] using sqlite DB OPTIONS")
             USER$options <- read_user_options_db(USER$email, user_database)
+            USER$username <- read_user_field_db(USER$email, user_database, "firstname")
+            USER$level <- read_user_field_db(USER$email, user_database, "level")
+            USER$expiry <- read_user_field_db(USER$email, user_database, "expiry")
           } else {
             dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
             USER$options <- read_user_options(USER$user_dir)
+            USER$level <- "free"
+            USER$expiry <- "unlimited"
           }
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user

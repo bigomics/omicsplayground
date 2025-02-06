@@ -240,6 +240,7 @@ DatasetReportServer <- function(
                   "-P", paste0("pgxdir:", pgx_path),
                   "-P", paste0("comparison:", ct),
                   "-P", paste0("dataset:", sel_dataset),
+                  "-M", paste0("dataset:", sel_dataset),
                   "-M", paste0("user:", user),
                   "-M", paste0("title:", ct)
                 ),
@@ -262,6 +263,7 @@ DatasetReportServer <- function(
           setwd(cur_wd)
           unlink(tmpdir)
 
+          record_report_download(input$report_type)
           shinyalert::shinyalert(
             title = "Yay! Your report is ready",
             text = "We finished your report. Please check your downloads folder.",

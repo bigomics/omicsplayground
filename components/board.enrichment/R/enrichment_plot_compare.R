@@ -80,10 +80,20 @@ enrichment_plot_compare_server <- function(id,
 
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          playbase::gsea.enplot(rnk0, genes,
-            names = NULL, #
-            main = cmp, xlab = "",
-            cex.main = 0.80, len.main = 72
+
+          names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
+            x0 <- strsplit(x, "_")[[1]]
+            return(x0[length(x0)])
+          }))
+
+          playbase::gsea.enplot(
+            rnk0,
+            genes,
+            names = NULL,
+            main = cmp,
+            xlab = "",
+            cex.main = 0.80,
+            len.main = 72
           )
           qv1 <- formatC(qv0, format = "e", digits = 2)
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
@@ -103,17 +113,25 @@ enrichment_plot_compare_server <- function(id,
 
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          playbase::gsea.enplot(rnk0, genes,
-            names = NULL, #
-            main = cmp, xlab = "",
-            cex.main = 0.80, len.main = 72
+
+          names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
+            x0 <- strsplit(x, "_")[[1]]
+            return(x0[length(x0)])
+          }))
+
+          playbase::gsea.enplot(
+            rnk0,
+            genes,
+            names = NULL,
+            main = cmp,
+            xlab = "",
+            cex.main = 0.80,
+            len.main = 72
           )
           qv1 <- formatC(qv0, format = "e", digits = 2)
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-
-      #      p
     }
 
     compare.RENDER <- function() {
@@ -123,7 +141,6 @@ enrichment_plot_compare_server <- function(id,
     compare.RENDER2 <- function() {
       render_compare()
     }
-
 
     PlotModuleServer(
       "plot",

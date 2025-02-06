@@ -226,6 +226,10 @@ loading_table_datasets_server <- function(id,
 
     shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
+      # Make sure there is a row selected
+      if (is.null(pgxfile)) {
+        return(NULL)
+      }
       pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
         message("[LoadingBoard@load_react] ERROR pgxfile not found : ", pgxfilename, "\n")
@@ -394,7 +398,7 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            ##            list(width = "30vw", targets = target2),
+            ## list(width = "30vw", targets = target2),
             list(
               targets = target2, ## with no rownames column 1 is column 2
               render = DT::JS(
@@ -555,7 +559,6 @@ loading_table_datasets_server <- function(id,
             load_uploaded_data <- shiny::reactiveVal(NULL)
             reload_pgxdir <- shiny::reactiveVal(0)
             recompute_pgx(pgx)
-            new_upload(new_upload() + 1)
 
             # bigdash.selectTab(session, "upload-tab")
             # shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?

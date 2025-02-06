@@ -4,7 +4,7 @@
 ##
 
 
-WgcnaBoard <- function(id, pgx) {
+WgcnaBoard <- function(id, pgx, board_observers) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -21,62 +21,16 @@ WgcnaBoard <- function(id, pgx) {
 ", js = FALSE)
 
     ## ================================================================================
-    ## ======================= PRECOMPUTE FUNCTION ====================================
+    ## ========================== OBSERVE FUNCTIONS ===================================
     ## ================================================================================
-
-    ## wgcna.compute <- shiny::reactive({
-    wgcna.compute <- shiny::eventReactive(
-      {
-        list(input$compute)
-      },
-      {
-        require(WGCNA)
-
-        if (input$compute == 0 && "wgcna" %in% names(pgx)) {
-          message("[wgcna.compute] >>> using pre-computed WGCNA results...")
-          me <- names(pgx$wgcna$me.genes)
-          shiny::updateSelectInput(session, "selected_module", choices = me, selected = "ME1")
-          return(pgx$wgcna)
-        }
-
-        pgx.showSmallModal("Calculating WGCNA using new parameters...<br>please wait")
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message = "Calculating WGCNA...", value = 0)
-        message("[wgcna.compute] >>> Calculating WGCNA...")
-
-        WGCNA::enableWGCNAThreads()
-
-        out <- playbase::pgx.wgcna(
-          pgx = pgx,
-          ngenes = as.integer(input$ngenes),
-          minmodsize = as.integer(input$minmodsize),
-          power = as.numeric(input$power),
-          cutheight = as.numeric(input$cutheight),
-          deepsplit = as.integer(input$deepsplit)
-        )
-
-        me <- names(out$me.genes)
-        shiny::updateSelectInput(session, "selected_module", choices = me, sel = "ME1")
-
-        beepr::beep(2)
-        shiny::removeModal()
-
-        out
-      }
-    )
-
-
-    ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
-    ## ================================================================================
+    my_observers <- list()
 
     infotext <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -86,33 +40,82 @@ WgcnaBoard <- function(id, pgx) {
     })
 
 
-    ## ================================================================================
-    ## ======================= PLOTTING FUNCTIONS =====================================
-    ## ================================================================================
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "WGCNA" = list(disable = c("selected_module","selected_trait")),
+      "Eigengenes" = list(disable = c("selected_module","selected_trait")),
+      "Modules" = list(disable = c("selected_trait")),
+      "Gene significance" = list(disable = NULL)
+    )
 
-    ## ----------------------------------------
-    ## --------- enrichment table -------------
-    ## ----------------------------------------
-
-    enrich_table <- shiny::reactive({
-      out <- wgcna.compute()
-      df <- out$gse
-      k <- input$selected_module
-      message("[enrichTable.RENDER] 1 : k = ", k)
-      if (length(k) == 0 || k == "") k <- "<all>"
-      message("[enrichTable.RENDER] 2 : k = ", k)
-      if (k %in% df$module) {
-        df <- df[df$module == k, , drop = FALSE]
-      }
-      df$score <- df$odd.ratio * -log10(df$p.value)
-      df <- df[, c(
-        "module", "geneset", "score", "p.value", "q.value",
-        "odd.ratio", "overlap", "genes"
-      )]
-      df <- df[order(-df$score), ]
-      df
+    my_observers[[2]] <- shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
+
+
+    ## ================================================================================
+    ## ======================= PRECOMPUTE FUNCTION ====================================
+    ## ================================================================================
+
+    wgcna.compute <- shiny::eventReactive(
+      {
+        list(input$compute, pgx$X)
+      },
+      {
+        require(WGCNA)
+        all.req <- all(c("stats","TOM") %in% names(pgx$wgcna))
+        
+        dbg("[wgcna.compute] 0: input$compute =", input$compute)
+        dbg("[wgcna.compute] 0: pgx$name =", pgx$name)
+
+        ## NEED RETHINK!!! if input$compute >0 !!!
+        if (input$compute == 0 && "wgcna" %in% names(pgx) && all.req) {
+          message("[wgcna.compute] >>> using pre-computed WGCNA results...")
+          out <- pgx$wgcna
+          ## old style had these settings
+          if(is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
+          if(is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
+          if(is.null(pgx$wgcna$power)) out$power <- 6
+
+        } else {
+          pgx.showSmallModal("Recomputing WGCNA with new parameters...")
+          progress <- shiny::Progress$new()
+          on.exit(progress$close())
+          progress$set(message = "Calculating WGCNA...", value = 0)
+
+          message("[wgcna.compute] >>> Calculating WGCNA...")          
+          out <- playbase::pgx.wgcna(
+            pgx = pgx,
+            ngenes = as.integer(input$ngenes),
+            minmodsize = as.integer(input$minmodsize),
+            power = as.numeric(input$power),
+#            deepsplit = as.integer(input$deepsplit),
+            cutheight = as.numeric(input$cutheight),
+            networktype = input$networktype,
+            ## tomtype = input$tomtype,
+            numericlabels = FALSE
+          )
+          shiny::removeModal()
+        }
+
+        ## update Inputes
+        me <- sort(names(out$me.genes))
+        shiny::updateSelectInput(session, "selected_module", choices = me,
+                                 sel = me[1])
+        tt <- sort(colnames(out$datTraits))
+        shiny::updateSelectInput(session, "selected_trait", choices = tt,
+          selected = tt[1])
+
+        out
+      }
+    )
+
+    
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
@@ -122,7 +125,6 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_gdendogram_server(
       "geneDendro",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
@@ -135,17 +137,14 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # TOM heatmap
-
+    
     wgcna_plot_TOMheatmap_server(
       "TOMplot",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
-      power = shiny::reactive(input$power),
       watermark = WATERMARK
     )
 
     # Gene clustering
-
     wgcna_plot_gclustering_server(
       "umap",
       wgcna.compute = wgcna.compute,
@@ -153,25 +152,20 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module graph
-
     wgcna_plot_module_graph_server(
       "moduleGraph",
-      wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
+      wgcna = wgcna.compute,
       watermark = WATERMARK
     )
 
     # Module-Trait relationships
-
     wgcna_plot_MTrelationships_server(
       "moduleTrait",
       wgcna.compute = wgcna.compute,
-      labels2rainbow = playbase::labels2rainbow,
       watermark = WATERMARK
     )
 
     # Correlation network
-
     wgcna_plot_correlation_network_server(
       "corGraph",
       wgcna.compute = wgcna.compute,
@@ -180,62 +174,98 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Enrichment plot
-
     wgcna_plot_enrichment_server(
       "enrichPlot",
-      enrich_table = enrich_table,
-      enrichTable_module = enrichTable_module,
+      enrichTable_module = enrichTableModule,
       watermark = WATERMARK
     )
 
     # Module genes
-
     wgcna_table_genes_server(
       "geneTable",
-      wgcna.compute = wgcna.compute,
-      selected_module = shiny::reactive(input$selected_module)
+      wgcna = wgcna.compute,
+      selected_module = shiny::reactive(input$selected_module),
+      selected_trait = shiny::reactive(input$selected_trait)      
     )
 
     # Module enrichment
-
-    enrichTable_module <- wgcna_table_enrichment_server(
+    enrichTableModule <- wgcna_table_enrichment_server(
       "enrichTable",
-      enrich_table
+      wgcna = wgcna.compute,
+      selected_module = shiny::reactive(input$selected_module)
     )
 
     # Eigengene clustering
-
     wgcna_plot_eigengene_clustering_server(
       "eigenClustering",
       wgcna.compute = wgcna.compute,
       watermark = WATERMARK
     )
 
-    # Module membership (eigengene correlation)
+    wgcna_plot_eigengene_heatmap_server(
+      "eigenHeatmap",
+      wgcna = wgcna.compute,
+      watermark = WATERMARK
+    )
 
+    # Module membership (eigengene correlation)
+    wgcna_plot_module_barplot_server(
+      "moduleSize",
+      wgcna = wgcna.compute,
+      watermark = WATERMARK
+    )
+
+    # Module membership (eigengene correlation)
     wgcna_plot_module_membership_server(
       "eigenCorrelation",
-      wgcna.compute = wgcna.compute,
+      wgcna = wgcna.compute,
+      selected_module = shiny::reactive(input$selected_module),      
       watermark = WATERMARK
     )
 
     # Membership-trait heatmap
-
-    wgcna_plot_heatmap_membership_server(
-      "intraHeatmap",
-      wgcna.compute = wgcna.compute,
-      watermark = WATERMARK
-    )
+    ## wgcna_plot_heatmap_membership_server(
+    ##   "intraHeatmap",
+    ##   wgcna.compute = wgcna.compute,
+    ##   watermark = WATERMARK
+    ## )
 
     # Membership vs. trait correlation
-
     wgcna_plot_membership_v_trait_server(
       "intraScatter",
-      wgcna.compute = wgcna.compute,
+      wgcna = wgcna.compute,
       selected_module = shiny::reactive(input$selected_module),
+      selected_trait = shiny::reactive(input$selected_trait),      
       watermark = WATERMARK
     )
 
+    wgcna_plot_module_significance_server(
+      "moduleSignificance",
+      wgcna.compute = wgcna.compute,
+      selected_module = shiny::reactive(input$selected_module),      
+      watermark = WATERMARK
+    )
+
+    wgcna_plot_MMvsGS_server(
+      "geneSignificance",
+      wgcna.compute = wgcna.compute,
+      watermark = WATERMARK
+    )
+
+    wgcna_plot_sampledendrogram_server(
+      "sampleDendrogram",
+      wgcna = wgcna.compute,
+      what = "traits",
+      watermark = WATERMARK
+    )
+
+    wgcna_plot_sampledendrogram_server(
+      "sampleDendrogram2",
+      wgcna = wgcna.compute,
+      what = "me",
+      watermark = WATERMARK
+    )
+    
     return(NULL)
   })
 } ## end of Board

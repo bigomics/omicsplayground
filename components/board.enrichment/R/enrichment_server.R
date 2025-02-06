@@ -3,7 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
+EnrichmentBoard <- function(id, pgx,
+                            selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
+                            board_observers = NULL
+                            ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -402,6 +405,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       ## in multi-mode we select *common* genes
       ns <- length(gs)
+      shiny::req(gs)
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
       # check which columns are in pgx$genes

@@ -75,7 +75,7 @@ functional_table_go_table_server <- function(id,
       filtertable <- fa_filtertable()
       if (filtertable) {
         filter_value <- as.numeric(fa_filtertable_value())
-        df <- df[which(df$meta.q < filter_value), ]
+        dt <- dt[which(dt$meta.q < filter_value), ]
       }
 
       id2 <- paste0("abc(", sub(":", "_", dt$id), ")") ## to match with wrapHyperLink

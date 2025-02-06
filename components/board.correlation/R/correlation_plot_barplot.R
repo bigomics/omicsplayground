@@ -90,7 +90,7 @@ correlation_plot_barplot_server <- function(id,
       sel <- intersect(sel, rownames(R))
       sel <- head(sel, NTOP)
       rho <- R[sel, "cor"]
-      if (length(sel) == 1) names(rho) <- rownames(R)[sel]
+      if (length(sel) == 1) names(rho) <- sel
 
       prho <- df$pcor
       names(prho) <- playbase::probe2symbol(rownames(df), pgx$genes, labeltype(), fill_na = TRUE)
@@ -107,6 +107,7 @@ correlation_plot_barplot_server <- function(id,
 
     render_barplot <- function() {
       pd <- plot_data()
+      shiny::req(pd)
 
       playbase::pgx.stackedBarplot(
         x = pd,

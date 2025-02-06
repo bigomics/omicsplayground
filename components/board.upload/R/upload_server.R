@@ -10,7 +10,7 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        recompute_info,
+                        ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
   moduleServer(id, function(input, output, session) {
@@ -20,7 +20,7 @@ UploadBoard <- function(id,
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     # this directory is used to save pgx files, logs, inputs, etc..
-    raw_dir <- reactiveVal(NULL)
+    raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
@@ -33,16 +33,19 @@ UploadBoard <- function(id,
     reset_upload_text_input <- shiny::reactiveVal(0)
     probetype <- shiny::reactiveVal("running")
 
+    compute_settings <- shiny::reactiveValues()
+
     # add task to detect probetype using annothub
-    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
+    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes,
+                                                  annot.cols) {
       future_promise({
-        dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        detected <- playbase::detect_species_probetype(
+        detected <- playbase::check_species_probetype(
           probes = probes,
           datatype = datatype,
-          test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
+          test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+          annot.cols = annot.cols
         )
-        if (is.null(detected)) detected <- "error"
+        ##if (is.null(detected)) detected <- "error"
         detected
       })
     })
@@ -203,17 +206,6 @@ UploadBoard <- function(id,
     ## ================== DATA LOADING OBSERVERS ===========================
     ## =====================================================================
 
-    ## ------------------------------------------------------------------
-    ## Observer for uploading data files using fileInput widget.
-    ##
-    ## Reads in the data files from the file names, checks and
-    ## puts in the reactive values object 'uploaded'. Then
-    ## uploaded should trigger the computePGX module.
-    ## ------------------------------------------------------------------
-
-
-    last_hash <- 1234
-
     create_raw_dir <- function(auth) {
       auth_id <- ifelse(!auth$email %in% c("", NA), auth$email, auth$username)
       prefix <- paste0("raw_", auth_id, "_")
@@ -245,7 +237,6 @@ UploadBoard <- function(id,
         if (is.null(df0)) {
           return(NULL)
         }
-
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -365,7 +356,6 @@ UploadBoard <- function(id,
         if (is.null(df0)) {
           return(list(status = "Missing samples.csv", matrix = NULL))
         }
-
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -703,7 +693,7 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
-      recompute_pgx(NULL) ## need to reset
+      recompute_pgx(NULL) ## need to reset ???
     })
 
     observeEvent(c(input$start_upload, recompute_pgx()), {
@@ -983,12 +973,10 @@ UploadBoard <- function(id,
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
-              recompute_info(
-                list(
-                  "name" = pgx$name,
-                  "description" = pgx$description
-                )
-              )
+
+              ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
+              compute_settings$name <- pgx$name
+              compute_settings$description <- pgx$description
             }
           } else {
             shinyalert::shinyalert(
@@ -1022,12 +1010,40 @@ UploadBoard <- function(id,
       {
         shiny::req(uploaded$counts.csv, upload_organism())
         probes <- rownames(uploaded$counts.csv)
+        annot <- uploaded$annot.csv
+        annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
 
+        if(0) {
+          dbg("[*** testing check probes ***]")
+
+          dbg("[UploadServer:uploaded.counts] head.probes = ", head(probes))
+          dbg("[UploadServer:uploaded.counts] upload.organism = ", upload_organism())
+          dbg("[UploadServer:uploaded.counts] upload.datatype = ", upload_datatype())
+          dbg("[UploadServer:uploaded.counts] dim.annot = ", dim(annot))
+          dbg("[UploadServer:uploaded.counts] annot.cols = ", annot.cols)
+          dbg("[UploadServer:uploaded.counts] probetype = ", probetype())
+          
+          organism = upload_organism()
+          datatype = upload_datatype()
+          res <- playbase::check_species_probetype(
+            probes = probes,
+            datatype = datatype,
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols
+          )
+          dbg("[*** testing check probes ***] names.res = ", names(res))
+          if(length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
+          
+        }
+
+
+        
         checkprobes_task$invoke(
           organism = upload_organism(),
           datatype = upload_datatype(),
-          probes = probes
+          probes = probes,
+          annot.cols = annot.cols
         )
       }
     )
@@ -1036,7 +1052,7 @@ UploadBoard <- function(id,
       checkprobes_task$status(),
       {
         dbg(
-          "[observeEvent:checkprobes_task$result] task status = ",
+          "[UploadServer:observeEvent:checkprobes_task] task status = ",
           checkprobes_task$status()
         )
         if (checkprobes_task$status() == "error") {
@@ -1044,40 +1060,46 @@ UploadBoard <- function(id,
           return(NULL)
         }
         if (checkprobes_task$status() != "success") {
+          probetype("running")
           return(NULL)
         }
 
         ## inspect ExtendedTask results
         detected <- checkprobes_task$result()
+
+        dbg("[upload_server::checkprobes_task] len.detected = ", length(detected))
+        dbg("[upload_server::checkprobes_task] names.detected = ", names(detected))
+        ##dbg("[upload_server::checkprobes_task] detected[[1]] = ", detected[[1]])
+
         organism <- upload_organism()
         alt.text <- ""
-
+        
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
-        e1 <- is.null(detected$probetype[organism])
-        e2 <- is.na(detected$probetype[organism])
-        e3 <- !(organism %in% detected$species)
-        task_failed <- (e1 || e2 || e3)
+        e0 <- length(detected)==0
+        e1 <- is.null(detected[[organism]])
+        e2 <- all(is.na(detected[[organism]]))
+        e3 <- !(organism %in% names(detected))
+        task_failed <- (e0 || e1 || e2 || e3)
+        alt.text <- ""
+        detected_probetype <- NULL
         if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
-          alt.species <- paste(detected$species, collapse = " or ")
+          detected_species <- setdiff(names(detected),organism)
+          alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
-            alt.species <- paste0("<b>", alt.species, "</b>")
             # check if ANY organism matched the probes, if yes add a hint to the user
-            if (length(detected$species) >= 1) {
-              alt.text <- paste0("Are these perhaps ", alt.species, "?")
-            }
-            if (upload_datatype() == "metabolomics") {
-              # overwrite alt.text for metabolomics
-              alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN"), collapse = ", ")
-              alt.text <- paste0("<b>", alt.text, "</b>")
-              alt.text <- paste0("Valid probes are: ", alt.text, ".")
-            }
+            alt.text <- c(alt.text, paste0("Are these perhaps <b>",
+              alt.species, "</b>?"))
+          }
+          if (upload_datatype() == "metabolomics") {
+            # overwrite alt.text for metabolomics
+            alt.text <- c(alt.text, paste0("Valid probes are: <b>ChEBI (recommended), HMDB, PubChem, or KEGG</b>"))
           }
         } else {
-          # handle probetype matching success: assign detected probetype to detected_probetype
-          detected_probetype <- detected$probetype[organism]
+          # handle success: assign detected probetype to detected_probetype
+          detected_probetype <- paste(detected[[organism]],collapse='+')
         }
 
         probetype(detected_probetype) ## set RV
@@ -1090,7 +1112,7 @@ UploadBoard <- function(id,
             text = paste0(
               "Error. Your probes do not match any probe type for <b>",
               organism, "</b>. Please check your probe names and select ",
-              "another organism. ", alt.text
+              "another organism. ", paste(alt.text,collapse=" ")
             ),
             type = "error",
             size = "s",
@@ -1123,6 +1145,8 @@ UploadBoard <- function(id,
 
     upload_table_preview_counts_server(
       id = "counts_preview",
+      create_raw_dir = create_raw_dir,
+      auth = auth,
       uploaded = uploaded,
       checked_matrix = shiny::reactive(checked_counts()$matrix),
       checklist = checklist,
@@ -1209,6 +1233,10 @@ UploadBoard <- function(id,
         compute_input$X <- normalized$X()
         compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
+
+        compute_settings$imputation_method <- normalized$imputation_method()
+        compute_settings$bc_method <- normalized$bc_method()
+        compute_settings$remove_outliers <- normalized$remove_outliers()
       }
     })
 
@@ -1218,6 +1246,9 @@ UploadBoard <- function(id,
       countsX = reactive(compute_input$X),
       impX = reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
+      #      imputation_method = shiny::reactive(compute_input$imputation_method),
+      #      bc_method = shiny::reactive(compute_input$bc_method),
+      #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
@@ -1228,7 +1259,7 @@ UploadBoard <- function(id,
       create_raw_dir = create_raw_dir,
       alertready = FALSE,
       height = "100%",
-      recompute_info = recompute_info,
+      compute_settings = compute_settings,
       inactivityCounter = inactivityCounter,
       upload_wizard = reactive(input$upload_wizard),
       upload_name = upload_name,

@@ -4,7 +4,8 @@
 ##
 
 SignatureBoard <- function(id, pgx,
-                           selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
+                           selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
+                           board_observers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -43,7 +44,10 @@ SignatureBoard <- function(id, pgx,
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+
+    my_observers <- list()
+    
+    my_observers[[1]] <- shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -53,28 +57,31 @@ SignatureBoard <- function(id, pgx,
 
     ## ------------------------ observe/reactive function  -----------------------------
 
-    shiny::observeEvent(input$example1, {
+    my_observers[[2]] <- shiny::observeEvent(input$example1, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = GLYCOLISIS.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
       }
     })
-    shiny::observeEvent(input$example2, {
+
+    my_observers[[3]] <- shiny::observeEvent(input$example2, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = CITRICACIDCYCLE.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
       }
     })
-    shiny::observeEvent(input$example3, {
+    
+    my_observers[[4]] <- shiny::observeEvent(input$example3, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
       }
     })
-    shiny::observeEvent(pgx$X, {
+    
+    my_observers[[5]] <- shiny::observeEvent(pgx$X, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
         shiny::updateActionButton(session, "example1", label = "[glycolisis] ")
@@ -88,7 +95,7 @@ SignatureBoard <- function(id, pgx,
       }
     })
 
-    shiny::observe({
+    my_observers[[6]] <- shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -125,7 +132,11 @@ SignatureBoard <- function(id, pgx,
       }
     })
 
-
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
+    
     ## ================================================================================
     ## ======================= REACTIVE FUNCTIONS =====================================
     ## ================================================================================
@@ -171,6 +182,7 @@ SignatureBoard <- function(id, pgx,
           }
           genes <- union(genes, rx.genes)
         }
+        genes <- intersect(toupper(genes), symbols)
         ## map to probes
         features1 <- playbase::map_probes(pgx$genes, genes,
           column = "human_ortholog", ignore.case = TRUE
@@ -186,7 +198,7 @@ SignatureBoard <- function(id, pgx,
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         ## take top 100 features
         top.genes <- fx[order(-abs(fx))]
-        top.genes <- head(top.genes, 100)
+        top.genes <- head(top.genes, min(100, length(fx) / 4))
         features <- names(top.genes)
       } else if (input$type %in% c("hallmark", "KEGG", "geneset") &&
         input$feature[1] %in% colnames(pgx$GMT)) {
@@ -317,18 +329,43 @@ SignatureBoard <- function(id, pgx,
       ii <- setdiff(match(genes, colnames(G)), NA)
 
       N <- cbind(
-        k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
-        k2 = Matrix::rowSums(G[, ii] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(G != 0),
+        n1 = ncol(G),
+        k2 = Matrix::rowSums(G[, ii, drop = FALSE] != 0),
+        n2 = length(ii)
       )
       rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
 
       ## WOW THIS IS FAST!!!!!!!
-      pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
-      names(pv) <- rownames(N)
-      pv <- pv[match(names(odds.ratio), names(pv))]
-      qv <- p.adjust(pv, method = "bonferroni")
+      ## pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
+      pv <- try(
+        corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE),
+        silent = TRUE
+      )
+      if (class(pv) != "try-error") {
+        names(pv) <- rownames(N)
+        pv <- pv[match(names(odds.ratio), names(pv))]
+        qv <- p.adjust(pv, method = "bonferroni")
+      } else {
+        message("[signature_server] corpora::fisher.pval failed. Using standard fisher.")
+        pv <- c(rep(NA, nrow(N)))
+        i <- 1
+        for (i in 1:nrow(N)) {
+          tt <- matrix(NA, nrow = 2, ncol = 2)
+          tt[1, 1] <- N[i, 1]
+          tt[1, 2] <- N[i, 2] - N[i, 1]
+          tt[2, 1] <- N[i, 3]
+          tt[2, 2] <- N[i, 4] - N[i, 3]
+          ## pv[i] <- stats::fisher.test(tt, alternative = "greater")$p.value ## ??
+          pv[i] <- stats::fisher.test(tt)$p.value
+        }
+        names(pv) <- rownames(N)
+        pv <- pv[match(names(odds.ratio), names(pv))]
+        qv <- p.adjust(pv, method = "bonferroni")
+      }
+
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
 
       ## get shared genes
@@ -348,8 +385,15 @@ SignatureBoard <- function(id, pgx,
       names(fx) <- gg
 
       gset <- names(y)[which(y != 0)]
-      G1 <- G[aa, which(y != 0)]
+      G1 <- G[aa, which(y != 0), drop = FALSE]
+
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
+
+      shiny::validate(shiny::need(
+        length(commongenes) > 0,
+        "No results. Perhaps you need to try on a bigger datasets with more features."
+      ))
+
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
         gg <- gg[order(-abs(fx[gg]))]

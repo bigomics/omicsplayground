@@ -130,18 +130,16 @@ upload_table_preview_samples_server <- function(
                 label = "",
                 show.maximize = FALSE
               ),
-              bslib::card(
-                bslib::navset_pill(
-                  bslib::nav_panel(
-                    title = "UMAP",
-                    br(),
-                    plotOutput(ns("umap"), height = "500px")
-                  ),
-                  bslib::nav_panel(
-                    title = "Distribution",
-                    br(),
-                    plotOutput(ns("phenotype_stats"), height = "500px")
-                  )
+              bslib::navset_card_pill(
+                bslib::nav_panel(
+                  title = "UMAP",
+                  br(),
+                  plotOutput(ns("umap"))
+                ),
+                bslib::nav_panel(
+                  title = "Distribution",
+                  br(),
+                  plotOutput(ns("phenotype_stats"))
                 )
               )
             ),
@@ -200,6 +198,10 @@ upload_table_preview_samples_server <- function(
       y <- Y[, sel]
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
+      shiny::validate(shiny::need(
+        any(colnames(X) %in% rownames(Y)),
+        "No matches between samples and counts."
+      ))
       playbase::pgx.dimPlot(
         X, y,
         method = "umap",
@@ -276,7 +278,29 @@ upload_table_preview_samples_server <- function(
         return()
       }
 
-      uploaded$samples.csv <- playbase::read.as_matrix(input$samples_csv$datapath)
+      # Save file
+      file.copy(
+        from = input$samples_csv$datapath,
+        to = paste0(raw_dir(), "/samples.csv"),
+        overwrite = TRUE
+      )
+
+      df <- tryCatch(
+        {
+          playbase::read.as_matrix(input$samples_csv$datapath)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
+      if (is.null(df)) {
+        data_error_modal(
+          path = input$samples_csv$datapath,
+          data_type = "samples"
+        )
+      } else {
+        uploaded$samples.csv <- df
+      }
     })
 
     observeEvent(input$remove_samples, {

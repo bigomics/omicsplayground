@@ -12,7 +12,8 @@
 ##' @param pgx
 ##' @return
 ##' @author kwee
-ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
+ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
+                            board_observers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
@@ -26,6 +27,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## ======================== OBSERVERS ================================================
     ## ===================================================================================
 
+    my_observers <- list()
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Heatmap" = list(
@@ -34,13 +37,14 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ),
       "PCA/tSNE" = list(
         enable = NULL,
-        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale", "cluster_bar", "spliby_bar")
+        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale")
       ),
       "Parallel" = list(
         enable = NULL,
-        disable = c("selected_phenotypes", "hm_clustmethod", "pheno_bar")
+        disable = c("selected_phenotypes", "hm_clustmethod")
       )
     )
+
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
@@ -54,10 +58,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ))
     })
 
-    shiny::observeEvent(pgx$Y, {
+    my_observers[[1]] <- shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
-      var.types <- colnames(pgx$Y)
+      var.types <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
       var.types <- var.types[grep("sample|patient", var.types, invert = TRUE)]
       vv <- c(var.types, rep("<none>", 10))
       var.types0 <- c("<none>", "<cluster>", var.types)
@@ -91,7 +95,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     })
 
     ## update filter choices upon change of data set
-    shiny::observeEvent(
+    my_observers[[2]] <- shiny::observeEvent(
       {
         list(pgx$X, pgx$Y, pgx$samples)
       },
@@ -118,7 +122,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
 
     ## update choices upon change of level
-    shiny::observeEvent(
+    my_observers[[3]] <- shiny::observeEvent(
       {
         c(input$hm_splitvar, input$hm_level)
       },
@@ -140,8 +144,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
 
     # reactive functions ##############
-
-    shiny::observeEvent(
+    my_observers[[4]] <- shiny::observeEvent(
       {
         list(input$hm_splitby, pgx$X, pgx$samples)
       },
@@ -151,7 +154,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           return()
         }
         if (input$hm_splitby == "gene") {
-          xgenes <- sort(rownames(pgx$X))
+          xgenes <- sort(rownames(getFilteredMatrix()$zx))
           shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
         }
         if (input$hm_splitby == "phenotype") {
@@ -168,10 +171,15 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
 
     ## update filter choices upon change of data set
+    ##    my_observers[[5]] <-
     shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
+
+    ## assign to global list of observers. suspend by default.
+    # lapply( my_observers, function(b) b$suspend() )
+    board_observers[[id]] <- my_observers
 
     ## ===================================================================================
     ## ============================= REACTIVES ===========================================
@@ -247,9 +255,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           if (length(gg1) == 1 && is.regx) {
             gg1 <- grep(gg1, genes, ignore.case = TRUE, value = TRUE)
           }
-          if (length(gg1) == 1 && !is.regx) {
-            gg1 <- c(gg1, gg1) ## heatmap does not like single gene
-          }
+          # heatmap does not like single gene
+          shiny::validate(shiny::need(
+            length(gg1) > 1 && !is.regx,
+            tspan("Please input more than 1 gene.", js = FALSE)
+          ))
 
           gg1 <- gg1[toupper(gg1) %in% toupper(genes) | grepl("---", gg1)]
           idx <- NULL
@@ -318,6 +328,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         zx <- zx[which(!is.ribomito), , drop = FALSE]
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
+      shiny::validate(shiny::need(
+        ncol(zx) > 0, "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
 
       flt <- list(
         zx = zx,
@@ -388,16 +401,20 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         gx <- pgx$X[1, ]
         gx <- pgx$X[splitvar, colnames(zx)]
 
+        ## TODO if this code is revived again, for some datasets
+        ## the number of unique values in gx can be equal or
+        ## lower than k, on those cases it will crash
+
         ## estimate best K
-        within.ssratio <- sapply(1:4, function(k) {
-          km <- kmeans(gx, k)
-          km$tot.withinss / km$totss
-        })
-        within.ssratio
-        k.est <- min(which(within.ssratio < 0.10))
-        k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
-        k.est
-        k.est <- pmax(pmin(k.est, 3), 2)
+        # within.ssratio <- sapply(1:4, function(k) {
+        #   km <- kmeans(gx, k)
+        #   km$tot.withinss / km$totss
+        # })
+        # within.ssratio
+        # k.est <- min(which(within.ssratio < 0.10))
+        # k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
+        # k.est
+        # k.est <- pmax(pmin(k.est, 3), 2)
         k.est <- 2 ## for now...
 
         if (k.est == 2) {
@@ -639,7 +656,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ref <- pgx$X[, , drop = FALSE]
       if (ann.level == "gene" && ann.refset %in% names(pgx$families)) {
         gg <- pgx$families[[ann.refset]]
-        jj <- match(toupper(gg), toupper(pgx$genes$gene_name))
+        jj <- match(toupper(gg), toupper(pgx$genes$symbol))
         jj <- setdiff(jj, NA)
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
@@ -675,9 +692,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
       colnames(rho) <- idxx
-      rownames(rho) <- rownames(ref)
+      rownames(rho) <- sub(".*:", "", rownames(ref))
 
-      i <- 1
       if (nrow(ref) > 0) {
         for (i in 1:length(idxx)) {
           gg <- rownames(zx)[which(idx == idxx[i])]
@@ -692,7 +708,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
         table(idx)
         grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
-        gmt <- playdata::getGSETS(rownames(rho))
+        gmt <- playbase::getGSETS_playbase(sub("_", ":", rownames(rho)))
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {
@@ -702,17 +718,16 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
             fdr = 1, min.genes = 0, max.genes = Inf,
             background = bg.genes
           )
-          res <- res[rownames(rho), ]
           r <- res[, "odd.ratio"]
           odd.prob <- r / (1 + r)
           P <- cbind(P, odd.prob)
         }
         colnames(P) <- colnames(rho)
-        rownames(P) <- rownames(rho)
+        rownames(P) <- sub(":", "_", names(gmt))
+        rho <- rho[rownames(P), ]
         rho <- rho * (P / max(P))
       }
 
-      dim(rho)
       return(rho)
     })
 

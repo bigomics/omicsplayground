@@ -27,14 +27,14 @@ UploadUI <- function(id) {
               "mRNA microarray",
               "proteomics",
               "scRNA-seq",
-              "metabolomics (beta)" = "metabolomics"
-              ## "scRNA-seq",
-              ## "other"
+              "metabolomics (beta)" = "metabolomics",
+              "multi-omics (beta)" = "multi-omics",
+              "custom"
             ),
             selected = DEFAULTS$datatype
           )
         ),
-        ##        shiny::uiOutput(ns("probe_type_ui")),
+        ## shiny::uiOutput(ns("probe_type_ui")),
         div(
           p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
           shiny::selectInput(

@@ -67,9 +67,8 @@ functional_plot_reactome_actmap_ui <- function(
 #' @return
 #' @export
 functional_plot_reactome_actmap_server <- function(id,
-                                                   r_meta,
                                                    pgx,
-                                                   getReactomeTable,
+                                                   getFilteredReactomeTable,
                                                    watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -86,8 +85,8 @@ functional_plot_reactome_actmap_server <- function(id,
         )
       })
       plot_data <- shiny::reactive({
-        df <- getReactomeTable()
-        meta <- r_meta()
+        df <- getFilteredReactomeTable()
+        meta <- pgx$gset.meta$meta
         shiny::req(df, meta)
 
         shiny::validate(
@@ -97,22 +96,41 @@ functional_plot_reactome_actmap_server <- function(id,
           )
         )
         meta <- meta[input$selected_contrasts]
-        res <- list(
-          df = df,
-          meta = meta
-        )
+
+
+        fx <- sapply(meta, function(x) x$meta.fx)
+        qv <- sapply(meta, function(x) x$meta.q)
+        rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
+        kk <- rownames(fx)
+        kk <- as.character(df$pathway)
+        if (length(kk) < 3) {
+          return(NULL)
+        }
+        if (mean(is.na(qv)) < 0.01) {
+          score <- fx[kk, , drop = FALSE] * (1 - qv[kk, , drop = FALSE])**2
+        } else {
+          score <- fx[kk, , drop = FALSE]
+        }
+        rownames(score) <- tolower(gsub(".*:|reactome_|_Homo.*$", "",
+          rownames(score),
+          ignore.case = TRUE
+        ))
+        rownames(score) <- gsub("(_.*$)", "", rownames(score))
+
+        return(score)
       })
 
       plot_RENDER <- function() {
         res <- plot_data()
-        df <- res$df
-        meta <- res$meta
-        rotate <- input$rotate
+        shiny::validate(shiny::need(
+          !is.null(res), "Enrichment table is too small to plot an activation matrix."
+        ))
 
         playbase::pgx.plotActivation(
           pgx,
           contrasts = input$selected_contrasts,
-          what = "geneset",
+          what = "matrix",
+          matrix = res,
           plotlib = "plotly",
           filter = NULL,
           cexCol = 1.4,
@@ -129,16 +147,12 @@ functional_plot_reactome_actmap_server <- function(id,
 
       plot_RENDER2 <- function() {
         res <- plot_data()
-        df <- res$df
-        meta <- res$meta
-        if (is.null(df) || nrow(df) == 0) {
-          return(NULL)
-        }
 
         playbase::pgx.plotActivation(
           pgx,
           contrasts = input$selected_contrasts,
-          what = "geneset",
+          what = "matrix",
+          matrix = res,
           plotlib = "plotly",
           filter = NULL,
           cexCol = 1.4,

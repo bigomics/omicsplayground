@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:master
+FROM bigomics/omicsplayground:latest
 
 ARG BRANCH=master
 ARG update_playdata=false
@@ -27,6 +27,12 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra Ubuntu libs (should be moved to playbase)
 #------------------------------------------------------------
 # RUN apt update && apt install -y fonts-lato
+
+#------------------------------------------------------------
+# Install quarto tinytext, to be removed when new image is built
+#------------------------------------------------------------
+RUN quarto install tinytex
+RUN R -e "install.packages('torch')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
@@ -54,6 +60,10 @@ RUN rm -fr /omicsplayground  \
 # Install fresh playbase (from same BRANCH)
 #------------------------------------------------------------
 # check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
+# TODO: temporary solution, this should go out once we rebuild base image
+RUN R -e "install.packages('ggiraph')"
+RUN R -e "BiocManager::install('TileDBArray')"
+
 RUN if [ $update_playbase = true ]; then \
     echo "Checking playbase branch ${BRANCH}"; \
     BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \

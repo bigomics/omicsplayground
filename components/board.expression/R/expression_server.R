@@ -3,7 +3,8 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
+                            board_observers = board_observers ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -30,11 +31,13 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
 
+    #================================================================================
+    #=============================== observers ======================================
+    #================================================================================
 
-    # observe functions ##########
-
-
-    shiny::observeEvent(input$gx_info,
+    my_observers <- list()
+    
+    my_observers[[1]] <- shiny::observeEvent(input$gx_info,
       {
         shiny::showModal(shiny::modalDialog(
           title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
@@ -46,7 +49,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
 
     ## update choices upon change of data set
-    shiny::observe({
+    my_observers[[2]] <- shiny::observe({
       pgx <- pgx
       shiny::req(pgx$X)
 
@@ -72,7 +75,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::updateCheckboxInput(session, "gx_grouped", value = (ncol(pgx$X) <= 8))
     })
 
-    observeEvent(
+    my_observers[[3]] <- observeEvent(
       {
         input$show_pv
       },
@@ -86,24 +89,28 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
       }
     )
-
-
-
+    
     # observe functions to project DT from invalidating equal row_select
-
     gsettable_rows_selected <- reactiveVal()
 
-    observe({
+    my_observers[[4]] <- observe({
       gsettable_rows_selected(gsettable$rows_selected())
     })
 
     genetable_rows_selected <- reactiveVal()
 
-    observe({
+    my_observers[[5]] <- observe({
       genetable_rows_selected(genetable$rows_selected())
     })
 
-    # reactives ########
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    board_observers[[id]] <- my_observers
+
+    ## =========================================================================
+    ## ============================= REACTIVES =================================
+    ## =========================================================================
 
 
     selected_gxmethods <- shiny::reactive({
@@ -188,6 +195,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0"
         colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
       }
+
       aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
       gene.annot <- pgx$genes[rownames(mx), aa]
       gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
@@ -294,19 +302,6 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         res <- res[sel, , drop = FALSE]
       }
-
-      ## just show top 10
-      ## AZ: Disabled on Sept 1. useless?
-      ## if (length(input$gx_top10) && input$gx_top10) {
-      ##   fx <- as.numeric(res[, fx.col])
-      ##  names(fx) <- rownames(res)
-      ##  pp <- unique(c(
-      ##    head(names(sort(-fx[which(fx > 0)])), 10),
-      ##    head(names(sort(fx[which(fx < 0)])), 10)
-      ##  ))
-      ##  res <- res[pp, , drop = FALSE]
-      ##  res <- res[order(-res[, fx.col]), , drop = FALSE]
-      ## }
 
       if (nrow(res) == 0) {
         shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))

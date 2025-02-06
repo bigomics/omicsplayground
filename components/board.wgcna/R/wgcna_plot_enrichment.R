@@ -5,10 +5,10 @@
 
 wgcna_plot_enrichment_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
     height,
     width) {
   ns <- shiny::NS(id)
@@ -26,19 +26,20 @@ wgcna_plot_enrichment_ui <- function(
 }
 
 wgcna_plot_enrichment_server <- function(id,
-                                         enrich_table,
                                          enrichTable_module,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     enrichPlot.RENDER <- function() {
-      df <- enrich_table()
+
+      df <- enrichTable_module$data()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
       }
+
       ii <- enrichTable_module$rows_all()
       shiny::req(ii)
       df <- df[ii, , drop = FALSE]
-      df <- head(df, 20)
+      df <- head(df, 20)      
       gs.top <- df$geneset
       xlim0 <- c(0, max(df$score))
       col1 <- c("lightskyblue1", "lightpink")[1 + 1 * (df$q.value < 0.05)]
@@ -53,8 +54,8 @@ wgcna_plot_enrichment_server <- function(id,
     PlotModuleServer(
       "plot",
       func = enrichPlot.RENDER,
-      pdf.width = 5, pdf.height = 5,
-      res = c(72, 80),
+      pdf.width = 10, pdf.height = 5,
+      res = c(80, 110),
       add.watermark = watermark
     )
   })

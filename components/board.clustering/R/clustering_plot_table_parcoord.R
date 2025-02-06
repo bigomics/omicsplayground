@@ -153,6 +153,10 @@ clustering_plot_table_parcoord_server <- function(id,
     parcoord.RENDER <- function() {
       pc <- plot_data()
       zx <- pc$mat
+      shiny::validate(shiny::need(
+        !all(is.na(zx)),
+        "Filter is too restrictive. Please change 'Filter samples:'."
+      ))
       ## build dimensions
       dimensions <- list()
       for (i in 1:ncol(zx)) {

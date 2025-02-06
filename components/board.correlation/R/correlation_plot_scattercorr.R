@@ -97,7 +97,7 @@ correlation_plot_scattercorr_server <- function(id,
 
       if (length(rho) == 1) names(rho) <- rownames(R)[1]
       pp <- unique(c(this.gene, names(rho)))
-      X <- pgx$X[pp, ]
+      X <- pgx$X[pp, , drop = FALSE]
 
       names(rho) <- playbase::probe2symbol(names(rho), pgx$genes, labeltype(), fill_na = TRUE)
       this.gene <- playbase::probe2symbol(this.gene, pgx$genes, labeltype(), fill_na = TRUE)
