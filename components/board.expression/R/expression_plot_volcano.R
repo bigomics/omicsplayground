@@ -39,7 +39,9 @@ expression_plot_volcano_ui <- function(id,
     width = width,
     height = height,
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns
   )
 }
 
@@ -165,14 +167,21 @@ expression_plot_volcano_server <- function(id,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         label.names = pd[["label.names"]],
-        label.cex = 4,
+        label.cex = input$label_size,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
-        marker.size = 1,
-        showlegend = FALSE,
-        title = NULL
+        marker.size = input$marker_size,
+        showlegend = input$show_legend,
+        title = input$title,
+        axis.text.size = input$axis_text_size,
+        colors = c(
+          up = input$color_up,
+          notsig = "#707070AA",
+          notsel = "#cccccc88",
+          down = input$color_down
+        )
       )
     }
 

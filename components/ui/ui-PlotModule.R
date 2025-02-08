@@ -32,7 +32,9 @@ PlotModuleUI <- function(id,
                          card_names = NULL,
                          header_buttons = NULL,
                          translate = TRUE,
-                         translate_js = TRUE) {
+                         translate_js = TRUE,
+                         editor = FALSE,
+                         ns_parent = function(a){return(a)}) {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -219,8 +221,23 @@ PlotModuleUI <- function(id,
     header_buttons <- div()
   }
 
+  if (editor) {
+    editor_button <- shiny::div(
+      class = "edit-button",
+      title = "edit plot",
+      modalTrigger(
+        ns("editbutton"),
+        ns("plotPopup2"),
+        icon("pencil"),
+        class = "btn-circle-xs"
+      )
+    )
+  } else {
+    editor_button <- NULL
+  }
+
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",
@@ -303,7 +320,8 @@ PlotModuleUI <- function(id,
     ),
     options.button,
     shiny::div(class = "download-button", title = "download", dload.button),
-    shiny::div(class = "zoom-button", title = "zoom", zoom.button)
+    shiny::div(class = "zoom-button", title = "zoom", zoom.button),
+    editor_button
   )
 
   ## ------------------------------------------------------------------------
@@ -390,6 +408,107 @@ PlotModuleUI <- function(id,
     }
   }
 
+  editor_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          # Plot Type & Color Options
+          bslib::accordion_panel(
+            "Basic Options",
+            shiny::textInput(
+              ns_parent("title"),
+              "Title",
+              value = "title"
+            )#,
+            # selectInput(
+            #   ns("color_scheme"),
+            #   "Color Scheme", 
+            #   choices = c("Default", "Viridis", "Blues", "Reds"),
+            #   selected = "Default"
+            # )
+          ),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              colourpicker::colourInput(
+                ns_parent("color_up"), "Up",
+                "#f23451"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_down"), "Down",
+                "#3181de"
+              )
+            )
+          ),
+          
+          # Axis Options
+          bslib::accordion_panel(
+            "Labels",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              numericInput(ns_parent("label_size"), "Labels size", value = 4),
+              numericInput(ns_parent("marker_size"), "Points size", value = 1),
+              numericInput(ns_parent("axis_text_size"), "Axis text size", value = 14)
+            )
+          ),
+          
+          # Additional Settings
+          bslib::accordion_panel(
+            "Additional Settings",
+            checkboxInput(ns_parent("show_legend"), "Show Legend", value = FALSE)
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            # outputFunc(ns("renderfigure_2")) %>%
+            #   bigLoaders::useSpinner()
+          }
+        )
+      )
+      # div(
+      #   class = "d-flex",
+      #   div(
+      #     class = "sidebar border-end",
+      #     style = "width: 300px; padding: 20px;",
+      #     # h4("Plot Options"),
+      #     # hr(),
+          
+          
+          
+      #     # Apply Button
+      #     div(
+      #       class = "mt-4",
+      #       actionButton(
+      #         ns("apply_changes"),
+      #         "Download plot", 
+      #         class = "btn-primary w-100"
+      #       )
+      #     )
+      #   ),
+        
+      #   # Main plot area
+      #   shiny::div(
+      #     class = "popup-plot-body",
+          
+      #   )
+      # ),
+      #track_open = TRUE
+    )
+                         
+  )
+
   ## inline styles (should be in CSS...)
   modaldialog.style <- paste0("#", ns("plotPopup"), " .modal-dialog {width:", width.2, ";}")
   modalbody.style <- paste0("#", ns("plotPopup"), " .modal-body {min-height:", height.2, "; padding:30px 150px;}")
@@ -424,6 +543,7 @@ PlotModuleUI <- function(id,
           track_open = TRUE
         )
       ),
+      if (editor) {editor_content},
       if (cards) {
         div(
           lapply(1:length(card_names), function(x) {
@@ -503,7 +623,8 @@ PlotModuleServer <- function(id,
                              add.watermark = FALSE,
                              remove_margins = FALSE,
                              vis.delay = 0,
-                             card = NULL) {
+                             card = NULL,
+                             editor = FALSE) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -1263,6 +1384,7 @@ PlotModuleServer <- function(id,
       if (is.null(card)) {
         output$renderfigure <- render
         output$renderpopup <- render2
+        output$renderfigure_2 <- render
       } else {
         output[[paste0(
           "renderfigure",
@@ -1272,6 +1394,7 @@ PlotModuleServer <- function(id,
           "renderpopup",
           card
         )]] <- render2
+        output$renderfigure_2 <- render
       }
 
       shiny::observeEvent(input$copy_info, {
