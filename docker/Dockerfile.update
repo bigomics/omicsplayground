@@ -32,6 +32,19 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install quarto tinytext, to be removed when new image is built
 #------------------------------------------------------------
 RUN R -e "install.packages('torch')"
+RUN R -e "install.packages('GGally')"
+RUN R -e "install.packages('IntNMF')"
+RUN R -e "install.packages('metap')"
+RUN R -e "install.packages('plotrix')"
+RUN R -e "install.packages('RcppML')"
+RUN R -e "install.packages('RGCCA')"
+RUN R -e "install.packages('rpart.plot')"
+RUN R -e "install.packages('SNFtool')"
+RUN R -e "BiocManager::install('MOFA2')"
+RUN R -e "BiocManager::install('MOFAdata')"
+RUN R -e "BiocManager::install('nipalsMCIA')"
+RUN R -e "devtools::install_github('mkanai/grimon')"
+RUN R -e "devtools::install_github('metabolomicsworkbench/RefMet')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
