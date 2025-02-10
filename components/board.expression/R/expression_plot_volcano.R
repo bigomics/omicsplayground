@@ -159,13 +159,30 @@ expression_plot_volcano_server <- function(id,
       shiny::req(pd)
 
       names <- pd$features
+      
+      if (input$custom_labels) {
+        label_features <- if (input$label_features == "") {
+          NULL
+        } else {
+          strsplit(input$label_features, "\\s+")[[1]]
+        }
+        label_features <- label_features
+      } else {
+        label_features <- pd[["lab.genes"]]
+      }
+
+      highlight <- if (input$color_selection) {
+        label_features
+      } else {
+        pd[["sel.genes"]]
+      }
 
       playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = highlight,
+        label = label_features,
         label.names = pd[["label.names"]],
         label.cex = input$label_size,
         psig = pd[["fdr"]],
@@ -173,7 +190,7 @@ expression_plot_volcano_server <- function(id,
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
         marker.size = input$marker_size,
-        showlegend = input$show_legend,
+        showlegend = FALSE,
         title = input$title,
         axis.text.size = input$axis_text_size,
         colors = c(
@@ -234,7 +251,8 @@ expression_plot_volcano_server <- function(id,
         pdf.width = 10,
         pdf.height = 8,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        parent_session = session
       )
     })
   }) ## end of moduleServer

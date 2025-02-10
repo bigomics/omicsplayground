@@ -425,7 +425,7 @@ PlotModuleUI <- function(id,
             shiny::textInput(
               ns_parent("title"),
               "Title",
-              value = "title"
+              value = NULL
             )#,
             # selectInput(
             #   ns("color_scheme"),
@@ -448,28 +448,30 @@ PlotModuleUI <- function(id,
               )
             )
           ),
-          
+
           # Axis Options
           bslib::accordion_panel(
-            "Labels",
+            "Text sizes",
             bslib::layout_column_wrap(
               width = 1/2,
-              numericInput(ns_parent("label_size"), "Labels size", value = 4),
-              numericInput(ns_parent("marker_size"), "Points size", value = 1),
-              numericInput(ns_parent("axis_text_size"), "Axis text size", value = 14)
+              numericInput(ns_parent("label_size"), "Labels", value = 4),
+              numericInput(ns_parent("marker_size"), "Points", value = 1),
+              numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
             )
           ),
-          
+
           # Additional Settings
           bslib::accordion_panel(
-            "Additional Settings",
-            checkboxInput(ns_parent("show_legend"), "Show Legend", value = FALSE)
+            "Labels",
+            checkboxInput(ns_parent("color_selection"), "Color just selection", value = FALSE),
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
           )
         ),
         shiny::div(
           class = "popup-plot",
           if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
               bigLoaders::useSpinner()
           } else {
             # outputFunc(ns("renderfigure_2")) %>%
@@ -624,7 +626,8 @@ PlotModuleServer <- function(id,
                              remove_margins = FALSE,
                              vis.delay = 0,
                              card = NULL,
-                             editor = FALSE) {
+                             editor = FALSE,
+                             parent_session = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -679,6 +682,33 @@ PlotModuleServer <- function(id,
           path_object2
         )
       }
+
+      observeEvent(input$plot_click, {
+        click_x <- input$plot_click$x
+        click_y <- input$plot_click$y
+        plot_data <- csvFunc()
+        distances <- sqrt((plot_data$x - click_x)^2 + (plot_data$y - click_y)^2)
+        nearest_idx <- which.min(distances)
+        clicked_feature <- rownames(plot_data)[nearest_idx]
+        current_features <- parent_session$input$label_features
+        if (current_features == "") {
+          new_features <- clicked_feature
+        } else {
+          current_features_vec <- strsplit(current_features, " ")[[1]]
+          if (!clicked_feature %in% current_features_vec) {
+            new_features <- paste(current_features, clicked_feature, sep = " ")
+          } else {
+            new_features <- paste(setdiff(current_features_vec, clicked_feature), collapse = " ")
+          }
+        }
+
+        # Update label_features input
+        updateTextAreaInput(
+          parent_session,
+          "label_features",
+          value = new_features
+        )
+      })
 
 
       if (!is.null(card)) {
