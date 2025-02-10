@@ -171,25 +171,49 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       opacity <- ifelse(length(hilight2) > 0, 0.4, 0.90)
       if (plotlib == "plotly") opacity <- sqrt(opacity) ## less opacity..
 
-      p <- playbase::pgx.scatterPlotXY(
-        pos,
-        var = var,
-        plotlib = plotlib,
-        softmax = TRUE,
-        cex.lab = 1.2 * cex.label * cexlab,
-        opacity = opacity,
-        cex = cex,
-        zsym = (min(var, na.rm = TRUE) < 0),
-        zlim = zlim,
-        hilight.cex = cex,
-        hilight.col = NULL,
-        hilight.lwd = 0.8,
-        hilight = hilight,
-        hilight2 = hilight2,
-        labels = labels,
-        title = title,
-        ...
-      )
+      if (plotlib == "plotly") {
+        p <- playbase::pgx.scatterPlotXY(
+          pos,
+          var = var,
+          plotlib = plotlib,
+          softmax = TRUE,
+          cex.lab = 1.2 * cex.label * cexlab,
+          opacity = opacity,
+          cex = cex,
+          zsym = (min(var, na.rm = TRUE) < 0),
+          zlim = zlim,
+          hilight.cex = cex,
+          hilight.col = NULL,
+          hilight.lwd = 0.8,
+          hilight = hilight,
+          hilight2 = hilight2,
+          labels = labels,
+          title = title,
+          source = source,
+          key = rownames(pos),
+          ...
+        )
+      } else {
+        p <- playbase::pgx.scatterPlotXY(
+          pos,
+          var = var,
+          plotlib = plotlib,
+          softmax = TRUE,
+          cex.lab = 1.2 * cex.label * cexlab,
+          opacity = opacity,
+          cex = cex,
+          zsym = (min(var, na.rm = TRUE) < 0),
+          zlim = zlim,
+          hilight.cex = cex,
+          hilight.col = NULL,
+          hilight.lwd = 0.8,
+          hilight = hilight,
+          hilight2 = hilight2,
+          labels = labels,
+          title = title,
+          ...
+        )
+      }
 
       p
     }
