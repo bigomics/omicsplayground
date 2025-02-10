@@ -127,7 +127,7 @@ MofaUI <- function(id) {
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               xxxl = c(12, 12),
-              lg = c(7,5),
+              lg = c(6,6),
               sm = c(12, 12)               
             ),
             bslib::layout_columns(
@@ -274,51 +274,6 @@ MofaUI <- function(id) {
               ns("mofa_enrichmentgenes"),
               title = "Enrichment gene table",
               label = "a",
-              info.text = "",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )                          
-          )
-        )
-      ), ## tabPanel
-
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        "gsetMOFA",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Geneset MOFA.</b> MOFA can also be performed on gene sets computed in each single sample. The resulting gene set factors (here called 'modules') can be correlated with phenotypes/traits/conditions. This analysis may inform on 'genesets modules' (GM) correlated the modules with traits. The Module-Factor correlation shows how geneset modules correlate with gene factors.")),
-          bslib::layout_columns(
-            col_widths = bslib::breakpoints(
-              lg = c(6, 6, 7, 5),
-              sm = c(12, 12, 12, 12)
-            ),
-            mofa_plot_gsetmofa_traitCor_ui(
-              ns("gset_traitcor"),
-              title = "Genesets module-Trait correlation",
-              info.text = "Correlation between geneset MOFA factors and traits. Correlation between each geneset module MOFA factor (y-axis) and each available variable in your metadata (x-axis). The metadata variables shown correspond to those provided in your uploaded samples.csv file. Covariates may include the phenotype(s) of interest. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Each geneset MOFA factor captures a source of heterogeneity in the integrated data accounted by a gene set. Therefore, the heatmap helps identification of gene sets aggregating dominant sources of variation in the data -which may be driven by biological processes- associated with a trait or condition.",
-              caption = "Factor heatmap.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            mofa_plot_gsetmofa_factorCor_ui(
-              ns("gset_factorcor"),
-              title = "Geneset module-Factor correlation",
-              info.text = "Correlation between genesets modules and MOFA factors. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Significant correlation between genesets and MOFA factors might indicate similar sources of variation in the data -which might be driven by shared biological processes.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            mofa_table_gsetmofa_ui(
-              ns("gsetmofa_module"),
-              title = "Genesets in module",
-              info.text = "",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),                          
-            mofa_table_gsetmofa_factor_ui(
-              ns("gsetmofa_factor"),
-              title = "Features in factor",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

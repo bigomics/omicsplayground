@@ -85,7 +85,9 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
           pgx,
           kernel = kernel,
           numfactors = numfactors,
-          add_gsets = input$add_gsets)
+          add_gsets = input$add_gsets,
+          factorizations = FALSE
+      )
       
       shiny::removeModal()
       message("[mofa] compute MOFA done!")
@@ -121,12 +123,9 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
         sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
         contrasts <- colnames(mofa$contrasts)
         phenotypes <- colnames(mofa$samples)
-        modules <- colnames(mofa$gset.mofa$W)
         traits <- colnames(pgx$mofa$Y)
         updateSelectInput(session, "selected_factor", choices = factors,
                           selected = factors[1])
-        updateSelectInput(session, "selected_module", choices = modules,
-                          selected = modules[1])
         updateSelectInput(session, "selected_trait", choices = traits,
                           selected = traits[1])
         updateSelectInput(session, "show_types", choices = dtypes,
@@ -157,17 +156,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       sel
     })
 
-    gsetmofaTable_selected <- reactive({
-      tbl <- gsetmofaTable
-      shiny::req(tbl$data())      
-      has.selection <- length(tbl$rownames_selected())>0 
-      if(has.selection) {
-        sel <- tbl$rownames_selected()
-      } else {
-        sel <- NULL
-      }
-      sel
-    })
     
     ## ========================================================================
     ## =========================== MODULES ====================================
@@ -272,6 +260,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_moduleheatmap_server(
       "integrated_heatmap",
       mofa = mofa,
+      ntop = c(50,40),
       input_factor = reactive(NULL),      
       watermark = WATERMARK
     )
@@ -279,6 +268,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_moduleheatmap_server(
       "module_heatmap",
       mofa = mofa,
+      ntop = c(30,40),
       input_factor = reactive(input$selected_factor),      
       show_types = reactive(input$show_types),
       watermark = WATERMARK
@@ -298,18 +288,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       mofa = mofa,
       input_factor = reactive(input$selected_factor),
       show_types = reactive(input$show_types),
-      watermark = WATERMARK
-    )
-
-    mofa_plot_gsetmofa_traitCor_server(
-      "gset_traitcor",
-      mofa = mofa,
-      watermark = WATERMARK
-    )
-
-    mofa_plot_gsetmofa_factorCor_server(
-      "gset_factorcor",
-      mofa = mofa,
       watermark = WATERMARK
     )
     
@@ -336,22 +314,6 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       selected_pathway = enrichmentTable_selected
     )
 
-    gsetmofaTable <- mofa_table_gsetmofa_server(
-      "gsetmofa_module",
-      mofa = mofa,
-      selected_module = reactive(input$selected_module),
-      selected_trait = reactive(input$selected_trait)
-    )
-    
-    mofa_table_gsetmofa_factor_server(
-      "gsetmofa_factor",
-      mofa = mofa,
-      pgx = pgx,
-      selected_factor = reactive(input$selected_factor),
-      selected_trait = reactive(input$selected_trait),
-      selected_pathway = gsetmofaTable_selected
-    )
-    
 
     return(NULL)
   })

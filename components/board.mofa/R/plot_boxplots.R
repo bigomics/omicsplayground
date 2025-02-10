@@ -69,7 +69,7 @@ mofa_plot_boxplots_server <- function(id,
       samples <- samples[, cm, drop = FALSE]
 
       nph <- length(pheno)
-      nr <- ceiling(sqrt(nph))
+      nr <- max(ceiling(sqrt(nph)),2)
       nc <- ceiling(nph / nr)
       par(mfrow = c(nr, nc), mar = c(3, 4, 2.8, 0.5))
       

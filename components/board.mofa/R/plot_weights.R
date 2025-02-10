@@ -56,15 +56,15 @@ mofa_plot_weights_server <- function(id,
       ntop <- ifelse(input$show_top, ntop, -1)
 
       ## switch label type
-      dbg("[mofa_plot_weights_server:plot.RENDER] head.rownames.ww = ", head(rownames(ww[[1]])))
-      dbg("[mofa_plot_weights_server:plot.RENDER] colnames(pgx.genes) = ", head(colnames(pgx$genes)))
-      lab <- pgx$genes$label
-      dbg("[mofa_plot_weights_server:plot.RENDER] head.lab = ", head(lab))
-      dbg("[mofa_plot_weights_server:plot.RENDER] head.rownames.ww = ", head(rownames(ww[[1]])))
-      ww <- playbase::mofa.prefix(ww)
-      dbg("[mofa_plot_weights_server:plot.RENDER] head.rownames.ww = ", head(rownames(ww[[1]])))      
-      dbg("[mofa_plot_weights_server:plot.RENDER] rownames(pgx.genes) = ", head(rownames(pgx$genes)))
-      ww <- lapply(ww, function(w) playbase::rename_by(w, pgx$genes, "label"))
+      ## dbg("[mofa_plot_weights_server:plot.RENDER] head.rownames.ww = ", head(rownames(ww[[1]])))
+      ## dbg("[mofa_plot_weights_server:plot.RENDER] colnames(pgx.genes) = ", head(colnames(pgx$genes)))
+      ## lab <- pgx$genes$label
+      ## dbg("[mofa_plot_weights_server:plot.RENDER] head.lab = ", head(lab))
+      ## dbg("[mofa_plot_weights_server:plot.RENDER] head.rownames.ww = ", head(rownames(ww[[1]])))
+      ## ww <- playbase::mofa.prefix(ww)
+      ## dbg("[mofa_plot_weights_server:plot.RENDER] head.rownames.ww = ", head(rownames(ww[[1]])))      
+      ## dbg("[mofa_plot_weights_server:plot.RENDER] rownames(pgx.genes) = ", head(rownames(pgx$genes)))
+      ## ww <- lapply(ww, function(w) playbase::rename_by(w, pgx$genes, "label"))
       
       mfrow=c(1,ntypes)
       par(mfrow=mfrow, mar=c(4,8,1.5,0))

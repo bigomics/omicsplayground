@@ -11,6 +11,7 @@ DeepNetInputs <- function(id) {
     shiny::selectInput(ns("show_conditions"), "Show conditions:", choices = NULL, multiple = TRUE),
     shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),
 
+    br(),
     p("Network learning:"),
     bslib::layout_column_wrap(
       width = 1 / 2,
