@@ -408,107 +408,15 @@ PlotModuleUI <- function(id,
     }
   }
 
-  editor_content <- shiny::div(
-    class = "popup-modal",
-    modalUI(
-      id = ns("plotPopup2"),
-      title = title,
-      size = "fullscreen",
-      footer = NULL,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          # Plot Type & Color Options
-          bslib::accordion_panel(
-            "Basic Options",
-            shiny::textInput(
-              ns_parent("title"),
-              "Title",
-              value = NULL
-            )#,
-            # selectInput(
-            #   ns("color_scheme"),
-            #   "Color Scheme", 
-            #   choices = c("Default", "Viridis", "Blues", "Reds"),
-            #   selected = "Default"
-            # )
-          ),
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1/2,
-              colourpicker::colourInput(
-                ns_parent("color_up"), "Up",
-                "#f23451"
-              ),
-              colourpicker::colourInput(
-                ns_parent("color_down"), "Down",
-                "#3181de"
-              )
-            )
-          ),
-
-          # Axis Options
-          bslib::accordion_panel(
-            "Text sizes",
-            bslib::layout_column_wrap(
-              width = 1/2,
-              numericInput(ns_parent("label_size"), "Labels", value = 4),
-              numericInput(ns_parent("marker_size"), "Points", value = 1),
-              numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
-            )
-          ),
-
-          # Additional Settings
-          bslib::accordion_panel(
-            "Labels",
-            checkboxInput(ns_parent("color_selection"), "Color just selection", value = FALSE),
-            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
-            textAreaInput(ns_parent("label_features"), "Label features", value = "")
-          )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
-              bigLoaders::useSpinner()
-          } else {
-            # outputFunc(ns("renderfigure_2")) %>%
-            #   bigLoaders::useSpinner()
-          }
-        )
-      )
-      # div(
-      #   class = "d-flex",
-      #   div(
-      #     class = "sidebar border-end",
-      #     style = "width: 300px; padding: 20px;",
-      #     # h4("Plot Options"),
-      #     # hr(),
-          
-          
-          
-      #     # Apply Button
-      #     div(
-      #       class = "mt-4",
-      #       actionButton(
-      #         ns("apply_changes"),
-      #         "Download plot", 
-      #         class = "btn-primary w-100"
-      #       )
-      #     )
-      #   ),
-        
-      #   # Main plot area
-      #   shiny::div(
-      #     class = "popup-plot-body",
-          
-      #   )
-      # ),
-      #track_open = TRUE
-    )
-                         
+  editor_content <- getEditorContent(
+    plot_type = "default",
+    ns = ns,
+    ns_parent = ns_parent,
+    title = title,
+    cards = cards,
+    outputFunc = outputFunc,
+    width.2 = width.2,
+    height.2 = height.2
   )
 
   ## inline styles (should be in CSS...)
