@@ -34,6 +34,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 RUN R -e "install.packages('torch')"
 RUN R -e "install.packages('GGally')"
 RUN R -e "install.packages('IntNMF')"
+RUN R -e "BiocManager::install('multtest')"
 RUN R -e "install.packages('metap')"
 RUN R -e "install.packages('plotrix')"
 RUN R -e "install.packages('RcppML')"
