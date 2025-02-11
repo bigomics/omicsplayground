@@ -41,7 +41,8 @@ expression_plot_volcano_ui <- function(id,
     cards = TRUE,
     card_names = c("dynamic", "static"),
     editor = TRUE,
-    ns_parent = ns
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 

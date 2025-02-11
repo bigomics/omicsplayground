@@ -34,7 +34,8 @@ PlotModuleUI <- function(id,
                          translate = TRUE,
                          translate_js = TRUE,
                          editor = FALSE,
-                         ns_parent = function(a){return(a)}) {
+                         ns_parent = function(a){return(a)},
+                         plot_type = "volcano") {
   ns <- shiny::NS(id)
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
@@ -409,7 +410,7 @@ PlotModuleUI <- function(id,
   }
 
   editor_content <- getEditorContent(
-    plot_type = "default",
+    plot_type = plot_type,
     ns = ns,
     ns_parent = ns_parent,
     title = title,

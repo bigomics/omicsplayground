@@ -3,9 +3,9 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-getEditorContent <- function(plot_type = "default", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
   # Default editor content
-  default_content <- shiny::div(
+  volcano_content <- shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -73,8 +73,108 @@ getEditorContent <- function(plot_type = "default", ns, ns_parent, title, cards 
     )
   )
 
+  # Heatmap specific content
+  heatmap_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          # Basic Options
+          bslib::accordion_panel(
+            "General",
+            shiny::checkboxInput(
+              ns_parent("show_legend"),
+              "Show Legend",
+              value = TRUE
+            ),
+            shiny::checkboxInput(
+              ns_parent("show_colnames"),
+              "Show Column Names",
+              value = TRUE
+            ),
+            shiny::numericInput(
+              ns_parent("column_names_rot"),
+              "Column Names Rotation",
+              value = 45,
+              min = 0,
+              max = 90
+            ),
+            shiny::numericInput(
+              ns_parent("num_rownames"),
+              "Max Number of Row Names",
+              value = 50,
+              min = 0,
+              max = 1000
+            ),
+            shiny::numericInput(
+              ns_parent("rownames_width"),
+              "Row Names Width",
+              value = 40,
+              min = 10,
+              max = 200
+            )
+          ),
+          # Text Sizes
+          bslib::accordion_panel(
+            "Text Sizes",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              numericInput(ns_parent("label_size"), "Labels", value = 8),
+              numericInput(ns_parent("annot_cex"), "Annotation", value = 10)
+            )
+          ),
+          # Clustering Options
+          bslib::accordion_panel(
+            "Dendograms",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              checkboxInput(ns_parent("cluster_rows"), "Rows", value = TRUE),
+              checkboxInput(ns_parent("cluster_cols"), "Columns", value = TRUE)
+            )
+          ),
+          # Color Scheme
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              colourpicker::colourInput(
+                ns_parent("color_high"), "High",
+                "#f23451"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_mid"), "Mid",
+                "#eeeeee"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_low"), "Low",
+                "#3181de"
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            # outputFunc(ns("renderfigure_2")) %>%
+            #   bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
   # Return content based on plot type
   switch(plot_type,
-    "default" = default_content
+    "volcano" = volcano_content,
+    "heatmap" = heatmap_content
   )
 } 
