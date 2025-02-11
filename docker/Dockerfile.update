@@ -47,6 +47,12 @@ RUN R -e "BiocManager::install('nipalsMCIA')"
 RUN R -e "devtools::install_github('mkanai/grimon')"
 RUN R -e "devtools::install_github('metabolomicsworkbench/RefMet')"
 RUN R -e "torch::install_torch()"
+RUN apt-get update && apt-get install -y \
+    texlive-latex-base \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-latex-extra \
+    && git clone https://github.com/HarisIqbal88/PlotNeuralNet /opt
 
 #------------------------------------------------------------
 # Add supporting R libraries
