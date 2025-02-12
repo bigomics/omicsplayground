@@ -666,7 +666,13 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename, ".png"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".png")
+            } else {
+              paste0(filename, ".png")
+            }
+          }),
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -764,7 +770,13 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename, ".pdf"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".pdf")
+            } else {
+              paste0(filename, ".pdf")
+            }
+          }),
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -969,7 +981,13 @@ PlotModuleServer <- function(id,
       # Excel download
       if (do.excel) {
         download.excel <- shiny::downloadHandler(
-          filename = paste0(filename, ".xlsx"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".xlsx")
+            } else {
+              paste0(filename, ".xlsx")
+            }
+          }),
           content = function(file) {
             shiny::withProgress({
               data <- csvFunc()
