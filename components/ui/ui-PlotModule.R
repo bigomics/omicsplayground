@@ -473,6 +473,7 @@ PlotModuleServer <- function(id,
                              download.csv = NULL,
                              download.excel = NULL,
                              download.obj = NULL,
+                             download.contrast.name = NULL,
                              pdf.width = 8,
                              pdf.height = 6,
                              pdf.pointsize = 12,
@@ -942,7 +943,13 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename, ".csv"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".csv")
+            } else {
+              paste0(filename, ".csv")
+            }
+          }),
           content = function(file) {
             shiny::withProgress(
               {
