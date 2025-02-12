@@ -268,7 +268,8 @@ expression_plot_volcanoMethods_server <- function(id,
         pdf.width = 12,
         pdf.height = 5,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        download.contrast.name = comp
       )
     })
   }) ## end of moduleServer

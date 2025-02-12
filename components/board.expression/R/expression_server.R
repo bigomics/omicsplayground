@@ -598,7 +598,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       organism = pgx$organism,
       show_pv = shiny::reactive(input$show_pv),
       height = c(tabH - 10, 700),
-      scrollY = "200px"
+      scrollY = "200px",
+      cont = shiny::reactive(input$gx_contrast)
     )
 
     gsettable <- expression_table_gsettable_server(
