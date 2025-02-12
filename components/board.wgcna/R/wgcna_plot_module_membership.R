@@ -51,7 +51,9 @@ wgcna_plot_module_membership_server <- function(id,
       }
 
       ii <- unique(c(head(order(rho), ntop), tail(order(rho), ntop)))
-      par(mar=c(6,4,2,0.1))
+      len <- max(nchar(names(rho)))
+      bmar <- min(max(round(len/2),6),12)
+      par(mar=c(bmar,4,2,0.1))
       barplot( sort(rho[ii]), ylab = ylab0, las = 3,
               cex.names = 0.90, main = NULL )
       title(module, line = 1)

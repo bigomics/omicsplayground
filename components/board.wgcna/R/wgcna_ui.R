@@ -197,7 +197,7 @@ WgcnaUI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. </b> <b>(c)</b> Module membership (MM) as the correlation of the genes with the module eigengene. <b>(d)</b> Module enrichment plot of top most enriched genesets. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
           bslib::layout_columns(
-            col_widths = c(4,4,4,6,6),
+            col_widths = c(3,4,5,5,7),
             wgcna_plot_module_significance_ui(
               ns("moduleSignificance"),
               title = "(a) Trait correlation",

@@ -57,9 +57,13 @@ wgcna_table_enrichment_server <- function(id,
       df
     }
     
-    RENDER <- shiny::reactive({
+    render_table <- function(full=FALSE) {
 
       df <- table_data()
+      if(!full) {
+        df <- df[,c("geneset","score","q.value","genes")]
+      }
+
       numeric.cols <- grep("score|value|ratio", colnames(df))
 
       DT::datatable(
@@ -75,18 +79,34 @@ wgcna_table_enrichment_server <- function(id,
           scrollX = TRUE,
           scrollY = "70vh",
           scrollResize = TRUE,
-          scroller = TRUE, deferRender = TRUE
+          scroller = TRUE,
+          deferRender = TRUE,
+          columnDefs = list(
+            list(
+              targets = "geneset", ## with no rownames column 1 is column 2
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 60 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 60) + '...</span>' : data;",
+                "}"
+              )
+            )
+          )          
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%")
-    })
+    }
 
-    RENDER_modal <- shiny::reactive({
-      dt <- RENDER()
+    RENDER <- function() {
+      render_table(full=FALSE)
+    }
+
+    RENDER_modal <- function() {
+      dt <- render_table(full=TRUE)
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
-    })
+    }
 
     tablemodule <- TableModuleServer(
       "datasets",
