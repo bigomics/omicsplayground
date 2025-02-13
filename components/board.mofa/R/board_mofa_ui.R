@@ -73,6 +73,7 @@ MofaUI <- function(id) {
                 ns("factorxview"),
                 title = "Variance per factor and type",
                 info.text = "Amount of variance explained by each factor in each omic type. A trained MOFA model is used to infer the proportion of variance explained (i.e. the coefficient of determinations (R^2)) by the MOFA factors across the different views. Higher variance suggests stronger effect. In MOFA, 'views' refer to features from non-overlapping set of omic types. MOFA 'factors' are low-dimensional representations of multi-omic data. A factor is a latent variable that captures a source of variation across the integrated data. Each factor captures a different source and dimension of heterogeneity in the integrated data, and thus represents an independent source of variation. Note that the interpretation of factors is analogous to the interpretation of the principal components in PCA. Factors with higher explained variance are typically considered more important for understanding the underlying structure and patterns in a multi-omics dataset. They may correspond to significant biological processes, cellular states, or experimental conditions that have a broader impact across multiple data modalities.",
+                info.references = list(list("Argelaguet R, Velten B, Arnol D, Dietrich S, Zenz T, Marioni JC, Buettner F, Huber W, Stegle O (2018). “Multi‐Omics Factor Analysis — a framework for unsupervised integration of multi-omics data sets.” Mol Syst Biol.", "https://www.embopress.org/doi/full/10.15252/msb.20178124")),
                 caption = "Amount of variance explained by each factor in each omics type.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -89,6 +90,7 @@ MofaUI <- function(id) {
                 ns("variance_view"),
                 title = "Variance per type",
                 info.text = "Total amount of variance explained by each view (omic types). Distinct omic types or data modalities often account for different variance observed in the data. This represents an expectation in multi-omics data analyses. A data type explaining more variance compared to another data type may capture either more biologically heterogenous signals, or be affected by technical noise.",
+                info.references = list(list("Argelaguet R, Velten B, Arnol D, Dietrich S, Zenz T, Marioni JC, Buettner F, Huber W, Stegle O (2018). “Multi‐Omics Factor Analysis — a framework for unsupervised integration of multi-omics data sets.” Mol Syst Biol.", "https://www.embopress.org/doi/full/10.15252/msb.20178124")),
                 caption = "Total amount of variance explained by each view (omic types). ",
                 label = "c",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -98,6 +100,7 @@ MofaUI <- function(id) {
                 ns("variance_factor"),
                 title = "Variance per factor",
                 info.text = "Amount of variance explained by each factor across all views (omic types) combined. Distinct factors capture different dimensions of heterogeneity in the data. When a factor explains more variance compared to another factor, it is interpreted as a more dominant source of heterogeneity across samples, resulting from stronger biological or technical influence on the data.",
+                info.references = list(list("Argelaguet R, Velten B, Arnol D, Dietrich S, Zenz T, Marioni JC, Buettner F, Huber W, Stegle O (2018). “Multi‐Omics Factor Analysis — a framework for unsupervised integration of multi-omics data sets.” Mol Syst Biol.", "https://www.embopress.org/doi/full/10.15252/msb.20178124")),
                 caption = "Amount of variance explained by each factor across all views (omic types) combined.",
                 label = "c",
                 height = c("100%", TABLE_HEIGHT_MODAL),

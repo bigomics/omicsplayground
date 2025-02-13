@@ -60,6 +60,7 @@ SNF_UI <- function(id) {
               ns("snf_affinity"),
               title = "SNF affinity matrices",
               info.text = "SNF affinity matrices. Prior to SNF, missing values (if any) are imputed using SVD2. For each data type, standard normalization is applied to each column of the input data to have mean 0 and standard deviation 1. Pairwise squared Euclidean distance are computed between all pairs of data points. Affinity matrix is then calculated from the distance matrix, using number of neighbors K=10-30 and hyperparameter alpha=0.5. Similarity Network Fusion is then calculated. It takes multiple views (data types) and fuses them together to construct an overall status matrix. The learned status matrix can then be used for multiple analyses, including clustering, and classification. The heatmaps display sample correlation of pairwise Euclidean distances and learned integrated data.",
+              info.references = list(list("Wang B, Mezlini A, Demir F, Fiume M, Zu T, Brudno M, Haibe-Kains B, Goldenberg A (2014). “Similarity Network Fusion: a fast and effective method to aggregate multiple data types on a genome wide scale.” Nature Methods.", "https://www.nature.com/articles/nmeth.2810")),
               caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
@@ -70,6 +71,7 @@ SNF_UI <- function(id) {
                 ns("snf_heatmap"),
                 title = "SNF heatmap",
                 info.text = "Clustering of SNF-integrated multi-omics data. Heatmap of normalized multi-omics data. Samples' clustering is driven by Similarity Network Fusion (SNF) method. Euclidean distance is used as similarity measure. Features can be re-ordered by data type. The SNF clusters capture multi-omic features exhibiting similar behavior. Therefore, the heatmap is well versed to enable assessment of samples' clustering driven by multiple data types/modalities.",
+                info.references = list(list("Wang B, Mezlini A, Demir F, Fiume M, Zu T, Brudno M, Haibe-Kains B, Goldenberg A (2014). “Similarity Network Fusion: a fast and effective method to aggregate multiple data types on a genome wide scale.” Nature Methods.", "https://www.nature.com/articles/nmeth.2810")),
                 caption = "Clustering of SNF-integrated multi-omics data. Heatmap of normalized multi-omics data. Samples' clustering is driven by Similarity Network Fusion (SNF) method. Euclidean distance is used as similarity measure.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
