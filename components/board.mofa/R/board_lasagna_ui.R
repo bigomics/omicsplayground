@@ -70,8 +70,8 @@ LasagnaUI <- function(id) {
           mofa_plot_lasagna_ui(
             ns("lasagna"),
             title = "Multi-layer model",
-            info.text = "LASAGNA is a acronym of 'Layered Approach to Simultaneous Analysis of Genomic and Network Associations.'",
-            caption = "",
+            info.text = "Layered Approach to Simultaneous Analysis of Genomic and Network Associations ('LASAGNA'). The LASAGNA plot is a stacked layer plot to visualize multi-omics data. Specifically, each layer shows a data type-specific UMAP. LASAGNA just shows the datatype-specific UMAPs overlayed.",
+            caption = "Layered Approach to Simultaneous Analysis of Genomic and Network Associations ('LASAGNA'). The LASAGNA plot is a stacked layer plot to visualize data type-specific UMAPs overlayed.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
@@ -79,7 +79,7 @@ LasagnaUI <- function(id) {
             ns("clusters"),
             title = "Feature UMAP per datatype",
             info.text = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering is determined by UMAP applied to each data type separately. Feature-level clustering enables assessment of how the distinct data types/modalities define distinct (functional) groups. This analysis may reveal that distinct data types capture different heterogeneities in the data, potentially associated with unique biological functions. On the other end, similar clustering patterns between distinct data types may indicate shared regulation. The colors in the UMAP reflect the low-to-high correlation with the selected comparison to explore the impact of different conditions.",
-            caption = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering is determined by UMAP applied to each data type separately.",
+            caption = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering is determined by UMAP applied to each data type separately. The colors in the UMAP reflect the low-to-high correlation with the selected comparison ",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
