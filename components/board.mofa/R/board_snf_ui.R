@@ -69,8 +69,8 @@ SNF_UI <- function(id) {
               mofa_plot_snf_heatmap_ui(
                 ns("snf_heatmap"),
                 title = "SNF heatmap",
-                info.text = "SNF affinity matrices",
-                caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
+                info.text = "Clustering of SNF-integrated multi-omics data. Heatmap of normalized multi-omics data. Samples' clustering is driven by Similarity Network Fusion (SNF) method. Euclidean distance is used as similarity measure. Features can be re-ordered by data type. The SNF clusters capture multi-omic features exhibiting similar behavior. Therefore, the heatmap is well versed to enable assessment of samples' clustering driven by multiple data types/modalities."
+                caption = "Clustering of SNF-integrated multi-omics data. Heatmap of normalized multi-omics data. Samples' clustering is driven by Similarity Network Fusion (SNF) method. Euclidean distance is used as similarity measure.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
