@@ -1249,7 +1249,7 @@ app_server <- function(input, output, session) {
       inactivityCounter(0) # Reset counter on any user activity
     })
 
-    inactivityControl <- start_inactivityControl(session, timeout = 1800, inactivityCounter)
+    inactivityControl <- start_inactivityControl(session, timeout = opt$INACTIVITY_TIMEOUT, inactivityCounter)
     observe({
       inactivityControl()
     })
