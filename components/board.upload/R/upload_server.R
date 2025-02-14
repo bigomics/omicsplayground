@@ -12,7 +12,9 @@ UploadBoard <- function(id,
                         recompute_pgx,
                         ## recompute_info,  ## not used
                         inactivityCounter,
-                        new_upload) {
+                        new_upload,
+                        fileBrowser,
+                        fileBrowserRoot) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -1120,7 +1122,9 @@ UploadBoard <- function(id,
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Counts",
       info.text = "This is the uploaded counts data.",
-      caption = "This is the uploaded counts data."
+      caption = "This is the uploaded counts data.",
+      fileBrowser = fileBrowser,
+      fileBrowserRoot = fileBrowserRoot
     )
 
     upload_table_preview_samples_server(
@@ -1132,7 +1136,9 @@ UploadBoard <- function(id,
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
-      caption = "This is the uploaded samples data."
+      caption = "This is the uploaded samples data.",
+      fileBrowser = fileBrowser,
+      fileBrowserRoot = fileBrowserRoot
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
@@ -1150,7 +1156,9 @@ UploadBoard <- function(id,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,
-      upload_wizard = shiny::reactive(input$upload_wizard)
+      upload_wizard = shiny::reactive(input$upload_wizard),
+      fileBrowser = fileBrowser,
+      fileBrowserRoot = fileBrowserRoot
     )
 
     normalized <- upload_module_normalization_server(
