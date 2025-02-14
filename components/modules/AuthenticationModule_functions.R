@@ -18,7 +18,7 @@ check_user_options_db <- function(email, user_database = NULL) {
   if (is.null(user_database)) {
     return(FALSE)
   }
-  connection <- connect_db(user_database)
+  connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
   user_opt <- query_by_email(email, connection)
   if (is.null(user_opt)) {
     return(FALSE) # user NOT in db
@@ -47,16 +47,14 @@ read_user_options <- function(user_dir) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
     }
   }
-  # add user dir to opt file (IK: this is not an option!)
-  ##  new_opt$user_dir <- user_dir
   new_opt
 }
 
 read_user_options_db <- function(email, user_database = NULL) {
-  connection <- connect_db(user_database)
+  connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
   user_opt <- query_by_email(email, connection)
   new_opt <- opt ## opt from global
-  disconnect_db(connection)
+  DBI::dbDisconnect(connection)
   if (!is.null(user_opt)) {
     ## restrict user options only to these options.
     ALLOWED_USER_OPTS <- c(
@@ -109,71 +107,71 @@ upgrade.dialog <- function(ns, current.plan) {
   if (current.plan == "starter") btn_starter <- "Current Plan"
   if (current.plan == "premium") btn_premium <- "Current Plan"
 
-  modalDialog(
-    title = h3("Find the right OmicsPlayground plan for you"),
+  shiny::modalDialog(
+    title = shiny::h3("Find the right OmicsPlayground plan for you"),
     size = "m",
-    div(
+    shiny::div(
       class = "row",
       style = "padding-left:4rem;padding-right:4rem;text-align:center;",
-      div(
+      shiny::div(
         class = "col-md-4",
         style = "background:#F2FAFF;",
-        HTML("<h4><b>Basic</b></h4>"),
-        p("Try for free"),
-        h3("Free!"),
-        tags$ul(
+        shiny::HTML("<h4><b>Basic</b></h4>"),
+        shiny::p("Try for free"),
+        shiny::h3("Free!"),
+        shiny::tags$ul(
           class = "list-unstyled",
-          tags$li("Host up to 3 datasets"),
-          tags$li("45 minutes time limit"),
-          tags$li("Up to 25 samples / dataset"),
-          tags$li("Up to 5 comparisons")
+          shiny::tags$li("Host up to 3 datasets"),
+          shiny::tags$li("45 minutes time limit"),
+          shiny::tags$li("Up to 25 samples / dataset"),
+          shiny::tags$li("Up to 5 comparisons")
         ),
         shiny::actionButton(ns("get_basic"), btn_basic),
-        br()
+        shiny::br()
       ),
-      div(
+      shiny::div(
         class = "col-md-4",
         style = "background:#E8F8FF;",
-        h4(HTML("<b>Starter</b>")),
-        p("Great to start"),
-        h3("Soon!"),
-        tags$ul(
+        shiny::h4(shiny::HTML("<b>Starter</b>")),
+        shiny::p("Great to start"),
+        shiny::h3("Soon!"),
+        shiny::tags$ul(
           class = "list-unstyled",
-          tags$li("Host up to 10 datasets"),
-          tags$li("3 hours time limit"),
-          tags$li("Up to 100 samples / dataset"),
-          tags$li("Up to 10 comparisons")
+          shiny::tags$li("Host up to 10 datasets"),
+          shiny::tags$li("3 hours time limit"),
+          shiny::tags$li("Up to 100 samples / dataset"),
+          shiny::tags$li("Up to 10 comparisons")
         ),
         shiny::actionButton(ns("get_starter"), btn_starter),
-        br()
+        shiny::br()
       ),
-      div(
+      shiny::div(
         class = "col-md-4",
         style = "background:#E2F4FF;",
-        HTML("<h4><b>Premium</b></h4>"),
-        p("For power users or small groups"),
-        h3("Soon!"),
-        tags$ul(
+        shiny::HTML("<h4><b>Premium</b></h4>"),
+        shiny::p("For power users or small groups"),
+        shiny::h3("Soon!"),
+        shiny::tags$ul(
           class = "list-unstyled",
-          tags$li("Host up to 100 datasets"),
-          tags$li("8 hours time limit"),
-          tags$li("Up to 2000 samples / dataset"),
-          tags$li("Up to 100 comparisons")
+          shiny::tags$li("Host up to 100 datasets"),
+          shiny::tags$li("8 hours time limit"),
+          shiny::tags$li("Up to 2000 samples / dataset"),
+          shiny::tags$li("Up to 100 comparisons")
         ),
         shiny::actionButton(ns("get_premium"), btn_premium),
-        br()
+        shiny::br()
       )
     ), ## content div
-    div(
+    shiny::div(
       style = "margin-top:3rem;text-align:center;",
-      HTML("Looking for OmicsPlayground for <b>Enterprise</b>? <a href='mailto:info@bigomics.com'>Contact sales for info and pricing</a>.")
+      shiny::HTML("Looking for OmicsPlayground for <b>Enterprise</b>? <a href='mailto:info@bigomics.com'>Contact sales for info and pricing</a>.")
     ),
-    footer = tagList(
-      fillRow(
+    footer = shiny::tagList(
+      shiny::fillRow(
         flex = c(NA, 0.03, NA, 1, NA, NA),
-        tags$label(
+        shiny::tags$label(
           class = "radio-inline",
-          tags$input(
+          shiny::tags$input(
             id = "yearlyCheck",
             type = "radio",
             name = "yearly",
@@ -182,10 +180,10 @@ upgrade.dialog <- function(ns, current.plan) {
           ),
           "Billed yearly"
         ),
-        br(),
-        tags$label(
+        shiny::br(),
+        shiny::tags$label(
           class = "radio-inline",
-          tags$input(
+          shiny::tags$input(
             id = "monthlyCheck",
             type = "radio",
             name = "monthly",
@@ -193,9 +191,9 @@ upgrade.dialog <- function(ns, current.plan) {
           ),
           "Billed monthly"
         ),
-        br(),
+        shiny::br(),
         shiny::actionButton(ns("manage"), "Manage Subscription"),
-        modalButton("Dismiss")
+        shiny::modalButton("Dismiss")
       )
     )
   ) ## modalDialog
@@ -243,7 +241,7 @@ checkAuthorizedUser <- function(email, credentials_file = NULL) {
   if (!file.exists(credentials_file)) {
     return(TRUE)
   }
-  CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
+  CREDENTIALS <- utils::read.csv(credentials_file, colClasses = "character")
   valid_user <- tolower(email) %in% tolower(CREDENTIALS$email)
   if (!valid_user) {
     return(FALSE)
@@ -261,15 +259,13 @@ checkExpiredUser <- function(email, user_database) {
   if (!file.exists(user_database)) {
     return(TRUE)
   }
-  connection <- connect_db(user_database)
-  # connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
+  connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = user_database)
   query_result <- DBI::dbGetQuery(connection, paste0("
     SELECT expiry
     FROM users
     WHERE email = '", email, "'
   "))
-  # DBI::dbDisconnect(connection)
-  disconnect_db(connection)
+  DBI::dbDisconnect(connection)
   if (nrow(query_result) == 0) {
     return(TRUE)
   } else {
@@ -346,6 +342,62 @@ chueckHubspotData <- function(user_email) {
       )
     )
   }
+}
+
+## -----------------------------------------------------------------
+## Encryption/Decryption functions
+## -----------------------------------------------------------------
+
+#' Decrypt text using AES-256-CBC
+#' @param encrypted_text The encrypted text to decrypt
+#' @param key The encryption key as a string
+#' @return The decrypted text
+decrypt_util <- function(encrypted_text, key, remove_suffix = FALSE) {
+  if (is.null(encrypted_text) || is.null(key)) return(NULL)
+
+  # Convert key to raw bytes
+  key_raw <- charToRaw(key)
+
+  # URL decode the encrypted text
+  encrypted_text <- utils::URLdecode(encrypted_text)
+
+  # Split the IV and encrypted data
+  parts <- strsplit(encrypted_text, ":")[[1]]
+  if (length(parts) != 2) return(NULL)
+
+  # Decode base64 components
+  iv <- openssl::base64_decode(parts[1])
+  encrypted_data <- openssl::base64_decode(parts[2])
+
+  # Decrypt using AES-256-CBC
+  tryCatch({
+    decrypted <- openssl::aes_cbc_decrypt(
+      encrypted_data,
+      key = key_raw,
+      iv = iv
+    )
+    decrypted_text <- rawToChar(decrypted)
+
+    if (remove_suffix) {
+      BLACKLIST_FILE <- file.path(ETC, "blacklisted_suffixes.txt")
+      suffix <- substr(decrypted_text, nchar(decrypted_text) - 7, nchar(decrypted_text))
+      if (!file.exists(BLACKLIST_FILE)) {
+        dir.create(dirname(BLACKLIST_FILE), recursive = TRUE, showWarnings = FALSE)
+        file.create(BLACKLIST_FILE)
+      }
+      if (system(paste("grep -q", shQuote(suffix), shQuote(BLACKLIST_FILE)), 
+                 ignore.stdout = TRUE, ignore.stderr = TRUE) == 0) {
+        warning("[decrypt_util] Blacklisted suffix detected")
+        return(NULL)
+      }
+      decrypted_text <- substr(decrypted_text, 1, nchar(decrypted_text) - 8)
+      write(suffix, file = BLACKLIST_FILE, append = TRUE)
+    }
+    decrypted_text
+  }, error = function(e) {
+    warning("[decrypt_util] Decryption failed: ", e$message)
+    NULL
+  })
 }
 
 ## ================================================================================

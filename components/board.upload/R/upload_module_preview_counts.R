@@ -128,6 +128,22 @@ upload_table_preview_counts_server <- function(
             action_buttons
           )
         },
+        if (is.matrix(uploaded$counts.csv) && nrow(uploaded$counts.csv) == 1 && ncol(uploaded$counts.csv) == 1) {
+          bslib::layout_columns(
+            col_widths = 12,
+            div(
+              style = "display: flex; justify-content: center; align-items: center; position: absolute; top: 21px; left: 21px; right: 21px; bottom: 21px; z-index: 9999; background: white;",
+              shiny::tags$div(
+                style = "width: 100%; display: flex; justify-content: center; align-items: center;",
+                shiny::tags$div(
+                  class = "spinner-border text-primary", 
+                  style = "width: 5rem; height: 5rem;",
+                  shiny::tags$span(class = "visually-hidden", "Loading...")
+                )
+              )
+            )
+          )
+        },
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
             col_widths = 12,
