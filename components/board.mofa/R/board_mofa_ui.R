@@ -64,7 +64,7 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Multi‐Omics Factor Analysis (MOFA)</b> is a computational framework for multi‐omics data integration. The inferred latent 'factors' (or 'modules') represent the underlying principal axes of heterogeneity across the samples.")),
+          bs_alert(HTML("<b>Multi‐Omics Factor Analysis (MOFA)</b> is a computational, factorization-based framework for multi‐omics data integration. The inferred latent 'factors' (or 'modules') represent the underlying principal axes of heterogeneity across the samples.")),
           bslib::layout_columns(
             col_widths = c(7, 5),
             bslib::layout_columns(
