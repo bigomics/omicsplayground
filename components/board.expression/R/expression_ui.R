@@ -60,6 +60,15 @@ ExpressionInputs <- function(id) {
             we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
             Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
+        ),
+        withTooltip(
+          shiny::selectInput(
+            inputId = ns("pval_cap"),
+            label = "Significance cap",
+            choices = c("1e-12", "1e-20", "Uncaped")
+          ),
+          "Significance cap",
+          placement = "right", options = list(container = "body")
         )
       )
     )

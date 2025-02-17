@@ -69,6 +69,7 @@ expression_plot_volcano_server <- function(id,
                                            genes_selected,
                                            labeltype = reactive("symbol"),
                                            watermark = FALSE,
+                                           pval_cap,
                                            pgx) {
   moduleServer(id, function(input, output, session) {
     # reactive function listening for changes in input
@@ -86,13 +87,15 @@ expression_plot_volcano_server <- function(id,
         probes = rownames(res), res, query = "symbol", fill_na = TRUE
       )
 
-      qval <- pmax(res$meta.q, 1e-20)
-      pval <- pmax(res$meta.p, 1e-20)
+      pval_cap <- pval_cap()
+
+      qval <- pmax(res$meta.q, pval_cap)
+      pval <- pmax(res$meta.p, pval_cap)
       x <- res$logFC
-      y <- -log10(qval + 1e-12)
+      y <- -log10(qval + pval_cap)
       ylab <- "Significance (-log10q)"
       if (show_pv()) {
-        y <- -log10(pval + 1e-12)
+        y <- -log10(pval + pval_cap)
         ylab <- "Significance (-log10p)"
       }
 
