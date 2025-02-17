@@ -115,11 +115,18 @@ FolderLock <- R6::R6Class("FolderLock",
       if (full.path) f <- file.path(self$path, f)
       return(f)
     },
-    read_lock = function() {
+    read_lock = function(user) {
       if (is.null(self$path)) {
         return(NULL)
       }
       lock_file <- dir(self$path, "^LOCK__.*", full.name = FALSE)
+      if (length(lock_file) > 0) {
+        user_pattern <- paste0("LOCK__", user)
+        has_user <- grepl(user_pattern, lock_file, fixed = TRUE)
+        if (!has_user) {
+          return(NULL)
+        }
+      }
       if (length(lock_file) == 0) {
         message("UNLOCKED: no lock file")
         return(NULL)
@@ -254,7 +261,7 @@ FolderLock <- R6::R6Class("FolderLock",
           no_email <- is.null(auth$email) || is.na(auth$email) || auth$email == ""
           user_id <- ifelse(no_email, auth$username, auth$email)
           self$set_user(user = user_id, session, path = auth$user_dir)
-          cur <- self$read_lock()
+          cur <- self$read_lock(user = user_id)
 
           if (is.null(cur) || !cur$is_locked) {
             ## this is probably a clean login, either with no lockfile
@@ -272,7 +279,7 @@ FolderLock <- R6::R6Class("FolderLock",
           if (is_mylock) {
             self$write_lock()
             if (private$show_success) {
-              if (is.null(cur$time)) cur <- self$read_lock()
+              if (is.null(cur$time)) cur <- self$read_lock(user =self$user)
               self$shinyalert_success(lock = cur)
             }
             invalidateLater(private$poll_secs * 1000)
