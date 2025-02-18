@@ -16,15 +16,6 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
           id = ns("plot_options_accordion"),
-          # Plot Type & Color Options
-          bslib::accordion_panel(
-            "Basic Options",
-            shiny::textInput(
-              ns_parent("title"),
-              "Title",
-              value = NULL
-            )
-          ),
           bslib::accordion_panel(
             "Color Scheme",
             bslib::layout_column_wrap(
@@ -49,6 +40,21 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               numericInput(ns_parent("marker_size"), "Points", value = 1),
               numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
             )
+          ),
+
+          bslib::accordion_panel(
+            "Margins",
+            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
+            numericInput(ns_parent("margin_left"), "Left", value = 10),
+            numericInput(ns_parent("margin_right"), "Right", value = 10),
+            numericInput(ns_parent("margin_top"), "Top", value = 10),
+            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+          ),
+
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom Aspect Ratio", value = FALSE),
+            numericInput(ns_parent("aspect_ratio"), "Aspect Ratio", value = 0.5, min = 0.1, max = 10)
           ),
 
           # Additional Settings
@@ -156,6 +162,15 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 "#3181de"
               )
             )
+          ),
+          # Margins
+          bslib::accordion_panel(
+            "Margins",
+            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
+            numericInput(ns_parent("margin_left"), "Left", value = 10),
+            numericInput(ns_parent("margin_right"), "Right", value = 10),
+            numericInput(ns_parent("margin_top"), "Top", value = 10),
+            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
           )
         ),
         shiny::div(

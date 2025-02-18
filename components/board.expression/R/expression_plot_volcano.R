@@ -178,7 +178,7 @@ expression_plot_volcano_server <- function(id,
         pd[["sel.genes"]]
       }
 
-      playbase::ggVolcano(
+      p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,
@@ -192,7 +192,7 @@ expression_plot_volcano_server <- function(id,
         ylab = pd[["ylab"]],
         marker.size = input$marker_size,
         showlegend = FALSE,
-        title = input$title,
+        title = NULL,
         axis.text.size = input$axis_text_size,
         colors = c(
           up = input$color_up,
@@ -201,6 +201,36 @@ expression_plot_volcano_server <- function(id,
           down = input$color_down
         )
       )
+
+      if (input$margin_checkbox) {
+        margin_top <- ifelse(is.na(input$margin_top), 10, input$margin_top)
+        margin_right <- ifelse(is.na(input$margin_right), 10, input$margin_right)
+        margin_bottom <- ifelse(is.na(input$margin_bottom), 10, input$margin_bottom)
+        margin_left <- ifelse(is.na(input$margin_left), 10, input$margin_left)
+        p <- p + ggplot2::theme(
+          plot.margin = ggplot2::margin(
+            t = margin_top,
+            r = margin_right,
+            b = margin_bottom,
+            l = margin_left,
+            unit = "pt"
+          )
+        )
+      }
+      
+      if (input$aspect_ratio_checkbox) {
+        if (is.na(input$aspect_ratio)) {
+          p <- p + ggplot2::theme(
+            aspect.ratio = 0.5
+          )
+        } else {
+          p <- p + ggplot2::theme(
+            aspect.ratio = input$aspect_ratio
+          )
+        }
+      }
+
+      p
     }
 
     base.RENDER.modal <- function() {

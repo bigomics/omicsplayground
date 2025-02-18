@@ -181,6 +181,11 @@ clustering_plot_splitmap_server <- function(id,
 
       shiny::showNotification("Rendering heatmap...")
 
+      margin_top <- ifelse(input$margin_checkbox && !is.na(input$margin_top), input$margin_top, 5)
+      margin_right <- ifelse(input$margin_checkbox && !is.na(input$margin_right), input$margin_right, 5) 
+      margin_bottom <- ifelse(input$margin_checkbox && !is.na(input$margin_bottom), input$margin_bottom, 5)
+      margin_left <- ifelse(input$margin_checkbox && !is.na(input$margin_left), input$margin_left, 5)
+
       playbase::gx.splitmap(
         zx,
         split = splity, splitx = splitx,
@@ -200,7 +205,8 @@ clustering_plot_splitmap_server <- function(id,
         annot.cex = input$annot_cex/10,
         col.annot = annot, row.annot = NULL, annot.ht = 2.3,
         key.offset = c(0.89, 1.01),
-        main = " ", nmax = -1, mar = c(8, 16)
+        main = " ", nmax = -1,
+        mar = c(margin_top, margin_right, margin_bottom, margin_left)
       )
       p <- grDevices::recordPlot()
       p
