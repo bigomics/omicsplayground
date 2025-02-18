@@ -67,6 +67,7 @@ expression_plot_volcanoAll_server <- function(id,
                                               show_pv,
                                               genes_selected,
                                               labeltype = reactive("symbol"),
+                                              pval_cap,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -126,6 +127,8 @@ expression_plot_volcanoAll_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
+      pval_cap <- pval_cap()
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = pd$F,
@@ -145,7 +148,8 @@ expression_plot_volcanoAll_server <- function(id,
         color_up_down = TRUE,
         highlight = pd$sel.genes,
         label = pd$lab.genes,
-        by_sig = FALSE
+        by_sig = FALSE,
+        pval_cap = pval_cap
       )
 
       return(all_plts)
@@ -193,7 +197,9 @@ expression_plot_volcanoAll_server <- function(id,
         )
       facet <- pivot.fc$facet
       x <- pivot.fc$fc
-      y <- -log10(pivot.qv$qv + 1e-12)
+
+      pval_cap <- pval_cap()
+      y <- -log10(pivot.qv$qv + pval_cap)
 
       playbase::ggVolcano(
         x,
