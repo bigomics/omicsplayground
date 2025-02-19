@@ -35,7 +35,7 @@ clustering_plot_genemodule_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
