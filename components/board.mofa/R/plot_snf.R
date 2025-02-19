@@ -50,7 +50,7 @@ mofa_plot_snf_ui <- function(
 
 mofa_plot_snf_server <- function(id,
                                  mofa,
-                                 #input_pheno = reactive(1),
+                                 pgx_samples,
                                  watermark = FALSE) {
 
   moduleServer(id, function(input, output, session) {
@@ -68,6 +68,7 @@ mofa_plot_snf_server <- function(id,
 
     plot.RENDER <- function() {
       res <- mofa()
+      pgx_samples <- pgx_samples()
       snf <- res$snf
       validate(need(!is.null(res), "missing MOFA data."))          
       type <- input$type
@@ -83,12 +84,12 @@ mofa_plot_snf_server <- function(id,
 
       if (type == "t-SNE") {
         ph <- input$tsne_colorby
-        cc <- factor(res$samples[, ph])
+        cc <- factor(pgx_samples[, ph])
         par(mfrow = c(2,2), mar = c(5,5,2,1))
         i = 1
         for (i in 1:length(snf$posx)) {
           plot(snf$posx[[i]], col = cc, pch = 19, cex = 1,
-               xlab = "TSNE-x", ylab = "TSNE-y", las = 1)
+               xlab = "tSNE 1", ylab = "tSNE 2", las = 1)
           title(names(snf$posx)[i], cex.main = 1.4)
         }
       }
