@@ -41,7 +41,7 @@ biomarker_plot_featurerank_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = clust_featureRank.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

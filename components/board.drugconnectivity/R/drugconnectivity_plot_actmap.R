@@ -37,7 +37,7 @@ drugconnectivity_plot_actmap_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )

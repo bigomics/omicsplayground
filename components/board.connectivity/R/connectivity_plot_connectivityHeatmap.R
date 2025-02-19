@@ -51,7 +51,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
     #
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("pdf", "png", "csv"),
+    download.fmt = c("pdf", "png", "csv", "svg"),
     height = height,
     width = width,
     caption = caption

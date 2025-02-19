@@ -27,7 +27,7 @@ mofa_plot_pathbank_ui <- function(
     label = label,
     plotlib = "svgPanZoom",
     options = NULL,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )

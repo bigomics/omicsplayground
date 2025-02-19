@@ -39,7 +39,7 @@ biomarker_plot_decisiontree_ui <- function(
     info.extra_link = info.extra_link,
     options = options,
     caption = caption,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )
