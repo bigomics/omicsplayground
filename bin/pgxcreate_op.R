@@ -55,7 +55,6 @@ pgx <- playbase::pgx.computePGX(
   pgx = pgx,
   max.genes = params$max.genes,
   gx.methods = params$gx.methods,
-  vars.regress = params$vars.regress,
   gset.methods = params$gset.methods,
   custom.geneset = pgx$custom.geneset,
   extra.methods = params$extra.methods,
