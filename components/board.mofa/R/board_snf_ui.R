@@ -7,8 +7,8 @@ SNF_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     ## data set parameters
-    shiny::selectInput(ns("selected_pheno"), "Select phenotype", choices = NULL),
-    shiny::br(),
+    #shiny::selectInput(ns("selected_pheno"), "Select phenotype", choices = NULL),
+    #shiny::br(),
     bslib::accordion(
       id = ns("data_type_accordion"),
       open = FALSE,
@@ -19,11 +19,11 @@ SNF_Inputs <- function(id) {
           shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
             choices = c(500, 1000, 2000, 4000, 8000),
             selected = 1000
-          ),
-          shiny::selectInput(ns("cutheight"), "Merge cut height",
-            choices = c(0.05, 0.10, 0.25, 0.5, 0.9, 0.999),
-            selected = 0.25
           )
+          # shiny::selectInput(ns("cutheight"), "Merge cut height",
+          #   choices = c(0.05, 0.10, 0.25, 0.5, 0.9, 0.999),
+          #  selected = 0.25
+          # )
         )
       )
     )
@@ -58,7 +58,7 @@ SNF_UI <- function(id) {
             ),
             mofa_plot_snf_ui(
               ns("snf_affinity"),
-              title = "SNF affinity matrices",
+              title = "SNF affinity matrices / t-SNE",
               info.text = "SNF affinity matrices. Prior to SNF, missing values (if any) are imputed using SVD2. For each data type, standard normalization is applied to each column of the input data to have mean 0 and standard deviation 1. Pairwise squared Euclidean distance are computed between all pairs of data points. Affinity matrix is then calculated from the distance matrix, using number of neighbors K=10-30 and hyperparameter alpha=0.5. Similarity Network Fusion is then calculated. It takes multiple views (data types) and fuses them together to construct an overall status matrix. The learned status matrix can then be used for multiple analyses, including clustering, and classification. The heatmaps display sample correlation of pairwise Euclidean distances and learned integrated data.",
               info.references = list(list("Wang B, Mezlini A, Demir F, Fiume M, Zu T, Brudno M, Haibe-Kains B, Goldenberg A (2014). “Similarity Network Fusion: a fast and effective method to aggregate multiple data types on a genome wide scale.” Nature Methods.", "https://www.nature.com/articles/nmeth.2810")),
               caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",

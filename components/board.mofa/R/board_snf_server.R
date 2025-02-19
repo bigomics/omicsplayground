@@ -77,8 +77,8 @@ SNF_Board <- function(id, pgx, board_observers = NULL) {
     mofa_plot_snf_server(
       "snf_affinity",
       mofa = mofa,
-      type = "affinity",
-      input_pheno = reactive(input$selected_pheno),       
+      #type = "affinity",
+      #input_pheno = reactive(input$selected_pheno),       
       watermark = WATERMARK
     )
     

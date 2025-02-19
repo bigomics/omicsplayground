@@ -12,15 +12,33 @@ mofa_plot_snf_ui <- function(
     label = "",
     height = 400,
     width = 400) {
+  
   ns <- shiny::NS(id)
 
   options <- tagList(
+    shiny::radioButtons(
+      ns("type"),
+      label = "Plot type:",
+      choices = c("Affinity matrix", "t-SNE"),
+      selected = "Affinity matrix"
+    ),
+    shiny::conditionalPanel(
+      condition = "input.type == 't-SNE'",
+      ns = ns,
+      shiny::radioButtons(
+        ns("tsne_colorby"),
+        label = "Color by variable:",
+        choices = c("Var1", "Var2"),
+        selected = "Var1"
+      )
+    )
   )
   
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     info.references = info.references,
     caption = caption,
@@ -32,44 +50,49 @@ mofa_plot_snf_ui <- function(
 
 mofa_plot_snf_server <- function(id,
                                  mofa,
-                                 type = c("affinity","tsne","heatmap")[1],
-                                 input_pheno = reactive(1),
+                                 #input_pheno = reactive(1),
                                  watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
+    observeEvent(mofa(), {
+      res <- mofa()
+      phenos <- colnames(res$samples)
+      updateRadioButtons(
+        session,
+        "tsne_colorby",
+        choices = phenos,
+        selected = phenos[1]
+      )
+    })
 
     plot.RENDER <- function() {
       res <- mofa()
       snf <- res$snf
-      validate(need(!is.null(res), "missing MOFA data."))              
-      k <- input_pheno()
-      shiny::req(k)
-      cc <- 'black'
-      ph <- factor(input_pheno())
+      validate(need(!is.null(res), "missing MOFA data."))          
+      type <- input$type
       
-      if(type == "affinity") {
-        par(mfrow=c(2,2), mar=c(6,1,2,8))
+      if (type == "Affinity matrix") {
+        par(mfrow = c(2,2), mar = c(6,1,2,8))
         ndim <- ncol(snf$affinityMatrix[[1]])
-        if(ndim>20) par(mar=c(3,1,2,4))
-        nmat <- length(snf$affinityMatrix)+1
-        if(nmat>4) par(mfrow=c(3,3)) 
-        playbase::snf.plot_affinity(snf, k=0.5, par=FALSE) 
+        if (ndim > 20) par(mar = c(3,1,2,4))
+        nmat <- length(snf$affinityMatrix) + 1
+        if (nmat > 4) par(mfrow = c(3,3)) 
+        playbase::snf.plot_affinity(snf, k = 0.5, par = FALSE) 
       }
 
-      if(type == "tsne") {
-        cc <- factor(res$samples[,ph])
-        par(mfrow=c(2,2))
-        par(mar=c(5,5,2,1))
-        for(i in 1:length(snf$posx)) {
-          plot( snf$posx[[i]], col=cc, pch=19, cex=1,
-               xlab = "TSNE-x", ylab = "TSNE-y" )
-          title( names(snf$posx)[i], cex.main=1.4 )
+      if (type == "t-SNE") {
+        ph <- input$tsne_colorby
+        cc <- factor(res$samples[, ph])
+        par(mfrow = c(2,2), mar = c(5,5,2,1))
+        i = 1
+        for (i in 1:length(snf$posx)) {
+          plot(snf$posx[[i]], col = cc, pch = 19, cex = 1,
+               xlab = "TSNE-x", ylab = "TSNE-y", las = 1)
+          title(names(snf$posx)[i], cex.main = 1.4)
         }
       }
 
-      if(type == "heatmap") {
-        playbase::snf.heatmap(snf, res$X, res$samples, nmax=60)                 
-      }
-      
     }
 
     PlotModuleServer(
@@ -79,7 +102,6 @@ mofa_plot_snf_server <- function(id,
       res = c(80, 100),
       add.watermark = watermark
     )
-
     
   })
 }
