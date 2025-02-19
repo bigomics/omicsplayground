@@ -11,9 +11,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 temp_dir <- args[1]
 
-if (!exists("temp_dir")) {
-  temp_dir <- getwd()
-}
+if (!exists("temp_dir")) { temp_dir <- getwd() }
 
 params_from_op <- file.path(temp_dir, "params.RData")
 
@@ -38,7 +36,6 @@ pgx <- playbase::pgx.createPGX(
   description = params$description,
   creator = params$creator,
   batch.correct = params$batch.correct,
-  ## normalize = params$normalize,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   only.known = params$only.known,
@@ -58,6 +55,7 @@ pgx <- playbase::pgx.computePGX(
   pgx = pgx,
   max.genes = params$max.genes,
   gx.methods = params$gx.methods,
+  vars.regress = params$vars.regress,
   gset.methods = params$gset.methods,
   custom.geneset = pgx$custom.geneset,
   extra.methods = params$extra.methods,
