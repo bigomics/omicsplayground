@@ -101,6 +101,11 @@ upload_module_computepgx_server <- function(
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
+
+        shiny::req(samplesRT())
+        samples <- samplesRT()
+        metadata_vars <- colnames(samples)
+        
         upload_annot_table_ui <- NULL
         if (auth$options$ENABLE_ANNOT) {
           upload_annot_table_ui <- fileInput2(
@@ -167,7 +172,6 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  ## shiny::HTML("<h4>Probe filtering:</h4>"),
                   shiny::HTML("<h4>Feature filtering:</h4>"),
                   choiceValues =
                     c(
@@ -190,8 +194,16 @@ upload_module_computepgx_server <- function(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
                   shiny::HTML("<h4>Gene tests:</h4>"),
-                  GENETEST.METHODS(),
+                  choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
+                ),
+                shiny::checkboxGroupInput(
+                  ns("covs_to_regress"),
+                  shiny::HTML("<h4>Regress out covariates:</h4>
+                    <small style='display: block; margin-top: 5px;'>Applicable to limma, DESeq2, EdgeR.</small>"
+                  ),
+                  choices = metadata_vars,
+                  selected = NULL
                 )
               ),
               bslib::card(
@@ -205,7 +217,6 @@ upload_module_computepgx_server <- function(
                       </a>
                     </div>
                   "),
-                  # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
                   GENESET.METHODS,
                   selected = GENESET.SELECTED
                 ),
@@ -542,7 +553,6 @@ upload_module_computepgx_server <- function(
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
-
         flt <- ""
         use.design <- TRUE
         prune.samples <- FALSE
@@ -557,20 +567,20 @@ upload_module_computepgx_server <- function(
         filter.genes <- ("remove.notexpressed" %in% flt)
         use.design <- !("noLM.prune" %in% input$dev_options)
         prune.samples <- ("noLM.prune" %in% input$dev_options)
+        vars.regress <- input$covs_to_regress ## NEW
+        if (is.null(vars.regress)) vars.regress <- NULL ## NEW
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
-        if (is.null(raw_dir())) {
-          raw_dir(create_raw_dir(auth))
-        }
+        if (is.null(raw_dir())) raw_dir(create_raw_dir(auth))
 
         dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
 
         pgx_save_folder <- auth$user_dir
-
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -605,6 +615,7 @@ upload_module_computepgx_server <- function(
           max.genes = max.genes,
           max.genesets = max.genesets,
           gx.methods = gx.methods,
+          vars.regress = vars.regress, #NEW
           gset.methods = gset.methods,
           extra.methods = extra.methods,
           use.design = use.design, ## no.design+prune are combined
@@ -673,9 +684,7 @@ upload_module_computepgx_server <- function(
       }) ## end observe input$compute
 
       check_process_status <- reactive({
-        if (process_counter() == 0) {
-          return(NULL)
-        }
+        if (process_counter() == 0) { return(NULL) }
 
         # Re-execute this reactive expression after 30 seconds
         shiny::invalidateLater(30 * 1000, session)
@@ -752,7 +761,6 @@ upload_module_computepgx_server <- function(
                 user_email = auth$email,
                 pgx_path   = raw_dir
               )
-
 
               # if auth$email is empty, then the user is not logged in
               if (auth$email == "") {

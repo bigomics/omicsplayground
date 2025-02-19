@@ -1183,22 +1183,16 @@ UploadBoard <- function(id,
         }
         logX <- playbase::logCPM(counts, 1, total = 1e5)
         impX <- NULL
-        if (any(missing(counts))) {
-          impX <- imputeSVD2(logX)
-        }
+        if (any(missing(counts))) { impX <- imputeSVD2(logX) }
         compute_input$counts <- counts
         compute_input$X <- logX
         compute_input$impX <- impX
-        ## compute_input$counts <- normalized_sc$counts()
-        ## compute_input$X <- normalized_sc$X()
-        ## compute_input$impX <- normalized_sc$impX()
         compute_input$norm_method <- "CPM"
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
         compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
-
         compute_settings$imputation_method <- normalized$imputation_method()
         compute_settings$bc_method <- normalized$bc_method()
         compute_settings$remove_outliers <- normalized$remove_outliers()
@@ -1237,8 +1231,6 @@ UploadBoard <- function(id,
       reset_upload_text_input = reset_upload_text_input,
       probetype = probetype
     )
-
-
 
     ## ------------------------------------------------
     ## Board return object
