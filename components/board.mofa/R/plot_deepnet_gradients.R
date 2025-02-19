@@ -27,7 +27,7 @@ plot_deepnet_gradients_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

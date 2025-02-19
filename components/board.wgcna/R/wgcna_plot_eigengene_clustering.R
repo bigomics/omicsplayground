@@ -26,7 +26,7 @@ wgcna_plot_eigengene_clustering_ui <- function(
     height = height,
     caption = caption,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

@@ -38,7 +38,7 @@ correlation_plot_correlation_UMAP_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = cor_umap.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )

@@ -26,7 +26,7 @@ wgcna_plot_membership_v_trait_ui <- function(
     height = height,
     caption = caption,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

@@ -48,7 +48,7 @@ singlecell_plot_cytoplot_ui <- function(
     title = title,
     caption = caption,
     options = cyto.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )

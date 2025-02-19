@@ -50,7 +50,7 @@ enrichment_plot_freq_top_gsets_ui <- function(
     options = topEnrichedFreq.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "csv")
+    download.fmt = c("png", "pdf", "csv", "svg")
   )
 }
 

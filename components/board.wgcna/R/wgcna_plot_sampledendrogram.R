@@ -22,7 +22,7 @@ wgcna_plot_sampledendrogram_ui <- function(
     info.text = info.text,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "csv")
+    download.fmt = c("png", "pdf", "csv", "svg")
   )
 }
 

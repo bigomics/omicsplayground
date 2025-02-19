@@ -22,7 +22,7 @@ wgcna_plot_MMvsGS_ui <- function(
     height = height,
     width = width,
     ##plotlib = "ggiraph",
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

@@ -29,7 +29,7 @@ mofa_plot_modulegraph_ui <- function(
     height = height,
     width = width,
     plotlib = "visnetwork",
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

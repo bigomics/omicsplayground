@@ -45,7 +45,7 @@ biomarker_plot_heatmap_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = plot_options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

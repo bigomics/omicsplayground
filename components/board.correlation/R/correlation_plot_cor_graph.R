@@ -47,7 +47,7 @@ correlation_plot_cor_graph_ui <- function(
     options = cor_graph.opts,
     width = width,
     height = height,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
   )
 }
 

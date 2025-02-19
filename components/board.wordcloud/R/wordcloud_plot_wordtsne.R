@@ -35,7 +35,7 @@ wordcloud_plot_wordtsne_ui <- function(
     caption = caption,
     options = wordtsne_options,
     height = height,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

@@ -41,7 +41,7 @@ intersection_plot_venn_diagram_ui <- function(id,
     info.text = info.text,
     options = venndiagram.opts,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )
