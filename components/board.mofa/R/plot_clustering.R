@@ -48,9 +48,9 @@ mofa_plot_clustering_server <- function(id,
         par(mfrow=c(2,2), mar=c(4,4,2.5,1))
         if(length(res$posx)>4) par(mfrow=c(3,3))
         for(i in 1:length(res$posx)) {
-          plot( res$posx[[i]], col = col1, pch=20, cex=2.2,
-               xlab="UMAP1", ylab="UMAP2" )
-          title(toupper(names(res$posx)[i]), cex.main=1.2)
+          plot(res$posx[[i]], col = col1, pch = 20, cex = 2.2,
+               xlab = "UMAP1", ylab = "UMAP2", las = 1)
+          title(toupper(names(res$posx)[i]), cex.main = 1.2)
         }
       }
       if( type == "features") {
@@ -66,8 +66,9 @@ mofa_plot_clustering_server <- function(id,
           pos1 <- posf[[i]]
           rho1 <- rho[rownames(pos1)]
           col1 <- playbase::colorscale(rho1, gamma=1)
-          plot( pos1, col=col1, pch=20, cex=1.2, xlab="UMAP1", ylab="UMAP2" )
-          title(toupper(names(res$posf)[i]), cex.main=1.2)          
+          plot(pos1, col = col1, pch = 20, cex = 1.2,
+            xlab = "UMAP1", ylab = "UMAP2", las = 1)
+          title(toupper(names(res$posf)[i]), cex.main = 1.2)          
         }
       }
     }

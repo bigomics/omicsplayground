@@ -71,6 +71,7 @@ LasagnaUI <- function(id) {
             ns("lasagna"),
             title = "Multi-layer model",
             info.text = "Layered Approach to Simultaneous Analysis of Genomic and Network Associations ('LASAGNA'). The LASAGNA plot is a stacked layer plot to visualize multi-omics data. Specifically, each layer shows a data type-specific UMAP. LASAGNA just shows the datatype-specific UMAPs overlayed.",
+            info.references = list(list("Melville J (2024). “uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.”, CRAN.", "https://doi.org/10.32614/CRAN.package.uwot")),
             caption = "Layered Approach to Simultaneous Analysis of Genomic and Network Associations ('LASAGNA'). The LASAGNA plot is a stacked layer plot to visualize data type-specific UMAPs overlayed.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
