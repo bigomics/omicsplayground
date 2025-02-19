@@ -27,7 +27,6 @@ upload_module_normalization_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
@@ -38,7 +37,6 @@ upload_module_normalization_server <- function(
         )
       })
 
-
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
@@ -48,29 +46,29 @@ upload_module_normalization_server <- function(
         shiny::req(r_counts())
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_counts()
-
+        
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
         negs <- sum(counts < 0, na.rm = TRUE)
-        if (negs > 0) {
-          counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX)
-        }
+        if (negs > 0) counts <- pmax(counts, 0) ## Olink NPX?
 
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
 
+        ## if min != 0, no offset.
+        ## if min == 0, offset = smallest non-zero value.
+        prior0 <- 0
+        if (min(counts, na.rm = TRUE) == 0) {
+          prior0 <- min(counts[counts > 0], na.rm = TRUE)
+        }
+
         m <- input$normalization_method
-        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
+        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
         X <- log2(counts + prior) ## NEED RETHINK
-
-        ## if (input$remove_xxl) {
-        ##     dbg("[normalization_server:imputedX]: Assign NA to outlier features")
-        ##     X[playbase::is.xxl(X, z = 10)] <- NA
-        ## }
-
+        
         nmissing <- sum(is.na(X))
         dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
         if (nmissing > 0 && input$impute) {
@@ -83,18 +81,19 @@ upload_module_normalization_server <- function(
         }
 
         dbg("[normalization_server:imputedX] Checking for duplicated features")
-        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
-        X
+        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)        
+
+        list(X = X, prior = prior)
       })
 
       ## Normalize
       normalizedX <- reactive({
-        shiny::req(dim(imputedX()))
-        X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
+        shiny::req(dim(imputedX()$X))
+        X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
+        prior <- imputedX()$prior
         if (input$normalize) {
           m <- input$normalization_method
           dbg("[normalization_server:normalizedX] Normalizing data using ", m)
-          ## NEED RETHINK: would be better to rewrite Normalization in log2-space (IK)
           ref <- NULL
           if (m == "reference") {
             ref <- input$ref_gene
@@ -104,22 +103,11 @@ upload_module_normalization_server <- function(
             ))
             shiny::req(ref)
           }
-          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-          m0 <- m
-          if (m == "CPM+quantile") m0 <- "CPM"
-          normCounts <- playbase::pgx.countNormalization(
-            pmax(2**X - prior, 0),
-            method = m0, ref = ref
-          )
-          X <- log2(normCounts + prior)
-          ## if (FALSE && input$quantile_norm) {
-          if (m == "CPM+quantile") {
-            dbg("[normalization_server:normalizedX] Applying quantile normalization")
-            X <- limma::normalizeQuantiles(X)
-          }
+          X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
+        
         return(X)
       })
 
@@ -142,7 +130,7 @@ upload_module_normalization_server <- function(
           pos <- irlba::irlba(X, nv = 2)$v
           rownames(pos) <- colnames(X)
         }
-        dbg("[normalization_server:cleanX] dim.cleanX = ", dim(X))
+        
         list(X = X, pos = pos)
       })
 
@@ -152,7 +140,7 @@ upload_module_normalization_server <- function(
         X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
-
+        
         ## recompute chosed correction method with full
         ## matrix. previous was done on shortened matrix.
         kk <- intersect(colnames(X1), rownames(samples))
@@ -160,7 +148,7 @@ upload_module_normalization_server <- function(
         X1 <- X1[, kk, drop = FALSE]
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
-
+        
         nmissing <- sum(is.na(X1))
         if (!input$batchcorrect) {
           dbg("[normalization_server:correctedX] Data not corrected for batch effects")
@@ -168,7 +156,6 @@ upload_module_normalization_server <- function(
             cx <- list(X = X1)
           } else {
             dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
-            dbg("[normalization_server:correctedX] Generating an internal, SVD2-imputed matrix")
             impX1 <- playbase::imputeMissing(X1, method = "SVD2")
             cx <- list(X = X1, impX1 = impX1)
           }
@@ -219,8 +206,7 @@ upload_module_normalization_server <- function(
             cx <- list(X = xlist[[m]], impX1 = bc_impX1)
           }
         }
-        shiny::removeModal()
-
+        shiny::removeModal()        
         return(cx)
       })
 
@@ -228,9 +214,14 @@ upload_module_normalization_server <- function(
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
-        prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-        dbg("[normalization_server:correctedCounts] Generating counts. Prior=", prior)
-        counts <- pmax(2**X - prior, 0)
+        prior <- imputedX()$prior
+        if(1) {
+          counts <- 2 ** X - prior
+        } else {
+          ## NEED RETHINK!! should we return the original not-corrected
+          ## counts???? But EdgeR/Deseq2 need batch-corrected matrix??
+          counts <- r_counts()[rownames(X),colnames(X)]
+        }
         counts
       })
 
@@ -240,7 +231,7 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        X0 <- imputedX()
+        X0 <- imputedX()$X
         X1 <- cleanX()$X ## normalized+cleaned
         samples <- r_samples()
         contrasts <- r_contrasts()
@@ -337,8 +328,7 @@ upload_module_normalization_server <- function(
 
       plot_normalization <- function() {
         rX <- r_counts()
-        X0 <- imputedX()
-        ## X1 <- normalizedX()
+        X0 <- imputedX()$X
         X1 <- cleanX()$X
         main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
@@ -423,7 +413,7 @@ upload_module_normalization_server <- function(
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_counts()
-        X1 <- imputedX()
+        X1 <- imputedX()$X
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
@@ -778,7 +768,8 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
-                      "SVDimpute" = "SVD2"
+                      "SVDimpute" = "SVD2",
+                      "QRILC"
                       # "Zero" = "zero",
                       # "MinDet",
                       # "MinProb"
@@ -806,14 +797,16 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
                     choices = if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-                      c(
-                        "maxMedian", "maxSum", ## "TMM",
-                        "reference"
-                      )
+                      c("median" = "maxMedian", "sum" = "maxSum", "quantile", "reference")
+                    } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
+                      c("median" = "maxMedian", "sum" = "maxSum", "quantile")
                     } else {
                       c(
-                        "CPM", "CPM+quantile", ## "quantile",
-                        "maxMedian", "maxSum", ## "TMM",
+                        "CPM",
+                        "CPM+quantile",
+                        "quantile",
+                        "median" = "maxMedian",
+                        "sum" = "maxSum", ## "TMM",
                         "reference"
                       )
                     },
