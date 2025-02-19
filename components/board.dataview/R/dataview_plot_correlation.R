@@ -25,7 +25,7 @@ dataview_plot_correlation_ui <- function(
     info.methods = info.methods,
     info.extra_link = info.extra_link,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

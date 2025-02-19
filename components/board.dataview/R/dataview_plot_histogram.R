@@ -21,7 +21,7 @@ dataview_plot_histogram_ui <- function(
     info.text = info.text,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

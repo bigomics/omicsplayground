@@ -23,7 +23,7 @@ dataview_plot_tsne_ui <- function(
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height,
     label = label,
