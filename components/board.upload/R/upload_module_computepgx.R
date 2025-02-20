@@ -91,9 +91,9 @@ upload_module_computepgx_server <- function(
 
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
-      DEV.METHODS <- c("noLM.prune")
-      DEV.NAMES <- c("noLM + prune")
-      DEV.SELECTED <- c()
+      ## DEV.METHODS <- c("noLM.prune")
+      ## DEV.NAMES <- c("noLM + prune")
+      ## DEV.SELECTED <- c()
 
       ## Probe filtering defaults
       PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
@@ -217,14 +217,14 @@ upload_module_computepgx_server <- function(
                   choiceValues = EXTRA.METHODS,
                   choiceNames = EXTRA.NAMES,
                   selected = EXTRA.SELECTED
-                ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  shiny::HTML("<br><h4>Developer options:</h4>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
                 )
+                ## shiny::checkboxGroupInput(
+                ##   ns("dev_options"),
+                ##   shiny::HTML("<br><h4>Developer options:</h4>"),
+                ##   choiceValues = DEV.METHODS,
+                ##   choiceNames = DEV.NAMES,
+                ##   selected = DEV.SELECTED
+                ## )
               ),
               bslib::card(
                 fileInput2(
@@ -542,28 +542,26 @@ upload_module_computepgx_server <- function(
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
-
         flt <- ""
-        use.design <- TRUE
-        prune.samples <- FALSE
+        ## use.design <- TRUE
+        ## prune.samples <- FALSE
+        use.design <- FALSE
+        prune.samples <- TRUE
         flt <- input$filter_methods
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        ## do.normalization <- !("skip.normalization" %in% flt)
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         only.proteincoding <- ("only.proteincoding" %in% flt)
         filter.genes <- ("remove.notexpressed" %in% flt)
-        use.design <- !("noLM.prune" %in% input$dev_options)
-        prune.samples <- ("noLM.prune" %in% input$dev_options)
+        ## use.design <- !("noLM.prune" %in% input$dev_options)
+        ## prune.samples <- ("noLM.prune" %in% input$dev_options)
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
-        if (is.null(raw_dir())) {
-          raw_dir(create_raw_dir(auth))
-        }
+        if (is.null(raw_dir())) raw_dir(create_raw_dir(auth))
 
         dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
