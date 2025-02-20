@@ -899,6 +899,14 @@ PlotModuleServer <- function(id,
                   svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
                   func() # Call the plotting function directly  
                   dev.off()
+                } else if (plotlib == "svgPanZoom") {
+                  p <- func()
+                  # Save the SVG content directly to file
+                  cat(p$x$svg, file = file)
+                } else if (plotlib == "visnetwork") {
+                  p <- func()
+                  # Export visnetwork to SVG using visSave
+                  visNetwork::visSave(p, file = file, background = "white", style = "width:100%;height:100%;")
                 } else {
                   # For unsupported plot types, create a simple SVG with error message
                   svglite::svglite(file)
