@@ -108,10 +108,10 @@ functional_plot_reactome_graph_server <- function(id,
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
         
         ## folder with predownloaded SBGN files
-        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
-        sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
+        # sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
+        # sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         imgfile <- playbase::getReactomeSVG(
-          pathway.id, val=fc, sbgn.dir=sbgn.dir, as.img=TRUE)
+          pathway.id, val=fc, as.img=TRUE)
 
         return(imgfile)
       })
