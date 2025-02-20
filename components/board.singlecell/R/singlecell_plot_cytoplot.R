@@ -41,9 +41,7 @@ singlecell_plot_cytoplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plotmodule"),
-    ##    plotlib = "plotly",
-    plotlib = "generic",
-    outputFunc = plotly::plotlyOutput,
+    plotlib = "plotly",
     info.text = info.text,
     title = title,
     caption = caption,
@@ -104,9 +102,7 @@ singlecell_plot_cytoplot_server <- function(id,
       "plotmodule",
       func = cyto.plotFUNC,
       ##      func2 = plotly_modal.RENDER,
-      ## plotlib = "plotly",
-      plotlib = "generic",
-      renderFunc = plotly::renderPlotly,
+      plotlib = "plotly",
       res = c(90, 130), ## resolution of plots
       pdf.width = 8,
       pdf.height = 8,
