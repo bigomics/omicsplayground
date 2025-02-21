@@ -1256,7 +1256,8 @@ LoginCodeAuthenticationModule <- function(id,
 
 EndpointAuthenticationModule <- function(id,
                                        auth_url = "http://localhost:8000",
-                                       redirect_login = FALSE) {
+                                       redirect_login = FALSE,
+                                       fileBrowserRoot = "") {
   shiny::moduleServer(id, function(input, output, session) {
     message("[EndpointAuthenticationModule] >>>> using external authentication endpoints <<<<")
     ns <- session$ns
@@ -1487,7 +1488,10 @@ EndpointAuthenticationModule <- function(id,
           )
 
           # Set up user directory
-          USER$user_dir <- file.path(PGX.DIR, USER$email)
+          if (fileBrowserRoot != "") {
+            user_dir <- fileBrowserRoot
+          }
+          USER$user_dir <- file.path(user_dir, USER$email)
           create_user_dir_if_needed(USER$user_dir, PGX.DIR)
           if (!opt$ENABLE_USERDIR) {
             USER$user_dir <- file.path(PGX.DIR)

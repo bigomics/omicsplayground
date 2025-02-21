@@ -121,7 +121,8 @@ app_server <- function(input, output, session) {
     auth <- EndpointAuthenticationModule(
       id = "auth",
       auth_url = opt$AUTH_ENDPOINT,
-      redirect_login = FALSE
+      redirect_login = FALSE,
+      fileBrowserRoot = opt$UPLOAD_ROOT
     )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
