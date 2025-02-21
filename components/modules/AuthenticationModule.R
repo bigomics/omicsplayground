@@ -1495,6 +1495,10 @@ EndpointAuthenticationModule <- function(id,
           }
           USER$user_dir <- file.path(user_dir, USER$email)
           create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+          if (!dir.exists(USER$user_dir)) {
+            USER$user_dir <- file.path(PGX.DIR, USER$email)
+            create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+          }
           if (!opt$ENABLE_USERDIR) {
             USER$user_dir <- file.path(PGX.DIR)
           }
