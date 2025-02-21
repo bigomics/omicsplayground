@@ -71,7 +71,7 @@ upload_module_computepgx_server <- function(
         {
           if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-          } else [
+          } else {
             mm <- c("ttest", "ttest.welch", "trend.limma")
           return(mm)
         }
