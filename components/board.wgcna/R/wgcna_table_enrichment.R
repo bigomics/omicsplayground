@@ -49,10 +49,12 @@ wgcna_table_enrichment_server <- function(id,
         df$odd.ratio[is.infinite(df$odd.ratio)] <- 99
         df$score <- df$odd.ratio * -log10(df$p.value)
       }
-      df <- df[, c(
+      cols <- c(
         "module", "geneset", "score", "p.value", "q.value",
-        "odd.ratio", "overlap", "genes"
-      )]
+        ## "odd.ratio",
+        "overlap", "genes")
+      cols <- intersect(cols, colnames(df))
+      df <- df[, cols]
       df <- df[order(-df$score), ]
       df
     }
@@ -61,7 +63,9 @@ wgcna_table_enrichment_server <- function(id,
 
       df <- table_data()
       if(!full) {
-        df <- df[,c("geneset","score","q.value","genes")]
+        cols <- c("geneset","score","q.value","overlap","genes")
+        cols <- intersect(cols, colnames(df))
+        df <- df[,cols]
       }
 
       numeric.cols <- grep("score|value|ratio", colnames(df))

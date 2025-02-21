@@ -56,7 +56,7 @@ wgcna_plot_membership_v_trait_server <- function(id,
       shiny::req(!is.null(input$showallmodules))
       col <- "black"
       if(input$showallmodules) col <- NULL
-      par(mar=c(2,2,1,1))
+      par(mar=c(0,0,0,0))
       df <- playbase::wgcna.getGeneStats(
         res, module=module, trait=trait,
         showallmodules = input$showallmodules,

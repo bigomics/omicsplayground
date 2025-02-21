@@ -9,6 +9,7 @@ WgcnaInputs <- function(id) {
     ## data set parameters
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),    
+    br(),
     bslib::accordion(
       id = ns("compare_accordion"),
       open = FALSE,
@@ -17,8 +18,8 @@ WgcnaInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
           shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
-            choices = c(500, 1000, 2000, 4000, 8000),
-            selected = 1000
+            choices = c(1000, 2000, 4000, 8000),
+            selected = 2000
           ),
           shiny::selectInput(ns("networktype"), "Network type",
             choices = c("unsigned","signed","signed hybrid"), selected = "signed"
@@ -195,7 +196,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. </b> <b>(c)</b> Module membership (MM) as the correlation of the genes with the module eigengene. <b>(d)</b> Module enrichment plot of top most enriched genesets. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
+          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. </b> <b>(c)</b> Module membership (MM) as the correlation of the genes with the module eigengene. <b>(d)</b> Quantitative measures of significance such as Module Membership (MM), gene Trait Significance (GS), foldChange and network centrality. <b>(e)</b> Importance score as the geometric mean of the significance measures to identify 'driver genes' of the module.")),
           bslib::layout_columns(
             col_widths = c(3,4,5,5,7),
             wgcna_plot_module_significance_ui(
@@ -228,20 +229,20 @@ WgcnaUI <- function(id) {
               width = c("auto", "100%")
             ),
 
-            wgcna_plot_enrichment_ui(
-              ns("enrichPlot"),
-              title = "(d) Enrichment barplot",
-              info.text = "Functional enrichment of the selected module.",
-              caption = "Module enrichment plot of top most enriched genesets.",
+            wgcna_plot_membership_v_trait_ui(
+              ns("intraScatter"),
+              title = "(d) Gene significance",
+              info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
+              caption = "We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-
-            wgcna_table_enrichment_ui(
-              ns("enrichTable"),
-              title = "(e) Enrichment table",
-              info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
-              caption = "Functional enrichment of the module calculated using Fisher's exact test.",
+            
+            wgcna_table_genes_ui(
+              ns("geneTable"),
+              title = "(e) Significance table",
+              info.text = "Genes in the selected WGCNA module.",
+              caption = "Table of genes in the selected module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -251,31 +252,43 @@ WgcnaUI <- function(id) {
       ),
 
       shiny::tabPanel(
-        "Gene significance",
+        "Enrichment",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Significance analysis.</b> <b>(a)</b> For each gene in a module, we define a quantitative measures of significance such as Module Membership (MM), gene Trait Significance (GS), foldChange and network centrality. <b>(b)</b> By calculating the geometric mean of the significance measures, we can define an importance score and identify 'driver genes' of the module.")),
+          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Module enrichment plot of top most enriched genesets. <b>(b)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
           bslib::layout_columns(
-            col_widths = c(7, 5),
+            col_widths = c(4, 8, 12),
             height = "calc(100vh - 181px)",
-            wgcna_plot_membership_v_trait_ui(
-              ns("intraScatter"),
-              title = "(a) Gene significance",
-              info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
-              caption = "We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.",
+
+            wgcna_plot_enrichment_ui(
+              ns("enrichPlot"),
+              title = "(a) Enrichment barplot",
+              info.text = "Functional enrichment of the selected module.",
+              caption = "Module enrichment plot of top most enriched genesets.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            wgcna_table_genes_ui(
-              ns("geneTable"),
-              title = "(b) Significance table",
-              info.text = "Genes in the selected WGCNA module.",
-              caption = "Table of genes in the selected module.",
+            
+            wgcna_plot_geneset_heatmap_ui(
+              ns("genesetHeatmap"),
+              title = "(b) Geneset heatmap for module",
+              info.text = "Eigengene correlationheatmap",
+              caption = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),           
+            
+            wgcna_table_enrichment_ui(
+              ns("enrichTable"),
+              title = "(c) Enrichment table",
+              info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
+              caption = "Functional enrichment of the module calculated using Fisher's exact test.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-          ) ## end layout_columns (left column)
+
+            ) ## end layout_columns (left column)
         ) ## end layout_columns (page)
       )  ## end tabPanel
     )
