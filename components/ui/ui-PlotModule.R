@@ -35,6 +35,11 @@ PlotModuleUI <- function(id,
                          translate_js = TRUE) {
   ns <- shiny::NS(id)
 
+  # Svg is only available if watermark is disabled
+  if (opt$WATERMARK) {
+    download.fmt <- download.fmt[download.fmt != "svg"]
+  }
+
   if (is.null(plotlib2)) plotlib2 <- plotlib
   if (length(height) == 1) height <- c(height, 800)
   if (length(width) == 1) width <- c(width, "100%")
@@ -876,8 +881,8 @@ PlotModuleServer <- function(id,
           } ## content
         ) ## PDF downloadHandler
       } ## end if do.pdf
-
-      if (do.svg) {
+      # Svg is only available if watermark is disabled
+      if (do.svg && add.watermark == FALSE) {
         download.svg <- shiny::downloadHandler(
           filename = paste0(filename, ".svg"),
           content = function(file) {
@@ -899,6 +904,14 @@ PlotModuleServer <- function(id,
                   svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
                   func() # Call the plotting function directly  
                   dev.off()
+                } else if (plotlib == "svgPanZoom") {
+                  p <- func()
+                  # Save the SVG content directly to file
+                  cat(p$x$svg, file = file)
+                } else if (plotlib == "visnetwork") {
+                  p <- func()
+                  # Export visnetwork to SVG using visSave
+                  visNetwork::visSave(p, file = file, background = "white", style = "width:100%;height:100%;")
                 } else {
                   # For unsupported plot types, create a simple SVG with error message
                   svglite::svglite(file)
