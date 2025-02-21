@@ -1490,6 +1490,8 @@ EndpointAuthenticationModule <- function(id,
           # Set up user directory
           if (fileBrowserRoot != "") {
             user_dir <- fileBrowserRoot
+          } else {
+            user_dir <- PGX.DIR
           }
           USER$user_dir <- file.path(user_dir, USER$email)
           create_user_dir_if_needed(USER$user_dir, PGX.DIR)
