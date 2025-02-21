@@ -1490,6 +1490,11 @@ EndpointAuthenticationModule <- function(id,
           # Set up user directory
           if (fileBrowserRoot != "") {
             user_dir <- fileBrowserRoot
+            folders <- list.dirs(user_dir, full.names = FALSE, recursive = FALSE)
+            if (length(folders) > 0) {
+              # Use first folder in user_dir
+              user_dir <- file.path(user_dir, folders[1])
+            }
           } else {
             user_dir <- PGX.DIR
           }
