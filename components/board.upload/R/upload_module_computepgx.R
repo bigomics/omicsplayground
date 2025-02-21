@@ -52,15 +52,13 @@ upload_module_computepgx_server <- function(
           upload_datatype()
         },
         {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else {
+          if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
             mm <- c(
               "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
               "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
             )
+          } else {
+            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
           }
           return(mm)
         }
@@ -71,18 +69,15 @@ upload_module_computepgx_server <- function(
           upload_datatype()
         },
         {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma")
-          } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma")
-          } else {
+          if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-          }
+          } else [
+            mm <- c("ttest", "ttest.welch", "trend.limma")
           return(mm)
         }
       )
 
-      ## statistical methods for GENESET level testing
+      ## statistical method for GENESET level testing
       ## GENESET.METHODS <- c(
       ##   "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
       ##   ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
@@ -96,9 +91,11 @@ upload_module_computepgx_server <- function(
       {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "spearman", "camera")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "spearman")
         } else {
-          mm <- c(
-            "fisher", "ssgsea", "gsva", "spearman", "camera","fry", "fgsea")
+          mm <- c("fisher", "ssgsea+limma" = "ssgsea",
+            "gsva+limma" = "gsva", "spearman", "camera", "fry", "fgsea")
         }
         return(mm)
       }
@@ -112,7 +109,7 @@ upload_module_computepgx_server <- function(
         if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "spearman")
         } else {
-          mm <- c("fisher", "gsva", "ssgsea", "fgsea")
+          mm <- c("fisher", "gsva", "fgsea")
         }
         return(mm)
       }

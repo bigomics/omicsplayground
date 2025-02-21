@@ -79,6 +79,7 @@ FolderLock <- R6::R6Class("FolderLock",
   public = list(
     path = NULL,
     user = NULL,
+    user_id = NULL,
     #' Initialize the R6 Object
     #'
     #' @param rds_path The path to the rds file.
@@ -96,6 +97,7 @@ FolderLock <- R6::R6Class("FolderLock",
     set_user = function(user, session, path) {
       self$path <- path
       self$user <- paste0(user, "__", substring(session$token, 1, 16))
+      self$user_id <- user
     },
     remove_all_locks = function() {
       other_lock_files <- dir(self$path, "^LOCK__.*", full.names = TRUE)
@@ -119,7 +121,7 @@ FolderLock <- R6::R6Class("FolderLock",
       if (is.null(self$path)) {
         return(NULL)
       }
-      lock_file <- dir(self$path, "^LOCK__.*", full.name = FALSE)
+      lock_file <- dir(self$path, paste0("^LOCK__", self$user_id, ".*"), full.name = FALSE)
       if (length(lock_file) == 0) {
         message("UNLOCKED: no lock file")
         return(NULL)
@@ -168,7 +170,7 @@ FolderLock <- R6::R6Class("FolderLock",
       if (is.null(self$path)) {
         return(NULL)
       }
-      other_lock_files <- dir(self$path, "^LOCK__.*", full.names = TRUE)
+      other_lock_files <- dir(self$path, paste0("^LOCK__", self$user_id, ".*"), full.names = TRUE)
       if (length(other_lock_files) > 0) {
         lapply(other_lock_files, file.remove)
       }

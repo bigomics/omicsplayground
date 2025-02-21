@@ -174,7 +174,8 @@ expression_plot_maplot_server <- function(id,
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      download.contrast.name = gx_contrast
     )
   }) ## end of moduleServer
 }
