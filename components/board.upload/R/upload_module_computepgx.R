@@ -73,6 +73,7 @@ upload_module_computepgx_server <- function(
             mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
           } else {
             mm <- c("ttest", "ttest.welch", "trend.limma")
+          }
           return(mm)
         }
       )
