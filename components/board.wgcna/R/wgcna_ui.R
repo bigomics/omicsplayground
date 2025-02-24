@@ -24,10 +24,11 @@ WgcnaInputs <- function(id) {
           shiny::selectInput(ns("networktype"), "Network type",
             choices = c("unsigned","signed","signed hybrid"), selected = "signed"
           ),
-          shiny::sliderInput(ns("power"), "Power", 1, 20, 6),
-          shiny::sliderInput(ns("cutheight"), "Merge cut height", 0.05, 0.8, 0.15, 0.05),
+          shiny::sliderInput(ns("power"), "Power", 1, 20, 12),
+          # shiny::sliderInput(ns("cutheight"), "Merge cut height",0.05,0.8,0.15,0.05),
+          shiny::sliderInput(ns("minkme"), "Minimum KME", 0, 0.9, 0.3, 0.1),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
-            choices = c(5, 10, 20, 50, 100),  selected = 20
+            choices = c(10, 20, 30, 50, 100),  selected = 20
           ),
           shiny::br(),
           shiny::actionButton(
@@ -62,7 +63,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module detection.</b> <b>(a)</b> Modules are detected using the dynamic branch cutting approach. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Multi-dimensional scaling colored by WGCNA module. <b>(e)</b> Size of WGCNA modules.")),
+          bs_alert(HTML("<b>Module detection.</b> <b>(a)</b> Modules are detected using the dynamic branch cutting approach. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Dimensionality reduction map of features colored by module. <b>(e)</b> Size of WGCNA modules.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
             height = "35%",
@@ -106,10 +107,10 @@ WgcnaUI <- function(id) {
             ),
             wgcna_plot_gclustering_ui(
               ns("umap"),
-              title = "(d) MDS of features",
-              caption = "Multi-dimensional scaling of features colored by WGCNA module.",
-              info.text = "Multi-dimensional scaling of features colored by WGCNA module. The MDS plot shows the separation of modules and their member genes.",
-              info.methods = "MDS analysis was performed by computing the first two principal components of the covariance matrix.",
+              title = "(d) Feature UMAP",
+              caption = "UMAP dimensional reduction of features colored by WGCNA module.",
+              info.text = "UMAP dimensional reduction of features colored by WGCNA module. The MDS plot shows the separation of modules and their member genes.",
+              info.methods = "UMAP was performed on the non-scaled centered expression matrix. MDS analysis was performed by computing the first two principal components of the covariance matrix.",
               info.references = WGCNA_REFS,
               info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -196,7 +197,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. </b> <b>(c)</b> Module membership (MM) as the correlation of the genes with the module eigengene. <b>(d)</b> Quantitative measures of significance such as Module Membership (MM), gene Trait Significance (GS), foldChange and network centrality. <b>(e)</b> Importance score as the geometric mean of the significance measures to identify 'driver genes' of the module.")),
+          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network around the eigengene. </b> <b>(c)</b> Module membership (MM) with the module eigengene. <b>(d)</b> Measures of significance: module membership (MM), gene trait significance (GS), foldChange and network centrality. <b>(e)</b> Importance score to identify 'driver genes' of the module.")),
           bslib::layout_columns(
             col_widths = c(3,4,5,5,7),
             wgcna_plot_module_significance_ui(
@@ -256,39 +257,48 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Module enrichment plot of top most enriched genesets. <b>(b)</b> Functional enrichment of the module calculated using Fisher's exact test.")),
+          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Geneset enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Top enriched genesets in module. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Gene expression heatmap of selected geneset.")),
           bslib::layout_columns(
-            col_widths = c(4, 8, 12),
+            col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",
-
+            
+            wgcna_plot_geneset_heatmap_ui(
+              ns("genesetHeatmap"),
+              title = "(a) Geneset heatmap for module",
+              info.text = "Eigengene correlationheatmap",
+              caption = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            
             wgcna_plot_enrichment_ui(
               ns("enrichPlot"),
-              title = "(a) Enrichment barplot",
+              title = "(b) Top enriched genesets",
               info.text = "Functional enrichment of the selected module.",
               caption = "Module enrichment plot of top most enriched genesets.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             
-            wgcna_plot_geneset_heatmap_ui(
-              ns("genesetHeatmap"),
-              title = "(b) Geneset heatmap for module",
-              info.text = "Eigengene correlationheatmap",
-              caption = "",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),           
-            
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
-              title = "(c) Enrichment table",
+              title = "(c) Enrichment scores",
               info.text = "In this table, users can check mean expression values of features across the conditions for the selected genes.",
               caption = "Functional enrichment of the module calculated using Fisher's exact test.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )
+            ),
 
-            ) ## end layout_columns (left column)
+            wgcna_plot_gene_heatmap_ui(
+              ns("geneHeatmap"),
+              title = "(d) Gene heatmap",
+              info.text = "Eigengene correlationheatmap",
+              caption = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )           
+            
+          ) ## end layout_columns (left column)
         ) ## end layout_columns (page)
       )  ## end tabPanel
     )

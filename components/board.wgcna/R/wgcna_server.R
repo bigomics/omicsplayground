@@ -83,7 +83,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
           if(is.null(pgx$wgcna$power)) out$power <- 6
 
         } else {
-          pgx.showSmallModal("Recomputing WGCNA with new parameters...")
+          pgx.showSmallModal("Recalculating WGCNA with new parameters...")
           progress <- shiny::Progress$new()
           on.exit(progress$close())
           progress$set(message = "Calculating WGCNA...", value = 0)
@@ -92,11 +92,13 @@ WgcnaBoard <- function(id, pgx, board_observers) {
           out <- playbase::pgx.wgcna(
             pgx = pgx,
             ngenes = as.integer(input$ngenes),
-            gse.filter = "PATHWAY|HALLMARK|^GO|^C[1-9]",            
+            #gset.filter = "PATHWAY|HALLMARK|^GO|^C[1-9]",
+            gset.filter = NULL,
             minmodsize = as.integer(input$minmodsize),
             power = as.numeric(input$power),
 #           deepsplit = as.integer(input$deepsplit),
-            cutheight = as.numeric(input$cutheight),
+#           cutheight = as.numeric(input$cutheight),
+            minKME = as.numeric(input$minkme),
             networktype = input$networktype,
             ## tomtype = input$tomtype,
             numericlabels = FALSE
@@ -148,7 +150,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     # Gene clustering
     wgcna_plot_gclustering_server(
       "umap",
-      wgcna.compute = wgcna,
+      wgcna = wgcna,
       watermark = WATERMARK
     )
 
@@ -174,12 +176,6 @@ WgcnaBoard <- function(id, pgx, board_observers) {
       watermark = WATERMARK
     )
 
-    # Enrichment plot
-    wgcna_plot_enrichment_server(
-      "enrichPlot",
-      enrichTable_module = enrichTableModule,
-      watermark = WATERMARK
-    )
 
     # Module genes
     wgcna_table_genes_server(
@@ -188,14 +184,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
       selected_module = shiny::reactive(input$selected_module),
       selected_trait = shiny::reactive(input$selected_trait)      
     )
-
-    # Module enrichment
-    enrichTableModule <- wgcna_table_enrichment_server(
-      "enrichTable",
-      wgcna = wgcna,
-      selected_module = shiny::reactive(input$selected_module)
-    )
-
+    
     # Eigengene clustering
     wgcna_plot_eigengene_clustering_server(
       "eigenClustering",
@@ -274,6 +263,26 @@ WgcnaBoard <- function(id, pgx, board_observers) {
       selected_module = shiny::reactive(input$selected_module),
       watermark = FALSE) 
 
+    wgcna_plot_gene_heatmap_server(
+      "geneHeatmap",
+      pgx = pgx,
+      wgcna = wgcna,
+      enrich_table = enrichTableModule,
+      watermark = FALSE) 
+
+    # Enrichment plot
+    wgcna_plot_enrichment_server(
+      "enrichPlot",
+      enrichTable_module = enrichTableModule,
+      watermark = WATERMARK
+    )
+
+    # Module enrichment
+    enrichTableModule <- wgcna_table_enrichment_server(
+      "enrichTable",
+      wgcna = wgcna,
+      selected_module = shiny::reactive(input$selected_module)
+    )
     
     return(NULL)
   })

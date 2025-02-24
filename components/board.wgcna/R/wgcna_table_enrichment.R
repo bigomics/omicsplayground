@@ -51,7 +51,6 @@ wgcna_table_enrichment_server <- function(id,
       }
       cols <- c(
         "module", "geneset", "score", "p.value", "q.value",
-        ## "odd.ratio",
         "overlap", "genes")
       cols <- intersect(cols, colnames(df))
       df <- df[, cols]
@@ -99,7 +98,14 @@ wgcna_table_enrichment_server <- function(id,
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%") %>%
+        DT::formatStyle("score",
+          background = color_from_middle(df$score, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%",
+          backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        )
+
     }
 
     RENDER <- function() {
@@ -117,7 +123,7 @@ wgcna_table_enrichment_server <- function(id,
       func = RENDER,
       func2 = RENDER_modal,
       csvFunc = table_data,
-      selector = "none"
+      selector = "single"
     )
 
     return(tablemodule)
