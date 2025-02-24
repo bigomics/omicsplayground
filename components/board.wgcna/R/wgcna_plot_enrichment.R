@@ -42,7 +42,7 @@ wgcna_plot_enrichment_server <- function(id,
       df <- head(df, 20)      
       gs.top <- df$geneset
       xlim0 <- c(0, max(df$score))
-      col1 <- c("grey90", "lightskyblue1")[1 + 1 * (df$q.value < 0.05)]
+      col1 <- c("grey90", "#f5bfbf")[1 + 1 * (df$q.value < 0.05)]
       par(mar = c(4.5, 1, 1, 1))
       barplot(rev(df$score),
         horiz = TRUE, width = 0.8, space = 0.25, xlim = xlim0,
@@ -50,6 +50,7 @@ wgcna_plot_enrichment_server <- function(id,
       )
       text(0, (nrow(df):1) - 0.48, gs.top, adj = 0, pos = 4, cex = 0.8)
     }
+    
 
     PlotModuleServer(
       "plot",

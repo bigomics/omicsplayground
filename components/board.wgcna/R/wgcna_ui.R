@@ -44,7 +44,8 @@ WgcnaInputs <- function(id) {
 
 
 WGCNA_REFS <- list(
-  list("Langfelder, P., Horvath, S. WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 9, 559 (2008).", "https://doi.org/10.1186/1471-2105-9-559")
+  list("Langfelder, P., Horvath, S. WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 9, 559 (2008).", "https://doi.org/10.1186/1471-2105-9-559"),
+  list("Langfelder P, Luo R, Oldham MC, Horvath S (2011) Is My Network Module Preserved and Reproducible? PLoS Comput Biol 7(1): e1001057.", "https://doi.org/10.1371/journal.pcbi.1001057")
 )
 
 WgcnaUI <- function(id) {
@@ -197,9 +198,9 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Partial correlation network around the eigengene. </b> <b>(c)</b> Module membership (MM) with the module eigengene. <b>(d)</b> Measures of significance: module membership (MM), gene trait significance (GS), foldChange and network centrality. <b>(e)</b> Importance score to identify 'driver genes' of the module.")),
+          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Circle network of top hub genes. </b> <b>(c)</b> Module membership (MM) with the module eigengene. <b>(d)</b> Measures of significance: module membership (MM), gene trait significance (GS), foldChange and network centrality. <b>(e)</b> Importance score to identify 'driver genes' of the module.")),
           bslib::layout_columns(
-            col_widths = c(3,4,5,5,7),
+            col_widths = c(4,4,4,5,7),
             wgcna_plot_module_significance_ui(
               ns("moduleSignificance"),
               title = "(a) Trait correlation",
@@ -212,9 +213,12 @@ WgcnaUI <- function(id) {
             wgcna_plot_correlation_network_ui(
               ns("corGraph"),
               label = "c",
-              title = "(b) Partial correlation network",
-              info.text = "Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection.",
-              caption = "Module enrichment plot of top most enriched genesets.",
+              title = "(b) Circle network of hub genes",
+              caption = "Circle network of hub genes",
+              info.text = "The circle plot visualizes the connection strengths between top hub genes in the module. Thickness of lines reflect the absolute correlation. Sizes of circles indicate the connectivity of the gene as quantified by its module membership. Higher connected genes are represented by larger circles.",
+              info.methods = "The Pearson correlation was computed from the log expression matrix across samples. Module membership was computed using the WGCNA R package as part of the full WGCNA analysis. Plotting was performed using the igraph R package.",
+              info.references = WGCNA_REFS,
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
@@ -257,7 +261,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Geneset enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Top enriched genesets in module. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Gene expression heatmap of selected geneset.")),
+          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",
@@ -271,14 +275,14 @@ WgcnaUI <- function(id) {
               width = c("auto", "100%")
             ),
             
-            wgcna_plot_enrichment_ui(
-              ns("enrichPlot"),
-              title = "(b) Top enriched genesets",
-              info.text = "Functional enrichment of the selected module.",
-              caption = "Module enrichment plot of top most enriched genesets.",
+            wgcna_plot_gene_heatmap_ui(
+              ns("geneHeatmap"),
+              title = "(b) Gene heatmap",
+              info.text = "Eigengene correlationheatmap",
+              caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),
+            ),           
             
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
@@ -288,15 +292,15 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-
-            wgcna_plot_gene_heatmap_ui(
-              ns("geneHeatmap"),
-              title = "(d) Gene heatmap",
-              info.text = "Eigengene correlationheatmap",
-              caption = "",
+            
+            wgcna_plot_enrichment_ui(
+              ns("enrichPlot"),
+              title = "(d) Top enriched genesets",
+              info.text = "Functional enrichment of the selected module.",
+              caption = "Module enrichment plot of top most enriched genesets.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )           
+            )
             
           ) ## end layout_columns (left column)
         ) ## end layout_columns (page)

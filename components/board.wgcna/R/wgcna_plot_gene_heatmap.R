@@ -32,7 +32,8 @@ wgcna_plot_gene_heatmap_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
-    render_plot <- function(nmax, maxlen,show_legend) {
+    render_plot <- function(nmax, maxlen, show_legend,
+                            show_colnames) {
       wgcna <- wgcna()
       sel <- enrich_table$rows_selected()
       shiny::validate( shiny::need(length(sel)>0, "Please select a geneset"))      
@@ -46,17 +47,20 @@ wgcna_plot_gene_heatmap_server <- function(id,
         col.annot = pgx$samples,
         rowlab.maxlen = maxlen,
         show_legend = show_legend,
+        show_colnames = show_colnames,
         split = 1,
         main = gset
       )
     }
 
     plot.RENDER <- function() {
-      render_plot(nmax=50, maxlen=40, show_legend=FALSE) 
+      render_plot(nmax=40, maxlen=40, show_legend=FALSE,
+                  show_colnames=FALSE) 
     }
 
     plot.RENDER2 <- function() {
-      render_plot(nmax=45, maxlen=80, show_legend=TRUE)
+      render_plot(nmax=40, maxlen=80, show_legend=TRUE,
+                  show_colnames=TRUE)
     }
 
     PlotModuleServer(
