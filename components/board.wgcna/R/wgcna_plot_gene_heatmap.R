@@ -32,44 +32,31 @@ wgcna_plot_gene_heatmap_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
-    plot.RENDER <- function() {
+    render_plot <- function(nmax, maxlen,show_legend) {
       wgcna <- wgcna()
       sel <- enrich_table$rows_selected()
       shiny::validate( shiny::need(length(sel)>0, "Please select a geneset"))      
       data <- enrich_table$data()
-      gset <- rownames(data)[sel]
+      gset <- data$geneset[sel]
       gg <- strsplit(data$genes[sel],split="\\|")[[1]]
-      gg <- intersect(gg, rownames(pgx$X))
-      
+      pp <- playbase::map_probes(pgx$genes, gg)
+      pp <- intersect(pp, rownames(pgx$X))
       playbase::gx.splitmap(
-        pgx$X[gg,], nmax=50,
+        pgx$X[pp,], nmax=nmax,
         col.annot = pgx$samples,
-        rowlab.maxlen = 40,
-        show_legend = FALSE,
+        rowlab.maxlen = maxlen,
+        show_legend = show_legend,
         split = 1,
         main = gset
       )
-      
+    }
+
+    plot.RENDER <- function() {
+      render_plot(nmax=50, maxlen=40, show_legend=FALSE) 
     }
 
     plot.RENDER2 <- function() {
-      wgcna <- wgcna()
-      sel <- enrich_table$rows_selected()
-      shiny::validate( shiny::need(length(sel)>0, "Please select a geneset"))      
-      data <- enrich_table$data()
-      gset <- rownames(data)[sel]
-      gg <- strsplit(data$genes[sel],split="\\|")[[1]]
-      gg <- intersect(gg, rownames(pgx$X))      
-      playbase::gx.splitmap(
-        pgx$X[gg,], nmax=45,
-        col.annot = pgx$samples,
-        ##cexCol = 0.01, cexRow = 0.01,
-        rowlab.maxlen = 80,
-        show_legend = TRUE,
-        split = 1,
-        main = gset
-      )
-
+      render_plot(nmax=45, maxlen=80, show_legend=TRUE)
     }
 
     PlotModuleServer(
