@@ -182,6 +182,7 @@ opt.default <- list(
   TIMEOUT = 0,
   WATERMARK = TRUE,
   APACHE_COOKIE_PATH = OPG,
+  ALLOW_CUSTOM_FC = FALSE,
   DEVMODE = FALSE
 )
 
