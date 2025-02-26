@@ -189,7 +189,8 @@ upload_table_preview_counts_server <- function(
       # Add seed to make it deterministic
       set.seed(123)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
-      suppressWarnings(dc <- data.table::melt(xx))
+      #suppressWarnings(dc <- data.table::melt(xx))
+      suppressWarnings(dc <- reshape2::melt(xx))
       dc$value[dc$value == 0] <- NA
       tt2 <- paste(nrow(counts), tspan("genes x", js = FALSE), ncol(counts), "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
