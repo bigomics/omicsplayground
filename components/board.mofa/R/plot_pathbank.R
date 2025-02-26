@@ -70,8 +70,21 @@ mofa_plot_pathbank_server <- function(id,
 
         val = NULL ## temporary...
         k <- sel_contrast()
-        if(FALSE && !is.null(k)) {
+        if(!is.null(k)) {
           val <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+          val_names <- names(val)
+          ids <- sapply(strsplit(val_names, ":"), function(x) x[2])
+          
+          id_mapping <- playdata::METABOLITE_ANNOTATION[, c("ID", "PATHBANK")]
+          id_mapping <- id_mapping[!is.na(id_mapping$PATHBANK),]
+          id_mapping <- setNames(id_mapping$PATHBANK, id_mapping$ID)
+          
+          # Map the IDs to PATHBANK IDs
+          mapped_ids <- id_mapping[ids]
+          mapped_ids <- mapped_ids[!is.na(mapped_ids)]
+          
+          # Update value names with PATHBANK IDs where available
+          names(val)[match(names(mapped_ids), ids)] <- mapped_ids
         }
 
         ## convert to UNIPROT and PATHBANK ID
