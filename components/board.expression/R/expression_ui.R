@@ -222,6 +222,21 @@ ExpressionUI <- function(id) {
           width = c("auto", "100%")
         )
       )
+    ), ## end upper tabPanel
+    shiny::tabPanel(
+      "FC-FC comparison",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
+        expression_plot_fc_fc_ui(
+          id = ns("fc_fc"),
+          title = "FC-FC comparison",
+          info.text = "Compare custom FC with baseline FC",
+          caption = "FC-FC comparison: Compare custom FC with baseline FC",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
     ) ## end upper tabPanel
   ) ## end of tabs1
 

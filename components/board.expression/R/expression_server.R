@@ -561,6 +561,13 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       watermark = WATERMARK
     )
 
+    expression_plot_fc_fc_server(
+      id = "fc_fc",
+      pgx = pgx,
+      comp = shiny::reactive(input$gx_contrast),
+      watermark = WATERMARK
+    )
+
     # tab differential expression > Volcano Methods ####
 
     # rendering tables ####

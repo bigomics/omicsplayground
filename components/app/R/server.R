@@ -782,7 +782,9 @@ app_server <- function(input, output, session) {
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
 
-    
+    ## Control tab to only be displayed if there is custom fc + baseline fc
+    toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
+
     ## Dynamically show upon availability in pgx object
     info("[SERVER] disabling extra features")
     tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
