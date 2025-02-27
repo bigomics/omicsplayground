@@ -26,7 +26,7 @@ wgcna_plot_module_membership_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -36,10 +36,10 @@ wgcna_plot_module_membership_server <- function(id,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    RENDER <- function() {
+    render_plot <- function(ntop=30) {
       res <- wgcna()
       module <- selected_module()
-      
+
       rho <- res$stats[['moduleMembership']][,module]
       rho[is.na(rho) | is.infinite(rho)] <- 0
       
@@ -50,16 +50,36 @@ wgcna_plot_module_membership_server <- function(id,
         ylab0 <- "Eigengene covariance (cov)"
       }
 
-      ii <- unique(c(head(order(rho), ntop), tail(order(rho), ntop)))
-      par(mar=c(6,4,2,0.1))
-      barplot( sort(rho[ii]), ylab = ylab0, las = 3,
+      ## only ME genes
+      sel <- which(names(rho) %in% res$me.genes[[module]])
+      rho <- rho[sel]
+      
+      if(min(rho,na.rm=TRUE)< 0) {
+        ii <- unique(c(head(order(rho), ntop/2), tail(order(rho), ntop/2)))
+      } else {
+        ii <- tail(order(rho), ntop)
+      }
+      len <- max(nchar(names(rho)))
+      bmar <- min(max(round(len/2),6),12)
+      par(mar=c(bmar,4,2,0.1))
+      barplot( sort(rho[ii],decreasing=TRUE),
+              ylab = ylab0, las = 3,
               cex.names = 0.90, main = NULL )
       title(module, line = 1)
     }
 
+    RENDER <- function() {
+      render_plot(ntop=20)
+    }
+
+    RENDER2 <- function() {
+      render_plot(ntop=50)
+    }
+    
     PlotModuleServer(
       "plot",
       func = RENDER,
+      func2 = RENDER2,      
       pdf.width = 8, pdf.height = 5,
       res = c(80, 120),
       add.watermark = watermark

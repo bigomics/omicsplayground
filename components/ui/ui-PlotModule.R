@@ -19,7 +19,7 @@ PlotModuleUI <- function(id,
                          outputFunc = NULL,
                          outputFunc2 = outputFunc,
                          no.download = FALSE,
-                         download.fmt = c("png", "pdf"),
+                         download.fmt = c("png", "pdf", "svg"),
                          just.info = FALSE,
                          info.width = "300px",
                          show.maximize = TRUE,
@@ -37,6 +37,11 @@ PlotModuleUI <- function(id,
                          ns_parent = function(a){return(a)},
                          plot_type = "volcano") {
   ns <- shiny::NS(id)
+
+  # Svg is only available if watermark is disabled
+  if (opt$WATERMARK) {
+    download.fmt <- download.fmt[download.fmt != "svg"]
+  }
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
   if (length(height) == 1) height <- c(height, 800)
@@ -518,7 +523,7 @@ PlotModuleServer <- function(id,
                              renderFunc = NULL,
                              renderFunc2 = renderFunc,
                              csvFunc = NULL,
-                             download.fmt = c("png", "pdf"),
+                             download.fmt = c("png", "pdf", "svg"),
                              height = c(640, 800),
                              width = c("auto", 1400),
                              res = c(100, 170),
@@ -528,6 +533,7 @@ PlotModuleServer <- function(id,
                              download.csv = NULL,
                              download.excel = NULL,
                              download.obj = NULL,
+                             download.contrast.name = NULL,
                              pdf.width = 8,
                              pdf.height = 6,
                              pdf.pointsize = 12,
@@ -731,12 +737,14 @@ PlotModuleServer <- function(id,
       do.png <- "png" %in% download.fmt
       do.html <- "html" %in% download.fmt
       do.obj <- "obj" %in% download.fmt
+      do.svg <- "svg" %in% download.fmt
       do.csv <- !is.null(csvFunc)
       do.excel <- !is.null(csvFunc)
 
-      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- EXCELFILE <- NULL
+      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- EXCELFILE <- SVGFILE <- NULL
       if (do.pdf) PDFFILE <- paste0(gsub("file", "plot", tempfile()), ".pdf")
       if (do.png) PNGFILE <- paste0(gsub("file", "plot", tempfile()), ".png")
+      if (do.svg) SVGFILE <- paste0(gsub("file", "plot", tempfile()), ".svg")
       if (do.csv) CSVFILE <- paste0(gsub("file", "data", tempfile()), ".csv")
       if (do.excel) EXCELFILE <- paste0(gsub("file", "data", tempfile()), ".xlsx")
       HTMLFILE <- paste0(tempfile(), ".html") ## tempory for webshot
@@ -749,7 +757,13 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename, ".png"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".png")
+            } else {
+              paste0(filename, ".png")
+            }
+          }),
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -847,7 +861,13 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename, ".pdf"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".pdf")
+            } else {
+              paste0(filename, ".pdf")
+            }
+          }),
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -934,6 +954,53 @@ PlotModuleServer <- function(id,
           } ## content
         ) ## PDF downloadHandler
       } ## end if do.pdf
+      # Svg is only available if watermark is disabled
+      if (do.svg && add.watermark == FALSE) {
+        download.svg <- shiny::downloadHandler(
+          filename = paste0(filename, ".svg"),
+          content = function(file) {
+            shiny::withProgress(
+              {
+                if (plotlib == "plotly") {
+                  p <- func()
+                  p$width <- input$pdf_width * 80
+                  p$height <- input$pdf_height * 80
+                  plotly::save_image(p, file = file, format = "svg", width = p$width, height = p$height)
+                } else if (plotlib %in% c("ggplot", "ggplot2")) {
+                  p <- func()
+                  ggplot2::ggsave(file, plot = p, device = "svg", width = input$pdf_width, height = input$pdf_height)
+                } else if (plotlib == "base") {
+                  svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
+                  func() # Call the plotting function directly
+                  dev.off()
+                } else if (plotlib == "grid") {
+                  svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
+                  func() # Call the plotting function directly  
+                  dev.off()
+                } else if (plotlib == "svgPanZoom") {
+                  p <- func()
+                  # Save the SVG content directly to file
+                  cat(p$x$svg, file = file)
+                } else if (plotlib == "visnetwork") {
+                  p <- func()
+                  # Export visnetwork to SVG using visSave
+                  visNetwork::visSave(p, file = file, background = "white", style = "width:100%;height:100%;")
+                } else {
+                  # For unsupported plot types, create a simple SVG with error message
+                  svglite::svglite(file)
+                  plot.new()
+                  mtext("SVG export not supported for this plot type", line = -8)
+                  dev.off()
+                }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
+              },
+              message = "Exporting to SVG",
+              value = 0.8
+            )
+          }
+        )
+      }
 
       saveHTML <- function() {
         if (plotlib %in% c("plotly")) {
@@ -1034,7 +1101,13 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename, ".csv"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".csv")
+            } else {
+              paste0(filename, ".csv")
+            }
+          }),
           content = function(file) {
             shiny::withProgress(
               {
@@ -1054,7 +1127,13 @@ PlotModuleServer <- function(id,
       # Excel download
       if (do.excel) {
         download.excel <- shiny::downloadHandler(
-          filename = paste0(filename, ".xlsx"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".xlsx")
+            } else {
+              paste0(filename, ".xlsx")
+            }
+          }),
           content = function(file) {
             shiny::withProgress({
               data <- csvFunc()
@@ -1075,6 +1154,9 @@ PlotModuleServer <- function(id,
           }
           if (input$downloadOption == "pdf") {
             output$download <- download.pdf
+          }
+          if (input$downloadOption == "svg") {
+            output$download <- download.svg
           }
           if (input$downloadOption == "csv") {
             output$download <- download.csv
@@ -1102,6 +1184,12 @@ PlotModuleServer <- function(id,
               "download",
               card
             )]] <- download.pdf
+          }
+          if (input$downloadOption == "svg") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.svg
           }
           if (input$downloadOption == "csv") {
             output[[paste0(

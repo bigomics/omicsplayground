@@ -7,6 +7,7 @@ mofa_plot_lasagna_ui <- function(
     id,
     title = "",
     info.text = "",
+    info.references = "",
     caption = "",
     label = "",
     height = 400,
@@ -19,10 +20,11 @@ mofa_plot_lasagna_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
+    info.references = info.references,
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

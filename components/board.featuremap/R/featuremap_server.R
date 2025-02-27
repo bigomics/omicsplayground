@@ -195,6 +195,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         hilight2 = hilight2,
         labels = labels,
         title = title,
+        source = source,
+        key = rownames(pos),
         ...
       )
 

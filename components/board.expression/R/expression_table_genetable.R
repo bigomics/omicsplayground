@@ -51,6 +51,7 @@ expression_table_genetable_server <- function(id,
                                               show_pv,
                                               height,
                                               scrollY,
+                                              cont,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -155,7 +156,8 @@ expression_table_genetable_server <- function(id,
       func = table.RENDER,
       func2 = table.RENDER_modal,
       csvFunc = table_csv,
-      selector = "single"
+      selector = "single",
+      download.contrast.name = cont
     )
 
     return(genetable)

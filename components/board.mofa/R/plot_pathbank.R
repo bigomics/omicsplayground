@@ -27,7 +27,7 @@ mofa_plot_pathbank_ui <- function(
     label = label,
     plotlib = "svgPanZoom",
     options = NULL,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )
@@ -60,24 +60,26 @@ mofa_plot_pathbank_server <- function(id,
 
         # Get pathway image using WPID and fc values
         wp.name <- sel_pathway()
-        dbg("[mofa_plot_pathbank_server] selected wp.name = ", wp.name )
         if(length(wp.name)==0 || length(wp.name) > 1) return(NULL)
         
         ##wp.name = "TF_ARCHS4:NCOA3 human tf ARCHS4 coexpression [SMP0080852]"
         wp <- stringr::str_match(wp.name, "SMP[0-9]+|WP[0-9]+|R-HSA-[0-9]+")[,1]
         shiny::validate( shiny::need(!is.na(wp), "pathway diagram not available"))
 
-        dbg("[mofa_plot_pathbank_server:getPathwayImage] wp.name =",wp.name)       
-        dbg("[mofa_plot_pathbank_server:getPathwayImage] wp =",wp)       
-        
-        
-
         if(length(wp)>1) wp <- wp[1]
 
         val = NULL ## temporary...
         k <- sel_contrast()
-        if(FALSE && !is.null(k)) {
+        if(!is.null(k)) {
           val <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+          val_names <- names(val)
+          ids <- sapply(strsplit(val_names, ":"), function(x) x[2])
+          id_mapping <- playdata::METABOLITE_ANNOTATION[, c("ID", "PATHBANK")]
+          id_mapping <- id_mapping[!is.na(id_mapping$PATHBANK),]
+          id_mapping <- setNames(id_mapping$PATHBANK, id_mapping$ID)
+          mapped_ids <- id_mapping[ids]
+          mapped_ids <- mapped_ids[!is.na(mapped_ids)]
+          names(val)[match(names(mapped_ids), ids)] <- mapped_ids
         }
 
         ## convert to UNIPROT and PATHBANK ID

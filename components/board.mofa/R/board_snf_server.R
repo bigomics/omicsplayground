@@ -52,24 +52,31 @@ SNF_Board <- function(id, pgx, board_observers = NULL) {
 
     mofa <- shiny::eventReactive( pgx$mofa, {
 
-      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))      
-
-      data <- pgx$mofa
-      snf <- playbase::snf.cluster(data$xx, pheno=NULL, plot=FALSE) 
-      snf$samples <- data$samples
-      
-      ## update factors in selectInput
-      pheno <- colnames(data$samples)
-      updateSelectInput(session, "selected_pheno", choices = pheno,
-                        selected = pheno[1])
+      shiny::validate( shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))      
 
       mofa <- pgx$mofa
-      mofa$snf <- snf
+      if(!"snf" %in% names(pgx$mofa)) {
+        snf <- playbase::snf.cluster(mofa$xx, pheno=NULL, plot=FALSE) 
+        mofa$snf <- snf
+      }
+      
+      ## update factors in selectInput
+      pheno <- colnames(mofa$samples)
+      updateSelectInput(
+        session,
+        "selected_pheno",
+        choices = pheno,
+        selected = pheno[1]
+      )
       
       return(mofa)
-    }, ignoreNULL=FALSE)
+    }, ignoreNULL = FALSE)
   
-    
+    pgx_samples <- shiny::eventReactive(pgx$samples, {
+      pgx_samples <- pgx$samples
+      return(pgx_samples)
+    }, ignoreNULL = FALSE)
+
     
     ## ========================================================================
     ## =========================== MODULES ====================================
@@ -78,8 +85,7 @@ SNF_Board <- function(id, pgx, board_observers = NULL) {
     mofa_plot_snf_server(
       "snf_affinity",
       mofa = mofa,
-      type = "affinity",
-      input_pheno = reactive(input$selected_pheno),       
+      pgx_samples = pgx_samples,
       watermark = WATERMARK
     )
     

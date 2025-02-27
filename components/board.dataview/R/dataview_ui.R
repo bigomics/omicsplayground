@@ -15,7 +15,7 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
+    withTooltip(shiny::selectizeInput(ns("search_gene"), tspan("Gene:"), choices = NULL, options = list(maxOptions = 1001)),
       "Type a gene of interest.",
       placement = "top"
     ),

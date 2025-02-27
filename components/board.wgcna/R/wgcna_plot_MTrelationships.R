@@ -27,7 +27,7 @@ wgcna_plot_MTrelationships_ui <- function(
     height = height,
     width = width,
     # FIXME png and pdf is not working, to avoid crash, we decided to remove it    
-    download.fmt = c("png","pdf","csv")
+    download.fmt = c("png","pdf","csv","svg")
   )
 }
 

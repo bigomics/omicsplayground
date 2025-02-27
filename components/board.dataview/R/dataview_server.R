@@ -117,18 +117,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       }
     )
 
-    last_search_gene <- reactiveVal()
-
-    input_search_gene <- reactive({
-      if (input$search_gene == "" || grepl("type for more", input$search_gene)) {
-        gene1 <- last_search_gene()
-        return(gene1)
-      }
-      last_search_gene(input$search_gene)
-      return(input$search_gene)
-    })
-
-
     ## assign to r list of observers. suspend by default.
     my_observers <- my_observers[!sapply(my_observers, is.null)]
     # lapply( my_observers, function(b) b$suspend() )

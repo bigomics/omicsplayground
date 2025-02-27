@@ -7,6 +7,7 @@ mofa_plot_variance_ui <- function(
     id,
     title = "",
     info.text = "",
+    info.references = "",
     caption = "",
     label = "",
     height = 400,
@@ -18,10 +19,11 @@ mofa_plot_variance_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
+    info.references = info.references,
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -49,12 +51,12 @@ mofa_plot_variance_server <- function(id,
       if( type == "view") {
         y <- rowSums( res$V )
         par(mar=c(3,4,2,0))        
-        barplot(y, names.arg = names(y), ylab="Var. (%)")
+        barplot(y, names.arg = names(y), ylab = "Var. (%)", las = 1)
       }
       if( type == "factor") {
         y <- colSums( res$V )
         par(mar=c(3,4,2,0))
-        bp <- barplot(y, ylab="Var. (%)", xaxt = "n")
+        bp <- barplot(y, ylab="Var. (%)", xaxt = "n", las = 1)
         text(bp, par("usr")[3] - 0.008, labels = names(y), srt = 45, adj = 1, xpd = TRUE)
       }
     }

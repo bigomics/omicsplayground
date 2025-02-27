@@ -30,7 +30,7 @@ compare_plot_compare1_ui <- function(id,
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )

@@ -22,7 +22,7 @@ wgcna_plot_TOMheatmap_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     ...
   )
 }

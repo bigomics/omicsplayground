@@ -22,7 +22,7 @@ wgcna_plot_gdendogram_ui <- function(
     info.text = info.text,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     ...
   )
 }

@@ -26,7 +26,7 @@ wgcna_plot_eigengene_heatmap_ui <- function(
     height = height,
     caption = caption,
     width = width,
-    download.fmt = c("png", "pdf", "csv")
+    download.fmt = c("png", "pdf", "csv", "svg")
   )
 }
 

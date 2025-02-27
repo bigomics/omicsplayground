@@ -174,7 +174,8 @@ TableModuleServer <- function(id,
                               height = c(640, 800),
                               width = c("auto", 1400),
                               selector = c("none", "single", "multi", "key")[1],
-                              filename = "table") {
+                              filename = "table",
+                              download.contrast.name = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -185,13 +186,16 @@ TableModuleServer <- function(id,
 
       # Downloader
       output$download <- shiny::downloadHandler(
-        filename = function() {
+        filename = shiny::reactive({
+          if (!is.null(download.contrast.name)) {
+            filename <- paste0(filename, "-", download.contrast.name())
+          }
           if (input$format == "CSV") {
             paste0(filename, ".csv")
           } else {
             paste0(filename, ".xlsx")
           }
-        },
+        }),
         content = function(file) {
           if (!is.null(csvFunc)) {
             dt <- csvFunc() ## data.frame or matrix

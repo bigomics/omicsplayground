@@ -30,7 +30,7 @@ mofa_plot_moduleheatmap_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -38,10 +38,11 @@ mofa_plot_moduleheatmap_server <- function(id,
                                            mofa,
                                            input_factor = reactive(1),
                                            show_types = reactive(NULL),
+                                           ntop = c(40,40),
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function(legend=FALSE) {
+    render_plot <- function(legend, maxchar, n, show_colnames)  {
       res <- mofa()      
       k <- input_factor()
       factors <- colnames(res$F)
@@ -55,20 +56,27 @@ mofa_plot_moduleheatmap_server <- function(id,
       
       playbase::mofa.plot_heatmap(
         res, k=k, ## main=k,
-        ntop = 40,
+        ntop = n,
         split = input$split,
         type="splitmap",
         annot = "pheno",
-        maxchar = 40,
+        maxchar = maxchar,
         show_types = show_types,
         show_legend = legend,
+        show_colnames = show_colnames,
         mar = c(3,0,0,0),
         annot.ht = 0.9,
         cexRow = 0.9)
     }
 
+    plot.RENDER <- function() {
+      render_plot(legend=FALSE, maxchar=30, n=ntop[1],
+                  show_colnames=FALSE)
+    }
+    
     plot.RENDER2 <- function() {
-      plot.RENDER(legend=TRUE)
+      render_plot(legend=TRUE, maxchar=80, n=ntop[2],
+                  show_colnames=TRUE)
     }
     
     PlotModuleServer(

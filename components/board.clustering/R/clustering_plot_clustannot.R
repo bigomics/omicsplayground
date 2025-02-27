@@ -49,7 +49,7 @@ clustering_plot_clusterannot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = clustannot_plots.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )

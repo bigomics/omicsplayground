@@ -556,6 +556,7 @@ app_server <- function(input, output, session) {
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = board_observers, labeltype = labeltype)
       loaded$clustering <- 1
+      tab_control()
     }
     if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab") && loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
@@ -563,6 +564,7 @@ app_server <- function(input, output, session) {
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
       loaded$expression <- 1
+      tab_control()
     }
     if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
@@ -570,6 +572,7 @@ app_server <- function(input, output, session) {
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
+      tab_control()
     }
     if (input$nav %in% c("isect-tab", "comp-tab", "cmap-tab") && loaded$compare == 0) {
       info("[UI:SERVER] reacted: calling Compare module")
@@ -577,6 +580,7 @@ app_server <- function(input, output, session) {
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
       loaded$compare <- 1
+      tab_control()
     }
     if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
@@ -584,13 +588,15 @@ app_server <- function(input, output, session) {
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL)
       loaded$systems <- 1
+      tab_control()
     }
     if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
-      info("[UI:SERVER] reacted: calling Systems module")
+      info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL)
       loaded$multiomics <- 1
+      tab_control()
     }
   })
 
@@ -707,6 +713,15 @@ app_server <- function(input, output, session) {
       ## trigger on change dataset
       dbg("[SERVER] trigger on new PGX")
 
+      ## Set navbar color based on datatype
+      if (PGX$datatype == "multi-omics") {
+        js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #00923b'")
+        shinyjs::runjs(js_code)
+      } else {
+        js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #004ca7'")
+        shinyjs::runjs(js_code)
+      }
+
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
       DATATYPEPGX <<- tolower(PGX$datatype)
@@ -730,9 +745,8 @@ app_server <- function(input, output, session) {
         labeltype("feature") # probe is feature (rownames of counts)
       }
 
-      ## show beta feauture
-      show.beta <- env$user_settings$enable_beta()
-      if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
+      tab_control()
+
       is.logged <- auth$logged
 
       ## hide all main tabs until we have an object
@@ -748,48 +762,58 @@ app_server <- function(input, output, session) {
       shinyjs::runjs("sidebarOpen()")
       shinyjs::runjs("settingsOpen()")
 
-      ## do we have libx libraries?
-      has.libx <- dir.exists(file.path(OPG, "libx"))
-
-      ## Beta features
-      info("[SERVER] disabling beta features")
-      bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
-      toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
-      toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-
       
-      ## Dynamically show upon availability in pgx object
-      info("[SERVER] disabling extra features")
-      tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
-      tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
-      tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
-      tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
-      gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
-      for (tab_i in gset_tabs) {
-        tabRequire(PGX, session, tab_i, "gsetX", TRUE)
-        tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
-      }
-
-      ## Hide PCSF and WGCNA for metabolomics.
-      # WGCNA will be available upon gmt refactoring
-      if (DATATYPEPGX == "metabolomics") {
-        info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
-        bigdash.hideTab(session, "pcsf-tab")
-        bigdash.hideTab(session, "wgcna-tab")
-        bigdash.hideTab(session, "cmap-tab")
-      }
-
-      if (PGX$datatype == "multi-omics") {
-        info("[SERVER] disabling modules for multi-omics data")
-        bigdash.hideTab(session, "drug-tab")
-        bigdash.hideTab(session, "cell-tab")
-        bigdash.hideTab(session, "wordcloud-tab")
-        bigdash.hideTab(session, "cmap-tab")
-      }
 
       info("[SERVER] trigger on change dataset done!")
     }
   )
+
+  tab_control <- function() {
+    ## show beta feauture
+    show.beta <- env$user_settings$enable_beta()
+    if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
+
+    ## do we have libx libraries?
+    has.libx <- dir.exists(file.path(OPG, "libx"))
+
+    ## Beta features
+    info("[SERVER] disabling beta features")
+    bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
+    toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
+    toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+
+    ## Control tab to only be displayed if there is custom fc + baseline fc
+    toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
+
+    ## Dynamically show upon availability in pgx object
+    info("[SERVER] disabling extra features")
+    tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
+    tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
+    tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
+    tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
+    gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
+    for (tab_i in gset_tabs) {
+      tabRequire(PGX, session, tab_i, "gsetX", TRUE)
+      tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
+    }
+
+    ## Hide PCSF and WGCNA for metabolomics.
+    # WGCNA will be available upon gmt refactoring
+    if (DATATYPEPGX == "metabolomics") {
+      info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+      bigdash.hideTab(session, "pcsf-tab")
+      bigdash.hideTab(session, "wgcna-tab")
+      bigdash.hideTab(session, "cmap-tab")
+    }
+
+    if (PGX$datatype == "multi-omics") {
+      info("[SERVER] disabling modules for multi-omics data")
+      bigdash.hideTab(session, "drug-tab")
+      bigdash.hideTab(session, "cell-tab")
+      bigdash.hideTab(session, "wordcloud-tab")
+      bigdash.hideTab(session, "cmap-tab")
+    }
+  }
 
   # populate labeltype selector based on pgx$genes
   observeEvent(
@@ -1341,7 +1365,7 @@ app_server <- function(input, output, session) {
       inactivityCounter(0) # Reset counter on any user activity
     })
 
-    inactivityControl <- start_inactivityControl(session, timeout = 1800, inactivityCounter)
+    inactivityControl <- start_inactivityControl(session, timeout = opt$INACTIVITY_TIMEOUT, inactivityCounter)
     observe({
       inactivityControl()
     })

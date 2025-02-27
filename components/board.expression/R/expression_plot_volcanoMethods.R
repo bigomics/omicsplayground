@@ -44,7 +44,7 @@ expression_plot_volcanoMethods_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
     cards = TRUE,
@@ -68,6 +68,7 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   show_pv,
                                                   genes_selected,
                                                   labeltype = reactive("symbol"),
+                                                  pval_cap,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -138,6 +139,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
       label.names <- playbase::probe2symbol(rownames(mx), pgx$genes, labeltype(), fill_na = TRUE)
 
+      pval_cap <- pval_cap()
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = x,
@@ -157,7 +160,8 @@ expression_plot_volcanoMethods_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        by_sig = FALSE
+        by_sig = FALSE,
+        pval_cap = pval_cap
       )
       return(all_plts)
     }
@@ -216,7 +220,9 @@ expression_plot_volcanoMethods_server <- function(id,
       facet <- fc$facet
       x <- fc$fc
       y <- qv$qv
-      y <- -log10(y + 1e-12)
+
+      pval_cap <- pval_cap()
+      y <- -log10(y + pval_cap)
 
       playbase::ggVolcano(
         x = x,
@@ -268,7 +274,8 @@ expression_plot_volcanoMethods_server <- function(id,
         pdf.width = 12,
         pdf.height = 5,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        download.contrast.name = comp
       )
     })
   }) ## end of moduleServer

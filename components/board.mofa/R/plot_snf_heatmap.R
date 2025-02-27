@@ -7,6 +7,7 @@ mofa_plot_snf_heatmap_ui <- function(
     id,
     title = "",
     info.text = "",
+    info.references = "",
     caption = "",
     label = "",
     height = 400,
@@ -23,10 +24,11 @@ mofa_plot_snf_heatmap_ui <- function(
     label = label,
     options = options,
     info.text = info.text,
+    info.references = info.references,
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
   
 }

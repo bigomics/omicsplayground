@@ -128,6 +128,16 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       )
     })
 
+    pval_cap <- shiny::reactive({
+      pval_cap <- input$pval_cap
+      if (pval_cap == "Uncaped") {
+        pval_cap <- 1e-999
+      } else {
+        pval_cap <- as.numeric(input$pval_cap)
+      }
+      return(pval_cap)
+    })
+
     # functions #########
     comparison <- 1
     testmethods <- c("trend.limma")
@@ -353,12 +363,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       features <- rownames(res)
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
-      qval <- pmax(qval, 1e-20)
+      qval <- pmax(qval, pval_cap())
       pval <- res[, grep("pvalue|meta.p|pval|p_value", colnames(res))[1]]
-      pval <- pmax(pval, 1e-20)
+      pval <- pmax(pval, pval_cap())
 
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
-      y <- -log10(qval + 1e-12)
+      y <- -log10(qval + pval_cap())
       scaled.x <- scale(x, center = FALSE)
       scaled.y <- scale(y, center = FALSE)
 
@@ -427,6 +437,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       genes_selected = genes_selected,
       labeltype = labeltype,
       watermark = WATERMARK,
+      pval_cap = pval_cap,
       pgx = pgx
     )
 
@@ -531,6 +542,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
       labeltype = labeltype,
+      pval_cap = pval_cap,
       watermark = WATERMARK
     )
 
@@ -545,6 +557,14 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
       labeltype = labeltype,
+      pval_cap = pval_cap,
+      watermark = WATERMARK
+    )
+
+    expression_plot_fc_fc_server(
+      id = "fc_fc",
+      pgx = pgx,
+      comp = shiny::reactive(input$gx_contrast),
       watermark = WATERMARK
     )
 
@@ -605,7 +625,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       organism = pgx$organism,
       show_pv = shiny::reactive(input$show_pv),
       height = c(tabH - 10, 700),
-      scrollY = "200px"
+      scrollY = "200px",
+      cont = shiny::reactive(input$gx_contrast)
     )
 
     gsettable <- expression_table_gsettable_server(

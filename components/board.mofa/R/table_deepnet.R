@@ -34,7 +34,7 @@ table_deepnet_gradients_server <- function(id,
 {
   moduleServer(id, function(input, output, session) {
 
-    table.RENDER <- function(full=FALSE) {
+    table.RENDER <- function(full=TRUE) {
       net <- net()
       grad <- net$get_gradients()[[1]]
       all.fc <- phenoFC()
@@ -60,14 +60,27 @@ table_deepnet_gradients_server <- function(id,
       numeric.cols <- colnames(df)
       
       ## add gene title for readable names (e.g. for metabolomics)
-      feature <- rownames(df)
+      feature <- stringr::str_trunc(rownames(df),40)
+      symbol  <- stringr::str_trunc(pgx$genes[feature,"symbol"],20)
+      title   <- stringr::str_trunc(pgx$genes[feature,"gene_title"],60)
       if(full) {
-        gene_title <- stringr::str_trunc(pgx$genes[feature,"gene_title"], 40)
-        df <- cbind( feature=feature, title=gene_title, df)
+        df <- cbind( feature=feature, symbol=symbol, title=title, df)
       } else {
-        df <- cbind( feature=feature, df)
+        df <- cbind( feature=feature, symbol=symbol, df)
       }
 
+      trunc_column <- function(target, len) {
+        list(
+          targets = target, ## with no rownames column 1 is column 2
+          render = DT::JS(
+            "function(data, type, row, meta) {",
+            paste0("return type === 'display' && data.length > ",len," ?"),
+            paste0("'<span title=\"' + data + '\">' + data.substr(0, ",len,") + '...</span>' : data;"),
+            "}"
+          )
+        )
+      }
+      
       DT::datatable(
         df,
         rownames = FALSE, 
@@ -82,7 +95,10 @@ table_deepnet_gradients_server <- function(id,
           scrollY = "70vh",
           scroller = TRUE,
           scrollResize = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs = list(
+            trunc_column("feature",40)
+          )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%

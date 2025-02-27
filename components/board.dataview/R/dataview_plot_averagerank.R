@@ -33,7 +33,7 @@ dataview_plot_averagerank_ui <- function(id,
     info.text = info.text,
     options = options,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

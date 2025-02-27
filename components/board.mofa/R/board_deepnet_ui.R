@@ -11,6 +11,7 @@ DeepNetInputs <- function(id) {
     shiny::selectInput(ns("show_conditions"), "Show conditions:", choices = NULL, multiple = TRUE),
     shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),
 
+    br(),
     p("Network learning:"),
     bslib::layout_column_wrap(
       width = 1 / 2,
@@ -31,14 +32,14 @@ DeepNetInputs <- function(id) {
           shiny::selectInput(ns("layers"), "Layers:", choices = c("mini","medium","deep"),
                            selected="mini"),
           shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
-          shiny::checkboxInput(ns("augment"), "augment data (10x)", FALSE),
+          shiny::checkboxInput(ns("augment"), "augment data (10x)", TRUE),
+          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),
           # shiny::checkboxInput(ns("scaleinput"), "scale input", TRUE),
           # shiny::checkboxInput(ns("sdweight"), "gradient SD weight", TRUE),
           # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
           #shiny::checkboxInput(ns("dropout"), "use dropout", FALSE),
-          shiny::checkboxInput(ns("addnoise"), "add internal noise", TRUE),
-          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE),
-          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE)
+          shiny::checkboxInput(ns("addnoise"), "add noise", TRUE),
+          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE)
           #shiny::checkboxInput(ns("multitarget"), "multi target", FALSE)        
           #shiny::selectInput(ns("optim"), "Optimizer",
           #  choices = c("adam","adamw","sgd","lbfgs"), selected="adam"),
@@ -138,24 +139,21 @@ DeepNetUI <- function(id) {
           height = "calc(100vh - 180px)",
           bs_alert(HTML("<b>Gradient vs foldchange. </b>. This board compares input gradients of the network (i.e. change of prediction with respect to inputs) with the log-foldchange. Good biomarkers should have high foldchange and large input gradient.")),
           bslib::layout_columns(
-            col_widths = c(7,5),
+            col_widths = c(6,6,12),
             height = "calc(100vh - 180px)",            
-            bslib::layout_columns(
-              col_widths = c(12,12),
-              plot_deepnet_gradients_ui(
-                ns("deepnet_gradients"),
-                title = "Network gradients",
-                info.text = "SNF affinity matrices",
-                caption = ""
-              ),
-              plot_deepnet_gradients_ui(
-                ns("deepnet_fcvsgrad"),
-                title = "Gradient vs. foldchange",
-                info.text = "Foldchange vs. gradient",
-                caption = "",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              )
+            plot_deepnet_gradients_ui(
+              ns("deepnet_gradients"),
+              title = "Network gradients",
+              info.text = "SNF affinity matrices",
+              caption = ""
+            ),
+            plot_deepnet_gradients_ui(
+              ns("deepnet_fcvsgrad"),
+              title = "Gradient vs. foldchange",
+              info.text = "Foldchange vs. gradient",
+              caption = "",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             ),
             table_deepnet_gradients_ui(
               ns("deepnet_table"),
@@ -167,7 +165,28 @@ DeepNetUI <- function(id) {
             )
           )
         )
+      ),  ## end of tabPanel
+
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "Biomarker heatmap",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("<b>Biomarker heatmap.</b>.")),
+          bslib::layout_columns(
+            col_widths = c(12),
+            height = "calc(100vh - 180px)",            
+            plot_deepnet_biomarkerheatmap_ui(
+              ns("deepnet_bigheatmap"),
+              title = "Biomarker heatmap",
+              info.text = "",
+              caption = ""
+            )              
+          )
+        )
       )  ## end of tabPanel
+      
       
     )
   )

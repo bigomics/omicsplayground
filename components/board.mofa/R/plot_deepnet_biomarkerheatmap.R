@@ -22,7 +22,7 @@ plot_deepnet_biomarkerheatmap_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -30,16 +30,29 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  net,
                                                  pgx,
                                                  update,
-                                                 pheno,
+                                                 add_annot = c(0,1),
+                                                 show_legend = c(0,1),
+                                                 ntop = c(20,30),
+                                                 rmar = c(0,20),
+                                                 plot.res = c(90, 120),
+                                                 datatypes = reactive(NULL),
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
       net <- net()
+      annot <- NULL
+      if(add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]),]      
       playbase::deep.plotBiomarkerHeatmap(
-        net, ntop = 20, datatypes = NULL,
-        cexRow = 0.8, cexCol = 0.8,
+        net, ntop = ntop[1],
+        datatypes = datatypes(),
+        cexRow = 0.8,
+        cexCol = 0.8,
+        annot = annot,
+        rowlab.maxlen = 25 + rmar[1],
+        rownames_width = 45 + rmar[1],
+        show_legend = show_legend[1],
         show_colnames = FALSE
       ) 
     }
@@ -48,14 +61,18 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       update()  ## react on updates
       net <- net()
       nsamples <- ncol(net$X[[1]])
-      annot <- t(pgx$samples)[,colnames(net$X[[1]])]
-      pheno <- pheno()
-      sel <- which(rownames(annot)!= pheno)
-      annot <- annot[sel,,drop=FALSE]
+      annot <- NULL
+      if(add_annot[2]) annot <- pgx$samples[colnames(net$X[[1]]),]
       playbase::deep.plotBiomarkerHeatmap(
-        net, ntop = 30, datatypes = NULL,
-        rownames_width = 80, rowlab.maxlen = 60,
-        annot = annot, cexRow = 0.8, cexCol = 0.8,
+        net,
+        ntop = ntop[2],
+        datatypes = datatypes(),
+        rowlab.maxlen = 35 + rmar[2],
+        rownames_width = 60 + rmar[2],
+        show_legend = show_legend[2],
+        annot = annot,
+        cexRow = 0.8,
+        cexCol = 0.8,
         show_colnames = (nsamples<100)
       ) 
     }
@@ -65,7 +82,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       func = plot.RENDER,
       func2 = plot.RENDER2,      
       pdf.width = 12, pdf.height = 5,
-      res = c(90, 120),
+      res = plot.res,
       add.watermark = watermark
     )
 

@@ -30,7 +30,7 @@ mofa_plot_snfgraph_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -41,9 +41,9 @@ mofa_plot_snfgraph_server <- function(id,
 
     
     observeEvent( mofa()$snf, {
-      snf <- mofa()$snf
+      res <- mofa()
       labeltypes <- c("<none>","<cluster>","<sample_id>",
-                      colnames(snf$samples))      
+                      colnames(res$samples))      
       shiny::updateSelectInput(
         session, "labeltype", choices = labeltypes,
         selected="<sample_id>" )
@@ -58,16 +58,16 @@ mofa_plot_snfgraph_server <- function(id,
       labeltype <- input$labeltype
       label <- NULL
       if(labeltype == "<none>") {
-        label <- rep(" ", nrow(snf$samples))
+        label <- rep(" ", nrow(res$samples))
       }
       if(labeltype == "<cluster>") {
         label <- snf$cluster
       }
       if(labeltype == "<sample_id>") {
-        label <- rownames(snf$samples)
+        label <- rownames(res$samples)
       }
-      if(labeltype %in% colnames(snf$samples)) {
-        label <- snf$samples[,labeltype]
+      if(labeltype %in% colnames(res$samples)) {
+        label <- res$samples[,labeltype]
       }
 
       playbase::snf.plot_graph(

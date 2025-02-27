@@ -52,15 +52,16 @@ upload_module_computepgx_server <- function(
           upload_datatype()
         },
         {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else {
+          if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
             mm <- c(
               "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
               "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
             )
+          } else {
+            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
+          }
+          if (opt$ALLOW_CUSTOM_FC) {
+            mm <- c(mm, "custom")
           }
           return(mm)
         }
@@ -71,18 +72,16 @@ upload_module_computepgx_server <- function(
           upload_datatype()
         },
         {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma")
-          } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma")
-          } else {
+          if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
             mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+          } else {
+            mm <- c("ttest", "ttest.welch", "trend.limma")
           }
           return(mm)
         }
       )
 
-      ## statistical methods for GENESET level testing
+      ## statistical method for GENESET level testing
       ## GENESET.METHODS <- c(
       ##   "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
       ##   ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
@@ -96,10 +95,11 @@ upload_module_computepgx_server <- function(
       {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "spearman", "camera")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "spearman")
         } else {
-          mm <- c(
-            "fisher", "ssgsea", "gsva", "spearman", "camera",
-            "fry", "plage","enricher", "fgsea")
+          mm <- c("fisher", "ssgsea+limma" = "ssgsea",
+            "gsva+limma" = "gsva", "spearman", "camera", "fry", "fgsea")
         }
         return(mm)
       }
@@ -113,7 +113,7 @@ upload_module_computepgx_server <- function(
         if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "spearman")
         } else {
-          mm <- c("fisher", "gsva", "ssgsea", "fgsea")
+          mm <- c("fisher", "gsva", "fgsea")
         }
         return(mm)
       }
@@ -172,6 +172,9 @@ upload_module_computepgx_server <- function(
       ## )
       
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
+      if(opt$ALLOW_CUSTOM_FC) {
+        ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
+      }
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
       DEV.METHODS <- c("noLM.prune")
       DEV.NAMES <- c("noLM + prune")
@@ -280,6 +283,16 @@ upload_module_computepgx_server <- function(
                   shiny::HTML("<h4>Gene tests:</h4>"),
                   GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
+                ),
+                conditionalPanel(
+                  "input.gene_methods.includes('custom')",
+                  ns = ns,
+                  fileInput2(
+                    ns("upload_custom_fc"),
+                    shiny::HTML("<h4>Custom fold change:</h4>"),
+                    multiple = FALSE,
+                    accept = c(".csv")
+                  )
                 )
               ),
               bslib::card(
@@ -513,6 +526,7 @@ upload_module_computepgx_server <- function(
       PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
       custom_geneset <- list(gmt = NULL, info = NULL)
+      custom_fc <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
@@ -567,6 +581,50 @@ upload_module_computepgx_server <- function(
           )
           custom_geneset <<- list(gmt = NULL, info = NULL)
           return(NULL)
+        }
+      })
+
+      ## react on custom fold change upload
+      shiny::observeEvent(input$upload_custom_fc, {
+        filePath <- input$upload_custom_fc$datapath
+        fileName <- input$upload_custom_fc$name
+
+        if (endsWith(filePath, "csv")) {
+          custom_fc <<- playbase::read_counts(filePath)
+          contrasts <- contrastsRT()
+          contrast_names <- colnames(contrasts)
+          required_cols <- unlist(lapply(contrast_names, function(contrast) {
+            c(
+              paste0(contrast, ".logFC"),
+              paste0(contrast, ".P.Value"),
+              paste0(contrast, ".adj.P.Val")
+            )
+          }))
+
+          missing_cols <- setdiff(required_cols, colnames(custom_fc))
+
+          if (length(missing_cols) > 0) {
+            shinyalert::shinyalert(
+              title = "Invalid custom fold changes",
+              text = paste0(
+                "Missing required columns: ",
+                paste(missing_cols, collapse=", "),
+                ". Each contrast must have .logFC, .P.Value and .adj.P.Val columns."
+              ),
+              type = "error",
+              html = TRUE,
+              closeOnClickOutside = TRUE
+            )
+            custom_fc <<- NULL
+            return(NULL)
+          }
+
+          shinyalert::shinyalert(
+            title = "Custom fold changes uploaded!",
+            text = "Your fold changes will be incorporated in the analysis.",
+            type = "success",
+            closeOnClickOutside = TRUE
+          )
         }
       })
 
@@ -671,6 +729,7 @@ upload_module_computepgx_server <- function(
           # Extra tables
           annot_table = annot_table,
           custom.geneset = custom_geneset,
+          custom_fc = custom_fc,
           # Options
           batch.correct = FALSE,
           norm_method = norm_method(),
@@ -679,7 +738,8 @@ upload_module_computepgx_server <- function(
             imputation_method = compute_settings$imputation_method,
             bc_method = compute_settings$bc_method,
             remove_outliers = compute_settings$remove_outliers,
-            norm_method = norm_method()
+            norm_method = norm_method(),
+            custom_fc = custom_fc
           ),
           ## normalize = do.normalization,
           prune.samples = TRUE,

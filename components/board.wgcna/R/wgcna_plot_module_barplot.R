@@ -27,7 +27,7 @@ wgcna_plot_module_barplot_ui <- function(
     height = height,
     caption = caption,
     width = width,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     ...
   )
 }

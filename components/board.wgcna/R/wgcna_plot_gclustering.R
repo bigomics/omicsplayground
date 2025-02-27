@@ -22,20 +22,21 @@ wgcna_plot_gclustering_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     ...
   )
 }
 
 wgcna_plot_gclustering_server <- function(id,
-                                          wgcna.compute,
+                                          wgcna,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     RENDER <- function() {
-      res<- wgcna.compute()
+      res <- wgcna()
       par(mar=c(5,5,1,1))
-      playbase::wgcna.plotMDS(res, main="", scale=FALSE) 
+      ##playbase::wgcna.plotMDS(res, main="", scale=FALSE)
+      playbase::wgcna.plotFeatureUMAP(res, nhub=3, method="clust")
     }
 
     PlotModuleServer(

@@ -57,7 +57,7 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
     height = height,
     width = width,
     options = plot_opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
   )
 }
 

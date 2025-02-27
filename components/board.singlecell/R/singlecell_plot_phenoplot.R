@@ -38,7 +38,7 @@ singlecell_plot_phenoplot_ui <- function(
     title = title,
     caption = caption,
     options = phenoplot.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )

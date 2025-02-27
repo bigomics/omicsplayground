@@ -25,7 +25,7 @@ dataview_plot_correlation_ui <- function(
     info.methods = info.methods,
     info.extra_link = info.extra_link,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -73,7 +73,7 @@ dataview_plot_correlation_server <- function(id,
       klr1 <- omics_pal_c(palette = "brand_blue")(16)[1 + round(15 * gx1)]
       klr1[which(is.na(klr1))] <- unname(omics_colors("mid_grey"))
 
-      names(top.rho) <- sub(".*:", "", names(top.rho))
+      ##names(top.rho) <- mofa.strip_prefix(names(top.rho)
 
       ## NOTE: currently some labels are pretty long; also the var names are cryptic
       ## TODO: check if names can be shortened and variable names can be formatted nicely

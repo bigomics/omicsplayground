@@ -64,7 +64,7 @@ MofaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Multi‐Omics Factor Analysis (MOFA)</b> is a computational framework for multi‐omics data integration. The inferred latent 'factors' (or 'modules') represent the underlying principal axes of heterogeneity across the samples.")),
+          bs_alert(HTML("<b>Multi‐Omics Factor Analysis (MOFA)</b> is a computational, factorization-based framework for multi‐omics data integration. The inferred latent 'factors' (or 'modules') represent the underlying principal axes of heterogeneity across the samples.")),
           bslib::layout_columns(
             col_widths = c(7, 5),
             bslib::layout_columns(
@@ -73,6 +73,7 @@ MofaUI <- function(id) {
                 ns("factorxview"),
                 title = "Variance per factor and type",
                 info.text = "Amount of variance explained by each factor in each omic type. A trained MOFA model is used to infer the proportion of variance explained (i.e. the coefficient of determinations (R^2)) by the MOFA factors across the different views. Higher variance suggests stronger effect. In MOFA, 'views' refer to features from non-overlapping set of omic types. MOFA 'factors' are low-dimensional representations of multi-omic data. A factor is a latent variable that captures a source of variation across the integrated data. Each factor captures a different source and dimension of heterogeneity in the integrated data, and thus represents an independent source of variation. Note that the interpretation of factors is analogous to the interpretation of the principal components in PCA. Factors with higher explained variance are typically considered more important for understanding the underlying structure and patterns in a multi-omics dataset. They may correspond to significant biological processes, cellular states, or experimental conditions that have a broader impact across multiple data modalities.",
+                info.references = list(list("Argelaguet R, Velten B, Arnol D, Dietrich S, Zenz T, Marioni JC, Buettner F, Huber W, Stegle O (2018). “Multi‐Omics Factor Analysis — a framework for unsupervised integration of multi-omics data sets.” Mol Syst Biol.", "https://www.embopress.org/doi/full/10.15252/msb.20178124")),
                 caption = "Amount of variance explained by each factor in each omics type.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
@@ -89,6 +90,7 @@ MofaUI <- function(id) {
                 ns("variance_view"),
                 title = "Variance per type",
                 info.text = "Total amount of variance explained by each view (omic types). Distinct omic types or data modalities often account for different variance observed in the data. This represents an expectation in multi-omics data analyses. A data type explaining more variance compared to another data type may capture either more biologically heterogenous signals, or be affected by technical noise.",
+                info.references = list(list("Argelaguet R, Velten B, Arnol D, Dietrich S, Zenz T, Marioni JC, Buettner F, Huber W, Stegle O (2018). “Multi‐Omics Factor Analysis — a framework for unsupervised integration of multi-omics data sets.” Mol Syst Biol.", "https://www.embopress.org/doi/full/10.15252/msb.20178124")),
                 caption = "Total amount of variance explained by each view (omic types). ",
                 label = "c",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -98,6 +100,7 @@ MofaUI <- function(id) {
                 ns("variance_factor"),
                 title = "Variance per factor",
                 info.text = "Amount of variance explained by each factor across all views (omic types) combined. Distinct factors capture different dimensions of heterogeneity in the data. When a factor explains more variance compared to another factor, it is interpreted as a more dominant source of heterogeneity across samples, resulting from stronger biological or technical influence on the data.",
+                info.references = list(list("Argelaguet R, Velten B, Arnol D, Dietrich S, Zenz T, Marioni JC, Buettner F, Huber W, Stegle O (2018). “Multi‐Omics Factor Analysis — a framework for unsupervised integration of multi-omics data sets.” Mol Syst Biol.", "https://www.embopress.org/doi/full/10.15252/msb.20178124")),
                 caption = "Amount of variance explained by each factor across all views (omic types) combined.",
                 label = "c",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -127,7 +130,7 @@ MofaUI <- function(id) {
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               xxxl = c(12, 12),
-              lg = c(7,5),
+              lg = c(6,6),
               sm = c(12, 12)               
             ),
             bslib::layout_columns(
@@ -274,51 +277,6 @@ MofaUI <- function(id) {
               ns("mofa_enrichmentgenes"),
               title = "Enrichment gene table",
               label = "a",
-              info.text = "",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )                          
-          )
-        )
-      ), ## tabPanel
-
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        "gsetMOFA",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Geneset MOFA.</b> MOFA can also be performed on gene sets computed in each single sample. The resulting gene set factors (here called 'modules') can be correlated with phenotypes/traits/conditions. This analysis may inform on 'genesets modules' (GM) correlated the modules with traits. The Module-Factor correlation shows how geneset modules correlate with gene factors.")),
-          bslib::layout_columns(
-            col_widths = bslib::breakpoints(
-              lg = c(6, 6, 7, 5),
-              sm = c(12, 12, 12, 12)
-            ),
-            mofa_plot_gsetmofa_traitCor_ui(
-              ns("gset_traitcor"),
-              title = "Genesets module-Trait correlation",
-              info.text = "Correlation between geneset MOFA factors and traits. Correlation between each geneset module MOFA factor (y-axis) and each available variable in your metadata (x-axis). The metadata variables shown correspond to those provided in your uploaded samples.csv file. Covariates may include the phenotype(s) of interest. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Each geneset MOFA factor captures a source of heterogeneity in the integrated data accounted by a gene set. Therefore, the heatmap helps identification of gene sets aggregating dominant sources of variation in the data -which may be driven by biological processes- associated with a trait or condition.",
-              caption = "Factor heatmap.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            mofa_plot_gsetmofa_factorCor_ui(
-              ns("gset_factorcor"),
-              title = "Geneset module-Factor correlation",
-              info.text = "Correlation between genesets modules and MOFA factors. Correlations are pairwise Pearson's correlation coefficients. The colors in the heatmap indicate the strength and direction of the correlation. The correlation values range from -1 to +1. Stronger, positive correlations will approach darker red. Stronger, negative correlations will approach darker blue. Significant correlation between genesets and MOFA factors might indicate similar sources of variation in the data -which might be driven by shared biological processes.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            mofa_table_gsetmofa_ui(
-              ns("gsetmofa_module"),
-              title = "Module geneset table",
-              info.text = "",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),                          
-            mofa_table_gsetmofa_factor_ui(
-              ns("gsetmofa_factor"),
-              title = "Factor gene table",
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

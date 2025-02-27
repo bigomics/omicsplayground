@@ -21,7 +21,7 @@ wgcna_plot_module_significance_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -48,7 +48,7 @@ wgcna_plot_module_significance_server <- function(id,
            y = par("usr")[3] - dy,
            labels = names(rho),
            xpd = NA,
-           srt = 35,
+           srt = 45,
            adj = 0.965,
            cex = 0.9)
 

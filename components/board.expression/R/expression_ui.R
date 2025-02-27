@@ -60,6 +60,15 @@ ExpressionInputs <- function(id) {
             we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
             Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
           placement = "right", options = list(container = "body")
+        ),
+        withTooltip(
+          shiny::selectInput(
+            inputId = ns("pval_cap"),
+            label = "Significance cap",
+            choices = c("1e-12", "1e-20", "Uncaped")
+          ),
+          "Significance cap",
+          placement = "right", options = list(container = "body")
         )
       )
     )
@@ -209,6 +218,21 @@ ExpressionUI <- function(id) {
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. ",
           label = "a",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
+    ), ## end upper tabPanel
+    shiny::tabPanel(
+      "FC-FC comparison",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
+        expression_plot_fc_fc_ui(
+          id = ns("fc_fc"),
+          title = "FC-FC comparison",
+          info.text = "Compare custom FC with baseline FC",
+          caption = "FC-FC comparison: Compare custom FC with baseline FC",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
