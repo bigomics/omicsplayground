@@ -1155,7 +1155,8 @@ UploadBoard <- function(id,
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Counts",
       info.text = "This is the uploaded counts data.",
-      caption = "This is the uploaded counts data."
+      caption = "This is the uploaded counts data.",
+      upload_datatype = upload_datatype
     )
 
     upload_table_preview_samples_server(

@@ -24,7 +24,8 @@ upload_table_preview_counts_server <- function(
     height,
     title,
     info.text,
-    caption) {
+    caption,
+    upload_datatype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -80,6 +81,24 @@ upload_table_preview_counts_server <- function(
         style = "display: flex; justify-content: left; margin: 8px;",
         if (is.null(uploaded$counts.csv)) {
           div(
+            if (upload_datatype() == "multi-omics") {
+              shinyWidgets::switchInput(
+                inputId = ns("data_source"),
+                value = FALSE,
+                onLabel = "From pgx",
+                offLabel = "From csv",
+                onStatus = "primary",
+              offStatus = "default",
+              inline = TRUE,
+                size = "mini"
+              )
+            },
+            if (upload_datatype() == "multi-omics") {
+              actionButton(
+                ns("load_selected"), "Load data",
+                class = "btn-sm btn-outline-primary m-1"
+              )
+            },
             actionButton(
               ns("load_example"), "Load example data",
               class = "btn-sm btn-outline-primary m-1"
@@ -116,13 +135,53 @@ upload_table_preview_counts_server <- function(
               bs_alert(tspan("The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."), closable = FALSE, translate_js = FALSE)
             ),
             bslib::card(
-              fileInputArea(
-                ns("counts_csv"),
-                shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                multiple = FALSE,
-                accept = c(".csv"),
-                width = "100%"
-              ),
+              if (upload_datatype() == "multi-omics") {
+                shiny::conditionalPanel(
+                  condition = sprintf("input['%s'] == true", ns("data_source")),
+                  div(
+                    div(
+                      style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
+                      span("Selected:", style = "font-weight: bold;"),
+                      textOutput(ns("selected_rows_text")),
+                    ),
+                    div(
+                      style = "height: 350px; overflow-y: auto;",
+                      DT::DTOutput(ns("available_data_table"))
+                    ),
+                    style = "width: 100%; max-height: 400px; overflow-y: auto;"
+                  ),
+                  selection = "multiple",
+                  options = list(
+                    pageLength = 5,
+                    dom = "tp",
+                    scrollY = TRUE
+                  )
+                )
+              },
+              if (upload_datatype() == "multi-omics") {
+                shiny::conditionalPanel(
+                  condition = sprintf("input['%s'] == false", ns("data_source")),
+                  shiny::uiOutput(ns("dynamic_file_inputs"))#,
+                  # div(
+                  #   style = "text-align: right; ",
+                  #   actionButton(
+                  #     ns("add_file_input"),
+                  #     "Add another file",
+                  #     icon = icon("plus"),
+                  #     class = "btn-sm btn-outline-primary"
+                  #   )
+                  # )
+                )
+              },
+              if (upload_datatype() != "multi-omics") {
+                fileInputArea(
+                  ns("counts_csv"),
+                  shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
+                  multiple = FALSE,
+                  accept = c(".csv"),
+                  width = "100%"
+                )
+              },
               style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
             action_buttons
@@ -165,6 +224,137 @@ upload_table_preview_counts_server <- function(
           )
         } ## end of if-else
       ) ## end of div
+    })
+
+    output$selected_rows_text <- renderText({
+      info <- available_data_table()
+      paste("Selected:", paste(info$dataset[input$available_data_table_rows_selected], collapse = ", "))
+    })
+
+    available_data_table <- reactive({
+      pgxdir <- auth$user_dir
+      info <- playbase::pgxinfo.read(pgxdir, file = "datasets-info.csv")
+      info <- info[info$datatype != "multi-omics", ]
+      info
+    })
+
+    output$available_data_table <- DT::renderDT({
+      info <- available_data_table()
+      DT::datatable(data.frame(
+        "Dataset" = info$dataset,
+        "Type" = info$datatype
+      ), 
+      class = "compact hover",
+      rownames = FALSE,
+      options = list(
+        dom = 't',
+        paging = FALSE,
+        ordering = FALSE,
+        info = FALSE
+      ))
+    })
+
+    output$dynamic_file_inputs <- renderUI({
+      bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "8fr 3fr 1fr"),
+          class = "m-0",
+          fileInput(ns("file_input_1"), label = NULL, multiple = FALSE, accept = c(".csv")),
+          selectInput(ns("datatype_1"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics")),
+          actionButton(ns("remove_input_1"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
+          fileInput(ns("file_input_2"), label = NULL, multiple = FALSE, accept = c(".csv")),
+          selectInput(ns("datatype_2"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Proteomics"),
+          actionButton(ns("remove_input_2"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
+          fileInput(ns("file_input_3"), label = NULL, multiple = FALSE, accept = c(".csv")),
+          selectInput(ns("datatype_3"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Metabolomics"),
+          actionButton(ns("remove_input_3"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger")
+        )
+    })
+
+    lapply(1:3, function(i) {
+      observeEvent(input[[paste0("remove_input_", i)]], {
+        shinyjs::hide(paste0("file_input_", i))
+        shinyjs::hide(paste0("datatype_", i))
+        shinyjs::hide(paste0("remove_input_", i))
+      })
+    })
+
+    observeEvent(input$load_selected, {
+      col_lists <- list()
+      file_names <- character()
+      if (input$data_source) { # Case from pgx not implemented yet
+        for (i in 1:length(input$available_data_table_rows_selected)) {
+          info <- available_data_table()
+          datasets <- info$dataset[input$available_data_table_rows_selected]
+          for (dataset in datasets) {
+            pgxfile <- file.path(auth$user_dir, paste0(dataset, ".pgx"))
+            df <- playbase::pgx.load(pgxfile)$counts
+            col_lists[[i]] <- colnames(df)
+            file_names[i] <- dataset
+          }
+        }
+      } else {
+        for (i in 1:3) {
+          file_input <- input[[paste0("file_input_", i)]]
+          if (!is.null(file_input)) {
+            df <- playbase::read_counts(file_input$datapath)
+            col_lists[[i]] <- colnames(df)
+            file_names[i] <- file_input$name
+          }
+        }
+      }
+      if (length(col_lists) > 1) {
+        cols_match <- all(sapply(col_lists[-1], function(x) {
+          setequal(x, col_lists[[1]])
+        }))
+        if (!cols_match) {
+          all_cols <- unique(unlist(col_lists))
+          mismatch_text <- NULL
+          for (i in seq_along(col_lists)) {
+            missing <- setdiff(all_cols, col_lists[[i]])
+            if (length(missing) > 0) {
+              mismatch_text <- paste0(
+                mismatch_text,
+                "\nFile '", file_names[i], "' is missing columns: ",
+                paste(missing, collapse=", ")
+              )
+            }
+          }
+          shinyalert::shinyalert(
+            title = "Column Mismatch Error",
+            text = mismatch_text,
+            type = "error"
+          )
+          return(NULL)
+        }
+      }
+      combined_df <- NULL
+      for (i in 1:max(3, length(input$available_data_table_rows_selected))) {
+        if (input$data_source) {
+          dataset <- available_data_table()[input$available_data_table_rows_selected[i], "dataset"]
+          if (is.na(dataset)) {
+            next
+          } else {
+            pgxfile <- file.path(auth$user_dir, paste0(dataset, ".pgx"))
+            df <- playbase::pgx.load(pgxfile)$counts
+          }
+        } else {
+          file_path <- input[[paste0("file_input_", i)]]$datapath
+          if (is.null(file_path)) {
+            next
+          }
+          df <- playbase::read_counts(file_path)
+        }
+        prefix <- switch(input[[paste0("datatype_", i)]],
+          "RNA-seq" = "gx",
+          "Proteomics" = "px",
+          "Metabolomics" = "mx",
+          "mx" # default fallback
+        )
+        rownames(df) <- paste0(prefix, ":", rownames(df))
+        df <- df[, col_lists[[1]], drop = FALSE]
+        combined_df <- rbind(combined_df, df)
+      }
+      uploaded$counts.csv <- combined_df
     })
 
     output$error_summary <- renderUI({
