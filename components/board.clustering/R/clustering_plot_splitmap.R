@@ -206,7 +206,7 @@ clustering_plot_splitmap_server <- function(id,
         col.annot = annot, row.annot = NULL, annot.ht = 2.3,
         key.offset = c(0.89, 1.01),
         main = " ", nmax = -1,
-        mar = c(margin_top, margin_right, margin_bottom, margin_left)
+        mar = c(margin_bottom, margin_left, margin_top, margin_right)
       )
       p <- grDevices::recordPlot()
       p
