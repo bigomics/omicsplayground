@@ -51,22 +51,23 @@ upload_module_normalization_server <- function(
         counts[which(is.infinite(counts))] <- NA
 
         negs <- sum(counts < 0, na.rm = TRUE)
-        if (negs > 0) counts <- pmax(counts, 0) ## Olink NPX?
+        if (negs > 0) {
+          counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX)
+        }
 
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
 
-        ## if min != 0, no offset.
-        ## if min == 0, offset = smallest non-zero value.
-        prior0 <- 0
-        if (min(counts, na.rm = TRUE) == 0) {
-          prior0 <- min(counts[counts > 0], na.rm = TRUE)
-        }
-
         m <- input$normalization_method
-        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
+
+        prior0 <- 0  ## no offset if minimum is not zero
+        if(min(counts, na.rm = TRUE) == 0) {
+          prior0 <- min(counts[counts > 0], na.rm = TRUE)  ## smallest non-zero value
+        }
+        ## prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
+        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0) ## NEW        
         X <- log2(counts + prior) ## NEED RETHINK
         
         nmissing <- sum(is.na(X))
@@ -82,8 +83,7 @@ upload_module_normalization_server <- function(
 
         dbg("[normalization_server:imputedX] Checking for duplicated features")
         X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)        
-
-        list(X = X, prior = prior)
+        X
       })
 
       ## Normalize
@@ -103,7 +103,24 @@ upload_module_normalization_server <- function(
             ))
             shiny::req(ref)
           }
-          X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
+          ## NEED RETHINK: would be better to rewrite Normalization in
+          ## log2-space (IK) to avoid log/unlog and priors
+          prior0 <- 1e-4
+          ##prior0 <- min(2**X, na.rm=TRUE)  ## smallest non-zero value
+          prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
+          m0 <- m
+          if (m == "CPM+quantile") m0 <- "CPM"
+          normCounts <- playbase::pgx.countNormalization(
+            pmax(2**X - prior, 0),
+            method = m0, ref = ref
+          )
+          X <- log2(normCounts + prior)
+          
+          ## if (FALSE && input$quantile_norm) {
+          if (m == "CPM+quantile") {
+            dbg("[normalization_server:normalizedX] Applying quantile normalization")
+            X <- limma::normalizeQuantiles(X)
+          }
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
@@ -214,9 +231,10 @@ upload_module_normalization_server <- function(
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
-        prior <- imputedX()$prior
         if(1) {
-          counts <- 2 ** X - prior
+          ##prior <- ifelse(input$normalization_method %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+          prior <- 2**min(X,na.rm=TRUE)  ## new
+          counts <- pmax(2**X - prior, 0)
         } else {
           ## NEED RETHINK!! should we return the original not-corrected
           ## counts???? But EdgeR/Deseq2 need batch-corrected matrix??

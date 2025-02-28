@@ -30,7 +30,7 @@ clustering_plot_phenoplot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = phenoplot.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

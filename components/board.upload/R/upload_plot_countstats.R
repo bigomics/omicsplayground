@@ -20,7 +20,7 @@ upload_plot_countstats_ui <- function(id,
     info.text = info.text,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

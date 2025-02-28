@@ -8,9 +8,8 @@ BiomarkerInputs <- function(id) {
   bigdash::tabSettings(
     class = "p-1",
     shiny::tagList(
-      shiny::hr(), shiny::br(),
       withTooltip(
-        shiny::selectInput(ns("pdx_predicted"), "Predicted target:",
+        shiny::selectInput(ns("pdx_target"), "Prediction target:",
           choices = NULL
         ),
         "Select the target variable for biomarker selection.",
@@ -44,7 +43,7 @@ BiomarkerInputs <- function(id) {
           ),
           "Paste a custom list to be used as features.",
           placement = "top"
-        )
+        ),
       ),
       shiny::br(),
       withTooltip(
@@ -62,8 +61,8 @@ BiomarkerInputs <- function(id) {
 BiomarkerUI <- function(id) {
   ns <- shiny::NS(id)
 
-  imgH1 <- c("calc(40vh - 120px)", "70vh") ## heights for small and fullscreen image
-  imgH2 <- c("calc(60vh - 180px)", "70vh")
+  imgH1 <- c("calc(40vh - 125px)", "70vh") ## heights for small and fullscreen image
+  imgH2 <- c("calc(60vh - 181px)", "70vh")
   fullH <- "calc(100vh - 200px)"
 
   div(
@@ -104,20 +103,9 @@ BiomarkerUI <- function(id) {
             width = c("auto", "100%"),
             label = "a"
           ),
-          biomarker_plot_boxplots_ui(
-            ns("pdx_boxplots"),
-            title = "Biomarker expression",
-            info.text = "Boxplot displaying the expression for the top genes according to their importance. The expression is grouped by the {Predicted target} selected on the computation.",
-            info.methods = "See Variable importance",
-            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
-            caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
-            height = imgH1,
-            width = c("auto", "100%"),
-            label = "b"
-          ),
           biomarker_plot_heatmap_ui(
             ns("pdx_heatmap"),
-            title = "Heatmap",
+            title = "Heatmap of top biomarkers",
             info.text = "Expression heatmap of top 40 gene features according to their importance for the {Predicted target}. By default only the samples used on the computation are displayed, using the {show all samples} plot setting all samples can be displayed.",
             info.methods = "Heatmap clustering performed with the fastcluster R package [1] using the 'ward.D2' method with euclidean distance.",
             info.references = list(
@@ -142,6 +130,17 @@ BiomarkerUI <- function(id) {
             height = imgH2,
             width = c("auto", "100%"),
             label = "d"
+          ),
+          biomarker_plot_boxplots_ui(
+            ns("pdx_boxplots"),
+            title = "Biomarker expression vs. conditions",
+            info.text = "Boxplot displaying the expression for the top genes according to their importance. The expression is grouped by the {Predicted target} selected on the computation.",
+            info.methods = "See Variable importance",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#biomarker-analysis",
+            caption = "Expression boxplots of the most likely biomarkers across selected phenotypic groups.",
+            height = imgH1,
+            width = c("auto", "100%"),
+            label = "b"
           )
         )
       ), ## tabPanel 1

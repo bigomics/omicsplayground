@@ -44,7 +44,7 @@ expression_plot_volcanoMethods_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
     cards = TRUE,

@@ -59,11 +59,11 @@ expression_table_genetable_server <- function(id,
     table_data <- function() {
       res <- res()
       req(res)
-
+      
       if ("gene_title" %in% colnames(res)) {
         res$gene_title <- playbase::shortstring(res$gene_title, 50)
       }
-      rownames(res) <- sub(".*:", "", rownames(res))
+      ##rownames(res) <- sub(".*:", "", rownames(res))
 
       if (show_pv()) {
         res <- res[, -grep(".q$", colnames(res)), drop = FALSE]

@@ -41,7 +41,7 @@ enrichment_plot_top_enrich_gsets_ui <- function(
     info.extra_link = info.extra_link,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

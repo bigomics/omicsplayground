@@ -45,7 +45,7 @@ biomarker_plot_heatmap_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = plot_options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -85,8 +85,7 @@ biomarker_plot_heatmap_server <- function(id,
           kk <- colnames(res$X)
         }
         X <- pgx$X[gg, kk]
-        X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
-
+        ## X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
         splitx <- NULL
         ct <- pdx_predicted()
         do.survival <- grepl("survival", ct, ignore.case = TRUE)
@@ -124,7 +123,7 @@ biomarker_plot_heatmap_server <- function(id,
 
         playbase::gx.splitmap(X,
           split = NULL, splitx = splitx, main = "  ",
-          dist.method = "euclidean",
+          dist.method = "euclidean", col.dist.method = "euclidean", 
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
           key.offset = c(0.05, 0.98),

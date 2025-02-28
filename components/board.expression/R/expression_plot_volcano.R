@@ -35,11 +35,14 @@ expression_plot_volcano_ui <- function(id,
     info.extra_link = info.extra_link,
     title = title,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height,
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 
@@ -160,23 +163,77 @@ expression_plot_volcano_server <- function(id,
       shiny::req(pd)
 
       names <- pd$features
+      
+      if (input$custom_labels) {
+        label_features <- if (input$label_features == "") {
+          NULL
+        } else {
+          strsplit(input$label_features, "\\s+")[[1]]
+        }
+        label_features <- label_features
+      } else {
+        label_features <- pd[["lab.genes"]]
+      }
 
-      playbase::ggVolcano(
+      highlight <- if (input$color_selection) {
+        label_features
+      } else {
+        pd[["sel.genes"]]
+      }
+
+      p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = highlight,
+        label = label_features,
         label.names = pd[["label.names"]],
-        label.cex = 4,
+        label.cex = input$label_size,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
-        marker.size = 1,
+        marker.size = input$marker_size,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        axis.text.size = input$axis_text_size,
+        colors = c(
+          up = input$color_up,
+          notsig = "#707070AA",
+          notsel = "#cccccc88",
+          down = input$color_down
+        )
       )
+
+      if (input$margin_checkbox) {
+        margin_top <- ifelse(is.na(input$margin_top), 10, input$margin_top)
+        margin_right <- ifelse(is.na(input$margin_right), 10, input$margin_right)
+        margin_bottom <- ifelse(is.na(input$margin_bottom), 10, input$margin_bottom)
+        margin_left <- ifelse(is.na(input$margin_left), 10, input$margin_left)
+        p <- p + ggplot2::theme(
+          plot.margin = ggplot2::margin(
+            t = margin_top,
+            r = margin_right,
+            b = margin_bottom,
+            l = margin_left,
+            unit = "pt"
+          )
+        )
+      }
+      
+      if (input$aspect_ratio_checkbox) {
+        if (is.na(input$aspect_ratio)) {
+          p <- p + ggplot2::theme(
+            aspect.ratio = 0.5
+          )
+        } else {
+          p <- p + ggplot2::theme(
+            aspect.ratio = input$aspect_ratio
+          )
+        }
+      }
+
+      p
     }
 
     base.RENDER.modal <- function() {
@@ -229,6 +286,7 @@ expression_plot_volcano_server <- function(id,
         pdf.height = 8,
         add.watermark = watermark,
         card = x$card,
+        parent_session = session,
         download.contrast.name = comp1
       )
     })

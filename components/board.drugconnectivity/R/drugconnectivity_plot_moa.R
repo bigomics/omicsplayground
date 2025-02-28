@@ -38,7 +38,7 @@ drugconnectivity_plot_moa_ui <- function(
     info.text = info.text,
     caption = caption,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = c("auto", "100%"),
   )

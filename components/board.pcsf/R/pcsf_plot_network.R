@@ -20,7 +20,7 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
       shiny::radioButtons(ns("layout"), "Layout algorithm:",
         choiceNames = c("Barnes-Hut", "Hierarchical", "Kamada-Kawai"),
         choiceValues = c("BH", "hierarchical", "KK"),
-        selected = "KK",
+        selected = "BH",
         inline = FALSE
       ),
       "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
@@ -57,7 +57,7 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
     height = height,
     width = width,
     options = plot_opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
   )
 }
 

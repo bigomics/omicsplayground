@@ -24,6 +24,12 @@ biomarker_plot_decisiontree_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    shiny::selectInput(ns("plottype"), "Plot type:",
+      choices = c("simple","fancy","extended"),
+      selected = "fancy")
+  )
+  
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
@@ -31,9 +37,9 @@ biomarker_plot_decisiontree_ui <- function(
     info.text = info.text,
     info.methods = info.methods,
     info.extra_link = info.extra_link,
-    options = NULL,
+    options = options,
     caption = caption,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )
@@ -61,26 +67,10 @@ biomarker_plot_decisiontree_server <- function(id,
       })
 
       plot.RENDER <- function() {
-        res <- plot_data()
-
-        shiny::req(res)
-        par(mfrow = c(1, 1), mar = c(1, 0, 2, 0))
-        is.surv <- grepl("Surv", res$rf$call)[2]
-        is.surv
-        if (is.surv) {
-          rf <- partykit::as.party(res$rf)
-          partykit::plot.party(rf)
-        } else {
-          ## rpart.plot::rpart.plot(res$rf)
-          rf <- partykit::as.party(res$rf)
-          is.multinomial <- length(table(res$y)) > 2
-          if (is.multinomial) {
-            ## plot(rf, type="extended")
-            plot(rf, type = "simple")
-          } else {
-            plot(rf, type = "simple")
-          }
-        }
+        imp <- plot_data()
+        shiny::req(imp)
+        playbase::plotDecisionTreeFromImportance(
+          imp=NULL, rf=imp$rf, type = input$plottype )
       }
 
       PlotModuleServer(

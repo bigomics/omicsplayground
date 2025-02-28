@@ -5,10 +5,10 @@
 
 wgcna_plot_module_graph_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
     height,
     width) {
   ns <- shiny::NS(id)
@@ -21,58 +21,21 @@ wgcna_plot_module_graph_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
 wgcna_plot_module_graph_server <- function(id,
-                                           wgcna.compute,
-                                           labels2rainbow,
+                                           wgcna,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    moduleGraph.RENDER <- shiny::reactive({
+
+    moduleGraph.RENDER <- function() {
       require(igraph)
-      out <- wgcna.compute()
-      net <- out$net
-      datExpr <- out$datExpr
-      datTraits <- out$datTraits
-      moduleColors <- labels2rainbow(out$net)
-      ii <- which(!duplicated(out$net$colors))
-      me.colors <- moduleColors[ii]
-      names(me.colors) <- out$net$colors[ii]
-      me.colors
-
-      ## Recalculate MEs with color as labels
-      MEs <- out$net$MEs
-      dim(MEs)
-
-      clust <- hclust(dist(t(MEs)))
-      clust
-      phylo <- ape::as.phylo(clust)
-      gr <- igraph::as.igraph(phylo, directed = FALSE)
-
-      is.tip <- grepl("^ME", igraph::V(gr)$name)
-      module.nr <- as.integer(sub("^ME|Node.*", "", igraph::V(gr)$name))
-      module.size <- table(out$net$colors)
-      module.size <- module.size / mean(module.size)
-      module.size
-
-      igraph::V(gr)$label <- igraph::V(gr)$name
-      igraph::V(gr)$label[!is.tip] <- NA
-      igraph::V(gr)$color <- me.colors[as.character(module.nr)]
-      igraph::V(gr)$size <- 24 * (module.size[as.character(module.nr)])**0.5
-      igraph::V(gr)$size[is.na(igraph::V(gr)$size)] <- 0
-
-      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1) * 0)
-      igraph::plot.igraph(
-        gr,
-        layout = igraph::layout.kamada.kawai,
-        vertex.label.cex = 0.8,
-        edge.width = 3
-      )
-      p <- grDevices::recordPlot()
-      p
-    })
+      res <- wgcna()
+      par(mar=c(0,0,0,0))
+      playbase::wgcna.plotEigenGeneGraph(res, add_traits=TRUE, main=NULL) 
+    }
 
     PlotModuleServer(
       "plot",

@@ -15,8 +15,7 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
+    withTooltip(shiny::selectizeInput(ns("search_gene"), tspan("Gene:"), choices = NULL, options = list(maxOptions = 1001)),
       "Type a gene of interest.",
       placement = "top"
     ),
@@ -32,24 +31,23 @@ DataViewInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(),
-    withTooltip(shiny::actionLink(ns("data_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(), shiny::br(),
-    shiny::conditionalPanel(
-      "input.data_options % 2 == 1",
-      ns = ns,
-      withTooltip(
-        shiny::radioButtons(
-          ns("data_type"), "Scale:",
-          choiceNames = c("linear", "log2"),
-          choiceValues = c("counts", "log2"),
-          selected = "log2",
-          inline = TRUE
-        ),
-        "Choose an input data type for the analysis.",
-        placement = "bottom"
+    bslib::accordion(
+      id = ns("data_type_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::radioButtons(
+            ns("data_type"), "Scale:",
+            choiceNames = c("linear", "log2"), 
+            choiceValues = c("counts", "log2"),
+            selected = "log2",
+            inline = TRUE
+          ),
+          "Choose an input data type for the analysis.",
+          placement = "bottom"
+        )
       )
     )
   )
@@ -67,8 +65,8 @@ DataViewUI <- function(id) {
 
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
-  fullH <- "calc(100vh - 180px)"
-  fullH.css <- "height: calc(100vh - 180px);"
+  fullH <- "calc(100vh - 181px)"
+  fullH.css <- "height: calc(100vh - 181px);"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),

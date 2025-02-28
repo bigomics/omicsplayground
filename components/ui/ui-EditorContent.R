@@ -1,0 +1,195 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
+  # Default editor content
+  volcano_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              colourpicker::colourInput(
+                ns_parent("color_up"), "Up",
+                "#f23451"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_down"), "Down",
+                "#3181de"
+              )
+            )
+          ),
+
+          # Axis Options
+          bslib::accordion_panel(
+            "Text sizes",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              numericInput(ns_parent("label_size"), "Labels", value = 4),
+              numericInput(ns_parent("marker_size"), "Points", value = 1),
+              numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
+            )
+          ),
+
+          bslib::accordion_panel(
+            "Margins",
+            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
+            numericInput(ns_parent("margin_left"), "Left", value = 10),
+            numericInput(ns_parent("margin_right"), "Right", value = 10),
+            numericInput(ns_parent("margin_top"), "Top", value = 10),
+            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+          ),
+
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom Aspect Ratio", value = FALSE),
+            numericInput(ns_parent("aspect_ratio"), "Aspect Ratio", value = 0.5, min = 0.1, max = 10)
+          ),
+
+          # Additional Settings
+          bslib::accordion_panel(
+            "Labels",
+            checkboxInput(ns_parent("color_selection"), "Color just selection", value = FALSE),
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
+              bigLoaders::useSpinner()
+          } else {
+            # outputFunc(ns("renderfigure_2")) %>%
+            #   bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Heatmap specific content
+  heatmap_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          # Basic Options
+          bslib::accordion_panel(
+            "General",
+            shiny::checkboxInput(
+              ns_parent("show_legend"),
+              "Show Legend",
+              value = TRUE
+            ),
+            shiny::checkboxInput(
+              ns_parent("show_colnames"),
+              "Show Column Names",
+              value = TRUE
+            ),
+            shiny::numericInput(
+              ns_parent("column_names_rot"),
+              "Column Names Rotation",
+              value = 45,
+              min = 0,
+              max = 90
+            ),
+            shiny::numericInput(
+              ns_parent("num_rownames"),
+              "Max Number of Row Names",
+              value = 50,
+              min = 0,
+              max = 1000
+            ),
+            shiny::numericInput(
+              ns_parent("rownames_width"),
+              "Row Names Width",
+              value = 40,
+              min = 10,
+              max = 200
+            )
+          ),
+          # Text Sizes
+          bslib::accordion_panel(
+            "Text Sizes",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              numericInput(ns_parent("label_size"), "Labels", value = 8),
+              numericInput(ns_parent("annot_cex"), "Annotation", value = 10)
+            )
+          ),
+          # Clustering Options
+          bslib::accordion_panel(
+            "Dendograms",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              checkboxInput(ns_parent("cluster_rows"), "Rows", value = TRUE),
+              checkboxInput(ns_parent("cluster_cols"), "Columns", value = TRUE)
+            )
+          ),
+          # Color Scheme
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              colourpicker::colourInput(
+                ns_parent("color_high"), "High",
+                "#f23451"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_mid"), "Mid",
+                "#eeeeee"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_low"), "Low",
+                "#3181de"
+              )
+            )
+          ),
+          # Margins
+          bslib::accordion_panel(
+            "Margins",
+            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
+            numericInput(ns_parent("margin_left"), "Left", value = 10),
+            numericInput(ns_parent("margin_right"), "Right", value = 10),
+            numericInput(ns_parent("margin_top"), "Top", value = 10),
+            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            # outputFunc(ns("renderfigure_2")) %>%
+            #   bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Return content based on plot type
+  switch(plot_type,
+    "volcano" = volcano_content,
+    "heatmap" = heatmap_content
+  )
+} 

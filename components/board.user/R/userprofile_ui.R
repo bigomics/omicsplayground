@@ -26,7 +26,7 @@ UserProfileUI <- function(id) {
             PlotModuleUI(
               ns("usage"),
               plotlib = "plotly",
-              download.fmt = c("png", "pdf", "csv"),
+              download.fmt = c("png", "pdf", "csv", "svg"),
               title = "Platform usage",
               height = c("100%", TABLE_HEIGHT_MODAL)
             ),
