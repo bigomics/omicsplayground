@@ -272,15 +272,29 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
-                  shiny::HTML("<h4>Gene tests:</h4>"),
-                  GENETEST.METHODS(),
+                  label = shiny::HTML("<h4>Gene tests:</h4>"),
+                  choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
                 ),
-                ##   choiceNames = c("limma (spline)", "DESeq2 (interaction term)"),
-                shiny::checkboxInput(
-                  ns("time_series"),
-                  label = shiny::HTML("<b>Time series analysis</b>"),
-                  value = FALSE
+                shiny::conditionalPanel(
+                  condition = "input.gene_methods.includes('trend.limma')",
+                  ns = ns,
+                  shiny::checkboxInput(
+                    ns("time_series"),
+                    label = shiny::HTML("<b>Time series analysis</b>"),
+                    value = FALSE
+                  ),
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Analysis uses limma spline.</small>")
+                ),
+                shiny::conditionalPanel(
+                  condition = "input.gene_methods.includes('deseq2.lrt')",
+                  ns = ns,
+                  shiny::checkboxInput(
+                    ns("time_series"),
+                    label = shiny::HTML("<b>Time series analysis</b>"),
+                    value = FALSE
+                  ),
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Analysis uses DESeq2 with interaction term between main effect and time.</small>")
                 ),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
