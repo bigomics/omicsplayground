@@ -180,11 +180,8 @@ upload_module_computepgx_server <- function(
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
       output$UI <- shiny::renderUI({
-        upload_annot_table_ui <- NULL
 
-       ## if (upload_datatype() == "multi-omics") {
-       ##   EXTRA.SELECTED <- c(EXTRA.SELECTED, "mofa")
-       ## }
+        upload_annot_table_ui <- NULL
 
         if (auth$options$ENABLE_ANNOT) {
           upload_annot_table_ui <- fileInput2(
@@ -400,6 +397,23 @@ upload_module_computepgx_server <- function(
             "))
           ) ## end of conditional panel
         )
+
+      })
+
+      ## For time series: ensure 'time' column is in samples.csv file
+      shiny::observeEvent(input$time_series, {
+        shiny::req(samplesRT())
+        metadata_vars <- colnames(as.data.frame(samplesRT()))
+        if (input$time_series) {
+          if (!"time" %in% metadata_vars) {
+            shinyalert::shinyalert(
+              title = "WARNING",
+              text = "Column 'time' not found in samples.csv. Skipping time series analysis.",
+              type = "warning"
+            )
+            shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
+          }
+        }
       })
 
       # Input validators
