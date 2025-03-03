@@ -272,7 +272,14 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
-                  label = shiny::HTML("<h4>Gene tests:</h4>"),
+                  label = shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; width: 100%;'>
+	              <h4 style='margin: 0;'>Gene tests:</h4>
+                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/#differential-gene-expression-testing' target='_blank' class='info-link' style='margin-left: 150px;'>
+                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>
+                    </div>
+                  "),
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
                 ),
@@ -313,7 +320,7 @@ upload_module_computepgx_server <- function(
                   shiny::HTML("
                     <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
                       <h4>Enrichment methods:</h4>
-                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses' target='_blank' class='info-link' style='margin-left: 15px;'>
                         <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>
                     </div>
