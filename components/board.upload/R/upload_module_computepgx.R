@@ -311,7 +311,7 @@ upload_module_computepgx_server <- function(
                     label = shiny::HTML("<b>Time series analysis</b>"),
                     value = FALSE
                   ),
-                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Analysis uses limma spline and DESeq2 with interaction term between main effect and time.</small>")
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Both limma spline and DESeq2 with interaction term between main effect and time will be run.</small>")
                 ),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
