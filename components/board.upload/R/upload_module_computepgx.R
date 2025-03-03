@@ -707,11 +707,23 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        #timeseries.methods <- input$time_series
+
+        if (input$time_series) {
+          dbg("-----------------timeseries ON")
+          timeseries.methods <- NULL
+          cc1 <- "trend.limma" %in% gx.methods
+          cc2 <- "deseq2.lrt" %in% gx.methods
+          if (cc1 && !cc2) timeseries.methods <- "trend.limma"
+          if (!cc1 && cc2) timeseries.methods <- "deseq2.lrt"
+          if (cc1 && cc2) timeseries.methods <- c("trend.limma","deseq2.lrt")
+          dbg("-----------------MNT1: ", paste0(timeseries.methods, collapse=";"))
+        } else {
+          timeseries.methods <- NULL
+          dbg("-----------------timeseries OFF")
+        }
+
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-        dbg("-----------------MNT1: ", paste0(gx.methods, collapse=";"))
-        dbg("-----------------MNT2: ", paste0(timeseries.methods, collapse=";"))
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
