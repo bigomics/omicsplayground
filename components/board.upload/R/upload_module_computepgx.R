@@ -276,12 +276,11 @@ upload_module_computepgx_server <- function(
                   GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
                 ),
-                shiny::checkboxGroupInput(
+                ##   choiceNames = c("limma (spline)", "DESeq2 (interaction term)"),
+                shiny::checkboxInput(
                   ns("time_series"),
-                  shiny::HTML("<br><h4>Time series analysis:</h4>"),
-                  choiceValues = c("limma.spline", "deseq2.interaction"),
-                  choiceNames = c("limma (spline)", "DESeq2 (interaction term)"),
-                  selected = ""
+                  label = shiny::HTML("<b>Time series analysis</b>"),
+                  value = FALSE
                 ),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
