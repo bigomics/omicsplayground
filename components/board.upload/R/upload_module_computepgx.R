@@ -707,10 +707,11 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        timeseries.methods <- input$time_series
+        #timeseries.methods <- input$time_series
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-        dbg("-----------------MNT1: ", paste0(timeseries.methods, collapse=";"))
+        dbg("-----------------MNT1: ", paste0(gx.methods, collapse=";"))
+        dbg("-----------------MNT2: ", paste0(timeseries.methods, collapse=";"))
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
