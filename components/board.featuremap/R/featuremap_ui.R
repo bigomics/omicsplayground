@@ -6,7 +6,6 @@
 FeatureMapInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::br(),
     ## data set parameters
     withTooltip(
       shiny::radioButtons(
@@ -30,7 +29,7 @@ FeatureMapInputs <- function(id) {
         shiny::selectInput(ns("ref_group"), "Reference:", choices = NULL),
         "Reference group. If no group is selected the average is used as reference.",
         placement = "right", options = list(container = "body")
-      )
+      ),
     ),
     shiny::conditionalPanel(
       "input.showvar == 'comparisons'",
@@ -39,7 +38,7 @@ FeatureMapInputs <- function(id) {
         shiny::selectizeInput(ns("selcomp"), NULL, choices = NULL, multiple = TRUE),
         "Select the comparisons to show in the signatures plot.",
         placement = "top"
-      )
+      ),
     ),
     hr(),
     shiny::conditionalPanel(
@@ -51,7 +50,7 @@ FeatureMapInputs <- function(id) {
         ),
         "Filter the genes to highlight on the map.",
         placement = "right", options = list(container = "body")
-      )
+      ),
     ),
     shiny::conditionalPanel(
       "input.tabs == 'Gene' && input.filter_genes.includes('<custom>')",
@@ -63,7 +62,7 @@ FeatureMapInputs <- function(id) {
         ),
         "Paste a custom list of genes to highlight.",
         placement = "bottom"
-      )
+      ),
     ),
     shiny::conditionalPanel(
       "input.tabs == 'Geneset'",
@@ -74,20 +73,8 @@ FeatureMapInputs <- function(id) {
         ),
         "Filter the genesets to highlight on the map.",
         placement = "right", options = list(container = "body")
-      )
+      ),
     )
-    ## shiny::br(),
-    ## shiny::br(),
-    ## withTooltip(shiny::actionLink(ns("options"), "Advanced options",
-    ##   icon = icon("cog", lib = "glyphicon")),
-    ##   "Toggle advanced options.", placement = "top"
-    ## ),
-    ## shiny::br(), br(),
-    ## shiny::conditionalPanel(
-    ##   "input.options % 2 == 1",
-    ##   ns = ns,
-    ##   tagList()
-    ## )
   )
 }
 
@@ -96,7 +83,7 @@ FeatureMapUI <- function(id) {
 
   height1 <- c("60%", "70vh")
   height2 <- c("40%", "70vh")
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
 
   div(
     boardHeader(title = "Cluster features", info_link = ns("info")),

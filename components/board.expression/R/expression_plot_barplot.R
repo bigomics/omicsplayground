@@ -45,7 +45,7 @@ expression_plot_barplot_ui <- function(
     plotlib = "plotly",
     caption = caption,
     options = plots_barplot_opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )

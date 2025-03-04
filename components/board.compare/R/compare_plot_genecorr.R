@@ -31,7 +31,7 @@ compare_plot_genecorr_ui <- function(
     options = genecorr.opts,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

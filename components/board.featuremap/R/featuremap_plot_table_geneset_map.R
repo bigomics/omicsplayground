@@ -42,7 +42,7 @@ featuremap_plot_geneset_map_ui <- function(
     options = plot.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     cards = TRUE,
     card_names = c("dynamic", "static")
   )

@@ -19,7 +19,7 @@ compare_plot_expression_ui <- function(
     info.text = info.text,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

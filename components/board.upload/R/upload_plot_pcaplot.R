@@ -31,7 +31,7 @@ upload_plot_pcaplot_ui <- function(id,
     plotlib = "plotly",
     info.text = info.text,
     options = options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

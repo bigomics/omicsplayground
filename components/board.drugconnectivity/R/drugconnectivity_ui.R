@@ -6,7 +6,6 @@
 DrugConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(),
     withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
@@ -30,7 +29,7 @@ DrugConnectivityInputs <- function(id) {
 DrugConnectivityUI <- function(id) {
   ns <- shiny::NS(id)
 
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
   halfH <- "calc(50vh  - 98px)"
 
   panel1 <- shiny::tabPanel(

@@ -74,7 +74,7 @@ connectivity_plot_connectivityMap_ui <- function(
     info.text = info.text,
     options = plot_opts,
     caption = caption,
-    download.fmt = c("pdf", "png", "html"),
+    download.fmt = c("pdf", "png", "html", "svg"),
     height = height,
     width = width
   )

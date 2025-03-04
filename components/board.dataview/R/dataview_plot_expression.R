@@ -29,7 +29,7 @@ dataview_plot_expression_ui <- function(
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     #
     height = height
   )
@@ -316,7 +316,7 @@ dataview_plot_expression_server <- function(id,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      download.fmt = c("png", "pdf", "csv", "obj"),
+      download.fmt = c("png", "pdf", "csv", "obj", "svg"),
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

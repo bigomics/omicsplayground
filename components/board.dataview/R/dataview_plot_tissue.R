@@ -26,7 +26,7 @@ dataview_plot_tissue_ui <- function(
     info.references = info.references,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

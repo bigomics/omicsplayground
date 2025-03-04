@@ -5,17 +5,14 @@
 
 wgcna_plot_gclustering_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
+    height = 400,
+    width = 400,
+    ...) { 
   ns <- shiny::NS(id)
-
-  umap.opts <- shiny::tagList(
-    shiny::selectInput(ns("clust_method"), "method:", choices = c("tsne2d", "umap2d", "pca2d"))
-  )
 
   PlotModuleUI(
     ns("plot"),
@@ -23,37 +20,30 @@ wgcna_plot_gclustering_ui <- function(
     label = label,
     info.text = info.text,
     caption = caption,
-    options = umap.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg"),
+    ...
   )
 }
 
 wgcna_plot_gclustering_server <- function(id,
-                                          wgcna.compute,
+                                          wgcna,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    umap.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
 
-      method <- "tsne2d"
-      method <- input$clust_method
-
-      par(mfrow = c(1, 1), mar = c(2, 3, 1, 1))
-      me1 <- paste0("ME", out$net$colors)
-      pos <- out$clust[[method]]
-
-      playbase::pgx.scatterPlotXY.BASE(pos, var = me1, col = out$me.colors)
-      p <- grDevices::recordPlot()
-      p
-    })
+    RENDER <- function() {
+      res <- wgcna()
+      par(mar=c(5,5,1,1))
+      ##playbase::wgcna.plotMDS(res, main="", scale=FALSE)
+      playbase::wgcna.plotFeatureUMAP(res, nhub=3, method="clust")
+    }
 
     PlotModuleServer(
       "plot",
-      func = umap.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(72, 80),
+      res = c(80, 110),
       add.watermark = watermark
     )
   })

@@ -398,7 +398,7 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            ##            list(width = "30vw", targets = target2),
+            ## list(width = "30vw", targets = target2),
             list(
               targets = target2, ## with no rownames column 1 is column 2
               render = DT::JS(

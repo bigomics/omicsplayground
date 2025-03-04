@@ -63,7 +63,7 @@ clustering_plot_clustpca_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

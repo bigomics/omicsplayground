@@ -27,7 +27,7 @@ enrichment_plot_volcano_ui <- function(
     width = width,
     caption = caption,
     plotlib = c("plotly", "ggplot"),
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     cards = TRUE,
     card_names = c("dynamic", "static")
   )

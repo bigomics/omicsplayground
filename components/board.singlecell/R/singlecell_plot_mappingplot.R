@@ -52,7 +52,7 @@ singlecell_plot_mappingplot_ui <- function(
     options = mapping.opts,
     title = title,
     caption = caption,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )

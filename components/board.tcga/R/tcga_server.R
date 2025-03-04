@@ -8,7 +8,7 @@
 ##
 ## https://github.com/bigomics/omicsplayground/pull/20/commits/bd943d84d316d76dca9140f2fd3610b3d1dfc950
 
-TcgaBoard <- function(id, pgx) {
+TcgaBoard <- function(id, pgx, board_observers=NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 800
@@ -21,7 +21,13 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
-    observeEvent(input$tcga_info, {
+    ## ========================================================================
+    ## ============================ OBSERVERS =================================
+    ## ========================================================================
+
+    my_observers <- list()
+    
+    my_observers[[1]] <- observeEvent(input$tcga_info, {
       showModal(
         modalDialog(
           title = tags$strong("TCGA Analysis Board"),
@@ -32,7 +38,7 @@ TcgaBoard <- function(id, pgx) {
       )
     })
 
-    observe({
+    my_observers[[2]] <- observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -40,6 +46,11 @@ TcgaBoard <- function(id, pgx) {
       comparisons <- sort(comparisons)
       updateSelectInput(session, "contrast", choices = comparisons, selected = head(comparisons, 1))
     })
+
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## ================================================================================
     ## =========================== MODULES ============================================

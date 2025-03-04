@@ -38,7 +38,7 @@ LoadingUI <- function(id) {
     "My Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       uiOutput(ns("sharing_alert")),
       div(
         shiny::actionButton(
@@ -51,7 +51,7 @@ LoadingUI <- function(id) {
         DatasetReportUI(id = ns("generate_report"))
       ),
       bslib::layout_columns(
-        col_widths = c(7, 5),
+        col_widths = c(8, 4),
         loading_table_datasets_ui(
           ns("pgxtable"),
           title = "Available datasets",
@@ -84,16 +84,17 @@ LoadingUI <- function(id) {
     "Public Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.", translate = FALSE, html = TRUE),
       bslib::layout_columns(
-        col_widths = c(7, 5),
+        col_widths = c(8, 4),
         loading_table_datasets_public_ui(
           ns("pgxtable_public"),
           title = "Public datasets",
           info.text = "This table shows available public datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
           caption = "Table with public datasets available in the platform.",
-          height = c("calc(100vh - 330px)", 700),
+          ##height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
           width = c("100%", "100%")
         ),
         loading_tsne_ui(
@@ -109,7 +110,8 @@ LoadingUI <- function(id) {
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-          height = c("calc(100vh - 330px)", 700),
+          ##height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr
@@ -146,11 +148,11 @@ SharedDatasetsUI <- function(id) {
 
   tab_content <- bslib::layout_columns(
     col_widths = 12,
-    height = "calc(100vh - 180px)",
+    height = "calc(100vh - 181px)",
     bs_alert("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets."),
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       uiOutput(ns("sharing_panel_ui"))
       ##      sharing_tabpanel
     )

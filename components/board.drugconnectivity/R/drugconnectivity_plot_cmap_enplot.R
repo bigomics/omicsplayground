@@ -28,7 +28,7 @@ drugconnectivity_plot_cmap_enplot_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
   )

@@ -42,7 +42,7 @@ tcga_plot_survival_ui <- function(id, caption, info.text, height, width) {
     height = height,
     width = width,
     options = tcga_tcgasurv_opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
   )
 }
 

@@ -10,13 +10,9 @@ message("[create PGX process] : starting process")
 args <- commandArgs(trailingOnly = TRUE)
 
 temp_dir <- args[1]
-
-if (!exists("temp_dir")) {
-  temp_dir <- getwd()
-}
+if (!exists("temp_dir")) temp_dir <- getwd()
 
 params_from_op <- file.path(temp_dir, "params.RData")
-
 if (file.exists(params_from_op)) {
   params <- readRDS(params_from_op)
 } else {
@@ -38,7 +34,6 @@ pgx <- playbase::pgx.createPGX(
   description = params$description,
   creator = params$creator,
   batch.correct = params$batch.correct,
-  ## normalize = params$normalize,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   only.known = params$only.known,
@@ -60,9 +55,11 @@ pgx <- playbase::pgx.computePGX(
   gx.methods = params$gx.methods,
   gset.methods = params$gset.methods,
   custom.geneset = pgx$custom.geneset,
+  custom_fc = params$custom_fc,
   extra.methods = params$extra.methods,
   use.design = params$use.design, ## no.design+prune are combined
-  prune.samples = params$prune.samples, ##
+  prune.samples = params$prune.samples,
+  timeseries.methods = params$timeseries.methods,
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
   cluster.contrasts = params$cluster.contrasts,
@@ -76,7 +73,6 @@ pgx <- playbase::pgx.computePGX(
 message("[ComputePgxServer:@compute] initialize object\n")
 
 # Save output to a PGX file
-
 pgx_name <- paste0(params$name, ".pgx")
 # if pgx.save folder exists, save pgx file to it, otherwise save in temp_dir
 if (dir.exists(params$pgx.save.folder)) {

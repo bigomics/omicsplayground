@@ -6,7 +6,6 @@
 WordCloudInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("wc_contrast"), "Contrast:", choices = NULL),
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"

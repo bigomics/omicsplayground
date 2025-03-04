@@ -20,7 +20,7 @@ dataview_plot_boxplot_ui <- function(
     label = label,
     caption = caption,
     info.text = info.text,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height
   )
 }

@@ -47,7 +47,7 @@ enrichment_plot_barplot_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

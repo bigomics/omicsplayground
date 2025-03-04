@@ -5,10 +5,10 @@
 
 wgcna_plot_module_membership_ui <- function(
     id,
-    label,
-    title,
-    info.text,
-    caption,
+    label = "",
+    title = "",
+    info.text = "",
+    caption = "",
     height,
     width) {
   ns <- shiny::NS(id)
@@ -26,54 +26,62 @@ wgcna_plot_module_membership_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
 wgcna_plot_module_membership_server <- function(id,
-                                                wgcna.compute,
+                                                wgcna,
+                                                selected_module,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    eigenCorrelation.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
 
-      MEs <- out$net$MEs
-      ## rho <- cor(MEs, out$datExpr)
-      rho <- cor(MEs, out$datExpr, use = "pairwise.complete.obs")
+    render_plot <- function(ntop=30) {
+      res <- wgcna()
+      module <- selected_module()
+
+      rho <- res$stats[['moduleMembership']][,module]
       rho[is.na(rho) | is.infinite(rho)] <- 0
-
-      ylab0 <- "ME correlation"
+      
+      ylab0 <- "Eigengene correlation (rho)"
       if (input$eigen_cov) {
-        sdx <- apply(out$datExpr, 2, sd, na.rm = TRUE)
-        rho <- t(t(rho) * sdx**2)
-        ylab0 <- "ME covariance"
+        sdx <- apply(res$datExpr, 2, sd, na.rm = TRUE)
+        rho <- (rho * sdx**2)
+        ylab0 <- "Eigengene covariance (cov)"
       }
 
-      n <- nrow(rho)
-      nr <- ceiling(sqrt(n))
-      nc <- ceiling(n / nr)
-
-      ntop <- 15
-      par(mfrow = c(nr, nc), mar = c(6, 3.1, 2.3, 1), oma = c(1, 1, 1, 1) * 0, mgp = c(2.1, 0.8, 0))
-      k <- 1
-      me <- names(out$me.colors) ## sorted
-      for (m in me) {
-        i1 <- head(order(rho[m, ]), ntop)
-        i2 <- tail(order(rho[m, ]), ntop)
-        barplot(sort(rho[k, c(i1, i2)]),
-          ylab = ylab0, las = 3, cex.names = 0.90, main = NULL
-        )
-        title(m, line = 0.3)
+      ## only ME genes
+      sel <- which(names(rho) %in% res$me.genes[[module]])
+      rho <- rho[sel]
+      
+      if(min(rho,na.rm=TRUE)< 0) {
+        ii <- unique(c(head(order(rho), ntop/2), tail(order(rho), ntop/2)))
+      } else {
+        ii <- tail(order(rho), ntop)
       }
-      p <- grDevices::recordPlot()
-      p
-    })
+      len <- max(nchar(names(rho)))
+      bmar <- min(max(round(len/2),6),12)
+      par(mar=c(bmar,4,2,0.1))
+      barplot( sort(rho[ii],decreasing=TRUE),
+              ylab = ylab0, las = 3,
+              cex.names = 0.90, main = NULL )
+      title(module, line = 1)
+    }
 
+    RENDER <- function() {
+      render_plot(ntop=20)
+    }
+
+    RENDER2 <- function() {
+      render_plot(ntop=50)
+    }
+    
     PlotModuleServer(
       "plot",
-      func = eigenCorrelation.RENDER,
-      pdf.width = 5, pdf.height = 5,
-      res = c(90, 105),
+      func = RENDER,
+      func2 = RENDER2,      
+      pdf.width = 8, pdf.height = 5,
+      res = c(80, 120),
       add.watermark = watermark
     )
   })

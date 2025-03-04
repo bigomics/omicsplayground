@@ -36,7 +36,7 @@ expression_plot_maplot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

@@ -52,7 +52,7 @@ signature_plot_markers_ui <- function(
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height
   )
 }

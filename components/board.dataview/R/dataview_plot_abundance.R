@@ -23,7 +23,7 @@ dataview_plot_abundance_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

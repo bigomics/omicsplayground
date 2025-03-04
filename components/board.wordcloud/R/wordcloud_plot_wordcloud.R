@@ -58,7 +58,7 @@ wordcloud_plot_wordcloud_ui <- function(
     caption = caption,
     options = wordcloud_opts,
     height = height,
-    download.fmt = c("png", "pdf", "csv")
+    download.fmt = c("png", "pdf", "csv", "svg")
   )
 }
 

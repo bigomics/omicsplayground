@@ -17,7 +17,7 @@ dataview_plot_averagecounts_ui <- function(id, label = "", height = c(600, 800))
     outputFunc2 = plotOutput,
     info.text = info_text,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = c("auto", "100%"),
     height = height
   )

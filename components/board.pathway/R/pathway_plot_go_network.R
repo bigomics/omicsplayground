@@ -46,7 +46,7 @@ functional_plot_go_network_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_opts,
-    download.fmt = c("pdf", "png"),
+    download.fmt = c("pdf", "png", "svg"),
     height = height,
     width = width
   )

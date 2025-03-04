@@ -45,7 +45,7 @@ expression_plot_topgenes_ui <- function(
     info.text = info.text,
     caption = caption,
     options = topgenes_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

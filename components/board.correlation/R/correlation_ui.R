@@ -6,14 +6,11 @@
 CorrelationInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-
     ## data set parameters
     withTooltip(shiny::selectInput(ns("gene"), tspan("Gene:"), choices = NULL),
       "Choose a gene for the correlation analysis.",
       placement = "top"
     ),
-    shiny::br(),
     withTooltip(shiny::selectInput(ns("cor_filter"), tspan("Filter genes:"), choices = NULL, multiple = FALSE),
       "Filter gene features.",
       placement = "top"
@@ -30,24 +27,23 @@ CorrelationInputs <- function(id) {
         ),
         "Paste a custom list of genes to be used as features.",
         placement = "top"
-      )
+      ),
     ),
-    shiny::br(), shiny::br(), shiny::br(), shiny::br(),
-    withTooltip(shiny::actionLink(ns("adv_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(), shiny::br(),
-    shiny::conditionalPanel(
-      "input.adv_options % 2 == 1",
-      ns = ns,
-      withTooltip(
-        shiny::radioButtons(ns("pcor_ntop"), tspan("Nr. of genes to compute partial correlation."),
-          c(50, 100, 250),
-          selected = 100, inline = TRUE
-        ),
-        "Number of top genes to compute partial correlation",
-        placement = "top"
+    shiny::br(),
+    bslib::accordion(
+      id = ns("cor_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::radioButtons(ns("pcor_ntop"), tspan("Nr. of genes to compute partial correlation."),
+            c(50, 100, 250),
+        selected = 100, inline = TRUE
+          ),
+          "Number of top genes to compute partial correlation",
+          placement = "top"
+        )
       )
     )
   )
@@ -65,7 +61,7 @@ CorrelationUI <- function(id) {
       "Correlation",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bslib::layout_columns(
           col_widths = 12,
           correlation_plot_barplot_ui(
@@ -111,7 +107,7 @@ CorrelationUI <- function(id) {
       "Graph",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         correlation_plot_cor_graph_ui(
           ns("cor_graph"),
           title = "Partial correlation network",

@@ -24,14 +24,14 @@ clustering_plot_clusterannot_ui <- function(
       "Select the level of an anotation analysis.",
       placement = "left", options = list(container = "body")
     ),
-    shiny::conditionalPanel(
-      "input.xann_level == 'geneset'",
-      ns = ns,
+    # shiny::conditionalPanel(
+    #   "input.xann_level == 'geneset'",
+    #   ns = ns,
       withTooltip(shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
         "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
         placement = "left", options = list(container = "body")
-      )
-    ),
+      ),
+    # ),
     withTooltip(shiny::selectInput(ns("xann_refset"), "Reference set:", choices = "", width = "80%"),
       "Specify a reference set to be used in the annotation.",
       placement = "left", options = list(container = "body")
@@ -49,7 +49,7 @@ clustering_plot_clusterannot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = clustannot_plots.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )

@@ -46,7 +46,7 @@ enrichment_plot_geneplot_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

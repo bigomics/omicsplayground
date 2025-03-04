@@ -25,7 +25,7 @@ compare_plot_cum_fc1_ui <- function(id,
     plotlib = "plotly",
     label = label,
     info.text = info.text,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )

@@ -33,7 +33,7 @@ signature_plot_enplots_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )

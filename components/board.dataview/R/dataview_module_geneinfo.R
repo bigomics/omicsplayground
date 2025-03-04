@@ -61,7 +61,7 @@ dataview_module_geneinfo_server <- function(id,
       if (datatype == "metabolomics") {
         info <- playbase::getMetaboliteInfo(
           organism = organism,
-          chebi = symbol
+          id = symbol
         )
       } else {
         info <- playbase::getOrgGeneInfo(

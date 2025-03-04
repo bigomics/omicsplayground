@@ -28,7 +28,7 @@ intersection_scatterplot_pairs_ui <- function(
     caption = caption,
     info.text = info.text,
     options = scatterplot_pairs.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )

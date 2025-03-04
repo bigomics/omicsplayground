@@ -42,7 +42,7 @@ connectivity_plot_scatterPlot_ui <- function(
     caption = caption,
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("pdf", "png"),
+    download.fmt = c("pdf", "png", "svg"),
     height = height,
     width = width,
   )

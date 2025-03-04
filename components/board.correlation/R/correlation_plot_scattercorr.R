@@ -53,7 +53,7 @@ correlation_plot_scattercorr_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = cor_scatter.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )

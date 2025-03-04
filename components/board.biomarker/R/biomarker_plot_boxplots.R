@@ -43,7 +43,7 @@ biomarker_plot_boxplots_ui <- function(
     info.extra_link = info.extra_link,
     options = NULL,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -68,9 +68,19 @@ biomarker_plot_boxplots_server <- function(id,
         shiny::req(res)
         shiny::req(is_computed())
 
+        dbg("[biomarker_plot_boxplots] names(res) = ",names(res))
+        dbg("[biomarker_plot_boxplots] names(res$rf) = ",names(res$rf))
+        dbg("[biomarker_plot_boxplots] names(res$rf$frame) = ",names(res$rf$frame))
+        
         ## get variables used in the tree solution
-        vars <- setdiff(res$rf$frame$var, "<leaf>")
-        vars <- res$rf$orig.names[vars]
+        leafs <- setdiff(res$rf$frame$var, "<leaf>")
+
+        dbg("[biomarker_plot_boxplots] leafs = ",leafs)
+        
+        vars <- res$rf$orig.names[leafs]
+
+        dbg("[biomarker_plot_boxplots] vars = ",vars)
+        
         if (length(vars) == 0) {
           return(NULL)
         }
