@@ -56,7 +56,7 @@ WelcomeBoardUI <- function(id) {
         class = "col-md-12 text-center",
         shiny::tags$b("Created with love"), br(),
         "by BigOmics Analytics from Ticino, the sunny side of Switzerland.",
-        br(), "© 2000-2024 BigOmics Analytics, Inc.", br(),
+        br(), "© 2000-2025 BigOmics Analytics, Inc.", br(),
         shiny::a("www.bigomics.ch", href = "https://www.bigomics.ch")
       )
     )

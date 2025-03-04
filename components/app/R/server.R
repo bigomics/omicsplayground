@@ -937,7 +937,7 @@ app_server <- function(input, output, session) {
           style = "text-align:center; line-height: 1em;"
         ),
         footer = div(
-          "© 2000-2024 BigOmics Analytics, Inc.",
+          "© 2000-2025 BigOmics Analytics, Inc.",
           br(), br(),
           paste("Credits:", authors),
           style = "font-size: 0.8em; line-height: 0.9em; text-align:center;"
