@@ -281,35 +281,35 @@ upload_module_computepgx_server <- function(
                   selected = GENETEST.SELECTED()
                 ),
                 shiny::conditionalPanel(
-                  condition = "input.gene_methods.indexOf('trend.limma') !== -1 && input.gene_methods.indexOf('deseq2.lrt') == -1",
+                  condition = "input.gene_methods.indexOf('trend.limma') !== -1 | input.gene_methods.indexOf('deseq2.lrt') != -1",
                   ns = ns,
                   shiny::checkboxInput(
                     ns("time_series"),
                     label = shiny::HTML("<b>Time series analysis</b>"),
                     value = FALSE
                   ),
-                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Analysis uses limma spline.</small>")
+                  shiny::HTML("<small style='margin-top: -20px; display: block; font-size: 14px;'>Requires a 'time' column in samples.csv. Analysis uses limma spline and/or DESeq2 with interaction term.</small>")
                 ),
-                shiny::conditionalPanel(
-                  condition = "input.gene_methods.indexOf('trend.limma') == -1 && input.gene_methods.indexOf('deseq2.lrt') !== -1",
-                  ns = ns,
-                  shiny::checkboxInput(
-                    ns("time_series"),
-                    label = shiny::HTML("<b>Time series analysis</b>"),
-                    value = FALSE
-                  ),
-                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Analysis uses DESeq2 with interaction term between main effect and time.</small>")
-                ),
-                shiny::conditionalPanel(
-                  condition = "input.gene_methods.indexOf('trend.limma') !== -1 && input.gene_methods.indexOf('deseq2.lrt') !== -1",
-                  ns = ns,
-                  shiny::checkboxInput(
-                    ns("time_series"),
-                    label = shiny::HTML("<b>Time series analysis</b>"),
-                    value = FALSE
-                  ),
-                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Both limma spline and DESeq2 with interaction term between main effect and time will be run.</small>")
-                ),
+                ## shiny::conditionalPanel(
+                ##   condition = "input.gene_methods.indexOf('trend.limma') == -1 && input.gene_methods.indexOf('deseq2.lrt') !== -1",
+                ##   ns = ns,
+                ##   shiny::checkboxInput(
+                ##     ns("time_series"),
+                ##     label = shiny::HTML("<b>Time series analysis</b>"),
+                ##     value = FALSE
+                ##   ),
+                ##   shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Analysis uses DESeq2 with interaction term between main effect and time.</small>")
+                ## ),
+                ## shiny::conditionalPanel(
+                ##   condition = "input.gene_methods.indexOf('trend.limma') !== -1 && input.gene_methods.indexOf('deseq2.lrt') !== -1",
+                ##   ns = ns,
+                ##   shiny::checkboxInput(
+                ##     ns("time_series"),
+                ##     label = shiny::HTML("<b>Time series analysis</b>"),
+                ##     value = FALSE
+                ##   ),
+                ##   shiny::HTML("<small style='margin-top: -20px; display: block;'>Requires a 'time' column in samples.csv. Both limma spline and DESeq2 with interaction term between main effect and time will be run.</small>")
+                ## ),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -589,7 +589,6 @@ upload_module_computepgx_server <- function(
           gmt <- gmt[!duplicated(names(gmt))]
           gset_size <- sapply(gmt, length)
           gmt <- gmt[gset_size >= 3] ## how many?
-
 
           # an additional check to verify that items in lists are
           # genes
