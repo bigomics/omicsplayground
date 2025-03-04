@@ -46,7 +46,7 @@ upload_module_normalization_server <- function(
         shiny::req(r_counts())
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_counts()
-        
+
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
@@ -68,7 +68,7 @@ upload_module_normalization_server <- function(
         m <- input$normalization_method
         prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
         X <- log2(counts + prior) ## NEED RETHINK
-        
+
         nmissing <- sum(is.na(X))
         dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
         if (nmissing > 0 && input$impute) {
@@ -81,7 +81,7 @@ upload_module_normalization_server <- function(
         }
 
         dbg("[normalization_server:imputedX] Checking for duplicated features")
-        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)        
+        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
 
         list(X = X, prior = prior)
       })
@@ -107,7 +107,7 @@ upload_module_normalization_server <- function(
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
-        
+
         return(X)
       })
 
@@ -130,7 +130,7 @@ upload_module_normalization_server <- function(
           pos <- irlba::irlba(X, nv = 2)$v
           rownames(pos) <- colnames(X)
         }
-        
+
         list(X = X, pos = pos)
       })
 
@@ -140,7 +140,7 @@ upload_module_normalization_server <- function(
         X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
-        
+
         ## recompute chosed correction method with full
         ## matrix. previous was done on shortened matrix.
         kk <- intersect(colnames(X1), rownames(samples))
@@ -148,7 +148,7 @@ upload_module_normalization_server <- function(
         X1 <- X1[, kk, drop = FALSE]
         contrasts <- contrasts[kk, , drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
-        
+
         nmissing <- sum(is.na(X1))
         if (!input$batchcorrect) {
           dbg("[normalization_server:correctedX] Data not corrected for batch effects")
@@ -206,7 +206,7 @@ upload_module_normalization_server <- function(
             cx <- list(X = xlist[[m]], impX1 = bc_impX1)
           }
         }
-        shiny::removeModal()        
+        shiny::removeModal()
         return(cx)
       })
 
@@ -215,12 +215,12 @@ upload_module_normalization_server <- function(
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
         prior <- imputedX()$prior
-        if(1) {
-          counts <- 2 ** X - prior
+        if (1) {
+          counts <- 2**X - prior
         } else {
           ## NEED RETHINK!! should we return the original not-corrected
           ## counts???? But EdgeR/Deseq2 need batch-corrected matrix??
-          counts <- r_counts()[rownames(X),colnames(X)]
+          counts <- r_counts()[rownames(X), colnames(X)]
         }
         counts
       })

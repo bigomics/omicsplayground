@@ -85,31 +85,31 @@ upload_module_computepgx_server <- function(
       ## )
       ## GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
       GENESET.METHODS <- shiny::eventReactive(
-      {
-        upload_datatype()
-      },
-      {
-        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "spearman")
-        } else {
-          mm <- c("fisher", "ssgsea", "gsva", "spearman", "camera", "fry", "fgsea")
+        {
+          upload_datatype()
+        },
+        {
+          if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+            mm <- c("fisher", "fgsea", "spearman")
+          } else {
+            mm <- c("fisher", "ssgsea", "gsva", "spearman", "camera", "fry", "fgsea")
+          }
+          return(mm)
         }
-        return(mm)
-      }
       )
 
       GENESET.SELECTED <- shiny::eventReactive(
-      {
-        upload_datatype()
-      },
-      {
-        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea")
-        } else {
-          mm <- c("fisher", "gsva", "ssgsea", "fgsea")
+        {
+          upload_datatype()
+        },
+        {
+          if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+            mm <- c("fisher", "fgsea")
+          } else {
+            mm <- c("fisher", "gsva", "ssgsea", "fgsea")
+          }
+          return(mm)
         }
-        return(mm)
-      }
       )
 
       ## batch correction and extrs methods
