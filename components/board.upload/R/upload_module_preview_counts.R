@@ -82,16 +82,22 @@ upload_table_preview_counts_server <- function(
         if (is.null(uploaded$counts.csv)) {
           div(
             if (upload_datatype() == "multi-omics") {
-              shinyWidgets::switchInput(
-                inputId = ns("data_source"),
-                value = FALSE,
-                onLabel = "From pgx",
-                offLabel = "From csv",
-                onStatus = "primary",
-              offStatus = "default",
-              inline = TRUE,
-                size = "mini"
-              )
+              # shiny::selectInput(
+              #   ns("data_source"),
+              #   label = NULL,
+              #   choices = c("From pgx", "From csv"),
+              #   selected = "From pgx"
+              # )
+                # shinyWidgets::switchInput(
+                #   inputId = ns("data_source"),
+                #   value = FALSE,
+                #   onLabel = "From pgx",
+                #   offLabel = "From csv",
+                #   onStatus = "primary",
+                #   offStatus = "default",
+                #   inline = TRUE#,
+                #   #size = "mini"
+                # )
             },
             if (upload_datatype() == "multi-omics") {
               actionButton(
@@ -136,8 +142,16 @@ upload_table_preview_counts_server <- function(
             ),
             bslib::card(
               if (upload_datatype() == "multi-omics") {
+                shiny::selectInput(
+                  ns("data_source"),
+                  label = NULL,
+                  choices = c("From pgx", "From csv"),
+                  selected = "From pgx"
+                )
+              },
+              if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == true", ns("data_source")),
+                  condition = sprintf("input['%s'] == 'From pgx'", ns("data_source")),
                   div(
                     div(
                       style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
@@ -160,7 +174,7 @@ upload_table_preview_counts_server <- function(
               },
               if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == false", ns("data_source")),
+                  condition = sprintf("input['%s'] == 'From csv'", ns("data_source")),
                   shiny::uiOutput(ns("dynamic_file_inputs"))#,
                   # div(
                   #   style = "text-align: right; ",
@@ -228,7 +242,7 @@ upload_table_preview_counts_server <- function(
 
     output$selected_rows_text <- renderText({
       info <- available_data_table()
-      paste("Selected:", paste(info$dataset[input$available_data_table_rows_selected], collapse = ", "))
+      paste(info$dataset[input$available_data_table_rows_selected], collapse = ", ")
     })
 
     available_data_table <- reactive({
@@ -247,10 +261,11 @@ upload_table_preview_counts_server <- function(
       class = "compact hover",
       rownames = FALSE,
       options = list(
-        dom = 't',
+        dom = 'ft',
         paging = FALSE,
         ordering = FALSE,
-        info = FALSE
+        info = FALSE,
+        search = list(regex = FALSE, caseInsensitive = TRUE)
       ))
     })
 
@@ -281,7 +296,7 @@ upload_table_preview_counts_server <- function(
     observeEvent(input$load_selected, {
       col_lists <- list()
       file_names <- character()
-      if (input$data_source) { # Case from pgx not implemented yet
+      if (input$data_source == "From pgx") { # Case from pgx not implemented yet
         for (i in 1:length(input$available_data_table_rows_selected)) {
           info <- available_data_table()
           datasets <- info$dataset[input$available_data_table_rows_selected]
@@ -329,7 +344,7 @@ upload_table_preview_counts_server <- function(
       }
       combined_df <- NULL
       for (i in 1:max(3, length(input$available_data_table_rows_selected))) {
-        if (input$data_source) {
+        if (input$data_source == "From pgx") {
           dataset <- available_data_table()[input$available_data_table_rows_selected[i], "dataset"]
           if (is.na(dataset)) {
             next
