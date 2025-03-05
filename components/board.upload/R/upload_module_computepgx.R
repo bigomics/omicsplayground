@@ -102,7 +102,7 @@ upload_module_computepgx_server <- function(
             "gsva+limma" = "gsva", "spearman", "camera", "fry", "fgsea")
         }
         return(mm)
-      )
+      })
 
       GENESET.SELECTED <- shiny::eventReactive(
       {
@@ -115,7 +115,7 @@ upload_module_computepgx_server <- function(
           mm <- c("fisher", "gsva", "fgsea")
         }
         return(mm)
-      )
+      })
 
       ## batch correction and extrs methods
       ## EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna", "mofa")
