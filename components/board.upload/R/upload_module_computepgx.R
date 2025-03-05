@@ -287,7 +287,14 @@ upload_module_computepgx_server <- function(
                   ns = ns,
                   fileInput2(
                     ns("upload_custom_fc"),
-                    shiny::HTML("<h4>Custom fold change:</h4>"),
+                    shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Custom fold change methods:</h4>
+                      <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/uploadfc/' target='_blank' class='info-link' style='margin-left: 15px;'>
+                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>
+                    </div>
+                  "),
                     multiple = FALSE,
                     accept = c(".csv")
                   )
