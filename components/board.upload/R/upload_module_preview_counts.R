@@ -82,24 +82,6 @@ upload_table_preview_counts_server <- function(
         if (is.null(uploaded$counts.csv)) {
           div(
             if (upload_datatype() == "multi-omics") {
-              # shiny::selectInput(
-              #   ns("data_source"),
-              #   label = NULL,
-              #   choices = c("From pgx", "From csv"),
-              #   selected = "From pgx"
-              # )
-                # shinyWidgets::switchInput(
-                #   inputId = ns("data_source"),
-                #   value = FALSE,
-                #   onLabel = "From pgx",
-                #   offLabel = "From csv",
-                #   onStatus = "primary",
-                #   offStatus = "default",
-                #   inline = TRUE#,
-                #   #size = "mini"
-                # )
-            },
-            if (upload_datatype() == "multi-omics") {
               actionButton(
                 ns("load_selected"), "Load data",
                 class = "btn-sm btn-outline-primary m-1"
@@ -176,15 +158,6 @@ upload_table_preview_counts_server <- function(
                 shiny::conditionalPanel(
                   condition = sprintf("input['%s'] == 'From csv'", ns("data_source")),
                   shiny::uiOutput(ns("dynamic_file_inputs"))#,
-                  # div(
-                  #   style = "text-align: right; ",
-                  #   actionButton(
-                  #     ns("add_file_input"),
-                  #     "Add another file",
-                  #     icon = icon("plus"),
-                  #     class = "btn-sm btn-outline-primary"
-                  #   )
-                  # )
                 )
               },
               if (upload_datatype() != "multi-omics") {
@@ -263,7 +236,7 @@ upload_table_preview_counts_server <- function(
       options = list(
         dom = 'ft',
         paging = FALSE,
-        ordering = FALSE,
+        ordering = TRUE,
         info = FALSE,
         search = list(regex = FALSE, caseInsensitive = TRUE)
       ))
@@ -297,16 +270,17 @@ upload_table_preview_counts_server <- function(
       col_lists <- list()
       file_names <- character()
       if (input$data_source == "From pgx") { # Case from pgx not implemented yet
-        for (i in 1:length(input$available_data_table_rows_selected)) {
+        #for (i in 1:length(input$available_data_table_rows_selected)) {
           info <- available_data_table()
           datasets <- info$dataset[input$available_data_table_rows_selected]
-          for (dataset in datasets) {
+          for (i in 1:length(datasets)) {
+            dataset <- datasets[i]
             pgxfile <- file.path(auth$user_dir, paste0(dataset, ".pgx"))
             df <- playbase::pgx.load(pgxfile)$counts
             col_lists[[i]] <- colnames(df)
             file_names[i] <- dataset
           }
-        }
+        #}
       } else {
         for (i in 1:3) {
           file_input <- input[[paste0("file_input_", i)]]
@@ -318,28 +292,40 @@ upload_table_preview_counts_server <- function(
         }
       }
       if (length(col_lists) > 1) {
-        cols_match <- all(sapply(col_lists[-1], function(x) {
-          setequal(x, col_lists[[1]])
-        }))
-        if (!cols_match) {
-          all_cols <- unique(unlist(col_lists))
-          mismatch_text <- NULL
-          for (i in seq_along(col_lists)) {
-            missing <- setdiff(all_cols, col_lists[[i]])
-            if (length(missing) > 0) {
-              mismatch_text <- paste0(
-                mismatch_text,
-                "\nFile '", file_names[i], "' is missing columns: ",
-                paste(missing, collapse=", ")
-              )
-            }
-          }
+        common_cols <- Reduce(intersect, col_lists)
+        if (length(common_cols) == 0) {
           shinyalert::shinyalert(
-            title = "Column Mismatch Error",
-            text = mismatch_text,
+            title = "No Common Columns",
+            text = "The uploaded files have no columns in common",
             type = "error"
           )
           return(NULL)
+        } else {
+          all_cols <- unique(unlist(col_lists))
+          excluded_cols <- setdiff(all_cols, common_cols)
+          if (length(excluded_cols) > 0) {
+            mismatch_text <- NULL
+            for (i in seq_along(col_lists)) {
+              missing <- setdiff(all_cols, col_lists[[i]])
+              if (length(missing) > 0) {
+                mismatch_text <- paste0(
+                  mismatch_text,
+                  "\nFile '", file_names[i], "' is missing columns: ",
+                  paste(missing, collapse=", ")
+                )
+              }
+            }
+            shinyalert::shinyalert(
+              title = "Using Common Columns Only",
+              text = paste0(
+                "Some columns were not present in all files and will be excluded.",
+                mismatch_text,
+                "\n\nProceeding with ", length(common_cols), " common columns."
+              ),
+              type = "warning"
+            )
+          }
+          col_lists[[1]] <- common_cols
         }
       }
       combined_df <- NULL
