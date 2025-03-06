@@ -716,7 +716,6 @@ upload_module_computepgx_server <- function(
         gx.methods <- input$gene_methods
         timeseries.methods <- NULL
         if (input$time_series) timeseries.methods <- gx.methods
-        dbg("---------------MNT1: ", timeseries.methods)
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         ## at least do meta.go, infer
