@@ -715,13 +715,8 @@ upload_module_computepgx_server <- function(
         ## get selected methods from input
         gx.methods <- input$gene_methods
         timeseries.methods <- NULL
-        if (input$time_series) {
-          cc1 <- "trend.limma" %in% gx.methods
-          cc2 <- "deseq2.lrt" %in% gx.methods
-          if (cc1 && !cc2) timeseries.methods <- "trend.limma"
-          if (!cc1 && cc2) timeseries.methods <- "deseq2.lrt"
-          if (cc1 && cc2) timeseries.methods <- c("trend.limma","deseq2.lrt")
-        }
+        if (input$time_series) timeseries.methods <- gx.methods
+        dbg("---------------MNT1: ", timeseries.methods)
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         ## at least do meta.go, infer
