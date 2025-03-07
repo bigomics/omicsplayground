@@ -59,7 +59,7 @@ pgx <- playbase::pgx.computePGX(
   extra.methods = params$extra.methods,
   use.design = params$use.design, ## no.design+prune are combined
   prune.samples = params$prune.samples,
-  timeseries.methods = params$timeseries.methods,
+  time = params$timeseries,
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
   cluster.contrasts = params$cluster.contrasts,
