@@ -195,6 +195,7 @@ upload_table_preview_samples_server <- function(
       prior <- min(counts[which(counts > 0)], na.rm = TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
+      shiny::req(nrow(Y))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
