@@ -550,7 +550,7 @@ app_server <- function(input, output, session) {
     multiomics = 0
   )
   observeEvent(input$nav, {
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
+    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab", "timeseries-tab") && loaded$clustering == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())

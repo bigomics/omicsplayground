@@ -793,7 +793,7 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
-                    choices = if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+                    choices = if (grepl("proteomics|metabolomics", upload_datatype(), ignore.case = TRUE)) {
                       c("median" = "maxMedian", "sum" = "maxSum", "quantile", "reference")
                     } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
                       c("median" = "maxMedian", "sum" = "maxSum", "quantile")

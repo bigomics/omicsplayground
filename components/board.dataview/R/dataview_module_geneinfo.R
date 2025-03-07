@@ -44,6 +44,7 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     ## prepare data
     geneinfo_data <- shiny::reactive({
       feature <- r.gene()
@@ -59,11 +60,13 @@ dataview_module_geneinfo_server <- function(id,
       ortholog <- pgx$genes$human_ortholog[jj]
 
       if (datatype == "metabolomics") {
+        dbg("[geneinfo_data] calling getMetaboliteInfo()")        
         info <- playbase::getMetaboliteInfo(
           organism = organism,
           id = symbol
         )
       } else {
+        dbg("[geneinfo_data] calling getOrgGeneInfo()")
         info <- playbase::getOrgGeneInfo(
           organism = organism,
           gene = symbol,
