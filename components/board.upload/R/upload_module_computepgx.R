@@ -714,8 +714,8 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        timeseries <- NULL
-        if (input$time_series) timeseries <- gx.methods
+        timeseries <- FALSE
+        if (input$time_series) timeseries <- TRUE
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         ## at least do meta.go, infer
