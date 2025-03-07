@@ -714,8 +714,8 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        timeseries.methods <- NULL
-        if (input$time_series) timeseries.methods <- gx.methods
+        timeseries <- NULL
+        if (input$time_series) timeseries <- gx.methods
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         ## at least do meta.go, infer
@@ -786,7 +786,7 @@ upload_module_computepgx_server <- function(
           extra.methods = extra.methods,
           use.design = use.design, ## no.design+prune are combined
           prune.samples = prune.samples,
-          timeseries.methods = timeseries.methods,
+          timeseries = timeseries,
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
