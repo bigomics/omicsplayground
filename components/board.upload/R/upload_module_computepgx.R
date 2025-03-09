@@ -380,12 +380,11 @@ upload_module_computepgx_server <- function(
 
       ## Checks specific for time series
       shiny::observeEvent(input$time_series, {
-
+        
         Y <- samplesRT()
-        C <- contrastsRT()        
+        Contrasts <- contrastsRT()
         time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
         sel.time <- intersect(time.var, colnames(Y))
-        contr.names <- colnames(C)
 
         ## 1. Ensure 'time' column is in samples.csv file
         ## 2. Force DGE methods to be one of those allowing time series testing.
@@ -415,13 +414,17 @@ upload_module_computepgx_server <- function(
         ## (eg GEIGER not good)
         if (input$time_series) {
           i=1
-          for (i in 1:length(contr.names)) {
-            var <- strsplit(contr.names[i], ":")[[1]][1]
+          for (i in 1:ncol(Contrasts)) {
+            contr.name <- colnames(Contrasts)[i]
+            var <- strsplit(contr.name[i], ":")[[1]][1]
             if (var %in% time.var) next
-            if (any(table(Y[, sel.time[1]], Y[, var]) == 0)) {            
+            jj <- match(rownames(Contrasts[, i, drop=FALSE]), rownames(Y))
+            D <- data.frame(contr = Contrasts[,i], time = Y[jj, sel.time[1]])
+            rownames(D) <- rownames(Y)[jj]
+            if (any(table(D[, 1], D[, 2]) == 0)) {
               shinyalert::shinyalert(
                 title = "WARNING",
-                text = "Not all phenoypes are represented across time points. Skipping time series analysis.",
+                text = "Not all time points are represented across specified contrasts. Skipping time series analysis.",
                 type = "warning"
               )
               shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
