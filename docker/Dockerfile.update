@@ -88,6 +88,9 @@ RUN if [ $update_playbase = true ]; then \
     fi \
 fi
 
+# Check if playbase is available, sometimes it fails and we do not want the build to continue
+RUN R -e "if (!require('playbase')) { quit(status=1) }"
+
 # after install non-detected missing packages
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
 #RUN R -e "install.packages(c('shiny.i18n','waiter','sever'))"
