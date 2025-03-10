@@ -143,7 +143,7 @@ const logout = () => {
 
 const logoutInApp = () => {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "/cookie_remove", true);
+	xhr.open("GET", "cookie_remove", true);
 	xhr.onload = function() {
 		window.location = window.location.origin + '/';
     };
