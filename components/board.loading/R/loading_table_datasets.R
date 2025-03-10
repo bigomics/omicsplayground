@@ -346,7 +346,7 @@ loading_table_datasets_server <- function(id,
           onclick = paste0('Shiny.onInputChange(\"', ns("changename_pgx"), '\",this.id,{priority: "event"});')
         )
         changedesc_pgx_menuitem <- shiny::actionButton(
-          ns(paste0("changedesc_pgx_row_", i)), 
+          ns(paste0("changedesc_pgx_row_", i)),
           label = "Change description",
           icon = shiny::icon("edit"),
           class = "btn btn-outline-dark",
