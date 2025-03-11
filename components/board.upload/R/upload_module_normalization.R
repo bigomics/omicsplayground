@@ -70,8 +70,25 @@ upload_module_normalization_server <- function(
         X <- log2(counts + prior) ## NEED RETHINK
 
         nmissing <- sum(is.na(X))
+        nrowsmissing <- sum(rowSums(is.na(X))>0)        
         dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
-        if (nmissing > 0 && input$impute) {
+        dbg("[normalization_server:imputedX] X has ", nrowsmissing, " rows with NAs.")        
+
+        if (nmissing > 0 && input$filtermissing) {
+          f <- input$filterthreshold
+          dbg(paste0("[normalization_server:imputedX] Threshold max. allowed NA: <", f))
+          sel <- which(rowMeans(is.na(X)) <= f)
+          nfiltered <- sum(rowMeans(is.na(X)) > f)
+          dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", nfiltered)
+          X <- X[sel,,drop=FALSE]
+
+          nmissing <- sum(is.na(X))
+          nrowsmissing <- sum(rowSums(is.na(X))>0)        
+          dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
+          dbg("[normalization_server:imputedX] X has ", nrowsmissing, " rows with NAs.")        
+        }
+
+        if (any(is.na(X)) > 0 && input$impute) {
           m <- input$impute_method
           dbg("[normalization_server:imputedX] Imputing data using ", m)
           X <- playbase::imputeMissing(X, method = m)
@@ -727,12 +744,6 @@ upload_module_normalization_server <- function(
           shiny::checkboxInput(ns("outlier_shownames"), "show sample names", FALSE)
         )
 
-        ## bec.options <- tagList(
-        ##   shiny::radioButtons(ns("bec_plottype"), "Plot type:", c("pca", "tsne", "heatmap"),
-        ##     inline = TRUE
-        ##   )
-        ## )
-
         bec.options <- tagList(
           shiny::radioButtons(
             ns("colorby_var"),
@@ -753,24 +764,29 @@ upload_module_normalization_server <- function(
                 title = "1. Missing values",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("Replace missing values using an imputation method:\n"),
+                  shiny::p("Handle missing values:\n"),
                   shiny::HTML("<a href='https://bigomics.ch/blog/imputation-of-missing-values-in-proteomics' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-                shiny::checkboxInput(ns("impute"), label = "Impute missing values", value = TRUE),
+                shiny::checkboxInput(ns("filtermissing"), label = "Filter NA rows", value = TRUE),
+                shiny::conditionalPanel(
+                  "input.filtermissing == true",
+                  ns = ns,
+                  shiny::selectInput(ns("filterthreshold"), NULL,
+                    choices = c("<10% NA"=0.1, "<20% NA"=0.2, "<50% NA"=0.5),
+                    selected = 0.20)
+                ),
+                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = TRUE),
                 shiny::conditionalPanel(
                   "input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c(
                       "SVDimpute" = "SVD2",
-                      "QRILC"
-                      # "Zero" = "zero",
-                      # "MinDet",
-                      # "MinProb"
-                      # "NMF"
+                      "QRILC",
+                      "MinProb"
                     ),
                     selected = "SVD2"
                   )
