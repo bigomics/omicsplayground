@@ -394,6 +394,12 @@ loading_table_datasets_server <- function(id,
         ignoreInit = TRUE
       )
 
+      if (nrow(df) > auth$options$MAX_DATASETS) {
+        df_cap <- auth$options$MAX_DATASETS
+      } else {
+        df_cap <- nrow(df)
+      }
+
 
       DT::datatable(
         df,
@@ -406,7 +412,7 @@ loading_table_datasets_server <- function(id,
         # ),
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1),
+        selection = list(mode = "single", target = "row", selected = 1, selectable = 1:df_cap),
         fillContainer = TRUE,
         options = list(
           dom = "ft",
@@ -416,6 +422,15 @@ loading_table_datasets_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
+          rowCallback = DT::JS(
+            "function(row, data, displayNum, index) {",
+            "  if(index >= ", df_cap, ") {", # Grey out all rows after the first two
+            "    $(row).css('opacity', '0.5');",
+            "    $('td:first-child', row).css('pointer-events', 'none');", # Disable clicks on menu buttons after row 5
+            "    $('td:first-child button', row).prop('disabled', true);", # Disable the buttons themselves
+            "  }",
+            "}"
+          ),
           columnDefs = list(
             list(width = "60px", targets = target1),
             ##            list(width = "30vw", targets = target2),
