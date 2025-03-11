@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:master
+FROM bigomics/omicsplayground:v3.5.18
 
 ARG BRANCH=master
 ARG update_playdata=false
@@ -35,6 +35,7 @@ RUN quarto install tinytex
 RUN R -e "install.packages('torch')"
 RUN R -e "install.packages('GGally')"
 RUN R -e "install.packages('IntNMF')"
+RUN R -e "BiocManager::install('multtest')"
 RUN R -e "install.packages('metap')"
 RUN R -e "install.packages('plotrix')"
 RUN R -e "install.packages('RcppML')"
@@ -46,6 +47,7 @@ RUN R -e "BiocManager::install('MOFAdata')"
 RUN R -e "BiocManager::install('nipalsMCIA')"
 RUN R -e "devtools::install_github('mkanai/grimon')"
 RUN R -e "devtools::install_github('metabolomicsworkbench/RefMet')"
+RUN R -e "torch::install_torch()"
 
 #------------------------------------------------------------
 # Add supporting R libraries
@@ -86,6 +88,9 @@ RUN if [ $update_playbase = true ]; then \
        R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
     fi \
 fi
+
+# Check if playbase is available, sometimes it fails and we do not want the build to continue
+RUN R -e "if (!require('playbase')) { quit(status=1) }"
 
 # after install non-detected missing packages
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
