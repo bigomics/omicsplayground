@@ -32,16 +32,18 @@ TimeSeriesInputs <- function(id) {
         "Advanced options",
         icon = icon("cog", lib = "glyphicon"),
         withTooltip(
+          shiny::checkboxInput(ns("timefactor"), "Time as factor", TRUE),
+          "Treat time as factor"
+        ),
+        withTooltip(
           shiny::selectInput(
             ns("knn"), "Number of clusters:",
             choices = c(2,3,4,5,7,10,15), selected=7
           ),
           "Choose number of KNN clusters."
         ),
-        withTooltip(
-          shiny::checkboxInput(ns("timefactor"), "Time as factor", TRUE),
-          "Treat time as factor"
-        )
+        shiny::selectInput(ns("maxfeatures"), "Max features per module:",
+          choices=c(50,100,200,500), selected=100)
       )
     )
   )

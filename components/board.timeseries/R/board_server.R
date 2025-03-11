@@ -33,11 +33,11 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     tab_elements <- list(
       "Time clustering" = list(
         enable = NULL,
-        disable = c("contrast")
+        disable = c("contrast","groupvar")
       ),
       "Features" = list(
         enable = NULL,
-        disable = c("module")
+        disable = c("module","knn","maxfeatures")
       )
     )
 
@@ -96,7 +96,7 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       ## update selectinput
       modulenames <- sort(unique(colors))
       shiny::updateSelectInput( session, "module", choices=modulenames,
-        selected=modulenames[1])
+        selected=head(modulenames,3))
       
       res <- list(
         X = timeX,

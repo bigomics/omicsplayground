@@ -77,14 +77,6 @@ TimeSeriesBoard.clustering_server <- function(id,
       colors <- factor(res$colors)
       timefactor <- timefactor()
       plottype <- ifelse(timefactor, "parcoord", "continuous")
-
-      dbg("[TimeSeriesBoard.clustering:render_plot] timefactor = ", timefactor)
-      dbg("[TimeSeriesBoard.clustering:render_plot] plottype = ", plottype)      
-      
-      dbg("[TimeSeriesBoard.clustering:render_plot] head.colors = ", head(colors))
-      dbg("[TimeSeriesBoard.clustering:render_plot] dim.xx = ", dim(xx))
-      dbg("[TimeSeriesBoard.clustering:render_plot] head.time = ", head(time))
-      dbg("[TimeSeriesBoard.clustering:render_plot] len.time = ", length(time))
       
       playbase::plotTimeSeries.modules(
         time, xx, colors, main="", legend=FALSE,
