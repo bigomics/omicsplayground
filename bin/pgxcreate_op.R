@@ -43,6 +43,7 @@ pgx <- playbase::pgx.createPGX(
   custom.geneset = params$custom.geneset,
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
+  timeseries = params$timeseries,
   settings = params$settings
 )
 
@@ -59,7 +60,6 @@ pgx <- playbase::pgx.computePGX(
   extra.methods = params$extra.methods,
   use.design = params$use.design, ## no.design+prune are combined
   prune.samples = params$prune.samples,
-  time = params$timeseries,
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
   cluster.contrasts = params$cluster.contrasts,
