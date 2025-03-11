@@ -67,6 +67,11 @@ upload_table_preview_samples_server <- function(
     output$table_samples <- shiny::renderUI({
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
+        shiny::actionButton(
+          ns("create_from_samplenames"),
+          "Create from sample names",
+          class = "btn-sm btn-outline-primary m-1"
+        ),
         div(
           if (!is.null(uploaded$samples.csv)) {
             shiny::actionButton(
@@ -77,18 +82,16 @@ upload_table_preview_samples_server <- function(
             )
           } else {
             shiny::actionButton(
-              ns("load_example"), "Load example",
+              ns("load_example"), "Load example data",
               class = "btn-sm btn-outline-primary m-1"
             )
           }
         ),
-        div(
-          shiny::actionButton(
-            ns("check_documentation_samples"),
-            "Read documentation",
-            class = "btn-sm btn-outline-primary m-1",
-            onclick = "window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
-          )
+        shiny::actionButton(
+          ns("check_documentation_samples"),
+          "Read documentation",
+          class = "btn-sm btn-outline-primary m-1",
+          onclick = "window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/samples/', '_blank')"
         )
       )
 
@@ -130,16 +133,18 @@ upload_table_preview_samples_server <- function(
                 label = "",
                 show.maximize = FALSE
               ),
-              bslib::navset_card_pill(
-                bslib::nav_panel(
-                  title = "UMAP",
-                  br(),
-                  plotOutput(ns("umap"))
-                ),
-                bslib::nav_panel(
-                  title = "Distribution",
-                  br(),
-                  plotOutput(ns("phenotype_stats"))
+              bslib::card(
+                bslib::navset_pill(
+                  bslib::nav_panel(
+                    title = "UMAP",
+                    br(),
+                    plotOutput(ns("umap"), height = "500px")
+                  ),
+                  bslib::nav_panel(
+                    title = "Distribution",
+                    br(),
+                    plotOutput(ns("phenotype_stats"), height = "500px")
+                  )
                 )
               )
             ),
@@ -193,17 +198,9 @@ upload_table_preview_samples_server <- function(
       prior <- min(counts[which(counts > 0)], na.rm = TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
-      shiny::req(nrow(Y))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
-      # Fix: handle case where sel col is NA (plot errors)
-      if (all(is.na(y))) {
-        non_na_cols <- which(colSums(!is.na(Y)) > 0)
-        if (length(non_na_cols) > 0) {
-          y <- Y[, non_na_cols[1]]
-        }
-      }
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(
@@ -343,6 +340,12 @@ upload_table_preview_samples_server <- function(
 
     observeEvent(input$load_example, {
       uploaded$samples.csv <- playbase::SAMPLES
+    })
+
+    observeEvent(input$create_from_samplenames, {
+      counts <- uploaded$counts.csv
+      samples <- playbase::createSampleInfoFromNames(colnames(counts)) 
+      uploaded$samples.csv <- samples
     })
 
     TableModuleServer(

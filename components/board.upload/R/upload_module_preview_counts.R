@@ -83,12 +83,12 @@ upload_table_preview_counts_server <- function(
           div(
             if (upload_datatype() == "multi-omics") {
               actionButton(
-                ns("load_selected"), "Load data",
+                ns("load_selected"), "Upload selected files",
                 class = "btn-sm btn-outline-primary m-1"
               )
             },
             actionButton(
-              ns("load_example"), "Load example data",
+              ns("load_example"), "Load example",
               class = "btn-sm btn-outline-primary m-1"
             )
           )
@@ -124,16 +124,23 @@ upload_table_preview_counts_server <- function(
             ),
             bslib::card(
               if (upload_datatype() == "multi-omics") {
-                shiny::selectInput(
+                ## shiny::selectInput(
+                ##   ns("data_source"),
+                ##   label = NULL,
+                ##   choices = c("From pgx", "From csv"),
+                ##   selected = "From pgx"
+                ## )
+                shiny::radioButtons(
                   ns("data_source"),
-                  label = NULL,
-                  choices = c("From pgx", "From csv"),
-                  selected = "From pgx"
+                  label = "Select input files from:",
+                  choices = c("csv", "pgx"),
+                  selected = "csv",
+                  inline = TRUE
                 )
               },
               if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'From pgx'", ns("data_source")),
+                  condition = sprintf("input['%s'] == 'pgx'", ns("data_source")),
                   div(
                     div(
                       style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
@@ -156,7 +163,7 @@ upload_table_preview_counts_server <- function(
               },
               if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'From csv'", ns("data_source")),
+                  condition = sprintf("input['%s'] == 'csv'", ns("data_source")),
                   shiny::uiOutput(ns("dynamic_file_inputs"))#,
                 )
               },
@@ -266,10 +273,35 @@ upload_table_preview_counts_server <- function(
       })
     })
 
+    observeEvent({
+      list(input$file_input_1, input$file_input_2, input$file_input_3)
+    },{
+      fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
+      if(sum(!sapply(fileinputs,is.null))>=2) {
+        shinyjs::removeClass(id = "load_selected", class = "btn-outline-primary")
+        shinyjs::addClass(id = "load_selected", class = "btn-primary")
+      } else {
+        shinyjs::addClass(id = "load_selected", class = "btn-outline-primary")
+        shinyjs::removeClass(id = "load_selected", class = "btn-primary")
+      }
+    })
+    
     observeEvent(input$load_selected, {
+
+      fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
+      numfiles <- sum(!sapply(fileinputs,is.null))
+      if(numfiles < 2) {
+        shinyalert::shinyalert(
+          title = "Not enough input files",
+          text = "Multi-omics needs minimal two data files",
+          type = "error"
+        )
+        return(NULL)
+      }
+      
       col_lists <- list()
       file_names <- character()
-      if (input$data_source == "From pgx") { # Case from pgx not implemented yet
+      if (input$data_source == "pgx") { # Case from pgx not implemented yet
         #for (i in 1:length(input$available_data_table_rows_selected)) {
           info <- available_data_table()
           datasets <- info$dataset[input$available_data_table_rows_selected]
@@ -291,6 +323,12 @@ upload_table_preview_counts_server <- function(
           }
         }
       }
+
+      ## remove empty
+      sel <- which(!is.na(file_names))
+      col_lists <- col_lists[sel]
+      file_names <- file_names[sel]
+      
       if (length(col_lists) > 1) {
         common_cols <- Reduce(intersect, col_lists)
         if (length(common_cols) == 0) {
@@ -330,7 +368,7 @@ upload_table_preview_counts_server <- function(
       }
       combined_df <- NULL
       for (i in 1:max(3, length(input$available_data_table_rows_selected))) {
-        if (input$data_source == "From pgx") {
+        if (input$data_source == "pgx") {
           dataset <- available_data_table()[input$available_data_table_rows_selected[i], "dataset"]
           if (is.na(dataset)) {
             next
