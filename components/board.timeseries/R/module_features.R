@@ -83,6 +83,7 @@ TimeSeriesBoard.features_server <- function(id,
                                             pgx,
                                             data,
                                             timevar,
+                                            contrast,
                                             groupvar,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -114,7 +115,9 @@ TimeSeriesBoard.features_server <- function(id,
     })
 
     stats_data <- shiny::reactive({
-      stats <- pgx$gx.meta$meta[[1]][,1:5]
+      k <- contrast()
+      shiny::req(k)
+      stats <- pgx$gx.meta$meta[[k]][,1:5]
       stats
     })
     

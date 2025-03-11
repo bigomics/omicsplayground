@@ -31,13 +31,13 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "ParallelCoord" = list(
+      "Time clustering" = list(
         enable = NULL,
-        disable = c()
+        disable = c("contrast")
       ),
       "Features" = list(
         enable = NULL,
-        disable = c()
+        disable = c("module")
       )
     )
 
@@ -60,6 +60,8 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       shiny::updateSelectInput(session, "timevar", choices=timevars, selected=timevars[1])
       groups <- c("<none>",vars)
       shiny::updateSelectInput(session, "groupvar", choices=groups, selected=groups[1])
+      contrasts <- playbase::pgx.getContrasts(pgx)
+      shiny::updateSelectInput(session, "contrast", choices=contrasts, selected=contrasts[1])
     })
 
     ## assign to global list of observers. suspend by default.
@@ -150,6 +152,7 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       id = "features",
       pgx = pgx,
       data = timeseries_full,
+      contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
       groupvar = shiny::reactive(input$groupvar),
       watermark = WATERMARK

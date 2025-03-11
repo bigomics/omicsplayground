@@ -7,15 +7,20 @@ TimeSeriesInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   settings_taglist <- tagList(
-    withTooltip(shiny::selectInput(ns("timevar"), "Time variable:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("timevar"), "Time variable:", choices = NULL),
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = TRUE),
+    withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL,
+                                   multiple=TRUE),
       "Select module(s) to show in parallel plot.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("groupvar"), "Group variable:", choices = NULL, multiple = FALSE),
+    withTooltip(shiny::selectInput(ns("contrast"), "Contrast:", choices = NULL),
+      "Select contrast to show in table.",
+      placement = "top"
+    ),
+    withTooltip(shiny::selectInput(ns("groupvar"), "Color by:", choices = NULL),
       "Select phenotypes to show for creating groups.",
       placement = "top"
     ),
@@ -34,7 +39,7 @@ TimeSeriesInputs <- function(id) {
           "Choose number of KNN clusters."
         ),
         withTooltip(
-          shiny::checkboxInput(ns("timefactor"), "Time as factor", FALSE),
+          shiny::checkboxInput(ns("timefactor"), "Time as factor", TRUE),
           "Treat time as factor"
         )
       )
@@ -52,14 +57,14 @@ TimeSeriesUI <- function(id) {
 
   board_info <- "The TimeSeries Board performs unsupervised clustering analysis. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects."
 
-  parallel_info <- HTML("<b>Parallel Coordinates</b> visualizes time series or ordered experiments. By grouping samples by time points, we can see trends in the expression of groups of genes, or so-called gene modules. The figure is interactive so you can manually order the time points.")
+  parallel_info <- HTML("<b>Time clustering</b> groups features with similar variation in time together using KNN. We can see different trends in the expression of groups of genes, or so-called gene modules. The parallel plot is interactive so you can manually order the time points.")
 
   div(
     boardHeader(title = "Time Series", info_link = ns("board_info")),
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(
-        "ParallelCoord",
+        "Time clustering",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
