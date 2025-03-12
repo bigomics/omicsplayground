@@ -34,17 +34,18 @@ upload_table_preview_counts_server <- function(
       dt <- checked_matrix()
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
-      MAXSHOW <- 100
-      if (nrow(dt) > MAXSHOW) {
-        dt <- head(dt, MAXSHOW)
+      MAXROW <- 10000
+      MAXCOL <- 20
+      if (nrow(dt) > MAXROW) {
+        dt <- head(dt, MAXROW)
         dt <- rbind(dt, rep(NA, ncol(dt)))
-        n1 <- nrow0 - MAXSHOW
+        n1 <- nrow0 - MAXROW
         rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
       }
-      if (ncol(dt) > MAXSHOW) {
-        dt <- dt[, 1:MAXSHOW]
+      if (ncol(dt) > MAXCOL) {
+        dt <- dt[, 1:MAXCOL]
         dt <- cbind(dt, rep(NA, nrow(dt)))
-        n1 <- ncol0 - MAXSHOW
+        n1 <- ncol0 - MAXCOL
         colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
       }
       dt

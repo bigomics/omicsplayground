@@ -770,13 +770,14 @@ upload_module_normalization_server <- function(
                       </a>")
                 ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-                shiny::checkboxInput(ns("filtermissing"), label = "Filter NA rows", value = TRUE),
+                shiny::checkboxInput(ns("filtermissing"), label = "Exclude NA rows", value = TRUE),
                 shiny::conditionalPanel(
                   "input.filtermissing == true",
                   ns = ns,
                   shiny::selectInput(ns("filterthreshold"), NULL,
-                    choices = c("<10% NA"=0.1, "<20% NA"=0.2, "<50% NA"=0.5),
-                    selected = 0.20)
+                    choices = c(">0% NA"=0.0, ">10% NA"=0.1, ">20% NA"=0.2,
+                      ">50% NA"=0.5),
+                    selected = 0.2)
                 ),
                 shiny::checkboxInput(ns("impute"), label = "Impute NA", value = TRUE),
                 shiny::conditionalPanel(

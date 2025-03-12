@@ -55,6 +55,7 @@ upload_module_computepgx_server <- function(
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
+        ##mm <- sort(mm)
         if (opt$ALLOW_CUSTOM_FC) {
           mm <- c(mm, "custom")
         }
@@ -73,12 +74,12 @@ upload_module_computepgx_server <- function(
       ## statistical method for GENESET level testing
       GENESET.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "rank correlation"="spearman", "camera")
+          mm <- c("fisher", "fgsea", "rank correlation"="spearman", "camera", "fry")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "spearman")
+          mm <- c("fisher", "fgsea", "rank correlation"="spearman")
         } else {
-          mm <- c("fisher", "ssgsea+limma" = "ssgsea",
-            "gsva+limma" = "gsva", "rank correlation"="spearman", "camera", "fgsea")
+          mm <- c("fisher", "fgsea", "ssgsea+limma" = "ssgsea", "gsva+limma" = "gsva",
+            "rank correlation"="spearman", "camera", "fry")
         }
         return(mm)
       }
@@ -145,6 +146,20 @@ upload_module_computepgx_server <- function(
               status = "default",
               width = "150px"
             )
+          )
+        )
+      }
+
+      inline_info_button <- function(info.text) {
+        shiny::span(
+          style = "margin-left:15px;",
+          DropdownMenu(
+            info.text,
+            size = "xs",
+            icon = shiny::icon("info", class='fa-solid fa-circle-info info-icon',
+              style='color:blue; font-size: 18px;'),
+            status = "default",
+            width = "150px"
           )
         )
       }
@@ -230,19 +245,31 @@ upload_module_computepgx_server <- function(
                   choiceNames =
                     c(
                       "Append symbol to feature ID",
-                      "Remove all-zero features",
-                      "Remove features without symbol"
+                      "Exclude all-zero features",
+                      "Exclude features without symbol"
                       ## "Remove Rik/ORF/LOC genes"
                     ),
                   selected = PROBE_FILTER_SELECTED
                 ),
-                shiny::textInput(
-                  ns("exclude_genes"),
-                  ## "Exclude void features:",
-                  htmltag_with_info_popup(
-                    "Exclude void features:",
-                    "Exclude void features that match pattern at the beginning or the end of their symbol. Patterns are not matched in the middle of the symbol name."),
-                  "LOC ORF RIK") 
+                div(
+                  style = "margin-top:-22px;",
+                  shiny::checkboxInput(
+                    ns("exclude_void"),
+                    shiny::span( "Exclude void features:",
+                      inline_info_button(
+                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name.")),
+                    FALSE)
+                ),
+                conditionalPanel(
+                  "input.exclude_void == true",
+                  ns = ns,
+                  shiny::span(style="margin-top:-15px;",
+                    shiny::textInput(
+                      ns("exclude_genes"),
+                      NULL,
+                      "LOC ORF RIK")
+                  )
+                )
               ),
               bslib::card(
                 shiny::checkboxGroupInput(
@@ -686,6 +713,8 @@ upload_module_computepgx_server <- function(
         use.design <- !("noLM.prune" %in% input$dev_options)
         prune.samples <- ("noLM.prune" %in% input$dev_options)
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+        exclude_genes <- NULL
+        if(input$exclude_void) exclude_genes <- input$exclude_genes
         
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
@@ -726,7 +755,7 @@ upload_module_computepgx_server <- function(
           ## normalize = do.normalization,
           prune.samples = TRUE,
           filter.genes = filter.genes,
-          exclude.genes = input$exclude_genes,
+          exclude.genes = exclude_genes,
           only.known = remove.unknown,
           only.proteincoding = only.proteincoding,          
           only.hugo = append.symbol, ## DEPRECATED
