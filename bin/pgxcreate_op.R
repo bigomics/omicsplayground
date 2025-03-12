@@ -60,7 +60,7 @@ pgx <- playbase::pgx.computePGX(
   custom.geneset = pgx$custom.geneset,
   custom_fc = params$custom_fc,
   extra.methods = params$extra.methods,
-  use.design = params$use.design, ## no.design+prune are combined
+  use.design = params$use.design,
   prune.samples = params$prune.samples,
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
