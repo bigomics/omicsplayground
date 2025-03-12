@@ -127,10 +127,11 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       shiny::req(!is.null(input$addgsets) && length(input$addgsets))
       
       if(!all(grepl(":",rownames(pgx$X)))) {
-        shiny::updateSelectInput(session, "show_datatypes", choices = NULL,
-                                 selected = NULL)
+        shiny::updateSelectInput(
+          session, "show_datatypes", choices = "gx", selected = "gx")
         return(NULL)
       }
+      
       ## update datatype selectinput
       datatypes <- sort(unique(sub(":.*","",rownames(pgx$X))))
       if(input$addgsets) datatypes <- c(datatypes, "gset")
@@ -250,8 +251,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       X <- pgx$X
       if(!all(grepl("[:]",rownames(X)))) {
         rownames(X) <- paste0("gx:",rownames(X))        
-      }
-      
+      }      
       gsetX <- pgx$gsetX
       rownames(gsetX) <- paste0("gset:",rownames(gsetX))
       X <- rbind(X, gsetX)
