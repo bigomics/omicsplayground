@@ -43,15 +43,7 @@ UploadBoard <- function(id,
           probes = probes,
           datatype = datatype,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
-        )
-        if(1) {
-        dbg("[UploadBoard:checkprobes_task] head.probes=",head(probes))
-        dbg("[UploadBoard:checkprobes_task] datatype=",datatype)
-        dbg("[UploadBoard:checkprobes_task] islist.detected=",is.list(detected))
-        dbg("[UploadBoard:checkprobes_task] names.detected=",names(detected))
-        dbg("[UploadBoard:checkprobes_task] detected=",detected)
-        }
-        
+        )        
         if (is.null(detected)) detected <- "error"
         detected
       })
