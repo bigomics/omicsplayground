@@ -118,9 +118,9 @@ upload_module_computepgx_server <- function(
         ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
       }
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
-      DEV.METHODS <- c("noLM.prune")
-      DEV.NAMES <- c("noLM + prune")
-      DEV.SELECTED <- c()
+      #DEV.METHODS <- c("noLM.prune")
+      #DEV.NAMES <- c("noLM + prune")
+      #DEV.SELECTED <- c()
 
       ## Probe filtering defaults
       PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
@@ -300,13 +300,13 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  shiny::HTML("<br><h4>Developer options:</h4>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
-                )
+                ## shiny::checkboxGroupInput(
+                ##   ns("dev_options"),
+                ##   shiny::HTML("<br><h4>Developer options:</h4>"),
+                ##   choiceValues = DEV.METHODS,
+                ##   choiceNames = DEV.NAMES,
+                ##   selected = DEV.SELECTED
+                ## )
               ),
               bslib::card(
                 fileInput2(
@@ -675,7 +675,6 @@ upload_module_computepgx_server <- function(
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
-
         flt <- input$filter_methods
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
@@ -683,8 +682,10 @@ upload_module_computepgx_server <- function(
         #only.proteincoding <- ("only.proteincoding" %in% flt)
         only.proteincoding <- FALSE      # DEPRECATED: use exclude_genes
         filter.genes <- ("remove.notexpressed" %in% flt)
-        use.design <- !("noLM.prune" %in% input$dev_options)
-        prune.samples <- ("noLM.prune" %in% input$dev_options)
+        #use.design <- !("noLM.prune" %in% input$dev_options)
+        #prune.samples <- ("noLM.prune" %in% input$dev_options)
+        use.design <- FALSE
+        prune.samples <- TRUE
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
         
         # if no raw_dir (happens when we auto-load example data via
@@ -724,7 +725,6 @@ upload_module_computepgx_server <- function(
             custom_fc = custom_fc
           ),
           ## normalize = do.normalization,
-          prune.samples = TRUE,
           filter.genes = filter.genes,
           exclude.genes = input$exclude_genes,
           only.known = remove.unknown,
@@ -739,7 +739,7 @@ upload_module_computepgx_server <- function(
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
-          use.design = use.design, ## no.design+prune are combined
+          use.design = use.design,
           prune.samples = prune.samples,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
