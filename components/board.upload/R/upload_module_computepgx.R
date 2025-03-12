@@ -422,6 +422,7 @@ upload_module_computepgx_server <- function(
             D <- data.frame(contr = Contrasts[,i], time = Y[jj, sel.time[1]])
             rownames(D) <- rownames(Y)[jj]
             if (any(table(D[, 1], D[, 2]) == 0)) {
+            #if (any(table(D[, 1], D[, 2]) == 0)) { ## also allow least 1 pheno per time point.
               shinyalert::shinyalert(
                 title = "WARNING",
                 text = "Not all time points are represented across specified contrasts. Skipping time series analysis.",
