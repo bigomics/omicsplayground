@@ -39,11 +39,11 @@ UploadBoard <- function(id,
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes) {
       future_promise({
         dbg("[UploadBoard:ExtendedTask.new] detect_probetype started...")
-        detected <- playbase::detect_species_probetype(
+        detected <- playbase::check_species_probetype(
           probes = probes,
           datatype = datatype,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat")))
-        )
+        )        
         if (is.null(detected)) detected <- "error"
         detected
       })
@@ -1023,7 +1023,7 @@ UploadBoard <- function(id,
       checkprobes_task$status(),
       {
         dbg(
-          "[observeEvent:checkprobes_task$result] task status = ",
+          "[UploadServer:observeEvent:checkprobes_task] task status = ",
           checkprobes_task$status()
         )
         if (checkprobes_task$status() == "error") {
@@ -1031,6 +1031,7 @@ UploadBoard <- function(id,
           return(NULL)
         }
         if (checkprobes_task$status() != "success") {
+          probetype("running")
           return(NULL)
         }
 
@@ -1038,33 +1039,33 @@ UploadBoard <- function(id,
         detected <- checkprobes_task$result()
         organism <- upload_organism()
         alt.text <- ""
-
+        
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
-        e1 <- is.null(detected$probetype[organism])
-        e2 <- is.na(detected$probetype[organism])
-        e3 <- !(organism %in% detected$species)
-        task_failed <- (e1 || e2 || e3)
+        e0 <- length(detected)==0
+        e1 <- is.null(detected[[organism]])
+        e2 <- all(is.na(detected[[organism]]))
+        e3 <- !(organism %in% names(detected))
+        task_failed <- (e0 || e1 || e2 || e3)
+        alt.text <- ""
+        detected_probetype <- NULL
         if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
-          alt.species <- paste(detected$species, collapse = " or ")
+          detected_species <- setdiff(names(detected),organism)
+          alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
-            alt.species <- paste0("<b>", alt.species, "</b>")
             # check if ANY organism matched the probes, if yes add a hint to the user
-            if (length(detected$species) >= 1) {
-              alt.text <- paste0("Are these perhaps ", alt.species, "?")
-            }
-            if (upload_datatype() == "metabolomics") {
-              # overwrite alt.text for metabolomics
-              alt.text <- paste0(c("ChEBI (recommended)", "HMDB", "PubChem", "KEGG", "METLIN"), collapse = ", ")
-              alt.text <- paste0("<b>", alt.text, "</b>")
-              alt.text <- paste0("Valid probes are: ", alt.text, ".")
-            }
+            alt.text <- c(alt.text, paste0("Are these perhaps <b>",
+              alt.species, "</b>?"))
+          }
+          if (upload_datatype() == "metabolomics") {
+            # overwrite alt.text for metabolomics
+            alt.text <- c(alt.text, paste0("Valid probes are: <b>ChEBI (recommended), HMDB, PubChem, or KEGG</b>"))
           }
         } else {
-          # handle probetype matching success: assign detected probetype to detected_probetype
-          detected_probetype <- detected$probetype[organism]
+          # handle success: assign detected probetype to detected_probetype
+          detected_probetype <- paste(detected[[organism]],collapse='+')
         }
 
         probetype(detected_probetype) ## set RV
@@ -1077,7 +1078,7 @@ UploadBoard <- function(id,
             text = paste0(
               "Error. Your probes do not match any probe type for <b>",
               organism, "</b>. Please check your probe names and select ",
-              "another organism. ", alt.text
+              "another organism. ", paste(alt.text,collapse=" ")
             ),
             type = "error",
             size = "s",
