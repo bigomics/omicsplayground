@@ -38,6 +38,7 @@ pgx <- playbase::pgx.createPGX(
   batch.correct = params$batch.correct,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
+  exclude.genes = params$exclude.genes,  
   only.known = params$only.known,
   only.proteincoding = params$only.proteincoding,
   only.hugo = params$only.hugo,
