@@ -108,7 +108,6 @@ upload_module_normalization_server <- function(
         prior <- imputedX()$prior
         if (input$normalize) {
           m <- input$normalization_method
-          dbg("[normalization_server:normalizedX] Normalizing data using ", m)
           ref <- NULL
           if (m == "reference") {
             ref <- input$ref_gene
@@ -118,7 +117,13 @@ upload_module_normalization_server <- function(
             ))
             shiny::req(ref)
           }
-          X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
+          if(upload_datatype() == "multi-omics") {
+            dbg("[normalization_server:normalizedX] normalizing MultOmics data using ", m)
+            X <- playbase::normalizeMultiOmics(X, method = m)
+          } else {
+            dbg("[normalization_server:normalizedX] normalizing data using ", m)
+            X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
+          }
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
@@ -753,7 +758,7 @@ upload_module_normalization_server <- function(
             inline = FALSE
           )
         )
-
+        
         navmenu <- tagList(
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
@@ -810,23 +815,20 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
-                    choices = if (grepl("proteomics|metabolomics", upload_datatype(), ignore.case = TRUE)) {
-                      c("median" = "maxMedian", "sum" = "maxSum", "quantile", "reference")
+                    choices = if(grepl("proteomics|metabolomics", upload_datatype(), ignore.case = TRUE)) {
+                      c("maxMedian", "maxSum", "quantile", "reference")
                     } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-                      c("median" = "maxMedian", "sum" = "maxSum", "quantile")
+                      c("median", "combat")
                     } else {
-                      c(
-                        "CPM",
-                        "CPM+quantile",
+                      c("CPM+quantile",
+                        "TMM", 
                         "quantile",
-                        "median" = "maxMedian",
-                        "sum" = "maxSum", ## "TMM",
+                        "maxMedian",
+                        "maxSum",
                         "reference"
                       )
                     },
-                    selected = ifelse(grepl("proteomics", upload_datatype(), ignore.case = TRUE),
-                      "maxMedian", "CPM+quantile"
-                    )
+                    selected = 1
                   ),
                   shiny::conditionalPanel(
                     "input.normalization_method == 'reference'",
@@ -840,7 +842,6 @@ upload_module_normalization_server <- function(
                       )
                     )
                   )
-                  ## shiny::checkboxInput(ns("quantile_norm"), "Add quantile normalization", value = TRUE)
                 ),
                 br()
               ),
