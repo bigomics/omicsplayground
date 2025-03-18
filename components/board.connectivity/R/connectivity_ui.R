@@ -113,6 +113,7 @@ ConnectivityUI <- function(id) {
         bs_alert("Compare the fold-change of similar signatures across different experiments."),
         bslib::layout_columns(
           col_widths = c(3, 9),
+          height = "calc(100vh - 180px)",
           connectivity_plot_connectivityMap_ui(
             ns("connectivityMap"),
             title = "Connectivity map",
