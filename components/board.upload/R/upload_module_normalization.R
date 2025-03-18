@@ -66,7 +66,7 @@ upload_module_normalization_server <- function(
           prior0 <- min(counts[counts > 0], na.rm = TRUE)  ## smallest non-zero value
         }
         ## prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
-        prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0) ## NEW        
+        prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW        
         X <- log2(counts + prior) ## NEED RETHINK
 
         nmissing <- sum(is.na(X))
@@ -122,7 +122,7 @@ upload_module_normalization_server <- function(
             X <- playbase::normalizeMultiOmics(X, method = m)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)
-            X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
+            X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
           }
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
@@ -231,16 +231,18 @@ upload_module_normalization_server <- function(
       ## return object
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
-
         X <- correctedX()$X
         prior <- imputedX()$prior
         if (1) {
+          ## WARNING: counts may still have NA. So downstream
+          ## DEseq2/EdgeR will fail in case of missing values.
           counts <- 2**X - prior
         } else {
           ## NEED RETHINK!! should we return the original not-corrected
           ## counts???? But EdgeR/Deseq2 need batch-corrected matrix??
           counts <- r_counts()[rownames(X), colnames(X)]
         }
+        counts <- pmax(counts, 0)  ## just to be sure
         counts
       })
 
