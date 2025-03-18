@@ -400,6 +400,16 @@ loading_table_datasets_server <- function(id,
         df_cap <- nrow(df)
       }
 
+      datasets_exceed_limits <- rep(FALSE, nrow(df))
+      if (!is.null(auth$options$MAX_GENES)) {
+        datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
+      }
+      if (!is.null(auth$options$MAX_SAMPLES)) {
+        datasets_exceed_limits <- datasets_exceed_limits | (df$nsamples > auth$options$MAX_SAMPLES)
+      }
+
+      selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
+      if (length(selectable_rows) == 0) selectable_rows <- NULL
 
       DT::datatable(
         df,
@@ -412,7 +422,7 @@ loading_table_datasets_server <- function(id,
         # ),
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1, selectable = 1:df_cap),
+        selection = list(mode = "single", target = "row", selected = if(length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
         fillContainer = TRUE,
         options = list(
           dom = "ft",
@@ -424,9 +434,10 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           rowCallback = DT::JS(
             "function(row, data, displayNum, index) {",
-            "  if(index >= ", df_cap, ") {", # Grey out all rows after the first two
+            "  var exceedLimits = ", jsonlite::toJSON(datasets_exceed_limits), ";",
+            "  if(index >= ", df_cap, " || exceedLimits[index]) {", # Grey out rows that exceed max datasets or size limits
             "    $(row).css('opacity', '0.5');",
-            "    $('td:first-child', row).css('pointer-events', 'none');", # Disable clicks on menu buttons after row 5
+            "    $('td:first-child', row).css('pointer-events', 'none');", # Disable clicks on menu buttons
             "    $('td:first-child button', row).prop('disabled', true);", # Disable the buttons themselves
             "  }",
             "}"
