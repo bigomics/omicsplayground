@@ -201,7 +201,6 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       
       progress$inc( 0.33, detail = "Calculating variable importance. Please wait...")
       if(pgx$datatype == "multi-omics") {
-
         res <- playbase::pgx.compute_importance(
           pgx,
           pheno = ph,
@@ -214,7 +213,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
       } else {
         res <- playbase::pgx.compute_importance(
           pgx,
-          contrast = ph,
+          pheno = ph,
           level="genes",
           filter_features = ft,
           select_features = sel,
