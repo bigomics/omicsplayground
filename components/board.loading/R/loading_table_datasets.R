@@ -28,7 +28,7 @@ loading_table_datasets_ui <- function(
       options = options
     ),
     div(
-      id = "load-action-buttons",
+      class = "load-action-buttons",
       # this button is needed to trigger download but should be hidden
       shiny::downloadLink(
         ns("download_pgx_btn"),
