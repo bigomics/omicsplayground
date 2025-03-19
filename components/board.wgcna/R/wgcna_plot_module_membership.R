@@ -13,16 +13,16 @@ wgcna_plot_module_membership_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  eigenCorrelation_opts <- shiny::tagList(
-    shiny::checkboxInput(ns("eigen_cov"), "covariance", FALSE)
+  opts <- shiny::tagList(
+    shiny::checkboxInput(ns("show_cov"), "covariance", FALSE)
   )
-
+  
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
     info.text = info.text,
-    options = eigenCorrelation_opts,
+    options = opts,
     caption = caption,
     height = height,
     width = width,
@@ -39,12 +39,13 @@ wgcna_plot_module_membership_server <- function(id,
     render_plot <- function(ntop=30) {
       res <- wgcna()
       module <- selected_module()
-
+      shiny::req(!is.null(module) & module!='')
+      
       rho <- res$stats[['moduleMembership']][,module]
       rho[is.na(rho) | is.infinite(rho)] <- 0
       
       ylab0 <- "Eigengene correlation (rho)"
-      if (input$eigen_cov) {
+      if (input$show_cov) {
         sdx <- apply(res$datExpr, 2, sd, na.rm = TRUE)
         rho <- (rho * sdx**2)
         ylab0 <- "Eigengene covariance (cov)"

@@ -208,7 +208,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
 
     # Module membership (eigengene correlation)
     wgcna_plot_module_membership_server(
-      "eigenCorrelation",
+      "modulemembership",
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),      
       watermark = WATERMARK
@@ -223,7 +223,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
 
     # Membership vs. trait correlation
     wgcna_plot_membership_v_trait_server(
-      "intraScatter",
+      "memberTrait",
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),
       selected_trait = shiny::reactive(input$selected_trait),      
@@ -237,11 +237,11 @@ WgcnaBoard <- function(id, pgx, board_observers) {
       watermark = WATERMARK
     )
 
-    wgcna_plot_MMvsGS_server(
-      "geneSignificance",
-      wgcna.compute = wgcna,
-      watermark = WATERMARK
-    )
+    ## wgcna_plot_MMvsGS_server(
+    ##   "geneSignificance",
+    ##   wgcna.compute = wgcna,
+    ##   watermark = WATERMARK
+    ## )
 
     wgcna_plot_sampledendrogram_server(
       "sampleDendrogram",

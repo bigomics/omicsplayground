@@ -230,7 +230,7 @@ WgcnaUI <- function(id) {
             ),
 
             wgcna_plot_module_membership_ui(
-              ns("eigenCorrelation"),
+              ns("modulemembership"),
               title = "(c) Module membership",
               info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
               caption = "For each module, we also define
@@ -241,7 +241,7 @@ WgcnaUI <- function(id) {
             ),
 
             wgcna_plot_membership_v_trait_ui(
-              ns("intraScatter"),
+              ns("memberTrait"),
               title = "(d) Gene significance",
               info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
               caption = "We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.",

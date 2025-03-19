@@ -41,10 +41,12 @@ wgcna_table_genes_server <- function(id,
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()      
+
       shiny::req(pgx$genes)
       shiny::req(res)
       shiny::req(module,trait)
-      
+      shiny::req(module!="" && trait!="")
+        
       df <- playbase::wgcna.getGeneStats(
         res, module=module, trait=trait, plot=FALSE) 
       symbol <- pgx$genes[rownames(df),"symbol"]
@@ -59,6 +61,7 @@ wgcna_table_genes_server <- function(id,
       numeric.cols <- grep("^module$|symbol|feature", colnames(df), invert=TRUE)
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
       colnames(df) <- sub("traitSignificance","TS",colnames(df))
+      colnames(df) <- sub("foldChange","logFC",colnames(df))
       
       DT::datatable(
         df,
