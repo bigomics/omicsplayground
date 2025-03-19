@@ -61,7 +61,7 @@ pcsf_table_centrality_server <- function(id,
       }
       
       num.cols <- match(c("centrality", "logFC"), colnames(df))
-
+      
       dt <- DT::datatable(df,
         rownames = FALSE,
         extensions = c("Scroller"),
@@ -75,7 +75,8 @@ pcsf_table_centrality_server <- function(id,
           scrollResize = TRUE,
           scrollY = 100,
           scroller = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs =  NULL
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

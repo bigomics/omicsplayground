@@ -31,6 +31,7 @@ wgcna_table_genes_ui <- function(
 
 wgcna_table_genes_server <- function(id,
                                      wgcna,
+                                     pgx,
                                      selected_module,
                                      selected_trait
                                      ) {
@@ -40,20 +41,28 @@ wgcna_table_genes_server <- function(id,
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()      
+      shiny::req(pgx$genes)
+      shiny::req(res)
+      shiny::req(module,trait)
       
       df <- playbase::wgcna.getGeneStats(
         res, module=module, trait=trait, plot=FALSE) 
+      symbol <- pgx$genes[rownames(df),"symbol"]
+      feature <- rownames(df)
+      df <- cbind( feature=feature, symbol=symbol, df)
+      
       if(input$showpvalues==FALSE) {
-        df <- df[, grep("Pvalue", colnames(df), invert=TRUE), drop=FALSE]
+        df <- df[, grep("pvalue", colnames(df), invert=TRUE, ignore.case=TRUE), drop=FALSE]
       }
       ## only those in module
-      df <- df[ which(df$module == module), , drop=FALSE ]
+      df <- df[ which(df$module == module), , drop=FALSE ]      
+      numeric.cols <- grep("^module$|symbol|feature", colnames(df), invert=TRUE)
+      colnames(df) <- sub("moduleMembership","MM",colnames(df))
+      colnames(df) <- sub("traitSignificance","TS",colnames(df))
       
-      numeric.cols <- grep("^module$", colnames(df), invert=TRUE)
-
       DT::datatable(
         df,
-        rownames = TRUE,
+        rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
         plugins = "scrollResize",

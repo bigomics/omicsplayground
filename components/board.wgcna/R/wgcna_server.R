@@ -181,6 +181,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     wgcna_table_genes_server(
       "geneTable",
       wgcna = wgcna,
+      pgx = pgx,
       selected_module = shiny::reactive(input$selected_module),
       selected_trait = shiny::reactive(input$selected_trait)      
     )
