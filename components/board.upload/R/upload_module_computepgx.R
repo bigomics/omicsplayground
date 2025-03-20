@@ -257,7 +257,7 @@ upload_module_computepgx_server <- function(
                     ns("exclude_void"),
                     shiny::span( "Exclude void features:",
                       inline_info_button(
-                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name.")),
+                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored.")),
                     FALSE)
                 ),
                 conditionalPanel(
