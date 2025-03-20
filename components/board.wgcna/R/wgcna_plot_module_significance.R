@@ -43,7 +43,7 @@ wgcna_plot_module_significance_server <- function(id,
               ylab = "Trait correlation (rho)",
               main = "",
               width=1, las=3, names.arg='')
-      dy <- 0.03*diff(range(rho))
+      dy <- 0.04*diff(range(rho))
       text(x = (-0.33 + 1:length(rho))*1.2,
            y = par("usr")[3] - dy,
            labels = names(rho),

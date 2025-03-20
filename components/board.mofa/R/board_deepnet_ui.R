@@ -78,6 +78,7 @@ DeepNetUI <- function(id) {
               xl = c(12, 12),              
               sm = c(12, 12)
             ),
+            height = "calc(100vh - 180px)",
             bslib::layout_columns(
               col_widths = bslib::breakpoints(
                 xxxl = c(12, 6, 6),

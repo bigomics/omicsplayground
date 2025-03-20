@@ -343,3 +343,20 @@ CardUI <- function(...,
     )
   ) ## end of card
 }
+
+#' Truncate row to display. Must be placed as list in columnDefs list
+#' under options of DT::datatable function.
+#'
+#' @param target  Target column
+#' @param length  Maximum string length
+#' 
+trunc_display_row <- function(target, length) {
+  list(
+    targets = target, ## with no rownames column 1 is column 2
+    render = DT::JS(paste0(
+      "function(data, type, row, meta) {",
+      "return type === 'display' && data.length > ",length," ?",
+      "'<span title=\"' + data + '\">' + data.substr(0, ",length,
+      ") + '...</span>' : data;}"))
+  )
+}

@@ -66,66 +66,71 @@ WgcnaUI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Module detection.</b> <b>(a)</b> Modules are detected using the dynamic branch cutting approach. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Dimensionality reduction map of features colored by module. <b>(e)</b> Size of WGCNA modules.")),
           bslib::layout_columns(
-            col_widths = c(6, 6),
-            height = "35%",
-            wgcna_plot_gdendogram_ui(
-              ns("geneDendro"),
-              label = "a",
-              title = "(a) Gene dendrogram and modules",
-              caption = "WGCNA gene dendrogram and modules",
-              info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
-              info.methods = "",
-              info.references = WGCNA_REFS,
-              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            col_widths = 12,
+            height = "calc(100vh - 181px)",
+            row_heights = c(1, 1),
+            bslib::layout_columns(
+              col_widths = c(6, 6),
+              height = "35%",
+              wgcna_plot_gdendogram_ui(
+                ns("geneDendro"),
+                label = "a",
+                title = "(a) Gene dendrogram and modules",
+                caption = "WGCNA gene dendrogram and modules",
+                info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
+                info.methods = "",
+                info.references = WGCNA_REFS,
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_plot_s_independence_ui(
+                ns("topologyPlots"),
+                title = "(b) Scale independence and mean connectivity",
+                info.text = "Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis). WGCNA requires a user-defined soft-threshold (or 'power') based on visually observing the above graph; specifically, the scale-freeness. Combined with the negative slope indicated in the mean connectivity graph, we can assume that we have a scale-free network as required by WGCNA.",
+                info.methods = "The power was automatically selected using the `pickSoftThreshold()` function with a maximum of power=20. Users can override this default by choosing the power manually on the right. The threshold suggested by the WGCNA authors is the minimum power that reaches a R² threshold of 0.80-0.95.",
+                info.references = WGCNA_REFS,
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
             ),
-            wgcna_plot_s_independence_ui(
-              ns("topologyPlots"),
-              title = "(b) Scale independence and mean connectivity",
-              info.text = "Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis). WGCNA requires a user-defined soft-threshold (or 'power') based on visually observing the above graph; specifically, the scale-freeness. Combined with the negative slope indicated in the mean connectivity graph, we can assume that we have a scale-free network as required by WGCNA.",
-              info.methods = "The power was automatically selected using the `pickSoftThreshold()` function with a maximum of power=20. Users can override this default by choosing the power manually on the right. The threshold suggested by the WGCNA authors is the minimum power that reaches a R² threshold of 0.80-0.95.",
-              info.references = WGCNA_REFS,
-              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          ),
-          bslib::layout_columns(
-            col_widths = c(4, 4, 4),
-            height = "65%",
-            wgcna_plot_TOMheatmap_ui(
-              ns("TOMplot"),
-              title = "(c) TOM heatmap",
-              caption = "Topological Overlap Matrix (TOM) visualized as heatmap.",
-              label = "c",
-              info.text = "The adjacency matrix is transformed in a Topological Overlapping Matrix (TOM) considering the number of neighbors the genes share. From this matrix, a dissimilarity matrix is computed and used to determine the gene modules after dynamic branch cutting.",
-              info.methods = "The adjacency matrix is computed as correlation of the standardized expression matrix. The TOM matrix is computed as described in [1]. The heatmap is plotted from a power elevated matrix TOM^7 to accentuate the clusters. ",
-              info.references = WGCNA_REFS,
-              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            wgcna_plot_gclustering_ui(
-              ns("umap"),
-              title = "(d) Feature UMAP",
-              caption = "UMAP dimensional reduction of features colored by WGCNA module.",
-              info.text = "UMAP dimensional reduction of features colored by WGCNA module. The MDS plot shows the separation of modules and their member genes.",
-              info.methods = "UMAP was performed on the non-scaled centered expression matrix. MDS analysis was performed by computing the first two principal components of the covariance matrix.",
-              info.references = WGCNA_REFS,
-              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            wgcna_plot_module_barplot_ui(
-              ns("moduleSize"),
-              title = "(e) Module size",
-              caption = "Size of modules by number of genes.",
-              info.text = "The plot shows the size (number of genes) of each module. The grey module represents genes that show weak correlation and were not assigned to any primary group.",
-              info.methods = "The module size is computed as the number of genes within each module.",
-              info.references = WGCNA_REFS,
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            bslib::layout_columns(
+              col_widths = c(4, 4, 4),
+              height = "65%",
+              wgcna_plot_TOMheatmap_ui(
+                ns("TOMplot"),
+                title = "(c) TOM heatmap",
+                caption = "Topological Overlap Matrix (TOM) visualized as heatmap.",
+                label = "c",
+                info.text = "The adjacency matrix is transformed in a Topological Overlapping Matrix (TOM) considering the number of neighbors the genes share. From this matrix, a dissimilarity matrix is computed and used to determine the gene modules after dynamic branch cutting.",
+                info.methods = "The adjacency matrix is computed as correlation of the standardized expression matrix. The TOM matrix is computed as described in [1]. The heatmap is plotted from a power elevated matrix TOM^7 to accentuate the clusters. ",
+                info.references = WGCNA_REFS,
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_plot_gclustering_ui(
+                ns("umap"),
+                title = "(d) Feature UMAP",
+                caption = "UMAP dimensional reduction of features colored by WGCNA module.",
+                info.text = "UMAP dimensional reduction of features colored by WGCNA module. The MDS plot shows the separation of modules and their member genes.",
+                info.methods = "UMAP was performed on the non-scaled centered expression matrix. MDS analysis was performed by computing the first two principal components of the covariance matrix.",
+                info.references = WGCNA_REFS,
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/modules/mod9_CellProfiling/#wgcna",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_plot_module_barplot_ui(
+                ns("moduleSize"),
+                title = "(e) Module size",
+                caption = "Size of modules by number of genes.",
+                info.text = "The plot shows the size (number of genes) of each module. The grey module represents genes that show weak correlation and were not assigned to any primary group.",
+                info.methods = "The module size is computed as the number of genes within each module.",
+                info.references = WGCNA_REFS,
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
             )
           )
         )
@@ -201,6 +206,7 @@ WgcnaUI <- function(id) {
           bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Circle network of top hub genes. </b> <b>(c)</b> Module membership (MM) with the module eigengene. <b>(d)</b> Measures of significance: module membership (MM), gene trait significance (GS), foldChange and network centrality. <b>(e)</b> Importance score to identify 'driver genes' of the module.")),
           bslib::layout_columns(
             col_widths = c(4,4,4,5,7),
+            height = "calc(100vh - 181px)",
             wgcna_plot_module_significance_ui(
               ns("moduleSignificance"),
               title = "(a) Trait correlation",
@@ -224,7 +230,7 @@ WgcnaUI <- function(id) {
             ),
 
             wgcna_plot_module_membership_ui(
-              ns("eigenCorrelation"),
+              ns("modulemembership"),
               title = "(c) Module membership",
               info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
               caption = "For each module, we also define
@@ -235,7 +241,7 @@ WgcnaUI <- function(id) {
             ),
 
             wgcna_plot_membership_v_trait_ui(
-              ns("intraScatter"),
+              ns("memberTrait"),
               title = "(d) Gene significance",
               info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
               caption = "We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.",

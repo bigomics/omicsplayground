@@ -163,25 +163,30 @@ SignatureUI <- function(id) {
       "Overlap/similarity",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 181px)",
+        height = "calc(100vh - 180px)",
         bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),
-        signature_plot_overlap_ui(
-          ns("overlapScorePlot"),
-          title = "Signature overlap scores",
-          info.text = "Barplot of the overlap scores for the loaded data against multiple public genesets databases. The plot displays by default the top 60 overlap scores, it can be changed using the {Number of features} plot setting, also the feature names can be toggled with the {Show feature names} plto setting.",
-          info.methods = "The overlap score of the gene set combines the odds ratio and significance (q-value) of the Fisher's test.",
-          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
-          caption = "The plot shows the gene sets most correlated with the test signature.",
-          width = c("auto", "100%"),
-          height = c("40%", TABLE_HEIGHT_MODAL)
-        ),
-        signature_table_overlap_ui(
-          ns("overlapTable"),
-          title = "Overlap with other signatures",
-          info.text = "Under the Overlap/similarity tab, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
-          caption = "The table indicates the gene sets available in the platform that are most correlated with the tested signature.",
-          height = c("60%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c(1, 1),
+          signature_plot_overlap_ui(
+            ns("overlapScorePlot"),
+            title = "Signature overlap scores",
+            info.text = "Barplot of the overlap scores for the loaded data against multiple public genesets databases. The plot displays by default the top 60 overlap scores, it can be changed using the {Number of features} plot setting, also the feature names can be toggled with the {Show feature names} plto setting.",
+            info.methods = "The overlap score of the gene set combines the odds ratio and significance (q-value) of the Fisher's test.",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
+            caption = "The plot shows the gene sets most correlated with the test signature.",
+            width = c("auto", "100%"),
+            height = c("40%", TABLE_HEIGHT_MODAL)
+          ),
+          signature_table_overlap_ui(
+            ns("overlapTable"),
+            title = "Overlap with other signatures",
+            info.text = "Under the Overlap/similarity tab, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
+            caption = "The table indicates the gene sets available in the platform that are most correlated with the tested signature.",
+            height = c("60%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
         )
       )
     ),
