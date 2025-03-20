@@ -260,9 +260,10 @@ dataview_plot_expression_server <- function(id,
           } else if (input$bars_order == "descending") {
             data$group <- reorder(data$group, -data$mean)
             df$group <- reorder(df$group, -df$x)
-          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic)) {
-            data$group <- factor(data$group, levels = input$rank_list_basic)
-            df$group <- factor(df$group, levels = input$rank_list_basic)
+          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) && 
+                    all(input$rank_list_basic %in% unique(data$group))) {
+            data$group <- factor(data$group, levels = valid_ranks)
+            df$group <- factor(df$group, levels = valid_ranks) 
           }
         }
 
@@ -326,7 +327,8 @@ dataview_plot_expression_server <- function(id,
             df <- df[order(df$x), ]
           } else if (input$bars_order == "descending") {
             df <- df[order(-df$x), ]
-          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) && 
+                    all(input$rank_list_basic %in% unique(df$samples))) {
             df$samples <- factor(df$samples, levels = input$rank_list_basic)
             df <- df[order(df$samples), ]
           }
