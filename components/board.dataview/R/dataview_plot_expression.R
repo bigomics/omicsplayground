@@ -213,18 +213,20 @@ dataview_plot_expression_server <- function(id,
       if (pd$groupby != "<ungrouped>") {
         sortable::bucket_list(
           header = NULL,
+          class = "default-sortable custom-sortable",
           sortable::add_rank_list(
-            input_id = "dataview-expressionplot-rank_list_basic",
-            text = "Drag the items in any desired order",
+            input_id = session$ns("rank_list_basic"),
+            text = NULL,
             labels = unique(pd[["df"]]$group),
           )
         )
       } else {
         sortable::bucket_list(
           header = NULL,
+          class = "default-sortable custom-sortable",
           sortable::add_rank_list(
             input_id = session$ns("rank_list_basic"),
-            text = "Drag the items in any desired order",
+            text = NULL,
             labels = unique(pd[["df"]]$samples),
           )
         )
