@@ -15,6 +15,7 @@ upload_module_computepgx_server <- function(
     impX,
     norm_method,
     samplesRT,
+    azimuth_ref,
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -25,6 +26,8 @@ upload_module_computepgx_server <- function(
     alertready = TRUE,
     height = 720,
     compute_settings,
+    sc_compute_settings,
+    recompute_info,
     inactivityCounter,
     upload_wizard,
     upload_name,
@@ -41,7 +44,6 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-
       ## NOTE (IK): these eventReactive can better go directly inside
       ## output$UI which is already reactive. Less reactives is good.
 
@@ -49,11 +51,11 @@ upload_module_computepgx_server <- function(
       GENETEST.METHODS <- function() {
         if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
           mm <- c(
-            "ttest", "ttest.welch", "voom.limma", "trend.limma", 
+            "ttest", "ttest.welch", "wilcoxon.ranksum", "voom.limma", "trend.limma", 
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
         } else {
-          mm <- c("ttest", "ttest.welch", "trend.limma")
+          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
         }
         ##mm <- sort(mm)
         if (opt$ALLOW_CUSTOM_FC) {
@@ -65,6 +67,8 @@ upload_module_computepgx_server <- function(
       GENETEST.SELECTED <- function() {
         if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
@@ -98,13 +102,16 @@ upload_module_computepgx_server <- function(
       EXTRA.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drug connectivity"="drugs", "wordcloud",
+                  "experiment similarity"="connectivity", "WGCNA"="wgcna")
         } else {
           mm <- c("celltype deconvolution"="deconv", "drug connectivity"="drugs",
                   "wordcloud", "experiment similarity"="connectivity", "WGCNA"="wgcna")
         }
         return(mm)
       }
-      
+
       EXTRA.SELECTED <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
@@ -113,7 +120,28 @@ upload_module_computepgx_server <- function(
         }
         return(mm)
       }
-      
+
+      ## EXTRA.NAMES <- shiny::eventReactive(
+      ## {
+      ##   upload_datatype()
+      ## },
+      ## {
+      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+      ##     mm <- c("drugs connectivity", "wordcloud", "experiment similarity", "WGCNA")
+      ##   } else {
+      ##     mm <- c("celltype deconvolution", "drugs connectivity", "wordcloud",
+      ##       "experiment similarity", "WGCNA")
+      ##   }
+      ##   return(mm)
+      ## }
+      ## )
+      ##EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+      ##EXTRA.NAMES <- c(
+      ##  "celltype deconvolution", "drugs connectivity",
+      ##  "wordcloud", "experiment similarity", "WGCNA"
+      ##)
+      ##EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+             
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
       if(opt$ALLOW_CUSTOM_FC) {
         ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
@@ -270,7 +298,36 @@ upload_module_computepgx_server <- function(
                       "LOC ORF RIK")
                   )
                 )
-              ),
+              ),              
+              if (upload_datatype() == "scRNA-seq") {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("compute_supercells"),
+                    shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Supercells</h4>
+                      <a href='https://cran.r-project.org/web/packages/SuperCell/index.html' target='_blank' class='info-link' style='margin-left: 15px;'>
+                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>
+                    </div>
+                    "),
+                    choices = c("Compute supercells"),
+                    selected = NULL
+                  ),
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Supercells always computed if >10K cells.</small>"),
+                  shiny::checkboxGroupInput(
+                    ns("regress_covariates"),
+                    shiny::HTML("<h4>Remove heterogeneity related to:</h4>"),
+                    choices = c(
+                      "Mitochondrial contamination",
+                      "Haemoglobin (blood) contamination",
+                      "Ribosomal expression",
+                      "Cell cycle scores"
+                    ),
+                    selected = NULL
+                  )
+                )
+              },
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
@@ -302,6 +359,14 @@ upload_module_computepgx_server <- function(
                     "<h4>Enrichment methods:</h4>",
                     "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
                   ),
+#                  shiny::HTML("
+#                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+#                      <h4>Enrichment methods:</h4>
+#                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
+#                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+#                      </a>
+#                    </div>
+#                  "),
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
@@ -415,7 +480,6 @@ upload_module_computepgx_server <- function(
         shiny::updateTextInput(session, "selected_name", value = "")
         shiny::updateTextAreaInput(session, "selected_description", value = "")
       })
-
 
       # change upload_name to selected_name
       observeEvent(input$selected_name, {
@@ -561,7 +625,6 @@ upload_module_computepgx_server <- function(
           gmt <- gmt[!duplicated(names(gmt))]
           gset_size <- sapply(gmt, length)
           gmt <- gmt[gset_size >= 3] ## how many?
-
 
           # an additional check to verify that items in lists are
           # genes
@@ -719,9 +782,7 @@ upload_module_computepgx_server <- function(
         
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
-        if (is.null(raw_dir())) {
-          raw_dir(create_raw_dir(auth))
-        }
+        if (is.null(raw_dir())) { raw_dir(create_raw_dir(auth)) }
 
         dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
@@ -729,6 +790,43 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
+        ##-----------------------------------------------
+        ## Params for scRNA-seq
+        do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
+
+        nfeature_threshold <- sc_compute_settings()$nfeature_threshold
+        if (!any(nfeature_threshold)) nfeature_threshold = FALSE
+
+        mt_threshold <- sc_compute_settings()$mt_threshold
+        if (!any(mt_threshold)) mt_threshold = FALSE
+
+        hb_threshold <- sc_compute_settings()$hb_threshold
+        if (!any(hb_threshold)) hb_threshold = FALSE
+
+        sc.covs <- as.character(input$regress_covariates)
+
+        ##-------------Take a look again. Works??
+        sc_compute_settings <- list(
+          ##azimuth_ref <- to add
+          ##nfeature_threshold = sc_compute_settings()$nfeature_threshold,
+          nfeature_threshold = nfeature_threshold,
+          mt_threshold = mt_threshold,
+          hb_threshold = hb_threshold,
+          compute_supercells = ifelse(any(do.supercells), TRUE, FALSE),
+          regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
+          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
+          regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
+          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+        )
+        ##---------------------------
+        #dbg("--------------MNT1: nfeature_threshold=", sc_compute_settings$nfeature_threshold)
+        #dbg("--------------MNT2: mt_threshold=", sc_compute_settings$mt_threshold)
+        #dbg("--------------MNT3: hb_threshold=", sc_compute_settings$hb_threshold)
+        #dbg("--------------MNT4: compute_supercells=", sc_compute_settings$compute_supercells)
+        #dbg("--------------MNT5: regress_mt=", sc_compute_settings$regress_mt)
+        #dbg("--------------MNT6: regress_hb=", sc_compute_settings$regress_hb)
+        ##---------------------------
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -736,6 +834,7 @@ upload_module_computepgx_server <- function(
           counts = counts,
           countsX = countsX,
           impX = impX,
+          azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
           # Extra tables
@@ -753,6 +852,7 @@ upload_module_computepgx_server <- function(
             norm_method = norm_method(),
             custom_fc = custom_fc
           ),
+          sc_compute_settings = sc_compute_settings,
           ## normalize = do.normalization,
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
@@ -788,7 +888,7 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
-
+        
         # Remove global variables
         try(rm(annot_table))
         try(rm(custom_geneset))
@@ -912,7 +1012,6 @@ upload_module_computepgx_server <- function(
                 user_email = auth$email,
                 pgx_path   = raw_dir
               )
-
 
               # if auth$email is empty, then the user is not logged in
               if (auth$email == "") {

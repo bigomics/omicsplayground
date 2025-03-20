@@ -124,7 +124,6 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     ## ================================================================================
 
     # Gene dendrogram and gene modules
-
     wgcna_plot_gdendogram_server(
       "geneDendro",
       wgcna.compute = wgcna,
@@ -132,7 +131,6 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     )
 
     # Scale independence and mean connectivity
-
     wgcna_plot_s_independence_server(
       "topologyPlots",
       wgcna.compute = wgcna,
@@ -140,7 +138,6 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     )
 
     # TOM heatmap
-    
     wgcna_plot_TOMheatmap_server(
       "TOMplot",
       wgcna.compute = wgcna,
@@ -175,7 +172,6 @@ WgcnaBoard <- function(id, pgx, board_observers) {
       selected_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
-
 
     # Module genes
     wgcna_table_genes_server(

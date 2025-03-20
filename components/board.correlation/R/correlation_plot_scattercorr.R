@@ -115,7 +115,6 @@ correlation_plot_scattercorr_server <- function(id,
         colorby = colorby,
         COL = COL
       )
-
       return(dt)
     })
 
@@ -218,7 +217,10 @@ correlation_plot_scattercorr_server <- function(id,
             yanchor = "bottom",
             x = min(x),
             y = title_loc
-          ) %>% playbase::plotly_build_light(.)
+          )
+        if (pgx$datatype != "scRNAseq") {
+          plt %>% playbase::plotly_build_light(.)
+        }
         sub_plots[[i]] <- plt
       }
 

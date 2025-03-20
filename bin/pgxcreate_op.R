@@ -30,6 +30,8 @@ pgx <- playbase::pgx.createPGX(
   norm_method = params$norm_method,
   samples = params$samples,
   contrasts = params$contrasts,
+  azimuth_ref = params$azimuth_ref, ## NEW AZ
+  ## sc_pheno = params$sc_pheno, ## NEW AZ
   name = params$name,
   datatype = params$datatype,
   probe_type = params$probe_type,
@@ -47,6 +49,7 @@ pgx <- playbase::pgx.createPGX(
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
   settings = params$settings
+  sc_compute_settings = params$sc_compute_settings ## NEW AZ
 )
 
 message("[create PGX process] : PGX created successfully")
