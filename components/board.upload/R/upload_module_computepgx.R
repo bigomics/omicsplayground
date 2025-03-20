@@ -49,28 +49,25 @@ upload_module_computepgx_server <- function(
 
       ## statistical method for GENE level testing
       GENETEST.METHODS <- function() {
-        if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
+        if (upload_datatype() != "RNA-seq") {
+          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
+        } else {
           mm <- c(
-            "ttest", "ttest.welch", "wilcoxon.ranksum", "voom.limma", "trend.limma", 
+            "ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma", "voom.limma", 
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
-        } else {
-          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
         }
-        ##mm <- sort(mm)
         if (opt$ALLOW_CUSTOM_FC) {
           mm <- c(mm, "custom")
         }
         return(mm)
       }
-
+      
       GENETEST.SELECTED <- function() {
-        if (grepl("rna-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+        if (upload_datatype() != "RNA-seq") {
           mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
-        } else {
-          mm <- c("ttest", "ttest.welch", "trend.limma")
+        } else  {
+          mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
         }
         return(mm)
       }
@@ -317,10 +314,10 @@ upload_module_computepgx_server <- function(
                   shiny::HTML("<small style='margin-top: -20px; display: block;'>Supercells always computed if >10K cells.</small>"),
                   shiny::checkboxGroupInput(
                     ns("regress_covariates"),
-                    shiny::HTML("<h4>Remove heterogeneity related to:</h4>"),
+                    shiny::HTML("<h4>Remove effects of:</h4>"),
                     choices = c(
                       "Mitochondrial contamination",
-                      "Haemoglobin (blood) contamination",
+                      "Blood contamination",
                       "Ribosomal expression",
                       "Cell cycle scores"
                     ),
@@ -559,8 +556,6 @@ upload_module_computepgx_server <- function(
 
       shiny::observeEvent(contrastsRT(), {
 
-        ## shiny::req(upload_wizard() == "wizard_finished")
-        
         contrasts <- as.data.frame(contrastsRT())
         has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
         if (any(has_one)) {
