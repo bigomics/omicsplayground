@@ -95,10 +95,6 @@ UploadBoard <- function(id,
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
-      #      all_species <- sort(unique(c(all_species, "Plasmodium falciparum")))
-      #      all_species <- all_species[grep("Homo sapiens|Mus musculus|Rattus norvegicus",
-      #        all_species, invert = TRUE )]
-      #      all_species <- c("Human", "Mouse", "Rat", "No organism", all_species)
       if (!auth$options$ENABLE_ANNOT) {
         all_species <- setdiff(all_species, "No organism")
       }
@@ -122,7 +118,6 @@ UploadBoard <- function(id,
       },
       ignoreNULL = TRUE
     )
-
 
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
@@ -498,19 +493,6 @@ UploadBoard <- function(id,
       }
     )
 
-    ## output$probe_type_ui <- shiny::renderUI({
-    ##   if (input$selected_datatype == "metabolomics") {
-    ##     div(
-    ##       p("Probe type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
-    ##       shiny::selectInput(
-    ##         ns("selected_probe"),
-    ##         label = NULL,
-    ##         choices = c("HMDB", "ChEBI", "KEGG", "PubChem", "METLIN")
-    ##       )
-    ##     )
-    ##   }
-    ## })
-
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
       counts_ui <- wizardR::wizard_step(
@@ -527,7 +509,7 @@ UploadBoard <- function(id,
         step_id = "step_samples",
         server = TRUE,
         upload_table_preview_samples_ui(
-          ns("samples_preview")
+            ns("samples_preview")
         )
       )
 
@@ -538,6 +520,14 @@ UploadBoard <- function(id,
         upload_table_preview_contrasts_ui(
           ns("contrasts_preview")
         )
+      )
+
+      ## AZ: could simply use normalization_panel?
+      sc_normalization_panel <- wizardR::wizard_step(
+        step_title = "Step 4: QC/BC",
+        step_id = "step_qc",
+        server = TRUE,
+        upload_module_normalizationSC_ui(ns("checkqc_sc"))  ## ns clash??
       )
 
       normalization_panel <- wizardR::wizard_step(
@@ -565,12 +555,9 @@ UploadBoard <- function(id,
           counts_ui,
           samples_ui,
           contrasts_ui,
-          ## sc_normalization_panel,
+          sc_normalization_panel,
           compute_panel,
-          options = list(
-            navigation = "buttons",
-            finish = "Compute!"
-          )
+          options = list(navigation = "buttons", finish = "Compute!")
         )
       } else {
         wizard <- wizardR::wizard(
@@ -977,6 +964,12 @@ UploadBoard <- function(id,
               ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
+              #              recompute_info(
+              #                list(
+              #                  "name" = pgx$name,
+              #                  "description" = pgx$description
+              #                )
+              #              )
             }
           } else {
             shinyalert::shinyalert(
@@ -1188,7 +1181,7 @@ UploadBoard <- function(id,
       selected_contrast_input = selected_contrast_input,
       upload_wizard = shiny::reactive(input$upload_wizard)
     )
-
+    
     normalized <- upload_module_normalization_server(
       id = "checkqc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1198,7 +1191,17 @@ UploadBoard <- function(id,
       is.count = TRUE,
       height = height
     )
-
+    
+    sc_normalized <- upload_module_normalizationSC_server(
+      id = "checkqc_sc",
+      r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
+      r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
+      r_contrasts = modified_ct,
+      upload_datatype = upload_datatype,
+      is.count = TRUE,
+      height = height
+    )
+    
     ## correctedX <- upload_module_batchcorrect_server(
     ##   id = "batchcorrect",
     ##   r_X = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1207,50 +1210,48 @@ UploadBoard <- function(id,
     ##   r_results = modified_ct,
     ##   is.count = TRUE
     ## )
-
+    
     ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
-
+    sc_compute_settings <- reactiveValues()
+    
     observe({
       if (input$selected_datatype == "scRNA-seq") {
-        counts <- checked_samples_counts()$COUNTS
-        if (is.null(dim(counts))) {
-          return(NULL)
-        }
-        logX <- playbase::logCPM(counts, 1, total = 1e5)
-        impX <- NULL
-        if (any(missing(counts))) {
-          impX <- imputeSVD2(logX)
-        }
-        compute_input$counts <- counts
-        compute_input$X <- logX
-        compute_input$impX <- impX
-        ## compute_input$counts <- normalized_sc$counts()
-        ## compute_input$X <- normalized_sc$X()
-        ## compute_input$impX <- normalized_sc$impX()
-        compute_input$norm_method <- "CPM"
+        compute_input$counts <- sc_normalized$counts()
+        compute_input$X <- sc_normalized$X()
+        compute_input$impX <- NULL
+        compute_input$norm_method <- sc_normalized$norm_method()
+        compute_input$samples <- sc_normalized$samples()
+        compute_input$azimuth_ref <- sc_normalized$azimuth_ref()
+        sc_compute_settings$nfeature_threshold <- sc_normalized$nfeature_threshold()
+        sc_compute_settings$mt_threshold <- sc_normalized$mt_threshold()
+        sc_compute_settings$hb_threshold <- sc_normalized$hb_threshold()
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
         compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
-
         compute_settings$imputation_method <- normalized$imputation_method()
         compute_settings$bc_method <- normalized$bc_method()
         compute_settings$remove_outliers <- normalized$remove_outliers()
+        compute_input$samples <- checked_samples_counts()$SAMPLES
       }
     })
-
+    
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
-      countsRT = reactive(compute_input$counts),
-      countsX = reactive(compute_input$X),
-      impX = reactive(compute_input$impX),
+      countsRT = shiny::reactive(compute_input$counts),
+      countsX = shiny::reactive(compute_input$X),
+      impX = shiny::reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
       #      imputation_method = shiny::reactive(compute_input$imputation_method),
       #      bc_method = shiny::reactive(compute_input$bc_method),
       #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
-      samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
+      #samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
+      #samplesRT = shiny::reactive(compute_input$samples), scRNA-seq disabled at merging.
+      samplesRT = shiny::reactive(compute_input$samples),
+      azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
+      sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
       annotRT = shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,

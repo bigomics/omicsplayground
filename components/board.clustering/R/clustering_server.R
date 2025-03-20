@@ -177,9 +177,18 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
 
+
     ## assign to global list of observers. suspend by default.
     # lapply( my_observers, function(b) b$suspend() )
     board_observers[[id]] <- my_observers
+
+    shiny::observeEvent(pgx, {
+      shiny::req(pgx$datatype)
+      datatype <- pgx$datatype
+      if (datatype %in% c("scRNA-seq","scRNAseq")) {
+        shiny::updateRadioButtons(session, "hm_splitby", selected = "phenotype")
+      }
+    })
 
     ## ===================================================================================
     ## ============================= REACTIVES ===========================================
@@ -351,7 +360,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       ## input$hm_group,
       input$hm_ntop
     )
-
 
     ##' .. content for \description{} (no empty lines) ..
     ##'
