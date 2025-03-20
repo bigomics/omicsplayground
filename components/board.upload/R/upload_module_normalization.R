@@ -122,7 +122,8 @@ upload_module_normalization_server <- function(
             X <- playbase::normalizeMultiOmics(X, method = m)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)
-            X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
+            #X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
+            X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
           }
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
