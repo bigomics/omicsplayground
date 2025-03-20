@@ -119,7 +119,6 @@ UploadBoard <- function(id,
       ignoreNULL = TRUE
     )
 
-
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
@@ -1249,7 +1248,7 @@ UploadBoard <- function(id,
       #      bc_method = shiny::reactive(compute_input$bc_method),
       #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
       samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
-      samplesRT = shiny::reactive(compute_input$samples),
+      #samplesRT = shiny::reactive(compute_input$samples), scRNA-seq disabled at merging.
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
