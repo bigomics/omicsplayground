@@ -187,9 +187,68 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     )
   )
 
+  # Barplot specific content
+  barplot_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          # Color Scheme
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1,
+              colourpicker::colourInput(
+                ns_parent("bar_color"), "Bar Color",
+                "#3181de"
+              )
+            )
+          ),
+
+          # Bars Order
+          bslib::accordion_panel(
+            "Bars Order",
+            shiny::selectInput(
+              ns_parent("bars_order"),
+              "Sort bars by:",
+              choices = c("Alphabetical" = "alphabetical",
+                          "Value (ascending)" = "ascending",
+                          "Value (descending)" = "descending",
+                          "Custom (drag & drop)" = "custom"),
+              selected = "alphabetical"
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+              shiny::div(
+                shiny::uiOutput(ns_parent("rank_list"))
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2")) %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
   # Return content based on plot type
   switch(plot_type,
     "volcano" = volcano_content,
-    "heatmap" = heatmap_content
+    "heatmap" = heatmap_content,
+    "barplot" = barplot_content
   )
 } 
