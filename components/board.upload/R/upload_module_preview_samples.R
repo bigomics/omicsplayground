@@ -79,7 +79,7 @@ upload_table_preview_samples_server <- function(
             )
           } else {
             shiny::actionButton(
-              ns("load_example"), "Load example data",
+              ns("load_example"), "Load example",
               class = "btn-sm btn-outline-primary m-1"
             )
           }
@@ -198,9 +198,17 @@ upload_table_preview_samples_server <- function(
       prior <- min(counts[which(counts > 0)], na.rm = TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
+      shiny::req(nrow(Y))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
+      # Fix: handle case where sel col is NA (plot errors)
+      if (all(is.na(y))) {
+        non_na_cols <- which(colSums(!is.na(Y)) > 0)
+        if (length(non_na_cols) > 0) {
+          y <- Y[, non_na_cols[1]]
+        }
+      }
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(

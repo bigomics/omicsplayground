@@ -7,8 +7,6 @@ PcsfInputs <- function(id) {
   ns <- NS(id)
 
   bigdash::tabSettings(
-    hr(),
-    br(),
     withTooltip(
       selectInput(ns("contrast"), "Select contrast:",
         choices = NULL, multiple = FALSE
@@ -22,23 +20,20 @@ PcsfInputs <- function(id) {
       "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
       placement = "right"
     ),
-    hr(),
     br(),
-    withTooltip(
-      actionLink(ns("adv_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::conditionalPanel(
-      "input.adv_options % 2 == 1",
-      ns = ns,
-      br(),
-      withTooltip(
-        shiny::radioButtons(ns("pcsf_ntop"), "Initial network size:",
-          choices = c("S" = 500, "M" = 1000, "L" = 2000),
-          selected = 1000, inline = TRUE
-        ),
-        "Select initial network size (number of top genes) for ."
+    bslib::accordion(
+      id = ns("compare_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::radioButtons(ns("pcsf_ntop"), "Network size:",
+            choices = c("S" = 150, "M" = 500, "L" = 1500),
+            selected = 500, inline = TRUE
+          ),
+          "Select initial network size (number of top genes) for ."
+        )
       )
     )
   )
@@ -60,11 +55,11 @@ PcsfUI <- function(id) {
         "PCSF network",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 190px)",
+          height = "calc(100vh - 181px)",
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
-            col_widths = c(7, 5),
-            height = "calc(100vh - 190px)",
+            col_widths = c(6, 6),
+            height = "calc(100vh - 181px)",
             pcsf_plot_network_ui(
               ns("pcsf_network"),
               caption = paste(

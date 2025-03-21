@@ -29,9 +29,12 @@ dataview_plot_expression_ui <- function(
     outputFunc = plotly::plotlyOutput,
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     #
-    height = height
+    height = height,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "barplot"
   )
 }
 
@@ -204,6 +207,32 @@ dataview_plot_expression_server <- function(id,
       }
     }
 
+    output$rank_list <- renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      if (pd$groupby != "<ungrouped>") {
+        sortable::bucket_list(
+          header = NULL,
+          class = "default-sortable custom-sortable",
+          sortable::add_rank_list(
+            input_id = session$ns("rank_list_basic"),
+            text = NULL,
+            labels = unique(pd[["df"]]$group),
+          )
+        )
+      } else {
+        sortable::bucket_list(
+          header = NULL,
+          class = "default-sortable custom-sortable",
+          sortable::add_rank_list(
+            input_id = session$ns("rank_list_basic"),
+            text = NULL,
+            labels = unique(pd[["df"]]$samples),
+          )
+        )
+      }
+    })
+
     plotly.RENDER <- function() {
       pd <- plot_data()
 
@@ -222,15 +251,30 @@ dataview_plot_expression_server <- function(id,
         cx1 <- ifelse(ngrp < 10, 1, 0.8)
         cx1 <- ifelse(ngrp > 20, 0.6, cx1)
 
-        if (pd$geneplot_type == "barplot") {
-          data_mean <- tapply(df$x, df$group, mean)
-          data_sd <- tapply(df$x, df$group, sd)
-          data <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
+        data_mean <- tapply(df$x, df$group, mean)
+        data_sd <- tapply(df$x, df$group, sd)
+        data <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
 
+        if (!is.null(input$bars_order)) {
+          if (input$bars_order == "ascending") {
+            data$group <- reorder(data$group, data$mean)
+            df$group <- reorder(df$group, df$x)
+          } else if (input$bars_order == "descending") {
+            data$group <- reorder(data$group, -data$mean)
+            df$group <- reorder(df$group, -df$x)
+          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) && 
+                    all(input$rank_list_basic %in% unique(data$group))) {
+            data$group <- factor(data$group, levels = valid_ranks)
+            df$group <- factor(df$group, levels = valid_ranks) 
+          }
+        }
+
+        if (pd$geneplot_type == "barplot") {
           fig <- plotly::plot_ly(
             data = data,
             x = ~group, y = ~mean, type = "bar", name = pd$gene,
-            error_y = ~ list(array = sd, color = "#000000")
+            error_y = ~ list(array = sd, color = "#000000"),
+            marker = list(color = input$bar_color)
           )
 
           fig <- fig %>% plotly::add_markers(
@@ -280,13 +324,26 @@ dataview_plot_expression_server <- function(id,
         }
       } else {
         ## plot as regular bar plot
+        if (!is.null(input$bars_order)) {
+          if (input$bars_order == "ascending") {
+            df <- df[order(df$x), ]
+          } else if (input$bars_order == "descending") {
+            df <- df[order(-df$x), ]
+          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) && 
+                    all(input$rank_list_basic %in% unique(df$samples))) {
+            df$samples <- factor(df$samples, levels = input$rank_list_basic)
+            df <- df[order(df$samples), ]
+          }
+          df$samples <- factor(df$samples, levels = df$samples)
+        }
+
         fig <- plotly::plot_ly(
           df,
           x = ~samples,
           y = ~x,
           type = "bar",
           name = pd$gene,
-          marker = list(color = BLUE),
+          marker = list(color = input$bar_color),
           hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"
         )
         pd$groupby <- ""
@@ -316,7 +373,7 @@ dataview_plot_expression_server <- function(id,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-      download.fmt = c("png", "pdf", "csv", "obj"),
+      download.fmt = c("png", "pdf", "csv", "obj", "svg"),
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

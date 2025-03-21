@@ -15,8 +15,7 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
-    withTooltip(shiny::selectInput(ns("search_gene"), tspan("Gene:"), choices = NULL),
+    withTooltip(shiny::selectizeInput(ns("search_gene"), tspan("Gene:"), choices = NULL, options = list(maxOptions = 1001)),
       "Type a gene of interest.",
       placement = "top"
     ),
@@ -32,24 +31,23 @@ DataViewInputs <- function(id) {
       placement = "top"
     ),
     shiny::br(),
-    withTooltip(shiny::actionLink(ns("data_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(), shiny::br(),
-    shiny::conditionalPanel(
-      "input.data_options % 2 == 1",
-      ns = ns,
-      withTooltip(
-        shiny::radioButtons(
-          ns("data_type"), "Scale:",
-          choiceNames = c("linear", "log2"),
-          choiceValues = c("counts", "log2"),
-          selected = "log2",
-          inline = TRUE
-        ),
-        "Choose an input data type for the analysis.",
-        placement = "bottom"
+    bslib::accordion(
+      id = ns("data_type_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::radioButtons(
+            ns("data_type"), "Scale:",
+            choiceNames = c("linear", "log2"), 
+            choiceValues = c("counts", "log2"),
+            selected = "log2",
+            inline = TRUE
+          ),
+          "Choose an input data type for the analysis.",
+          placement = "bottom"
+        )
       )
     )
   )
@@ -67,8 +65,8 @@ DataViewUI <- function(id) {
 
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
-  fullH <- "calc(100vh - 180px)"
-  fullH.css <- "height: calc(100vh - 180px);"
+  fullH <- "calc(100vh - 181px)"
+  fullH.css <- "height: calc(100vh - 181px);"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
@@ -78,6 +76,7 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("The Overview panel displays data for a selected gene. The 'gene info' box provides more information about the gene and hyperlinks to external databases. The upper plots show the expression level, average expression ranking, and distribution of expression among the samples. The remaining plots, display the most correlated genes and expression in the GTEX tissue database."),
         bslib::layout_columns(
           height = "100%",
@@ -110,6 +109,7 @@ DataViewUI <- function(id) {
             width = c("auto", "100%")
           ),
           bslib::layout_columns(
+            row_heights = list(1, 1),
             col_widths = 12,
             bslib::layout_columns(
               col_widths = c(4, 4, 4),
@@ -189,56 +189,61 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("The Sample QC tab provides an overview of several sample-centric quality control metrics. In this QC tab, the total counts per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as proportion of ribosomal genes."),
         bslib::layout_columns(
-          col_widths = c(4, 4, 4),
-          dataview_plot_totalcounts_ui(
-            ns("counts_total"),
-            label = "a",
-            title = "Total counts / Number of detected features",
-            info.text = "Average total counts by sample. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot of the total counts or number of detected features for each sample (or group).",
-            ## caption = "Barplot of the average counts for each group.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
+          col_widths = 12,
+          row_heights = list(1, 1),
+          bslib::layout_columns(
+            col_widths = c(4, 4, 4),
+            dataview_plot_totalcounts_ui(
+              ns("counts_total"),
+              label = "a",
+              title = "Total counts / Number of detected features",
+              info.text = "Average total counts by sample. Samples can be grouped using the {Group by} setting.",
+              caption = "Barplot of the total counts or number of detected features for each sample (or group).",
+              ## caption = "Barplot of the average counts for each group.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            dataview_plot_boxplot_ui(
+              ns("counts_boxplot"),
+              title = "Counts boxplots",
+              info.text = "Boxplot of counts by sample. Samples can be grouped using the {Group by} setting.",
+              caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              label = "b"
+            ),
+            dataview_plot_histogram_ui(
+              ns("counts_histplot"),
+              title = "Density distribution of counts",
+              info.text = "Histogram of the density distribution of total counts per sample. Samples can be grouped using the {Group by} setting.",
+              caption = "Density distribution of total counts per sample/group",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              label = "c"
+            )
           ),
-          dataview_plot_boxplot_ui(
-            ns("counts_boxplot"),
-            title = "Counts boxplots",
-            info.text = "Boxplot of counts by sample. Samples can be grouped using the {Group by} setting.",
-            caption = "Distribution of total counts per sample/group. The center horizontal bar correspond to the median.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            label = "b"
-          ),
-          dataview_plot_histogram_ui(
-            ns("counts_histplot"),
-            title = "Density distribution of counts",
-            info.text = "Histogram of the density distribution of total counts per sample. Samples can be grouped using the {Group by} setting.",
-            caption = "Density distribution of total counts per sample/group",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%"),
-            label = "c"
-          )
-        ),
-        bslib::layout_columns(
-          col_widths = c(5, 7),
-          dataview_plot_genetypes_ui(
-            ns("counts_genetypes"),
-            title = "Proportion of major gene types",
-            info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot showing the proportion of major gene types.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%"),
-            label = "d"
-          ),
-          dataview_plot_abundance_ui(
-            ns("counts_abundance"),
-            title = "Proportion of major gene types per sample/group",
-            info.text = "Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting.",
-            caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            label = "e",
-            width = c("auto", "100%")
+          bslib::layout_columns(
+            col_widths = c(5, 7),
+            dataview_plot_genetypes_ui(
+              ns("counts_genetypes"),
+              title = "Proportion of major gene types",
+              info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
+              caption = "Barplot showing the proportion of major gene types.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              label = "d"
+            ),
+            dataview_plot_abundance_ui(
+              ns("counts_abundance"),
+              title = "Proportion of major gene types per sample/group",
+              info.text = "Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting.",
+              caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              label = "e",
+              width = c("auto", "100%")
+            )
           )
         )
       )
@@ -267,41 +272,45 @@ DataViewUI <- function(id) {
       bslib::layout_columns(
         height = fullH,
         col_widths = 12,
-        row_heights = list("auto", 1.33, 1),
+        row_heights = list("auto", 1),
         bs_alert("In the Sample information panel, more complete information about samples can be found."),
         bslib::layout_columns(
-          width = 6,
-          dataview_plot_phenoheatmap_ui(
-            ns("phenoheatmap"),
-            title = "Phenotype clustering",
-            info.text = "Clustering of the available phenotypes across all samples. Samples can be filtered using the {Filter samples} setting.",
-            info.methods = "Column ordering performed using unsupervised clustering on a one-hot encoded matrix. Perfomed using the hierarchical clustering method from the R core stats package.",
-            caption = "Clustered heatmap of sample information (i.e. phenotype data)",
-            height = c("50%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%"),
-            label = "a"
-          ),
-          dataview_plot_phenoassociation_ui(
-            ns("phenoassociation"),
-            height = c("50%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%"),
-            label = "b",
-            title = "Phenotype correlation",
-            info.text = "Correlation matrix of the phenotypes.",
-            info.methods = "Correlation for categorical vs categorical phenotypes performed using fisher test, categorical vs continuous phenotypes performed using Krusall-Wallace and continuous vs continuous phenotypes performed using pearson correlation (all three done using the core R stats package). The size of the dots correspond to the absolute correlation between two phenotype conditions. Red corresponds to positive correlation, blue corresponds to negative correlation.",
-            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
-            caption = "Clustered heatmap of phenotype correlation."
-          )
-        ),
-        bslib::layout_columns(
           col_widths = 12,
-          dataview_table_samples_ui(
-            ns("sampletable"),
-            height = c("50%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%"),
-            title = "Sample information",
-            info.text = "Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data.",
-            caption = "Phenotype information about the samples."
+          row_heights = list(1.33, 1),
+          bslib::layout_columns(
+            width = 6,
+            dataview_plot_phenoheatmap_ui(
+              ns("phenoheatmap"),
+              title = "Phenotype clustering",
+              info.text = "Clustering of the available phenotypes across all samples. Samples can be filtered using the {Filter samples} setting.",
+              info.methods = "Column ordering performed using unsupervised clustering on a one-hot encoded matrix. Perfomed using the hierarchical clustering method from the R core stats package.",
+              caption = "Clustered heatmap of sample information (i.e. phenotype data)",
+              height = c("50%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              label = "a"
+            ),
+            dataview_plot_phenoassociation_ui(
+              ns("phenoassociation"),
+              height = c("50%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              label = "b",
+              title = "Phenotype correlation",
+              info.text = "Correlation matrix of the phenotypes.",
+              info.methods = "Correlation for categorical vs categorical phenotypes performed using fisher test, categorical vs continuous phenotypes performed using Krusall-Wallace and continuous vs continuous phenotypes performed using pearson correlation (all three done using the core R stats package). The size of the dots correspond to the absolute correlation between two phenotype conditions. Red corresponds to positive correlation, blue corresponds to negative correlation.",
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
+              caption = "Clustered heatmap of phenotype correlation."
+            )
+          ),
+          bslib::layout_columns(
+            col_widths = 12,
+            dataview_table_samples_ui(
+              ns("sampletable"),
+              height = c("50%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              title = "Sample information",
+              info.text = "Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data.",
+              caption = "Phenotype information about the samples."
+            )
           )
         )
       )

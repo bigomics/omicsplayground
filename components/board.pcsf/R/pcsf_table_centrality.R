@@ -46,7 +46,7 @@ pcsf_table_centrality_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    table.RENDER <- function() {
+    table.RENDER <- function(full=FALSE) {
       df <- playbase::pgx.getPCSFcentrality(
         pgx,
         contrast = r_contrast(),
@@ -54,9 +54,14 @@ pcsf_table_centrality_server <- function(id,
         n = 100,
         plot = FALSE
       )
-
+      if(full==FALSE) {
+        cols <- c("feature","symbol","centrality","logFC")
+        cols <- intersect(cols, colnames(df))
+        df <- df[,cols]
+      }
+      
       num.cols <- match(c("centrality", "logFC"), colnames(df))
-
+      
       dt <- DT::datatable(df,
         rownames = FALSE,
         extensions = c("Scroller"),
@@ -70,7 +75,8 @@ pcsf_table_centrality_server <- function(id,
           scrollResize = TRUE,
           scrollY = 100,
           scroller = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs =  NULL
         ) ## end of options.list
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
@@ -92,7 +98,7 @@ pcsf_table_centrality_server <- function(id,
     }
 
     table.RENDER_modal <- function() {
-      dt <- table.RENDER()
+      dt <- table.RENDER(full=TRUE)
       dt$x$options$scrollY <- SCROLLY_MODAL
       return(dt)
     }

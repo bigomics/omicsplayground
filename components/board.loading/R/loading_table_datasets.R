@@ -336,6 +336,24 @@ loading_table_datasets_server <- function(id,
           width = "100%",
           onclick = paste0('Shiny.onInputChange(\"', ns("recompute_pgx"), '\",this.id,{priority: "event"});')
         )
+        changename_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("changename_pgx_row_", i)),
+          label = "Change name",
+          icon = shiny::icon("edit"),
+          class = "btn btn-outline-dark",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("changename_pgx"), '\",this.id,{priority: "event"});')
+        )
+        changedesc_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("changedesc_pgx_row_", i)),
+          label = "Change description",
+          icon = shiny::icon("edit"),
+          class = "btn btn-outline-dark",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("changedesc_pgx"), '\",this.id,{priority: "event"});')
+        )
 
         new_menu <- DropdownMenu(
           div(
@@ -351,6 +369,8 @@ loading_table_datasets_server <- function(id,
                 width = "100%",
                 onclick = paste0('Shiny.onInputChange(\"', ns("download_zip"), '\",this.id,{priority: "event"})')
               ),
+              changename_pgx_menuitem,
+              changedesc_pgx_menuitem,
               recompute_pgx_menuitem,
               share_public_menuitem,
               share_dataset_menuitem,
@@ -380,10 +400,10 @@ loading_table_datasets_server <- function(id,
         class = "compact hover",
         rownames = menus,
         escape = FALSE,
-        editable = list(
-          target = "cell",
-          disable = list(columns = c(1, 3:ncol(df)))
-        ),
+        # editable = list(
+        #   target = "cell",
+        #   disable = list(columns = c(1, 3:ncol(df)))
+        # ),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = 1),
@@ -398,7 +418,7 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
           columnDefs = list(
             list(width = "60px", targets = target1),
-            ##            list(width = "30vw", targets = target2),
+            ## list(width = "30vw", targets = target2),
             list(
               targets = target2, ## with no rownames column 1 is column 2
               render = DT::JS(
@@ -432,41 +452,41 @@ loading_table_datasets_server <- function(id,
     )
 
     ## --------------- edit rows of  pgxtable ---------------------
-    observeEvent(
-      input[["datasets-datatable_cell_edit"]],
-      {
-        row <- input[["datasets-datatable_cell_edit"]]$row
-        col <- input[["datasets-datatable_cell_edit"]]$col
-        val <- input[["datasets-datatable_cell_edit"]]$value
+    # observeEvent(
+    #   input[["datasets-datatable_cell_edit"]],
+    #   {
+    #     row <- input[["datasets-datatable_cell_edit"]]$row
+    #     col <- input[["datasets-datatable_cell_edit"]]$col
+    #     val <- input[["datasets-datatable_cell_edit"]]$value
 
-        df <- table_data()
-        col_edited <- colnames(df)[col]
+    #     df <- table_data()
+    #     col_edited <- colnames(df)[col]
 
-        dataset_edited <- df$dataset[row]
-        pgxinfo <- getPGXINFO()
+    #     dataset_edited <- df$dataset[row]
+    #     pgxinfo <- getPGXINFO()
 
-        row_edited <- match(dataset_edited, pgxinfo$dataset)
-        pgxinfo[row_edited, col_edited] <- val
-        fname <- file.path(auth$user_dir, "datasets-info.csv")
-        write.csv(pgxinfo, fname)
+    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
+    #     pgxinfo[row_edited, col_edited] <- val
+    #     fname <- file.path(auth$user_dir, "datasets-info.csv")
+    #     write.csv(pgxinfo, fname)
 
-        ## also rewrite description in actual pgx file
-        pgx_name <- dataset_edited
-        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
-        pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
+    #     ## also rewrite description in actual pgx file
+    #     pgx_name <- dataset_edited
+    #     pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
+    #     pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
 
-        row_edited <- match(dataset_edited, pgxinfo$dataset)
-        new_val <- pgxinfo[row_edited, col_edited]
-        pgx[[col_edited]] <- new_val
+    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
+    #     new_val <- pgxinfo[row_edited, col_edited]
+    #     pgx[[col_edited]] <- new_val
 
-        dbg("[datasets-datatable_cell_edit] updating", col_edited, " -> ", new_val)
-        dbg("[datasets-datatable_cell_edit] saving changes to", pgx_file)
-        playbase::pgx.save(pgx, file = pgx_file)
-        remove(pgx)
-        dbg("[datasets-datatable_cell_edit] done!")
-      },
-      ignoreInit = TRUE
-    )
+    #     dbg("[datasets-datatable_cell_edit] updating", col_edited, " -> ", new_val)
+    #     dbg("[datasets-datatable_cell_edit] saving changes to", pgx_file)
+    #     playbase::pgx.save(pgx, file = pgx_file)
+    #     remove(pgx)
+    #     dbg("[datasets-datatable_cell_edit] done!")
+    #   },
+    #   ignoreInit = TRUE
+    # )
 
 
     table_selected_pgx <- shiny::reactive({
@@ -566,6 +586,82 @@ loading_table_datasets_server <- function(id,
             return(0)
           } else {
             return(0)
+          }
+        }
+      )
+    })
+
+    ## ---------------- CHANGE NAME PGX ----------------
+    observeEvent(input$changename_pgx, {
+      shinyalert::shinyalert(
+        title = "Change name",
+        text = "Are you sure you want to change the name of your dataset?",
+        showCancelButton = TRUE,
+        cancelButtonText = "Cancel",
+        confirmButtonText = "OK",
+        callbackR = function(x) {
+          if (x) {
+            shinyalert::shinyalert(
+              title = "Enter new name",
+              text = "Please enter a new name for your dataset:",
+              type = "input",
+              showCancelButton = TRUE,
+              callbackR = function(new_name) {
+                if (!is.logical(new_name) && !is.null(new_name) && nchar(new_name) > 0) {
+                  sel <- as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2])
+                  df <- getFilteredPGXINFO()
+                  pgxfile <- as.character(df$dataset[sel])
+                  pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+                  new_pgxfile <- paste0(gsub(" ", "_", new_name), ".pgx")
+                  file.rename(
+                    file.path(auth$user_dir, pgxfile),
+                    file.path(auth$user_dir, new_pgxfile)
+                  )
+                  pgx <- playbase::pgx.load(file.path(auth$user_dir, new_pgxfile), verbose = FALSE)
+                  pgx$name <- gsub(" ", "_", new_name)
+                  playbase::pgx.save(pgx, file = file.path(auth$user_dir, new_pgxfile))
+                  reload_pgxdir(reload_pgxdir() + 1)
+                }
+              }
+            )
+          }
+        }
+      )
+    })
+
+    ## ---------------- CHANGE DESCRIPTION PGX ----------------
+    observeEvent(input$changedesc_pgx, {
+      shinyalert::shinyalert(
+        title = "Change description",
+        text = "Are you sure you want to change the description of your dataset?",
+        showCancelButton = TRUE,
+        cancelButtonText = "Cancel",
+        confirmButtonText = "OK",
+        callbackR = function(x) {
+          if (x) {
+            shinyalert::shinyalert(
+              title = "Enter new description",
+              text = "Please enter a new description for your dataset:",
+              type = "input",
+              showCancelButton = TRUE,
+              callbackR = function(new_desc) {
+                if (!is.logical(new_desc) && !is.null(new_desc) && nchar(new_desc) > 0) {
+                  sel <- as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2])
+                  df <- getFilteredPGXINFO()
+                  pgxfile <- as.character(df$dataset[sel])
+                  pgxfile2 <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+                  pgx <- playbase::pgx.load(file.path(auth$user_dir, pgxfile2), verbose = FALSE)
+                  pgx$description <- new_desc
+                  playbase::pgx.save(pgx, file = file.path(auth$user_dir, pgxfile2))
+                  pgxinfo <- getPGXINFO()
+                  row_edited <- match(pgxfile, pgxinfo$dataset)
+                  pgxinfo[row_edited, "description"] <- new_desc
+                  fname <- file.path(auth$user_dir, "datasets-info.csv")
+                  write.csv(pgxinfo, fname)
+                  reload_pgxdir(reload_pgxdir() + 1)
+                }
+              }
+            )
           }
         }
       )

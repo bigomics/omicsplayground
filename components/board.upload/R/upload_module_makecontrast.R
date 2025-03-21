@@ -194,17 +194,26 @@ upload_module_makecontrast_server <- function(
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
         cond <- apply(df1, 1, paste, collapse = ".")
+        names(cond) <- cond
+        
+        if (max(sapply(cond, function(x) nchar(x))) > 15) {
+          shinyalert::shinyalert(
+            title = "Warning",
+            text = "Condition names are long (>15 characters). This may cause display issues.",
+            type = "warning"
+          )
+        }
 
-        ## get abbreviated phenotype
-        minlen <- ifelse(length(pp) >= 2, 4, 8)
-        minlen <- ifelse(length(pp) >= 3, 3, minlen)
-        abv.df <- playbase::abbreviate_pheno(
-          df,
-          minlength = minlen, abbrev.colnames = FALSE
-        )
-        abv.df <- abv.df[ss, pp, drop = FALSE]
-        abv.cond <- apply(abv.df, 1, paste, collapse = ".")
-        names(cond) <- abv.cond
+        ## get abbreviated phenotype, NOTE: commented out, some users complained.
+        # minlen <- ifelse(length(pp) >= 2, 4, 8)
+        # minlen <- ifelse(length(pp) >= 3, 3, minlen)
+        # abv.df <- playbase::abbreviate_pheno(
+        #   df,
+        #   minlength = minlen, abbrev.colnames = FALSE
+        # )
+        # abv.df <- abv.df[ss, pp, drop = FALSE]
+        # abv.cond <- apply(abv.df, 1, paste, collapse = ".")
+        # names(cond) <- abv.cond
 
         cond
       })

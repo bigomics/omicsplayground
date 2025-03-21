@@ -174,7 +174,8 @@ TableModuleServer <- function(id,
                               height = c(640, 800),
                               width = c("auto", 1400),
                               selector = c("none", "single", "multi", "key")[1],
-                              filename = "table") {
+                              filename = "table",
+                              download.contrast.name = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -185,13 +186,16 @@ TableModuleServer <- function(id,
 
       # Downloader
       output$download <- shiny::downloadHandler(
-        filename = function() {
+        filename = shiny::reactive({
+          if (!is.null(download.contrast.name)) {
+            filename <- paste0(filename, "-", download.contrast.name())
+          }
           if (input$format == "CSV") {
             paste0(filename, ".csv")
           } else {
             paste0(filename, ".xlsx")
           }
-        },
+        }),
         content = function(file) {
           if (!is.null(csvFunc)) {
             dt <- csvFunc() ## data.frame or matrix
@@ -269,6 +273,7 @@ TableModuleServer <- function(id,
         rows_selected = shiny::reactive(input$datatable_rows_selected),
         rows_all = shiny::reactive(input$datatable_rows_all),
         row_last_clicked = shiny::reactive(input$row_last_clicked),
+        search = shiny::reactive(input$datatable_search),        
         rownames_current = shiny::reactive({
           rns <- rownames(func()$x$data)
           if (is.null(rns)) rns <- 1:nrow(func()$x$data)
@@ -337,4 +342,21 @@ CardUI <- function(...,
       )))
     )
   ) ## end of card
+}
+
+#' Truncate row to display. Must be placed as list in columnDefs list
+#' under options of DT::datatable function.
+#'
+#' @param target  Target column
+#' @param length  Maximum string length
+#' 
+trunc_display_row <- function(target, length) {
+  list(
+    targets = target, ## with no rownames column 1 is column 2
+    render = DT::JS(paste0(
+      "function(data, type, row, meta) {",
+      "return type === 'display' && data.length > ",length," ?",
+      "'<span title=\"' + data + '\">' + data.substr(0, ",length,
+      ") + '...</span>' : data;}"))
+  )
 }

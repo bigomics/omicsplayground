@@ -29,7 +29,7 @@ expression_plot_topfoldchange_ui <- function(
     plotlib = "plotly",
     caption = caption,
     info.text = info.text,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

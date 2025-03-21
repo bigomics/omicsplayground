@@ -43,7 +43,7 @@ enrichment_plot_volcanoall_ui <- function(
     width = width,
     cards = TRUE,
     card_names = c("dynamic", "static"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

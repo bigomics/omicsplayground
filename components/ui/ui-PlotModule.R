@@ -19,7 +19,7 @@ PlotModuleUI <- function(id,
                          outputFunc = NULL,
                          outputFunc2 = outputFunc,
                          no.download = FALSE,
-                         download.fmt = c("png", "pdf"),
+                         download.fmt = c("png", "pdf", "svg"),
                          just.info = FALSE,
                          info.width = "300px",
                          show.maximize = TRUE,
@@ -32,8 +32,16 @@ PlotModuleUI <- function(id,
                          card_names = NULL,
                          header_buttons = NULL,
                          translate = TRUE,
-                         translate_js = TRUE) {
+                         translate_js = TRUE,
+                         editor = FALSE,
+                         ns_parent = function(a){return(a)},
+                         plot_type = "volcano") {
   ns <- shiny::NS(id)
+
+  # Svg is only available if watermark is disabled
+  if (opt$WATERMARK) {
+    download.fmt <- download.fmt[download.fmt != "svg"]
+  }
 
   if (is.null(plotlib2)) plotlib2 <- plotlib
   if (length(height) == 1) height <- c(height, 800)
@@ -70,6 +78,7 @@ PlotModuleUI <- function(id,
       image = shiny::imageOutput,
       base = shiny::plotOutput,
       svgPanZoom = svgPanZoom::svgPanZoomOutput,
+      ggiraph = ggiraph::ggiraphOutput,
       renderUI = shiny::htmlOutput,
       shiny::plotOutput
     )
@@ -119,23 +128,17 @@ PlotModuleUI <- function(id,
     )
   } else {
     button_list <- lapply(seq_along(card_names), function(x) {
-      shiny::conditionalPanel(
-        condition = paste0(
-          "input.card_selector == '", card_names[x], "'"
-        ),
-        ns = ns,
-        div(
-          shiny::downloadButton(
-            outputId = ns(paste0(
-              "download", x
-            )),
-            label = "Download",
-            class = "btn-outline-primary"
-          )
+      div(
+        shiny::downloadButton(
+          outputId = ns(paste0(
+            "download", x
+          )),
+          label = card_names[x],
+          class = "btn-outline-primary"
         )
       )
     })
-    download_buttons <- do.call(div, button_list)
+    download_buttons <- button_list
   }
 
   pdf_size_ui <- shiny::tagList(
@@ -173,16 +176,16 @@ PlotModuleUI <- function(id,
           shiny::br()
         )
       ),
-      shiny::conditionalPanel(
-        condition = "input.downloadOption == 'pdf'",
-        ns = ns,
+      # shiny::conditionalPanel(
+      #   condition = "input.downloadOption == 'pdf'",
+      #   ns = ns,
         shiny::checkboxInput(
           inputId = ns("get_pdf_settings"),
-          label = "Include plot settings",
+          label = "Include plot settings (PDF)",
           TRUE
-        )
-      ),
-      download_buttons,
+        ),
+      # ),
+      download_buttons
     ),
     size = "xs",
     icon = shiny::icon("download"),
@@ -224,8 +227,23 @@ PlotModuleUI <- function(id,
     header_buttons <- div()
   }
 
+  if (editor) {
+    editor_button <- shiny::div(
+      class = "edit-button",
+      title = "edit plot",
+      modalTrigger(
+        ns("editbutton"),
+        ns("plotPopup2"),
+        icon("pencil"),
+        class = "btn-circle-xs"
+      )
+    )
+  } else {
+    editor_button <- NULL
+  }
+
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",
@@ -308,13 +326,17 @@ PlotModuleUI <- function(id,
     ),
     options.button,
     shiny::div(class = "download-button", title = "download", dload.button),
-    shiny::div(class = "zoom-button", title = "zoom", zoom.button)
+    shiny::div(class = "zoom-button", title = "zoom", zoom.button),
+    editor_button
   )
 
   ## ------------------------------------------------------------------------
   ## --------------- modal UI (former output$popupfig) ----------------------
   ## ------------------------------------------------------------------------
 
+  height.2="100%"
+  height.2="calc(80vh - 100px)"
+  
   if (cards) {
     tabs_modal <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
@@ -363,6 +385,27 @@ PlotModuleUI <- function(id,
     )
   }
 
+  popupfigUI.BSLIB <- function() {
+    if (any(class(caption2) == "reactive")) {
+      caption2 <- caption2()
+    }
+    caption2 <- shiny::div(
+      class = "caption2 popup-plot-caption",
+      shiny::HTML(paste0(
+        "<b>", as.character(title), ".</b>&nbsp;&nbsp;",
+        as.character(caption2)
+      ))
+    )
+    bslib::layout_columns(
+      class = "popup-plot-body",
+      height = "80vh",
+      col_widths = 12,
+      row_heights = list(1,"auto"),
+      shiny::div(class = "popup-plot", plot_cards_modal),
+      caption2
+    )
+  }
+
   popupfigUI_editor <- function(card = NULL) {
     if (!is.null(card)) {
       htmlOutput(ns(paste0("editor_frame", card)))
@@ -370,6 +413,17 @@ PlotModuleUI <- function(id,
       htmlOutput(ns("editor_frame"))
     }
   }
+
+  editor_content <- getEditorContent(
+    plot_type = plot_type,
+    ns = ns,
+    ns_parent = ns_parent,
+    title = title,
+    cards = cards,
+    outputFunc = outputFunc,
+    width.2 = width.2,
+    height.2 = height.2
+  )
 
   ## inline styles (should be in CSS...)
   modaldialog.style <- paste0("#", ns("plotPopup"), " .modal-dialog {width:", width.2, ";}")
@@ -382,9 +436,10 @@ PlotModuleUI <- function(id,
   }
 
   e <- bslib::card(
-    class = "plotmodule",
-    full_screen = FALSE,
-    style = paste0("height:", height.1, ";overflow: visible;"),
+    #bslib::card_header(header),
+    #class = "plotmodule",
+    #full_screen = FALSE,
+    #style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
     bslib::card_body(
       gap = "0px",
@@ -404,6 +459,7 @@ PlotModuleUI <- function(id,
           track_open = TRUE
         )
       ),
+      if (editor) {editor_content},
       if (cards) {
         div(
           lapply(1:length(card_names), function(x) {
@@ -451,6 +507,10 @@ PlotModuleUI <- function(id,
       )
     )
   ) # end of card
+  # e <- bslib::card(
+  #   outputFunc(ns("renderfigure")) %>%
+  #     bigLoaders::useSpinner()
+  # )
   return(e)
 }
 
@@ -463,7 +523,7 @@ PlotModuleServer <- function(id,
                              renderFunc = NULL,
                              renderFunc2 = renderFunc,
                              csvFunc = NULL,
-                             download.fmt = c("png", "pdf"),
+                             download.fmt = c("png", "pdf", "svg"),
                              height = c(640, 800),
                              width = c("auto", 1400),
                              res = c(100, 170),
@@ -473,13 +533,16 @@ PlotModuleServer <- function(id,
                              download.csv = NULL,
                              download.excel = NULL,
                              download.obj = NULL,
+                             download.contrast.name = NULL,
                              pdf.width = 8,
                              pdf.height = 6,
                              pdf.pointsize = 12,
                              add.watermark = FALSE,
                              remove_margins = FALSE,
                              vis.delay = 0,
-                             card = NULL) {
+                             card = NULL,
+                             editor = FALSE,
+                             parent_session = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -534,6 +597,33 @@ PlotModuleServer <- function(id,
           path_object2
         )
       }
+
+      observeEvent(input$plot_click, {
+        click_x <- input$plot_click$x
+        click_y <- input$plot_click$y
+        plot_data <- csvFunc()
+        distances <- sqrt((plot_data$x - click_x)^2 + (plot_data$y - click_y)^2)
+        nearest_idx <- which.min(distances)
+        clicked_feature <- rownames(plot_data)[nearest_idx]
+        current_features <- parent_session$input$label_features
+        if (current_features == "") {
+          new_features <- clicked_feature
+        } else {
+          current_features_vec <- strsplit(current_features, " ")[[1]]
+          if (!clicked_feature %in% current_features_vec) {
+            new_features <- paste(current_features, clicked_feature, sep = " ")
+          } else {
+            new_features <- paste(setdiff(current_features_vec, clicked_feature), collapse = " ")
+          }
+        }
+
+        # Update label_features input
+        updateTextAreaInput(
+          parent_session,
+          "label_features",
+          value = new_features
+        )
+      })
 
 
       if (!is.null(card)) {
@@ -647,12 +737,14 @@ PlotModuleServer <- function(id,
       do.png <- "png" %in% download.fmt
       do.html <- "html" %in% download.fmt
       do.obj <- "obj" %in% download.fmt
+      do.svg <- "svg" %in% download.fmt
       do.csv <- !is.null(csvFunc)
       do.excel <- !is.null(csvFunc)
 
-      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- EXCELFILE <- NULL
+      PNGFILE <- PDFFILE <- HTMLFILE <- CSVFILE <- EXCELFILE <- SVGFILE <- NULL
       if (do.pdf) PDFFILE <- paste0(gsub("file", "plot", tempfile()), ".pdf")
       if (do.png) PNGFILE <- paste0(gsub("file", "plot", tempfile()), ".png")
+      if (do.svg) SVGFILE <- paste0(gsub("file", "plot", tempfile()), ".svg")
       if (do.csv) CSVFILE <- paste0(gsub("file", "data", tempfile()), ".csv")
       if (do.excel) EXCELFILE <- paste0(gsub("file", "data", tempfile()), ".xlsx")
       HTMLFILE <- paste0(tempfile(), ".html") ## tempory for webshot
@@ -665,7 +757,13 @@ PlotModuleServer <- function(id,
 
       if (do.png && is.null(download.png)) {
         download.png <- shiny::downloadHandler(
-          filename = paste0(filename, ".png"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".png")
+            } else {
+              paste0(filename, ".png")
+            }
+          }),
           content = function(file) {
             png.width <- input$pdf_width * 80
             png.height <- input$pdf_height * 80
@@ -763,7 +861,13 @@ PlotModuleServer <- function(id,
 
       if (do.pdf && is.null(download.pdf)) {
         download.pdf <- shiny::downloadHandler(
-          filename = paste0(filename, ".pdf"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".pdf")
+            } else {
+              paste0(filename, ".pdf")
+            }
+          }),
           content = function(file) {
             pdf.width <- input$pdf_width
             pdf.height <- input$pdf_height
@@ -812,6 +916,14 @@ PlotModuleServer <- function(id,
                     url = HTMLFILE, file = PDFFILE,
                     vwidth = pdf.width * 100, vheight = pdf.height * 100
                   )
+                } else if (plotlib == "ggiraph") {
+                  p <- func()
+                  SVGFILE <- tempfile(fileext=".svg")
+                  ggiraph::dsvg(SVGFILE)
+                  print(p)
+                  dev.off()
+                  system(paste("convert ",SVGFILE," ",PDFFILE))
+                  unlink(SVGFILE)
                 } else { ## end base
                   pdf(PDFFILE, pointsize = pdf.pointsize)
                   plot.new()
@@ -842,12 +954,59 @@ PlotModuleServer <- function(id,
           } ## content
         ) ## PDF downloadHandler
       } ## end if do.pdf
+      # Svg is only available if watermark is disabled
+      if (do.svg && add.watermark == FALSE) {
+        download.svg <- shiny::downloadHandler(
+          filename = paste0(filename, ".svg"),
+          content = function(file) {
+            shiny::withProgress(
+              {
+                if (plotlib == "plotly") {
+                  p <- func()
+                  p$width <- input$pdf_width * 80
+                  p$height <- input$pdf_height * 80
+                  plotly::save_image(p, file = file, format = "svg", width = p$width, height = p$height)
+                } else if (plotlib %in% c("ggplot", "ggplot2")) {
+                  p <- func()
+                  ggplot2::ggsave(file, plot = p, device = "svg", width = input$pdf_width, height = input$pdf_height)
+                } else if (plotlib == "base") {
+                  svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
+                  func() # Call the plotting function directly
+                  dev.off()
+                } else if (plotlib == "grid") {
+                  svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
+                  func() # Call the plotting function directly  
+                  dev.off()
+                } else if (plotlib == "svgPanZoom") {
+                  p <- func()
+                  # Save the SVG content directly to file
+                  cat(p$x$svg, file = file)
+                } else if (plotlib == "visnetwork") {
+                  p <- func()
+                  # Export visnetwork to SVG using visSave
+                  visNetwork::visSave(p, file = file, background = "white", style = "width:100%;height:100%;")
+                } else {
+                  # For unsupported plot types, create a simple SVG with error message
+                  svglite::svglite(file)
+                  plot.new()
+                  mtext("SVG export not supported for this plot type", line = -8)
+                  dev.off()
+                }
+                ## Record downloaded plot
+                record_plot_download(ns("") %>% substr(1, nchar(.) - 1))
+              },
+              message = "Exporting to SVG",
+              value = 0.8
+            )
+          }
+        )
+      }
 
       saveHTML <- function() {
-        if (plotlib == "plotly") {
+        if (plotlib %in% c("plotly")) {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
-        } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
+        } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3", "ggiraph")) {
           p <- func()
           htmlwidgets::saveWidget(p, HTMLFILE)
         } else if (plotlib == "iheatmapr") {
@@ -883,7 +1042,7 @@ PlotModuleServer <- function(id,
                 if (plotlib == "plotly") {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
-                } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3")) {
+                } else if (plotlib %in% c("htmlwidget", "pairsD3", "scatterD3", "ggiraph")) {
                   p <- func()
                   htmlwidgets::saveWidget(p, HTMLFILE)
                 } else if (plotlib == "iheatmapr") {
@@ -942,7 +1101,13 @@ PlotModuleServer <- function(id,
       ## if(do.csv && is.null(download.csv) )  {
       if (do.csv) {
         download.csv <- shiny::downloadHandler(
-          filename = paste0(filename, ".csv"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".csv")
+            } else {
+              paste0(filename, ".csv")
+            }
+          }),
           content = function(file) {
             shiny::withProgress(
               {
@@ -962,7 +1127,13 @@ PlotModuleServer <- function(id,
       # Excel download
       if (do.excel) {
         download.excel <- shiny::downloadHandler(
-          filename = paste0(filename, ".xlsx"),
+          filename = shiny::reactive({
+            if (!is.null(download.contrast.name)) {
+              paste0(paste0(filename, "-", download.contrast.name()), ".xlsx")
+            } else {
+              paste0(filename, ".xlsx")
+            }
+          }),
           content = function(file) {
             shiny::withProgress({
               data <- csvFunc()
@@ -983,6 +1154,9 @@ PlotModuleServer <- function(id,
           }
           if (input$downloadOption == "pdf") {
             output$download <- download.pdf
+          }
+          if (input$downloadOption == "svg") {
+            output$download <- download.svg
           }
           if (input$downloadOption == "csv") {
             output$download <- download.csv
@@ -1010,6 +1184,12 @@ PlotModuleServer <- function(id,
               "download",
               card
             )]] <- download.pdf
+          }
+          if (input$downloadOption == "svg") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.svg
           }
           if (input$downloadOption == "csv") {
             output[[paste0(
@@ -1074,6 +1254,7 @@ PlotModuleServer <- function(id,
           image = shiny::renderImage,
           base = shiny::renderPlot,
           svgPanZoom = svgPanZoom::renderSvgPanZoom,
+          ggiraph = ggiraph::renderggiraph,
           renderUI = shiny::renderUI,
           shiny::renderPlot
         )
@@ -1230,6 +1411,7 @@ PlotModuleServer <- function(id,
       if (is.null(card)) {
         output$renderfigure <- render
         output$renderpopup <- render2
+        output$renderfigure_2 <- render
       } else {
         output[[paste0(
           "renderfigure",
@@ -1239,6 +1421,7 @@ PlotModuleServer <- function(id,
           "renderpopup",
           card
         )]] <- render2
+        output$renderfigure_2 <- render
       }
 
       shiny::observeEvent(input$copy_info, {

@@ -52,6 +52,9 @@ NoAuthenticationModule <- function(id,
         }
         USER$username <- username
         USER$email <- email
+
+        # Reset loaded modules
+        MODULES_LOADED[] <<- FALSE
       }
 
       output$showLogin <- shiny::renderUI({
@@ -133,6 +136,9 @@ AuthenticationModuleApacheCookie <- function(id,
         }
         USER$username <- email
         USER$email <- email
+
+        # Reset loaded modules
+        MODULES_LOADED[] <<- FALSE
       }
 
       output$showLogin <- shiny::renderUI({
@@ -233,6 +239,9 @@ FirebaseAuthenticationModule.DEPRECATED <- function(id,
 
       ## login modal
       shiny::showModal(m)
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
     }
 
     ### I don't really understand this???... (IK 10jul23)
@@ -520,6 +529,9 @@ EmailLinkAuthenticationModule.DEPRECATED <- function(id,
 
       ## login modal
       shiny::showModal(m)
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
     }
 
     first_time <- TRUE
@@ -661,6 +673,9 @@ PasswordAuthenticationModule <- function(id,
       USER$level <- ""
       USER$limit <- ""
       shiny::showModal(login_modal)
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
     }
 
     CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
@@ -907,6 +922,9 @@ LoginCodeAuthenticationModule <- function(id,
       PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
       REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
       UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
+
+      # Reset loaded modules
+      MODULES_LOADED[] <<- FALSE
 
       shiny::showModal(login_modal)
     }

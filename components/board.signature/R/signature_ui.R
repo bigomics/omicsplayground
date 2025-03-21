@@ -8,8 +8,6 @@ style0 <- "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-styl
 SignatureInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::tags$head(shiny::tags$style("#sig-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
-    shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("type"),
         label = "Signature type:",
@@ -83,11 +81,11 @@ SignatureUI <- function(id) {
       "Volcano plots",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 190px)",
+        height = "calc(100vh - 181px)",
         bs_alert("Overlay your custom list of genes on top of the volcano plots for each comparison. You can enter your list of genes on the right."),
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 190px)",
+          height = "calc(100vh - 181px)",
           signature_plot_volcano_ui(
             ns("volcanoPlots"),
             title = "Volcano plots",
@@ -124,11 +122,11 @@ SignatureUI <- function(id) {
       "Enrichment",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 190px)",
+        height = "calc(100vh - 181px)",
         bs_alert("This panel shows your custom list of genes on top of the GSEA enrichment plots for each comparison. Enter your list of genes in the right box."),
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 190px)",
+          height = "calc(100vh - 181px)",
           signature_plot_enplots_ui(
             ns("enplots"),
             title = "Enrichment plots",
@@ -165,25 +163,30 @@ SignatureUI <- function(id) {
       "Overlap/similarity",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 190px)",
+        height = "calc(100vh - 180px)",
         bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),
-        signature_plot_overlap_ui(
-          ns("overlapScorePlot"),
-          title = "Signature overlap scores",
-          info.text = "Barplot of the overlap scores for the loaded data against multiple public genesets databases. The plot displays by default the top 60 overlap scores, it can be changed using the {Number of features} plot setting, also the feature names can be toggled with the {Show feature names} plto setting.",
-          info.methods = "The overlap score of the gene set combines the odds ratio and significance (q-value) of the Fisher's test.",
-          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
-          caption = "The plot shows the gene sets most correlated with the test signature.",
-          width = c("auto", "100%"),
-          height = c("40%", TABLE_HEIGHT_MODAL)
-        ),
-        signature_table_overlap_ui(
-          ns("overlapTable"),
-          title = "Overlap with other signatures",
-          info.text = "Under the Overlap/similarity tab, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
-          caption = "The table indicates the gene sets available in the platform that are most correlated with the tested signature.",
-          height = c("60%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c(1, 1),
+          signature_plot_overlap_ui(
+            ns("overlapScorePlot"),
+            title = "Signature overlap scores",
+            info.text = "Barplot of the overlap scores for the loaded data against multiple public genesets databases. The plot displays by default the top 60 overlap scores, it can be changed using the {Number of features} plot setting, also the feature names can be toggled with the {Show feature names} plto setting.",
+            info.methods = "The overlap score of the gene set combines the odds ratio and significance (q-value) of the Fisher's test.",
+            info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
+            caption = "The plot shows the gene sets most correlated with the test signature.",
+            width = c("auto", "100%"),
+            height = c("40%", TABLE_HEIGHT_MODAL)
+          ),
+          signature_table_overlap_ui(
+            ns("overlapTable"),
+            title = "Overlap with other signatures",
+            info.text = "Under the Overlap/similarity tab, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
+            caption = "The table indicates the gene sets available in the platform that are most correlated with the tested signature.",
+            height = c("60%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
         )
       )
     ),
@@ -192,11 +195,11 @@ SignatureUI <- function(id) {
       "Markers",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 190px)",
+        height = "calc(100vh - 181px)",
         bs_alert("The markers plot shows the expression levels of the tested genes in the dataset samples as a colored t-SNE plot in red (highly expressed) and light grey (low expressed). The first figure shows the single-sample enrichment of your signature list in red (upregulation) and blue (downregulation)."),
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 190px)",
+          height = "calc(100vh - 181px)",
           signature_plot_markers_ui(
             ns("markers"),
             title = "Markers plot",
@@ -223,7 +226,7 @@ SignatureUI <- function(id) {
       "Enrichment table",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 190px)",
+        height = "calc(100vh - 181px)",
         signature_table_enrich_by_contrasts_ui(
           ns("enrichmentContrastTable"),
           title = "Enrichment by contrasts",

@@ -491,3 +491,18 @@ jspan <- function(text) tspan(text, js = TRUE)
 tspan.SAVE <- function(label) {
   shiny::span(class = "i18n", `data-key` = label, label)
 }
+
+#' Create a loading spinner element
+#' 
+#' @param id The ID for the loader container
+#' @return A shiny div element containing the loader
+#' @export
+create_loader <- function(id) {
+  div(
+    class = "loader-container",
+    id = id,
+    div(
+      class = "spinner"
+    )
+  )
+}

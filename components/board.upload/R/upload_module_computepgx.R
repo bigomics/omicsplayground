@@ -15,6 +15,7 @@ upload_module_computepgx_server <- function(
     impX,
     norm_method,
     samplesRT,
+    azimuth_ref,
     contrastsRT,
     annotRT = reactive(NULL),
     raw_dir,
@@ -25,6 +26,8 @@ upload_module_computepgx_server <- function(
     alertready = TRUE,
     height = 720,
     compute_settings,
+    sc_compute_settings,
+    recompute_info,
     inactivityCounter,
     upload_wizard,
     upload_name,
@@ -41,67 +44,154 @@ upload_module_computepgx_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
-      ## statistical method for GENE level testing
-      GENETEST.METHODS <- shiny::eventReactive(
-        {
-          upload_datatype()
-        },
-        {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else {
-            mm <- c(
-              "ttest", "ttest.welch", "voom.limma", "trend.limma", "notrend.limma",
-              "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
-            )
-          }
-          return(mm)
-        }
-      )
+      ## NOTE (IK): these eventReactive can better go directly inside
+      ## output$UI which is already reactive. Less reactives is good.
 
-      GENETEST.SELECTED <- shiny::eventReactive(
-        {
-          upload_datatype()
-        },
-        {
-          if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-            mm <- c("ttest", "ttest.welch", "trend.limma", "notrend.limma")
-          } else {
-            mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
-          }
-          return(mm)
+      ## statistical method for GENE level testing
+      GENETEST.METHODS <- function() {
+        if (upload_datatype() != "RNA-seq") {
+          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
+        } else {
+          mm <- c(
+            "ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma", "voom.limma", 
+            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
+          )
         }
-      )
+        if (opt$ALLOW_CUSTOM_FC) {
+          mm <- c(mm, "custom")
+        }
+        return(mm)
+      }
+      
+      GENETEST.SELECTED <- function() {
+        if (upload_datatype() != "RNA-seq") {
+          mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
+        } else  {
+          mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+        }
+        return(mm)
+      }
 
       ## statistical method for GENESET level testing
-      GENESET.METHODS <- c(
-        "fisher", "ssgsea", "gsva", "spearman", "camera", "fry",
-        ## "plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
-        "fgsea"
-      )
-      GENESET.SELECTED <- c("fisher", "gsva", "ssgsea", "fgsea")
+      GENESET.METHODS <- function() {
+        if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "rank correlation"="spearman", "camera", "fry")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "rank correlation"="spearman")
+        } else {
+          mm <- c("fisher", "fgsea", "ssgsea+limma" = "ssgsea", "gsva+limma" = "gsva",
+            "rank correlation"="spearman", "camera", "fry")
+        }
+        return(mm)
+      }
 
-      ## batch correction and extrs methods
-      EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
-      EXTRA.NAMES <- c(
-        "celltype deconvolution", "drugs connectivity",
-        "wordcloud", "experiment similarity", "WGCNA"
-      )
-      EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+      GENESET.SELECTED <- function() {
+        if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("fisher", "fgsea", "spearman")
+        } else {
+          mm <- c("fisher", "gsva", "fgsea")
+        }
+        return(mm)
+      }
 
+
+      ## EXTRA METHODS
+      EXTRA.METHODS <- function() {
+        if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("wgcna", "mofa")
+        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drug connectivity"="drugs", "wordcloud",
+                  "experiment similarity"="connectivity", "WGCNA"="wgcna")
+        } else {
+          mm <- c("celltype deconvolution"="deconv", "drug connectivity"="drugs",
+                  "wordcloud", "experiment similarity"="connectivity", "WGCNA"="wgcna")
+        }
+        return(mm)
+      }
+
+      EXTRA.SELECTED <- function() {
+        if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("wgcna", "mofa")
+        } else {
+          mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+        }
+        return(mm)
+      }
+
+      ## EXTRA.NAMES <- shiny::eventReactive(
+      ## {
+      ##   upload_datatype()
+      ## },
+      ## {
+      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
+      ##     mm <- c("drugs connectivity", "wordcloud", "experiment similarity", "WGCNA")
+      ##   } else {
+      ##     mm <- c("celltype deconvolution", "drugs connectivity", "wordcloud",
+      ##       "experiment similarity", "WGCNA")
+      ##   }
+      ##   return(mm)
+      ## }
+      ## )
+      ##EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+      ##EXTRA.NAMES <- c(
+      ##  "celltype deconvolution", "drugs connectivity",
+      ##  "wordcloud", "experiment similarity", "WGCNA"
+      ##)
+      ##EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
+             
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
+      if(opt$ALLOW_CUSTOM_FC) {
+        ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
+      }
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
-      DEV.METHODS <- c("noLM.prune")
-      DEV.NAMES <- c("noLM + prune")
-      DEV.SELECTED <- c()
+      #DEV.METHODS <- c("noLM.prune")
+      #DEV.NAMES <- c("noLM + prune")
+      #DEV.SELECTED <- c()
 
       ## Probe filtering defaults
       PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
 
+      htmltag_with_info_url <- function(tag, url) {
+        shiny::HTML(paste("<div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>",tag,"<a href='",url,"'target='_blank' class='info-link' style='margin-left: 15px;'><i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 18px;'></i></a></div>"))
+      }
+
+      htmltag_with_info_popup <- function(tag, info.text) {
+        shiny::div(
+          style = 'display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;',
+          tag,
+          div(
+            style = "margin-left:15px;",
+            DropdownMenu(
+              info.text,
+              size = "xs",
+              icon = shiny::icon("info", class='fa-solid fa-circle-info info-icon',
+                                 style='color:blue; font-size: 18px;'),
+              status = "default",
+              width = "150px"
+            )
+          )
+        )
+      }
+
+      inline_info_button <- function(info.text) {
+        shiny::span(
+          style = "margin-left:15px;",
+          DropdownMenu(
+            info.text,
+            size = "xs",
+            icon = shiny::icon("info", class='fa-solid fa-circle-info info-icon',
+              style='color:blue; font-size: 18px;'),
+            status = "default",
+            width = "150px"
+          )
+        )
+      }
+      
       output$UI <- shiny::renderUI({
         upload_annot_table_ui <- NULL
+
         if (auth$options$ENABLE_ANNOT) {
           upload_annot_table_ui <- fileInput2(
             ns("upload_annot_table"),
@@ -110,7 +200,8 @@ upload_module_computepgx_server <- function(
             accept = c(".csv")
           )
         }
-        div(
+
+        ui <- div(
           style = "overflow: auto;",
           bslib::as_fill_carrier(),
           bslib::layout_columns(
@@ -173,58 +264,138 @@ upload_module_computepgx_server <- function(
                     c(
                       "append.symbol",
                       "remove.notexpressed",
-                      "remove.unknown",
-                      "only.proteincoding"
+                      "remove.unknown"
+                      ## "only.proteincoding"
                     ),
                   choiceNames =
                     c(
                       "Append symbol to feature ID",
-                      "Remove not-expressed",
-                      "Remove features without symbol",
-                      "Remove Rik/ORF/LOC genes"
+                      "Exclude all-zero features",
+                      "Exclude features without symbol"
+                      ## "Remove Rik/ORF/LOC genes"
                     ),
                   selected = PROBE_FILTER_SELECTED
+                ),
+                div(
+                  style = "margin-top:-22px;",
+                  shiny::checkboxInput(
+                    ns("exclude_void"),
+                    shiny::span( "Exclude void features:",
+                      inline_info_button(
+                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored.")),
+                    FALSE)
+                ),
+                conditionalPanel(
+                  "input.exclude_void == true",
+                  ns = ns,
+                  shiny::span(style="margin-top:-15px;",
+                    shiny::textInput(
+                      ns("exclude_genes"),
+                      NULL,
+                      "LOC ORF RIK")
+                  )
                 )
-              ),
+              ),              
+              if (upload_datatype() == "scRNA-seq") {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("compute_supercells"),
+                    shiny::HTML("
+                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+                      <h4>Supercells</h4>
+                      <a href='https://cran.r-project.org/web/packages/SuperCell/index.html' target='_blank' class='info-link' style='margin-left: 15px;'>
+                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>
+                    </div>
+                    "),
+                    choices = c("Compute supercells"),
+                    selected = NULL
+                  ),
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Supercells always computed if >10K cells.</small>"),
+                  shiny::checkboxGroupInput(
+                    ns("regress_covariates"),
+                    shiny::HTML("<h4>Remove effects of:</h4>"),
+                    choices = c(
+                      "Mitochondrial contamination",
+                      "Blood contamination",
+                      "Ribosomal expression",
+                      "Cell cycle scores"
+                    ),
+                    selected = NULL
+                  )
+                )
+              },
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gene_methods"),
-                  shiny::HTML("<h4>Gene tests:</h4>"),
+                  htmltag_with_info_url(
+                    "<h4>Gene tests:</h4>",
+                    "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing"
+                  ),
                   GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
+                ),
+                conditionalPanel(
+                  "input.gene_methods.includes('custom')",
+                  ns = ns,
+                  fileInput2(
+                    ns("upload_custom_fc"),
+                    htmltag_with_info_url(
+                      "<h4>Custom fold change methods:</h4>",
+                      "https://omicsplayground.readthedocs.io/en/latest/dataprep/uploadfc/"
+                    ),
+                    multiple = FALSE,
+                    accept = c(".csv")
+                  )
                 )
               ),
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("gset_methods"),
-                  shiny::HTML("
-                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
-                      <h4>Enrichment methods:</h4>
-                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
-                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
-                      </a>
-                    </div>
-                  "),
-                  # <a href='https://example.com' target='_blank' id='infoButton' style='flex-shrink: 0; padding: 10px 20px; background-color: blue; color: white; text-decoration: none; border-radius: 4px;'>Info</a>
-                  GENESET.METHODS,
-                  selected = GENESET.SELECTED
+                  htmltag_with_info_url(
+                    "<h4>Enrichment methods:</h4>",
+                    "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
+                  ),
+#                  shiny::HTML("
+#                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
+#                      <h4>Enrichment methods:</h4>
+#                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
+#                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+#                      </a>
+#                    </div>
+#                  "),
+                  GENESET.METHODS(),
+                  selected = GENESET.SELECTED()
                 ),
               ),
               bslib::card(
-                shiny::checkboxGroupInput(
-                  ns("extra_methods"),
-                  shiny::HTML("<h4>Extra analysis:</h4>"),
-                  choiceValues = EXTRA.METHODS,
-                  choiceNames = EXTRA.NAMES,
-                  selected = EXTRA.SELECTED
+                shiny::HTML("<h4>Extra analysis:</h4>"),
+                div(
+                  style = "margin-top:-18px;",
+                  shiny::checkboxInput(
+                    ns("do_extra"), "Compute extra methods", TRUE
+                  )
                 ),
-                shiny::checkboxGroupInput(
-                  ns("dev_options"),
-                  shiny::HTML("<br><h4>Developer options:</h4>"),
-                  choiceValues = DEV.METHODS,
-                  choiceNames = DEV.NAMES,
-                  selected = DEV.SELECTED
-                )
+                conditionalPanel(
+                  "input.do_extra == true",
+                  ns = ns,
+                  div(
+                    style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
+                    shiny::checkboxGroupInput(
+                      ns("extra_methods"),
+                      NULL,
+                      choices = EXTRA.METHODS(),
+                      selected = EXTRA.SELECTED()
+                    )
+                  )
+                ),
+                ## shiny::checkboxGroupInput(
+                ##   ns("dev_options"),
+                ##   shiny::HTML("<br><h4>Developer options:</h4>"),
+                ##   choiceValues = DEV.METHODS,
+                ##   choiceNames = DEV.NAMES,
+                ##   selected = DEV.SELECTED
+                ## )
               ),
               bslib::card(
                 fileInput2(
@@ -272,6 +443,8 @@ upload_module_computepgx_server <- function(
             "))
           ) ## end of conditional panel
         )
+
+        return(ui)
       })
 
       # Input validators
@@ -304,7 +477,6 @@ upload_module_computepgx_server <- function(
         shiny::updateTextInput(session, "selected_name", value = "")
         shiny::updateTextAreaInput(session, "selected_description", value = "")
       })
-
 
       # change upload_name to selected_name
       observeEvent(input$selected_name, {
@@ -383,6 +555,7 @@ upload_module_computepgx_server <- function(
       })
 
       shiny::observeEvent(contrastsRT(), {
+
         contrasts <- as.data.frame(contrastsRT())
         has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
         if (any(has_one)) {
@@ -411,8 +584,8 @@ upload_module_computepgx_server <- function(
           )
           shiny::updateCheckboxGroupInput(session,
             "gset_methods",
-            choices = GENESET.METHODS,
-            sel = GENESET.SELECTED
+            choices = GENESET.METHODS(),
+            sel = GENESET.SELECTED()
           )
         }
       })
@@ -426,6 +599,7 @@ upload_module_computepgx_server <- function(
       PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
       custom_geneset <- list(gmt = NULL, info = NULL)
+      custom_fc <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
 
       ## react on custom GMT upload
@@ -446,7 +620,6 @@ upload_module_computepgx_server <- function(
           gmt <- gmt[!duplicated(names(gmt))]
           gset_size <- sapply(gmt, length)
           gmt <- gmt[gset_size >= 3] ## how many?
-
 
           # an additional check to verify that items in lists are
           # genes
@@ -483,6 +656,50 @@ upload_module_computepgx_server <- function(
         }
       })
 
+      ## react on custom fold change upload
+      shiny::observeEvent(input$upload_custom_fc, {
+        filePath <- input$upload_custom_fc$datapath
+        fileName <- input$upload_custom_fc$name
+
+        if (endsWith(filePath, "csv")) {
+          custom_fc <<- playbase::read_counts(filePath)
+          contrasts <- contrastsRT()
+          contrast_names <- colnames(contrasts)
+          required_cols <- unlist(lapply(contrast_names, function(contrast) {
+            c(
+              paste0(contrast, ".logFC"),
+              paste0(contrast, ".P.Value"),
+              paste0(contrast, ".adj.P.Val")
+            )
+          }))
+
+          missing_cols <- setdiff(required_cols, colnames(custom_fc))
+
+          if (length(missing_cols) > 0) {
+            shinyalert::shinyalert(
+              title = "Invalid custom fold changes",
+              text = paste0(
+                "Missing required columns: ",
+                paste(missing_cols, collapse=", "),
+                ". Each contrast must have .logFC, .P.Value and .adj.P.Val columns."
+              ),
+              type = "error",
+              html = TRUE,
+              closeOnClickOutside = TRUE
+            )
+            custom_fc <<- NULL
+            return(NULL)
+          }
+
+          shinyalert::shinyalert(
+            title = "Custom fold changes uploaded!",
+            text = "Your fold changes will be incorporated in the analysis.",
+            type = "success",
+            closeOnClickOutside = TRUE
+          )
+        }
+      })
+
       shiny::observeEvent(upload_wizard(), {
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
@@ -490,9 +707,6 @@ upload_module_computepgx_server <- function(
 
         ## bail out if probetype task is not finished or has error
         p <- probetype()
-        dbg("[computepgx_server:upload_wizard] start compute PGX!!!")
-        dbg("[computepgx_server:upload_wizard] probetype = ", p)
-
         if (is.null(p) || grepl("error", tolower(p)) || p == "") {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
           shinyalert::shinyalert("ERROR", "probetype detection failed",
@@ -509,6 +723,7 @@ upload_module_computepgx_server <- function(
         counts <- countsRT()
         countsX <- countsX()
         impX <- impX()
+
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
@@ -535,35 +750,34 @@ upload_module_computepgx_server <- function(
         gx.methods <- input$gene_methods
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-
+        if(input$do_extra == FALSE) {
+          extra.methods <- c()
+        }
+        
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
-
-        flt <- ""
-        use.design <- TRUE
-        prune.samples <- FALSE
         flt <- input$filter_methods
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        ## do.normalization <- !("skip.normalization" %in% flt)
-        excl.immuno <- ("excl.immuno" %in% flt)
-        excl.xy <- ("excl.xy" %in% flt)
-        only.proteincoding <- ("only.proteincoding" %in% flt)
+        #only.proteincoding <- ("only.proteincoding" %in% flt)
+        only.proteincoding <- FALSE      # DEPRECATED: use exclude_genes
         filter.genes <- ("remove.notexpressed" %in% flt)
-        use.design <- !("noLM.prune" %in% input$dev_options)
-        prune.samples <- ("noLM.prune" %in% input$dev_options)
+        #use.design <- !("noLM.prune" %in% input$dev_options)
+        #prune.samples <- ("noLM.prune" %in% input$dev_options)
+        use.design <- FALSE
+        prune.samples <- TRUE
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-
+        exclude_genes <- NULL
+        if(input$exclude_void) exclude_genes <- input$exclude_genes
+        
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
-        if (is.null(raw_dir())) {
-          raw_dir(create_raw_dir(auth))
-        }
+        if (is.null(raw_dir())) { raw_dir(create_raw_dir(auth)) }
 
         dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
@@ -571,6 +785,29 @@ upload_module_computepgx_server <- function(
 
         pgx_save_folder <- auth$user_dir
 
+        ##-----------------------------------------------
+        ## Params for scRNA-seq
+        do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
+        nfeature_threshold <- sc_compute_settings()$nfeature_threshold
+        if (!any(nfeature_threshold)) nfeature_threshold = FALSE
+        mt_threshold <- sc_compute_settings()$mt_threshold
+        if (!any(mt_threshold)) mt_threshold = FALSE
+        hb_threshold <- sc_compute_settings()$hb_threshold
+        if (!any(hb_threshold)) hb_threshold = FALSE
+        sc.covs <- as.character(input$regress_covariates)
+        sc_compute_settings.PARS <- list(
+          ##azimuth_ref <- to add
+          ##nfeature_threshold = sc_compute_settings()$nfeature_threshold,
+          nfeature_threshold = nfeature_threshold,
+          mt_threshold = mt_threshold,
+          hb_threshold = hb_threshold,
+          compute_supercells = ifelse(any(do.supercells), TRUE, FALSE),
+          regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
+          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
+          regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
+          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+        )
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -578,12 +815,14 @@ upload_module_computepgx_server <- function(
           counts = counts,
           countsX = countsX,
           impX = impX,
+          azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
-          # Extra tables
+          # ------- extra tables ---------
           annot_table = annot_table,
           custom.geneset = custom_geneset,
-          # Options
+          custom_fc = custom_fc,
+          #-------- preprocess options ---------
           batch.correct = FALSE,
           norm_method = norm_method(),
           settings = list(
@@ -591,15 +830,18 @@ upload_module_computepgx_server <- function(
             imputation_method = compute_settings$imputation_method,
             bc_method = compute_settings$bc_method,
             remove_outliers = compute_settings$remove_outliers,
-            norm_method = norm_method()
+            norm_method = norm_method(),
+            custom_fc = custom_fc
           ),
+          sc_compute_settings = sc_compute_settings.PARS,
           ## normalize = do.normalization,
-          prune.samples = TRUE,
           filter.genes = filter.genes,
+          exclude.genes = exclude_genes,
           only.known = remove.unknown,
-          only.proteincoding = only.proteincoding,
+          only.proteincoding = only.proteincoding,          
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
+          ##--------- 
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
@@ -607,9 +849,8 @@ upload_module_computepgx_server <- function(
           gx.methods = gx.methods,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
-          use.design = use.design, ## no.design+prune are combined
+          use.design = use.design,
           prune.samples = prune.samples,
-          do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
           datatype = upload_datatype(),
@@ -628,7 +869,7 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
-
+        
         # Remove global variables
         try(rm(annot_table))
         try(rm(custom_geneset))
@@ -752,7 +993,6 @@ upload_module_computepgx_server <- function(
                 user_email = auth$email,
                 pgx_path   = raw_dir
               )
-
 
               # if auth$email is empty, then the user is not logged in
               if (auth$email == "") {

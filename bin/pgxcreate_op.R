@@ -11,9 +11,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 temp_dir <- args[1]
 
-if (!exists("temp_dir")) {
-  temp_dir <- getwd()
-}
+if (!exists("temp_dir")) temp_dir <- getwd()
 
 params_from_op <- file.path(temp_dir, "params.RData")
 
@@ -32,15 +30,17 @@ pgx <- playbase::pgx.createPGX(
   norm_method = params$norm_method,
   samples = params$samples,
   contrasts = params$contrasts,
+  azimuth_ref = params$azimuth_ref, ## NEW AZ
+  ## sc_pheno = params$sc_pheno, ## NEW AZ
   name = params$name,
   datatype = params$datatype,
   probe_type = params$probe_type,
   description = params$description,
   creator = params$creator,
   batch.correct = params$batch.correct,
-  ## normalize = params$normalize,
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
+  exclude.genes = params$exclude.genes,  
   only.known = params$only.known,
   only.proteincoding = params$only.proteincoding,
   only.hugo = params$only.hugo,
@@ -48,7 +48,8 @@ pgx <- playbase::pgx.createPGX(
   custom.geneset = params$custom.geneset,
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
-  settings = params$settings
+  settings = params$settings,
+  sc_compute_settings = params$sc_compute_settings 
 )
 
 message("[create PGX process] : PGX created successfully")
@@ -60,9 +61,10 @@ pgx <- playbase::pgx.computePGX(
   gx.methods = params$gx.methods,
   gset.methods = params$gset.methods,
   custom.geneset = pgx$custom.geneset,
+  custom_fc = params$custom_fc,
   extra.methods = params$extra.methods,
-  use.design = params$use.design, ## no.design+prune are combined
-  prune.samples = params$prune.samples, ##
+  use.design = params$use.design,
+  prune.samples = params$prune.samples,
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
   cluster.contrasts = params$cluster.contrasts,

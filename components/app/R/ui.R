@@ -119,7 +119,8 @@ app_ui <- function(x) {
         ),
         "Clustering" = c(
           clustersamples = "Samples",
-          clusterfeatures = "Features"
+          clusterfeatures = "Features",
+          timeseries = "TimeSeries" ## here???
         ),
         "Expression" = c(
           diffexpr = "Differential expression",
@@ -143,14 +144,19 @@ app_ui <- function(x) {
           pcsf = "PCSF",
           wgcna = "WGCNA",
           tcga = "TCGA survival (beta)"
-        )
+        ),
+        "MultiOmics (beta)" = MODULE.multiomics$module_menu()
       )
 
       ## filter disabled modules
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
 
-      menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+      dbg("names(menu_tree) = ", names(menu_tree))
+      dbg("names.ENABLED = ", names(ENABLED))
+      menu_tree <- menu_tree[MODULES_ENABLED]
+      ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+      ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
       populateSidebar <- function(menu_tree) {
         sidebar_item <- function(title, name) {
@@ -215,6 +221,10 @@ app_ui <- function(x) {
       }
 
       ## ------------------------- bigPage ----------------------------------
+      bigdash.sidebarHelp2 <- function(...) {
+        do.call(bigdash::sidebarHelp, rlang::list2(...))
+      }
+
       bigdash::bigPage(
         shiny.i18n::usei18n(i18n),
         header,
@@ -365,7 +375,8 @@ app_ui <- function(x) {
         settings = bigdash::settings(
           "Settings"
         ),
-        bigdash::sidebarHelp(
+        ## bigdash::sidebarHelp(
+        bigdash.sidebarHelp2(
           bigdash::sidebarTabHelp(
             "welcome-tab",
             "BigOmics Playground",
@@ -409,6 +420,22 @@ app_ui <- function(x) {
                     relationships between co-expression modules.")
           ),
           bigdash::sidebarTabHelp(
+            "mofa-tab",
+            "MOFA",
+            tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
+                  integration method based on multi-omcis factor analysis.")
+          ),
+          bigdash::sidebarTabHelp(
+            "mgsea-tab",
+            "multiGSEA",
+            tspan("multiGSEA perform multi-omics integration on gene set level.")
+          ),
+          bigdash::sidebarTabHelp(
+            "snf-tab",
+            "SNF",
+            tspan("SNF clustering")
+          ),
+          bigdash::sidebarTabHelp(
             "pcsf-tab",
             "PCSF Network Analysis",
             "PCSF performs fast and user-friendly network analysis using
@@ -436,8 +463,7 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "pathway-tab",
             "Pathway Analysis",
-            "Perform specialized functional analysis
-                    to understand biological pathways including GO, KEGG, and drug connectivity mapping."
+            "Perform functional analysis to understand biological pathways using WikiPathways, Reactome and Gene Ontology."
           ),
           bigdash::sidebarTabHelp(
             "wordcloud-tab",
@@ -498,7 +524,8 @@ app_ui <- function(x) {
             "Single-Cell Profiling",
             tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
-          )
+          ),
+          !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),
         bigdash::bigTabs(
           bigdash::bigTabItem(

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-DrugConnectivityBoard <- function(id, pgx) {
+DrugConnectivityBoard <- function(id, pgx, board_observers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -23,17 +23,19 @@ DrugConnectivityBoard <- function(id, pgx) {
         frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
         allowfullscreen></iframe></center>")
 
-    shiny::observe({
+    ## ================================================================================
+    ## ============================== OBSERVERS  ======================================
+    ## ================================================================================
+
+    my_observers <- list()
+
+    my_observers[[1]] <- shiny::observe({
       shiny::req(pgx$X)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "dsea_method", choices = ct)
     })
 
-    ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
-    ## ================================================================================
-
-    shiny::observeEvent(input$dsea_info, {
+    my_observers[[2]] <- shiny::observeEvent(input$dsea_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
         shiny::HTML(dsea_infotext),
@@ -41,11 +43,16 @@ DrugConnectivityBoard <- function(id, pgx) {
       ))
     })
 
-    shiny::observe({
+    my_observers[[3]] <- shiny::observe({
       shiny::req(pgx$X)
       ct <- colnames(pgx$model.parameters$contr.matrix)
       shiny::updateSelectInput(session, "dsea_contrast", choices = sort(ct))
     })
+
+    ## add to list global of observers. suspend by default.
+    my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # lapply( my_observers, function(b) b$suspend() )
+    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## =========================================================================
     ## Shared Reactive functions

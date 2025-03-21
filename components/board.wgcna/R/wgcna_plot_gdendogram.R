@@ -3,52 +3,45 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-wgcna_plot_gdendogram_ui <- function(id, label, info.text, caption, height, width) {
+wgcna_plot_gdendogram_ui <- function(
+  id,
+  title = "",
+  label = "",
+  info.text = "",
+  caption = "",
+  height = 400,
+  width = 400,
+  ...
+  ) {
   ns <- shiny::NS(id)
-
-  #
-
   PlotModuleUI(
     ns("plot"),
-    title = "Gene dendrogram and gene modules",
+    title = title,
     label = label,
     caption = caption,
     info.text = info.text,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg"),
+    ...
   )
 }
 
 wgcna_plot_gdendogram_server <- function(id,
                                          wgcna.compute,
-                                         labels2rainbow,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    geneDendro.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
-      net <- out$net
 
-      ## Convert labels to colors for plotting
-      mergedColors <- labels2rainbow(net)
-      ## Plot the dendrogram and the module colors underneath
-      plotDendroAndColors(
-        dendro = net$dendrograms[[1]],
-        colors = mergedColors[net$blockGenes[[1]]],
-        dendroLabels = FALSE, hang = 0.03,
-        addGuide = FALSE, guideHang = 0.05,
-        marAll = c(0.2, 5, 0.4, 0.2),
-        main = NULL
-      )
-      p <- grDevices::recordPlot()
-      p
-    })
+    RENDER <- function() {
+      res <- wgcna.compute()
+      playbase::wgcna.plotDendroAndColors(res, main="")
+    }
 
     PlotModuleServer(
       "plot",
-      func = geneDendro.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(72, 90),
+      res = c(85, 120),
       add.watermark = watermark
     )
   })
