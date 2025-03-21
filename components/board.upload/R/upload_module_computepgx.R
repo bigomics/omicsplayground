@@ -835,13 +835,10 @@ upload_module_computepgx_server <- function(
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        #only.proteincoding <- ("only.proteincoding" %in% flt)
-        
         only.proteincoding <- FALSE      # DEPRECATED: use exclude_genes
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
-        only.proteincoding <- ("only.proteincoding" %in% flt)
->>>>>>> DGE-timeseries
+        # only.proteincoding <- ("only.proteincoding" %in% flt)
         filter.genes <- ("remove.notexpressed" %in% flt)
         #use.design <- !("noLM.prune" %in% input$dev_options)
         #prune.samples <- ("noLM.prune" %in% input$dev_options)
