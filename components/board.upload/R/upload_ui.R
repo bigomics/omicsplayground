@@ -14,7 +14,7 @@ UploadUI <- function(id) {
       div(
         style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",
         div(
-          style = "width: 40%;",
+          style = "width: 60%;",
           bs_alert("To upload your own data, you should prepare at least two CSV files: an <b>counts.csv</b> file (containing your experiment data) and a <b>samples.csv</b> file (containing your sample information). A third <b>contrasts.csv</b> file (describing your comparisons) is optional. Read more about data preparation <a href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep/'><u>here</u></a>.", closable = FALSE, translate = TRUE, html = TRUE)
         ),
         br(),
@@ -28,10 +28,10 @@ UploadUI <- function(id) {
               "proteomics",
               "scRNA-seq",
               "metabolomics (beta)" = "metabolomics",
-              "multi-omics (beta)" = "multi-omics",
-              "custom"
+              "multi-omics (beta)" = "multi-omics"
             ),
-            selected = DEFAULTS$datatype
+            selected = DEFAULTS$datatype,
+            width = "400px"
           )
         ),
         ## shiny::uiOutput(ns("probe_type_ui")),
@@ -41,7 +41,8 @@ UploadUI <- function(id) {
             inputId = ns("selected_organism"),
             label = NULL,
             choices = NULL,
-            multiple = FALSE
+            multiple = FALSE,
+            width = "400px"
           )
         ),
         br(),

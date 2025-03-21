@@ -94,10 +94,12 @@ UploadBoard <- function(id,
 
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
+
       all_species <- playbase::allSpecies(col = "species_name")
-      if (!auth$options$ENABLE_ANNOT) {
-        all_species <- setdiff(all_species, "No organism")
-      }
+      common_name <- playbase::allSpecies(col = "display_name")      
+      names(all_species) <- paste0(all_species," (",common_name,")")
+      names(all_species)[all_species=="No organism"] <- "<custom organism>"
+      
       shiny::updateSelectizeInput(session, "selected_organism",
         choices = all_species, server = TRUE
       )
@@ -937,15 +939,13 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
-        if (input$selected_organism == "No organism" && !auth$options$ENABLE_ANNOT) {
+        if (input$selected_organism == "No organism") {
           shinyalert::shinyalert(
-            title = "No organism",
-            text = "Sorry, not yet implemented.",
+            title = "Custom organism",
+            text = "You have selected 'custom organism'. Please include a custom feature annotation table and upload a custom genesets GMT file. Otherwise many analysis modules will not work properly.",
             type = "warning",
-            #
             closeOnClickOutside = FALSE
           )
-          return(NULL)
         }
 
         if (enable_upload) {
@@ -1029,8 +1029,6 @@ UploadBoard <- function(id,
           if(length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
           
         }
-
-
         
         checkprobes_task$invoke(
           organism = upload_organism(),
@@ -1044,10 +1042,9 @@ UploadBoard <- function(id,
     observeEvent(
       checkprobes_task$status(),
       {
-        dbg(
-          "[UploadServer:observeEvent:checkprobes_task] task status = ",
-          checkprobes_task$status()
-        )
+        dbg("[UploadServer:observeEvent:checkprobes_task] task$status = ",
+          checkprobes_task$status() )
+        
         if (checkprobes_task$status() == "error") {
           probetype("error")
           return(NULL)
@@ -1059,10 +1056,8 @@ UploadBoard <- function(id,
 
         ## inspect ExtendedTask results
         detected <- checkprobes_task$result()
-
-        dbg("[upload_server::checkprobes_task] len.detected = ", length(detected))
-        dbg("[upload_server::checkprobes_task] names.detected = ", names(detected))
-        ##dbg("[upload_server::checkprobes_task] detected[[1]] = ", detected[[1]])
+        dbg("[UploadServer:observeEvent:checkprobes_task] task$result: names(detected) = ",
+          names(detected))
 
         organism <- upload_organism()
         alt.text <- ""
