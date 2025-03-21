@@ -51,7 +51,9 @@ upload_module_normalization_server <- function(
         counts[which(is.infinite(counts))] <- NA
 
         negs <- sum(counts < 0, na.rm = TRUE)
-        if (negs > 0) counts <- pmax(counts, 0) ## Olink NPX?
+        if (negs > 0) {
+          counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX)
+        }
 
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
@@ -65,8 +67,9 @@ upload_module_normalization_server <- function(
         if(min(counts, na.rm = TRUE) == 0) {
           prior0 <- min(counts[counts > 0], na.rm = TRUE)  ## smallest non-zero value
         }
-        ## prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4) ## NEW
-        prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW        
+        prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW
+        #prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
+        #prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
         X <- log2(counts + prior) ## NEED RETHINK
 
         nmissing <- sum(is.na(X))
@@ -103,9 +106,8 @@ upload_module_normalization_server <- function(
 
       ## Normalize
       normalizedX <- reactive({
-        shiny::req(dim(imputedX()$X))
-        X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
-        prior <- imputedX()$prior
+        shiny::req(dim(imputedX()))
+        X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
         if (input$normalize) {
           m <- input$normalization_method
           ref <- NULL
@@ -135,7 +137,6 @@ upload_module_normalization_server <- function(
       cleanX <- reactive({
         shiny::req(dim(normalizedX()))
         X <- normalizedX()
-
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
@@ -253,7 +254,7 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        X0 <- imputedX()$X
+        X0 <- imputedX()
         X1 <- cleanX()$X ## normalized+cleaned
         samples <- r_samples()
         contrasts <- r_contrasts()
@@ -350,7 +351,7 @@ upload_module_normalization_server <- function(
 
       plot_normalization <- function() {
         rX <- r_counts()
-        X0 <- imputedX()$X
+        X0 <- imputedX()
         X1 <- cleanX()$X
         main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
@@ -435,7 +436,7 @@ upload_module_normalization_server <- function(
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_counts()
-        X1 <- imputedX()$X
+        X1 <- imputedX()
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)

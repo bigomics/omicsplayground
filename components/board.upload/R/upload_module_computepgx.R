@@ -190,6 +190,7 @@ upload_module_computepgx_server <- function(
       }
       
       output$UI <- shiny::renderUI({
+
         upload_annot_table_ui <- NULL
 
         if (auth$options$ENABLE_ANNOT) {
@@ -209,7 +210,6 @@ upload_module_computepgx_server <- function(
             col_widths = c(-5, 2, -5),
             fill = FALSE,
             div(
-              ## style = "display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;",
               style = "display: flex; flex-direction: column; gap: 20px; width: 100%;",
               shiny::div(
                 style = "margin-left: 0px; text-align: left; width: 100%;",
@@ -258,7 +258,6 @@ upload_module_computepgx_server <- function(
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
-                  ## shiny::HTML("<h4>Probe filtering:</h4>"),
                   shiny::HTML("<h4>Feature filtering:</h4>"),
                   choiceValues =
                     c(
@@ -332,9 +331,24 @@ upload_module_computepgx_server <- function(
                     "<h4>Gene tests:</h4>",
                     "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing"
                   ),
-                  GENETEST.METHODS(),
+                  ## GENETEST.METHODS(),
+                  ## label = shiny::HTML("
+                  ##   <div style='display: flex; align-items: center; justify-content: space-between; width: 100%;'>
+	          ##     <h4 style='margin: 0;'>Gene tests:</h4>
+                  ##     <a href='https://omicsplayground.readthedocs.io/en/latest/methods/#differential-gene-expression-testing' target='_blank' class='info-link' style='margin-left: 150px;'>
+                  ##       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                  ##     </a>
+                  ##   </div>
+                  ## "),
+                  choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
                 ),
+                shiny::checkboxInput(
+                  ns("time_series"),
+                  label = shiny::HTML("<b>Time series analysis</b>"),
+                  value = FALSE
+                ),
+                shiny::HTML("<small style='margin-top: -20px; display: block; font-size: 14px;'>Requires a 'time' column in samples.csv. Analysis uses limma spline and/or DESeq2/EdgeR with interaction term.</small>"),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -445,6 +459,64 @@ upload_module_computepgx_server <- function(
         )
 
         return(ui)
+      })
+
+      ## Checks specific for time series
+      shiny::observeEvent(input$time_series, {
+        
+        Y <- samplesRT()
+        Contrasts <- contrastsRT()
+        time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
+        sel.time <- intersect(time.var, colnames(Y))
+
+        ## 1. Ensure 'time' column is in samples.csv file
+        ## 2. Force DGE methods to be one of those allowing time series testing.
+        if (input$time_series) {
+          if (length(sel.time) == 0) {
+            shinyalert::shinyalert(
+              title = "WARNING",
+              text = "Column 'minute, hour, day, week, month, year, or time' not found in samples.csv. Skipping time series analysis.",
+              type = "warning"
+            )
+            shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
+          }
+          shiny::updateCheckboxGroupInput(
+            inputId = "gene_methods",
+            choices = c("trend.limma", "deseq2.lrt", "edger.lrt"),
+            selected = c("trend.limma", "deseq2.lrt", "edger.lrt")
+          )
+        } else {
+          shiny::updateCheckboxGroupInput(
+            inputId = "gene_methods",
+            choices = GENETEST.METHODS(),
+            selected = GENETEST.SELECTED()
+          )
+        }
+
+        ## 3. For each contrast, there should be at least 1 sample per condition, per time point. make more flexible.
+        ## (eg GEIGER not good)
+        if (input$time_series) {
+          i=1
+          for (i in 1:ncol(Contrasts)) {
+            contr.name <- colnames(Contrasts)[i]
+            var <- strsplit(contr.name[i], ":")[[1]][1]
+            if (var %in% time.var) next
+            jj <- match(rownames(Contrasts[, i, drop=FALSE]), rownames(Y))
+            D <- data.frame(contr = Contrasts[,i], time = Y[jj, sel.time[1]])
+            rownames(D) <- rownames(Y)[jj]
+            if (any(table(D[, 1], D[, 2]) == 0)) {
+            #if (any(table(D[, 1], D[, 2]) == 0)) { ## also allow least 1 pheno per time point.
+              shinyalert::shinyalert(
+                title = "WARNING",
+                text = "Not all time points are represented across specified contrasts. Skipping time series analysis.",
+                type = "warning"
+              )
+              shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
+              break;
+            }
+          }
+        }
+
       })
 
       # Input validators
@@ -734,7 +806,7 @@ upload_module_computepgx_server <- function(
         if (nmissing.counts > 0 || nmissing.countsX > 0) {
           shinyalert::shinyalert(
             title = "WARNING",
-            text = stringr::str_squish("Missing values are present in your data. You chose not to impute. The following differential gene expression (DGE) tests are currently unsupported with missing values: limma/voom, DESeq2 and edgeR LRT, QL F-test, Wald test. Please adjust your DGE test selection accordingly."),
+            text = stringr::str_squish("Missing values (MVs) detected in your data. You chose not to impute. The following methods are unsupported with MVs: limma/voom, DESeq2 and edgeR LRT, QL F-test, Wald test. Please adjust your methods selection."),
             type = "warning",
             timer = 60000
           )
@@ -748,12 +820,11 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
+        timeseries <- FALSE
+        if (input$time_series) timeseries <- TRUE
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-        if(input$do_extra == FALSE) {
-          extra.methods <- c()
-        }
-        
+        if(input$do_extra == FALSE) extra.methods <- c()
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
@@ -765,7 +836,12 @@ upload_module_computepgx_server <- function(
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
         #only.proteincoding <- ("only.proteincoding" %in% flt)
+        
         only.proteincoding <- FALSE      # DEPRECATED: use exclude_genes
+        excl.immuno <- ("excl.immuno" %in% flt)
+        excl.xy <- ("excl.xy" %in% flt)
+        only.proteincoding <- ("only.proteincoding" %in% flt)
+>>>>>>> DGE-timeseries
         filter.genes <- ("remove.notexpressed" %in% flt)
         #use.design <- !("noLM.prune" %in% input$dev_options)
         #prune.samples <- ("noLM.prune" %in% input$dev_options)
@@ -777,12 +853,10 @@ upload_module_computepgx_server <- function(
         
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
-        if (is.null(raw_dir())) { raw_dir(create_raw_dir(auth)) }
-
+        if (is.null(raw_dir())) raw_dir(create_raw_dir(auth))
         dataset_name <- gsub("[ ]", "_", trimws(upload_name()))
         creator <- auth$email
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
-
         pgx_save_folder <- auth$user_dir
 
         ##-----------------------------------------------
@@ -834,7 +908,7 @@ upload_module_computepgx_server <- function(
             custom_fc = custom_fc
           ),
           sc_compute_settings = sc_compute_settings.PARS,
-          ## normalize = do.normalization,
+          prune.samples = TRUE,
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
           only.known = remove.unknown,
@@ -851,6 +925,8 @@ upload_module_computepgx_server <- function(
           extra.methods = extra.methods,
           use.design = use.design,
           prune.samples = prune.samples,
+          timeseries = timeseries,
+          do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
           datatype = upload_datatype(),

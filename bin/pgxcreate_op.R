@@ -10,11 +10,9 @@ message("[create PGX process] : starting process")
 args <- commandArgs(trailingOnly = TRUE)
 
 temp_dir <- args[1]
-
 if (!exists("temp_dir")) temp_dir <- getwd()
 
 params_from_op <- file.path(temp_dir, "params.RData")
-
 if (file.exists(params_from_op)) {
   params <- readRDS(params_from_op)
 } else {
@@ -47,6 +45,7 @@ pgx <- playbase::pgx.createPGX(
   custom.geneset = params$custom.geneset,
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
+  timeseries = params$timeseries,
   settings = params$settings,
   sc_compute_settings = params$sc_compute_settings
 )
@@ -77,7 +76,6 @@ pgx <- playbase::pgx.computePGX(
 message("[ComputePgxServer:@compute] initialize object\n")
 
 # Save output to a PGX file
-
 pgx_name <- paste0(params$name, ".pgx")
 # if pgx.save folder exists, save pgx file to it, otherwise save in temp_dir
 if (dir.exists(params$pgx.save.folder)) {
