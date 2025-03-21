@@ -72,6 +72,7 @@ TimeSeriesUI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(parallel_info),
           bslib::layout_columns(
+            height = "calc(100vh - 181px)",
             col_widths = c(6, 6),
             TimeSeriesBoard.clustering_plot_ui(
               id = ns("clustering"),
@@ -99,6 +100,7 @@ TimeSeriesUI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(parallel_info),
           bslib::layout_columns(
+            height = "calc(100vh - 181px)",
             col_widths = c(5, 7),
             TimeSeriesBoard.features_table(
               id = ns("features"),
