@@ -67,7 +67,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       "Overview" = list(disable = NULL),
       "Sample QC" = list(disable = c("search_gene")),
       "Data table" = list(disable = NULL),
-      "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
+      "Samples" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
       "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion"))
     )
 

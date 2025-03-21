@@ -268,7 +268,7 @@ DataViewUI <- function(id) {
     ),
     # Sample information #####
     shiny::tabPanel(
-      "Sample information",
+      "Samples",
       bslib::layout_columns(
         height = fullH,
         col_widths = 12,

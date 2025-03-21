@@ -115,11 +115,13 @@ dataview_table_rawdata_server <- function(id,
       if (!input$show_full_table) {
         annot <- annot[, c("feature", "symbol", "gene_title")]
       }
-      annot$gene_title <- substring(annot$gene_title, 1, 50)
+
+      # hide symbol column if symbol is feature
       if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000), na.rm = TRUE) > 0.8) {
         annot$symbol <- NULL
       }
-
+      annot$gene_name <- NULL
+      
       df <- data.frame(
         annot,
         rho = rho,
