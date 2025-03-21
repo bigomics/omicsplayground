@@ -117,6 +117,13 @@ app_server <- function(input, output, session) {
       allow_new_users = opt$ALLOW_NEW_USERS,
       redirect_login = TRUE
     )
+  } else if (authentication == "endpoint") {
+    auth <- EndpointAuthenticationModule(
+      id = "auth",
+      auth_url = opt$AUTH_ENDPOINT,
+      redirect_login = FALSE,
+      fileBrowserRoot = opt$UPLOAD_ROOT
+    )
   } else if (authentication == "shinyproxy") {
     username <- Sys.getenv("SHINYPROXY_USERNAME")
     auth <- NoAuthenticationModule(
@@ -244,7 +251,9 @@ app_server <- function(input, output, session) {
       load_uploaded_data = load_uploaded_data,
       recompute_pgx = recompute_pgx,
       inactivityCounter = inactivityCounter,
-      new_upload = new_upload
+      new_upload = new_upload,
+      fileBrowser = opt$UPLOAD_BROWSER,
+      fileBrowserRoot = opt$UPLOAD_ROOT
     )
 
 

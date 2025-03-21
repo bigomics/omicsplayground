@@ -1,7 +1,8 @@
 fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
                           width = NULL,
                           buttonLabel = "Drag your file here or click to browse",
-                          placeholder = "No file selected") {
+                          placeholder = "No file selected",
+                          fileBrowser = FALSE) {
   restoredValue <- restoreInput(id = inputId, default = NULL)
 
   # Catch potential edge case - ensure that it's either NULL or a data frame.
@@ -28,6 +29,10 @@ fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
   }
   if (length(accept) > 0) {
     inputTag$attribs$accept <- paste(accept, collapse = ",")
+  }
+
+  if (fileBrowser) {
+    return(shinyFiles::shinyFilesButton(inputId, label='File select', title='Please select a file', multiple=FALSE))
   }
 
   div(
