@@ -43,10 +43,17 @@ upload_module_normalization_server <- function(
 
       ## Impute and remove duplicated features
       imputedX <- reactive({
-        shiny::req(r_counts())
+
+        dbg("[normalization_server:imputedX] reacted!")
+        
+        shiny::req(dim(r_counts()))
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_counts()
+        samples <- r_samples()        
+        contrasts <- r_contrasts()
 
+        dbg("[normalization_server:imputedX] running...")
+        
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
@@ -79,11 +86,25 @@ upload_module_normalization_server <- function(
 
         if (nmissing > 0 && input$filtermissing) {
           f <- input$filterthreshold
-          dbg(paste0("[normalization_server:imputedX] Threshold max. allowed NA: <", f))
-          sel <- which(rowMeans(is.na(X)) <= f)
-          nfiltered <- sum(rowMeans(is.na(X)) > f)
+          dbg(paste0("[normalization_server:imputedX] Threshold NA filter: ", f))
+          sample.contrasts <- playbase::contrasts.convertToLabelMatrix(contrasts,samples)
+          grp <- apply(sample.contrasts,1,paste,collapse='_')
+          if(f >= 1 || f < 0) {
+            grp.sum <- tapply(1:ncol(counts),grp,function(i) {
+              rx=counts[,i,drop=FALSE]; rowSums(!is.na(rx) & rx>0) })
+            maxsum <- apply(do.call(cbind,grp.sum),1,max,na.rm=TRUE)
+            sel <- (maxsum >= 3)
+          } else if (f<0) {
+            grp.avg <- tapply(1:ncol(counts),grp,function(i) {
+              rx=counts[,i,drop=FALSE]; rowMeans(!is.na(rx) & rx>0) })
+            maxavg <- apply(do.call(cbind,grp.avg),1,max,na.rm=TRUE)
+            sel <- (maxavg >= abs(f))
+          } else {
+            sel <- (rowMeans(is.na(X)) <= f)
+          }
+          nfiltered <- sum(!sel)
           dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", nfiltered)
-          X <- X[sel,,drop=FALSE]
+          X <- X[which(sel),,drop=FALSE]
 
           nmissing <- sum(is.na(X))
           nrowsmissing <- sum(rowSums(is.na(X))>0)        
@@ -106,8 +127,10 @@ upload_module_normalization_server <- function(
 
       ## Normalize
       normalizedX <- reactive({
+        dbg("[normalization_server:normalizedX] reacted!")        
         shiny::req(dim(imputedX()))
         X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
+        dbg("[normalization_server:normalizedX] running..")
         if (input$normalize) {
           m <- input$normalization_method
           ref <- NULL
@@ -779,14 +802,15 @@ upload_module_normalization_server <- function(
                       </a>")
                 ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-                shiny::checkboxInput(ns("filtermissing"), label = "Exclude NA rows", value = TRUE),
+                shiny::checkboxInput(ns("filtermissing"), label = "Keep NA rows", value = TRUE),
                 shiny::conditionalPanel(
                   "input.filtermissing == true",
                   ns = ns,
                   shiny::selectInput(ns("filterthreshold"), NULL,
-                    choices = c(">0% NA"=0.0, ">10% NA"=0.1, ">20% NA"=0.2,
-                      ">50% NA"=0.5),
-                    selected = 0.2)
+                                     choices = c("0% NA"=0.0, "<10% NA"=0.1, "<20% NA"=0.2,
+                                                 ">=3 valid in any group"= 3,
+                                                 ">=50% valid in any group"= -0.5 ),  
+                                     selected = 0.2)
                 ),
                 shiny::checkboxInput(ns("impute"), label = "Impute NA", value = TRUE),
                 shiny::conditionalPanel(

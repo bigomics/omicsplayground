@@ -525,19 +525,21 @@ UploadBoard <- function(id,
       )
 
       ## AZ: could simply use normalization_panel?
-      sc_normalization_panel <- wizardR::wizard_step(
-        step_title = "Step 4: QC/BC",
-        step_id = "step_qc",
-        server = TRUE,
-        upload_module_normalizationSC_ui(ns("checkqc_sc"))  ## ns clash??
-      )
-
-      normalization_panel <- wizardR::wizard_step(
-        step_title = "Step 4: QC/BC",
-        step_id = "step_qc",
-        server = TRUE,
-        upload_module_normalization_ui(ns("checkqc"))
-      )
+      if (upload_datatype() == "scRNA-seq") {
+        normalization_panel <- wizardR::wizard_step(
+          step_title = "Step 4: QC/BC",
+          step_id = "step_qc",
+          server = TRUE,
+          upload_module_normalizationSC_ui(ns("checkqc_sc"))  ## ns clash??
+        )
+      } else {
+        normalization_panel <- wizardR::wizard_step(
+          step_title = "Step 4: QC/BC",
+          step_id = "step_qc",
+          server = TRUE,
+          upload_module_normalization_ui(ns("checkqc"))
+        )
+      }
 
       compute_panel <- wizardR::wizard_step(
         step_title = "Compute!",
@@ -546,22 +548,7 @@ UploadBoard <- function(id,
         upload_module_computepgx_ui(ns("compute"))
       )
 
-      if (upload_datatype() == "scRNA-seq") {
-        wizard <- wizardR::wizard(
-          id = ns("upload_wizard"),
-          width = 90,
-          height = 75,
-          modal = TRUE,
-          style = "dots",
-          lock_start = FALSE,
-          counts_ui,
-          samples_ui,
-          contrasts_ui,
-          sc_normalization_panel,
-          compute_panel,
-          options = list(navigation = "buttons", finish = "Compute!")
-        )
-      } else {
+##      if (upload_datatype() == "scRNA-seq") {
         wizard <- wizardR::wizard(
           id = ns("upload_wizard"),
           width = 90,
@@ -579,7 +566,25 @@ UploadBoard <- function(id,
             finish = "Compute!"
           )
         )
-      }
+      ## } else {
+      ##   wizard <- wizardR::wizard(
+      ##     id = ns("upload_wizard"),
+      ##     width = 90,
+      ##     height = 75,
+      ##     modal = TRUE,
+      ##     style = "dots",
+      ##     lock_start = FALSE,
+      ##     counts_ui,
+      ##     samples_ui,
+      ##     contrasts_ui,
+      ##     normalization_panel,
+      ##     compute_panel,
+      ##     options = list(
+      ##       navigation = "buttons",
+      ##       finish = "Compute!"
+      ##     )
+      ##   )
+      ##}
       return(wizard)
     })
 
