@@ -282,7 +282,7 @@ upload_module_computepgx_server <- function(
                     ns("exclude_void"),
                     shiny::span( "Exclude void features:",
                       inline_info_button(
-                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name.")),
+                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored.")),
                     FALSE)
                 ),
                 conditionalPanel(
@@ -788,20 +788,14 @@ upload_module_computepgx_server <- function(
         ##-----------------------------------------------
         ## Params for scRNA-seq
         do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
-
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
         if (!any(nfeature_threshold)) nfeature_threshold = FALSE
-
         mt_threshold <- sc_compute_settings()$mt_threshold
         if (!any(mt_threshold)) mt_threshold = FALSE
-
         hb_threshold <- sc_compute_settings()$hb_threshold
         if (!any(hb_threshold)) hb_threshold = FALSE
-
         sc.covs <- as.character(input$regress_covariates)
-
-        ##-------------Take a look again. Works??
-        sc_compute_settings <- list(
+        sc_compute_settings.PARS <- list(
           ##azimuth_ref <- to add
           ##nfeature_threshold = sc_compute_settings()$nfeature_threshold,
           nfeature_threshold = nfeature_threshold,
@@ -813,14 +807,6 @@ upload_module_computepgx_server <- function(
           regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
           regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
         )
-        ##---------------------------
-        #dbg("--------------MNT1: nfeature_threshold=", sc_compute_settings$nfeature_threshold)
-        #dbg("--------------MNT2: mt_threshold=", sc_compute_settings$mt_threshold)
-        #dbg("--------------MNT3: hb_threshold=", sc_compute_settings$hb_threshold)
-        #dbg("--------------MNT4: compute_supercells=", sc_compute_settings$compute_supercells)
-        #dbg("--------------MNT5: regress_mt=", sc_compute_settings$regress_mt)
-        #dbg("--------------MNT6: regress_hb=", sc_compute_settings$regress_hb)
-        ##---------------------------
         
         ## Define create_pgx function arguments
         params <- list(
@@ -832,7 +818,7 @@ upload_module_computepgx_server <- function(
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
-          # Extra tables
+          # ------- extra tables ---------
           annot_table = annot_table,
           custom.geneset = custom_geneset,
           custom_fc = custom_fc,
@@ -847,7 +833,7 @@ upload_module_computepgx_server <- function(
             norm_method = norm_method(),
             custom_fc = custom_fc
           ),
-          sc_compute_settings = sc_compute_settings,
+          sc_compute_settings = sc_compute_settings.PARS,
           ## normalize = do.normalization,
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,

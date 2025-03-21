@@ -46,7 +46,7 @@ dataview_module_geneinfo_server <- function(id,
   moduleServer(id, function(input, output, session) {
 
     ## prepare data
-    geneinfo_data <- shiny::reactive({
+    geneinfo_data.OLD <- shiny::reactive({
       feature <- r.gene()
       shiny::req(feature %in% rownames(pgx$X))
 
@@ -103,8 +103,6 @@ dataview_module_geneinfo_server <- function(id,
       if (!is.na(symbol) && feature != symbol) {
         info <- c(feature = feature, info)
       }
-      ## info$organism <- NULL
-      ## info$databases <- NULL
 
       # prepare info for display
       res <- c()
@@ -120,6 +118,62 @@ dataview_module_geneinfo_server <- function(id,
       res
     })
 
+    geneinfo_data <- shiny::reactive({
+      feature <- r.gene()
+      shiny::req(feature %in% rownames(pgx$genes))
+
+      info <- playbase::pgx.getFeatureInfo(pgx, feature)
+      
+      if (is.null(info)) {
+        info <- tspan("(gene info not available)")
+        return(info)
+      }
+      
+      ## add feature name is not symbol
+      info$feature <- NULL
+      if (!is.na(info$symbol) && feature != info$symbol) {
+        info <- c(feature = feature, info)
+      }
+      
+      names(info) <- tolower(names(info))
+      names(info) <- sub("gene_symbol", "symbol", names(info))
+      names(info) <- sub("gene_title", "title", names(info))
+      names(info) <- sub("uniprot", "protein", names(info))
+      names(info) <- sub("map_location", "genome location", names(info))
+      names(info) <- sub("databases", "links", names(info))
+
+      # reorder
+      nn1 <- intersect(
+        c(
+          "feature", "gene_symbol", "symbol",
+          "title", "gene_title",
+          "name", "gene_name",
+          "organism", "human_ortholog", "ortholog",
+          "datatype", "data_type", 
+          "uniprot", "protein",
+          "map_location", "map", "genome location",
+          "databases", "links",
+          "summary", "description"
+        ),
+        names(info)
+      )
+      nn2 <- setdiff(names(info), nn1)
+      info <- info[c(nn1,nn2)]
+
+      # prepare info for display
+      res <- c()
+      for (i in 1:length(info)) {
+        xx <- paste(info[[i]], collapse = ", ")
+        res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
+      }
+      names(res) <- names(info)
+      res <- c(
+        "<p>", paste(res[nn1], collapse = "<p>"),
+        "<p>", paste(res[nn2], collapse = "<br>")
+      )
+      res
+    })
+    
 
     info.RENDER <- function() {
       res <- geneinfo_data()

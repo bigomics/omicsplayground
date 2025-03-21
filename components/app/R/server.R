@@ -848,7 +848,7 @@ app_server <- function(input, output, session) {
 
       # if available, rename chr0 to Chromossome and chr to locus
       if ("chr0" %in% names(label_types_available)) {
-        names(label_types_available)[names(label_types_available) == "chr0"] <- "Chromossome"
+        names(label_types_available)[names(label_types_available) == "chr0"] <- "Chromosome"
       }
 
       if ("chr" %in% names(label_types_available)) {
