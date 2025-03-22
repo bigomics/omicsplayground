@@ -43,16 +43,12 @@ upload_module_normalization_server <- function(
 
       ## Impute and remove duplicated features
       imputedX <- reactive({
-
-        dbg("[normalization_server:imputedX] reacted!")
         
         shiny::req(dim(r_counts()))
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_counts()
         samples <- r_samples()        
         contrasts <- r_contrasts()
-
-        dbg("[normalization_server:imputedX] running...")
         
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
@@ -105,19 +101,14 @@ upload_module_normalization_server <- function(
           nfiltered <- sum(!sel)
           dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", nfiltered)
           X <- X[which(sel),,drop=FALSE]
-
+          ## update nmissing
           nmissing <- sum(is.na(X))
           nrowsmissing <- sum(rowSums(is.na(X))>0)        
-          dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
-          dbg("[normalization_server:imputedX] X has ", nrowsmissing, " rows with NAs.")        
         }
 
         if (any(is.na(X)) > 0 && input$impute) {
           m <- input$impute_method
-          dbg("[normalization_server:imputedX] Imputing data using ", m)
           X <- playbase::imputeMissing(X, method = m)
-        } else {
-          dbg("[normalization_server:imputedX] No imputation.")
         }
 
         dbg("[normalization_server:imputedX] Checking for duplicated features")
@@ -127,10 +118,9 @@ upload_module_normalization_server <- function(
 
       ## Normalize
       normalizedX <- reactive({
-        dbg("[normalization_server:normalizedX] reacted!")        
-        shiny::req(dim(imputedX()))
-        X <- imputedX() ## can be imputed or not (see above). log2. Can have negatives.
-        dbg("[normalization_server:normalizedX] running..")
+        shiny::req(dim(imputedX()$X))
+        X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
+        prior <- imputedX()$prior
         if (input$normalize) {
           m <- input$normalization_method
           ref <- NULL
@@ -194,19 +184,16 @@ upload_module_normalization_server <- function(
         
         nmissing <- sum(is.na(X1))
         if (!input$batchcorrect) {
-          dbg("[normalization_server:correctedX] Data not corrected for batch effects")
           if (nmissing == 0) {
             cx <- list(X = X1)
           } else {
-            dbg("[normalization_server:correctedX] ", nmissing, " missing values in X1.")
+            dbg("[normalization_server:correctedX] create impX1. ", nmissing, " missing values.")
             impX1 <- playbase::imputeMissing(X1, method = "SVD2")
             cx <- list(X = X1, impX1 = impX1)
           }
         } else {
           m <- input$bec_method
-          dbg("[normalization_server:correctedX] Batch correction method = ", m)
           mm <- unique(c("uncorrected", m))
-
           pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
           batch.pars <- input$bec_param
           if (any(grepl("<autodectect>", batch.pars))) {
@@ -234,7 +221,6 @@ upload_module_normalization_server <- function(
             )
             cx <- list(X = xlist[[m]])
           } else {
-            dbg("[normalization_server:correctedX] missing values in X1")
             impX1 <- playbase::imputeMissing(X1, method = "SVD2")
             xlist <- playbase::runBatchCorrectionMethods(
               X = impX1,
@@ -277,7 +263,7 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
 
-        X0 <- imputedX()
+        X0 <- imputedX()$X
         X1 <- cleanX()$X ## normalized+cleaned
         samples <- r_samples()
         contrasts <- r_contrasts()
@@ -374,7 +360,7 @@ upload_module_normalization_server <- function(
 
       plot_normalization <- function() {
         rX <- r_counts()
-        X0 <- imputedX()
+        X0 <- imputedX()$X
         X1 <- cleanX()$X
         main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
@@ -459,7 +445,7 @@ upload_module_normalization_server <- function(
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_counts()
-        X1 <- imputedX()
+        X1 <- imputedX()$X
         X0 <- X0[rownames(X1), ] ## remove duplicates
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
