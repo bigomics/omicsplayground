@@ -50,8 +50,6 @@ SNF_UI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Similarity Network Fusion</b> (SNF) is a network-based method for multi-omics integration by taking multiple views of a network and fusing them together to construct an overall status matrix (Wang et al., 2014).")),
           bslib::layout_columns(
-            ##col_widths = c(6,6),
-            height = "calc(100vh - 181px)",
             col_widths = bslib::breakpoints(
               xxxl = c(7, 5),
               xl = c(7, 5),              
@@ -85,15 +83,6 @@ SNF_UI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
-              ## mofa_plot_dummy_ui(
-              ##   ns("snf_dummy"),
-              ##   label = "c",
-              ##   title = "SNF data",
-              ##   info.text = "Partial correlation graph",
-              ##   caption = "Module enrichment plot of top most enriched genesets.",
-              ##   height = c("100%", TABLE_HEIGHT_MODAL),
-              ##   width = c("auto", "100%")
-              ## )
             )
           )
         )

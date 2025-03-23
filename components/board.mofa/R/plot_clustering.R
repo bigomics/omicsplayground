@@ -57,7 +57,7 @@ mofa_plot_clustering_server <- function(id,
 
         ## color by contrast correlation
         y <- as.numeric(res$Y[,k])
-        rho <- cor( t(res$X), y)[,1]
+        rho <- cor( t(res$X), y, use="pairwise")[,1]
         posf <- playbase::mofa.prefix(res$posf)
 
         par(mfrow=c(2,2), mar=c(4,4,2.5,1))
@@ -66,7 +66,7 @@ mofa_plot_clustering_server <- function(id,
           pos1 <- posf[[i]]
           rho1 <- rho[rownames(pos1)]
           col1 <- playbase::colorscale(rho1, gamma=1)
-          plot(pos1, col = col1, pch = 20, cex = 1.2,
+          plot(pos1, col = col1, pch = 20, cex = 1.4,
             xlab = "UMAP1", ylab = "UMAP2", las = 1)
           title(toupper(names(res$posf)[i]), cex.main = 1.2)          
         }

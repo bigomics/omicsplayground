@@ -51,31 +51,12 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
 
     data <- shiny::eventReactive( pgx$mofa, {
 
-      ##shiny::req(pgx$mofa)
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-
-      ## if(is.null(pgx$mofa) || !"mofa" %in% names(pgx)) {
-      ##   shinyalert::shinyalert(
-      ##     title = "Error",
-      ##     text = "Please compute MOFA first"
-      ##   )
-      ##   return(NULL)
-      ## }
-      
-      ##shiny::req(pgx$mofa$lasagna)
       shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
-      
-      dbg("[LasagnaBoard] names(pgx$mofa) = ", names(pgx$mofa))      
-      dbg("[LasagnaBoard] names(pgx$mofa$lasagna) = ", names(pgx$mofa$lasagna))
       
       res <- pgx$mofa$lasagna
       res$posx <- pgx$mofa$posx
-      res$posf <- pgx$mofa$posf        
-      
-      dbg("[LasagnaBoard] len(res$posx) = ", length(res$posx))
-      dbg("[LasagnaBoard] len(res$posf) = ", length(res$posf))      
-      dbg("[LasagnaBoard] dim(res$posx[1]) = ", dim(res$posx[[1]]))
-      dbg("[LasagnaBoard] dim(res$posf[1]) = ", dim(res$posf[[1]]))      
+      res$posf <- pgx$mofa$posf
       
       ## update factors in selectInput
       ## contrasts <- colnames(pgx$contrasts)

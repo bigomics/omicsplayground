@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_table_enrichment_ui <- function(
+mofa_table_factorenrichment_ui <- function(
     id,
     label = "",
     title = "",
@@ -29,7 +29,7 @@ mofa_table_enrichment_ui <- function(
   )
 }
 
-mofa_table_enrichment_server <- function(id,
+mofa_table_factorenrichment_server <- function(id,
                                          gsea,
                                          selected_factor = reactive(1)
                                          )

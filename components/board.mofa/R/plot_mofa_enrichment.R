@@ -53,24 +53,19 @@ mofa_plot_enrichment_server <- function(id,
 
       nx <- grep("[:]",rownames(mofa$W),value=TRUE)      
       dtypes <- unique(sub(":.*","",nx))
-      dtypes
-
-      dbg("[mofa_plot_enrichment] length.select = ", length(select()))
       
       if(length(sel)==1) {
         W <- playbase::rename_by2(mofa$W, pgx$genes, "symbol", keep.prefix=TRUE)
         rnk <- playbase::normalize_multirank(W[,k])
+
         gset <- sub(".*:","",names(which(pgx$GMT[,sel]!=0)))
         gset <- as.vector(sapply(dtypes,paste0,":",gset))
         gset <- intersect(gset, names(rnk))
-
-        dbg("[mofa_plot_enrichment] head.gset = ", head(gset))
-        dbg("[mofa_plot_enrichment] head.rnk = ", head(rnk))
-        dbg("[mofa_plot_enrichment] head.names.rnk = ", head(names(rnk)))
-
+        
         par(mfrow=c(1,1), mar=c(3,4,2,1))
-        playbase::gsea.enplot( rnk, gset, cex=1.3, 
-          cex.main = 1.2, main.line = 0.6,
+        playbase::gsea.enplot(
+          rnk, gset, cex=1.3, 
+          main=sel, cex.main = 1.2, main.line = 0.6,
           ylab ="Normalized rank metric",
           cex.lab=1, lab.line=c(1,2.4))
       } else {
@@ -80,6 +75,7 @@ mofa_plot_enrichment_server <- function(id,
         }
         playbase::mofa.plot_enrichment(
           gsea$table[[k]],
+          type = "barplot",
           ntop = ntop,
           select = select(),
           strip.names = TRUE,

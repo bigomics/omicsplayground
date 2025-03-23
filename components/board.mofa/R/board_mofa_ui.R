@@ -248,7 +248,7 @@ MofaUI <- function(id) {
               sm = c(12, 12, 12, 12)
             ),
             mofa_plot_enrichment_ui(
-              ns("enrichmentplot"),
+              ns("plotenrichment"),
               title = "Geneset enrichment analysis of MOFA factors.",
               info.text = "Geneset enrichment analysis of MOFA factors. Please select an enriched gene set for the selected MOFA factor in the Factor enrichment table below. Note that MOFA factors can be selected from the dropdown menu on the right side of the board. In each enrichment plot, black vertical bars indicate the rank of genes in the selected geneset. The green curve corresponds to the profile of the normalized enrichment score computed from the Kolmogovov-Smirnov test. Upper left shift of the green curve indicates enrichment in the first group. Lower right shift of the green curve indicates enrichment in the second group.",
               caption = "Functional analysis of factor",
@@ -270,7 +270,7 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
             ),                        
-            mofa_table_enrichment_ui(
+            mofa_table_factorenrichment_ui(
               ns("mofa_factorenrichment"),
               title = "Factor enrichment table",
               info.text = "",

@@ -32,23 +32,33 @@ mofa_table_enrichmentgenes_server <- function(id,
 {
   moduleServer(id, function(input, output, session) {
 
-    table.RENDER <- function() {
-
-      k <- selected_factor()  ## which factor/phenotype
-      gset <- selected_pathway()  ## which factor/phenotype      
-      validate(need(gset %in% colnames(pgx$GMT), "unknown geneset"))
+    table_df <- function(full) {
       validate(need("mofa" %in% names(pgx), "No MOFA slot"))      
 
-      genes0 <- names(which(pgx$GMT[,gset]!=0))
-      genes <- names(which(pgx$mofa$GMT[, gset]!=0))
-
+      k <- selected_factor()  
+      shiny::req(k)
+      gset <- selected_pathway()  ## which factor/phenotype      
+      shiny::validate(shiny::need(length(gset)==1, "Please select a gene set"))      
+      shiny::req(gset %in% colnames(pgx$GMT))
+      genes <- names(which(pgx$mofa$GMT[,gset]!=0))
       pp <- playbase::map_probes(pgx$genes, genes, "symbol")
       W <- pgx$mofa$W
-      
       pp <- intersect(pp, rownames(W))
       ww <- sort( W[pp,k], decreasing = TRUE )
-      aa <- pgx$genes[pp,c("symbol","gene_title")]
-      df <- data.frame( aa, weight=ww, check.names=FALSE )
+      
+      if(full) {
+        aa <- pgx$genes[pp,c("feature","symbol","gene_title")]
+      } else {
+        aa <- pgx$genes[pp,c("feature","symbol")]
+      }
+      if(all(aa$feature == aa$symbol)) aa$symbol <- NULL      
+      df <- data.frame(aa, weight=ww, check.names=FALSE )
+      return(df)
+    }
+    
+    table.RENDER <- function(full=FALSE) {
+
+      df <- table_df(full)
       numeric.cols <- grep("score|weight|centrality",colnames(df))
       
       DT::datatable(
@@ -80,9 +90,14 @@ mofa_table_enrichmentgenes_server <- function(id,
 
     }
 
+    table.RENDER2 <- function() {
+      table.RENDER(full=TRUE)
+    }
+    
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
+      func2 = table.RENDER2,      
       selector = "single"
     )
 

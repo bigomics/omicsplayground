@@ -193,7 +193,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     )
     
     mofa_plot_enrichment_server(
-      "enrichmentplot",
+      "plotenrichment",
       mofa = mofa,
       pgx = pgx,
       input_k = reactive(input$selected_factor),
@@ -301,7 +301,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       annot = reactive(pgx$genes)
     )
     
-    enrichmentTable <- mofa_table_enrichment_server(
+    enrichmentTable <- mofa_table_factorenrichment_server(
       "mofa_factorenrichment",
       gsea = reactive(mofa()$gsea),
       selected_factor = reactive(input$selected_factor)            

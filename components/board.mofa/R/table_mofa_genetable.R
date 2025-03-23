@@ -41,9 +41,15 @@ mofa_table_genetable_server <- function(id,
 
       wct <- playbase::mofa.plot_centrality(mofa, k, justdata=TRUE)
       wct <- wct[order(-wct$weight),]
-      aa <- annot()[wct$feature,c("feature","symbol")]
+      if(full) {
+        aa <- annot()[wct$feature,c("feature","symbol","gene_title")]
+      } else {
+        aa <- annot()[wct$feature,c("feature","symbol")]        
+      }
+      if(all(aa$feature == aa$symbol)) aa$symbol <- NULL      
       wct$feature <- NULL
       df <- data.frame( factor=k, aa, wct )
+
       numeric.cols <- grep("score|weight|centrality",colnames(df))
       
       DT::datatable(
@@ -81,7 +87,7 @@ mofa_table_genetable_server <- function(id,
 
     }
 
-    table.RENDER2 <- function(full=FALSE) {
+    table.RENDER2 <- function() {
       table.RENDER(full=TRUE)
     }
     
