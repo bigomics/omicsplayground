@@ -38,8 +38,6 @@ table_deepnet_gradients_server <- function(id,
       net <- net()
       grad <- net$get_gradients()[[1]]
       all.fc <- phenoFC()
-
-      dbg("[table_deepnet_gradients_server] reacted!")
       
       cond <- conditions()
       dtypes <- datatypes()

@@ -51,8 +51,11 @@ plot_deepnet_clusters_server <- function(id,
       net <- net()
       nsamples <- ncol(net$X[[1]])
       cex <- ifelse(nsamples < 40, 1.4, 1.15)
-      cex <- ifelse(nsamples > 100, 0.9, cex)      
-      par(mfrow=c(2,2), mar=c(4,4,2,1))
+      cex <- ifelse(nsamples > 100, 0.9, cex)
+      ntypes <- length(net$X)
+      nc <- ceiling(sqrt(ntypes))
+      nr <- ceiling(ntypes/nc)
+      par(mfrow=c(nr,nc), mar=c(4,4,2,1))
       playbase::deep.plotRedux(
         net, method="pca", views=NULL, par=FALSE, cex=cex) 
     }

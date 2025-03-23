@@ -189,8 +189,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       
       l1 = 1
       l2 = 100
-      ae.wt=1e6
-      ae.wt <- 3
+      ae.wt=3
       if( input$model == "AE")  ae.wt <- 1e3
       if( input$model == "MLP") ae.wt <- 1e-3      
       loss_weights <- c(y=1/ae.wt, ae=ae.wt, l1=l1, l2=l2)

@@ -132,6 +132,27 @@ DeepNetUI <- function(id) {
         )
       ),  ## end of tabPanel
 
+
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "Biomarker heatmap",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          bs_alert(HTML("<b>Biomarker heatmap.</b>.")),
+          bslib::layout_columns(
+            col_widths = c(12),
+            height = "calc(100vh - 180px)",            
+            plot_deepnet_biomarkerheatmap_ui(
+              ns("deepnet_bigheatmap"),
+              title = "Biomarker heatmap",
+              info.text = "",
+              caption = ""
+            )              
+          )
+        )
+      ),  ## end of tabPanel
+
       ##----------------------------------------------------------------
       shiny::tabPanel(
         "Gradient vs. foldchange",
@@ -166,28 +187,7 @@ DeepNetUI <- function(id) {
             )
           )
         )
-      ),  ## end of tabPanel
-
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        "Biomarker heatmap",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          bs_alert(HTML("<b>Biomarker heatmap.</b>.")),
-          bslib::layout_columns(
-            col_widths = c(12),
-            height = "calc(100vh - 180px)",            
-            plot_deepnet_biomarkerheatmap_ui(
-              ns("deepnet_bigheatmap"),
-              title = "Biomarker heatmap",
-              info.text = "",
-              caption = ""
-            )              
-          )
-        )
       )  ## end of tabPanel
-      
       
     )
   )
