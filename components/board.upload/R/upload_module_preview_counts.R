@@ -134,8 +134,8 @@ upload_table_preview_counts_server <- function(
                 shiny::radioButtons(
                   ns("data_source"),
                   label = "Select input files from:",
-                  choices = c("csv", "pgx"),
-                  selected = "csv",
+                  choices = c("multi-csv", "pgx", "single-csv"),
+                  selected = "multi-csv",
                   inline = TRUE
                 )
               },
@@ -164,8 +164,20 @@ upload_table_preview_counts_server <- function(
               },
               if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'csv'", ns("data_source")),
+                  condition = sprintf("input['%s'] == 'multi-csv'", ns("data_source")),
                   shiny::uiOutput(ns("dynamic_file_inputs"))#,
+                )
+              },
+              if (upload_datatype() == "multi-omics") {
+                shiny::conditionalPanel(
+                  condition = sprintf("input['%s'] == 'single-csv'", ns("data_source")),
+                  fileInputArea(
+                    ns("counts_csv"),
+                    shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
+                    multiple = FALSE,
+                    accept = c(".csv"),
+                    width = "100%"
+                  )
                 )
               },
               if (upload_datatype() != "multi-omics") {
