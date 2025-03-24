@@ -45,7 +45,7 @@ LasagnaUI <- function(id) {
           bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for a <u>L</u>ayered <u>A</u>pproach to <u>S</u>imultaneous <u>A</u>nalysis of <u>G</u>enomic and <u>N</u>etwork <u>A</u>ssociations'.")),
           bslib::layout_columns(
             col_widths = c(6,6),
-            height = "100%",
+            height = "calc(100vh - 180px)",
             mofa_plot_lasagna_ui(
               ns("lasagna"),
               title = "Multi-layer model",
