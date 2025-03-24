@@ -35,13 +35,10 @@ plot_deepnet_clusters_server <- function(id,
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
       net <- net()
-
-      dbg("[deepnet_clusters_server] reacted: clustering samples...")      
       nsamples <- ncol(net$X[[1]])
       cex <- ifelse(nsamples < 40, 1.4, 1.15)
       cex <- ifelse(nsamples > 100, 0.9, cex)
       par(mfrow=c(1,1), mar=c(4,4,2,1))
-      dbg("[deepnet_clusters_server] callling deep.plotRedux...")
       playbase::deep.plotRedux(net, method="pca",
         views="multi-omics", par=FALSE, cex=cex) 
     }
