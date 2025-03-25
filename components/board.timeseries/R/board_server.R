@@ -89,14 +89,15 @@ TimeSeriesBoard <- function(id,
       time  <- pgx$samples[,timevar]
       cX <- t(scale(t(pgx$X)))
       timeX <- t( playbase::rowmean( t(cX), time ))
-      
+      nmissing <- sum(is.na(timeX))
+      if (nmissing > 0)
+        timeX <- timeX[complete.cases(timeX), , drop = FALSE] ## impute??
       clust <- playbase::pgx.FindClusters(t(timeX), method="kmeans")[[1]]
       rownames(clust) <- rownames(timeX)
-      colnames(clust)
       colors <- clust[,paste0("kmeans.",knn)]
       ##colors <- WGCNA::standardColors(435)[colors]
       colors <- paste0("M",colors)
-
+      
       ## update selectinput
       modulenames <- sort(unique(colors))
       shiny::updateSelectInput(

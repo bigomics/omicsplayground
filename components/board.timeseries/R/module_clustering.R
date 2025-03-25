@@ -61,6 +61,7 @@ TimeSeriesBoard.clustering_server <- function(id,
                                               data,
                                               timefactor,
                                               watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
 
     plot_data <- shiny::reactive({
