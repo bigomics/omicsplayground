@@ -142,23 +142,28 @@ dataview_module_geneinfo_server <- function(id,
       names(info) <- sub("map_location", "genome location", names(info))
       names(info) <- sub("databases", "links", names(info))
 
-      # reorder
+      # reorder: make some paragraphs
       nn1 <- intersect(
         c(
           "feature", "gene_symbol", "symbol",
-          "title", "gene_title",
           "name", "gene_name",
           "organism", "human_ortholog", "ortholog",
           "datatype", "data_type", 
           "uniprot", "protein",
           "map_location", "map", "genome location",
-          "databases", "links",
+          "databases", "links"
+        ),
+        names(info)
+      )
+      nn2 <- intersect(
+        c(
+          "title", "gene_title",
           "summary", "description"
         ),
         names(info)
       )
-      nn2 <- setdiff(names(info), nn1)
-      info <- info[c(nn1,nn2)]
+      nn3 <- setdiff(names(info), c(nn1,nn2))
+      info <- info[c(nn1,nn2,nn3)]
 
       # prepare info for display
       res <- c()
@@ -168,8 +173,9 @@ dataview_module_geneinfo_server <- function(id,
       }
       names(res) <- names(info)
       res <- c(
-        "<p>", paste(res[nn1], collapse = "<p>"),
-        "<p>", paste(res[nn2], collapse = "<br>")
+        "<p>", paste(res[nn1], collapse = "<br>"),
+        "<p>", paste(res[nn2], collapse = "<p>"),
+        "<p>", paste(res[nn3], collapse = "<br>")
       )
       res
     })
