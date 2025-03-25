@@ -85,13 +85,16 @@ TimeSeriesBoard.features_server <- function(id,
                                             timevar,
                                             contrast,
                                             groupvar,
+                                            gx_statmethod,
                                             watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
 
     plot_data <- shiny::reactive({
       
       sel.timevar <- timevar()
       group <- groupvar()
+      gx_statmethod <- gx_statmethod()
       
       genes <- rownames(pgx$X)
       genes <- table_module$rownames_all()
@@ -117,8 +120,27 @@ TimeSeriesBoard.features_server <- function(id,
     stats_data <- shiny::reactive({
       k <- contrast()
       shiny::req(k)
-      stats <- pgx$gx.meta$meta[[k]][,1:5]
-      stats
+      gx_mm <- gx_statmethod()
+      shiny::validate(
+        shiny::need(length(gx_mm) > 0,
+          "Please select at least 1 Statistical method under 'Advanced options'")
+      )
+      stats <- as.matrix(pgx$gx.meta$meta[[k]]) #[,1:5]
+      i=1; tables=list()
+      for(i in 1:length(gx_mm)) {
+        tables[[i]] <- stats[, grep(gx_mm[i],colnames(stats)), drop = FALSE]
+      }
+      tables <- do.call(cbind, tables)
+      sel <- grep("^fc.*", colnames(tables))
+      meta.fx <- apply(tables[, sel, drop = FALSE], 1, function(x) x[which.max(abs(x))])
+      sel <- grep("^p.*", colnames(tables))
+      meta.p <- apply(tables[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
+      sel <- grep("^q.*", colnames(tables))
+      meta.q <- apply(tables[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
+      meta <- cbind(meta.fx = meta.fx, meta.p = meta.p, meta.q = meta.q)
+      stats <- cbind(meta, stats[, c("avg.0","avg.1")], tables)
+      rm(tables, meta.fc, meta.p, meta.q, meta)
+      return(stats)
     })
     
     ##-----------------------------------------------------
@@ -166,7 +188,7 @@ TimeSeriesBoard.features_server <- function(id,
 
       df <- stats_data()
       shiny::req(df)
-      
+
       numeric.cols <- colnames(df)
       DT::datatable(
         df,

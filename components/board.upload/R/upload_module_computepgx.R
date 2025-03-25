@@ -482,8 +482,8 @@ upload_module_computepgx_server <- function(
           }
           shiny::updateCheckboxGroupInput(
             inputId = "gene_methods",
-            choices = c("trend.limma", "deseq2.lrt", "edger.lrt"),
-            selected = c("trend.limma", "deseq2.lrt", "edger.lrt")
+            choices = c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf"),
+            selected = c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf")
           )
         } else {
           shiny::updateCheckboxGroupInput(

@@ -32,18 +32,39 @@ TimeSeriesInputs <- function(id) {
         "Advanced options",
         icon = icon("cog", lib = "glyphicon"),
         withTooltip(
-          shiny::checkboxInput(ns("timefactor"), "Time as factor", TRUE),
+          shiny::checkboxInput(ns("timefactor"),
+            "Time as factor",
+            TRUE
+          ),
           "Treat time as factor"
         ),
         withTooltip(
           shiny::selectInput(
-            ns("knn"), "Number of clusters:",
-            choices = c(2,3,4,5,7,10,15), selected=7
+            ns("knn"),
+            "Number of clusters:",
+            choices = c(2,3,4,5,7,10,15),
+            selected=7
           ),
           "Choose number of KNN clusters."
         ),
-        shiny::selectInput(ns("maxfeatures"), "Max features per module:",
-          choices=c(50,100,200,500), selected=100)
+        shiny::selectInput(
+          ns("maxfeatures"),
+          "Max features per module:",
+          choices=c(50,100,200,500),
+          selected=100
+        ),
+        withTooltip(
+          shiny::checkboxGroupInput(
+            ns("gx_statmethod"),
+            "Statistical methods:",
+            choices = c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf"),
+            select = c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf"),
+            inline = TRUE
+          ),
+          title = "Select which statistical method you want to see results from.",
+          placement = "right",
+          options = list(container = "body")
+        )
       )
     )
   )
