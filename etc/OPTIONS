@@ -36,5 +36,5 @@ HUBSPOT_CHECK        = TRUE
 #BOARDS_ENABLED = welcome;load;upload;cmap
 
 #MODULES_ENABLED = Welcome;Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;MultiOmics
-#MODULES_TRANSCRIPTOMICS = Welcome;Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio
+MODULES_TRANSCRIPTOMICS = Welcome;Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio
 MODULES_MULTIOMICS = Welcome;Datasets;DataView;Expression;SystemsBio;MultiOmics
