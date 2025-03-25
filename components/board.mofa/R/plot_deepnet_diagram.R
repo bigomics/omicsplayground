@@ -32,15 +32,21 @@ plot_deepnet_diagram_server <- function(id,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot.RENDER <- function(n=12) {
-      update()
-      net <- isolate(net()) ## do not react everytime
-      shiny::req(net)
+    svgfile <- NULL    
+    
+    plot.RENDER <- eventReactive({
+      list( update(), net() )
+    },{      
 
-      progress <- shiny::Progress$new(session, min=0, max=1)
-      on.exit(progress$close())
-      progress$set(message = paste("Creating diagram..."), value = 0.33)
-      svgfile <- playbase::deep.plotNeuralNet(net, svgfile=NULL)
+      if(update()==TRUE || is.null(svgfile)) {
+        net <- net() ## do not react everytime      
+        progress <- shiny::Progress$new(session, min=0, max=1)
+        on.exit(progress$close())
+        progress$set(message = paste("Creating diagram..."), value = 0.33)
+        svgfile <<- playbase::deep.plotNeuralNet(net, svgfile=NULL)
+        update(FALSE)
+      }
+      
       validate(
         need(!is.null(svgfile), "Could not create model diagram")
       )
@@ -54,8 +60,7 @@ plot_deepnet_diagram_server <- function(id,
         viewBox = FALSE
       )
       return(pz)
-    }
-
+    })
 
     PlotModuleServer(
       "plot",

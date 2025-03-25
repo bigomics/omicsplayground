@@ -21,19 +21,17 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
 
     ## update network diagram if model changes and reset
     update <- reactiveVal(0)
-    update_diagram <- reactiveVal("abc")
-
+    update_diagram <- reactiveVal(FALSE)
     
     ## ================================================================================
     ## ============================ OBSERVERS =========================================
     ## ================================================================================
-    
-    
+       
     my_observers <- list()
     
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Model training" = list(disable = c("show_conditions","show_datatypes")),
+      "Model training" = list(disable = c("show_conditions")),
       "Gradient vs. foldchange" = list(disable = NULL),
       "Biomarker heatmap" = list(disable = "show_conditions")
     )
@@ -69,8 +67,11 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
     
     
-    my_observers[[4]] <- shiny::observeEvent( input$selected_pheno, {
+    my_observers[[4]] <- shiny::observeEvent({
+      list(input$selected_pheno, pgx$samples)
+    }, {
       shiny::req(input$selected_pheno)
+      shiny::req(pgx$samples)
       conditions <- sort(unique(pgx$samples[, input$selected_pheno]))
       shiny::updateSelectInput(session, "show_conditions", choices = conditions,
                                selected = head(conditions,3) )      
@@ -119,31 +120,43 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       }
     })
 
-    
     my_observers[[9]] <- shiny::observeEvent({
       list(pgx$X, input$addgsets)
     },{
+      
       shiny::req(pgx$X)
       shiny::req(!is.null(input$addgsets) && length(input$addgsets))
       
       if(!all(grepl(":",rownames(pgx$X)))) {
+        dbg("[DeepNetBoard] 0: SINGLE OMICS???")
         shiny::updateSelectInput(
           session, "show_datatypes", choices = "gx", selected = "gx")
         return(NULL)
       }
-      
-      ## update datatype selectinput
-      datatypes <- sort(unique(sub(":.*","",rownames(pgx$X))))
-      if(input$addgsets) datatypes <- c(datatypes, "gset")
-      sel.datatype <- unique(c(intersect(c("px","gx"), datatypes),datatypes))
-      if(length(sel.datatype)==0) sel.datatype <- datatypes[1]
-      shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
-                               selected = sel.datatype[1] )
 
-      ## update??
-      ##update_diagram("abc")
+      ## update datatype selectinput
+      sel.datatype <- input$show_datatypes
+
+      datatypes <- sort(unique(sub(":.*","",rownames(pgx$X))))
+      if(input$addgsets) {
+        datatypes <- unique(c(datatypes, "GSET"))
+        sel.datatype <- unique(c(sel.datatype, "GSET"))
+      }
+      sel.datatype <- intersect(sel.datatype, datatypes)
+
+      if(length(sel.datatype)==0) sel.datatype <- datatypes
+      shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
+        selected = sel.datatype )
+
     })
 
+    my_observers[[10]] <- shiny::observeEvent({
+      ##list(input$addgsets, input$show_datatypes, input$layers)
+      list( input$selected_pheno, input$reset )
+    },{
+      update_diagram(TRUE)
+    })
+    
     ## add to list global of observers. suspend by default.
     my_observers <- my_observers[!sapply(my_observers,is.null)]
     # lapply( my_observers, function(b) b$suspend() )
@@ -157,11 +170,10 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     net <- shiny::eventReactive({
       list( input$selected_pheno, input$reset )
     }, {
-      
-      pheno <- input$selected_pheno
-      shiny::req(pheno)
+      shiny::req(input$selected_pheno)
+      shiny::req(input$show_datatypes)      
 
-      info("[DeepNetBoard] initialize deepnet model for",pheno)
+      pheno <- input$selected_pheno
       X <- pgx$X
       if(any(is.na(X))) {
         info("[DeepNetBoard] imputing missing values in X")
@@ -173,12 +185,18 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       X <- X[,ii]
       sdX <- matrixStats::rowSds(X, na.rm=TRUE)
       xx <- playbase::mofa.split_data(X)  ## also handles single-omics
-
+      
+      ## Subset selection of datatypes for deepnet
+      dt <- isolate(input$show_datatypes)
+      if(length(dt)) {
+        xx <- xx[setdiff(dt,"GSET")]
+      }
+      
       if(input$addgsets) {
         info("[DeepNetBoard] adding genesets ")
         gsetx <- pgx$gsetX[,ii]
-        xx <- c( xx, list(gset=gsetx))
-        update_diagram("abc")        
+        xx <- c( xx, list(GSET=gsetx))
+        update_diagram(TRUE)        
       }
       
       if(input$augment) {
@@ -193,7 +211,6 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       if( input$model == "AE")  ae.wt <- 1e3
       if( input$model == "MLP") ae.wt <- 1e-3      
       loss_weights <- c(y=1/ae.wt, ae=ae.wt, l1=l1, l2=l2)
-      dbg("[DeepNetBoard] loss_weights = ", loss_weights)                
       
       ## create the Neural network
       yy <- as.list(y)  ## one target for now...
@@ -201,7 +218,6 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       names(yy) <- pheno
       
       info("[DeepNetBoard] creating DeepNet model: ", input$model)
-      dbg("[DeepNetBoard] layers = ", input$layers)                      
       latent_dim <- input$latent_dim
 
       if(input$layers == "mini") {
@@ -231,10 +247,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       )
 
       info("[DeepNetBoard] finished creating model!")
-
-      if( input$layers != update_diagram()) {
-        update_diagram(input$layers)
-      }
+      ## update_diagram(TRUE)      ## need update?
       warned <<- FALSE
       return(net)
     })
@@ -244,7 +257,6 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       list(input$selected_pheno)
     } , {
       ## Calculate correspoding T-test statistics
-      dbg("[DeepNetBoard] calculating FC..")      
       pheno <- input$selected_pheno
       y <- pgx$samples[,pheno]
       X <- pgx$X
@@ -252,7 +264,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         rownames(X) <- paste0("gx:",rownames(X))        
       }      
       gsetX <- pgx$gsetX
-      rownames(gsetX) <- paste0("gset:",rownames(gsetX))
+      rownames(gsetX) <- paste0("GSET:",rownames(gsetX))
       X <- rbind(X, gsetX)
       
       ii <- which(!is.na(y))

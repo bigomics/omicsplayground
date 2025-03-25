@@ -49,11 +49,14 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       annot <- NULL
       if(add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]),]      
 
-      # set lables
-      labels <- playbase::mofa.strip_prefix(pgx$genes$gene_name)
-      labels <- paste0(pgx$genes$data_type,":",labels)
-      names(labels) <- pgx$genes$feature
-
+      # set labels
+      gene.labels <- playbase::mofa.strip_prefix(pgx$genes$gene_name)
+      gene.labels <- paste0(pgx$genes$data_type,":",gene.labels)
+      names(gene.labels) <- pgx$genes$feature
+      gset.labels <- paste0("GSET:",rownames(pgx$gsetX))
+      names(gset.labels) <- paste0("gset:",rownames(pgx$gsetX))
+      labels <- c(gene.labels, gset.labels)
+      
       playbase::deep.plotBiomarkerHeatmap(
         net, ntop = ntop[1],
         datatypes = datatypes(),

@@ -77,8 +77,6 @@ plot_deepnet_gradients_server <- function(id,
       }
       
       if( type == "scatter") {
-        X <- net$X
-        y <- net$y
         fc <- phenoFC()
         par(mfrow=c(nr,nc), mar=c(4,4,2,1))
         playbase::deep.plotGradientVSFoldchange(

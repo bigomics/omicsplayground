@@ -8,8 +8,8 @@ DeepNetInputs <- function(id) {
   bigdash::tabSettings(
     ## data set parameters
     shiny::selectInput(ns("selected_pheno"), "Select phenotype:", choices = NULL, multiple = FALSE),
+    shiny::selectInput(ns("show_datatypes"), "Select datatypes:", choices = NULL, multiple = TRUE),
     shiny::selectInput(ns("show_conditions"), "Show conditions:", choices = NULL, multiple = TRUE),
-    shiny::selectInput(ns("show_datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),
 
     br(),
     p("Network learning:"),
