@@ -120,7 +120,7 @@ dataview_table_rawdata_server <- function(id,
       if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000), na.rm = TRUE) > 0.8) {
         annot$symbol <- NULL
       }
-      annot$gene_name <- NULL
+      ##annot$gene_name <- NULL
       
       df <- data.frame(
         annot,

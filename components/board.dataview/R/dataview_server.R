@@ -34,7 +34,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     ## ------- observe functions -----------
     my_observers[[1]] <- shiny::observeEvent(input$board_info, {
-      dbg("[DataViewBoard] observer1")
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>DataView Board</strong>"),
         shiny::HTML(data_infotext),
@@ -44,7 +43,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     ## update filter choices upon change of data set
     my_observers[[2]] <- shiny::observe({
-      dbg("[DataViewBoard] observer2")
 
       shiny::req(pgx$Y, pgx$samples)
       ## levels for sample filter
@@ -72,7 +70,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     )
 
     my_observers[[3]] <- shiny::observeEvent(input$tabs, {
-      dbg("[DataViewBoard] observer3")
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
@@ -86,7 +83,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         )
       },
       {
-        dbg("[DataViewBoard] observer4")
         shiny::req(input$data_type)
 
 

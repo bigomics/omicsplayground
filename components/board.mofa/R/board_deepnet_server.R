@@ -357,7 +357,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       "deepnet_bigheatmap",
       net = net,
       pgx = pgx,
-      ntop = c(40,40),      
+      ntop = c(50,50),      
       plot.res = c(110, 110),
       add_annot = c(1,1),
       show_legend = c(1,1),

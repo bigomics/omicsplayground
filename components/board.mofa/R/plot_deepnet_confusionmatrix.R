@@ -40,7 +40,6 @@ plot_deepnet_confusionmatrix_server <- function(id,
     plot_data <- reactive({
       update()  ## react on updates
       shiny::req(input$showset)
-      dbg("[deepnet_confusionmatrix_server] triggered...")      
       mat <- playbase::deep.getConfusionMatrix(net(), what = input$showset)
       mat <- mat[[1]]
       return(

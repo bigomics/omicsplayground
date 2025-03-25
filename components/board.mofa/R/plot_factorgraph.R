@@ -42,9 +42,8 @@ mofa_plot_factorgraph_server <- function(id,
       gr <- res$graphs$factors
       igraph::add_shape('dot');
       igraph::add_shape('star')
-      igraph::V(gr)$label <- igraph::V(gr)$name        
+      igraph::V(gr)$label <- igraph::V(gr)$name
       mst <- input$mst
-      ## plot( gr )
       vis <- playbase::mofa.plot_module(
         gr, mst=mst, cex=0.3, plotlib="visnet")
       vis <- vis %>%

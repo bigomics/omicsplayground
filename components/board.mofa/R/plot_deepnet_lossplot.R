@@ -35,7 +35,6 @@ plot_deepnet_lossplot_server <- function(id,
     plot.RENDER <- function() {
       update()  ## react on updates
       net <- net()
-      dbg("[deepnet_aescatter_server] triggered...")
       n <- length(net$loss_history)
       shiny::validate(shiny::need(n>0, "please run network"))
 

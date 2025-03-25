@@ -737,14 +737,6 @@ app_server <- function(input, output, session) {
       dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
 
-      # choose the default labeltype based on datatype
-
-      if (PGX$datatype == "metabolomics") {
-        labeltype("gene_title")
-      } else {
-        labeltype("feature") # probe is feature (rownames of counts)
-      }
-
       tab_control()
 
       is.logged <- auth$logged
@@ -761,8 +753,6 @@ app_server <- function(input, output, session) {
       ## show all main tabs
       shinyjs::runjs("sidebarOpen()")
       shinyjs::runjs("settingsOpen()")
-
-      
 
       info("[SERVER] trigger on change dataset done!")
     }
@@ -815,56 +805,48 @@ app_server <- function(input, output, session) {
     }
   }
 
+  ## -------------------------------------------------------------
+  ## Labeltype stuff
+  ## -------------------------------------------------------------
+
   # populate labeltype selector based on pgx$genes
   observeEvent(
     {
-      PGX$genes
+      ##PGX$genes
+      list( PGX$X, PGX$name )
     },
     {
       req(PGX$genes)
+      
+      genes_mat <- PGX$genes
 
-      clean_genes_matrix <- PGX$genes
-
-      # remove NA columns
-      clean_genes_matrix <- clean_genes_matrix[, !apply(is.na(clean_genes_matrix), 2, all), drop = FALSE]
-
-      # remove columns with only 1 unique value
-      clean_genes_matrix <- clean_genes_matrix[, sapply(clean_genes_matrix, function(x) length(unique(x)) > 1), drop = FALSE]
-
-      # remove duplicated columns
-      clean_genes_matrix <- clean_genes_matrix[, !duplicated(t(clean_genes_matrix)), drop = FALSE]
-
+      # remove NA columns and columns with only 1 unique value
+      genes_mat <- genes_mat[, colMeans(is.na(genes_mat)) < 1, drop = FALSE]
+      genes_mat <- genes_mat[, sapply(genes_mat, function(x) length(unique(x)) > 1), drop = FALSE]
+      genes_mat <- genes_mat[, !duplicated(t(genes_mat)), drop = FALSE]
 
       # improve naming of label types (gene_title -> name) and remove pos, map, tx_len
-      label_types_available <- colnames(clean_genes_matrix)
+      label_types <- colnames(genes_mat)
+      names(label_types) <- label_types
+      names(label_types)[names(label_types) == "gene_title"] <- "title"
+      label_types <- label_types[!grepl("pos|map|tx_len|source", names(label_types))]
+      names(label_types) <- sub("^chr$","chromosome",names(label_types))
 
-      names(label_types_available) <- label_types_available
-
-      # rename gene_title name to name
-      names(label_types_available)[names(label_types_available) == "gene_title"] <- "name"
-
-      # remove pos, map, tx_len, source (not interesting for label types)
-      label_types_available <- label_types_available[!grepl("pos|map|tx_len|source", names(label_types_available))]
-
-      # if available, rename chr0 to Chromossome and chr to locus
-      if ("chr0" %in% names(label_types_available)) {
-        names(label_types_available)[names(label_types_available) == "chr0"] <- "Chromosome"
+      # default selection depending on datatype
+      if (PGX$datatype == "metabolomics") {
+        sel.labeltype <- "gene_title"
+      } else {
+        sel.labeltype <- "feature" # probe is feature (rownames of counts)
       }
-
-      if ("chr" %in% names(label_types_available)) {
-        names(label_types_available)[names(label_types_available) == "chr"] <- "Locus"
-      }
-
+      
       shiny::updateSelectInput(
         session,
         "selected_labeltype",
-        choices = label_types_available,
-        selected = labeltype()
+        choices = label_types,
+        selected = sel.labeltype
       )
     }
   )
-
-
 
   # change label type based on selected input
   shiny::observeEvent(
@@ -872,26 +854,23 @@ app_server <- function(input, output, session) {
       input$selected_labeltype
     },
     {
+      # update app reactiveVal. NOTE: to be DEPRECATED. instead use
+      # the gene_name columns as below. This will be automatically
+      # available for all pgx during app.
       labeltype(input$selected_labeltype)
-    }
-  )
 
-  # if labeltype is updated (via different pgx data types), we need to update the selector choice
-  shiny::observeEvent(
-    {
-      labeltype()
-    },
-    {
-      # if input$selected_labeltype does not match labeltype, we need to update the selector
-      if (input$selected_labeltype != labeltype()) {
-        shiny::updateSelectInput(
-          session,
-          "selected_labeltype",
-          selected = labeltype()
-        )
+      # TESTING: update gene_name column in pgx$genes. NOTE: we need
+      # to test whether all modules functions work if gene_name is
+      # changed. gene_name was old-style and was to be removed. 
+      if(!is.null(PGX$genes)) {
+        lab <- input$selected_labeltype
+        if(lab %in% colnames(PGX$genes)) {
+          PGX$genes$gene_name <- PGX$genes[,lab]
+        }
       }
     }
   )
+
 
   ## -------------------------------------------------------------
   ## Session Timers

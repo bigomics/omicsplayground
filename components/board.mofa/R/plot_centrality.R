@@ -27,6 +27,7 @@ mofa_plot_centrality_ui <- function(
 
 mofa_plot_centrality_server <- function(id,
                                         mofa,
+                                        pgx,
                                         input_factor = reactive(NULL),
                                         show_types = reactive(NULL),
                                         watermark = FALSE) {
@@ -40,10 +41,12 @@ mofa_plot_centrality_server <- function(id,
       
       show_types <- show_types()
       y <- res$pheno
+      labels <- pgx$genes$gene_name
+      names(labels) <- pgx$genes$feature
       
       par(mar=c(4,4,1,0.5))
       playbase::mofa.plot_centrality(
-        res, k=k, show_types=show_types,
+        res, k=k, show_types=show_types, labels=labels,
         transpose=FALSE, main = "")
     }
 

@@ -252,6 +252,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_modulegraph_server(
       "modulegraph",
       mofa = mofa,
+      pgx = pgx,
       input_k = reactive(input$selected_factor),
       filter_types = reactive(input$show_types),
       watermark = WATERMARK
@@ -286,6 +287,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_centrality_server(
       "centrality",
       mofa = mofa,
+      pgx = pgx,
       input_factor = reactive(input$selected_factor),
       show_types = reactive(input$show_types),
       watermark = WATERMARK

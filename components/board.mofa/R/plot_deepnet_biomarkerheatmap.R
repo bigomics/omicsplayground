@@ -13,6 +13,10 @@ plot_deepnet_biomarkerheatmap_ui <- function(
     width = c("auto", "100%")
     ) {
   ns <- shiny::NS(id)
+
+  options <- shiny::tagList(
+    selectInput(ns("ntop"), "Number of features:", c(20,30,50,100,200))
+  )
   
   PlotModuleUI(
     ns("plot"),
@@ -44,12 +48,19 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       annot <- NULL
       if(add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]),]      
+
+      # set lables
+      labels <- playbase::mofa.strip_prefix(pgx$genes$gene_name)
+      labels <- paste0(pgx$genes$data_type,":",labels)
+      names(labels) <- pgx$genes$feature
+
       playbase::deep.plotBiomarkerHeatmap(
         net, ntop = ntop[1],
         datatypes = datatypes(),
+        labels = labels,
         balanced = TRUE,
-        cexRow = 0.8,
-        cexCol = 0.8,
+        cexRow = 0.7,
+        cexCol = 0.7,
         annot = annot,
         rowlab.maxlen = 25 + rmar[1],
         rownames_width = 45 + rmar[1],
@@ -73,8 +84,8 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
         rownames_width = 60 + rmar[2],
         show_legend = show_legend[2],
         annot = annot,
-        cexRow = 0.8,
-        cexCol = 0.8,
+        cexRow = 0.7,
+        cexCol = 0.7,
         show_colnames = (nsamples<100)
       ) 
     }

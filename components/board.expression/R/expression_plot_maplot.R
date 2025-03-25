@@ -95,8 +95,7 @@ expression_plot_maplot_server <- function(id,
       symbols <- rownames(res)
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
-
-      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+      label.names <- pgx$genes$gene_name  ## this is reactive, user-selected
 
       plot_data <- list(
         x = x,

@@ -138,10 +138,10 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       return(pval_cap)
     })
 
-    # functions #########
-    comparison <- 1
-    testmethods <- c("trend.limma")
-    add.pq <- 0
+    #-----------------------------------------------------------------
+    # --------------------- FUNCTIONS --------------------------------
+    #-----------------------------------------------------------------
+    
     getDEGtable <- function(pgx, testmethods, comparison, add.pq, lfc, fdr) {
       shiny::req(pgx$X)
 
@@ -195,21 +195,20 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE], na.rm = TRUE)
       AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE], na.rm = TRUE)
 
+      ## !!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
+      ## [HACK] adjust averages to match logFC... This should be in pgx.computePGX.
       logFC <- mx$meta.fx
-      ## [hack] adjust averages to match logFC...
       mean0 <- (AveExpr0 + AveExpr1) / 2
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
 
-      if (all(c("map", "chr") %in% colnames(pgx$genes))) {
-        colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0"
-        colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
-      }
-
-      aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
+      aa <- intersect(c("symbol", "gene_title"), colnames(pgx$genes))
+      chr.col <- head(intersect(c("map","chr"),colnames(pgx$genes)),1)
+      if(length(chr.col)>0) aa <- c(aa, chr.col)
       gene.annot <- pgx$genes[rownames(mx), aa]
-      gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
-      res <- data.frame(gene.annot,
+
+      res <- data.frame(
+        gene.annot,
         logFC = logFC,
         AveExpr0,
         AveExpr1,
@@ -267,10 +266,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
 
       # TODO the annot could be moved to geDEGtable function!!!
-      annot <- pgx$genes[rownames(res),
-        c("feature", "symbol", "human_ortholog"),
-        drop = FALSE
-      ]
+      sel <- setdiff(c("feature", "symbol", "human_ortholog"), colnames(res))
+      annot <- pgx$genes[rownames(res), sel, drop = FALSE]
       # res$gene_name <- NULL, better remove before showing the plot
 
       res <- cbind(annot, res)

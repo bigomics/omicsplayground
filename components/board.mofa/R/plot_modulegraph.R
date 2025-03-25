@@ -35,6 +35,7 @@ mofa_plot_modulegraph_ui <- function(
 
 mofa_plot_modulegraph_server <- function(id,
                                          mofa,
+                                         pgx,
                                          input_k = reactive(1),
                                          filter_types = reactive(NULL),
                                          watermark = FALSE) {
@@ -52,10 +53,13 @@ mofa_plot_modulegraph_server <- function(id,
       gr <- graphs$features[[k]]
       vtype <- sub(":.*","", igraph::V(gr)$name)
       gr <- igraph::subgraph( gr, vids = vtype %in% filter_types())
-
       if(input$top20) {
-        gr <- igraph::subgraph(gr, vids = head(order(-V(gr)$size),20))
+        gr <- igraph::subgraph(gr, vids = head(order(-igraph::V(gr)$size),20))
       }
+      
+      ## set labels
+      vlabel <- pgx$genes[igraph::V(gr)$name,"gene_name"]
+      igraph::V(gr)$label <- vlabel
       
       vis <- playbase::mofa.plot_module(
         gr, mst = input$mst,

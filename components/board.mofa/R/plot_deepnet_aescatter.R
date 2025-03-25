@@ -34,8 +34,7 @@ plot_deepnet_aescatter_server <- function(id,
 
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
-      net <- net()
-      
+      net <- net()      
       par(mfrow=c(1,1), mar=c(4,4,2,1))
       playbase::deep.plotAutoEncoderReconstructions(
         net, dtypes="mixed", par=FALSE) 
