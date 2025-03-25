@@ -12,8 +12,12 @@
 ##' @param pgx
 ##' @return
 ##' @author kwee
-TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
-                            board_observers = NULL) {
+TimeSeriesBoard <- function(id,
+                            pgx,
+                            labeltype = shiny::reactive("feature"),
+                            board_observers = NULL
+                            ) {
+
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
@@ -95,14 +99,28 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
       ## update selectinput
       modulenames <- sort(unique(colors))
-      shiny::updateSelectInput( session, "module", choices=modulenames,
-        selected=head(modulenames,3))
-      
-      res <- list(
-        X = timeX,
-        colors = colors
+      shiny::updateSelectInput(
+        session,
+        "module",
+        choices = modulenames,
+        selected = head(modulenames, 3)
       )
-      res
+
+      ## Statistical methods
+      ts.gx.methods <- c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf")
+      gx.methods <- intersect(ts.gx.methods, colnames(pgx$gx.meta$meta[[1]]$fc))
+      if (length(gx.methods) == 0)
+        gx.methods <-  colnames(pgx$gx.meta$meta[[1]]$fc)
+      shiny::updateCheckboxGroupInput(
+        session,
+        "gx_statmethod",
+        choices = gx.methods,
+        selected = gx.methods
+      )
+      
+      res <- list(X = timeX, colors = colors)
+      return(res)
+
     })
     
     timeseries_filtered <- shiny::reactive({
@@ -112,20 +130,22 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       
       ##minKME=0.8;mergeCutHeight=0.15;minmodsize=20;ntop=10      
       filtered.colors <- playbase::wgcna.filterColors(
-        res$X, res$colors, minKME=0.8, mergeCutHeight=0.05,
-        minmodsize = 10, ntop=100 )
+        res$X,
+        res$colors,
+        minKME=0.8,
+        mergeCutHeight=0.05,
+        minmodsize = 10,
+        ntop=100
+      )
 
       jj <- which(!filtered.colors %in% c(NA,0,"---","grey"))
       xx <- res$X[jj,]
       filtered.colors <- filtered.colors[jj]
 
       time <- colnames(xx)
-      res <- list(
-        X = xx,
-        time = time,
-        colors = filtered.colors
-      )
-      res
+      res <- list(X = xx, time = time, colors = filtered.colors)
+      return(res)
+
     })
     
     ## ===============================================================================
@@ -155,6 +175,7 @@ TimeSeriesBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
       groupvar = shiny::reactive(input$groupvar),
+      gx_statmethod = shiny::reactive(input$gx_statmethod),
       watermark = WATERMARK
     )
 
