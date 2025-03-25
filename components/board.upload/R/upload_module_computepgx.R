@@ -468,7 +468,7 @@ upload_module_computepgx_server <- function(
         Contrasts <- contrastsRT()
         time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
         sel.time <- intersect(time.var, colnames(Y))
-
+        
         ## 1. Ensure 'time' column is in samples.csv file
         ## 2. Force DGE methods to be one of those allowing time series testing.
         if (input$time_series) {
@@ -495,7 +495,7 @@ upload_module_computepgx_server <- function(
 
         ## 3. For each contrast, there should be at least 1 sample per condition, per time point. make more flexible.
         ## (eg GEIGER not good)
-        if (input$time_series) {
+        if (input$time_series && length(sel.time) > 0) {
           i=1
           for (i in 1:ncol(Contrasts)) {
             contr.name <- colnames(Contrasts)[i]
