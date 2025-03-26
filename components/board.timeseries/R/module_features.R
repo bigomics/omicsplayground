@@ -128,7 +128,7 @@ TimeSeriesBoard.features_server <- function(id,
       stats <- as.matrix(pgx$gx.meta$meta[[k]]) #[,1:5]
       i=1; tables=list()
       for(i in 1:length(gx_mm)) {
-        tables[[i]] <- stats[, grep(gx_mm[i],colnames(stats)), drop = FALSE]
+      tables[[i]] <- stats[, grep(gx_mm[i],colnames(stats)), drop = FALSE]
       }
       tables <- do.call(cbind, tables)
       sel <- grep("^fc.*", colnames(tables))

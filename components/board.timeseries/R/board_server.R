@@ -87,11 +87,11 @@ TimeSeriesBoard <- function(id,
       timevar="week"
       timevar <- input$timevar
       time  <- pgx$samples[,timevar]
-      cX <- t(scale(t(pgx$X)))
-      timeX <- t( playbase::rowmean( t(cX), time ))
-      nmissing <- sum(is.na(timeX))
-      if (nmissing > 0)
-        timeX <- timeX[complete.cases(timeX), , drop = FALSE] ## impute??
+      X <- pgx$X
+      sd <- matrixStats::rowSds(X, na.rm = TRUE)
+      if (any(sd == 0)) X <- X + runif(length(X), 0, 1e-5)
+      cX <- t(scale(t(X)))
+      timeX <- t( playbase::rowmean(t(cX), time))
       clust <- playbase::pgx.FindClusters(t(timeX), method="kmeans")[[1]]
       rownames(clust) <- rownames(timeX)
       colors <- clust[,paste0("kmeans.",knn)]
@@ -116,7 +116,7 @@ TimeSeriesBoard <- function(id,
         session,
         "gx_statmethod",
         choices = gx.methods,
-        selected = gx.methods
+        selected = gx.methods[1:3]
       )
       
       res <- list(X = timeX, colors = colors)
