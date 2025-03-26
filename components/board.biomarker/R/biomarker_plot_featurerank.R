@@ -121,10 +121,10 @@ biomarker_plot_featurerank_server <- function(id,
         Y <- Y[, -jj, drop = FALSE]
       }
 
-      jj <- match("SCT_snn_res.1", colnames(Y))
+      jj <- match("SCT_snn_res.1", colnames(Y), nomatch = FALSE)
       if (any(jj)) Y <- Y[, -jj, drop = FALSE]
 
-      jj <- match("orig.ident", colnames(Y))
+      jj <- match("orig.ident", colnames(Y), nomatch = FALSE)
       if (any(jj)) Y <- Y[, -jj, drop = FALSE]
       
             
