@@ -202,14 +202,14 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
-        if (is.null(counts)) { return(NULL) }
+        #if (is.null(counts)) return(NULL)
 
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 1000
+        cells_trs <- 800#1000
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -340,8 +340,7 @@ upload_module_normalizationSC_server <- function(id,
 
         if (!input$groupby_celltype) {
           meta$IDENT0 <- "IDENT"
-          plist <- list()
-          i = 1
+          i=1; plist=list()
           for(i in 1:length(vars)) {
             v <- vars[i]
             if(v %in% num.vars) {
@@ -359,26 +358,20 @@ upload_module_normalizationSC_server <- function(id,
                   pp <- pp + scale_y_continuous(limits = c(0, NA))
                 }
               }
-
-              ## make yintercept from reactive values
+              ## yint from reactive values
               if (v == "percent.mt") {
                 pp <- pp + geom_hline(yintercept = input$mt_threshold, col = "firebrick2")
-              }
-              if (v == "percent.hb") {
+              } else if (v == "percent.hb") {
                 pp <- pp + geom_hline(yintercept = input$hb_threshold, col = "firebrick2")
+              } else if (v == "nFeature_RNA") {
+                yint <- c(input$nfeature_threshold[1], input$nfeature_threshold[2])
+                pp <- pp + geom_hline(yintercept = yint, col = "firebrick2")
               }
-              if (v == "nFeature_RNA") {
-                minv <- input$nfeature_threshold[1]
-                maxv <- input$nfeature_threshold[2]
-                pp <- pp + geom_hline(yintercept = c(minv, maxv), col = "firebrick2")
-              }
-              pp <- pp + scale_x_discrete(labels = "Cells")
-              plist[[v]] <- pp + labs(title = v) + ylab(ylab)
+              plist[[v]] <- pp + scale_x_discrete(labels = "Cells") + labs(title = v) + ylab(ylab)
             }
             if (v %in% char.vars) {
               tt <- data.frame(table(meta[, v]))
-              pp <- ggplot(tt, aes(x = Var1, y = Freq))
-              pp <- pp + geom_bar(stat = "identity", fill = "dim gray")
+              pp <- ggplot(tt, aes(x = Var1, y = Freq)) + geom_bar(stat = "identity", fill = "dim gray")
               plist[[v]] <- pp + labs(title = v) + ylab("Number of cells")
             }
           }
@@ -393,39 +386,37 @@ upload_module_normalizationSC_server <- function(id,
           if (length(plist) == 1) {
             plist[[1]]
           } else if (length(plist) == 2) {
-            ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
+            (plist[[1]] + plist[[2]])
+            #ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
           } else if (length(plist) == 3) {
-            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
-          } else if (length(plist) == 4) {
-            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+            (plist[[1]] + plist[[2]]) / plist[[3]]
+            #ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
+          } else if (length(plist) == 4) {            
+            (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
+            #ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
           }
         } else {
           grp <- "celltype.azimuth"
-          plist <- list()
-          i = 1
-          for(i in 1:length(vars)) {
+          i=1; plist=list()
+          for (i in 1:length(vars)) {
             v <- vars[i]
             if (v %in% num.vars) {
-              pp <- ggplot(meta, aes_string(y = v, x = grp))
-              pp <- pp + geom_boxplot() + RotatedAxis() + xlab("")
+              pp <- ggplot(meta, aes_string(y = v, x = grp)) + geom_boxplot()
+              pp <- pp + RotatedAxis() + xlab("") + theme(legend.position = "none")
               ylab <- v
-              pp <- pp + theme(legend.position = "none")
               if (grepl("percent", v)) {
                 pp <- pp + ylim(0, 100)
                 ylab <- "Percentage"
               } else if (min(meta[, v]) >= 0) {
                 pp <- pp + scale_y_continuous(limits = c(0, NA))
               }
-              if(v == "percent.mt") {
+              if (v == "percent.mt") {
                 pp <- pp + geom_hline(yintercept = input$mt_threshold, col = "firebrick2")
-              }
-              if(v == "percent.hb") {
+              } else if (v == "percent.hb") {
                 pp <- pp + geom_hline(yintercept = input$hb_threshold, col = "firebrick2")
-              }
-              if (v == "nFeature_RNA") {
-                minv <- input$nfeature_threshold[1]
-                maxv <- input$nfeature_threshold[2]
-                pp <- pp + geom_hline(yintercept = c(minv, maxv), col = "firebrick2")
+              } else if (v == "nFeature_RNA") {
+                yint <- c(input$nfeature_threshold[1], input$nfeature_threshold[2])
+                pp <- pp + geom_hline(yintercept = yint, col = "firebrick2")
               }
               plist[[v]] <- pp + labs(title = v) + ylab(ylab)
             }
