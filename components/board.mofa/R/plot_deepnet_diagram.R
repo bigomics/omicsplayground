@@ -46,7 +46,9 @@ plot_deepnet_diagram_server <- function(id,
         svgfile <<- playbase::deep.plotNeuralNet(net, svgfile=NULL)
         update(FALSE)
       }
-      
+
+      dbg("[plot_deepnet_diagram_server] svgfile =", svgfile)
+
       validate(
         need(!is.null(svgfile), "Could not create model diagram")
       )

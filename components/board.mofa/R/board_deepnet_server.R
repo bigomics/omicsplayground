@@ -71,6 +71,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     }, {
       shiny::req(input$selected_pheno)
       shiny::req(pgx$samples)
+      if(!input$selected_pheno %in% colnames(pgx$samples)) return(NULL)
       conditions <- sort(unique(pgx$samples[, input$selected_pheno]))
       shiny::updateSelectInput(session, "show_conditions", choices = conditions,
                                selected = head(conditions,3) )      
