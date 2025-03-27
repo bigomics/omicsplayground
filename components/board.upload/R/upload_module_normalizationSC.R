@@ -389,7 +389,7 @@ upload_module_normalizationSC_server <- function(id,
             (plist[[1]] + plist[[2]])
             #ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
           } else if (length(plist) == 3) {
-            (plist[[1]] + plist[[2]]) / plist[[3]]
+            (plist[[1]] + plist[[2]]) / (plist[[3]] + patchwork::plot_spacer())
             #ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
           } else if (length(plist) == 4) {            
             (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
