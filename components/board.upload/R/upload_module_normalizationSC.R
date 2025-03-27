@@ -104,7 +104,7 @@ upload_module_normalizationSC_server <- function(id,
                     "lungref", "mousecortexref", "pancreasref",
                     "pbmcref", "tonsilref", "<select>"
                   ),
-                  selected = "pbmcref",#"<select>"
+                  selected = "<select>"
                 ),
                 shiny::br()
               ),
@@ -209,7 +209,7 @@ upload_module_normalizationSC_server <- function(id,
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 800#1000
+        cells_trs <- 500#1000
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
@@ -219,7 +219,8 @@ upload_module_normalizationSC_server <- function(id,
         }
 
         ref_tissue <- input$ref_atlas
-        if(ref_tissue != "<select>") {
+        if (ref_tissue != "<select>") {
+
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
           counts <- as(counts, "dgCMatrix")
@@ -228,8 +229,8 @@ upload_module_normalizationSC_server <- function(id,
             azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
             dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
           })
-          if (class(azm) %in% c("matrix", "data.frame")) {
 
+          if (class(azm) %in% c("matrix", "data.frame")) {
             kk <- grep("^predicted.*l*2$", colnames(azm))
             if (any(kk)) {
               celltype.azimuth <- azm[, kk]
@@ -274,7 +275,7 @@ upload_module_normalizationSC_server <- function(id,
             })
           })
           dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
-
+          
           dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
           options(Seurat.object.assay.calcn = TRUE)
           getOption("Seurat.object.assay.calcn")
@@ -300,6 +301,12 @@ upload_module_normalizationSC_server <- function(id,
           rm(counts, nX, nX1, samples, SO)
           return(LL)
         } else {
+          shinyalert::shinyalert(
+            title = "Azimuth reference atlas",
+            text = "Please select the Azimuth reference atlas that fits your data.",
+            type = "warning",
+            closeOnClickOutside = FALSE
+          )
           rm(counts, samples)
           return(NULL)
         }
@@ -335,7 +342,7 @@ upload_module_normalizationSC_server <- function(id,
         num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
         char.vars <- vars[which(class.vars %in% c("character"))]
 
-        gen.pars <- function(plist){
+        gen.pars <- function(plist) {
           plist1 <- lapply(plist, function(x) {
             x <- x + theme(axis.text.x = element_text(size = 13))
             x <- x + theme(axis.text.y = element_text(size = 13))
@@ -345,7 +352,7 @@ upload_module_normalizationSC_server <- function(id,
           })
           return(plist1)
         }
-
+        
         if (!input$groupby_celltype) {
           meta$IDENT0 <- "IDENT"
           i=1; plist=list()
@@ -465,11 +472,16 @@ upload_module_normalizationSC_server <- function(id,
           tsne = ds_norm_Counts()$pos.tsne,
           umap = ds_norm_Counts()$pos.umap
         )
+
         samples <- ds_norm_Counts()$samples
         vars <- input$clusterBy
+
+        shiny::validate(shiny::need(length(vars) <= 4,
+          "Please select up to 4 metadata variables for clusters visualization."))
+
         shiny::validate(shiny::need(!is.null(vars),
-          "For clustering, please select a metadata variable from the menu on the left."
-        ))
+          "For clustering, please select a metadata variable from the menu on the left."))
+
         m <- tolower(input$dimred_plottype)
         if (length(vars) <= 2) {
           par(mfrow = c(1, length(vars)))
