@@ -49,6 +49,7 @@ upload_module_normalization_server <- function(
         counts <- r_counts()
         samples <- r_samples()        
         contrasts <- r_contrasts()
+        shiny::req(dim(contrasts))
         
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
