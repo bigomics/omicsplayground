@@ -128,13 +128,7 @@ dataview_module_geneinfo_server <- function(id,
         info <- tspan("(gene info not available)")
         return(info)
       }
-      
-      ## add feature name is not symbol
-      info$feature <- NULL
-      if (!is.na(info$symbol) && feature != info$symbol) {
-        info <- c(feature = feature, info)
-      }
-      
+            
       names(info) <- tolower(names(info))
       names(info) <- sub("gene_symbol", "symbol", names(info))
       names(info) <- sub("gene_title", "title", names(info))
