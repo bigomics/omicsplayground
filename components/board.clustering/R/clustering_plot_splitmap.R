@@ -174,6 +174,14 @@ clustering_plot_splitmap_server <- function(id,
 
       show_colnames <- (cex1 > 0)
 
+      # Select annot to display (user input)
+      sel <- selected_phenotypes()
+      if (length(sel) == 0) {
+        annot <- NULL
+      } else {
+        annot <- annot[, sel, drop = FALSE]
+      }
+
 
 #      show_legend <- show_colnames <- TRUE
 #      show_legend <- input$hm_legend
