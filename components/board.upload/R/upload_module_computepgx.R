@@ -504,11 +504,14 @@ upload_module_computepgx_server <- function(
             jj <- match(rownames(Contrasts[, i, drop=FALSE]), rownames(Y))
             D <- data.frame(contr = Contrasts[,i], time = Y[jj, sel.time[1]])
             rownames(D) <- rownames(Y)[jj]
-            if (any(table(D[, 1], D[, 2]) == 0)) {
-            #if (any(table(D[, 1], D[, 2]) == 0)) { ## also allow least 1 pheno per time point.
+            tt <- table(D[, 1], D[, 2])
+            zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
+            if (any(zeros.obs >= ncol(tt)-1)) {
+              #if (any(tt == 0)) {
               shinyalert::shinyalert(
                 title = "WARNING",
-                text = "Not all time points are represented across specified contrasts. Skipping time series analysis.",
+                #text = "Not all time points are represented across specified contrasts. Skipping time series analysis.",
+                text = "At least 1 phenotype is not represented in at least 2 time points. Skipping time series analysis.",
                 type = "warning"
               )
               shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
