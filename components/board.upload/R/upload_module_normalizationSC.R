@@ -50,9 +50,9 @@ upload_module_normalizationSC_server <- function(id,
         )
         metadata_vars <- unique(c(metadata_vars0, metadata_vars1))
         
-        dimred.infotext <- "Dimensionality reduction enables to simplify large datasets by computing representative data points capable of preserving the biological information while reducing the dimensionality of the data. Here we employ the two most widely used non-linear methods for dimensional reduction of single-cell RNA-seq data: T-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
+        dimred.infotext <- "Dimensionality reduction simplifies large datasets by computing representative data points capable of preserving the biological information while reducing data dimensionality. We employ two non-linear methods for scRNA-seq data: t-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
 
-        cellqc.infotext <- "Data QC. Violin plots of total number of cDNA molecules (e.g., UMI) detected in each cell (nCount_RNA), number of unique genes detected in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo), percentage of globin gene expression in each cell (percent_hb), G2M cell cysle score, S cell cycle score."
+        cellqc.infotext <- "Data QC. Violin plots of number of cDNA molecules (e.g., UMIs) in each cell (nCount_RNA), number of unique genes in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo), percentage of globin gene expression in each cell (percent_hb), G2M cell cysle score, S cell cycle score."
         
         dimred.options <- tagList(
           shiny::radioButtons(
@@ -104,7 +104,7 @@ upload_module_normalizationSC_server <- function(id,
                     "lungref", "mousecortexref", "pancreasref",
                     "pbmcref", "tonsilref", "<select>"
                   ),
-                  selected = "<select>"
+                  selected = "pbmcref",#"<select>"
                 ),
                 shiny::br()
               ),
@@ -191,8 +191,8 @@ upload_module_normalizationSC_server <- function(id,
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## downsampled & normalized data
-      ## downsample if ncells > threshold
+      ## Downsampled & normalized data.
+      ## Downsample 1000 cells.
       ds_norm_Counts <- shiny::reactive({ 
 
         options(future.globals.maxSize= 4*1024^100)
