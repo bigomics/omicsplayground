@@ -19,7 +19,7 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::sliderInput(ns("minrho"),"Minimum rho:",0,0.95,0.8,0.05),
+          shiny::sliderInput(ns("minrho"),"Minimum rho:",0,0.95,0.6,0.05),
           shiny::radioButtons(ns("labeltype"), "Labeltype:",
                               c("feature","symbol","title"),
                               selected="title", inline=TRUE)
