@@ -52,6 +52,9 @@ wgcna_table_genes_server <- function(id,
       symbol <- pgx$genes[rownames(df),"symbol"]
       feature <- rownames(df)
       df <- cbind( feature=feature, symbol=symbol, df)
+      if(all(symbol==feature)) {
+        df$symbol <- NULL
+      }
       
       if(input$showpvalues==FALSE) {
         df <- df[, grep("pvalue", colnames(df), invert=TRUE, ignore.case=TRUE), drop=FALSE]

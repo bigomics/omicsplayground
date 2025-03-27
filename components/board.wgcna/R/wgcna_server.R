@@ -106,7 +106,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
           shiny::removeModal()
         }
 
-        ## update Inputes
+        ## update Inputs
         me <- sort(names(out$me.genes))
         shiny::updateSelectInput(session, "selected_module", choices = me,
                                  sel = me[1])

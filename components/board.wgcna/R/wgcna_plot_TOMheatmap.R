@@ -33,17 +33,30 @@ wgcna_plot_TOMheatmap_server <- function(id,
   moduleServer(id, function(input, output, session) {
 
     csvFunc <- function() {
+      res <- wgcna.compute()
       playbase::wgcna.plotTOM(res, justdata=TRUE)
     }
     
-    RENDER <- function() {
+    RENDER <- shiny::reactive({
       res <- wgcna.compute()
-      playbase::wgcna.plotTOM(res)
+      par(mfrow=c(1,1),mar=c(0,0,0,0))
+      playbase::wgcna.plotTOM(res, legend=TRUE)
+      p <- grDevices::recordPlot()
+      p
+    })
+
+    RENDER.func <- function() {
+      res <- wgcna.compute()
+      shiny::req(res)
+      dbg("[wgcna_plot_TOMheatmap:RENDER.func] names(res)=",names(res))
+      dbg("[wgcna_plot_TOMheatmap:RENDER.func] dim(res$TOM)=",dim(res$TOM))
+      dbg("[wgcna_plot_TOMheatmap:RENDER.func] dim(res$svTOM)=",dim(res$svTOM))
+      playbase::wgcna.plotTOM(res, legend=FALSE, downsample=400)
     }
 
     PlotModuleServer(
       "plotmodule",
-      func = RENDER,
+      func = RENDER.func,
       csvFunc = csvFunc,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 90),
