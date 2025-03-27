@@ -117,7 +117,7 @@ upload_module_normalizationSC_server <- function(id,
                   label = "Visualize cell cluster by",
                   choices = metadata_vars,
                   multiple = TRUE,
-                  selected = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.ribo")
+                  selected = c("nCount_RNA", "nFeature_RNA", "percent.mt", "celltype.azimuth")
                 ),
                 shiny::br()
               ),
@@ -318,32 +318,40 @@ upload_module_normalizationSC_server <- function(id,
         library(ggpubr)
         require(vioplot)
         vars <- input$clusterBy        
-        shiny::validate(shiny::need(
-          !is.null(vars),
-          "For QC, please select a QC variable from the options."
-        ))        
-        shiny::validate(shiny::need(
-          length(vars) <= 4,
-          "Please select up to 4 QC variables for visualization."
-        ))        
-        if ("seurat_clusters" %in% colnames(meta)) {
+
+        shiny::validate(shiny::need(!is.null(vars),
+          "For QC, please select a QC variable from the options."))
+
+        shiny::validate(shiny::need(length(vars) <= 4,
+          "Please select up to 4 QC variables for visualization."))        
+
+        if ("seurat_clusters" %in% colnames(meta))
           meta$seurat_clusters <- as.character(meta$seurat_clusters) 
-        }
-        i <- 1
-        class.vars <- c()
-        for(i in 1:length(vars)) {
+
+        i=1; class.vars=c()
+        for(i in 1:length(vars))
           class.vars <- c(class.vars, class(meta[, vars[i]]))
-        }
         names(class.vars) <- vars
         num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
         char.vars <- vars[which(class.vars %in% c("character"))]
 
+        gen.pars <- function(plist){
+          plist1 <- lapply(plist, function(x) {
+            x <- x + theme(axis.text.x = element_text(size = 13))
+            x <- x + theme(axis.text.y = element_text(size = 13))
+            x <- x + RotatedAxis() + xlab("")
+            x <- x + theme(panel.border = element_rect(color = "black",
+              fill = NA, size = 1, linewidth = 2))
+          })
+          return(plist1)
+        }
+
         if (!input$groupby_celltype) {
           meta$IDENT0 <- "IDENT"
           i=1; plist=list()
-          for(i in 1:length(vars)) {
+          for (i in 1:length(vars)) {
             v <- vars[i]
-            if(v %in% num.vars) {
+            if (v %in% num.vars) {
               if (all(range(meta[, v]) %in% c(0,0))) {
                 meta[, v] <- runif(nrow(meta), min = 0, max = 1e-5)
               }
@@ -375,28 +383,20 @@ upload_module_normalizationSC_server <- function(id,
               plist[[v]] <- pp + labs(title = v) + ylab("Number of cells")
             }
           }
-          plist <- lapply(plist, function(x) {
-            x <- x + theme(axis.text.x = element_text(size = 13))
-            x <- x + theme(axis.text.y = element_text(size = 13))
-            x <- x + RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black", fill = NA,
-              size = 1, linewidth = 2))
-          })
-          i <- 1
+          plist <- gen.pars(plist)
           if (length(plist) == 1) {
             plist[[1]]
           } else if (length(plist) == 2) {
             (plist[[1]] + plist[[2]])
-            #ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
           } else if (length(plist) == 3) {
             (plist[[1]] + plist[[2]]) / (plist[[3]] + patchwork::plot_spacer())
-            #ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
           } else if (length(plist) == 4) {            
             (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
             #ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
           }
         } else {
           grp <- "celltype.azimuth"
+          legend.idx = 0
           i=1; plist=list()
           for (i in 1:length(vars)) {
             v <- vars[i]
@@ -425,33 +425,30 @@ upload_module_normalizationSC_server <- function(id,
                 tt <- data.frame(table(meta[, v]))
                 pp <- ggplot(tt, aes(x = Var1, y = Freq))
                 pp <- pp + geom_bar(stat = "identity", fill = "dim gray")
-                plist[[v]] <- pp + ylab("Number of cells")
+                plist[[v]] <- pp + ylab("Number of cells") + labs(title = v)
               } else {
                 tt <- data.frame(t(table(meta[, v], meta[, grp])))
                 colnames(tt)[1:2] <- c("celltype.azimuth", v)
                 pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
-                pp <- pp + geom_bar(stat = "identity")
-                if (i < length(vars)) { pp <- pp + theme(legend.position = "none") }
-                plist[[v]] <- pp + labs(title = v) + ylab("Number of cells")
+                pp <- pp + geom_bar(stat = "identity") + ylab("Number of cells") + labs(title = v)
+                if (legend.idx != 0) pp <- pp + theme(legend.position = "none")
+                plist[[v]] <- pp
+                legend.idx = i
               }
             }
           }
-          plist <- lapply(plist, function(x) {
-            x <- x + theme(axis.text.x = element_text(size = 13))
-            x <- x + theme(axis.text.y = element_text(size = 13))
-            x <- x + RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black", fill = NA,
-              size = 1, linewidth = 2))
-          })
-          i <- 1
+          #jj1 <- which(!names(plist) %in% char.vars)
+          #jj2 <- which(names(plist) %in% char.vars)
+          #plist <- plist[c(jj1, jj2)]
+          plist <- gen.pars(plist)
           if (length(plist) == 1) {
             plist[[1]]
           } else if (length(plist) == 2) {
-            ggpubr::ggarrange(plist[[1]], plist[[2]], nrow = 1, ncol = 2)
-          } else if (length(plist) == 3) {
-            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], nrow = 1, ncol = 3)
+            (plist[[1]] + plist[[2]])
+          } else if (length(plist) == 3) {            
+            (plist[[1]] + plist[[2]]) / (plist[[3]] + patchwork::plot_spacer())
           } else if (length(plist) == 4) {
-            ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+            (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
           }
         }
       }
@@ -470,10 +467,9 @@ upload_module_normalizationSC_server <- function(id,
         )
         samples <- ds_norm_Counts()$samples
         vars <- input$clusterBy
-        shiny::validate(shiny::need(
-          !is.null(vars),
+        shiny::validate(shiny::need(!is.null(vars),
           "For clustering, please select a metadata variable from the menu on the left."
-        ))        
+        ))
         m <- tolower(input$dimred_plottype)
         if (length(vars) <= 2) {
           par(mfrow = c(1, length(vars)))
