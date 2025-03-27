@@ -128,6 +128,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       input_contrast = reactive(input$contrast),
       input_datatypes = reactive(input$datatypes),
       input_minrho = reactive(input$minrho),
+      input_edgetype = reactive(input$edgetype),      
       input_labeltype = reactive(input$labeltype),            
       watermark = WATERMARK
     )

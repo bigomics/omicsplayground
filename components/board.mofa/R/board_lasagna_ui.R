@@ -19,8 +19,11 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::sliderInput(ns("minrho"),"Minimum rho:",0,0.95,0.6,0.05),
-          shiny::radioButtons(ns("labeltype"), "Labeltype:",
+          shiny::sliderInput(ns("minrho"),"Minimum (abs) rho:",0,0.95,0.33,0.05),
+          shiny::radioButtons(ns("edgetype"), "Edge type:",
+                              c("both","positive","negative"),
+                              selected="both", inline=TRUE),
+          shiny::radioButtons(ns("labeltype"), "Label type:",
                               c("feature","symbol","title"),
                               selected="title", inline=TRUE)
         )
@@ -39,7 +42,7 @@ my_navset_card_tab <- function(...) {
   )
 }
 
-MPARTITE_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. Thicker edges mean higher correlation. The color of the edges correspond to positive (purple) and negative (yellow) correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
+MPARTITE_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
 
 LasagnaUI <- function(id) {
@@ -99,13 +102,21 @@ LasagnaUI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
-            col_widths = c(12),
+            col_widths = c(8,4),
             height = "calc(100vh - 180px)",
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
               title = "Multi-partite graph",
               ## caption = NULL,
               info.text = MPARTITE_INFO,
+              info.references = NULL,
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            mofa_plot_lasagna_partite_adjmat_ui(
+              ns("lasagnaPartite"),
+              title = "Adjacency matrix",
+              info.text = "",
               info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

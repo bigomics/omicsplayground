@@ -37,17 +37,19 @@ plot_deepnet_diagram_server <- function(id,
     plot.RENDER <- eventReactive({
       list( update(), net() )
     },{      
-
+      
       if(update()==TRUE || is.null(svgfile)) {
         net <- net() ## do not react everytime      
         progress <- shiny::Progress$new(session, min=0, max=1)
         on.exit(progress$close())
         progress$set(message = paste("Creating diagram..."), value = 0.33)
-        svgfile <<- playbase::deep.plotNeuralNet(net, svgfile=NULL)
+        svgfile <<- playbase::deep.plotNeuralNet(
+          net,
+          svgfile = NULL,
+          rm.files = FALSE
+        )
         update(FALSE)
       }
-
-      dbg("[plot_deepnet_diagram_server] svgfile =", svgfile)
 
       validate(
         need(!is.null(svgfile), "Could not create model diagram")

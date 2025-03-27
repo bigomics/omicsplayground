@@ -54,7 +54,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       gene.labels <- paste0(pgx$genes$data_type,":",gene.labels)
       names(gene.labels) <- pgx$genes$feature
       gset.labels <- paste0("GSET:",rownames(pgx$gsetX))
-      names(gset.labels) <- paste0("gset:",rownames(pgx$gsetX))
+      names(gset.labels) <- paste0("GSET:",rownames(pgx$gsetX))
       labels <- c(gene.labels, gset.labels)
       
       playbase::deep.plotBiomarkerHeatmap(
