@@ -7,7 +7,25 @@ LasagnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     ## data set parameters
-    shiny::selectInput(ns("contrast"), "Select comparison", choices = NULL)
+    shiny::selectInput(ns("contrast"), "Select comparison", choices = NULL),
+    shiny::br(),
+    shiny::selectInput(ns("datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),
+    shiny::br(),
+    shiny::actionButton(ns("updateplots"), "Update plots", size = "xs", icon=icon("refresh")),
+    bslib::accordion(
+      id = ns("mpartite_options"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Network options",
+        icon = icon("cog", lib = "glyphicon"),
+        shiny::tagList(
+          shiny::sliderInput(ns("minrho"),"Minimum rho:",0,0.95,0.8,0.05),
+          shiny::radioButtons(ns("labeltype"), "Labeltype:",
+                              c("feature","symbol","title"),
+                              selected="title", inline=TRUE)
+        )
+      )
+    )
   )
 }
 
@@ -20,6 +38,9 @@ my_navset_card_tab <- function(...) {
     class = "root_navset border-0"
   )
 }
+
+MPARTITE_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. Thicker edges mean higher correlation. The color of the edges correspond to positive (purple) and negative (yellow) correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
+
 
 LasagnaUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
@@ -34,6 +55,7 @@ LasagnaUI <- function(id) {
       #my_navset_card_tab(
       id = ns("tabs"),
       #title = "LASAGNA",
+
       ##----------------------------------------------------------------
       shiny::tabPanel(
         ##bslib::nav_panel(      
@@ -68,58 +90,83 @@ LasagnaUI <- function(id) {
         )
       ),
       
-      ##----------------------------------------------------------------
+      ## ##----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
-        "Path scoring",
+        "Multi-partite graph",
         bslib::layout_columns(
           col_widths = 12,
-          #height = "calc(100vh - 181px)",
-          ## bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for 'a Layered Approach to Simultaneous Analysis of Genomic and Network Associations'.")),
+          height = "calc(100vh - 181px)",
+          row_heights = c("auto",1),
+          bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
-            col_widths = bslib::breakpoints(
-              xxxl = c(6, 6),
-              xl = c(12, 12),              
-              sm = c(12, 12)
-            ),
-            bslib::layout_columns(
-              col_widths = bslib::breakpoints(
-                xxxl = c(6, 6, 12),
-                xl = c(5, 3, 4),              
-                sm = c(12, 12, 12)
-              ),
-              mofa_plot_lasagnaSP_ui(
-                ns("lasagnaSP"),
-                title = "Parallel coordinates",
-                info.text = "LASAGNA is a acronym of 'Layered Approach to Simultaneous Analysis of Genomic and Network Associations.'",
-                caption = "Scale independence and mean connectivity plots to determine the soft threshold.",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              mofa_plot_lasagnaSP_scores_ui(
-                ns("lasagnaSP"),
-                title = "Path scores",
-                info.text = "Path scores",
-                caption = ""
-              ),
-              mofa_plot_lasagnaSP_frequency_ui(
-                ns("lasagnaSP"),
-                title = "Term frequency",
-                info.text = "Frequency of features",
-                caption = "Term frequency in top ranked shortest path solutions."
-              )
-            ),
-            mofa_table_lasagnaSP_ui(
-              ns("lasagnaSP"),
-              title = "Pathscore table",
-              info.text = "Clustering of features",
-              caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
+            col_widths = c(12),
+            height = "calc(100vh - 180px)",
+            mofa_plot_lasagna_partite_ui(
+              ns("lasagnaPartite"),
+              title = "Multi-partite graph",
+              ## caption = NULL,
+              info.text = MPARTITE_INFO,
+              info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           )
         )
-      )      
+      ),  ## end tabPanel      
+
+      ##----------------------------------------------------------------
+      ## shiny::tabPanel(
+      ##   ##bslib::nav_panel(      
+      ##   "Path scoring",
+      ##   bslib::layout_columns(
+      ##     col_widths = 12,
+      ##     #height = "calc(100vh - 181px)",
+      ##     ## bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for 'a Layered Approach to Simultaneous Analysis of Genomic and Network Associations'.")),
+      ##     bslib::layout_columns(
+      ##       col_widths = bslib::breakpoints(
+      ##         xxxl = c(6, 6),
+      ##         xl = c(12, 12),              
+      ##         sm = c(12, 12)
+      ##       ),
+      ##       bslib::layout_columns(
+      ##         col_widths = bslib::breakpoints(
+      ##           xxxl = c(6, 6, 12),
+      ##           xl = c(5, 3, 4),              
+      ##           sm = c(12, 12, 12)
+      ##         ),
+      ##         mofa_plot_lasagnaSP_ui(
+      ##           ns("lasagnaSP"),
+      ##           title = "Parallel coordinates",
+      ##           info.text = "LASAGNA is a acronym of 'Layered Approach to Simultaneous Analysis of Genomic and Network Associations.'",
+      ##           caption = "Scale independence and mean connectivity plots to determine the soft threshold.",
+      ##           height = c("100%", TABLE_HEIGHT_MODAL),
+      ##           width = c("auto", "100%")
+      ##         ),
+      ##         mofa_plot_lasagnaSP_scores_ui(
+      ##           ns("lasagnaSP"),
+      ##           title = "Path scores",
+      ##           info.text = "Path scores",
+      ##           caption = ""
+      ##         ),
+      ##         mofa_plot_lasagnaSP_frequency_ui(
+      ##           ns("lasagnaSP"),
+      ##           title = "Term frequency",
+      ##           info.text = "Frequency of features",
+      ##           caption = "Term frequency in top ranked shortest path solutions."
+      ##         )
+      ##       ),
+      ##       mofa_table_lasagnaSP_ui(
+      ##         ns("lasagnaSP"),
+      ##         title = "Pathscore table",
+      ##         info.text = "Clustering of features",
+      ##         caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
+      ##         height = c("100%", TABLE_HEIGHT_MODAL),
+      ##         width = c("auto", "100%")
+      ##       )
+      ##     )
+      ##   )
+      ## )  ## end tabPanel      
+      
     ) ## end tabsetPanel
   )  ## end div 
 }

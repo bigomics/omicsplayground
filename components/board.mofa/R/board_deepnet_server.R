@@ -55,10 +55,9 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
 
     
-    my_observers[[3]] <-  shiny::observeEvent(
-      #list(pgx$samples, pgx$multitarget)
+    my_observers[[3]] <-  shiny::observeEvent({
       list(pgx$samples)
-     , {
+    } , {
       phenotypes <- playbase::pgx.getCategoricalPhenotypes(pgx$samples)
       shiny::updateSelectInput(session, "selected_pheno", choices = phenotypes,
                                ## options = list(maxItems=2),

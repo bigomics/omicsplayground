@@ -59,16 +59,7 @@ SNF_Board <- function(id, pgx, board_observers = NULL) {
         snf <- playbase::snf.cluster(mofa$xx, pheno=NULL, plot=FALSE) 
         mofa$snf <- snf
       }
-      
-      ## update factors in selectInput
-      pheno <- colnames(mofa$samples)
-      updateSelectInput(
-        session,
-        "selected_pheno",
-        choices = pheno,
-        selected = pheno[1]
-      )
-      
+            
       return(mofa)
     }, ignoreNULL = FALSE)
   

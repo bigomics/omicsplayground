@@ -7,8 +7,6 @@ SNF_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     ## data set parameters
-    #shiny::selectInput(ns("selected_pheno"), "Select phenotype", choices = NULL),
-    #shiny::br(),
     bslib::accordion(
       id = ns("data_type_accordion"),
       open = FALSE,
@@ -20,10 +18,6 @@ SNF_Inputs <- function(id) {
             choices = c(500, 1000, 2000, 4000, 8000),
             selected = 1000
           )
-          # shiny::selectInput(ns("cutheight"), "Merge cut height",
-          #   choices = c(0.05, 0.10, 0.25, 0.5, 0.9, 0.999),
-          #  selected = 0.25
-          # )
         )
       )
     )

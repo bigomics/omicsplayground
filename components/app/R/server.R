@@ -777,7 +777,7 @@ app_server <- function(input, output, session) {
 
     ## Dynamically show upon availability in pgx object
     info("[SERVER] disabling extra features")
-    tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
+    ##tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
     tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
     tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
@@ -791,8 +791,8 @@ app_server <- function(input, output, session) {
     # WGCNA will be available upon gmt refactoring
     if (DATATYPEPGX == "metabolomics") {
       info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
-      bigdash.hideTab(session, "pcsf-tab")
-      bigdash.hideTab(session, "wgcna-tab")
+      #bigdash.hideTab(session, "pcsf-tab")
+      #bigdash.hideTab(session, "wgcna-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
 
@@ -812,20 +812,15 @@ app_server <- function(input, output, session) {
   # populate labeltype selector based on pgx$genes
   observeEvent(
     {
-      ##PGX$genes
       list( PGX$X, PGX$name )
     },
     {
-      req(PGX$genes)
-      
+      req(PGX$genes)      
       genes_mat <- PGX$genes
-
       # remove NA columns and columns with only 1 unique value
       genes_mat <- genes_mat[, colMeans(is.na(genes_mat)) < 1, drop = FALSE]
       genes_mat <- genes_mat[, sapply(genes_mat, function(x) length(unique(x)) > 1), drop = FALSE]
       genes_mat <- genes_mat[, !duplicated(t(genes_mat)), drop = FALSE]
-
-      # improve naming of label types (gene_title -> name) and remove pos, map, tx_len
       label_types <- colnames(genes_mat)
       names(label_types) <- label_types
       names(label_types)[names(label_types) == "gene_title"] <- "title"
@@ -833,10 +828,12 @@ app_server <- function(input, output, session) {
       names(label_types) <- sub("^chr$","chromosome",names(label_types))
 
       # default selection depending on datatype
-      if (PGX$datatype == "metabolomics") {
-        sel.labeltype <- "gene_title"
+      if (PGX$datatype %in% c("metabolomics","multi-omics")) {
+        sel.labeltype <- c("gene_title","symbol","feature")
+        sel.labeltype <- intersect(sel.labeltype,label_types)[1]
       } else {
-        sel.labeltype <- "feature" # probe is feature (rownames of counts)
+        sel.labeltype <- c("symbol","feature","gene_title")
+        sel.labeltype <- intersect(sel.labeltype,label_types)[1]
       }
       
       shiny::updateSelectInput(
@@ -864,8 +861,13 @@ app_server <- function(input, output, session) {
       # changed. gene_name was old-style and was to be removed. 
       if(!is.null(PGX$genes)) {
         lab <- input$selected_labeltype
-        if(lab %in% colnames(PGX$genes)) {
+        if(lab == "gene_title") {
+          tt <- paste0(PGX$genes[,"gene_title"]," (",PGX$genes[,"symbol"],")")
+          PGX$genes$gene_name <- tt
+        } else if(lab %in% colnames(PGX$genes)) {          
           PGX$genes$gene_name <- PGX$genes[,lab]
+        } else {
+          PGX$genes$gene_name <- rownames(PGX$genes)
         }
       }
     }

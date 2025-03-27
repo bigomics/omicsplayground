@@ -39,6 +39,18 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       ))
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Multi-layer model" = list(disable = c("mpartite_options")),
+      "Multi-partite graph" = list(disable = c("updateplots"))
+##      "Path scoring" = list(disable = c("left","right","updateplots"))
+    )
+
+    my_observers[[2]] <- shiny::observeEvent( input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
+    
     ## add to list global of observers. suspend by default.
     my_observers <- my_observers[!sapply(my_observers,is.null)]
     # lapply( my_observers, function(b) b$suspend() )
@@ -49,23 +61,39 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
-    data <- shiny::eventReactive( pgx$mofa, {
-
+    shiny::observeEvent( pgx$mofa, {
+      
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
       shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
+      
+      ## update factors in selectInput
+      contrasts <- colnames(pgx$mofa$contrasts)      
+      updateSelectInput(session, "contrast", choices = contrasts,
+        selected = contrasts[1])
+      
+      datatypes <- names(pgx$mofa$xx)
+      updateSelectInput(session, "datatypes", choices = datatypes,
+        selected = datatypes)
+      
+    }, ignoreNULL=FALSE)
+
+    data <- shiny::eventReactive( {
+      list( input$updateplots ) 
+    }, {
+      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
+      shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))      
+      shiny::req(pgx$mofa)
       
       res <- pgx$mofa$lasagna
       res$posx <- pgx$mofa$posx
       res$posf <- pgx$mofa$posf
+      if(length(input$datatypes)) {
+        sel <- input$datatypes
+        sel <- intersect(sel, names(res$posx))
+        res$posx <- res$posx[sel]
+        res$posf <- res$posf[sel]
+      }
       
-      ## update factors in selectInput
-      ## contrasts <- colnames(pgx$contrasts)
-      contrasts <- colnames(pgx$mofa$contrasts)      
-      updateSelectInput(session, "contrast", choices = contrasts,
-                        selected = contrasts[1])
-
-      shiny::removeModal()      
-
       return(res)
     }, ignoreNULL=FALSE)
 
@@ -86,13 +114,24 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       watermark = WATERMARK
     )
 
-    mofa_lasagnaSP_server(
-      "lasagnaSP",
+    ## mofa_lasagnaSP_server(
+    ##   "lasagnaSP",
+    ##   data = data,
+    ##   input_contrast = reactive(input$contrast),
+    ##   watermark = WATERMARK
+    ## )
+
+    mofa_plot_lasagna_partite_server(
+      "lasagnaPartite",
       data = data,
+      pgx = pgx,
       input_contrast = reactive(input$contrast),
+      input_datatypes = reactive(input$datatypes),
+      input_minrho = reactive(input$minrho),
+      input_labeltype = reactive(input$labeltype),            
       watermark = WATERMARK
     )
-
+    
     mofa_plot_clustering_server(
       "clusters",
       data = data,

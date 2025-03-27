@@ -52,7 +52,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
                                       "show_types")),
       "gsetMOFA" = list(disable = c("show_types"))      
     )
-
+    
     my_observers[[2]] <- shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
