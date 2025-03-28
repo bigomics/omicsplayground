@@ -463,11 +463,12 @@ upload_module_computepgx_server <- function(
 
       ## Checks specific for time series
       shiny::observeEvent(input$time_series, {
-        
+        req(samplesRT())
         Y <- samplesRT()
+        colnames(Y) <- toupper(colnames(Y))
         Contrasts <- contrastsRT()
         time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
-        sel.time <- intersect(time.var, colnames(Y))
+        sel.time <- intersect(toupper(time.var), colnames(Y))
         
         ## 1. Ensure 'time' column is in samples.csv file
         ## 2. Force DGE methods to be one of those allowing time series testing.
