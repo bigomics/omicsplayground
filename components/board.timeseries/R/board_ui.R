@@ -57,8 +57,8 @@ TimeSeriesInputs <- function(id) {
           shiny::checkboxGroupInput(
             ns("gx_statmethod"),
             "Statistical methods:",
-            choices = c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf"),
-            select = c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf"),
+            choices = c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf"),
+            selected = c("trend.limma", "deseq2.lrt"),
             inline = TRUE
           ),
           title = "Select which statistical method you want to see results from.",

@@ -108,7 +108,7 @@ TimeSeriesBoard <- function(id,
       )
 
       ## Statistical methods
-      ts.gx.methods <- c("trend.limma", "deseq2.lrt", "edger.lrt", "edger.qlf")
+      ts.gx.methods <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
       gx.methods <- intersect(ts.gx.methods, colnames(pgx$gx.meta$meta[[1]]$fc))
       if (length(gx.methods) == 0)
         gx.methods <-  colnames(pgx$gx.meta$meta[[1]]$fc)
@@ -116,7 +116,7 @@ TimeSeriesBoard <- function(id,
         session,
         "gx_statmethod",
         choices = gx.methods,
-        selected = gx.methods[1:3]
+        selected = gx.methods[1:2]
       )
       
       res <- list(X = timeX, colors = colors)
