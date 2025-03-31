@@ -37,7 +37,7 @@ TimeSeriesBoard <- function(id,
     tab_elements <- list(
       "Time clustering" = list(
         enable = NULL,
-        disable = c("contrast","groupvar")
+        disable = c("contrast","groupvar","gx_statmethod")
       ),
       "Features" = list(
         enable = NULL,

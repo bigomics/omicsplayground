@@ -11,8 +11,7 @@ TimeSeriesInputs <- function(id) {
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL,
-                                   multiple=TRUE),
+    withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple=TRUE),
       "Select module(s) to show in parallel plot.",
       placement = "top"
     ),
