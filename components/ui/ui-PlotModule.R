@@ -1138,7 +1138,7 @@ PlotModuleServer <- function(id,
             shiny::withProgress({
               data <- csvFunc()
               if (is.list(data) && !is.data.frame(data)) data <- data[[1]]
-              openxlsx::write.xlsx(data, file = file)
+              openxlsx::write.xlsx(data, file = file, rowNames = TRUE)
             })
           }
         )

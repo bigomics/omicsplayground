@@ -5,7 +5,7 @@
 
 
 ## =========================================================================
-## ==================== NORMALIZATION UI/SERVER =================================
+## =============== NORMALIZATION UI/SERVER =================================
 ## =========================================================================
 
 
@@ -643,6 +643,8 @@ upload_module_normalization_server <- function(
       plot_before_after <- function() {
         out.res <- results_outlier_methods()
         res <- results_correction_methods()
+        samples <- r_samples()
+
         ## get same positions as after outlier detection
         ## pos0 <- res$pos[["normalized"]]
         pos0 <- out.res$pos[["pca"]]
@@ -667,7 +669,11 @@ upload_module_normalization_server <- function(
         ## pheno <- r_contrasts()[,1]
         pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
         pheno <- pheno[rownames(pos0)]
-        col1 <- factor(pheno)
+        #col1 <- factor(pheno)
+        colorby_var <- input$colorby_var
+        colorby_var <- intersect(colorby_var, colnames(samples))
+        samples <- samples[rownames(pos0),  , drop = FALSE]
+        col1 <- factor(samples[, colorby_var])
         cex1 <- cut(nrow(pos1),
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
