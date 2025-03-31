@@ -25,7 +25,7 @@ upload_module_makecontrast_ui <- function(id) {
                 choices = "<samples>",
                 selected = "<samples>",
                 multiple = TRUE,
-                options = list(maxItems = 2)
+                options = list(maxItems = 3)
               ),
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
