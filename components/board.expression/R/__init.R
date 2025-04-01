@@ -6,6 +6,7 @@ MODULE.expression <- list(
   module_menu = function() {
     c(
       diffexpr = "Differential expression",
+      timeseries = "TimeSeries",
       corr = "Correlation analysis",
       bio = "Find biomarkers"
     )
@@ -23,6 +24,13 @@ MODULE.expression <- list(
       pgx = PGX,
       board_observers = board_observers
     )
+
+    info("[SERVER] calling TimeSeries module")
+    TimeSeriesBoard("timeseries",
+      pgx = PGX, labeltype = labeltype,
+      board_observers = board_observers
+    )
+    
   },
   module_ui = function() {
     list(
@@ -30,6 +38,11 @@ MODULE.expression <- list(
         "diffexpr-tab",
         ExpressionInputs("diffexpr"),
         create_loader("diffexpr-loader")
+      ),
+      bigdash::bigTabItem(
+        "timeseries-tab",
+        TimeSeriesInputs("timeseries"),
+        create_loader("timeseries-loader")
       ),
       bigdash::bigTabItem(
         "corr-tab",
@@ -48,6 +61,10 @@ MODULE.expression <- list(
       list(
         "corr-tab",
         CorrelationUI("corr")
+      ),
+      list(
+        "timeseries-tab",
+        TimeSeriesUI("timeseries")
       ),
       list(
         "diffexpr-tab",

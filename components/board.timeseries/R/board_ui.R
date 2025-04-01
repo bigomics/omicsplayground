@@ -7,13 +7,12 @@ TimeSeriesInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   settings_taglist <- tagList(
-    withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL,
-      multiple=TRUE),
-      "Select module(s) to show in parallel plot."
+    withTooltip(shiny::selectInput(ns("module"), "Select module:", choices = NULL,
+      multiple=FALSE),
+      "Select module to show."
     ),
     withTooltip(shiny::selectInput(ns("contrast"), "Contrast:", choices = NULL),
-      "Select contrast to show in table.",
-      placement = "top"
+      "Select contrast to show in table."
     ),
     shiny::br(),
     bslib::accordion(
@@ -78,23 +77,38 @@ TimeSeriesUI <- function(id) {
           bslib::layout_columns(
             height = "calc(100vh - 181px)",
             col_widths = c(6, 6),
-            TimeSeriesBoard.clustering_plot_ui(
-              id = ns("clustering"),
-              title = "Time series clustering"
-            ),
             bslib::layout_columns(
               col_widths = 12,
-              TimeSeriesBoard.parcoord_plot_ui(
-                id = ns("parcoord"),
-                title = "Parallel coordinates"
+              TimeSeriesBoard.clustering_plot_ui(
+                id = ns("clustering"),
+                title = "Time series clustering"
               ),
               TimeSeriesBoard.parcoord_table_ui(
                 id = ns("parcoord"),
                 title = "Module genes"
               )
+            ),
+            bslib::layout_columns(
+              col_widths = 12,
+              TimeSeriesBoard.enrichment_lolliplot_ui(
+                id = ns("enrichment"),
+                title = "Module enrichment"
+              ),
+              TimeSeriesBoard.enrichment_table_ui(
+                id = ns("enrichment"),
+                title = "Module enrichment"
+              )
             )
           )
-        )
+        ),
+        bslib::layout_columns(
+          col_widths = c(6,6),
+          height = "50vh",
+          TimeSeriesBoard.parcoord_plot_ui(
+            id = ns("parcoord"),
+            title = "Parallel coordinates"
+          )
+       )
       ), ## end of tabpanel
       shiny::tabPanel(
         "Features",

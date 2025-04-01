@@ -98,16 +98,13 @@ TimeSeriesBoard.features_server <- function(id,
                                             data,
                                             timevar,
                                             contrast,
-                                            gx_statmethod,
                                             watermark = FALSE) {
 
   moduleServer(id, function(input, output, session) {
 
     plot_data <- shiny::reactive({
       
-      sel.timevar <- timevar()
-      gx_statmethod <- gx_statmethod()
-      
+      sel.timevar <- timevar()      
       genes <- rownames(pgx$X)
       genes <- table_module$rownames_all()
       genes <- head(genes, 16)

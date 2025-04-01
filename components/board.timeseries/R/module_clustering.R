@@ -75,12 +75,12 @@ TimeSeriesBoard.clustering_server <- function(id,
       
       time <- res$time
       xx <- res$X
-      colors <- factor(res$colors)
+      modules <- factor(res$modules)
       timefactor <- timefactor()
       plottype <- ifelse(timefactor, "parcoord", "continuous")
       
       playbase::plotTimeSeries.modules(
-        time, xx, colors, main="", legend=FALSE,
+        time, xx, modules, main="", legend=FALSE,
         plottype = plottype
       ) 
     }

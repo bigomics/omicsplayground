@@ -86,7 +86,7 @@ TimeSeriesBoard <- function(id,
       knn <- input$knn
 
       ## collapse by time variable
-      timevar="week"
+      timevar="time"
       timevar <- input$timevar
       time  <- pgx$samples[,timevar]
       X <- pgx$X
@@ -96,11 +96,15 @@ TimeSeriesBoard <- function(id,
       timeX <- t( playbase::rowmean(t(cX), time))
       clust <- playbase::pgx.FindClusters(t(timeX), method="kmeans")[[1]]
       rownames(clust) <- rownames(timeX)
-      colors <- clust[,paste0("kmeans.",knn)]
-      colors <- paste0("M",colors)
+      modules <- clust[,paste0("kmeans.",knn)]
+      modules <- paste0("M",modules)
+      
+      ## compute geneset enrichment
+      mX <- playbase::rowmean( playbase::rowscale(X), modules)
+      gset.rho <- cor(t(pgx$gsetX), t(mX))
       
       ## update selectinput
-      modulenames <- sort(unique(colors))
+      modulenames <- sort(unique(modules))
       shiny::updateSelectInput(
         session,
         "module",
@@ -108,7 +112,7 @@ TimeSeriesBoard <- function(id,
         selected = head(modulenames, 3)
       )
             
-      res <- list(X = timeX, colors = colors)
+      res <- list(X = timeX, modules = modules, gset.rho = gset.rho)
       return(res)
 
     })
@@ -119,20 +123,27 @@ TimeSeriesBoard <- function(id,
       shiny::req(res)
       
       ##minKME=0.8;mergeCutHeight=0.15;minmodsize=20;ntop=10      
-      filtered.colors <- playbase::wgcna.filterColors(
+      filtered.modules <- playbase::wgcna.filterColors(
         res$X,
-        res$colors,
+        res$modules,
         minKME=0.8,
         mergeCutHeight=0.05,
         minmodsize = 10,
         ntop=100
       )
-      jj <- which(!filtered.colors %in% c(NA,0,"---","grey"))
-      xx <- res$X[jj,]
-      filtered.colors <- filtered.colors[jj]
 
+      ## set remove garbage group?
+      if(1) {
+        jj <- which(!filtered.modules %in% c(NA,0,"---","grey"))
+        xx <- res$X[jj,]
+        filtered.modules <- filtered.modules[jj]
+      }
+
+      dbg("[TimeSeriesBoard.enrichmentSVR:timeseries_filtered] dim(xx) =", dim(xx))
+      dbg("[TimeSeriesBoard.enrichmentSVR:timeseries_filtered] dim(gset.rho) =", dim(res$gset.rho))
       time <- colnames(xx)
-      res <- list(X = xx, time = time, colors = filtered.colors)
+      res <- list(X = xx, time = time, modules = filtered.modules,
+        gset.rho = res$gset.rho )
       return(res)
 
     })
@@ -157,14 +168,20 @@ TimeSeriesBoard <- function(id,
       watermark = WATERMARK
     )
 
+    TimeSeriesBoard.enrichment_server(
+      id = "enrichment",
+      pgx = pgx,
+      data = timeseries_filtered,
+      select_module = reactive(input$module),
+      watermark = WATERMARK
+    )
+
     TimeSeriesBoard.features_server(
       id = "features",
       pgx = pgx,
       data = timeseries_full,
       contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
-#      groupvar = shiny::reactive(input$groupvar),
-      gx_statmethod = shiny::reactive(input$gx_statmethod),
       watermark = WATERMARK
     )
 

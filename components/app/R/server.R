@@ -550,7 +550,7 @@ app_server <- function(input, output, session) {
     multiomics = 0
   )
   observeEvent(input$nav, {
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab", "timeseries-tab") && loaded$clustering == 0) {
+    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -558,8 +558,8 @@ app_server <- function(input, output, session) {
       loaded$clustering <- 1
       tab_control()
     }
-    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab") && loaded$expression == 0) {
-      info("[UI:SERVER] reacted: calling Clustering module")
+    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") && loaded$expression == 0) {
+      info("[UI:SERVER] reacted: calling Expression module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)

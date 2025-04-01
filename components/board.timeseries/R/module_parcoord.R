@@ -82,13 +82,13 @@ TimeSeriesBoard.parcoord_server <- function(id,
 
       dbg("[TimeSeriesBoard.parcoord_server:plot_data] selmod=", selmod)
       
-      ii <- which(res$colors %in% selmod)
+      ii <- which(res$modules %in% selmod)
       timeX <- res$X[ii,,drop=FALSE]
-      colors <- res$colors[ii]
+      modules <- res$modules[ii]
 
       res <- list(
         timeX = timeX,
-        colors = colors
+        modules = modules
       )
     }
 
@@ -97,7 +97,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
       timeX <- res$timeX
       
       dbg("[TimeSeriesBoard.parcoord_server:plot.RENDER] dim.timeX=", dim(timeX))
-      dbg("[TimeSeriesBoard.parcoord_server:plot.RENDER] head.colors=", head(res$colors))      
+      dbg("[TimeSeriesBoard.parcoord_server:plot.RENDER] head.modules=", head(res$modules))      
       dimensions <- list()
       for(i in 1:ncol(timeX)) {
         d <- list(
@@ -109,7 +109,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
       }
       
       df <- data.frame(timeX, check.names=FALSE)
-      int.colors <- as.integer(factor(res$colors))
+      int.modules <- as.integer(factor(res$modules))
 
       plt <- plotly::plot_ly(
         df, 
@@ -118,7 +118,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
         plotly::add_trace(
           type = "parcoords",
           line = list(
-            color = int.colors,
+            color = int.modules,
             colorscale = "Jet",
             showscale = FALSE,
             width = 40
@@ -157,7 +157,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
       dbg("[TimeSeriesBoard.parcoord_server:table.RENDER] 0:")
       
       df <- data.frame(
-        module = res$colors,
+        module = res$modules,
         feature = rownames(timeX),
         timeX,
         check.names = FALSE

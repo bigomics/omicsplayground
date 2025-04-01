@@ -119,11 +119,11 @@ app_ui <- function(x) {
         ),
         "Clustering" = c(
           clustersamples = "Samples",
-          clusterfeatures = "Features",
-          timeseries = "TimeSeries" ## here???
+          clusterfeatures = "Features"
         ),
         "Expression" = c(
           diffexpr = "Differential expression",
+          timeseries = "TimeSeries", ## here???
           corr = "Correlation analysis",
           bio = "Find biomarkers"
         ),

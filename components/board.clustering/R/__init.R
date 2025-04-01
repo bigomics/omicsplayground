@@ -6,8 +6,7 @@ MODULE.clustering <- list(
   module_menu = function() {
     c(
       clustersamples = "Samples",
-      clusterfeatures = "Features",
-      timeseries = "TimeSeries"
+      clusterfeatures = "Features"
     )
   },
   module_server = function(PGX, board_observers = NULL, labeltype = NULL) {
@@ -19,12 +18,6 @@ MODULE.clustering <- list(
 
     info("[SERVER] calling FeatureMapBoard module")
     FeatureMapBoard("clusterfeatures",
-      pgx = PGX, labeltype = labeltype,
-      board_observers = board_observers
-    )
-
-    info("[SERVER] calling TimeSeries module")
-    TimeSeriesBoard("timeseries",
       pgx = PGX, labeltype = labeltype,
       board_observers = board_observers
     )
@@ -41,11 +34,6 @@ MODULE.clustering <- list(
         "clusterfeatures-tab",
         FeatureMapInputs("clusterfeatures"),
         create_loader("clusterfeatures-loader")
-      ),
-      bigdash::bigTabItem(
-        "timeseries-tab",
-        TimeSeriesInputs("timeseries"),
-        create_loader("timeseries-loader")
       )
     )
   },
@@ -58,10 +46,6 @@ MODULE.clustering <- list(
       list(
         "clusterfeatures-tab",
         FeatureMapUI("clusterfeatures")
-      ),
-      list(
-        "timeseries-tab",
-        TimeSeriesUI("timeseries")
       )
     )
   }
