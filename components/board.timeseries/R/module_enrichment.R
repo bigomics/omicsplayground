@@ -77,6 +77,10 @@ TimeSeriesBoard.enrichment_server <- function(id,
       shiny::req(k)
       res <- data()
       gset.rho <- res$gset.rho
+      if(is.null(gset.rho)) {
+        df <- data.frame( geneset = "", rho = 1, p.value=1 )[0,]        
+        return(df)
+      }
       
       rho <- res$gset.rho[,k]
       names(rho) <- rownames(gset.rho)
@@ -95,7 +99,7 @@ TimeSeriesBoard.enrichment_server <- function(id,
       library(ggplot2)
       library(plotly)
       df <- gset_data()
-      shiny::req(df)
+      shiny::validate(shiny::need(nrow(df)>0, "no genesets"))
       
       sel <- table_module$rows_all()      
       shiny::req(sel)
@@ -136,8 +140,7 @@ TimeSeriesBoard.enrichment_server <- function(id,
       shiny::req(df)
 
       dbg("[TimeSeriesBoard.enrichment_server:render_table] dim(df) =", dim(df))
-      sum.na <- sum(rownames(df)=="" | is.na(rownames(df)))
-      dbg("[TimeSeriesBoard.enrichment_server:render_table] sum.na =", sum.na)
+      shiny::validate(shiny::need(nrow(df)>0, "no genesets"))      
       
       numeric.cols <- c("rho","p.value")
       DT::datatable(

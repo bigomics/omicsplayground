@@ -167,7 +167,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
         df$symbol <- symbol
       }
       df <- df[order(-df$SD),]
-
+      
       cols <- c("module","feature","symbol",colnames(df))
       cols <- intersect(cols, colnames(df))
       df <- df[,cols]

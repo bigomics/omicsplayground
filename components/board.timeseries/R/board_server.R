@@ -83,7 +83,7 @@ TimeSeriesBoard <- function(id,
       shiny::req(input$timevar)
       shiny::req(input$knn)
       knn=7
-      knn <- input$knn
+      knn <- as.integer(input$knn)
 
       ## collapse by time variable
       timevar="time"
@@ -100,10 +100,13 @@ TimeSeriesBoard <- function(id,
       rownames(clust) <- rownames(timeZ)
       modules <- clust[,paste0("kmeans.",knn)]
       modules <- paste0("M",modules)
-      
+
       ## compute geneset enrichment
-      mX <- playbase::rowmean( playbase::rowscale(X), modules)
-      gset.rho <- cor(t(pgx$gsetX), t(mX))
+      gset.rho <- NULL
+      if(!is.null(pgx$gsetX) && nrow(pgx$gsetX)) {
+        mX <- playbase::rowmean( playbase::rowscale(X), modules)
+        gset.rho <- cor(t(pgx$gsetX), t(mX))
+      }
       
       ## update selectinput
       modulenames <- sort(unique(modules))
@@ -180,7 +183,6 @@ TimeSeriesBoard <- function(id,
     TimeSeriesBoard.features_server(
       id = "features",
       pgx = pgx,
-#      data = timeseries_full,
       contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK
