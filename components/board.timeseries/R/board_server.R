@@ -41,7 +41,7 @@ TimeSeriesBoard <- function(id,
       ),
       "Features" = list(
         enable = NULL,
-        disable = c("module","knn","maxfeatures")
+        disable = c("timefactor","module","knn","maxfeatures")
       )
     )
 

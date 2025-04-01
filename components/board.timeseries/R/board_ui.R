@@ -8,9 +8,8 @@ TimeSeriesInputs <- function(id) {
 
   settings_taglist <- tagList(
     withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL,
-                                   multiple=TRUE),
-      "Select module(s) to show in parallel plot.",
-      placement = "top"
+      multiple=TRUE),
+      "Select module(s) to show in parallel plot."
     ),
     withTooltip(shiny::selectInput(ns("contrast"), "Contrast:", choices = NULL),
       "Select contrast to show in table.",
