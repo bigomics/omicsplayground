@@ -37,7 +37,7 @@ TimeSeriesBoard <- function(id,
     tab_elements <- list(
       "Time clustering" = list(
         enable = NULL,
-        disable = c("contrast","groupvar")
+        disable = c("contrast")
       ),
       "Features" = list(
         enable = NULL,
@@ -59,11 +59,13 @@ TimeSeriesBoard <- function(id,
     })
 
     my_observers[[3]] <- shiny::observeEvent( pgx$samples, {
+
+      ## set time variable
       vars <- sort(colnames(pgx$samples))
       timevars <- unique( c(grep("time|second|minute|day|week|month|year", vars, value=TRUE, ignore.case=TRUE), vars))
       shiny::updateSelectInput(session, "timevar", choices=timevars, selected=timevars[1])
-      groups <- c("<none>",vars)
-      shiny::updateSelectInput(session, "groupvar", choices=groups, selected=groups[1])
+
+      ## set available contrasts
       contrasts <- playbase::pgx.getContrasts(pgx)
       shiny::updateSelectInput(session, "contrast", choices=contrasts, selected=contrasts[1])
     })
@@ -95,7 +97,6 @@ TimeSeriesBoard <- function(id,
       clust <- playbase::pgx.FindClusters(t(timeX), method="kmeans")[[1]]
       rownames(clust) <- rownames(timeX)
       colors <- clust[,paste0("kmeans.",knn)]
-      ##colors <- WGCNA::standardColors(435)[colors]
       colors <- paste0("M",colors)
       
       ## update selectinput
@@ -106,19 +107,7 @@ TimeSeriesBoard <- function(id,
         choices = modulenames,
         selected = head(modulenames, 3)
       )
-
-      ## Statistical methods
-      ts.gx.methods <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
-      gx.methods <- intersect(ts.gx.methods, colnames(pgx$gx.meta$meta[[1]]$fc))
-      if (length(gx.methods) == 0)
-        gx.methods <-  colnames(pgx$gx.meta$meta[[1]]$fc)
-      shiny::updateCheckboxGroupInput(
-        session,
-        "gx_statmethod",
-        choices = gx.methods,
-        selected = gx.methods[1:2]
-      )
-      
+            
       res <- list(X = timeX, colors = colors)
       return(res)
 
@@ -138,7 +127,6 @@ TimeSeriesBoard <- function(id,
         minmodsize = 10,
         ntop=100
       )
-
       jj <- which(!filtered.colors %in% c(NA,0,"---","grey"))
       xx <- res$X[jj,]
       filtered.colors <- filtered.colors[jj]
@@ -175,7 +163,7 @@ TimeSeriesBoard <- function(id,
       data = timeseries_full,
       contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
-      groupvar = shiny::reactive(input$groupvar),
+#      groupvar = shiny::reactive(input$groupvar),
       gx_statmethod = shiny::reactive(input$gx_statmethod),
       watermark = WATERMARK
     )

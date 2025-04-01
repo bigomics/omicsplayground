@@ -7,10 +7,6 @@ TimeSeriesInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   settings_taglist <- tagList(
-    withTooltip(shiny::selectInput(ns("timevar"), "Time variable:", choices = NULL),
-      "Select phenotypes to show in heatmap and phenotype distribution plots.",
-      placement = "top"
-    ),
     withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL,
                                    multiple=TRUE),
       "Select module(s) to show in parallel plot.",
@@ -20,10 +16,6 @@ TimeSeriesInputs <- function(id) {
       "Select contrast to show in table.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("groupvar"), "Color by:", choices = NULL),
-      "Select phenotypes to show for creating groups.",
-      placement = "top"
-    ),
     shiny::br(),
     bslib::accordion(
       id = ns("options_accordion"),
@@ -31,6 +23,10 @@ TimeSeriesInputs <- function(id) {
       bslib::accordion_panel(
         "Advanced options",
         icon = icon("cog", lib = "glyphicon"),
+        withTooltip(shiny::selectInput(
+          ns("timevar"), "Time variable:", choices = NULL),
+          "Select phenotypes to show in heatmap and phenotype distribution plots."
+        ),
         withTooltip(
           shiny::checkboxInput(ns("timefactor"),
             "Time as factor",
@@ -41,8 +37,8 @@ TimeSeriesInputs <- function(id) {
         withTooltip(
           shiny::selectInput(
             ns("knn"),
-            "Number of clusters:",
-            choices = c(2,3,4,5,7,10,15),
+            "Number of modules:",
+            choices = c(2,3,4,5,7,10),
             selected=7
           ),
           "Choose number of KNN clusters."
@@ -52,18 +48,6 @@ TimeSeriesInputs <- function(id) {
           "Max features per module:",
           choices=c(50,100,200,500),
           selected=100
-        ),
-        withTooltip(
-          shiny::checkboxGroupInput(
-            ns("gx_statmethod"),
-            "Statistical methods:",
-            choices = c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf"),
-            selected = c("trend.limma", "deseq2.lrt"),
-            inline = TRUE
-          ),
-          title = "Select which statistical method you want to see results from.",
-          placement = "right",
-          options = list(container = "body")
         )
       )
     )
@@ -122,7 +106,7 @@ TimeSeriesUI <- function(id) {
           bs_alert(parallel_info),
           bslib::layout_columns(
             height = "calc(100vh - 181px)",
-            col_widths = c(5, 7),
+            col_widths = c(6,6),
             TimeSeriesBoard.features_table(
               id = ns("features"),
               title = "Feature table"

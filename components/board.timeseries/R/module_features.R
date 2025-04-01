@@ -27,10 +27,15 @@ TimeSeriesBoard.features_plot <- function(
     ) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    shiny::checkboxInput(ns("show_others"), "Show others",FALSE)
+  )
+  
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
     ##plotlib = "plotly",
+    options = options,
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -53,9 +58,18 @@ TimeSeriesBoard.features_table <- function(
     ) {
   ns <- shiny::NS(id)
 
+
+  options <- tagList(
+    withTooltip(
+      shiny::checkboxInput(ns("show_statdetails"), "Show detailed statistical methods"),
+      title = "Show detailed statistical methods."
+    )
+  )
+  
   TableModuleUI(
     ns("table"),
     info.text = info.text,
+    options = options,
     height = height,
     caption = caption,
     width = width,
@@ -84,7 +98,6 @@ TimeSeriesBoard.features_server <- function(id,
                                             data,
                                             timevar,
                                             contrast,
-                                            groupvar,
                                             gx_statmethod,
                                             watermark = FALSE) {
 
@@ -93,17 +106,24 @@ TimeSeriesBoard.features_server <- function(id,
     plot_data <- shiny::reactive({
       
       sel.timevar <- timevar()
-      group <- groupvar()
       gx_statmethod <- gx_statmethod()
       
       genes <- rownames(pgx$X)
       genes <- table_module$rownames_all()
       genes <- head(genes, 16)
-      expr  <- pgx$X[genes,,drop=FALSE]
 
+      expr  <- pgx$X[genes,,drop=FALSE]
       time <- pgx$samples[,sel.timevar]
-      if(!is.null(group) && !group %in% c("","<none>")) {
-        group <- pgx$samples[,group]
+
+      ct <- contrast()
+      group <- pgx$contrasts[,ct]
+      group[is.na(group)] <- "others"
+
+      if(!input$show_others) {
+        kk <- which(!is.na(pgx$contrasts[,ct]))      
+        expr  <- expr[,kk,drop=FALSE]
+        time <- time[kk]
+        group <- group[kk]
       }
 
       ngenes <- length(genes)
@@ -120,26 +140,16 @@ TimeSeriesBoard.features_server <- function(id,
     stats_data <- shiny::reactive({
       k <- contrast()
       shiny::req(k)
-      gx_mm <- gx_statmethod()
-      shiny::validate(
-        shiny::need(length(gx_mm) > 0,
-          "Please select at least 1 Statistical method under 'Advanced options'")
-      )
-      stats <- as.matrix(pgx$gx.meta$meta[[k]]) #[,1:5]
-      i=1; tables=list()
-      for(i in 1:length(gx_mm)) {
-      tables[[i]] <- stats[, grep(gx_mm[i],colnames(stats)), drop = FALSE]
+      kstats <- as.matrix(pgx$gx.meta$meta[[k]]) #[,1:5]
+      cols <- c("meta.fx","meta.p","meta.q","avg.0","avg.1")
+      stats <- kstats[,cols]
+      colnames(stats) <- c("log2FC","p.value","q.value","avg.0","avg.1")
+      if(input$show_statdetails) {
+        i=1;
+        pq.tables <- kstats[, grep("^p[.]|^q[.]",colnames(kstats)), drop = FALSE]
+        stats <- cbind(stats, pq.tables)
       }
-      tables <- do.call(cbind, tables)
-      sel <- grep("^fc.*", colnames(tables))
-      meta.fx <- apply(tables[, sel, drop = FALSE], 1, function(x) x[which.max(abs(x))])
-      sel <- grep("^p.*", colnames(tables))
-      meta.p <- apply(tables[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
-      sel <- grep("^q.*", colnames(tables))
-      meta.q <- apply(tables[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
-      meta <- cbind(meta.fx = meta.fx, meta.p = meta.p, meta.q = meta.q)
-      stats <- cbind(meta, stats[, c("avg.0","avg.1")], tables)
-      rm(tables, meta.fc, meta.p, meta.q, meta)
+      stats <- as.data.frame(stats, check.names=FALSE)
       return(stats)
     })
     
@@ -188,11 +198,14 @@ TimeSeriesBoard.features_server <- function(id,
 
       df <- stats_data()
       shiny::req(df)
-
+      ft <- gsub("[;].*",";...",rownames(df))
+      df <- as.data.frame(df, check.names=FALSE)
+      df1 <- cbind( feature=ft, df)
+      
       numeric.cols <- colnames(df)
       DT::datatable(
-        df,
-        rownames = TRUE,
+        df1,
+        rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = NULL),
@@ -216,7 +229,6 @@ TimeSeriesBoard.features_server <- function(id,
       func = render_table,
       selector = "none"
     )
-
     
   }) ## end of moduleServer
 }
