@@ -95,7 +95,7 @@ TimeSeriesBoard.features_table <- function(
 #' @export
 TimeSeriesBoard.features_server <- function(id,
                                             pgx,
-                                            data,
+                                            # data,
                                             timevar,
                                             contrast,
                                             watermark = FALSE) {
@@ -147,6 +147,7 @@ TimeSeriesBoard.features_server <- function(id,
         stats <- cbind(stats, pq.tables)
       }
       stats <- as.data.frame(stats, check.names=FALSE)
+      stats <- stats[order(-abs(stats$log2FC)),]
       return(stats)
     })
     
@@ -197,8 +198,12 @@ TimeSeriesBoard.features_server <- function(id,
       shiny::req(df)
       ft <- gsub("[;].*",";...",rownames(df))
       df <- as.data.frame(df, check.names=FALSE)
-      df1 <- cbind( feature=ft, df)
-      
+      symbol <- pgx$genes[rownames(df),"symbol"]
+      if(mean(symbol == ft, na.rm=TRUE) < 0.2) {
+        df1 <- cbind(feature=ft, symbol=symbol, df)        
+      } else {
+        df1 <- cbind(feature=ft, df)
+      }
       numeric.cols <- colnames(df)
       DT::datatable(
         df1,

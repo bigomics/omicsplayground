@@ -80,35 +80,33 @@ TimeSeriesBoard.parcoord_server <- function(id,
       selmod <- select_module()
       shiny::req(selmod)
 
-      dbg("[TimeSeriesBoard.parcoord_server:plot_data] selmod=", selmod)
-      
       ii <- which(res$modules %in% selmod)
-      timeX <- res$X[ii,,drop=FALSE]
+      timeZ <- res$Z[ii,,drop=FALSE]
+      timeX <- res$X[ii,,drop=FALSE]      
       modules <- res$modules[ii]
 
       res <- list(
         timeX = timeX,
+        timeZ = timeZ,        
         modules = modules
       )
     }
 
     plot.RENDER <- function() {
       res <- plot_data()
-      timeX <- res$timeX
+      timeZ <- res$timeZ
       
-      dbg("[TimeSeriesBoard.parcoord_server:plot.RENDER] dim.timeX=", dim(timeX))
-      dbg("[TimeSeriesBoard.parcoord_server:plot.RENDER] head.modules=", head(res$modules))      
       dimensions <- list()
-      for(i in 1:ncol(timeX)) {
+      for(i in 1:ncol(timeZ)) {
         d <- list(
-          range = range(timeX),
-          label = colnames(timeX)[i],
-          values = timeX[,i]
+          range = range(timeZ),
+          label = colnames(timeZ)[i],
+          values = timeZ[,i]
         )
         dimensions[[i]] <- d
       }
       
-      df <- data.frame(timeX, check.names=FALSE)
+      df <- data.frame(timeZ, check.names=FALSE)
       int.modules <- as.integer(factor(res$modules))
 
       plt <- plotly::plot_ly(
@@ -153,29 +151,28 @@ TimeSeriesBoard.parcoord_server <- function(id,
 
       res <- plot_data()
       timeX <- res$timeX
-
-      dbg("[TimeSeriesBoard.parcoord_server:table.RENDER] 0:")
-      
+      feature1 <- gsub(";.*",";...",rownames(timeX)) ## shorten
+      sdx <- matrixStats::rowSds(timeX)
+            
       df <- data.frame(
         module = res$modules,
-        feature = rownames(timeX),
+        feature = feature1,
+        SD = sdx,
         timeX,
         check.names = FALSE
       )
-      dbg("[TimeSeriesBoard.parcoord_server:table.RENDER] 1:")
-
+      
       symbol <- pgx$genes[rownames(timeX),"symbol"]
       if(mean(symbol == rownames(timeX), na.rm=TRUE) < 0.2) {
         df$symbol <- symbol
       }
+      df <- df[order(-df$SD),]
 
-      dbg("[TimeSeriesBoard.parcoord_server:table.RENDER] 2:")
-      
       cols <- c("module","feature","symbol",colnames(df))
       cols <- intersect(cols, colnames(df))
       df <- df[,cols]
       
-      numeric.cols <- colnames(timeX)
+      numeric.cols <- c("SD",colnames(timeX))
       DT::datatable(
         df,
         rownames = FALSE,
@@ -198,7 +195,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
     }
 
     table.RENDER_modal <- function() {
-      dt <- parcoord_table.RENDER()
+      dt <- table.RENDER()
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     }

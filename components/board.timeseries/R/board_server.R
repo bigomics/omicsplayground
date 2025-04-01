@@ -35,11 +35,11 @@ TimeSeriesBoard <- function(id,
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Time clustering" = list(
+      "Clustering" = list(
         enable = NULL,
         disable = c("contrast")
       ),
-      "Features" = list(
+      "Statistics" = list(
         enable = NULL,
         disable = c("timefactor","module","knn","maxfeatures")
       )
@@ -92,10 +92,12 @@ TimeSeriesBoard <- function(id,
       X <- pgx$X
       sd <- matrixStats::rowSds(X, na.rm = TRUE)
       if (any(sd == 0)) X <- X + runif(length(X), 0, 1e-5)
+      timeX <- t(playbase::rowmean(t(X), time))
+      
       cX <- t(scale(t(X)))
-      timeX <- t( playbase::rowmean(t(cX), time))
-      clust <- playbase::pgx.FindClusters(t(timeX), method="kmeans")[[1]]
-      rownames(clust) <- rownames(timeX)
+      timeZ <- t( playbase::rowmean(t(cX), time))
+      clust <- playbase::pgx.FindClusters(t(timeZ), method="kmeans")[[1]]
+      rownames(clust) <- rownames(timeZ)
       modules <- clust[,paste0("kmeans.",knn)]
       modules <- paste0("M",modules)
       
@@ -109,10 +111,10 @@ TimeSeriesBoard <- function(id,
         session,
         "module",
         choices = modulenames,
-        selected = head(modulenames, 3)
+        selected = modulenames[1]
       )
             
-      res <- list(X = timeX, modules = modules, gset.rho = gset.rho)
+      res <- list(X = timeX, Z = timeZ, modules = modules, gset.rho = gset.rho)
       return(res)
 
     })
@@ -124,7 +126,7 @@ TimeSeriesBoard <- function(id,
       
       ##minKME=0.8;mergeCutHeight=0.15;minmodsize=20;ntop=10      
       filtered.modules <- playbase::wgcna.filterColors(
-        res$X,
+        res$Z,
         res$modules,
         minKME=0.8,
         mergeCutHeight=0.05,
@@ -135,14 +137,13 @@ TimeSeriesBoard <- function(id,
       ## set remove garbage group?
       if(1) {
         jj <- which(!filtered.modules %in% c(NA,0,"---","grey"))
-        xx <- res$X[jj,]
+        zz <- res$Z[jj,]
+        xx <- res$X[jj,]        
         filtered.modules <- filtered.modules[jj]
       }
 
-      dbg("[TimeSeriesBoard.enrichmentSVR:timeseries_filtered] dim(xx) =", dim(xx))
-      dbg("[TimeSeriesBoard.enrichmentSVR:timeseries_filtered] dim(gset.rho) =", dim(res$gset.rho))
-      time <- colnames(xx)
-      res <- list(X = xx, time = time, modules = filtered.modules,
+      time <- colnames(zz)
+      res <- list(X=xx, Z = zz, time = time, modules = filtered.modules,
         gset.rho = res$gset.rho )
       return(res)
 
@@ -179,7 +180,7 @@ TimeSeriesBoard <- function(id,
     TimeSeriesBoard.features_server(
       id = "features",
       pgx = pgx,
-      data = timeseries_full,
+#      data = timeseries_full,
       contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK

@@ -78,39 +78,12 @@ TimeSeriesBoard.enrichment_server <- function(id,
       res <- data()
       gset.rho <- res$gset.rho
       
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] names(res) =", names(res))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] dim(gset.rho) =", dim(gset.rho))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] rownames.gset.rho =", head(rownames(gset.rho)))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] colnames.gset.rho =", head(colnames(gset.rho)))
-      
       rho <- res$gset.rho[,k]
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] 0: names.rho =", head(names(rho)))
-
-      
       names(rho) <- rownames(gset.rho)
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] 1: names.rho =", head(names(rho)))
 
-      rho <- sort(rho, decreasing=TRUE)
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] 2: names.rho =", head(names(rho)))
-      
-#      gset.filter = "HALLMARK"
-#      gset.filter = "GOBP|GO_BP"
-#      rho <- rho[grepl(gset.filter,names(rho))]
-      
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] length(rho) =", length(rho))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] names.rho =", head(names(rho)))
-      
-      pv <- playbase::cor.pvalue(rho, ncol(pgx$X))
-
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] length(pv) =", length(pv))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] head(rho) =", head(rho))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] length.names.rho =", length(names(rho)))
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] 3: names.rho =", head(names(rho)))
-      
+      rho <- sort(rho, decreasing=TRUE)      
+      pv <- playbase::cor.pvalue(rho, ncol(pgx$X))      
       df <- data.frame( geneset = names(rho), rho = rho, p.value=pv )
-
-      dbg("[TimeSeriesBoard.enrichment_server:gset_data] dim(df) =", dim(df))
-      
       return(df)
     }
     
@@ -118,28 +91,33 @@ TimeSeriesBoard.enrichment_server <- function(id,
     ##----------------------- Plot -----------------------
     ##-----------------------------------------------------
     
-    render_plot <- function() {
+    render_plot <- function(nshort=60, ntop=12, cex=0.85) {
       library(ggplot2)
       library(plotly)
       df <- gset_data()
       shiny::req(df)
-      dbg("[TimeSeriesBoard.enrichment_server:render_plot] dim(df) =", dim(df))
       
       sel <- table_module$rows_all()      
-      dbg("[TimeSeriesBoard.enrichment_server:render_plot] sel =", head(sel))
-
-      sel <- head(sel,24)
+      shiny::req(sel)
+      
+      order1 <- order(df$rho[sel])
+      sel <- sel[c(head(order1,ntop), tail(order1,ntop))]
       top <- df[sel,]
       values <- top$rho
-      names(values) <- top$geneset
+      names(values) <- playbase::shortstring(top$geneset,nshort)
       ## sizes <- rowSums(pgx$GMT[,names(values)]!=0)
       playbase::ggLollipopPlot(values, sizes = NULL, xlab = "value",
-        cex.text = 0.9) 
+        cex.text = cex) 
     }
 
+    render_plot.modal <- function() {
+      render_plot(nshort=120, ntop=18, cex=1)
+    }
+    
     PlotModuleServer(
       "plot",
       func = render_plot,
+      func2 = render_plot,      
       plotlib = "base",
       ##csvFunc = gset_data, ##  *** downloadable data as CSV
       res = c(72, 110), ## resolution of plots
@@ -182,8 +160,8 @@ TimeSeriesBoard.enrichment_server <- function(id,
               targets = "geneset", ## with no rownames column 1 is column 2
               render = DT::JS(
                 "function(data, type, row, meta) {",
-                "return type === 'display' && data.length > 80 ?",
-                "'<span title=\"' + data + '\">' + data.substr(0, 80) + '...</span>' : data;",
+                "return type === 'display' && data.length > 70 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 70) + '...</span>' : data;",
                 "}"
               )
             )
