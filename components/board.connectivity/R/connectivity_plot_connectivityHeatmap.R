@@ -154,9 +154,13 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           F <- reverse_negative(F, k = 1)
           score <- abs(score)
         }
-        ii <- order(rowMeans(F, na.rm = TRUE))
-        F <- F[ii, ]
+        ##iheatmap does not like NA
+        score[is.na(score)] <- 0
+        F[is.na(F)] <- 0        
 
+        ii <- order(rowMeans(F, na.rm = TRUE))
+        F <- F[ii,,drop=FALSE ]
+        
         plt <- iheatmapr::main_heatmap(
           data = t(F),
           layout = list(margin = list(r = 0))
@@ -213,13 +217,12 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
 
       PlotModuleServer(
         "plotmodule",
-        #
         plotlib = "plotly",
-        #
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        pdf.width = 14, pdf.height = 5.5,
+        pdf.width = 14,
+        pdf.height = 5.5,
         res = c(90, 90),
         add.watermark = watermark
       )
