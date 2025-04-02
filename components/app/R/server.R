@@ -1026,7 +1026,7 @@ app_server <- function(input, output, session) {
     shiny::showModal(
       shiny::modalDialog(
         div(
-          h2("BigOmics Playground"),
+          h2("Omics Playground"),
           h5(VERSION),
           h5("Advanced omics analysis for everyone"), br(), br(),
           p("Created with love and proudly presented to you by BigOmics Analytics from Ticino, the sunny side of Switzerland."),
