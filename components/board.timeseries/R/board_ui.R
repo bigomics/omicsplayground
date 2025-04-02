@@ -7,13 +7,12 @@ TimeSeriesInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   settings_taglist <- tagList(
-    withTooltip(shiny::selectInput(ns("module"), "Module:", choices = NULL,
-      multiple=TRUE),
-      "Select module(s) to show in parallel plot."
+    withTooltip(shiny::selectInput(ns("module"), "Select module:", choices = NULL,
+      multiple=FALSE),
+      "Select module to show."
     ),
     withTooltip(shiny::selectInput(ns("contrast"), "Contrast:", choices = NULL),
-      "Select contrast to show in table.",
-      placement = "top"
+      "Select contrast to show in table."
     ),
     shiny::br(),
     bslib::accordion(
@@ -69,35 +68,9 @@ TimeSeriesUI <- function(id) {
     boardHeader(title = "Time Series", info_link = ns("board_info")),
     shiny::tabsetPanel(
       id = ns("tabs1"),
+
       shiny::tabPanel(
-        "Time clustering",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 181px)",
-          bs_alert(parallel_info),
-          bslib::layout_columns(
-            height = "calc(100vh - 181px)",
-            col_widths = c(6, 6),
-            TimeSeriesBoard.clustering_plot_ui(
-              id = ns("clustering"),
-              title = "Time series clustering"
-            ),
-            bslib::layout_columns(
-              col_widths = 12,
-              TimeSeriesBoard.parcoord_plot_ui(
-                id = ns("parcoord"),
-                title = "Parallel coordinates"
-              ),
-              TimeSeriesBoard.parcoord_table_ui(
-                id = ns("parcoord"),
-                title = "Module genes"
-              )
-            )
-          )
-        )
-      ), ## end of tabpanel
-      shiny::tabPanel(
-        "Features",
+        "Statistics",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
@@ -116,6 +89,49 @@ TimeSeriesUI <- function(id) {
             )
           )
         )
+      ), ## end of tabpanel
+
+      shiny::tabPanel(
+        "Clustering",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          bs_alert(parallel_info),
+          bslib::layout_columns(
+            height = "calc(100vh - 181px)",
+            col_widths = c(6, 6),
+            bslib::layout_columns(
+              col_widths = 12,
+              TimeSeriesBoard.clustering_plot_ui(
+                id = ns("clustering"),
+                title = "Time series clustering"
+              ),
+              TimeSeriesBoard.parcoord_table_ui(
+                id = ns("parcoord"),
+                title = "Genes in module"
+              )
+            ),
+            bslib::layout_columns(
+              col_widths = 12,
+              TimeSeriesBoard.enrichment_lolliplot_ui(
+                id = ns("enrichment"),
+                title = "Enrichment plot"
+              ),
+              TimeSeriesBoard.enrichment_table_ui(
+                id = ns("enrichment"),
+                title = "Enriched genesets"
+              )
+            )
+          )
+        ),
+        bslib::layout_columns(
+          col_widths = c(6,6),
+          height = "45vh",
+          TimeSeriesBoard.parcoord_plot_ui(
+            id = ns("parcoord"),
+            title = "Parallel coordinates"
+          )
+       )
       ) ## end of tabpanel
       
     )

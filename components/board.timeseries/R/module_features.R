@@ -28,7 +28,7 @@ TimeSeriesBoard.features_plot <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("show_others"), "Show others",FALSE)
+    shiny::checkboxInput(ns("show_others"), "Show other groups",FALSE)
   )
   
   PlotModuleUI(ns("plot"),
@@ -95,19 +95,16 @@ TimeSeriesBoard.features_table <- function(
 #' @export
 TimeSeriesBoard.features_server <- function(id,
                                             pgx,
-                                            data,
+                                            # data,
                                             timevar,
                                             contrast,
-                                            gx_statmethod,
                                             watermark = FALSE) {
 
   moduleServer(id, function(input, output, session) {
 
     plot_data <- shiny::reactive({
       
-      sel.timevar <- timevar()
-      gx_statmethod <- gx_statmethod()
-      
+      sel.timevar <- timevar()      
       genes <- rownames(pgx$X)
       genes <- table_module$rownames_all()
       genes <- head(genes, 16)
@@ -150,6 +147,10 @@ TimeSeriesBoard.features_server <- function(id,
         stats <- cbind(stats, pq.tables)
       }
       stats <- as.data.frame(stats, check.names=FALSE)
+
+      ##stats <- stats[order(-abs(stats$log2FC)),]
+      stats <- stats[order(stats$p.value),]
+
       return(stats)
     })
     
@@ -200,8 +201,14 @@ TimeSeriesBoard.features_server <- function(id,
       shiny::req(df)
       ft <- gsub("[;].*",";...",rownames(df))
       df <- as.data.frame(df, check.names=FALSE)
-      df1 <- cbind( feature=ft, df)
-      
+
+      ## do not show symbol column if symbol==feature
+      symbol <- pgx$genes[rownames(df),"symbol"]
+      if(mean(symbol == ft, na.rm=TRUE) > 0.9) {
+        df1 <- cbind(feature=ft, df)
+      } else {
+        df1 <- cbind(feature=ft, symbol=symbol, df)        
+      }
       numeric.cols <- colnames(df)
       DT::datatable(
         df1,
