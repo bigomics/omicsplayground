@@ -5,12 +5,15 @@
 
 mofa_plot_snfgraph_ui <- function(
     id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+    ...
+    ## title = "",
+    ## info.methods = "",
+    ## info.text = "",
+    ## caption = "",
+    ## label = "",
+    ## height = 400,
+    ## width = 400
+    ) {
   ns <- shiny::NS(id)
 
   options <- tagList(
@@ -18,19 +21,21 @@ mofa_plot_snfgraph_ui <- function(
       ns("labeltype"), "Label type",
       choices = "none"
     ),
-    shiny::sliderInput(ns("minrho"),"edge threshold:",0,1,0.5,0.05)
+    shiny::sliderInput(ns("minrho"),"Edge threshold:",0,1,0.5,0.05)
   )
   
   PlotModuleUI(
     ns("plot"),
     options = options,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    ## title = title,
+    ## label = label,
+    ## info.text = info.text,
+    ## info.methods = info.methods,
+    ## caption = caption,
+    ## height = height,
+    ## width = width
+    ...
   )
 }
 

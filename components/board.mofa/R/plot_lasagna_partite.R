@@ -15,10 +15,16 @@ mofa_plot_lasagna_partite_ui <- function(
     height = 400,
     width = 400) {
   ns <- shiny::NS(id)
-
+  
+  options = tagList(
+    shiny::radioButtons(ns("plottype"),"Plot type:",
+      choices=c("parallel","hive plot"="hive"))
+  )
+  
   PlotModuleUI(
     ns("mpart"),
     title = title,
+    options = options,
     label = "",
     caption = caption,
     info.text = info.text,
@@ -112,7 +118,9 @@ mofa_plot_lasagna_partite_server <- function(id,
       shiny::req(res)
 
       labvar <- input_labeltype()
-      if(labvar=="title") {
+      if(labvar=="default") {
+        labels <- pgx$genes[,"gene_name"]
+      } else if(labvar=="title") {
         labels <- paste0(pgx$genes[,"gene_title"],
                          " (",pgx$genes[,"symbol"],")")
       } else {
@@ -123,22 +131,39 @@ mofa_plot_lasagna_partite_server <- function(id,
 
       names(labels) <- rownames(pgx$genes)
       xt <- playbase::mofa.get_prefix(rownames(res$X))
-      
-      par(mar=c(0,0,0,0))
-      playbase::plotMultiPartiteGraph(
-        res$X,
-        res$fc,
-        group = xt,
-        groups = res$groups,
-        labels = labels,
-        cex.label = 0.9,
-        vx.cex = 1,
-        edge.alpha = 0.2,
-        edge.type = input_edgetype(),
-        yheight = 2,
-        min.rho = input_minrho(),
-        ntop = 40) 
-      
+
+      if(input$plottype == "parallel") {
+        par(mar=c(0,0,0,0))
+        playbase::plotMultiPartiteGraph(
+          res$X,
+          res$fc,
+          group = xt,
+          groups = res$groups,
+          labels = labels,
+          cex.label = 0.9,
+          vx.cex = 1,
+          edge.alpha = 0.2,
+          edge.type = input_edgetype(),
+          yheight = 2,
+          min.rho = input_minrho(),
+          ntop = 40) 
+      }
+
+      if(input$plottype == "hive") {
+        par(mar=c(0,0,0,0))
+        playbase::plotHivePlot(
+          res$X,
+          res$fc,
+          group = xt,
+          groups = res$groups,
+          labels = labels,
+          cex.label = 0.9,
+          vx.cex = 0.8,
+          edge.alpha = 0.2,
+          edge.type = input_edgetype(),
+          min.rho = input_minrho(),
+          ntop = 20) 
+      }
     }
 
     PlotModuleServer(

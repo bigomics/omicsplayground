@@ -5,25 +5,28 @@
 
 mofa_plot_clustering_ui <- function(
     id,
-    title = "",
-    info.text = "",
-    info.references = "", 
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+    ...
+    ## title = "",
+    ## info.text = "",
+    ## info.references = "", 
+    ## caption = "",
+    ## label = "",
+    ## height = 400,
+    ## width = 400
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
     ns("plot"),
-    title = title,
-    label = label,
-    info.text = info.text,
-    info.references = info.references,
-    caption = caption,
-    height = height,
-    width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    ...
+    ## title = title,
+    ## label = label,
+    ## info.text = info.text,
+    ## info.references = info.references,
+    ## caption = caption,
+    ## height = height,
+    ## width = width
   )
 }
 
@@ -59,12 +62,16 @@ mofa_plot_clustering_server <- function(id,
         y <- as.numeric(res$Y[,k])
         rho <- cor( t(res$X), y, use="pairwise")[,1]
         posf <- playbase::mofa.prefix(res$posf)
-
+        
         par(mfrow=c(2,2), mar=c(4,4,2.5,1))
         if(length(res$posf)>4) par(mfrow=c(3,3))        
         for(i in 1:length(res$posf)) {
           pos1 <- posf[[i]]
           rho1 <- rho[rownames(pos1)]
+
+          dbg("[mofa_plot_clustering_server] len(rho1)",length(rho1))
+          dbg("[mofa_plot_clustering_server] sum.is.na(rho1)",sum(is.na(rho1)))
+          
           col1 <- playbase::colorscale(rho1, gamma=1)
           plot(pos1, col = col1, pch = 20, cex = 1.4,
             xlab = "UMAP1", ylab = "UMAP2", las = 1)

@@ -24,8 +24,8 @@ LasagnaInputs <- function(id) {
                               c("both","positive","negative"),
                               selected="both", inline=TRUE),
           shiny::radioButtons(ns("labeltype"), "Label type:",
-                              c("feature","symbol","title"),
-                              selected="title", inline=TRUE)
+                              c("default","feature","symbol","title"),
+                              selected="default", inline=TRUE)
         )
       )
     )
@@ -83,7 +83,8 @@ LasagnaUI <- function(id) {
             mofa_plot_clustering_ui(
               ns("clusters"),
               title = "Feature UMAP per datatype",
-              info.text = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering is determined by Uniford Manifold Approximation and Projection (UMAP) applied to each data type separately. UMAP is computed using the uwot R package. Feature-level clustering enables assessment of how the distinct data types/modalities define distinct (functional) groups. This analysis may reveal that distinct data types capture different heterogeneities in the data, potentially associated with unique biological functions. On the other end, similar clustering patterns between distinct data types may indicate shared regulation. The colors in the UMAP reflect the low-to-high correlation with the selected comparison to explore the impact of different conditions.",
+              info.text = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering enables assessment of how the distinct data types/modalities define distinct (functional) groups. This analysis may reveal that distinct data types capture different heterogeneities in the data, potentially associated with unique biological functions. On the other end, similar clustering patterns between distinct data types may indicate shared regulation.",
+              info.methods = "Feature-level clustering is determined by Uniford Manifold Approximation and Projection (UMAP) applied to each data type separately. UMAP is computed using the uwot R package. The colors in the UMAP reflect the low-to-high correlation with the selected comparison to explore the impact of different conditions.",              
               info.references = list(list("Melville J (2024). “uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.”, CRAN.", "https://doi.org/10.32614/CRAN.package.uwot")),
               caption = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering is determined by UMAP applied to each data type separately. The colors in the UMAP reflect the low-to-high correlation with the selected comparison ",
               height = c("100%", TABLE_HEIGHT_MODAL),
