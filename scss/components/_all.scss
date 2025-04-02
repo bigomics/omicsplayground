@@ -344,6 +344,13 @@ html {
     line-height: 1.1em;
   }
 
+  // used in loader
+  .shiny-input-text.form-control {
+    padding: .375rem .75rem;
+    font-size: 0.85rem;      
+    line-height: 1.1em;
+  }
+
   .form-group {
       margin-bottom: 0.3rem; 
   }

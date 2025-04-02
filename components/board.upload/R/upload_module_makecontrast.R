@@ -5,7 +5,6 @@
 
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
-
   bslib::layout_columns(
     col_widths = 12,
     height = "100%",
@@ -15,6 +14,7 @@ upload_module_makecontrast_ui <- function(id) {
       bslib::card_body(
         bslib::layout_columns(
           col_widths = c(3, 9),
+          ## left 3-column
           shiny::div(
             shiny::HTML("<b>1. Choose phenotype:</b>"),
             withTooltip(
@@ -40,19 +40,18 @@ upload_module_makecontrast_ui <- function(id) {
                   width = "100%",
                   placeholder = "e.g. MAIN_vs_CONTROL"
                 ),
-                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                placement = "left", options = list(container = "body")
+                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."
               ),
               div(
                 style = "padding-top: -2px;",
                 shiny::checkboxInput(
                   ns("add_prefix"), "Add phenotype prefix",
-                  FALSE
+                  TRUE
                 )
-              ),
+              )
             ),
             shiny::div(
-              style = "padding-top: 2px;",
+              style = "padding-top: 3px;",
               shiny::HTML("<b>4. Add my comparison:</b>")
             ),
             shiny::div(
@@ -70,21 +69,23 @@ upload_module_makecontrast_ui <- function(id) {
               )
             )
           ),
+
+          ## right 9-column
           shiny::div(
             style = "overflow: auto; margin-left: 30px;",
             shiny::HTML("<b>2. Create comparison:</b>"),
             withTooltip(
               shiny::uiOutput(
                 ns("createcomparison"),
-                style = "font-size:13px; margin-top: 0px;"
+                style = "font-size:13px; margin-top: 2px;"
               ),
-              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
-              placement = "top", options = list(container = "body")
+              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table."
             )
           )
-        ) ## end of card-body
-      )
+        ) ## end of layout-columns c(3,9)
+      ) # end of card-body
     ),
+    #-----------------------------------------------------
     bslib::layout_columns(
       col_widths = c(8, 4),
       bslib::card(

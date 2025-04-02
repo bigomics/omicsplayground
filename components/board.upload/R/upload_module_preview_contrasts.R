@@ -162,7 +162,7 @@ upload_table_preview_contrasts_server <- function(
           if (is.null(uploaded$contrasts.csv)) {
             bslib::layout_columns(
               col_widths = c(-3, 6, -3),
-              row_heights = list("auto", 11, 1),
+              row_heights = list("auto", 8, 1, 2),
               gap = "0.3rem",
               bslib::as_fill_carrier(
                 bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE),
@@ -181,7 +181,8 @@ upload_table_preview_contrasts_server <- function(
                 ),
                 style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
               ),
-              action_buttons2
+              action_buttons2,
+              br()
             )
           } else {
             bslib::layout_columns(
@@ -232,7 +233,7 @@ upload_table_preview_contrasts_server <- function(
             col_widths = 12,
             ## height = "calc(100vh - 340px)",
             heights_equal = "row",
-            bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main group' or 'Control group' boxes, give a name and click 'add to list'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
+            bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then drag conditions to the 'Main group' or 'Control group' boxes, give a name and click 'add to list'. You can also upload a CSV file with pre-defined comparisons.")),
             upload_module_makecontrast_ui(ns("makecontrast")),
             action_buttons1
           )

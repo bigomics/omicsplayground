@@ -118,19 +118,13 @@ upload_table_preview_counts_server <- function(
         if (is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
             col_widths = c(-3, 6, -3),
-            row_heights = list("auto", 11, 1),
+            row_heights = list("auto", 8, 1, 2),
             gap = "0.5rem",
             bslib::as_fill_carrier(
               bs_alert(tspan("The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."), closable = FALSE, translate_js = FALSE)
             ),
             bslib::card(
               if (upload_datatype() == "multi-omics") {
-                ## shiny::selectInput(
-                ##   ns("data_source"),
-                ##   label = NULL,
-                ##   choices = c("From pgx", "From csv"),
-                ##   selected = "From pgx"
-                ## )
                 shiny::radioButtons(
                   ns("data_source"),
                   label = "Select input files from:",
@@ -191,7 +185,8 @@ upload_table_preview_counts_server <- function(
               },
               style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
-            action_buttons
+            action_buttons,
+            br()
           )
         },
         if (!is.null(uploaded$counts.csv)) {

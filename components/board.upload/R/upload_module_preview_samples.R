@@ -97,7 +97,7 @@ upload_table_preview_samples_server <- function(
         if (is.null(uploaded$samples.csv)) {
           bslib::layout_columns(
             col_widths = c(-3, 6, -3),
-            row_heights = list("auto", 11, 1),
+            row_heights = list("auto", 8, 1, 2),
             gap = "0.3rem",
             bslib::as_fill_carrier(
               bs_alert("The samples file (samples.csv) contains the phenotypic information of your samples. The file should be a tabular text file (csv) with the samples in the rows and the phenotypic data (metadata) in the columns. The first column contains the sample names, which must be unique, and has to match the names given in the header of the counts file.", closable = FALSE),
@@ -113,7 +113,8 @@ upload_table_preview_samples_server <- function(
               ),
               style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
             ),
-            action_buttons
+            action_buttons,
+            br()
           )
         } else {
           bslib::layout_columns(
