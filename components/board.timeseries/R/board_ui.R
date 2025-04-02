@@ -126,7 +126,7 @@ TimeSeriesUI <- function(id) {
         ),
         bslib::layout_columns(
           col_widths = c(6,6),
-          height = "50vh",
+          height = "45vh",
           TimeSeriesBoard.parcoord_plot_ui(
             id = ns("parcoord"),
             title = "Parallel coordinates"

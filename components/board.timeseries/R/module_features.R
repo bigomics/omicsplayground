@@ -28,7 +28,7 @@ TimeSeriesBoard.features_plot <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("show_others"), "Show others",FALSE)
+    shiny::checkboxInput(ns("show_others"), "Show other groups",FALSE)
   )
   
   PlotModuleUI(ns("plot"),
