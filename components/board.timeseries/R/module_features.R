@@ -17,8 +17,8 @@ TimeSeriesBoard.features_plot <- function(
     id,
     label = "label",
     title = "title",
-    caption = "caption",
-    info.text = "info.text",
+    caption = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
+    info.text = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
     info.methods = "info.methods",
     info.references = list(),
     info.extra_link = "extra.link",
@@ -28,7 +28,11 @@ TimeSeriesBoard.features_plot <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("show_others"), "Show other groups",FALSE)
+    shiny::checkboxInput(
+      ns("show_others"),
+      "Show other groups",
+      FALSE
+    )
   )
   
   PlotModuleUI(ns("plot"),
@@ -51,17 +55,19 @@ TimeSeriesBoard.features_table <- function(
     id,
     label = "label",
     title = "title",
-    info.text = "info.text",
-    caption = "caption",
+    info.text = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
+    caption = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
     height = c("40%", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
     ) {
   ns <- shiny::NS(id)
 
-
   options <- tagList(
     withTooltip(
-      shiny::checkboxInput(ns("show_statdetails"), "Show detailed statistical methods"),
+      shiny::checkboxInput(
+        ns("show_statdetails"),
+        "Show detailed statistical methods"
+      ),
       title = "Show detailed statistical methods."
     )
   )
