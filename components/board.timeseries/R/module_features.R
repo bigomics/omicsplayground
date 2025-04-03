@@ -155,11 +155,11 @@ TimeSeriesBoard.features_server <- function(id,
         sel <- grep("^q[.]*", colnames(ikstats.full))
         ikstats.full[, "meta.q"] <- apply(ikstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
         ikstats <- ikstats.full[, c("meta.p", "meta.q")]
-        colnames(ikstats) <- c("p.value.interaction", "q.value.interaction")
+        colnames(ikstats) <- c("p.interaction", "q.interaction")
         kstats <- cbind(kstats, ikstats)
         cols <- c(
           "log2FC", "p.value", "q.value",
-          "p.value.interaction", "q.value.interaction",
+          "p.interaction", "q.interaction",
           "avg.0", "avg.1"
         )
         kstats <- kstats[, cols]
