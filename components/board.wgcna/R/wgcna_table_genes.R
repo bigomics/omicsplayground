@@ -37,7 +37,7 @@ wgcna_table_genes_server <- function(id,
                                      ) {
   moduleServer(id, function(input, output, session) {
 
-    RENDER <- function() {
+    RENDER <- function(full=FALSE) {
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()      
@@ -51,7 +51,8 @@ wgcna_table_genes_server <- function(id,
         res, module=module, trait=trait, plot=FALSE) 
       symbol <- pgx$genes[rownames(df),"symbol"]
       feature <- rownames(df)
-      df <- cbind( feature=feature, symbol=symbol, df)
+      feature1 <- sub(";.*",";...",feature) ## take first
+      df <- cbind( feature=feature1, symbol=symbol, df)
       if(all(symbol==feature)) {
         df$symbol <- NULL
       }

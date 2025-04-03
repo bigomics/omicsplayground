@@ -97,7 +97,7 @@ mgsea_plot_enrichment_server <- function(id,
     plot.RENDER2 <- function() {
       par(mfrow=c(1,2), mar=c(4,14,2,2))
       plot.new()
-      plot.RENDER(ntop=30, par=FALSE) 
+      plot.RENDER(ntop=32, par=FALSE) 
     }
     
     PlotModuleServer(
@@ -105,7 +105,7 @@ mgsea_plot_enrichment_server <- function(id,
       func = plot.RENDER,
       func2 = plot.RENDER2,
       pdf.width = 9, pdf.height = 5,
-      res = c(72, 110),
+      res = c(80, 110),
       add.watermark = watermark
     )
 

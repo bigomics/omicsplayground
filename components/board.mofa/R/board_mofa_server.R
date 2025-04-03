@@ -300,7 +300,7 @@ MofaBoard <- function(id, pgx, board_observers = NULL) {
       "mofa_genetable",
       mofa = mofa,
       selected_factor = reactive(input$selected_factor),
-      annot = reactive(pgx$genes)
+      pgx = pgx
     )
     
     enrichmentTable <- mofa_table_factorenrichment_server(

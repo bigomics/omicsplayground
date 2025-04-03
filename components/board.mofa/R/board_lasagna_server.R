@@ -136,6 +136,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_clustering_server(
       "clusters",
       data = data,
+      pgx = pgx,
       type = "features",
       input_contrast = reactive(input$contrast),
       watermark = WATERMARK

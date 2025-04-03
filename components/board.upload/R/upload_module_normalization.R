@@ -602,14 +602,10 @@ upload_module_normalization_server <- function(
         samples <- r_samples()
 
         methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
-        ## methods <- intersect(methods, names(res$pos))
-        ## pos.list <- res$pos[methods]
         pos.list <- res$pos
         ## get same positions as after outlier detection
         pos0 <- out.res$pos[["pca"]]
         pos.list <- c(list("uncorrected" = pos0), pos.list)
-        #        names(pos.list) <- sub("ComBat", "auto-ComBat", names(pos.list))
-        #        names(pos.list) <- sub("limma", "auto-limma", names(pos.list))
 
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
@@ -679,8 +675,6 @@ upload_module_normalization_server <- function(
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-        #        method <- sub("ComBat", "auto-ComBat", method)
-        #        method <- sub("limma", "auto-limma", method)
         par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
         plot(pos0,
           col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
@@ -836,10 +830,15 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
-                    choices = if(grepl("proteomics|metabolomics", upload_datatype(), ignore.case = TRUE)) {
-                      c("maxMedian", "maxSum", "quantile", "reference")
-                    } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-                      c("median", "combat")
+                    choices = if(grepl("proteomics|metabolomics", upload_datatype(),
+                      ignore.case = TRUE)) {
+                        c("maxMedian", "maxSum", "quantile", "reference")
+                    } else if (grepl("multi-omics", upload_datatype(),
+                      ignore.case = TRUE)) {
+                        c(
+                          "multi-omics median" = "median"
+                          ## "multi-omics combat" = "combat"
+                        )
                     } else {
                       c("CPM+quantile",
                         "TMM", 

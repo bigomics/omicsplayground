@@ -16,9 +16,16 @@ mofa_plot_clustering_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
+  options <- tagList(
+    shiny::radioButtons(ns("colorby"), "Color by:",
+                        c("foldchange","correlation"),
+                        selected="correlation")
+  )
+  
   PlotModuleUI(
     ns("plot"),
     download.fmt = c("png", "pdf", "svg"),
+    options = options,
     ...
     ## title = title,
     ## label = label,
@@ -32,6 +39,7 @@ mofa_plot_clustering_ui <- function(
 
 mofa_plot_clustering_server <- function(id,
                                         data,
+                                        pgx = pgx,
                                         type = c("samples","features")[1],
                                         input_contrast = reactive(NULL),
                                         watermark = FALSE) {
@@ -58,9 +66,15 @@ mofa_plot_clustering_server <- function(id,
       }
       if( type == "features") {
 
-        ## color by contrast correlation
-        y <- as.numeric(res$Y[,k])
-        rho <- cor( t(res$X), y, use="pairwise")[,1]
+        if(input$colorby=="correlation") {
+          ## color by contrast correlation
+          y <- as.numeric(res$Y[,k])
+          rho <- cor(t(pgx$X), y, use="pairwise")[,1]
+        } else {
+          ## color by fold-change
+          F <- playbase::pgx.getMetaMatrix(pgx)$fc
+          rho <- F[,k]
+        }
         posf <- playbase::mofa.prefix(res$posf)
         
         par(mfrow=c(2,2), mar=c(4,4,2.5,1))
@@ -68,10 +82,6 @@ mofa_plot_clustering_server <- function(id,
         for(i in 1:length(res$posf)) {
           pos1 <- posf[[i]]
           rho1 <- rho[rownames(pos1)]
-
-          dbg("[mofa_plot_clustering_server] len(rho1)",length(rho1))
-          dbg("[mofa_plot_clustering_server] sum.is.na(rho1)",sum(is.na(rho1)))
-          
           col1 <- playbase::colorscale(rho1, gamma=1)
           plot(pos1, col = col1, pch = 20, cex = 1.4,
             xlab = "UMAP1", ylab = "UMAP2", las = 1)
