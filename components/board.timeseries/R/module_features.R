@@ -19,8 +19,10 @@ TimeSeriesBoard.features_plot <- function(
     title = "title",
     caption = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
     info.text = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
-    info.methods = "info.methods",
-    info.references = list(),
+    info.methods = "A spline interpolation (smooth curve) of median expression data across time points is performed using the stats::spline R function with default parameters.",
+    info.references = list(
+      list("splinefun:", "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/splinefun.html")
+    ),
     info.extra_link = "extra.link",
     height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
