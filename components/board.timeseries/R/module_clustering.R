@@ -17,8 +17,8 @@ TimeSeriesBoard.clustering_plot_ui <- function(
     id,
     label = "label",
     title = "title",
-    caption = "caption",
-    info.text = "info.text",
+    caption = "Module are identified through k-nearest neighbour (KNN) analysis of expression data. <add how>. Line plots depicting time point-specific average expression profiles of all genes within a defined module.",
+    info.text = "Module are identified through k-nearest neighbour (KNN) analysis of expression data. <add how>. The number of modules (KNN) range from 2 to 10 and can be set from the 'Advanced option' menu on the right side. Line plots depicting time point-specific average expression profiles of all genes within a defined module. The gene mapped within each module are reported in the table below.",
     info.methods = "info.methods",
     info.references = list(),
     info.extra_link = "extra.link",
@@ -95,7 +95,6 @@ TimeSeriesBoard.clustering_server <- function(id,
       pdf.height = 10,
       add.watermark = watermark
     )
-
     
   }) ## end of moduleServer
 }

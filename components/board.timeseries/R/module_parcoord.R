@@ -49,8 +49,8 @@ TimeSeriesBoard.parcoord_table_ui <- function(
     id,
     label = "label",
     title = "title",
-    info.text = "info.text",
-    caption = "caption",
+    info.text = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
+    caption = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
     height = c("40%", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
     ) {
