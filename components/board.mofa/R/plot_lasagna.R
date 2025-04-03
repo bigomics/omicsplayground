@@ -30,16 +30,26 @@ mofa_plot_lasagna_ui <- function(
 
 mofa_plot_lasagna_server <- function(id,
                                      data,
+                                     pgx,
+                                     input_contrast,
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     plot.RENDER <- function() {
       res <- data()
       shiny::req(res$posf)
+      k <- input_contrast()
+      shiny::req(k, pgx$X)
+      vars <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+      vars <- sign(vars) * abs(vars)**0.5
       
       plt <- playbase::plotly_lasagna(
-        res$posf, vars=NULL,
-        num_edges = 20)
+        pos = res$posf,
+        vars = vars,
+        X = pgx$X,
+        min.rho = 0.8,
+        num_edges = 40
+      )
 
       plt %>%
         plotly::layout(

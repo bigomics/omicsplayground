@@ -110,7 +110,9 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
     mofa_plot_lasagna_server(
       "lasagna",
       data = data,
+      pgx = pgx,
       ##input_factor = reactive(input$selected_factor),      
+      input_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
 
