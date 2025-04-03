@@ -17,10 +17,13 @@ TimeSeriesBoard.clustering_plot_ui <- function(
     id,
     label = "label",
     title = "title",
-    caption = "caption",
-    info.text = "info.text",
-    info.methods = "info.methods",
-    info.references = list(),
+    caption = "Line plots depicting time point-specific average expression profiles of all genes within a defined module. Modules are identified through k-means clustering of expression data.",
+    info.text = "Modules are identified through k-means clustering of expression data. The number of modules (k) range from 2 to 10 and can be set from the 'Advanced option' menu on the right side. Line plots depicting time point-specific average expression profiles of all genes within a defined module. The genes mapped within each module are reported in the table below.",
+    info.methods = "Modules are identified through k-means clustering of expression data. Specifically, normalized and log2-transformed expression are first scaled and centered. Per each feature, the average expression across samples is then calculated per each time point. The top 1K features with highest sd of the time point-specific average expression values are selected and singular value decomposition applied using irlba::irlba R function with parameter nv = 50 estimable right singular vectors. K-means clustering is then applied on the singular vectors using the stats::kmeans R function with default parameters.",
+    info.references = list(
+      list("kmeans:", "https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/kmeans"),
+      list("irlba:", "https://www.rdocumentation.org/packages/irlba/versions/2.3.5.1/topics/irlba")
+    ),
     info.extra_link = "extra.link",
     height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
@@ -95,7 +98,6 @@ TimeSeriesBoard.clustering_server <- function(id,
       pdf.height = 10,
       add.watermark = watermark
     )
-
     
   }) ## end of moduleServer
 }
