@@ -16,7 +16,7 @@ PcsfInputs <- function(id) {
     ),
     hr(),
     withTooltip(
-      shiny::sliderInput(ns("pcsf_beta"), "Prize strength (beta):", -4, 1, 0, 1),
+      shiny::sliderInput(ns("pcsf_beta"), "Prize strength (beta):", -3, 2, 0, 1),
       "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
       placement = "right"
     ),
