@@ -205,7 +205,7 @@ WgcnaUI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Circle network of top hub genes. </b> <b>(c)</b> Module membership (MM) with the module eigengene.  <b>(d)</b> Table of importance score to identify 'driver genes' of the module. <b>(e)</b> Plot of significance measures: module membership (MM), gene trait significance (GS), foldChange and network centrality.")),
           bslib::layout_columns(
-            col_widths = c(4,4,4,5,7),
+            col_widths = c(4,4,4,7,5),
             height = "calc(100vh - 181px)",
             wgcna_plot_module_significance_ui(
               ns("moduleSignificance"),
