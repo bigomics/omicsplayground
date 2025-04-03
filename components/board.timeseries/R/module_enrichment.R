@@ -2,25 +2,26 @@ TimeSeriesBoard.enrichment_table_ui <- function(
     id,
     label = "label",
     title = "title",
-    info.text = "info.text",
-    caption = "caption",
+    info.text = "Table of enriched genesets. Table reporting the genesets along with the correlation value (rho) and the p.value. ",
+    caption = "Table of enriched genesets. Table reporting the genesets along with the correlation value (rho) and the p.value. ",
     height = c("40%", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
     ) {
   ns <- shiny::NS(id)
-
-
-  options <- tagList(
-    withTooltip(
-      shiny::checkboxInput(ns("show_statdetails"), "Show detailed statistical methods"),
-      title = "Show detailed statistical methods."
-    )
-  )
+  
+  ## options <- tagList(
+  ##   withTooltip(
+  ##     shiny::checkboxInput(
+  ##      ns("show_statdetails"),
+  ##      "Show detailed statistical methods"),
+  ##      title = "Show detailed statistical methods."
+  ##   )
+  ## )
   
   TableModuleUI(
     ns("table"),
     info.text = info.text,
-    options = options,
+    #options = options,
     height = height,
     caption = caption,
     width = width,
@@ -34,9 +35,9 @@ TimeSeriesBoard.enrichment_lolliplot_ui <- function(
     id,
     label = "label",
     title = "title",
-    caption = "caption",
-    info.text = "info.text",
-    info.methods = "info.methods",
+    caption = "Top-correlated gene sets with the selected gene module. X-axis shows the Pearson's correlation coefficient. Correlation coefficient values and p-values can be retrieved from the 'Enriched gene sets table' below'.",
+    info.text = "Top-correlated gene sets with the selected gene module. X-axis shows the Pearson's correlation coefficient. Correlation coefficient values and p-values can be retrieved from the 'Enriched gene sets table' below'.",
+    info.methods = "First, the log2-transformed and normalized data matrix is feature-scaled. Feature scaling is performed by subtracting the feature average value from each feature value and then dividing by the feature standard deviation. For each sample, the module-wise average expression is calculated. Pearson's correlation between gene set average expression and gene module average expression is calculated and mostly significantly correlated gene sets can be identified.",
     info.references = list(),
     info.extra_link = "extra.link",
     height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
