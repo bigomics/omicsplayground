@@ -27,7 +27,7 @@ mofa_table_genetable_ui <- function(
 mofa_table_genetable_server <- function(id,
                                         mofa,
                                         selected_factor = reactive(NULL),
-                                        annot 
+                                        pgx
                                         )
 {
   moduleServer(id, function(input, output, session) {
@@ -41,13 +41,17 @@ mofa_table_genetable_server <- function(id,
 
       wct <- playbase::mofa.plot_centrality(mofa, k, justdata=TRUE)
       wct <- wct[order(-wct$weight),]
+      annot <- pgx$genes
       if(full) {
-        aa <- annot()[wct$feature,c("feature","symbol","gene_title")]
+        aa <- annot[wct$feature,c("feature","symbol","gene_title")]
       } else {
-        aa <- annot()[wct$feature,c("feature","symbol")]        
+        aa <- annot[wct$feature,c("feature","symbol")]        
       }
+      aa$feature <- sub(";.*",";[...]",aa$feature)
+      aa$symbol[is.na(aa$symbol) | aa$symbol==''] <- '---'
       if(all(aa$feature == aa$symbol)) aa$symbol <- NULL      
       wct$feature <- NULL
+
       df <- data.frame( factor=k, aa, wct )
 
       numeric.cols <- grep("score|weight|centrality",colnames(df))

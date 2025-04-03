@@ -103,7 +103,8 @@ LasagnaUI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
-            col_widths = c(8,4),
+            # col_widths = c(8,4),
+            col_widths = c(12),            
             height = "calc(100vh - 180px)",
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
@@ -113,15 +114,15 @@ LasagnaUI <- function(id) {
               info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),
-            mofa_plot_lasagna_partite_adjmat_ui(
-              ns("lasagnaPartite"),
-              title = "Adjacency matrix",
-              info.text = "",
-              info.references = NULL,
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
             )
+            ## mofa_plot_lasagna_partite_adjmat_ui(
+            ##   ns("lasagnaPartite"),
+            ##   title = "Adjacency matrix",
+            ##   info.text = "",
+            ##   info.references = NULL,
+            ##   height = c("100%", TABLE_HEIGHT_MODAL),
+            ##   width = c("auto", "100%")
+            ## )
           )
         )
       ),  ## end tabPanel      
