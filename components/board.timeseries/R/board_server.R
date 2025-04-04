@@ -67,6 +67,7 @@ TimeSeriesBoard <- function(id,
 
       ## set available contrasts
       contrasts <- playbase::pgx.getContrasts(pgx)
+      contrasts <- contrasts[!grepl("^IA:", contrasts)]
       shiny::updateSelectInput(session, "contrast", choices=contrasts, selected=contrasts[1])
     })
 

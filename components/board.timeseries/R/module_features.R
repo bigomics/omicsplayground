@@ -143,23 +143,50 @@ TimeSeriesBoard.features_server <- function(id,
     })
 
     stats_data <- shiny::reactive({
+
       k <- contrast()
       shiny::req(k)
-      kstats <- as.matrix(pgx$gx.meta$meta[[k]]) #[,1:5]
-      cols <- c("meta.fx","meta.p","meta.q","avg.0","avg.1")
-      stats <- kstats[,cols]
-      colnames(stats) <- c("log2FC","p.value","q.value","avg.0","avg.1")
-      if(input$show_statdetails) {
-        i=1;
-        pq.tables <- kstats[, grep("^p[.]|^q[.]",colnames(kstats)), drop = FALSE]
-        stats <- cbind(stats, pq.tables)
+      
+      kstats.full <- as.matrix(pgx$gx.meta$meta[[k]])
+      sel <- grep("^p[.]*", colnames(kstats.full))
+      kstats.full[, "meta.p"] <- apply(kstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
+      sel <- grep("^q[.]*", colnames(kstats.full))
+      kstats.full[, "meta.q"] <- apply(kstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
+      kstats <- kstats.full[, c("meta.fx", "meta.p", "meta.q", "avg.0", "avg.1")]
+      colnames(kstats) <- c("log2FC", "p.value", "q.value", "avg.0", "avg.1")
+
+      ik <- paste0("IA:", k)
+      if (ik %in% names(pgx$gx.meta$meta)) {
+        ikstats.full <- as.matrix(pgx$gx.meta$meta[[ik]])
+        sel <- grep("^p[.]*", colnames(ikstats.full))
+        ikstats.full[, "meta.p"] <- apply(ikstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
+        sel <- grep("^q[.]*", colnames(ikstats.full))
+        ikstats.full[, "meta.q"] <- apply(ikstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
+        ikstats <- ikstats.full[, c("meta.p", "meta.q")]
+        colnames(ikstats) <- c("p.interaction", "q.interaction")
+        kstats <- cbind(kstats, ikstats)
+        cols <- c(
+          "log2FC", "p.value", "q.value",
+          "p.interaction", "q.interaction",
+          "avg.0", "avg.1"
+        )
+        kstats <- kstats[, cols]
       }
-      stats <- as.data.frame(stats, check.names=FALSE)
 
-      ##stats <- stats[order(-abs(stats$log2FC)),]
-      stats <- stats[order(stats$p.value),]
+      if (input$show_statdetails) {
+        k.pq.tables <- kstats.full[, grep("^p[.]|^q[.]",colnames(kstats.full)), drop = FALSE]
+        if (ik %in% names(pgx$gx.meta$meta)) {
+          ik.pq.tables <- ikstats.full[, grep("^p[.]|^q[.]", colnames(ikstats.full)), drop = FALSE]
+          colnames(ik.pq.tables) <- paste0(colnames(ik.pq.tables), ".interaction")
+          pq.tables <- cbind(k.pq.tables, ik.pq.tables)
+        }
+        kstats <- cbind(kstats, pq.tables)
+      }
 
-      return(stats)
+      kstats <- as.data.frame(kstats, check.names = FALSE)
+      kstats <- kstats[order(kstats$p.value), ]
+      return(kstats)
+
     })
     
     ##-----------------------------------------------------
