@@ -343,12 +343,13 @@ upload_module_computepgx_server <- function(
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
                 ),
-                shiny::checkboxInput(
-                  ns("time_series"),
-                  label = shiny::HTML("<b>Time series analysis</b>"),
-                  value = FALSE
-                ),
-                shiny::HTML("<small style='margin-top: -20px; display: block; font-size: 14px;'>Requires a 'time' column in samples.csv. Analysis uses limma spline and/or DESeq2/EdgeR with interaction term.</small>"),
+                div(id = "interaction_analysis"), # Placeholder for the dynamic text
+                ## shiny::checkboxInput(
+                ##   ns("time_series"),
+                ##   label = shiny::HTML("<b>Time series analysis</b>"),
+                ##   value = FALSE
+                ## ),
+                ## shiny::HTML("<small style='margin-top: -20px; display: block; font-size: 14px;'>Requires a 'time' column in samples.csv. Analysis uses limma spline and/or DESeq2/EdgeR with interaction term.</small>"),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -462,64 +463,56 @@ upload_module_computepgx_server <- function(
       })
 
       ## Checks specific for time series
-      shiny::observeEvent(input$time_series, {
-        req(samplesRT())
-        Y <- samplesRT()
-        colnames(Y) <- toupper(colnames(Y))
-        Contrasts <- contrastsRT()
-        time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
-        sel.time <- intersect(toupper(time.var), colnames(Y))
-        
-        ## 1. Ensure 'time' column is in samples.csv file
-        ## 2. Force DGE methods to be one of those allowing time series testing.
-        if (input$time_series) {
-          if (length(sel.time) == 0) {
-            shinyalert::shinyalert(
-              title = "WARNING",
-              text = "Column 'minute, hour, day, week, month, year, or time' not found in samples.csv. Skipping time series analysis.",
-              type = "warning"
-            )
-            shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
-          }
-          shiny::updateCheckboxGroupInput(
-            inputId = "gene_methods",
-            choices = c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf"),
-            selected = c("trend.limma", "deseq2.lrt")
-          )
-        } else {
-          shiny::updateCheckboxGroupInput(
-            inputId = "gene_methods",
-            choices = GENETEST.METHODS(),
-            selected = GENETEST.SELECTED()
-          )
-        }
+      shiny::observeEvent(samplesRT(), {
 
-        ## 3. For each contrast, there should be at least 1 sample per condition, per time point. make more flexible.
-        ## (eg GEIGER not good)
-        if (input$time_series && length(sel.time) > 0) {
-          i=1
+        Y <- samplesRT()
+        Contrasts <- contrastsRT()
+        colnames(Y) <- tolower(colnames(Y))
+        Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
+        
+        time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
+        sel.time <- intersect(time.var, colnames(Y))
+        
+        if (length(sel.time)) {
+          i=1; valid.ia.ctx=c();
           for (i in 1:ncol(Contrasts)) {
-            contr.name <- colnames(Contrasts)[i]
-            var <- strsplit(contr.name[i], ":")[[1]][1]
-            if (var %in% time.var) next
-            jj <- match(rownames(Contrasts[, i, drop=FALSE]), rownames(Y))
-            D <- data.frame(contr = Contrasts[,i], time = Y[jj, sel.time[1]])
-            rownames(D) <- rownames(Y)[jj]
-            tt <- table(D[, 1], D[, 2])
+            ctx <- colnames(Contrasts)[i]
+            if (strsplit(ctx, ":")[[1]][1] %in% time.var) next;
+            tt <- table(data.frame(ctx = Contrasts[,ctx], time = Y[,sel.time[1]]))
             zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
-            if (any(zeros.obs >= ncol(tt)-1)) {
-              #if (any(tt == 0)) {
-              shinyalert::shinyalert(
-                title = "WARNING",
-                #text = "Not all time points are represented across specified contrasts. Skipping time series analysis.",
-                text = "At least 1 phenotype is not represented in at least 2 time points. Skipping time series analysis.",
-                type = "warning"
-              )
-              shiny::updateCheckboxInput(inputId = "time_series", value = FALSE)
-              break;
+            if (any(zeros.obs >= (ncol(tt)-1))) {
+              next
+            } else {
+              valid.ia.ctx <- c(valid.ia.ctx, ctx)
             }
           }
+          if (length(valid.ia.ctx)) {
+            ss <- paste0("Column ", sel.time, " found in samples.csv.
+            Interaction analysis between main effect and time will be also performed for valid contrasts.")
+            shinyalert::shinyalert(title = "Interaction analysis", text = ss, type = "info")
+            shiny::updateCheckboxGroupInput(
+              inputId = "gene_methods",
+              choices = c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf"),
+              selected = c("trend.limma", "deseq2.lrt")
+            )
+            insertUI(
+              selector = "#interaction_analysis",
+              where = "afterEnd",
+              ui = HTML(
+                paste0("<p style='color: gray;'>Interaction with time will be tested<br>",
+                  "for the contrasts:<br>", paste0(valid.ia.ctx,collapse="<br>"),".</p>")
+              )
+            )
+    
+          }
         }
+        #else {
+        #  shiny::updateCheckboxGroupInput(
+        #    inputId = "gene_methods",
+        #   choices = GENETEST.METHODS(),
+        #    selected = GENETEST.SELECTED()
+        #  )
+        #}
 
       })
 
@@ -824,8 +817,8 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        timeseries <- FALSE
-        if (input$time_series) timeseries <- TRUE
+        #timeseries <- FALSE
+        #if (input$time_series) timeseries <- TRUE
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         if(input$do_extra == FALSE) extra.methods <- c()
@@ -926,7 +919,7 @@ upload_module_computepgx_server <- function(
           extra.methods = extra.methods,
           use.design = use.design,
           prune.samples = prune.samples,
-          timeseries = timeseries,
+          #timeseries = timeseries,
           do.cluster = TRUE,
           libx.dir = libx.dir, # needs to be replaced with libx.dir
           name = dataset_name,
