@@ -48,9 +48,13 @@ IntersectionBoard <- function(
       if (is.null(pgx)) {
         return(NULL)
       }
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      comparisons <- sort(comparisons)
-      shiny::updateSelectInput(session, "comparisons",
+      #comparisons <- colnames(pgx$model.parameters$contr.matrix)
+      #comparisons <- sort(comparisons)
+      comparisons <- playbase::pgx.getContrasts(pgx)
+      comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
+      shiny::updateSelectInput(
+        session,
+        "comparisons",
         choices = comparisons,
         selected = head(comparisons, 3)
       )

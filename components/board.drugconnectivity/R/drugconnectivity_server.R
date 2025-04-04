@@ -45,8 +45,10 @@ DrugConnectivityBoard <- function(id, pgx, board_observers = NULL) {
 
     my_observers[[3]] <- shiny::observe({
       shiny::req(pgx$X)
-      ct <- colnames(pgx$model.parameters$contr.matrix)
-      shiny::updateSelectInput(session, "dsea_contrast", choices = sort(ct))
+      #ct <- colnames(pgx$model.parameters$contr.matrix)
+      ct <- playbase::pgx.getContrasts(pgx)
+      ct <- sort(ct[!grepl("^IA:", ct)])
+      shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
     })
 
     ## add to list global of observers. suspend by default.

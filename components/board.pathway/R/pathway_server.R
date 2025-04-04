@@ -55,7 +55,7 @@ PathwayBoard <- function(id,
     my_observers[[2]] <- shiny::observe({
       shiny::req(pgx$X)
       ct <- colnames(pgx$model.parameters$contr.matrix)
-      ct <- sort(ct)
+      ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })
 

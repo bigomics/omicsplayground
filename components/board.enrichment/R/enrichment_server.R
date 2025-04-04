@@ -54,8 +54,9 @@ EnrichmentBoard <- function(id, pgx,
     shiny::observe({
       shiny::req(pgx$X)
       meta <- pgx$gset.meta$meta
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      comparisons <- sort(intersect(comparisons, names(meta)))
+      comparisons <- playbase::pgx.getContrasts(pgx)
+      comparisons <- intersect(comparisons, names(meta))
+      comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
       shiny::updateSelectInput(session, "gs_contrast", choices = comparisons)
 
       ## get the computed geneset methods
