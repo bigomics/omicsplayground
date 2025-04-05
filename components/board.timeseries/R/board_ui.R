@@ -36,16 +36,23 @@ TimeSeriesInputs <- function(id) {
           shiny::selectInput(
             ns("knn"),
             "Number of modules:",
-            choices = c(2,3,4,5,7,10),
-            selected=7
+            choices =  c(4,6,9,12),
+            selected = 9
           ),
           "Choose number of KNN clusters."
         ),
-        shiny::selectInput(
-          ns("maxfeatures"),
-          "Max features per module:",
-          choices=c(50,100,200,500),
-          selected=100
+        withTooltip(        
+          shiny::selectInput(
+            ns("maxfeatures"),
+            "Max features per module:",
+            choices=c(50,100,200,500),
+            selected=100
+          ),
+          "Set maximum features to show"
+        ),
+        withTooltip(        
+          shiny::checkboxInput(ns("filtermodules"), "Filter modules", FALSE),
+          "Apply eigenmodule filter"
         )
       )
     )

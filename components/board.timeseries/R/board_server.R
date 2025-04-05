@@ -27,9 +27,9 @@ TimeSeriesBoard <- function(id,
        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    ## ===================================================================================
-    ## ======================== OBSERVERS ================================================
-    ## ===================================================================================
+    ## ============================================================================
+    ## ======================== OBSERVERS =========================================
+    ## ============================================================================
 
     my_observers <- list()
 
@@ -82,7 +82,8 @@ TimeSeriesBoard <- function(id,
     timeseries_full <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(input$timevar)
-      shiny::req(input$knn)
+      ##shiny::req(input$knn)
+      
       knn=7
       knn <- as.integer(input$knn)
 
@@ -97,11 +98,16 @@ TimeSeriesBoard <- function(id,
       
       cX <- t(scale(t(X)))
       timeZ <- t( playbase::rowmean(t(cX), time))
-      clust <- playbase::pgx.FindClusters(t(timeZ), method="kmeans")[[1]]
+      clust <- playbase::pgx.FindClusters(
+        t(timeZ),
+        km.sizes = c(4,6,9,12),
+        method = "kmeans"
+      )[[1]]
       rownames(clust) <- rownames(timeZ)
       modules <- clust[,paste0("kmeans.",knn)]
-      modules <- paste0("M",modules)
-
+      modules <- paste0("T",modules)
+      names(modules) <- rownames(clust)
+      
       ## compute geneset enrichment
       gset.rho <- NULL
       if(!is.null(pgx$gsetX) && nrow(pgx$gsetX)) {
@@ -109,15 +115,6 @@ TimeSeriesBoard <- function(id,
         gset.rho <- cor(t(pgx$gsetX), t(mX))
       }
       
-      ## update selectinput
-      modulenames <- sort(unique(modules))
-      shiny::updateSelectInput(
-        session,
-        "module",
-        choices = modulenames,
-        selected = modulenames[1]
-      )
-            
       res <- list(X = timeX, Z = timeZ, modules = modules, gset.rho = gset.rho)
       return(res)
 
@@ -127,35 +124,53 @@ TimeSeriesBoard <- function(id,
 
       res <- timeseries_full()
       shiny::req(res)
-      
-      ##minKME=0.8;mergeCutHeight=0.15;minmodsize=20;ntop=10      
-      filtered.modules <- playbase::wgcna.filterColors(
-        res$Z,
-        res$modules,
-        minKME=0.8,
-        mergeCutHeight=0.05,
-        minmodsize = 10,
-        ntop=100
-      )
 
-      ## set remove garbage group?
+      if(input$filtermodules) {
+        ##minKME=0.8;mergeCutHeight=0.15;minmodsize=20;ntop=10      
+        filtered.modules <- playbase::wgcna.filterColors(
+          res$Z,
+          res$modules,
+          minKME = 0.3,
+          mergeCutHeight = 0.05,
+          minmodsize = 10,
+          ntop = 400
+        )
+      } else {
+        filtered.modules <- res$modules
+      }
+      zz <- res$Z[,]
+      xx <- res$X[,]        
+      time <- colnames(res$Z)
+      
+      ## remove grey group?
       if(1) {
-        jj <- which(!filtered.modules %in% c(NA,0,"---","grey"))
-        zz <- res$Z[jj,]
-        xx <- res$X[jj,]        
-        filtered.modules <- filtered.modules[jj]
+        jj <- which(!filtered.modules %in% c(NA,0,"---","grey","T0"))
+        if(length(jj)>0) {
+          zz <- zz[jj,]
+          xx <- xx[jj,]        
+          filtered.modules <- filtered.modules[jj]
+        }
       }
 
-      time <- colnames(zz)
-      res <- list(X=xx, Z = zz, time = time, modules = filtered.modules,
-        gset.rho = res$gset.rho )
+      ## update selectinput
+      modulenames <- sort(unique(filtered.modules))
+      shiny::updateSelectInput(
+        session,
+        "module",
+        choices = modulenames,
+        selected = modulenames[1]
+      )
+      
+      res <- list(X=xx, Z = zz, time = time,
+                  modules = filtered.modules,
+                  gset.rho = res$gset.rho )
       return(res)
 
     })
     
-    ## ===============================================================================
-    ## =============================== MODULES =======================================
-    ## ===============================================================================
+    ## ============================================================================
+    ## =============================== MODULES ====================================
+    ## ============================================================================
     
     TimeSeriesBoard.parcoord_server(
       id = "parcoord",
@@ -184,6 +199,7 @@ TimeSeriesBoard <- function(id,
     TimeSeriesBoard.features_server(
       id = "features",
       pgx = pgx,
+      data = timeseries_full,      
       contrast = shiny::reactive(input$contrast),      
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK

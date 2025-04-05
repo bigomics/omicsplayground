@@ -103,7 +103,7 @@ TimeSeriesBoard.features_table <- function(
 #' @export
 TimeSeriesBoard.features_server <- function(id,
                                             pgx,
-                                            # data,
+                                            data,
                                             timevar,
                                             contrast,
                                             watermark = FALSE) {
@@ -185,6 +185,7 @@ TimeSeriesBoard.features_server <- function(id,
 
       kstats <- as.data.frame(kstats, check.names = FALSE)
       kstats <- kstats[order(kstats$p.value), ]
+
       return(kstats)
 
     })
@@ -237,13 +238,21 @@ TimeSeriesBoard.features_server <- function(id,
       ft <- gsub("[;].*",";...",rownames(df))
       df <- as.data.frame(df, check.names=FALSE)
 
+      module <- data()$modules
+      dbg("len.modules = ", length(module))
+      dbg("head.modules = ", head(module))
+      dbg("head.names.modules = ", head(names(module)))
+      dbg("head.rownames.df = ", head(rownames(df)))
+      
+      module <- module[match(rownames(df), names(module))]
+
       ## do not show symbol column if symbol==feature
       symbol <- pgx$genes[rownames(df),"symbol"]
+      df1 <- cbind(module=module, feature=ft, symbol=symbol, df)        
       if(mean(symbol == ft, na.rm=TRUE) > 0.9) {
-        df1 <- cbind(feature=ft, df)
-      } else {
-        df1 <- cbind(feature=ft, symbol=symbol, df)        
-      }
+        df1$symbol <- NULL
+      } 
+
       numeric.cols <- colnames(df)
       DT::datatable(
         df1,

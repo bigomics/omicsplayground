@@ -150,10 +150,12 @@ TimeSeriesBoard.parcoord_server <- function(id,
     table.RENDER <- function() {
 
       res <- plot_data()
+      shiny::req(res)
+      
       timeX <- res$timeX
       feature1 <- gsub(";.*",";...",rownames(timeX)) ## shorten
       sdx <- matrixStats::rowSds(timeX)
-            
+      
       df <- data.frame(
         module = res$modules,
         feature = feature1,
