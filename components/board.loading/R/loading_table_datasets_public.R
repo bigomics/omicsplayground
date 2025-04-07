@@ -22,7 +22,6 @@ loading_table_datasets_public_ui <- function(
       title = title
     ),
     div(
-      id = "load-action-buttons",
       shiny::actionButton(
         ns("importbutton"),
         label = "Import dataset",
