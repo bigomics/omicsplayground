@@ -24,7 +24,9 @@ upload_table_preview_contrasts_server <- function(
     checked_contrasts,
     show_comparison_builder,
     selected_contrast_input,
-    upload_wizard) {
+    upload_wizard,
+    fileBrowser,
+    fileBrowserRoot) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -177,7 +179,8 @@ upload_table_preview_contrasts_server <- function(
                   ),
                   multiple = FALSE,
                   accept = c(".csv"),
-                  width = "100%"
+                  width = "100%",
+                  fileBrowser = fileBrowser
                 ),
                 style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
               ),
@@ -244,6 +247,7 @@ upload_table_preview_contrasts_server <- function(
       )
       # }
     })
+    shinyFiles::shinyFileChoose(input, "contrasts_csv", root = c(root = fileBrowserRoot), filetypes = c("csv"))
 
     output$contrasts_stats <- renderPlot({
       ct <- uploaded$contrasts.csv
@@ -312,8 +316,18 @@ upload_table_preview_contrasts_server <- function(
 
     # pass counts to uploaded when uploaded
     observeEvent(input$contrasts_csv, {
+      if (fileBrowser) {
+        shiny::req("list" %in% class(input$contrasts_csv))
+      }
+      if (!is.null(input$contrasts_csv$files)) {
+        name <- tail(input$contrasts_csv$files[[1]], 1)[[1]]
+        datapath <- paste0(fileBrowserRoot, paste(input$contrasts_csv$files[[1]], collapse = "/"))
+      } else {
+        name <- input$contrasts_csv$name
+        datapath <- input$contrasts_csv$datapath
+      }
       # check if contrasts is csv (necessary due to drag and drop of any file)
-      ext <- tools::file_ext(input$contrasts_csv$name)[1]
+      ext <- tools::file_ext(name)[1]
       if (ext != "csv") {
         shinyalert::shinyalert(
           title = "File format not supported.",
@@ -324,7 +338,7 @@ upload_table_preview_contrasts_server <- function(
       }
 
       # if contrasts not in file name, give warning and return
-      if (!grepl("contrast", input$contrasts_csv$name, ignore.case = TRUE) && !grepl("comparison", input$contrasts_csv$name, ignore.case = TRUE)) {
+      if (!grepl("contrast", name, ignore.case = TRUE) && !grepl("comparison", name, ignore.case = TRUE)) {
         shinyalert::shinyalert(
           title = "Comparison not in filename.",
           text = "Please make sure the file name contains 'comparison', such as comparison_dataset.csv or comparison.csv.",
@@ -335,7 +349,7 @@ upload_table_preview_contrasts_server <- function(
 
       ct <- tryCatch(
         {
-          playbase::read.as_matrix(input$contrasts_csv$datapath)
+          playbase::read.as_matrix(datapath)
         },
         error = function(w) {
           NULL
@@ -343,7 +357,7 @@ upload_table_preview_contrasts_server <- function(
       )
       if (is.null(ct)) {
         data_error_modal(
-          path = input$contrasts_csv$datapath,
+          path = datapath,
           data_type = "contrasts"
         )
       } else {
