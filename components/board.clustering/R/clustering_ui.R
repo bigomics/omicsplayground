@@ -134,7 +134,7 @@ ClusteringUI <- function(id) {
 
   board_info <- "The Clustering Board performs unsupervised clustering analysis. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects."
 
-  heatmap_info <- HTML("The <b>Clustered Heatmap</b> is a powerful 2-way unsupervised hierarchical clustering technique that simultaneously clusters the expression matrix along rows and columns, clustering similar genes and similar samples together. The tree-like dendrogram shows the 'distance' between features and the approximate groups. The column annotations show the correlation with the phenotypes.")
+  heatmap_info <- HTML("The <b>Clustered Heatmap</b> is a 2-way unsupervised hierarchical clustering technique that simultaneously clusters the expression matrix along rows and columns, clustering similar genes and similar samples together. The tree-like dendrogram shows the 'distance' between features and the approximate groups. The column annotations show the correlation with the phenotypes.")
 
   pca_info <- HTML("<b>Dimensionality reduction</b> is an unsupervised clustering technique that projects the samples into a lower dimensional, here 2D, space. Samples that have similar expression profiles will cluster close together. By coloring the points by condition, we can see which phenotype best explains the clustering.")
 
