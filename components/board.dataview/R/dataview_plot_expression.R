@@ -30,7 +30,6 @@ dataview_plot_expression_ui <- function(
     outputFunc2 = plotly::plotlyOutput,
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    #
     height = height,
     ns_parent = ns,
     editor = TRUE,
@@ -45,33 +44,43 @@ dataview_plot_expression_server <- function(id,
                                             r.data_type = reactive("counts"),
                                             r.data_groupby = reactive("<ungrouped>"),
                                             watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
+      
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
       shiny::req(all(colnames(pgx$X) == rownames(pgx$samples)))
-      ## dereference reactives
+      
       gene <- r.gene()
       samples <- r.samples()
       data_type <- r.data_type()
       groupby <- r.data_groupby()
       xgenes <- rownames(pgx$X)
 
-      if (samples[1] == "") {
-        return(NULL)
-      }
-      if (gene == "") {
-        return(NULL)
-      }
-      if (!gene %in% xgenes) {
-        return(NULL)
-      }
+      ##--------------------------------
+      ## metadata_vars <- colnames(pgx$samples)
+      ## new.options <- tagList(
+      ##   shiny::radioButtons(
+      ##     inputId = ns("colorby_var"),
+      ##     label = "Annotate by:",
+      ##     choices = metadata_vars,
+      ##     selected = metadata_vars[1],
+      ##     inline = FALSE
+      ##   )
+      ## )
+      ##---------------------------------
+      
+      if (samples[1] == "") return(NULL)
+      if (gene == "") return(NULL)
+      if (!gene %in% xgenes) return(NULL)
 
       grpvar <- 1
       grp <- rep(NA, length(samples))
-      if (groupby != "<ungrouped>") {
+      if (groupby != "<ungrouped>")
         grp <- factor(as.character(pgx$samples[samples, groupby]))
-      }
+ 
       # Req to avoid error on dataset change
       shiny::req(length(grp) == length(samples))
 
@@ -86,18 +95,19 @@ dataview_plot_expression_server <- function(id,
 
       # geneplot_type <- "barplot"
       geneplot_type <- input$geneplot_type
+      df <- data.frame(x = gx, samples = samples, group = grp)
+      kk <- which(colnames(pgx$samples) != groupby)
+      df <- cbind(df, pgx$samples[samples, kk, drop = FALSE])
+      df <- df[, unique(colnames(df)), drop = FALSE]
       pd <- list(
-        df = data.frame(
-          x = gx,
-          samples = samples,
-          group = grp
-        ),
+        df = df,
         geneplot_type = geneplot_type,
         groupby = groupby,
         ylab = ylab,
         gene = gene
       )
       return(pd)
+
     })
 
 
@@ -235,9 +245,7 @@ dataview_plot_expression_server <- function(id,
 
     plotly.RENDER <- function() {
       pd <- plot_data()
-
       shiny::req(pd)
-
       df <- pd[["df"]]
 
       BLUE <- omics_colors("brand_blue")
@@ -254,7 +262,7 @@ dataview_plot_expression_server <- function(id,
         data_mean <- tapply(df$x, df$group, mean)
         data_sd <- tapply(df$x, df$group, sd)
         data <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
-
+        
         if (!is.null(input$bars_order)) {
           if (input$bars_order == "ascending") {
             data$group <- reorder(data$group, data$mean)
@@ -337,6 +345,11 @@ dataview_plot_expression_server <- function(id,
           df$samples <- factor(df$samples, levels = df$samples)
         }
 
+        metadata <- df[, !colnames(df) %in% c("x","samples","group")]
+        df$metadata <- apply(metadata, 1, function(x) {
+          paste0(paste0("<b>", colnames(metadata), ": </b>", x, "<br>", collapse = ""))
+        })
+
         fig <- plotly::plot_ly(
           df,
           x = ~samples,
@@ -344,10 +357,15 @@ dataview_plot_expression_server <- function(id,
           type = "bar",
           name = pd$gene,
           marker = list(color = input$bar_color),
-          hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"
+          text = ~metadata,
+          textposition = "none",
+          hovertemplate = paste0(
+            "<b>Sample: </b>%{x}<br>",
+            "<b>%{yaxis.title.text}: </b>%{y:.2f}<br>",
+            "%{text}<extra></extra>"
+          )
         )
         pd$groupby <- ""
-        ## fig
       }
 
       fig <- fig %>%
