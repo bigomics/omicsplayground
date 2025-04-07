@@ -49,13 +49,13 @@ upload_module_computepgx_server <- function(
 
       ## statistical method for GENE level testing
       GENETEST.METHODS <- function() {
-        if (upload_datatype() != "RNA-seq") {
-          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
-        } else {
+        if (upload_datatype() == "RNA-seq") {
           mm <- c(
             "ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma", "voom.limma", 
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
+        } else {
+          mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
         }
         if (opt$ALLOW_CUSTOM_FC) {
           mm <- c(mm, "custom")
@@ -64,10 +64,10 @@ upload_module_computepgx_server <- function(
       }
       
       GENETEST.SELECTED <- function() {
-        if (upload_datatype() != "RNA-seq") {
-          mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
+        if (upload_datatype() == "RNA-seq") {
+          mm <- c("trend.limma", "deseq2.wald", "edger.qlf")
         } else  {
-          mm <- c("trend.limma", "voom.limma", "deseq2.wald", "edger.qlf")
+          mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
         }
         return(mm)
       }
@@ -117,36 +117,12 @@ upload_module_computepgx_server <- function(
         }
         return(mm)
       }
-
-      ## EXTRA.NAMES <- shiny::eventReactive(
-      ## {
-      ##   upload_datatype()
-      ## },
-      ## {
-      ##   if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-      ##     mm <- c("drugs connectivity", "wordcloud", "experiment similarity", "WGCNA")
-      ##   } else {
-      ##     mm <- c("celltype deconvolution", "drugs connectivity", "wordcloud",
-      ##       "experiment similarity", "WGCNA")
-      ##   }
-      ##   return(mm)
-      ## }
-      ## )
-      ##EXTRA.METHODS <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
-      ##EXTRA.NAMES <- c(
-      ##  "celltype deconvolution", "drugs connectivity",
-      ##  "wordcloud", "experiment similarity", "WGCNA"
-      ##)
-      ##EXTRA.SELECTED <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
              
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
       if(opt$ALLOW_CUSTOM_FC) {
         ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
       }
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
-      #DEV.METHODS <- c("noLM.prune")
-      #DEV.NAMES <- c("noLM + prune")
-      #DEV.SELECTED <- c()
 
       ## Probe filtering defaults
       PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
