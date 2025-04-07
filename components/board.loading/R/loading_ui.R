@@ -88,6 +88,7 @@ LoadingUI <- function(id) {
       bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.", translate = FALSE, html = TRUE),
       bslib::layout_columns(
         col_widths = c(8, 4),
+        height = "calc(100vh - 181px)",
         loading_table_datasets_public_ui(
           ns("pgxtable_public"),
           title = "Public datasets",
