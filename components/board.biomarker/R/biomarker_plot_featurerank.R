@@ -64,7 +64,6 @@ biomarker_plot_featurerank_server <- function(id,
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
         features <- gset_collections
         X <- pgx$gsetX
-        ## if(any(is.na(X))) X <- X[complete.cases(X), ]
       } else {
         features <- pgx$families
         X <- pgx$X
@@ -76,7 +75,9 @@ biomarker_plot_featurerank_server <- function(id,
       features <- lapply(features, toupper)
       features <- lapply(features, function(f) intersect(toupper(f), genes))
       features <- features[sapply(features, length) >= 10]
-
+      features <- features[setdiff(names(features), c("<all>",""))]
+      shiny::validate( shiny::need( length(features) >= 3, "No valid feature sets"))
+      
       ##------------- Supercell (scRNAseq very slow otherwise)
       ##------------- Or random downsampling by cell type?
       Y <- NULL
