@@ -143,7 +143,7 @@ EnrichmentBoard <- function(id, pgx,
         return(NULL)
       }
       mx <- pgx$gset.meta$meta[[comp]]
-
+      
       outputs <- NULL
       gsmethod <- colnames(unclass(mx$fc))
       gsmethod <- input$gs_statmethod
@@ -153,7 +153,7 @@ EnrichmentBoard <- function(id, pgx,
 
       lfc <- as.numeric(input$gs_lfc)
       fdr <- as.numeric(input$gs_fdr)
-
+      
       ## filter gene sets for table
       gsfeatures <- "<all>"
       gsfeatures <- input$gs_features
@@ -165,7 +165,7 @@ EnrichmentBoard <- function(id, pgx,
       }
 
       rpt <- NULL
-
+      
       if (is.null(outputs) || length(gsmethod) > 1) {
         ## show meta-statistics table (multiple methods)
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
@@ -180,7 +180,7 @@ EnrichmentBoard <- function(id, pgx,
         pv[is.na(pv)] <- 1
         qv[is.na(qv)] <- 1
         fx[is.na(fx)] <- 0
-
+        
         is.sig <- (qv <= fdr & abs(fx) >= lfc)
         stars <- sapply(rowSums(is.sig, na.rm = TRUE), playbase::star.symbols, pch = "\u2605")
         names(stars) <- rownames(mx)
@@ -195,62 +195,36 @@ EnrichmentBoard <- function(id, pgx,
           gset.size <- Matrix::colSums(pgx$GMT[, rownames(mx), drop = FALSE] != 0)
           names(gset.size) <- rownames(mx)
         }
-
+        
         ## ---------- report *average* group expression FOLD CHANGE
         ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
         ##
         s1 <- names(which(pgx$model.parameters$exp.matrix[, comp] > 0))
         s0 <- names(which(pgx$model.parameters$exp.matrix[, comp] < 0))
-        jj <- rownames(mx)
-        jj <- intersect(jj, colnames(pgx$GMT))
+        
+        jj <- intersect(rownames(mx), colnames(pgx$GMT))
         rnaX <- pgx$X
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
-        gsdiff.method <- "fc" ## OLD default
-
+        
+        gsdiff.method <- "fc" ## OLD default        
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1], na.rm = TRUE)
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0], na.rm = TRUE)
           meta.fc <- AveExpr1 - AveExpr0
         } else {
-          ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(pgx$X)
-          ## and rownames(GMT)
-          fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-          names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
-          pp <- intersect(rownames(pgx$GMT), names(fc))
-
-          # if pp is null, use human ortholog.
-          # pp is null when collapse by gene is false, but we dont have a parameter for that.
-          if (length(pp) == 0 || is.null(pp)) {
-            names(fc) <- pgx$genes[names(fc), "symbol"]
-            pp <- intersect(pgx$genes$symbol, names(fc))
-            pp <- intersect(rownames(pgx$GMT), names(fc))
-
-            pp <- pp[!is.na(pp)]
-          }
-
-          ## check if multi-omics (TEMPORARILY FALSE)
-          is.multiomics <- FALSE # any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
-          if (is.multiomics) {
-            ii <- grep("\\[gx\\]|\\[mrna\\]", names(fc))
-            fc <- fc[ii]
-            rnaX <- rnaX[names(fc), ]
-            names(fc) <- sub(".*:|.*\\]", "", names(fc))
-            rownames(rnaX) <- sub(".*:|.*\\]", "", rownames(rnaX))
-            pp <- intersect(rownames(pgx$GMT), names(fc))
-          }
-
+          ## WARNING!!! THIS SHOULD BE IN PGXCOMPUTE or
+          ## pgx.initialize. Here is just correction in case not done.
+          pp <- intersect( rownames(pgx$GMT), rownames(rnaX))
           G <- Matrix::t(pgx$GMT[pp, jj] != 0)
           ngenes <- Matrix::rowSums(G, na.rm = TRUE)
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
-
-          # subset rnaX by pp
           AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp, s1], na.rm = TRUE) / ngenes
           AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0], na.rm = TRUE) / ngenes
           remove(rnaX)
         }
-
-        ## TWIDDLE means to reflect foldchange...
+        
+        ## hack to reflect foldchange...
         mean0 <- (AveExpr0 + AveExpr1) / 2
         AveExpr1 <- mean0 + meta.fc / 2
         AveExpr0 <- mean0 - meta.fc / 2
@@ -388,12 +362,6 @@ EnrichmentBoard <- function(id, pgx,
       }
 
       mx <- pgx$gx.meta$meta[[comp]]
-      is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", rownames(mx)))
-      if (is.multiomics) {
-        ii <- grep("\\[gx\\]|\\[mrna\\]", rownames(mx))
-        mx <- mx[ii, ]
-      }
-
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
       limma1.fc <- mx$meta.fx
