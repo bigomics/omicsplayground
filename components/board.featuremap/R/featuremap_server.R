@@ -207,7 +207,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)
-      cex <- ifelse(nc > 3, 0.5, 0.7)
+      cex <- ifelse(nc >= 2, 0.8, 1.2)
+      cex <- ifelse(nc > 3, 0.6, cex)
       jj <- 1:nrow(F)
       if (ncol(F) > 4 && nrow(F) > 8000) jj <- sample(1:nrow(F), 8000) ## subsample for speed
       if (ncol(F) > 9 && nrow(F) > 4000) jj <- sample(1:nrow(F), 4000) ## subsample for speed
@@ -275,31 +276,32 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       }
     }
 
-    filteredGenes <- shiny::reactive({
+    filteredProbes <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::validate(need(input$filter_genes, tspan("Please input at least one value in Annotate genes!", js = FALSE)))
       sel <- input$filter_genes
-      filtgenes <- c()
-      if (is.null(pgx$version) | pgx$organism == "Human") {
+      filtprobes <- c()
+      if (is.null(pgx$version) || pgx$organism == "Human") {
         filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
+        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)        
+      } else if("<all>" %in% sel) {
+        filtprobes <- rownames(pgx$genes)
       } else {
-        filtgenes <- unlist(lapply(sel, function(genes) {
-          if (genes == "<all>") {
-            x <- pgx$genes$symbol
-          } else {
-            x <- playdata::FAMILIES[[genes]]
-            x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
-          }
+        filtgenes <- unlist(lapply(sel, function(s) {
+          x <- playdata::FAMILIES[[s]]
+          x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
           return(x)
         }))
+        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)                
       }
       if ("<custom>" %in% sel) {
-        genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
-        if (length(genes) > 0) {
-          filtgenes <- c(playbase::filterProbes(pgx$genes, genes), filtgenes)
+        custum.genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+        if (length(custum.genes) > 0) {
+          custum.probes <- playbase::map_probes(pgx$genes, custum.genes)
+          filtprobes <- c(custom.probes, filtprobes)
         }
       }
-      filtgenes
+      filtprobes
     })
 
     ## =========================================================================
@@ -321,7 +323,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       pgx = pgx,
       plotUMAP = plotUMAP,
       sigvar = sigvar2,
-      filteredGenes = filteredGenes,
+      filteredProbes = filteredProbes,
       watermark = WATERMARK,
       labeltype = labeltype
     )

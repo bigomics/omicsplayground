@@ -70,7 +70,7 @@ featuremap_plot_gene_map_server <- function(id,
                                             pgx,
                                             plotUMAP,
                                             sigvar,
-                                            filteredGenes,
+                                            filteredProbes,
                                             watermark = FALSE,
                                             labeltype) {
   moduleServer(id, function(input, output, session) {
@@ -84,7 +84,7 @@ featuremap_plot_gene_map_server <- function(id,
 
     plot_data <- shiny::reactive({
       pos <- getUMAP()
-      hilight <- filteredGenes()
+      hilight <- filteredProbes()
       nlabel <- as.integer(input$umap_nlabel)
 
       ## select on table filter
@@ -99,7 +99,8 @@ featuremap_plot_gene_map_server <- function(id,
       F <- F[gg, , drop = FALSE]
 
       hilight.probes <- playbase::map_probes(pgx$genes, hilight)
-      labels <- playbase::probe2symbol(rownames(pos), pgx$genes, labeltype(), fill_na = TRUE)
+      ##labels <- playbase::probe2symbol(rownames(pos), pgx$genes, labeltype(), fill_na = TRUE)
+      labels <- playbase::probe2symbol(rownames(pos), pgx$genes, "gene_name", fill_na = TRUE)
 
       pd <- list(
         df = data.frame(pos, fc = fc),
@@ -139,6 +140,8 @@ featuremap_plot_gene_map_server <- function(id,
           title = "rms(FC)",
           cex = cex,
           cex.label = cex.label,
+          xlab = "UMAP-x",
+          ylab = "UMAP-y",
           plotlib = "plotly",
           source = ns("gene_umap")
         ) %>%
