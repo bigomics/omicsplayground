@@ -242,6 +242,73 @@ PlotModuleUI <- function(id,
     editor_button <- NULL
   }
 
+  info_button <- DropdownMenu(
+    shiny::div(
+      class = "plotmodule-info",
+      shiny::HTML("<b>Plot info</b><br>"),
+      shiny::HTML(as.character(info.text))
+    ),
+    if (!is.null(info.methods)) {
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML("<b>Methods</b><br>"),
+        shiny::HTML(info.methods)
+      )
+    } else {
+      NULL
+    },
+    if (!is.null(info.references)) {
+      html_code <- ""
+      for (i in seq_along(info.references)) {
+        ref <- info.references[[i]]
+        name <- ref[[1]]
+        link <- ref[[2]]
+        
+        # Create the formatted HTML string
+        formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
+        
+        # Append the formatted string to the HTML code
+        html_code <- paste0(html_code, formatted_ref)
+      }
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML("<b>References</b>"),
+        shiny::div(
+          class = "plotmodule-info plotmodule-references",
+          shiny::HTML(html_code)
+        )
+      )
+    } else {
+      NULL
+    },
+    if (!is.null(info.extra_link)) {
+      shiny::div(
+        class = "plotmodule-info",
+        shiny::HTML(
+          paste0(
+            "<b><a href='",
+            info.extra_link,
+            "' target='_blank'>Further information...</a></b>"
+          )
+        )
+      )
+    } else {
+      NULL
+    },
+    shiny::HTML("<br>"),
+    shiny::actionButton(
+      ns("copy_info"),
+      "Copy text",
+      icon = shiny::icon("clipboard"),
+      class = "btn-outline-dark btn-sm",
+      onclick = "copyPlotModuleInfo();"
+    ),
+    size = "xs",
+    icon = shiny::icon("info"),
+    status = "default",
+    width = "300px"
+  )
+  
   header <- shiny::fillRow(
     flex = c(1, NA, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
@@ -258,76 +325,11 @@ PlotModuleUI <- function(id,
       shiny::div()
     },
     header_buttons,
-    DropdownMenu(
-      shiny::div(
-        class = "plotmodule-info",
-        shiny::HTML("<b>Plot info</b><br>"),
-        shiny::HTML(as.character(info.text))
-      ),
-      if (!is.null(info.methods)) {
-        shiny::div(
-          class = "plotmodule-info",
-          shiny::HTML("<b>Methods</b><br>"),
-          shiny::HTML(info.methods)
-        )
-      } else {
-        NULL
-      },
-      if (!is.null(info.references)) {
-        html_code <- ""
-        for (i in seq_along(info.references)) {
-          ref <- info.references[[i]]
-          name <- ref[[1]]
-          link <- ref[[2]]
-
-          # Create the formatted HTML string
-          formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
-
-          # Append the formatted string to the HTML code
-          html_code <- paste0(html_code, formatted_ref)
-        }
-        shiny::div(
-          class = "plotmodule-info",
-          shiny::HTML("<b>References</b>"),
-          shiny::div(
-            class = "plotmodule-info plotmodule-references",
-            shiny::HTML(html_code)
-          )
-        )
-      } else {
-        NULL
-      },
-      if (!is.null(info.extra_link)) {
-        shiny::div(
-          class = "plotmodule-info",
-          shiny::HTML(
-            paste0(
-              "<b><a href='",
-              info.extra_link,
-              "' target='_blank'>Further information...</a></b>"
-            )
-          )
-        )
-      } else {
-        NULL
-      },
-      shiny::HTML("<br>"),
-      shiny::actionButton(
-        ns("copy_info"),
-        "Copy text",
-        icon = shiny::icon("clipboard"),
-        class = "btn-outline-dark btn-sm",
-        onclick = "copyPlotModuleInfo();"
-      ),
-      size = "xs",
-      icon = shiny::icon("info"),
-      status = "default",
-      width = "300px"
-    ),
+    info_button,
     options.button,
+    editor_button,    
     shiny::div(class = "download-button", title = "download", dload.button),
-    shiny::div(class = "zoom-button", title = "zoom", zoom.button),
-    editor_button
+    shiny::div(class = "zoom-button", title = "zoom", zoom.button)
   )
 
   ## ------------------------------------------------------------------------
