@@ -23,17 +23,17 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     update <- reactiveVal(0)
     update_diagram <- reactiveVal(FALSE)
     
-    ## ================================================================================
-    ## ============================ OBSERVERS =========================================
-    ## ================================================================================
+    ## ===========================================================================
+    ## ============================ OBSERVERS ====================================
+    ## ===========================================================================
        
     my_observers <- list()
     
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Model training" = list(disable = c("show_conditions")),
-      "Gradient vs. foldchange" = list(disable = NULL),
-      "Biomarker heatmap" = list(disable = "show_conditions")
+      "Model training" = list(disable = c("show_conditions","show_datatypes")),
+      "Gradient vs. foldchange" = list(disable = c("select_datatypes")),
+      "Biomarker heatmap" = list(disable = c("show_conditions","select_datatypes"))
     )
 
     my_observers[[1]] <- shiny::observeEvent(input$tabs, {
@@ -59,7 +59,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       list(pgx$samples)
     } , {
       phenotypes <- playbase::pgx.getCategoricalPhenotypes(pgx$samples)
-      shiny::updateSelectInput(session, "selected_pheno", choices = phenotypes,
+      shiny::updateSelectInput(session, "select_pheno", choices = phenotypes,
                                ## options = list(maxItems=2),
                                selected = phenotypes[1] )
       update( update() + 1)
@@ -67,12 +67,12 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     
     
     my_observers[[4]] <- shiny::observeEvent({
-      list(input$selected_pheno, pgx$samples)
+      list(input$select_pheno, pgx$samples)
     }, {
-      shiny::req(input$selected_pheno)
+      shiny::req(input$select_pheno)
       shiny::req(pgx$samples)
-      if(!input$selected_pheno %in% colnames(pgx$samples)) return(NULL)
-      conditions <- sort(unique(pgx$samples[, input$selected_pheno]))
+      if(!input$select_pheno %in% colnames(pgx$samples)) return(NULL)
+      conditions <- sort(unique(pgx$samples[, input$select_pheno]))
       shiny::updateSelectInput(session, "show_conditions", choices = conditions,
                                selected = head(conditions,3) )      
     })
@@ -130,12 +130,14 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       if(!all(grepl(":",rownames(pgx$X)))) {
         dbg("[DeepNetBoard] 0: SINGLE OMICS???")
         shiny::updateSelectInput(
+          session, "select_datatypes", choices = "gx", selected = "gx")
+        shiny::updateSelectInput(
           session, "show_datatypes", choices = "gx", selected = "gx")
         return(NULL)
       }
 
       ## update datatype selectinput
-      sel.datatype <- input$show_datatypes
+      sel.datatype <- input$select_datatypes
 
       datatypes <- sort(unique(sub(":.*","",rownames(pgx$X))))
       if(input$addgsets) {
@@ -145,14 +147,23 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       sel.datatype <- intersect(sel.datatype, datatypes)
 
       if(length(sel.datatype)==0) sel.datatype <- datatypes
+      shiny::updateSelectInput(session, "select_datatypes", choices = datatypes,
+        selected = sel.datatype )
       shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
         selected = sel.datatype )
 
     })
 
     my_observers[[10]] <- shiny::observeEvent({
-      ##list(input$addgsets, input$show_datatypes, input$layers)
-      list( input$selected_pheno, input$reset )
+      list( input$select_datatypes )
+    },{
+      datatypes <- input$select_datatypes
+      shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
+        selected = datatypes )
+    })
+    
+    my_observers[[11]] <- shiny::observeEvent({
+      list( input$select_pheno, input$reset )
     },{
       update_diagram(TRUE)
     })
@@ -162,18 +173,18 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     # lapply( my_observers, function(b) b$suspend() )
     if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
-    ## ================================================================================
-    ## ========================== BOARD FUNCTIONS =====================================
-    ## ================================================================================
+    ## ===========================================================================
+    ## ========================== BOARD FUNCTIONS ================================
+    ## ===========================================================================
     
     ## create reactive DeepNet object
     net <- shiny::eventReactive({
-      list( input$selected_pheno, input$reset )
+      list( input$select_pheno, input$reset )
     }, {
-      shiny::req(input$selected_pheno)
-      shiny::req(input$show_datatypes)      
+      shiny::req(input$select_pheno)
+      shiny::req(input$select_datatypes)      
 
-      pheno <- input$selected_pheno
+      pheno <- input$select_pheno
       X <- pgx$X
       if(any(is.na(X))) {
         info("[DeepNetBoard] imputing missing values in X")
@@ -187,7 +198,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       xx <- playbase::mofa.split_data(X)  ## also handles single-omics
       
       ## Subset selection of datatypes for deepnet
-      dt <- isolate(input$show_datatypes)
+      dt <- isolate(input$select_datatypes)
       if(length(dt)) {
         xx <- xx[setdiff(dt,"GSET")]
       }
@@ -254,10 +265,10 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
 
     
     phenoFC <- eventReactive({
-      list(input$selected_pheno)
+      list(input$select_pheno)
     } , {
       ## Calculate correspoding T-test statistics
-      pheno <- input$selected_pheno
+      pheno <- input$select_pheno
       y <- pgx$samples[,pheno]
       X <- pgx$X
       if(!all(grepl("[:]",rownames(X)))) {
