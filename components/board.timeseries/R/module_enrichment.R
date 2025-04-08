@@ -164,8 +164,8 @@ TimeSeriesBoard.enrichment_server <- function(id,
               targets = "geneset", ## with no rownames column 1 is column 2
               render = DT::JS(
                 "function(data, type, row, meta) {",
-                "return type === 'display' && data.length > 70 ?",
-                "'<span title=\"' + data + '\">' + data.substr(0, 70) + '...</span>' : data;",
+                "return type === 'display' && data.length > 60 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 60) + '...</span>' : data;",
                 "}"
               )
             )

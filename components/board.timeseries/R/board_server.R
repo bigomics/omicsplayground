@@ -41,7 +41,7 @@ TimeSeriesBoard <- function(id,
       ),
       "Statistics" = list(
         enable = NULL,
-        disable = c("timefactor","module","knn","maxfeatures")
+        disable = c("timefactor","module","knn")
       )
     )
 
@@ -95,14 +95,18 @@ TimeSeriesBoard <- function(id,
       sd <- matrixStats::rowSds(X, na.rm = TRUE)
       if (any(sd == 0)) X <- X + runif(length(X), 0, 1e-5)
       timeX <- t(playbase::rowmean(t(X), time))
-      
       cX <- t(scale(t(X)))
       timeZ <- t( playbase::rowmean(t(cX), time))
+
+      ## compute gene clusters. Actually this should be precomputed in
+      ## pgx$cluster.genes???
       clust <- playbase::pgx.FindClusters(
-        t(timeZ),
+        ##t(timeZ),
+        t(cX),
         km.sizes = c(4,6,9,12),
         method = "kmeans"
       )[[1]]
+
       rownames(clust) <- rownames(timeZ)
       modules <- clust[,paste0("kmeans.",knn)]
       modules <- paste0("T",modules)
