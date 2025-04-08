@@ -84,30 +84,34 @@ TimeSeriesBoard <- function(id,
       shiny::req(input$timevar)
       ##shiny::req(input$knn)
       
-      knn=7
-      knn <- as.integer(input$knn)
+      X <- pgx$X
+      sd <- matrixStats::rowSds(X, na.rm = TRUE)
+      if (any(sd == 0)) X <- X + runif(length(X), 0, 1e-5)
+
+      ## pre-filter by SD. 
+      dbg("[timeseries_full] 1: dim.X=", dim(X))
+      ## filter by SD???
+      X <- playbase::mofa.topSD(X, 4000)
+      dbg("[timeseries_full] 2: dim.X=", dim(X))
 
       ## collapse by time variable
       timevar="time"
       timevar <- input$timevar
       time  <- pgx$samples[,timevar]
-      X <- pgx$X
-      sd <- matrixStats::rowSds(X, na.rm = TRUE)
-      if (any(sd == 0)) X <- X + runif(length(X), 0, 1e-5)
       timeX <- t(playbase::rowmean(t(X), time))
       cX <- t(scale(t(X)))
       timeZ <- t( playbase::rowmean(t(cX), time))
-
+      
       ## compute gene clusters. Actually this should be precomputed in
       ## pgx$cluster.genes???
       clust <- playbase::pgx.FindClusters(
-        ##t(timeZ),
-        t(cX),
+        t(timeZ),
         km.sizes = c(4,6,9,12),
         method = "kmeans"
       )[[1]]
-
       rownames(clust) <- rownames(timeZ)
+
+      knn <- as.integer(input$knn)
       modules <- clust[,paste0("kmeans.",knn)]
       modules <- paste0("T",modules)
       names(modules) <- rownames(clust)
@@ -130,14 +134,14 @@ TimeSeriesBoard <- function(id,
       shiny::req(res)
 
       if(input$filtermodules) {
-        ##minKME=0.8;mergeCutHeight=0.15;minmodsize=20;ntop=10      
+        
         filtered.modules <- playbase::wgcna.filterColors(
           res$Z,
           res$modules,
           minKME = 0.3,
           mergeCutHeight = 0.05,
           minmodsize = 10,
-          ntop = 400
+          ntop = 1000
         )
       } else {
         filtered.modules <- res$modules

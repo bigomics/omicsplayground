@@ -58,7 +58,7 @@ TimeSeriesBoard.features_table <- function(
     label = "label",
     title = "title",
     info.text = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
-    caption = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
+    caption = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value correspond to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
     height = c("40%", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
     ) {
@@ -174,17 +174,18 @@ TimeSeriesBoard.features_server <- function(id,
       }
 
       if (input$show_statdetails) {
-        k.pq.tables <- kstats.full[, grep("^p[.]|^q[.]",colnames(kstats.full)), drop = FALSE]
+        pq.tables <- kstats.full[, grep("^p[.]|^q[.]",colnames(kstats.full)), drop = FALSE]
         if (ik %in% names(pgx$gx.meta$meta)) {
           ik.pq.tables <- ikstats.full[, grep("^p[.]|^q[.]", colnames(ikstats.full)), drop = FALSE]
           colnames(ik.pq.tables) <- paste0(colnames(ik.pq.tables), ".interaction")
-          pq.tables <- cbind(k.pq.tables, ik.pq.tables)
+          pq.tables <- cbind(pq.tables, ik.pq.tables)
         }
         kstats <- cbind(kstats, pq.tables)
       }
 
       kstats <- as.data.frame(kstats, check.names = FALSE)
-      kstats <- kstats[order(kstats$p.value), ]
+      #kstats <- kstats[order(kstats$p.value), ]
+      kstats <- kstats[order(-kstats$log2FC), ]
 
       return(kstats)
 
@@ -231,28 +232,29 @@ TimeSeriesBoard.features_server <- function(id,
     ##----------------------- Table -----------------------
     ##-----------------------------------------------------
 
-    render_table <- function() {
+    render_table <- function(full=FALSE) {
 
       df <- stats_data()
       shiny::req(df)
       ft <- gsub("[;].*",";...",rownames(df))
       df <- as.data.frame(df, check.names=FALSE)
-
-      module <- data()$modules
-      dbg("len.modules = ", length(module))
-      dbg("head.modules = ", head(module))
-      dbg("head.names.modules = ", head(names(module)))
-      dbg("head.rownames.df = ", head(rownames(df)))
       
+      ## add module information
+      module <- data()$modules      
       module <- module[match(rownames(df), names(module))]
-
+      module[is.na(module)] <- "-"
+      
       ## do not show symbol column if symbol==feature
       symbol <- pgx$genes[rownames(df),"symbol"]
-      df1 <- cbind(module=module, feature=ft, symbol=symbol, df)        
-      if(mean(symbol == ft, na.rm=TRUE) > 0.9) {
-        df1$symbol <- NULL
+      na.symbol <- is.na(symbol) | symbol==""
+      if(!full && mean(!na.symbol)>0.66) {
+        df1 <- cbind(module=module, symbol=symbol, df)        
+      } else if(!full) {
+        df1 <- cbind(module=module, feature=ft, df)        
+      } else {
+        df1 <- cbind(module=module, feature=ft, symbol=symbol, df)        
       } 
-
+      
       numeric.cols <- colnames(df)
       DT::datatable(
         df1,
@@ -275,9 +277,14 @@ TimeSeriesBoard.features_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
+    render_table2 <- function() {
+      render_table(full=TRUE) 
+    }
+    
     table_module <- TableModuleServer(
       "table",
       func = render_table,
+      func2 = render_table2,
       selector = "none"
     )
     
