@@ -194,10 +194,6 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
         return(NULL)
       }
       shiny::isolate(sel <- input_pdx_select())
-
-      dbg("[calcVariableImportance] ph = ",ph)
-      dbg("[calcVariableImportance] colnames(pgx$contrasts) = ",colnames(pgx$contrasts))
-      dbg("[calcVariableImportance] colnames(pgx$samples) = ",colnames(pgx$samples))
       
       progress$inc( 0.33, detail = "Calculating variable importance. Please wait...")
       if(pgx$datatype == "multi-omics") {
@@ -205,6 +201,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
           pgx,
           pheno = ph,
           level="genes",
+          multiomics = 2,  ## 2-pass
           filter_features = ft,
           select_features = sel,
           select_samples = selected_samples(),

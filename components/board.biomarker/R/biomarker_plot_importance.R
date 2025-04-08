@@ -80,19 +80,13 @@ biomarker_plot_importance_server <- function(id,
 
       plot.RENDER <- function() {
         res <- plot_data()
-
-        ## if (is.null(res) || length(res) == 0) {
-        ##   frame()
-        ##   text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
-        ##   return()
-        ## }
+        
         shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(res)
         
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
         R <- pmax(R, 0.05)
-        #R <- head(R, 40)
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
         par(mar = c(8,4,1,0.2), mgp=c(2.5,0.8,0))
         barplot(t(R),
