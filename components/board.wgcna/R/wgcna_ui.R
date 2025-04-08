@@ -18,7 +18,7 @@ WgcnaInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
           shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
-            choices = c(1000, 2000, 4000, 8000),
+            choices = c(1000, 2000, 4000),
             selected = 2000
           ),
           shiny::selectInput(ns("networktype"), "Network type",
