@@ -241,7 +241,8 @@ SignatureBoard <- function(id, pgx,
       F <- F[, which(!duplicated(colnames(F))), drop = FALSE]
 
       ## convert to symbol
-      fsymbol <- pgx$genes[rownames(F), "symbol"]
+      fsymbol <- pgx$genes[rownames(F), "symbol"]   ## !!!!!
+      fsymbol[is.na(fsymbol)] <- "NA" ## fgsea does not like NA or empty
       F <- playbase::rowmean(F, fsymbol)
       F[is.na(F)] <- 0
 
@@ -257,7 +258,7 @@ SignatureBoard <- function(id, pgx,
       jj <- head(order(-abs(rho)), ntop)
       F <- F[, jj, drop = FALSE]
       F <- F + 1e-4 * matrix(rnorm(length(F)), nrow(F), ncol(F))
-
+      
       ## ------------- do fast GSEA
       gmt <- list("gset" = unique(genes))
       res <- NULL
