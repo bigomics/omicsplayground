@@ -60,7 +60,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         list(pgx$X)
       },
       {
-        comparisons1 <- names(pgx$gx.meta$meta)
+        #comparisons1 <- names(pgx$gx.meta$meta)
+        comparisons1 <- playbase::pgx.getContrasts(pgx)
         comparisons1 <- comparisons1[!grepl("^IA:", comparisons1)]
         sel1 <- comparisons1[1]
         shiny::updateSelectInput(session, "contrast1",
@@ -179,7 +180,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           pgx <- playbase::pgx.load(file2)
           pgx <- playbase::pgx.initialize(pgx)
         }
-        comparisons2 <- names(pgx$gx.meta$meta)
+        #comparisons2 <- names(pgx$gx.meta$meta)
+        comparisons2 <- playbase::pgx.getContrasts(pgx)
         comparisons2 <- comparisons2[!grepl("^IA:", comparisons2)]
         sel2 <- tail(head(comparisons2, 2), 1)
         shiny::updateSelectInput(

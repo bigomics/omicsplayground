@@ -104,7 +104,8 @@ SignatureBoard <- function(id, pgx,
       if (is.null(type)) type <- "<custom>"
 
       if (type == "contrast") {
-        contr <- names(pgx$gx.meta$meta)
+        #contr <- names(pgx$gx.meta$meta)
+        contr <- playbase::pgx.getContrasts(pgx)
         contr <- sort(contr[!grepl("^IA:", contr)])
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {

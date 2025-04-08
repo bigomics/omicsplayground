@@ -25,8 +25,10 @@ WordCloudBoard <- function(id, pgx) {
     })
 
     shiny::observe({
-      shiny::req(pgx$gset.meta)
-      ct <- names(pgx$gset.meta$meta)
+      #shiny::req(pgx$gset.meta)
+      #ct <- names(pgx$gset.meta$meta)
+      shiny::req(pgx)
+      ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "wc_contrast", choices = ct)
     })
