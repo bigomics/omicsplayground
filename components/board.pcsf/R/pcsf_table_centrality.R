@@ -46,7 +46,8 @@ pcsf_table_centrality_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    table.RENDER <- function(full=FALSE) {
+    table_data <- function() {
+      
       df <- playbase::pgx.getPCSFcentrality(
         pgx,
         contrast = r_contrast(),
@@ -54,15 +55,27 @@ pcsf_table_centrality_server <- function(id,
         n = 100,
         plot = FALSE
       )
+
+      ## warning. sometimes NaN
+      df$centrality[is.nan(df$centrality)] <- 0
+      
+      return(df)
+    }
+
+    
+    table.RENDER <- function(full=FALSE) {
+
+      df <- table_data()
+      
       if(full==FALSE) {
         cols <- c("feature","symbol","centrality","logFC")
         cols <- intersect(cols, colnames(df))
-        df <- df[,cols]
-      }
-      
+        df <- df[,cols, drop=FALSE]
+      }      
       num.cols <- match(c("centrality", "logFC"), colnames(df))
       
-      dt <- DT::datatable(df,
+      dt <- DT::datatable(
+        df,
         rownames = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
@@ -78,7 +91,9 @@ pcsf_table_centrality_server <- function(id,
           deferRender = TRUE,
           columnDefs =  NULL
         ) ## end of options.list
-      ) %>%
+      )
+
+      dt <- dt %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatSignif(columns = num.cols, digits = 4) %>%
         DT::formatStyle(
@@ -93,7 +108,7 @@ pcsf_table_centrality_server <- function(id,
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
-
+      
       return(dt)
     }
 

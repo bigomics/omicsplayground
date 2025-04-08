@@ -29,7 +29,7 @@ PcsfInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         withTooltip(
           shiny::radioButtons(ns("pcsf_ntop"), "Network size:",
-            choices = c("S" = 150, "M" = 500, "L" = 1500),
+            choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
             selected = 500, inline = TRUE
           ),
           "Select initial network size (number of top genes) for ."

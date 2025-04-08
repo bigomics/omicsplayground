@@ -47,9 +47,9 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     # lapply( my_observers, function(b) b$suspend() )
     if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
-    ## ================================================================================
-    ## =========================== MODULES ============================================
-    ## ================================================================================
+    ## =========================================================================
+    ## =========================== MODULES =====================================
+    ## =========================================================================
 
     ## PCSF  analysis
     pcsf_compute <- shiny::eventReactive(
@@ -57,8 +57,9 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
         list(pgx$X, input$contrast, input$pcsf_beta, input$pcsf_ntop)
       },
       {
-        shiny::req(pgx$X, input$contrast)
+        shiny::req(pgx$X, input$contrast, input$pcsf_ntop)
         comparisons <- colnames(pgx$model.parameters$contr.matrix)
+
         shiny::req(input$contrast %in% comparisons)
 
         beta <- as.numeric(input$pcsf_beta)
@@ -85,7 +86,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
           )
           return(NULL)
         }
-
+        
         pcsf
       }
     )
