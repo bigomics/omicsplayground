@@ -130,7 +130,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
     pval_cap <- shiny::reactive({
       pval_cap <- input$pval_cap
-      if (pval_cap == "Uncaped") {
+      if (pval_cap == "Uncapped") {
         pval_cap <- 1e-999
       } else {
         pval_cap <- as.numeric(input$pval_cap)

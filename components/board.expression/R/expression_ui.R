@@ -65,7 +65,7 @@ ExpressionInputs <- function(id) {
           shiny::selectInput(
             inputId = ns("pval_cap"),
             label = "Significance cap",
-            choices = c("1e-12", "1e-20", "Uncaped")
+            choices = c("1e-12", "1e-20", "Uncapped")
           ),
           "Significance cap",
           placement = "right", options = list(container = "body")

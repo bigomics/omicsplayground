@@ -99,7 +99,7 @@ expression_table_genetable_server <- function(id,
       }
 
       if (!showdetails) {
-        hide.cols <- grep("^AveExpr|p$|q$", colnames(df))
+        hide.cols <- grep("^AveExpr|p$|q$|ortho|title", colnames(df))
         hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
         if (length(hide.cols)) df <- df[, -hide.cols]
       }
