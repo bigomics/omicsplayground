@@ -74,8 +74,9 @@ functional_plot_go_actmap_server <- function(id,
     id, function(input, output, session) {
       shiny::observe({
         shiny::req(pgx$X)
-        ct <- colnames(pgx$model.parameters$contr.matrix)
-        ct <- sort(ct)
+        #ct <- colnames(pgx$model.parameters$contr.matrix)
+        ct <- playbase::pgx.getContrasts(pgx)
+        ct <- sort(ct[!grepl("^IA:", ct)])
         selected_ct <- head(ct, 8)
         shiny::updateSelectInput(
           session,
@@ -88,11 +89,10 @@ functional_plot_go_actmap_server <- function(id,
       plot_data <- shiny::reactive({
         shiny::req(pgx$meta.go)
         score <- pgx$meta.go$pathscore
+        score <- score[, input$selected_contrasts, drop = FALSE]
         graph <- pgx$meta.go$graph
         rownames(score) <- igraph::V(graph)[rownames(score)]$Term
-        res <- list(
-          score = score
-        )
+        res <- list(score = score)
       })
 
       plot_RENDER <- function() {
