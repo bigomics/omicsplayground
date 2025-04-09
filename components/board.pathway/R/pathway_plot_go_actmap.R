@@ -74,7 +74,6 @@ functional_plot_go_actmap_server <- function(id,
     id, function(input, output, session) {
       shiny::observe({
         shiny::req(pgx$X)
-        #ct <- colnames(pgx$model.parameters$contr.matrix)
         ct <- playbase::pgx.getContrasts(pgx)
         ct <- sort(ct[!grepl("^IA:", ct)])
         selected_ct <- head(ct, 8)

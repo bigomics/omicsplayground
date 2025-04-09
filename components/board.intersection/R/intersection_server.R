@@ -45,11 +45,7 @@ IntersectionBoard <- function(
 
     ## update choices upon change of data set
     my_observers[[2]] <- shiny::observe({
-      if (is.null(pgx)) {
-        return(NULL)
-      }
-      #comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      #comparisons <- sort(comparisons)
+      if (is.null(pgx)) return(NULL)
       comparisons <- playbase::pgx.getContrasts(pgx)
       comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
       shiny::updateSelectInput(
