@@ -194,22 +194,18 @@ upload_module_normalizationSC_server <- function(id,
       ## Downsampled & normalized data.
       ## Downsample 1000 cells.
       ds_norm_Counts <- shiny::reactive({ 
-
         options(future.globals.maxSize= 4*1024^100)
-
-        ## shiny::req(input$infercelltypes)
         shiny::req(r_counts())
         shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
-        #if (is.null(counts)) return(NULL)
 
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
 
         ncells <- ncol(counts)
-        cells_trs <- 500#1000
+        cells_trs <- 500
         dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
         if (ncells > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
