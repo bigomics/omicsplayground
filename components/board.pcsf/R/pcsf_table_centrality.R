@@ -72,7 +72,6 @@ pcsf_table_centrality_server <- function(id,
         cols <- intersect(cols, colnames(df))
         df <- df[,cols, drop=FALSE]
       }      
-      #num.cols <- match(c("centrality", "logFC"), colnames(df))
       num.cols <- c("centrality", "logFC")
 
       dt <- ui.DataTable(
