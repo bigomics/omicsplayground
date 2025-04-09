@@ -68,47 +68,22 @@ pcsf_table_centrality_server <- function(id,
       df <- table_data()
       
       if(full==FALSE) {
-        cols <- c("feature","symbol","centrality","logFC")
+        cols <- c("symbol","gene_title","centrality","logFC")
         cols <- intersect(cols, colnames(df))
         df <- df[,cols, drop=FALSE]
       }      
-      num.cols <- match(c("centrality", "logFC"), colnames(df))
-      
-      dt <- DT::datatable(
+      #num.cols <- match(c("centrality", "logFC"), colnames(df))
+      num.cols <- c("centrality", "logFC")
+
+      dt <- ui.DataTable(
         df,
         rownames = FALSE,
-        extensions = c("Scroller"),
-        plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = c(1)),
-        fillContainer = TRUE,
-        options = list(
-          dom = "lfrtip",
-          pageLength = 9999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE,
-          scrollResize = TRUE,
-          scrollY = 100,
-          scroller = TRUE,
-          deferRender = TRUE,
-          columnDefs =  NULL
-        ) ## end of options.list
+        num.cols = num.cols,
+        color.cols = num.cols,
+        substr.cols = c("gene_title"),
+        substr.len = 50
       )
-
-      dt <- dt %>%
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
-        DT::formatSignif(columns = num.cols, digits = 4) %>%
-        DT::formatStyle(
-          "logFC",
-          background = color_from_middle(df$logFC, "lightblue", "#f5aeae"),
-          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-          backgroundPosition = "center"
-        ) %>%
-        DT::formatStyle(
-          "centrality",
-          background = color_from_middle(df$centrality, "white", "#fec34d"),
-          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-          backgroundPosition = "center"
-        )
-      
+            
       return(dt)
     }
 

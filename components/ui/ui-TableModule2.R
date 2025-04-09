@@ -360,3 +360,90 @@ trunc_display_row <- function(target, length) {
       ") + '...</span>' : data;}"))
   )
 }
+
+
+#' Standard/default datatable.
+#'
+#' 
+ui.DataTable <- function(df, rownames = TRUE,
+                         num.cols = NULL,
+                         color.cols = NULL,
+                         substr.cols = NULL,
+                         substr.len = 60,
+                         ...) {
+
+  columnDefs = NULL
+  if(!is.null(substr.cols)) {
+    columnDefs = list()
+    if(length(substr.len)==1) substr.len <- rep(substr.len, length(substr.cols))
+    for(i in 1:length(substr.cols)) {
+      k <- substr.cols[i]
+      slen <- substr.len[i]
+      item1 <- list(
+        targets = k, ## with no rownames column 1 is column 2
+        render = DT::JS(
+          "function(data, type, row, meta) {",
+          paste0("return type === 'display' && data.length > ",slen," ?"),
+          paste0("'<span title=\"' + data + '\">' + data.substr(0, ",slen,
+            ") + '...</span>' : data; }")
+        )
+      )
+      columnDefs <- c(columnDefs, list(item1))
+    }
+  }
+
+  ## table definition
+  dt <- DT::datatable(
+    df,
+    rownames = rownames,
+    extensions = c("Scroller"),
+    plugins = "scrollResize",
+    selection = list(mode = "single", target = "row", selected = c(1)),
+    fillContainer = TRUE,
+    options = list(
+      dom = "lfrtip",
+      pageLength = 9999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+      scrollX = TRUE,
+      scrollResize = TRUE,
+      scrollY = 100,
+      scroller = TRUE,
+      deferRender = TRUE,
+      columnDefs =  columnDefs
+    ) ## end of options.list
+  )
+
+  ## add default styling
+  dt <- dt %>%
+    DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+
+  if(!is.null(num.cols)) {
+    dt <- dt %>% DT::formatSignif(columns = num.cols, digits = 4)
+  }
+
+  ## add column coloring
+  if(!is.null(color.cols)) {
+    if(is.integer(color.cols)) color.cols <- colnames(df)[color.cols]
+    for(k in color.cols) {
+      minx <- min(df[,k], na.rm=TRUE)
+      if(minx < 0) {
+        dt <- dt %>%
+          DT::formatStyle(
+            k,
+            background = color_from_middle(df[,k], "lightblue", "#f5aeae"),
+            backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+            backgroundPosition = "center"
+          )
+      } else {
+        dt <- dt %>%        
+          DT::formatStyle(
+            k,
+            background = color_from_middle(df[,k], "white", "#fec34d"),
+            backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+            backgroundPosition = "center"
+          )
+      }
+    }
+  }
+
+  return(dt)
+}
