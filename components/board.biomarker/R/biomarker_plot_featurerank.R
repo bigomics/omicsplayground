@@ -76,59 +76,34 @@ biomarker_plot_featurerank_server <- function(id,
       features <- lapply(features, function(f) intersect(toupper(f), genes))
       features <- features[sapply(features, length) >= 10]
       features <- features[setdiff(names(features), c("<all>",""))]
-      shiny::validate( shiny::need( length(features) >= 3, "No valid feature sets"))
+      shiny::validate(shiny::need( length(features) >= 3, "No valid feature sets"))
       
       ##------------- Supercell (scRNAseq very slow otherwise)
       ##------------- Or random downsampling by cell type?
       Y <- NULL
-      c1 <- pgx$datatype %in% c("scRNAseq", "scRNA-seq")
-      c2 <- ncol(pgx$counts) > 1000
-      if (c1 & c2) {
-        message("[biomarkers: feature-set scores] scRNAseq. >2K cells. Computing supercells.")
-        group <- pgx$Y[, "celltype"]
-        nb <- round(ncol(pgx$counts) / 600)
-        message("[pgx.createSingleCellPGX]=======================================")
-        message("[pgx.createSingleCellPGX] running SuperCell. nb = ", nb)    
-        sc <- playbase::pgx.supercell(pgx$counts, pgx$Y, group = group, gamma = nb)
-        message("[pgx.createSingleCellPGX] SuperCell done: ", ncol(counts), " -> ", ncol(sc$counts))
-        message("[pgx.createSingleCellPGX]=======================================")
-        message("[pgx.createSingleCellPGX] Normalizing supercell matrix (logCPM)")
-        X <- playbase::logCPM(sc$counts, total = 1e4, prior = 1)
+      if (pgx$datatype == "scRNAseq" && ncol(pgx$counts)>500) {
+        message("[biomarkers: feature-set scores] scRNAseq. Down-sampling by cell type")
+        Y <- pgx$samples
+        ct <- unique(Y$celltype)
+        i=1; cells=c()
+        for(i in 1:length(ct)) {
+          jj <- which(Y$celltype == ct[i])
+          size <- ifelse(length(jj)>20, 20, length(jj))
+          cells <- c(cells, rownames(Y)[sample(jj,size)])
+        }
+        Y <- Y[unique(cells), , drop = FALSE]
+        X <- playbase::logCPM(pgx$counts[, rownames(Y)], total = 1e4, prior = 1)
         X <- as.matrix(X)
-        Y <- sc$meta
-        remove(counts, group, sc); gc()
+        message("[biomarkers: feature-set scores] Down-sampling completed")
       }
       
       if (is.null(Y)) Y <- pgx$Y
 
-      ##------------- rm redundant/unneeded (scRNAseq)
-      if (all(c("nCount_RNA", "nCount_SCT") %in% colnames(Y))) {
-        jj <- match("nCount_SCT", colnames(Y))
-        Y <- Y[, -jj, drop = FALSE]
-      }
-
-      if (all(c("nFeature_RNA", "nFeature_SCT") %in% colnames(Y))) {
-        jj <- match("nFeature_SCT", colnames(Y))
-        Y <- Y[, -jj, drop = FALSE]
-      }
-
-      if (all(c(".cell_cycle", "Phase") %in% colnames(Y))) {
-        jj <- match("Phase", colnames(Y))
-        Y <- Y[, -jj, drop = FALSE]
-      }
-
-      if (all(c(".cell_cycle", "Phase") %in% colnames(Y))) {
-        jj <- match("Phase", colnames(Y))
-        Y <- Y[, -jj, drop = FALSE]
-      }
-
-      jj <- match("SCT_snn_res.1", colnames(Y), nomatch = FALSE)
-      if (any(jj)) Y <- Y[, -jj, drop = FALSE]
-
-      jj <- match("orig.ident", colnames(Y), nomatch = FALSE)
-      if (any(jj)) Y <- Y[, -jj, drop = FALSE]
+      ##------------- rm redundant/unneeded pheno
+      kk <- c("nCount_SCT", "nCount_RNA", "nFeature_SCT", "SCT_snn_res.1",
+        "orig.ident", "percent.ribo", "percent.hb", ".cell_cycle", "S.Score", "G2M.Score")
+      Y <- Y[, !colnames(Y) %in% kk, drop = FALSE]
       
-            
       ## ------------ Just to get current samples
       samples <- playbase::selectSamplesFromSelectedLevels(Y, samplefilter())
       X <- X[, samples, drop = FALSE]
@@ -141,7 +116,6 @@ biomarker_plot_featurerank_server <- function(id,
       kk <- which(apply(Y, 2, function(y) length(unique(y)) > 1))
       shiny::validate(shiny::need(length(kk) > 0, "Samples' filters too strict. Change 'Filter samples'."))
       Y <- Y[, kk, drop = FALSE]
-      dim(Y)
 
       ## ------------ Note: this takes a while. Maybe better precompute off-line...
       sdx <- matrixStats::rowSds(X, na.rm = TRUE)
@@ -154,11 +128,7 @@ biomarker_plot_featurerank_server <- function(id,
       if (!interactive()) {
         progress <- shiny::Progress$new()
         on.exit(progress$close())
-        if(c1 & c2) {
-          msg <- "Calculating feature-set scores on supercell data"
-        } else {
-          msg <- "Calculating feature-set scores"
-        }
+        msg <- "Calculating feature-set scores"
         progress$set(message = msg, value = 0)
       }
 
@@ -186,7 +156,7 @@ biomarker_plot_featurerank_server <- function(id,
           if (gene.level)
             pp <- playbase::filterProbes(annot, features[[j]])
 
-          if (c1 & c2) sdtop=300 else sdtop=1000
+          sdtop <- 1000
           pp <- head(pp[order(-sdx[pp])], sdtop)
 
           X1 <- playbase::rename_by(X, pgx$genes, "symbol")
