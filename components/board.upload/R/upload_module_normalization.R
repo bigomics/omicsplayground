@@ -64,23 +64,32 @@ upload_module_normalization_server <- function(
           counts[which(counts == 0)] <- NA
         }
 
-        ## Set prior. if min != 0, no offset.  if min == 0, offset =
-        ## smallest non-zero value.
-        m <- input$normalization_method
-        prior0 <- 0  ## no offset if minimum is not zero
-        if(min(counts, na.rm = TRUE) == 0) {
-          prior0 <- min(counts[counts > 0], na.rm = TRUE)  ## smallest non-zero value
+        ## Set prior. 
+        is.multiomics <- playbase::is.multiomics(rownames(counts))
+        if(is.multiomics) {
+          ## This is the scaled log1p transform with autoscaling on
+          ## non-zero quantile. For the moment only applied to
+          ## multi-omics. Note is also performs median scaling.
+          X <- playbase::mofa.log1s(counts, q=0.20)
+          prior <- 0  ## ???
+        } else {
+          # if min != 0, no offset. if min == 0, offset =
+          ## smallest non-zero value.          
+          prior0 <- 0  
+          if(min(counts, na.rm = TRUE) == 0 || any(is.na(counts)) ) {
+            prior0 <- min(counts[counts > 0], na.rm = TRUE)  
+          }
+          m <- input$normalization_method
+          prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW
+          X <- log2(counts + prior) ## NEED RETHINK
         }
-        prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW
-        #prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, 1e-4)
-        #prior <- ifelse(m %in% c("CPM", "CPM+quantile"), 1, prior0)
-        X <- log2(counts + prior) ## NEED RETHINK
 
         nmissing <- sum(is.na(X))
         nrowsmissing <- sum(rowSums(is.na(X))>0)        
         dbg("[normalization_server:imputedX] X has ", nmissing, " missing values (NAs).")
         dbg("[normalization_server:imputedX] X has ", nrowsmissing, " rows with NAs.")        
 
+        ## Filter probes for maximum missingness as required
         if (nmissing > 0 && input$filtermissing) {
           f <- input$filterthreshold
           dbg(paste0("[normalization_server:imputedX] Threshold NA filter: ", f))
@@ -107,6 +116,7 @@ upload_module_normalization_server <- function(
           nrowsmissing <- sum(rowSums(is.na(X))>0)        
         }
 
+        ## Impute if required        
         if (any(is.na(X)) > 0 && input$impute) {
           m <- input$impute_method
           X <- playbase::imputeMissing(X, method = m)
@@ -135,6 +145,8 @@ upload_module_normalization_server <- function(
           }
           if(upload_datatype() == "multi-omics") {
             dbg("[normalization_server:normalizedX] normalizing MultOmics data using ", m)
+            ## NOTE. This is actually not needed because already done
+            ## in mofa.log1s.
             X <- playbase::normalizeMultiOmics(X, method = m)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)

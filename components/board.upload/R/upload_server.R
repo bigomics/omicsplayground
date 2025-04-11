@@ -127,7 +127,7 @@ UploadBoard <- function(id,
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
-
+      
       ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
       ## -------------- save PGX file/object ---------------
       # Old pgx does not have name slot, overwrite it with file name
@@ -281,9 +281,12 @@ UploadBoard <- function(id,
         # correction (un-doing log transform).
         isConfirmed <- input$logCorrectCounts
         if ("e29" %in% names(res$checks) && isConfirmed) {
-          dbg("[UploadBoard::checked_counts] Converting log-transformed counts!!!")
+          dbg("[UploadBoard::checked_counts] Converting log-values to counts")
           res$df <- 2**res$df
-          if (min(res$df, na.rm = TRUE) >= 1) res$df <- res$df - 1
+          if (min(res$df, na.rm = TRUE) > 0) {
+            ## alway put minimum counts to zero.
+            res$df <- res$df - min(res$df,na.rm=TRUE)
+          }
           res$checks[["e29"]] <- NULL ## remove?
         }
 
