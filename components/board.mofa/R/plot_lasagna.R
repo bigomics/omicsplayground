@@ -47,13 +47,13 @@ mofa_plot_lasagna_server <- function(id,
         pos = res$posf,
         vars = vars,
         X = pgx$X,
-        min.rho = 0.8,
+        min.rho = 0.01,
         num_edges = 40
       )
 
       plt %>%
         plotly::layout(
-          margin = list(l=10,r=10,b=10,t=10),
+          margin = list(l=10, r=10, b=10, t=10),
           scene = list(
             camera = list(eye = list(x=2.2, y=0.8, z=1))
           )
