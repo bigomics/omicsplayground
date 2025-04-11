@@ -242,7 +242,8 @@ SignatureBoard <- function(id, pgx,
 
       ## convert to symbol
       fsymbol <- pgx$genes[rownames(F), "symbol"]   ## !!!!!
-      fsymbol[is.na(fsymbol)] <- "NA" ## fgsea does not like NA or empty
+      fsymbol[is.na(fsymbol)] <- "_" ## fgsea does not like NA or empty
+      fsymbol[fsymbol==""] <- "_" ## fgsea does not like NA or empty      
       F <- playbase::rowmean(F, fsymbol)
       F[is.na(F)] <- 0
 
