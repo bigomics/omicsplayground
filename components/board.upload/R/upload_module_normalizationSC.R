@@ -194,39 +194,32 @@ upload_module_normalizationSC_server <- function(id,
       ## Downsampled & normalized data.
       ## Downsample 1000 cells.
       ds_norm_Counts <- shiny::reactive({ 
-
         options(future.globals.maxSize= 4*1024^100)
-
-        ## shiny::req(input$infercelltypes)
         shiny::req(r_counts())
         shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
-        #if (is.null(counts)) return(NULL)
 
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
 
-        ncells <- ncol(counts)
-        cells_trs <- 500#1000
-        dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncells)
-        if (ncells > cells_trs) {
+        cells_trs <- 500
+        dbg("[normalizationSC_server:ds_norm_Counts:] N.cells in dataset:", ncol(counts))
+        if (ncol(counts) > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
           kk <- sample(colnames(counts), cells_trs)
           counts <- counts[, kk, drop = FALSE] 
           samples <- samples[kk, , drop = FALSE]
         }
 
-        ref_tissue <- input$ref_atlas
-        if (ref_tissue != "<select>") {
+        if (input$ref_atlas != "<select>") {
 
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
-          dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", ref_tissue)
+          dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", input$ref_atlas)
           counts <- as(counts, "dgCMatrix")
-          msg <- "Inferring cell types with Azimuth..."
-          shiny::withProgress(message = msg, value = 0.1, {
-            azm <- playbase::pgx.runAzimuth(counts = counts, reference = ref_tissue)
+          shiny::withProgress(message = "Inferring cell types with Azimuth...", value = 0.1, {
+            azm <- playbase::pgx.runAzimuth(counts = counts, reference = input$ref_atlas)
             dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
           })
 
@@ -251,7 +244,7 @@ upload_module_normalizationSC_server <- function(id,
             samples <- cbind(samples, celltype.azimuth = celltype.azimuth)          
 
           } else if (is.vector(azm)) {
-            dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth reference atlas *might* be incorrect. Please double check.")
+            dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth atlas *might* be incorrect. Please double check.")
             samples <- cbind(samples, celltype.azimuth = azm)
           }
 
@@ -264,15 +257,12 @@ upload_module_normalizationSC_server <- function(id,
           nb <- ceiling(min(15, dim(nX) / 8))
           pos.list <- list()
           dbg("[normalizationSC_server] Performing PCA, tSNE and UMAP...")
-          msg <- "Performing PCA, tSNE, UMAP..."
-          shiny::withProgress(message = msg, value = 0.5, {
+          shiny::withProgress(message = "Performing PCA, tSNE, UMAP...", value = 0.5, {
             pos.list[["pca"]] <- irlba::irlba(nX1, nv = 2, nu = 0)$v
             pos.list[["tsne"]] <- Rtsne::Rtsne(t(nX1), perplexity = 2*nb, check_duplicates=F)$Y
             pos.list[["umap"]] <- uwot::umap(t(nX1), n_neighbors = max(2, nb))
             pos.list <- lapply(pos.list, function(x) {
-              rownames(x) <- colnames(nX1);
-              return(x)
-            })
+              rownames(x)=colnames(nX1); return(x) })
           })
           dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
           
@@ -280,8 +270,7 @@ upload_module_normalizationSC_server <- function(id,
           options(Seurat.object.assay.calcn = TRUE)
           getOption("Seurat.object.assay.calcn")
           counts <- as(counts, "dgCMatrix")
-          msg <- "Creating & preprocessing Seurat object..."
-          shiny::withProgress(message = msg, value = 0.9, {
+          shiny::withProgress(message = "Creating & preprocessing Seurat object...", value = 0.9, {
             SO <- playbase::pgx.createSeuratObject(counts, samples,
               batch = NULL, filter = FALSE, preprocess = FALSE)
             SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
@@ -544,31 +533,24 @@ upload_module_normalizationSC_server <- function(id,
       ## samples
       samples <- shiny::reactive({
         shiny::req(r_samples())
-        samples <- r_samples()
-        return(samples)
+        return(r_samples())
       })
       
-      azimuth_ref <- shiny::reactive({
-        ref <- input$ref_atlas
-        return(ref)
-      })
+      azimuth_ref <- shiny::reactive({ return(input$ref_atlas) })
 
       nfeat_thr <- shiny::reactive({
         shiny::req(input$remove_cells)
-        nfeat_thr <- input$nfeature_threshold
-        return(nfeat_thr)
+        return(input$nfeature_threshold)
       })
 
       mt_thr <- shiny::reactive({
         shiny::req(input$remove_cells)
-        mt_thr <- input$mt_threshold
-        return(mt_thr)
+        return(input$mt_threshold)
       })
 
       hb_thr <- shiny::reactive({
         shiny::req(input$remove_cells)
-        hb_thr <- input$hb_threshold
-        return(hb_thr)
+        return(input$hb_threshold)
       })
       
       LL <- list(

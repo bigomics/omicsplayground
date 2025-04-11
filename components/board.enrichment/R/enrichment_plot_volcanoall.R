@@ -62,6 +62,8 @@ enrichment_plot_volcanoall_server <- function(id,
       shiny::req(gs_features())
 
       meta <- pgx$gset.meta$meta
+      ctx <- names(meta)[!grepl("^IA:", names(meta))]
+      meta <- meta[ctx]
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
       if (is.null(gsmethod) || length(gsmethod) == 0) {

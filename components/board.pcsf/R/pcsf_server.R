@@ -34,9 +34,11 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       if (is.null(pgx)) {
         return(NULL)
       }
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      comparisons <- sort(comparisons)
-      updateSelectInput(session, "contrast",
+      comparisons <- playbase::pgx.getContrasts(pgx)
+      comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
+      updateSelectInput(
+        session,
+        "contrast",
         choices = comparisons,
         selected = head(comparisons, 1)
       )

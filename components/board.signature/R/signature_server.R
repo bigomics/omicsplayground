@@ -104,7 +104,9 @@ SignatureBoard <- function(id, pgx,
       if (is.null(type)) type <- "<custom>"
 
       if (type == "contrast") {
-        contr <- sort(names(pgx$gx.meta$meta))
+        #contr <- names(pgx$gx.meta$meta)
+        contr <- playbase::pgx.getContrasts(pgx)
+        contr <- sort(contr[!grepl("^IA:", contr)])
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {
         ## collection
@@ -119,13 +121,17 @@ SignatureBoard <- function(id, pgx,
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
         gsets <- sort(names(playdata::iGSETS))
-        shiny::updateSelectizeInput(session, "feature",
+        shiny::updateSelectizeInput(
+          session,
+          "feature",
           choices = gsets,
           selected = gsets[1], server = TRUE
         )
       } else {
         ## custom
-        shiny::updateSelectInput(session, "feature",
+        shiny::updateSelectInput(
+          session,
+          "feature",
           choices = "<custom>",
           selected = "<custom>"
         )

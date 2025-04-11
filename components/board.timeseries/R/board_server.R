@@ -85,8 +85,8 @@ TimeSeriesBoard <- function(id,
       ##shiny::req(input$knn)
       
       X <- pgx$X
-      sd <- matrixStats::rowSds(X, na.rm = TRUE)
-      if (any(sd == 0)) X <- X + runif(length(X), 0, 1e-5)
+      sdx <- matrixStats::rowSds(X, na.rm = TRUE)
+      if (any(sdx == 0)) X <- X + runif(length(X), 0, 1e-5)
 
       ## pre-filter by SD. 
       dbg("[timeseries_full] 1: dim.X=", dim(X))
