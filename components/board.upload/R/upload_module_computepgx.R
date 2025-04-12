@@ -443,45 +443,41 @@ upload_module_computepgx_server <- function(
         time.var <- c("minute", "hour", "day", "week", "month", "year", "age", "time")
         sel.time <- intersect(time.var, colnames(Y))
 
-        if (length(sel.time)) {
-
-          ## check if only categorical (no spline then)
+        if (length(sel.time) && length(unique(Y[, sel.time[1]]))>1) {
+          
           timeseries <- unname(as.character(Y[, sel.time[1]]))
           timeseries <- gsub("\\D", "", timeseries)
-          valid.ia.ctx <- c()
-          valid.ia.spline.ctx <- c()
-          
-          if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
-            valid.ia.ctx <- c(valid.ia.ctx, sel.time[1])
-          } else {
-            i=1
-            for (i in 1:ncol(Contrasts)) {
-              ctx <- colnames(Contrasts)[i]
-              ctx0 <- strsplit(tolower(ctx), ":")[[1]][1]
-              if (ctx0 %in% time.var) next;
-              tt <- table(data.frame(ctx = Contrasts[,ctx], time = Y[,sel.time[1]]))
-              zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
-              if (any(zeros.obs >= (ncol(tt)-1))) {
-                next
-              } else {
-                valid.ia.spline.ctx <- c(valid.ia.spline.ctx, ctx)
+          ia.ctx <- ia.spline.ctx <- c()
+
+          i=1
+          for (i in 1:ncol(Contrasts)) {
+            ctx <- colnames(Contrasts)[i]
+            if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next;
+            tt <- table(data.frame(ctx = Contrasts[,ctx], time = Y[,sel.time[1]]))
+            zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
+
+            if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
+              if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
+            } else {
+              if (!any(zeros.obs >= (ncol(tt)-1))) {
+                ia.spline.ctx <- c(ia.spline.ctx, ctx)
               }
             }
           }
 
-          if (length(valid.ia.ctx) | length(valid.ia.spline.ctx)) {
-
-            if (length(valid.ia.ctx)) {
-              msg1 <- paste0("Column ", sel.time[1], " found in samples.csv. Will be used as interaction term.")
-              msg2 <- paste0("<p style='color: gray;'>Interaction with time will be tested.<br>")
-            } else  if (length(valid.ia.spline.ctx)) {
-              msg1 <- paste0("Column ", sel.time[1], " found in samples.csv.
-            Interaction between main effect and time (spline) will be also tested for valid contrasts.")
-              msg2 <- paste0("<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
-                "for the contrasts:<br>", paste0(valid.ia.spline.ctx,collapse="<br>"),".</p>")
+          if (length(ia.ctx) | length(ia.spline.ctx)) {
+            shinyalert::shinyalert(title = "Interaction analysis",
+              text = paste0(sel.time[1], " found in samples.csv.",
+                "Time-interaction will be tested for valid contrasts."),
+              type = "info"
+            )
+            if (length(ia.ctx)) {
+              msg <- paste0("<p style='color: gray;'>Interaction with time will be tested<br>",
+                "for the contrasts:<br>", paste0(ia.ctx,collapse="<br>"),".</p>")
+            } else if (length(ia.spline.ctx)) {
+              msg <- paste0("<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
+                "for the contrasts:<br>", paste0(ia.spline.ctx,collapse="<br>"),".</p>")
             }
-
-            shinyalert::shinyalert(title = "Interaction analysis", text = msg1, type = "info")
 
             shiny::updateCheckboxGroupInput(
               inputId = "gene_methods",
@@ -489,12 +485,12 @@ upload_module_computepgx_server <- function(
               selected = c("trend.limma", "deseq2.lrt")
             )
 
-            insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg2))
-
+            insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
+              
           }
-
+         
         }
-
+        
       })
       
       # Input validators
