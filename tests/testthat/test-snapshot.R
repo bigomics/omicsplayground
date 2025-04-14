@@ -16,9 +16,14 @@ test_that("example data loads with no error",{
   # remove problematic boards
   boards <- boards[!boards %in% c("tcga", "signature")]
 
+  # get all pgx files
+  pgx_files <- list.files(normalizePath("../../data"), pattern = "*.pgx", full.names = TRUE)
+
   authentication <- options()$authentication
 
-  AppLog <- lapply(boards, function(board) {
+  AppLog <- lapply(pgx_files, function(pgx_file) {
+    message(pgx_file)
+    lapply(boards, function(board) {
     # get error from App and save it as error_log
     message(board)
     # board = "wordcloud"
@@ -41,7 +46,7 @@ test_that("example data loads with no error",{
 
     withr::defer(App$stop())
 
-    pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
+    #pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
     if(board == "enrichment") {
       App$set_inputs("enrichment-gs_fdr" = 0.5)
@@ -62,11 +67,11 @@ test_that("example data loads with no error",{
           App$wait_for_idle(duration = 3000, timeout = duration)
         }
         
-        App$expect_screenshot(cran = TRUE, name = paste0(board, "_", tab), threshold = 10, selector = "viewport")
+        App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
       App$wait_for_idle(duration = 3000)
-      App$expect_screenshot(cran = TRUE, name = board, threshold = 10, selector = "viewport")
+      App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
     }
-  })
+  })})
 })
