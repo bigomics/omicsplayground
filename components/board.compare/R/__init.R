@@ -65,8 +65,7 @@ MODULE.compare <- list(
     ConnectivityBoard("cmap",
       pgx = PGX,
       auth = auth,
-      reload_pgxdir = reload_pgxdir,
-      board_observers = board_observers
+      reload_pgxdir = reload_pgxdir
     )
   }
 )
