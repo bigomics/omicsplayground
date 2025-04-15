@@ -14,8 +14,8 @@ MODULE.expression <- list(
   module_server = function(PGX, board_observers = NULL, labeltype = NULL) {
     info("[SERVER] calling CorrelationBoard module")
     CorrelationBoard("corr",
-      pgx = PGX, labeltype = labeltype,
-      board_observers = board_observers
+      pgx = PGX, labeltype = labeltype#,
+      #board_observers = board_observers
     )
 
     info("[SERVER] calling BiomarkerBoard module") 

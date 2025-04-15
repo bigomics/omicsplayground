@@ -422,8 +422,8 @@ app_server <- function(input, output, session) {
             info("[SERVER] calling DiffExprBoard module")
             bigdash.showMenuElement(session, "Expression")
             ExpressionBoard("diffexpr",
-              pgx = PGX, labeltype = labeltype,
-              board_observers = board_observers
+              pgx = PGX, labeltype = labeltype#,
+              #board_observers = board_observers
             ) ->> env$diffexpr
             lapply(names(MODULE.expression$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))

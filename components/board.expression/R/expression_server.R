@@ -3,8 +3,9 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
-                            board_observers = board_observers ) {
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
+                            #board_observers = board_observers 
+                            ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -35,9 +36,9 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     #=============================== observers ======================================
     #================================================================================
 
-    my_observers <- list()
+    # my_observers <- list()
     
-    my_observers[[1]] <- shiny::observeEvent(input$gx_info,
+    shiny::observeEvent(input$gx_info,
       {
         shiny::showModal(shiny::modalDialog(
           title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
@@ -49,7 +50,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     )
 
     ## update choices upon change of data set
-    my_observers[[2]] <- shiny::observe({
+    shiny::observe({
       pgx <- pgx
       shiny::req(pgx$X)
 
@@ -75,7 +76,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       shiny::updateCheckboxInput(session, "gx_grouped", value = (ncol(pgx$X) <= 8))
     })
 
-    my_observers[[3]] <- observeEvent(
+    observeEvent(
       {
         input$show_pv
       },
@@ -93,20 +94,20 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     # observe functions to project DT from invalidating equal row_select
     gsettable_rows_selected <- reactiveVal()
 
-    my_observers[[4]] <- observe({
+    observe({
       gsettable_rows_selected(gsettable$rows_selected())
     })
 
     genetable_rows_selected <- reactiveVal()
 
-    my_observers[[5]] <- observe({
+    observe({
       genetable_rows_selected(genetable$rows_selected())
     })
 
     ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    board_observers[[id]] <- my_observers
+    # my_observers <- my_observers[!sapply(my_observers,is.null)]
+    # # lapply( my_observers, function(b) b$suspend() )
+    # board_observers[[id]] <- my_observers
 
     ## =========================================================================
     ## ============================= REACTIVES =================================

@@ -73,8 +73,8 @@ MODULE.systems <- list(
     )
 
     WgcnaBoard("wgcna",
-      pgx = PGX,
-      board_observers = board_observers
+      pgx = PGX#,
+      #board_observers = board_observers
     )
 
     TcgaBoard("tcga",
