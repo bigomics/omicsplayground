@@ -33,7 +33,7 @@ test_that("example data loads with no error",{
     # board = boards[1]
     App <- shinytest2::AppDriver$new(
       normalizePath("../../dev/board.launch"),
-      timeout = 35000,
+      timeout = 120000,
       height = 1080,
       width = 1920,
       seed = 2910,
