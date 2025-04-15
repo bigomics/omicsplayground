@@ -14,7 +14,7 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("tcga", "signature")]
+  all_boards <- boards[!boards %in% c("tcga", "signature")]
 
   # get all pgx files
   pgx_files <- list.files(normalizePath("../../data"), pattern = "*.pgx", full.names = TRUE)
@@ -23,6 +23,9 @@ test_that("example data loads with no error",{
 
   AppLog <- lapply(pgx_files, function(pgx_file) {
     message(pgx_file)
+    pgx <- playbase::pgx.load(pgx_files[1])
+    boards <- all_boards[all_boards %in% names(pgx)]
+    boards <- c("dataview", "enrichment", "clustering", "compare", "correlation", "expression", "pathway", boards)
     lapply(boards, function(board) {
     # get error from App and save it as error_log
     message(board)
@@ -46,8 +49,8 @@ test_that("example data loads with no error",{
 
     withr::defer(App$stop())
 
-    #pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
+    pgx_file <- tools::file_path_sans_ext(basename(pgx_file))
     if(board == "enrichment") {
       App$set_inputs("enrichment-gs_fdr" = 0.5)
       App$wait_for_idle(duration = 10000, timeout = 50000)
@@ -66,7 +69,9 @@ test_that("example data loads with no error",{
           duration <- 50000
           App$wait_for_idle(duration = 3000, timeout = duration)
         }
-        
+        tab <- gsub(" ", "_", tab)
+        tab <- gsub("/", "_", tab)
+
         App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
