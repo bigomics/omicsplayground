@@ -23,7 +23,7 @@ test_that("example data loads with no error",{
 
   AppLog <- lapply(pgx_files, function(pgx_file) {
     message(pgx_file)
-    pgx <- playbase::pgx.load(pgx_files[1])
+    pgx <- playbase::pgx.load(pgx_file)
     boards <- all_boards[all_boards %in% names(pgx)]
     boards <- c("dataview", "enrichment", "clustering", "compare", "correlation", "expression", "pathway", boards)
     lapply(boards, function(board) {
