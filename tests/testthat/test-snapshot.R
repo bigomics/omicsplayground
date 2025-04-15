@@ -72,11 +72,11 @@ test_that("example data loads with no error",{
         tab <- gsub(" ", "_", tab)
         tab <- gsub("/", "_", tab)
 
-        App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
+        App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
       App$wait_for_idle(duration = 3000)
-      App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
+      App$expect_screenshot(name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
     }
   })})
 })
