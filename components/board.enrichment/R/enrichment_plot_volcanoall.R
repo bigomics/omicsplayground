@@ -21,14 +21,9 @@ enrichment_plot_volcanoall_ui <- function(
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
     ),
-    #withTooltip(
-    #  shiny::radioButtons(ns("enrch_volcanoall_subs"), "Subsample plot",
-    #   c("Yes", "No"), inline = TRUE, selected = "No"),
-    #  "Number of top genesets to consider for counting the gene frequency."
-    #),
     withTooltip(
       shiny::radioButtons(ns("n_contrasts"), "Number of contrasts shown:",
-        c("1", "4", "8", "all"), inline = TRUE, selected = "4"),
+        c("1", "4", "6", "all"), inline = TRUE, selected = "6"),
       "Number of contrasts shown in Volcano plots."
     )
   )
