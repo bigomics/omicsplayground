@@ -1,10 +1,10 @@
 searchTabs <- function(board) {
     tabs <- list(
         biomarker = c("Feature selection", "Feature-set ranking"),
-        dataview = c("Gene overview", "Sample QC", "Data table", "Sample information", "Contrasts"),
+        dataview = c("Gene overview", "Sample QC", "Data table", "Samples", "Contrasts"),
         clustering = c("Heatmap", "PCA/tSNE", "Parallel"),
         featuremap = c("Gene", "Geneset"),
-        expression = c("Overview", "Top genes", "Volcano by comparison", "Volcano by method"),
+        expression = c("Overview", "Top features", "Volcano by comparison", "Volcano by method"),
         correlation = c("Correlation", "Graph"),
         enrichment = c("Enrichment", "Geneset expression", "Enrichment by comparison", "Volcano by comparison", "Volcano by method"),
         signature = c("Volcano plots", "Enrichment", "Overlap/similarity", "Markers"),
@@ -13,7 +13,7 @@ searchTabs <- function(board) {
         compare = c("Compare expression", "Foldchange", "Gene Correlation"),
         connectivity = c("FC correlation", "FC Heatmap", "Meta-network"),
         singlecell = c("Cell type", "Mapping", "Markers"),
-        wgcna = c("WGCNA", "Modules", "Eigengenes", "Intramodular")
+        wgcna = c("WGCNA", "Modules", "Eigengenes", "Enrichment")
     )
     return(tabs[[board]])
 }
