@@ -113,7 +113,8 @@ upload_module_makecontrast_server <- function(
     countsRT,
     upload_wizard,
     show_comparison_builder,
-    autocontrast) {
+    autocontrast,
+    auth) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -380,6 +381,11 @@ upload_module_makecontrast_server <- function(
           shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
+        if (ncol(rv_contr()) >= auth$options$MAX_COMPARISONS) {
+          shinyalert::shinyalert("ERROR", paste0("You have reached the maximum number of ", auth$options$MAX_COMPARISONS, " comparisons. Please delete some comparisons before adding a new one."))
+          shiny::updateTextInput(session, "newname", value = "")
+          return(NULL)
+        }
 
         ## update reactive value
         samples <- colnames(countsRT())
@@ -413,6 +419,18 @@ upload_module_makecontrast_server <- function(
 
         ## update reactive value
         ctx2 <- playbase::contrastAsLabels(ctx)
+        max_comparisons <- auth$options$MAX_COMPARISONS
+        remaining_slots <- max_comparisons
+        if (!is.null(rv_contr())) {
+          remaining_slots <- max_comparisons - ncol(rv_contr())
+        }
+        if (ncol(ctx2) > remaining_slots) {
+          if (remaining_slots == 0) {
+            return(NULL)
+          }
+          dbg("[AUTOCONTRAST] Too many comparisons, truncating to ", remaining_slots, " remaining slots")
+          ctx2 <- ctx2[, 1:remaining_slots]
+        }
         if (!is.null(rv_contr())) {
           rv_contr(cbind(rv_contr(), ctx2))
         } else {

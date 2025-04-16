@@ -86,6 +86,8 @@ enrichment_plot_compare_server <- function(id,
             return(x0[length(x0)])
           }))
 
+          rnk0 <- playbase::rename_by(rnk0, pgx$genes)
+
           playbase::gsea.enplot(
             rnk0,
             genes,

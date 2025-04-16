@@ -24,7 +24,8 @@ upload_table_preview_contrasts_server <- function(
     checked_contrasts,
     show_comparison_builder,
     selected_contrast_input,
-    upload_wizard) {
+    upload_wizard,
+    auth) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -377,7 +378,8 @@ upload_table_preview_contrasts_server <- function(
       countsRT = reactive(checked_counts()$COUNTS),
       upload_wizard = upload_wizard,
       show_comparison_builder = show_comparison_builder,
-      autocontrast = reactive(input$autocontrast)
+      autocontrast = reactive(input$autocontrast),
+      auth = auth
     )
 
     TableModuleServer(

@@ -1182,7 +1182,8 @@ UploadBoard <- function(id,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,
-      upload_wizard = shiny::reactive(input$upload_wizard)
+      upload_wizard = shiny::reactive(input$upload_wizard),
+      auth = auth
     )
     
     normalized <- upload_module_normalization_server(
