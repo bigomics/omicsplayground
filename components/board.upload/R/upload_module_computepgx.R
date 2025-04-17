@@ -320,12 +320,6 @@ upload_module_computepgx_server <- function(
                   selected = GENETEST.SELECTED()
                 ),
                 div(id = "interaction_analysis"), # Placeholder for the dynamic text
-                ## shiny::checkboxInput(
-                ##   ns("time_series"),
-                ##   label = shiny::HTML("<b>Time series analysis</b>"),
-                ##   value = FALSE
-                ## ),
-                ## shiny::HTML("<small style='margin-top: -20px; display: block; font-size: 14px;'>Requires a 'time' column in samples.csv. Analysis uses limma spline and/or DESeq2/EdgeR with interaction term.</small>"),
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -446,52 +440,59 @@ upload_module_computepgx_server <- function(
         colnames(Y) <- tolower(colnames(Y))
         Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
         
-        time.var <- c("minute", "hour", "day", "week", "month", "year", "time")
+        time.var <- c("minute", "hour", "day", "week", "month", "year", "age", "time")
         sel.time <- intersect(time.var, colnames(Y))
-        
-        if (length(sel.time)) {
-          i=1; valid.ia.ctx=c();
+
+        if (length(sel.time) && length(unique(Y[, sel.time[1]]))>1) {
+          
+          timeseries <- unname(as.character(Y[, sel.time[1]]))
+          timeseries <- gsub("\\D", "", timeseries)
+          ia.ctx <- ia.spline.ctx <- c()
+
+          i=1
           for (i in 1:ncol(Contrasts)) {
             ctx <- colnames(Contrasts)[i]
-            if (strsplit(ctx, ":")[[1]][1] %in% time.var) next;
+            if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next;
             tt <- table(data.frame(ctx = Contrasts[,ctx], time = Y[,sel.time[1]]))
             zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
-            if (any(zeros.obs >= (ncol(tt)-1))) {
-              next
+
+            if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
+              if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
             } else {
-              valid.ia.ctx <- c(valid.ia.ctx, ctx)
+              if (!any(zeros.obs >= (ncol(tt)-1))) {
+                ia.spline.ctx <- c(ia.spline.ctx, ctx)
+              }
             }
           }
-          if (length(valid.ia.ctx)) {
-            ss <- paste0("Column ", sel.time, " found in samples.csv.
-            Interaction analysis between main effect and time will be also performed for valid contrasts.")
-            shinyalert::shinyalert(title = "Interaction analysis", text = ss, type = "info")
+
+          if (length(ia.ctx) | length(ia.spline.ctx)) {
+            shinyalert::shinyalert(title = "Interaction analysis",
+              text = paste0(sel.time[1], " found in samples.csv.",
+                "Time-interaction will be tested for valid contrasts."),
+              type = "info"
+            )
+            if (length(ia.ctx)) {
+              msg <- paste0("<p style='color: gray;'>Interaction with time will be tested<br>",
+                "for the contrasts:<br>", paste0(ia.ctx,collapse="<br>"),".</p>")
+            } else if (length(ia.spline.ctx)) {
+              msg <- paste0("<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
+                "for the contrasts:<br>", paste0(ia.spline.ctx,collapse="<br>"),".</p>")
+            }
+
             shiny::updateCheckboxGroupInput(
               inputId = "gene_methods",
               choices = c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf"),
               selected = c("trend.limma", "deseq2.lrt")
             )
-            insertUI(
-              selector = "#interaction_analysis",
-              where = "afterEnd",
-              ui = HTML(
-                paste0("<p style='color: gray;'>Interaction with time will be tested<br>",
-                  "for the contrasts:<br>", paste0(valid.ia.ctx,collapse="<br>"),".</p>")
-              )
-            )
-    
+
+            insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
+              
           }
+         
         }
-        #else {
-        #  shiny::updateCheckboxGroupInput(
-        #    inputId = "gene_methods",
-        #   choices = GENETEST.METHODS(),
-        #    selected = GENETEST.SELECTED()
-        #  )
-        #}
-
+        
       })
-
+      
       # Input validators
       iv <- shinyvalidate::InputValidator$new()
       iv$enable()
@@ -793,8 +794,6 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        #timeseries <- FALSE
-        #if (input$time_series) timeseries <- TRUE
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         if(input$do_extra == FALSE) extra.methods <- c()
