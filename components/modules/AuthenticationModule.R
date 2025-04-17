@@ -1251,7 +1251,146 @@ LoginCodeAuthenticationModule <- function(id,
   })
 }
 
+## ================================================================================
+## Utility functions for authentication
+## ================================================================================
 
+EmailEncryptedAuthenticationModule <- function(
+    id = "auth",
+    show_modal = TRUE,
+    skip_modal = FALSE,
+    domain = opt$DOMAIN) {
+  shiny::moduleServer(id, function(input, output, session) {
+    message("[AuthenticationModule] >>>> using EmailEncrypted authentication <<<<")
+    ns <- session$ns
+
+    # Get encryption key
+    encryption_key <- tryCatch(
+      {
+        readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+      },
+      error = function(w) {
+        NULL
+      }
+    )
+    if (is.null(encryption_key)) {
+      ## we continue without decryption, just to test, unsafe
+      warning("[EmailEncryptedAuthenticationModule] ERROR : missing encryption_key file!!!")
+    }
+
+    USER <- shiny::reactiveValues(
+      method = "email-encrypted",
+      logged = FALSE,
+      username = NA,
+      email = NA,
+      level = "",
+      limit = "",
+      options = opt, ## global
+      user_dir = PGX.DIR ## global
+    )
+
+    if (show_modal) {
+      m <- splashLoginModal(
+        ns = ns,
+        with.username = FALSE,
+        with.email = FALSE,
+        with.password = FALSE,
+        title = "Sign in",
+        subtitle = "Ready to explore your data?",
+        button.text = "Sure I am!"
+      )
+      shiny::showModal(m)
+      if (skip_modal) {
+        shinyjs::runjs("$('#auth-login_submit_btn').click();")
+      }
+    }
+
+    resetUSER <- function() {
+      dbg("[EmailEncryptedAuthenticationModule] resetUSER called")
+      USER$logged <- FALSE
+      USER$username <- NA
+      USER$email <- NA
+      USER$password <- NA
+      USER$level <- ""
+      USER$limit <- ""
+
+      PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+    }
+
+    output$showLogin <- shiny::renderUI({
+      resetUSER()
+    })
+
+    output$login_warning <- shiny::renderText("")
+
+    ## --------------------------------------
+    ## Step 1: Get email query field
+    ## --------------------------------------
+
+    query_email <- shiny::reactive({
+      query_email <- shiny::getQueryString()$email
+      query_email
+    })
+
+    ## --------------------------------------
+    ## Step 2: Decrypt and Login user
+    ## --------------------------------------
+    shiny::observeEvent(input$login_submit_btn, {
+      if (is.null(query_email())) {
+        dbg("[EmailEncryptedAuthenticationModule] invalid email hash")
+        output$login_warning <- shiny::renderText("invalid email hash")
+        return(NULL)
+      }
+
+      # Decrypt email if encryption key is available
+      decrypted_email <- if (!is.null(encryption_key)) {
+        decrypt_util(query_email(), encryption_key, remove_suffix = TRUE)
+      } else {
+        warning("[EmailEncryptedAuthenticationModule] No encryption key available, using raw email")
+        query_email()
+      }
+
+      # Validate decrypted email
+      if (is.null(decrypted_email)) {
+        dbg("[EmailEncryptedAuthenticationModule] failed to decrypt email")
+        output$login_warning <- shiny::renderText("invalid email format")
+        return(NULL)
+      }
+
+      USER$email <- decrypted_email
+      USER$username <- decrypted_email
+      USER$logged <- TRUE
+
+      # TODO Use some sort of user_database to see if email allowed??
+      # TODO check domain (?)
+
+      # Set up user directory
+      USER$user_dir <- file.path(PGX.DIR, USER$email)
+      create_user_dir_if_needed(USER$user_dir, PGX.DIR)
+      if (!opt$ENABLE_USERDIR) {
+        USER$user_dir <- file.path(PGX.DIR)
+      }
+
+      dbg("[EmailEncryptedAuthenticationModule] using user OPTIONS")
+      USER$options <- read_user_options(USER$user_dir)
+      session$sendCustomMessage("set-user", list(user = USER$email))
+
+      # Handle query files and navigation
+      query_files <- check_query_files() |> unlist()
+      if (!is.null(query_files)) {
+        bigdash.selectTab(session, "upload-tab")
+        shinyjs::runjs("$('#upload-start_upload').click();")
+      } else {
+        bigdash.selectTab(session, "load-tab")
+      }
+    })
+
+    ## export as 'public' functions
+    USER$resetUSER <- resetUSER
+
+    return(USER)
+  })
+}
 ## ================================================================================
 ## ================================= END OF FILE ==================================
 ## ================================================================================
