@@ -25,7 +25,7 @@ EnrichmentInputs <- function(id) {
         shiny::selectInput(ns("gs_lfc"), "logFC",
           choices = c(0, 0.05, 0.1, 0.2, 0.5, 1, 2), selected = 0
         ),
-        "Set the logarithmic fold change (logFC) threshold.",
+        "Set the logarithmic fold change (log2FC) threshold.",
         placement = "top"
       )
     ),
@@ -38,16 +38,20 @@ EnrichmentInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
           withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
-            "Enbale significant genes filtering. Display only significant genesets in the table.",
+            "Display all genesets in the table.",
+            placement = "top", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("Top10 genesets"), FALSE),
+            "Display only top 10 differentially enriched  (+ and -) genesets.",
+            placement = "top", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxInput(ns("show_pv"), "Show p-values", FALSE),
+            "Show gset p-values in the table. WARNING: nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
             placement = "top", options = list(container = "body")
           ),
           withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
             "Select a method or multiple methos for the statistical test.",
             placement = "right", options = list(container = "body")
-          ),
-          withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
-            "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
-                placement = "top", options = list(container = "body")
           )
         )
       )
