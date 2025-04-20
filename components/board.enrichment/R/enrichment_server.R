@@ -505,6 +505,7 @@ EnrichmentBoard <- function(id, pgx,
     enrichment_plot_volcanoall_server(
       "volcanoAll",
       pgx = pgx,
+      gs_contrast = shiny::reactive(input$gs_contrast),
       gs_features = shiny::reactive(input$gs_features),
       gs_statmethod = shiny::reactive(input$gs_statmethod),
       gs_fdr = shiny::reactive(input$gs_fdr),

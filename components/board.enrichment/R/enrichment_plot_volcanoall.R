@@ -16,16 +16,15 @@ enrichment_plot_volcanoall_ui <- function(
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
+    withTooltip(
+      shiny::checkboxInput(ns("scale_per_method"), "Scale per method", FALSE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
     ),
     withTooltip(
-      shiny::radioButtons(ns("enrch_volcanoall_subs"), "Subsample plot",
-        c("Yes", "No"),
-        inline = TRUE, selected = "No"
-      ),
-      "Number of top genesets to consider for counting the gene frequency."
+      shiny::radioButtons(ns("n_contrasts"), "Number of contrasts shown:",
+        c("1", "4", "6", "all"), inline = TRUE, selected = "6"),
+      "Number of contrasts shown in Volcano plots."
     )
   )
 
@@ -49,6 +48,7 @@ enrichment_plot_volcanoall_ui <- function(
 
 enrichment_plot_volcanoall_server <- function(id,
                                               pgx,
+                                              gs_contrast,
                                               gs_features,
                                               gs_statmethod,
                                               gs_fdr,
@@ -56,14 +56,30 @@ enrichment_plot_volcanoall_server <- function(id,
                                               calcGsetMeta,
                                               gset_selected,
                                               watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(gs_features())
-
+      
       meta <- pgx$gset.meta$meta
       ctx <- names(meta)[!grepl("^IA:", names(meta))]
-      meta <- meta[ctx]
+
+      sel_ctx <- gs_contrast()
+      if (input$n_contrasts == "all") {
+        ctx1 <- ctx[1:length(ctx)]
+      } else if (input$n_contrasts == "1") {
+        ctx1 <- sel_ctx
+      } else {
+        nn <- as.numeric(input$n_contrasts) - 1
+        ctx1 <- ctx[which(ctx != sel_ctx)]
+        ctx1 <- ctx1[c(1:nn)]
+        ctx1 <- ctx1[!is.na(ctx1)]
+        ctx1 <- unique(c(sel_ctx, ctx1))
+      }
+      
+      meta <- meta[ctx1]
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
       if (is.null(gsmethod) || length(gsmethod) == 0) {

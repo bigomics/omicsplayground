@@ -69,23 +69,23 @@ signature_plot_markers_server <- function(id,
                                           pgx,
                                           getCurrentMarkers,
                                           watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     calcSingleSampleValues <- function(X, y, method = c("rho", "gsva")) {
-      ##
+
       ## Calculates single-sample enrichment values for given matrix and
       ## binarized signature vector.
-      ##
-      ##
       ## very fast rank difference
 
       if (is.null(names(y)) && length(y) != nrow(X)) {
         cat("<signature:calcSingleSampleValues> FATAL ERROR: y must be named if not matched\n")
         return(NULL)
       }
-
-      if (!is.null(names(y)) && length(y) != nrow(X)) {
+      
+      if (!is.null(names(y)) && length(y) != nrow(X))
         y <- y[match(rownames(X), names(y))]
-      }
+      
       names(y) <- rownames(X)
       jj <- which(!is.na(y))
       X <- X[jj, ]
@@ -98,20 +98,24 @@ signature_plot_markers_server <- function(id,
         rownames(matzero) <- colnames(X)
         return(matzero)
       }
+
       ss.rank <- function(x) scale(sign(x) * rank(abs(x)), center = FALSE)[, 1]
 
       S <- list()
+
       if ("rho" %in% method) {
+
         S[["rho"]] <- cor(apply(X, 2, ss.rank), y, use = "pairwise")[, 1]
+
       }
 
-      ## calculate GSVA
       if ("gsva" %in% method) {
+
         gset <- names(y)[which(y != 0)]
         gmt <- list("gmt" = gset)
 
-        ## check versions of GSVA
         new.gsva <- exists("gsvaParam", where = asNamespace("GSVA"), mode = "function")
+        
         if (new.gsva) {
           res.gsva <- GSVA::gsva(GSVA::gsvaParam(X, gmt, maxDiff = TRUE)) ## new style :(
         } else {
@@ -122,59 +126,78 @@ signature_plot_markers_server <- function(id,
         fc <- as.vector(res.gsva[1, ])
         names(fc) <- res.colnames
         S[["gsva"]] <- fc[colnames(X)]
+
       }
-      s.names <- names(S)
+
       if (length(S) > 1) {
         S1 <- do.call(cbind, S)
       } else {
         S1 <- S[[1]]
       }
-
+      
       S1 <- as.matrix(S1)
       rownames(S1) <- colnames(X)
-      colnames(S1) <- s.names
+      colnames(S1) <- names(S)
+
       return(S1)
+
     }
 
     getSingleSampleEnrichment <- shiny::reactive({
       ## Calls calcSingleSampleValues() and calculates single-sample
       ## enrichment values for complete data matrix and reduced data by
       ## group (for currentmarkers)
-      if (is.null(pgx$X)) {
-        return(NULL)
-      }
+
+      if (is.null(pgx$X)) return(NULL)
 
       ## get the signature
       markers <- getCurrentMarkers()
       this.gset <- markers$symbols
-      if (is.null(this.gset)) {
-        return(NULL)
-      }
+      if (is.null(this.gset)) return(NULL)
 
-      xsymbol <- pgx$genes[rownames(pgx$X), "symbol"]
-      X <- playbase::rowmean(pgx$X, xsymbol)
+      X <- grp <- NULL
+      is.sc <- !is.null(pgx$datatype) && pgx$datatype == "scRNAseq"      
+      if (is.sc) {
+        message("[Test signatures: Markers] Computing supercells.")
+        ct <- pgx$samples[, "celltype"]
+        block.group <- paste0(ct, ":", apply(pgx$contrasts, 1, paste, collapse = '_'))
+        if ("batch" %in% colnames(pgx$samples))
+          block.group <- paste0(block.group, ":", pgx$samples[, "batch"])
+        nb <- round(ncol(pgx$counts)/1000) # strong compression
+        message("[pgx.wgcna] running SuperCell. nb = ", nb)    
+        sc <- playbase::pgx.supercell(pmax(2**pgx$X - 1, 0), pgx$samples, block.group, nb)
+        message("[pgx.wgcna] SuperCell done: ", ncol(pgx$counts), " ->", ncol(sc$counts))
+        message("[pgx.wgcna] Normalizing supercell matrix (logCPM)")
+        X <- as.matrix(playbase::logCPM(sc$counts, total = 1e4, prior = 1))
+        samples <- sc$meta
+        grp <- samples[, "celltype"]
+        remove(ct, block.group, nb, sc)
+        gc()
+      }
+      
+      if (is.null(X)) X <- pgx$X
+      xsymbol <- pgx$genes[rownames(X), "symbol"]
+      X <- playbase::rowmean(X, xsymbol)
       y <- 1 * (rownames(X) %in% this.gset)
       names(y) <- rownames(X)
-
+      
       ## expression by group
-      grp <- pgx$model.parameters$group
+      if (is.null(grp)) grp <- pgx$model.parameters$group
       groups <- unique(grp)
       gX <- sapply(groups, function(g) rowMeans(X[, which(grp == g), drop = FALSE], na.rm = TRUE))
       colnames(gX) <- groups
 
       ## for large datasets pre-grouping is faster
       ss.bygroup <- calcSingleSampleValues(gX, y, method = c("rho", "gsva"))
-      do.rho <- TRUE
-
+      
       ## by sample is slow... so no gsva
-      ss1 <- calcSingleSampleValues(X[, ], y, method = c("rho"))
+      ss1 <- calcSingleSampleValues(X, y, method = "rho")
       ss.bysample <- cbind(rho = ss1)
 
-      res <- list(
-        by.sample = ss.bysample,
-        by.group  = ss.bygroup
-      )
+      res <- list(by.sample = ss.bysample, by.group  = ss.bygroup)
+      
       return(res)
+
     })
 
     get_plots <- function() {
