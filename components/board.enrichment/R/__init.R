@@ -10,19 +10,17 @@ MODULE.enrichment <- list(
       wordcloud = "Word cloud"
     )
   },
-  module_server = function(PGX, board_observers = NULL, labeltype = NULL, env = NULL) {
+  module_server = function(PGX, labeltype = NULL, env = NULL) {
     info("[SERVER] calling SignatureBoard module")
     SignatureBoard("sig",
       pgx = PGX,
-      selected_gxmethods = env$diffexpr$selected_gxmethods,
-      board_observers = board_observers
+      selected_gxmethods = env$diffexpr$selected_gxmethods
     )
 
     info("[SERVER] calling PathwayBoard module")
     PathwayBoard("pathway",
       pgx = PGX,
-      selected_gsetmethods = env$enrich$selected_gsetmethods,
-      board_observers = board_observers
+      selected_gsetmethods = env$enrich$selected_gsetmethods
     )
 
     info("[SERVER] calling WordCloudBoard module")

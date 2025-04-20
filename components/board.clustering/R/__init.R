@@ -9,17 +9,15 @@ MODULE.clustering <- list(
       clusterfeatures = "Features"
     )
   },
-  module_server = function(PGX, board_observers = NULL, labeltype = NULL) {
+  module_server = function(PGX, labeltype = NULL) {
     info("[SERVER] calling ClusteringBoard module")
     ClusteringBoard("clustersamples",
-      pgx = PGX, labeltype = labeltype,
-      board_observers = board_observers
+      pgx = PGX, labeltype = labeltype
     )
 
     info("[SERVER] calling FeatureMapBoard module")
     FeatureMapBoard("clusterfeatures",
-      pgx = PGX, labeltype = labeltype,
-      board_observers = board_observers
+      pgx = PGX, labeltype = labeltype
     )
     
   },

@@ -14,8 +14,7 @@
 ##' @author kwee
 TimeSeriesBoard <- function(id,
                             pgx,
-                            labeltype = shiny::reactive("feature"),
-                            board_observers = NULL
+                            labeltype = shiny::reactive("feature")
                             ) {
 
   moduleServer(id, function(input, output, session) {
@@ -31,8 +30,6 @@ TimeSeriesBoard <- function(id,
     ## ======================== OBSERVERS =========================================
     ## ============================================================================
 
-    my_observers <- list()
-
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Clustering" = list(
@@ -45,12 +42,12 @@ TimeSeriesBoard <- function(id,
       )
     )
 
-    my_observers[[1]] <- shiny::observeEvent(input$tabs1, {
+    shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
     # Board info
-    my_observers[[2]] <- shiny::observeEvent(input$board_info, {
+    shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>TimeSeries Board</strong>"),
         shiny::HTML(clust_infotext),
@@ -58,8 +55,7 @@ TimeSeriesBoard <- function(id,
       ))
     })
 
-    my_observers[[3]] <- shiny::observeEvent( pgx$samples, {
-
+    shiny::observeEvent( pgx$samples, {
       ## set time variable
       vars <- sort(colnames(pgx$samples))
       timevars <- unique( c(grep("time|second|minute|day|week|month|year", vars, value=TRUE, ignore.case=TRUE), vars))
@@ -70,10 +66,6 @@ TimeSeriesBoard <- function(id,
       contrasts <- contrasts[!grepl("^IA:", contrasts)]
       shiny::updateSelectInput(session, "contrast", choices=contrasts, selected=contrasts[1])
     })
-
-    ## assign to global list of observers. suspend by default.
-    # lapply( my_observers, function(b) b$suspend() )
-    board_observers[[id]] <- my_observers
 
     ## ===========================================================================
     ## ======================== REACTIVES ========================================

@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
-                            #board_observers = board_observers 
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
                             ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -36,8 +35,6 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
     #=============================== observers ======================================
     #================================================================================
 
-    # my_observers <- list()
-    
     shiny::observeEvent(input$gx_info,
       {
         shiny::showModal(shiny::modalDialog(
@@ -103,11 +100,6 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
     observe({
       genetable_rows_selected(genetable$rows_selected())
     })
-
-    ## add to list global of observers. suspend by default.
-    # my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # # lapply( my_observers, function(b) b$suspend() )
-    # board_observers[[id]] <- my_observers
 
     ## =========================================================================
     ## ============================= REACTIVES =================================

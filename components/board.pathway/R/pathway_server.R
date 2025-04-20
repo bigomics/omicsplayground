@@ -5,8 +5,7 @@
 
 PathwayBoard <- function(id,
                          pgx,
-                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc)),
-                         board_observers = NULL
+                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))
                          ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -42,9 +41,7 @@ PathwayBoard <- function(id,
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    my_observers <- list()
-
-    my_observers[[1]] <- shiny::observeEvent(input$fa_info, {
+    shiny::observeEvent(input$fa_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Functional Analysis Board</strong>"),
         shiny::HTML(fa_infotext),
@@ -52,7 +49,7 @@ PathwayBoard <- function(id,
       ))
     })
 
-    my_observers[[2]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X)
       #ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- playbase::pgx.getContrasts(pgx)      
@@ -67,14 +64,9 @@ PathwayBoard <- function(id,
       "GO graph" = list(disable = NULL),
       "Enrichment Map (beta)" = list(disable = NULL)
     )
-    my_observers[[3]] <- shiny::observeEvent(input$tabs, {
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================

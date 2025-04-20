@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-PcsfBoard <- function(id, pgx, board_observers=NULL) {
+PcsfBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 800
@@ -17,9 +17,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     ## ============================ OBSERVERS =================================
     ## ========================================================================
 
-    my_observers <- list()
-    
-    my_observers[[1]] <- observeEvent(input$pcsf_info, {
+    observeEvent(input$pcsf_info, {
       showModal(
         modalDialog(
           title = tags$strong("PCSF Network Analysis"),
@@ -30,7 +28,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       )
     })
 
-    my_observers[[2]] <- observe({
+    observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -44,11 +42,6 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       )
     })
 
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
     ## =========================================================================
     ## =========================== MODULES =====================================
     ## =========================================================================

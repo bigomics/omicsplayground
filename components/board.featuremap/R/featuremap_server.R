@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
-                            board_observers = NULL ) {
+FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -21,10 +20,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     ## ======================= OBSERVE FUNCTIONS ==============================
     ## ========================================================================
 
-    my_observers <- list()
-    
     # Observer (1):
-    my_observers[[1]] <- shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Feature Map Analysis</strong>"),
         shiny::HTML(infotext),
@@ -43,12 +40,12 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         disable = c("filter_genes")
       )
     )
-    my_observers[[2]] <- shiny::observeEvent(input$tabs, {
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
     # Observer (3):
-    my_observers[[3]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         list(pgx$name, pgx$X, pgx$gsetX)
       },
@@ -78,7 +75,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       }
     )
 
-    my_observers[[4]] <- observeEvent(
+    observeEvent(
       {
         list(input$sigvar, pgx$samples)
       },
@@ -91,7 +88,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         }
       }
     )
-    my_observers[[5]] <- observeEvent(
+    observeEvent(
       {
         list(pgx$samples, pgx$X, input$showvar)
       },
@@ -116,7 +113,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         }
       }
     )
-    my_observers[[6]] <- observeEvent(
+    observeEvent(
       {
         list(pgx$samples, input$showvar, input$sigvar)
       },
@@ -129,7 +126,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         }
       }
     )
-    my_observers[[7]] <- observeEvent(
+    observeEvent(
       {
         list(input$selcomp)
       },
@@ -139,11 +136,6 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       }
     )
 
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
     ## =========================================================================
     ## ============================= FUNCTIONS =================================
     ## =========================================================================

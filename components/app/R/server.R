@@ -153,23 +153,6 @@ app_server <- function(input, output, session) {
   ## Call modules
   ## -------------------------------------------------------------
 
-  board_observers <- reactiveValues()
-  ## board_observers = list()
-  observeEvent(input$nav, {
-    dbg("[MAIN] react on input.nav = ", input$nav)
-    dbg("[MAIN] names(board_observers) = ", names(board_observers))
-    active_board <- sub("-tab", "", input$nav)
-    dbg("[MAIN] resuming board: ", active_board)
-    if (active_board %in% names(board_observers)) {
-      lapply(board_observers[[active_board]], function(b) b$resume())
-    }
-    non_actives <- setdiff(names(board_observers), active_board)
-    dbg("[MAIN] suspending boards: ", non_actives)
-    for (notact in non_actives) {
-      # lapply(board_observers[[notact]], function(b) b$suspend())
-    }
-  })
-
   ## communication "environment"
   env <- list()
 
@@ -285,13 +268,10 @@ app_server <- function(input, output, session) {
  
     lapply(names(MODULES_TO_REMOVE[MODULES_TO_REMOVE]), function(x) {
       if (x == "DataView") {
-        # lapply(board_observers[["dataview"]], function(b) b$destroy())
         bigdash.removeTab(session, "dataview-tab")
         bigdash.hideMenuElement(session, "DataView")
       }
       if (x == "Clustering") {
-        # lapply(board_observers[["clustersamples"]], function(b) b$destroy())
-        # lapply(board_observers[["clusterfeatures"]], function(b) b$destroy())
         lapply(names(MODULE.clustering$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
@@ -299,9 +279,6 @@ app_server <- function(input, output, session) {
         loaded$clustering <- 0
       }
       if (x == "Expression") {
-        # lapply(board_observers[["diffexpr"]], function(b) b$destroy())
-        # lapply(board_observers[["corr"]], function(b) b$destroy())
-        # lapply(board_observers[["bio"]], function(b) b$destroy())
         lapply(names(MODULE.expression$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
@@ -309,10 +286,6 @@ app_server <- function(input, output, session) {
         loaded$expression <- 0
       }
       if (x == "GeneSets") {
-        # lapply(board_observers[["enrich"]], function(b) b$destroy())
-        # lapply(board_observers[["sig"]], function(b) b$destroy())
-        # lapply(board_observers[["pathway"]], function(b) b$destroy())
-        # lapply(board_observers[["wordcloud"]], function(b) b$destroy())
         lapply(names(MODULE.enrichment$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
@@ -320,9 +293,6 @@ app_server <- function(input, output, session) {
         loaded$enrichment <- 0
       }
       if (x == "Compare") {
-        # lapply(board_observers[["isect"]], function(b) b$destroy())
-        # lapply(board_observers[["comp"]], function(b) b$destroy())
-        # lapply(board_observers[["cmap"]], function(b) b$destroy())
         lapply(names(MODULE.compare$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
@@ -330,11 +300,6 @@ app_server <- function(input, output, session) {
         loaded$compare <- 0
       }
       if (x == "SystemsBio") {
-        # lapply(board_observers[["drug"]], function(b) b$destroy())
-        # lapply(board_observers[["wgcna"]], function(b) b$destroy())
-        # lapply(board_observers[["tcga"]], function(b) b$destroy())
-        # lapply(board_observers[["cell"]], function(b) b$destroy())
-        # lapply(board_observers[["pcsf"]], function(b) b$destroy())
         lapply(names(MODULE.systems$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
@@ -342,10 +307,6 @@ app_server <- function(input, output, session) {
         loaded$systems <- 0
       }
       if (x == "MultiOmics") {
-        # lapply(board_observers[["mofa"]], function(b) b$destroy())
-        # lapply(board_observers[["mgsea"]], function(b) b$destroy())
-        # lapply(board_observers[["snf"]], function(b) b$destroy())
-        # lapply(board_observers[["lasagna"]], function(b) b$destroy())
         lapply(names(MODULE.multiomics$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
@@ -398,8 +359,7 @@ app_server <- function(input, output, session) {
             info("[SERVER] calling DataView module")
             insertBigTabItem("dataview")
             DataViewBoard("dataview",
-              pgx = PGX, labeltype = labeltype,
-              board_observers = board_observers
+              pgx = PGX, labeltype = labeltype
             )
           }
           shiny::incProgress(0.1)
@@ -422,8 +382,7 @@ app_server <- function(input, output, session) {
             info("[SERVER] calling DiffExprBoard module")
             bigdash.showMenuElement(session, "Expression")
             ExpressionBoard("diffexpr",
-              pgx = PGX, labeltype = labeltype#,
-              #board_observers = board_observers
+              pgx = PGX, labeltype = labeltype
             ) ->> env$diffexpr
             lapply(names(MODULE.expression$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
@@ -439,8 +398,7 @@ app_server <- function(input, output, session) {
             bigdash.showMenuElement(session, "GeneSets")
             EnrichmentBoard("enrich",
               pgx = PGX,
-              selected_gxmethods = env$diffexpr$selected_gxmethods,
-              board_observers = board_observers
+              selected_gxmethods = env$diffexpr$selected_gxmethods
             ) ->> env$enrich
             lapply(names(MODULE.enrichment$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
@@ -554,7 +512,7 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, board_observers = board_observers, labeltype = labeltype)
+      mod$module_server(PGX, labeltype = labeltype)
       loaded$clustering <- 1
       tab_control()
     }
@@ -562,7 +520,7 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Expression module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype)
+      mod$module_server(PGX, labeltype = labeltype)
       loaded$expression <- 1
       tab_control()
     }
@@ -570,7 +528,7 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, env = env)
+      mod$module_server(PGX, labeltype = labeltype, env = env)
       loaded$enrichment <- 1
       tab_control()
     }
@@ -578,7 +536,7 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Compare module")
       mod <- MODULE.compare
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, board_observers = NULL, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
+      mod$module_server(PGX, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
       loaded$compare <- 1
       tab_control()
     }
@@ -586,7 +544,7 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, board_observers = NULL)
+      mod$module_server(PGX)
       loaded$systems <- 1
       tab_control()
     }
@@ -594,7 +552,7 @@ app_server <- function(input, output, session) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, board_observers = NULL)
+      mod$module_server(PGX)
       loaded$multiomics <- 1
       tab_control()
     }

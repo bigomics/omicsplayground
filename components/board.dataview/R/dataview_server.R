@@ -12,8 +12,7 @@
 #' @param pgx Reactive expression that provides the input pgx data object
 #'
 #' @export
-DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
-                          board_observers = NULL) {
+DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     rowH <- 355 ## row height of panels
@@ -30,10 +29,8 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
 
-    my_observers <- list()
-
     ## ------- observe functions -----------
-    my_observers[[1]] <- shiny::observeEvent(input$board_info, {
+    shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>DataView Board</strong>"),
         shiny::HTML(data_infotext),
@@ -42,7 +39,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     })
 
     ## update filter choices upon change of data set
-    my_observers[[2]] <- shiny::observe({
+    shiny::observe({
 
       shiny::req(pgx$Y, pgx$samples)
       ## levels for sample filter
@@ -69,11 +66,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion"))
     )
 
-    my_observers[[3]] <- shiny::observeEvent(input$tabs, {
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    my_observers[[4]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         list(
           input$data_type,
@@ -112,11 +109,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         )
       }
     )
-
-    ## assign to r list of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers, is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    board_observers[[id]] <- my_observers
 
     ## ================================================================================
     ## =========================== MODULES ============================================

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-LasagnaBoard <- function(id, pgx, board_observers = NULL) {
+LasagnaBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -23,14 +23,13 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
     ## ============================================================================
     ## ============================ OBSERVERS =====================================
     ## ============================================================================
-    my_observers <- list()
 
     infotext <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    my_observers[[1]] <- shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>LASAGNA Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -46,17 +45,10 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
 ##      "Path scoring" = list(disable = c("left","right","updateplots"))
     )
 
-    my_observers[[2]] <- shiny::observeEvent( input$tabs, {
+    shiny::observeEvent( input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
-    
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================

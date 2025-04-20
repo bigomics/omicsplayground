@@ -3,9 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
-                             #board_observers = board_observers
-                             ) {
+CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -23,8 +21,6 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    #my_observers <- list()
 
     shiny::observeEvent(input$data_info, {
       shiny::showModal(shiny::modalDialog(
@@ -83,12 +79,6 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")#,
     shiny::observeEvent(pgx$X, {
       shiny::updateTextAreaInput(session, "cor_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
     })
-
-    ## add to list global of observers. suspend by default.
-    # my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # # lapply( my_observers, function(b) b$suspend() )
-    # if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
 
     ## =========================================================================
     ## ============================= FUNCTIONS =================================

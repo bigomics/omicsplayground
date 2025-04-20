@@ -4,7 +4,7 @@
 ##
 
 
-SingleCellBoard <- function(id, pgx, board_observers) {
+SingleCellBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -28,9 +28,7 @@ SingleCellBoard <- function(id, pgx, board_observers) {
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    my_observers <- list()
-    
-    my_observers[[1]] <- shiny::observeEvent(input$infotext, {
+    shiny::observeEvent(input$infotext, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Single Cell Board</strong>"),
         shiny::HTML(infotext),
@@ -39,7 +37,7 @@ SingleCellBoard <- function(id, pgx, board_observers) {
     })
 
     ## update filter choices upon change of data set
-    my_observers[[2]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X, pgx$Y)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
@@ -56,7 +54,7 @@ SingleCellBoard <- function(id, pgx, board_observers) {
       }
     })
 
-    my_observers[[3]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X)
       refsets <- "LM22"
       refsets <- sort(names(pgx$deconv))
@@ -69,7 +67,7 @@ SingleCellBoard <- function(id, pgx, board_observers) {
       shiny::updateSelectInput(session, "group2", choices = grpvars, selected = sel)
     })
 
-    my_observers[[4]] <- shiny::observeEvent(input$refset, {
+    shiny::observeEvent(input$refset, {
       shiny::req(input$refset)
       shiny::req(pgx$X)
 
@@ -78,14 +76,14 @@ SingleCellBoard <- function(id, pgx, board_observers) {
       shiny::updateSelectInput(session, "dcmethod", choices = dcmethods, selected = dcsel)
     })
 
-    my_observers[[5]] <- shiny::observeEvent(input$refset2, {
+    shiny::observeEvent(input$refset2, {
       shiny::req(input$refset2)
       dcmethods <- names(pgx$deconv[[input$refset2]])
       dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
       shiny::updateSelectInput(session, "dcmethod2", choices = dcmethods, selected = dcsel)
     })
 
-    my_observers[[6]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X)
 
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
@@ -105,7 +103,7 @@ SingleCellBoard <- function(id, pgx, board_observers) {
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
     })
 
-    my_observers[[7]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X, input$mrk_level)
 
       choices <- names(pgx$families)
@@ -120,7 +118,7 @@ SingleCellBoard <- function(id, pgx, board_observers) {
       shiny::updateSelectInput(session, "mrk_features", choices = choices, selected = selected)
     })
 
-    my_observers[[8]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
@@ -146,15 +144,10 @@ SingleCellBoard <- function(id, pgx, board_observers) {
       "Mapping" = list(disable = c("clustmethod")),
       "Markers" = list(disable = NULL)
     )
-    my_observers[[9]] <-
-      shiny::observeEvent(input$tabs, {
+
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## ========================================================================
     ## ============================ REACTIVE ==================================

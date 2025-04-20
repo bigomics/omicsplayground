@@ -66,30 +66,25 @@ MODULE.systems <- list(
       )
     )
   },
-  module_server = function(PGX, board_observers = NULL) {
+  module_server = function(PGX) {
     DrugConnectivityBoard("drug",
-      pgx = PGX,
-      board_observers = board_observers
+      pgx = PGX
     )
 
     WgcnaBoard("wgcna",
-      pgx = PGX#,
-      #board_observers = board_observers
+      pgx = PGX
     )
 
     TcgaBoard("tcga",
-      pgx = PGX,
-      board_observers = board_observers
+      pgx = PGX
     )
 
     SingleCellBoard("cell",
-      pgx = PGX,
-      board_observers = board_observers
+      pgx = PGX
     )
 
     PcsfBoard("pcsf",
-      pgx = PGX,
-      board_observers = board_observers
+      pgx = PGX
     )
   }
 )

@@ -65,30 +65,25 @@ MODULE.multiomics <- list(
       )
     )
   },
-  module_server = function(PGX, board_observers = NULL) {
+  module_server = function(PGX) {
     info("[SERVER] calling MofaBoard module")
-    MofaBoard("mofa", pgx = PGX,
-      board_observers = board_observers
+    MofaBoard("mofa", pgx = PGX
     )
 
     info("[SERVER] calling MGseaBoard module")
-    MGseaBoard("mgsea", pgx = PGX,
-      board_observers = board_observers
+    MGseaBoard("mgsea", pgx = PGX
     )
           
     info("[SERVER] calling SNF_Board module")
-    SNF_Board("snf", pgx = PGX,
-      board_observers = board_observers
+    SNF_Board("snf", pgx = PGX
     )
 
     info("[SERVER] calling LasagnaBoard module")
-    LasagnaBoard("lasagna", pgx = PGX,
-      board_observers = board_observers
+    LasagnaBoard("lasagna", pgx = PGX
     )
 
     info("[SERVER] calling DeepNetBoard module")
-    DeepNetBoard("deepnet", pgx = PGX,
-      board_observers = board_observers
+    DeepNetBoard("deepnet", pgx = PGX
     )
   },
 
