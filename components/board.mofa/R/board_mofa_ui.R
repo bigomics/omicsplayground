@@ -259,6 +259,8 @@ MofaUI <- function(id) {
               ns("pathwayheatmap"),
               title = "Pathway heatmap",
               info.text = "...",
+              #info.methods = "",
+              #info.references = "",
               caption = "Integrated Multi-omics heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
