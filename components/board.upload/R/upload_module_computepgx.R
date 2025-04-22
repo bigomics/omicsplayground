@@ -953,6 +953,7 @@ upload_module_computepgx_server <- function(
           stderr = c(),
           stdout = c()
         )
+        session$sendCustomMessage("warnOnExit", TRUE)
 
         ## append to process list
         PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
@@ -1100,6 +1101,7 @@ upload_module_computepgx_server <- function(
 
       # Function to execute when the process is completed successfully
       on_process_completed <- function(raw_dir, nr) {
+        session$sendCustomMessage("warnOnExit", FALSE)
         dbg("[computePGX:on_process_completed] process", nr, "completed!")
         process_counter(process_counter() - 1)
 

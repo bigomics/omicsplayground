@@ -68,6 +68,8 @@ app_ui <- function(x) {
         ##    gtag2, ## Google Tag Manager???
         shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
         shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
+        shiny::tags$script(src = "custom/close-message.js"
+  ),
         shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
