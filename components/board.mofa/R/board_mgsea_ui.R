@@ -49,10 +49,8 @@ MGseaUI <- function(id) {
             mofa_plot_mgsea_ui(
               ns("mgsea_plot"),
               title = "MultiGSEA plot",
-              info.text = "MultiGSEA plot",
-              #info.methods = ".....",
-              #info.references = list(list("X et al")),
-              caption = "The plot simultaneously visualizes the enrichment scores of two omics types in one figure. Pathway/genesets that are enriched in both modalities have a higher multi-score (see Table).",
+              info.text = "MultiGSEA plot. Scatter plot of enrichment scores of two omics data types. Pathway/genesets that are enriched in multiple datatypes are expected to exhibit higher multi.score values. To aid improved visualization a small random noise is added as standard normal values to the enrichment scores.",
+              caption = "Scatter plot of enrichment scores of two omics data types. Pathway/genesets that are enriched in multiple datatypes are expected to exhibit higher multi.score values. To aid improved visualization a small random noise is added as standard normal values to the enrichment scores.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
@@ -69,7 +67,7 @@ MGseaUI <- function(id) {
             mofa_table_mgsea_ui(
               ns("mgsea_table"),
               title = "multiGSEA scores",
-              info.text = "Table of multi-omics genesets and associated statistics. Geneset enrichment is performed using rank-correlation. A raw multi-omics score is first computed as the absolute geometric mean across datatypes' genesets. The 'sign' of the gset rank correlation-based enrichment is also determined (-1 for negative, +1 for positive correlations) and row-wise standard deviation computed. A 'multi-omics p-value' is also computed using Stouffer method for p-value integration. Multi-omics p-value are then corrected for multiple testing errors to derive 'multi-omics q-values'. The listed 'multi.score' column is computed as an integrated score using the following formula: 'raw multi-omics score' * -log(multi-omics p-value) * 'multi-omics sign'.",
+              info.text = "Table of multi-omics genesets and associated statistics. Geneset enrichment is performed using rank-correlation. A raw multi-omics score is first computed as the absolute geometric mean across datatypes' genesets. The 'sign' of the gset rank correlation-based enrichment is also determined (-1 for negative, +1 for positive correlations) and row-wise standard deviation computed. A 'multi-omics p-value' is also computed using Stouffer method for p-value integration. Multi-omics p-value are then corrected for multiple testing errors to derive 'multi-omics q-values'. The listed 'multi.score' column is computed as an integrated score using the following formula: 'raw multi-omics score' * -log(multi-omics p-value) * 'multi-omics sign'. Pathways/genesets that are enriched in multiple datatypes are expected to have higher multi.score values.",
               caption = "Table of multi-omics genesets and associated statistics.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
