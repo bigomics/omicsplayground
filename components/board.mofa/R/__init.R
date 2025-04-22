@@ -26,7 +26,7 @@ MODULE.multiomics <- list(
       ),
       bigdash::bigTabItem(
         "snf-tab",
-        SNF_Inputs("snf"),
+        SNFInputs("snf"),
         create_loader("snf-loader")
       ),
       bigdash::bigTabItem(
@@ -53,7 +53,7 @@ MODULE.multiomics <- list(
       ),
       list(
         "snf-tab",
-        SNF_UI("snf")
+        SNFUI("snf")
       ),
       list(
         "lasagna-tab",
@@ -74,8 +74,8 @@ MODULE.multiomics <- list(
     MGseaBoard("mgsea", pgx = PGX
     )
           
-    info("[SERVER] calling SNF_Board module")
-    SNF_Board("snf", pgx = PGX
+    info("[SERVER] calling SNFBoard module")
+    SNFBoard("snf", pgx = PGX
     )
 
     info("[SERVER] calling LasagnaBoard module")

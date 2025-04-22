@@ -4,7 +4,7 @@
 ##
 
 
-SNF_Board <- function(id, pgx) {
+SNFBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
