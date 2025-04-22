@@ -131,16 +131,16 @@ correlation_plot_scattercorr_server <- function(id,
       colorby <- dt$colorby
       this.gene <- dt$this.gene
       COL <- rep(dt$COL, 99)
-
+      
       shiny::req(length(rho) > 0)
       klr <- COL[as.integer(pheno)]
-
+      
       nplots <- n_row * n_cols
       rho <- head(rho, nplots)
       if (length(rho) < nplots) {
         n_row <- ceiling(sqrt(length(rho)))
       }
-
+      
       # Assemble subplots
       sub_plots <- vector("list", length(rho))
       for (i in 1:length(rho)) {
@@ -160,10 +160,12 @@ correlation_plot_scattercorr_server <- function(id,
         dy <- diff(range(y))
         title_i <- gene2
         title_loc <- max(y) - 0.1 * dy
+
         # Make regression line
-        fit <- lm(y ~ x)
+        fit <- stats::lm(y ~ x)
         newdata <- data.frame(x = range(x))
-        newdata$y <- predict(fit, newdata)
+        newdata$y <- stats::predict(fit, newdata)
+
         plt <- plotly::plot_ly(
           hovertemplate = paste0(
             "<b>%{fullData.name}<br>",
@@ -223,7 +225,7 @@ correlation_plot_scattercorr_server <- function(id,
         }
         sub_plots[[i]] <- plt
       }
-
+      
       # Assemble all subplot in to grid
       suppressWarnings(
         all_plt <- plotly::subplot(
@@ -264,6 +266,7 @@ correlation_plot_scattercorr_server <- function(id,
             )
           )
       )
+      
       return(all_plt)
     }
 
