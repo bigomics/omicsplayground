@@ -75,7 +75,7 @@ MGseaUI <- function(id) {
             mofa_plot_pathbank_ui(
               ns("pathbank_pathway"),
               title = "Multi-omics pathway",
-              info.text = "Multi-omics analyses ultimately aim to overlay distinct datatypes into integrated cellular pathways where transripts, proteins and multiple metabolite types exert biological effects. Please select a gene set from the 'multiGSEA scores' table to view the associated pathway if available.",
+              info.text = "Multi-omics analyses ultimately aim to overlay distinct datatypes into integrated cellular pathways where transripts, proteins and metabolites may exert biological effects. Please select a gene set from the 'multiGSEA scores' table to view the associated pathway if available.",
               caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
