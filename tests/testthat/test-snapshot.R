@@ -26,6 +26,9 @@ test_that("example data loads with no error",{
     pgx <- playbase::pgx.load(pgx_file)
     boards <- all_boards[all_boards %in% names(pgx)]
     boards <- c("dataview", "enrichment", "clustering", "compare", "correlation", "expression", "pathway", boards)
+    if ("mofa" %in% boards) {
+      boards <- c(boards, "snf", "lasagna", "deepnet", "mgsea")
+    }
     lapply(boards, function(board) {
     # get error from App and save it as error_log
     message(board)

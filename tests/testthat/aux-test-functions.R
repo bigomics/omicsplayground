@@ -13,7 +13,10 @@ searchTabs <- function(board) {
         compare = c("Compare expression", "Foldchange", "Gene Correlation"),
         connectivity = c("FC correlation", "FC Heatmap", "Meta-network"),
         singlecell = c("Cell type", "Mapping", "Markers"),
-        wgcna = c("WGCNA", "Modules", "Eigengenes", "Enrichment")
+        wgcna = c("WGCNA", "Modules", "Eigengenes", "Enrichment"),
+        mofa = c("Overview", "Response", "Weights", "Enrichment"),
+        lasagna = c("Multi-layer model", "Multi-partite graph"),
+        deepnet = c("Model training", "Biomarker heatmap", "Gradient vs. foldchange")
     )
     return(tabs[[board]])
 }
