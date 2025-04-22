@@ -49,7 +49,7 @@ MGseaUI <- function(id) {
             mofa_plot_mgsea_ui(
               ns("mgsea_plot"),
               title = "MultiGSEA plot",
-              info.text = "MultiGSEA plot. Scatter plot of enrichment scores of two omics data types. Pathway/genesets that are enriched in multiple datatypes are expected to exhibit higher multi.score values. To aid improved visualization a small random noise is added as standard normal values to the enrichment scores.",
+              info.text = "MultiGSEA plot. Scatter plot of enrichment scores of two omics data types. Pathway/genesets that are enriched in multiple datatypes are expected to exhibit higher multi.score values. To aid improved visualization a small random noise is added as standard normal values to the enrichment scores. Pathways enriched in both datatypesa are colored in red.",
               caption = "Scatter plot of enrichment scores of two omics data types. Pathway/genesets that are enriched in multiple datatypes are expected to exhibit higher multi.score values. To aid improved visualization a small random noise is added as standard normal values to the enrichment scores.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
