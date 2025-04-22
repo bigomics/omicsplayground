@@ -150,7 +150,6 @@ upload_module_normalization_server <- function(
             X <- playbase::normalizeMultiOmics(X, method = m)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)
-            #X <- playbase::pgx.countNormalization.beta(X, method = m, ref = ref, prior = prior)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
           }
         } else {
@@ -251,22 +250,21 @@ upload_module_normalization_server <- function(
         shiny::removeModal()
         return(cx)
       })
-
+      
       ## return object
       correctedCounts <- reactive({
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
         prior <- imputedX()$prior
-        if (1) {
-          ## WARNING: counts may still have NA. So downstream
-          ## DEseq2/EdgeR will fail in case of missing values.
-          counts <- 2**X - prior
-        } else {
-          ## NEED RETHINK!! should we return the original not-corrected
-          ## counts???? But EdgeR/Deseq2 need batch-corrected matrix??
-          counts <- r_counts()[rownames(X), colnames(X)]
-        }
-        counts <- pmax(counts, 0)  ## just to be sure
+        counts <- pmax(2**X - prior, 0)
+
+        ## We use 'correctedX' to compute the 'corrected' counts but
+        ## put back to original total counts
+        orig.counts <- r_counts()[rownames(X), colnames(X)]
+        orig.tc <- colSums(orig.counts,na.rm=TRUE)
+        tc <- colSums(counts,na.rm=TRUE)
+        counts <- t(t(counts) / tc * orig.tc)
+        
         counts
       })
 
