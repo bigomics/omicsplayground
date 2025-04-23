@@ -73,7 +73,7 @@ enrichment_plot_compare_server <- function(id,
           cmp <- top.up[i]
           rnk0 <- gx.meta[[cmp]]$meta.fx
           names(rnk0) <- rownames(gx.meta[[1]])
-          names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
+          names(rnk0) <- sub(".*:", "", names(rnk0))
 
           gs.meta <- pgx$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
