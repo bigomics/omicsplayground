@@ -89,7 +89,7 @@ PcsfInputs <- function(id) {
   )
 }
 
-pcsf_module_info <- "The PCSF network analysis uses the Prize-collection Steiner Forest algorithm to determine high-confidence subnetworks of highly correlated and highly differentially expressed genes. The STRING protein-protein interaction network is used as template. The PCSF solution may be used to identify 'driver' genes that appear as hubs in the network computed."
+pcsf_module_info <- "The PCSF network analysis uses the Prize-collection Steiner Forest algorithm to determine high-correlated subnetworks of the most differentially expressed genes. Interactions from STRING and pathway databases are used as template. The PCSF solution may be used to identify 'driver' genes that appear as hubs in the computed network."
 
 pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differential genes using the STRING database as backbone. 'Driver' genes appear as hubs in the network computed using a page-rank centrality measure."
 
