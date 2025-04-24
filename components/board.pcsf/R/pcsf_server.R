@@ -18,8 +18,18 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     ## ========================================================================
 
     my_observers <- list()
+
+    tab_elements <- list(
+      "PCSF network" = list(disable = c("gset_accordion")),
+      "Geneset PCSF" = list(disable = c("pcsf_accordion"))
+    )
+
+    my_observers[[1]] <- shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
     
-    my_observers[[1]] <- observeEvent(input$pcsf_info, {
+    
+    my_observers[[2]] <- observeEvent(input$pcsf_info, {
       showModal(
         modalDialog(
           title = tags$strong("PCSF Network Analysis"),
@@ -30,7 +40,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       )
     })
 
-    my_observers[[2]] <- observe({
+    my_observers[[3]] <- observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -67,19 +77,44 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
         beta <- as.numeric(input$pcsf_beta)
         ntop <- as.integer(input$pcsf_ntop)
         contrast <- input$contrast
+
+        if(pgx$datatype == "multi-omics") {
+          ## Multi-omics PCSF
+          info("[PcsfBoard:pcsf_compute] computing multi-omics PCSF...")
+          datatypes <- unique(playbase::mofa.get_prefix(rownames(pgx$X)))
+          if(all(c("gx","px") %in% datatypes)) {
+            datatypes <- setdiff(datatypes, c("gx"))
+          }
+          info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
+          pcsf <- playbase::pgx.computePCSF_multiomics(
+            pgx,
+            contrast,
+            datatypes = datatypes,
+            ntop = ntop,
+            ncomp = 3,
+            beta = 10^beta,
+            rm.negedge = TRUE,
+            highcor = 0.8, 
+            dir = "both",
+            ppi = c("STRING", "GRAPHITE"),
+            as.name = c("mx")
+          ) 
+        } else {
+          ## Single-omics PCSF
+          info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")
+          pcsf <- playbase::pgx.computePCSF(
+            pgx,
+            contrast,
+            level = "gene",
+            ntop = ntop,
+            ncomp = 2,
+            beta = 10^beta,
+            dir = "both",
+            rm.negedge = TRUE,
+            as.name = c("mx")
+          )
+        }
         
-        pcsf <- playbase::pgx.computePCSF(
-          pgx,
-          contrast,
-          level = "gene",
-          ntop = ntop,
-          ncomp = 2,
-          beta = 10^beta,
-          use.corweight = TRUE,
-          dir = "both",
-          rm.negedge = TRUE,
-          as.name = c("mx")
-        )
         if (is.null(pcsf)) {
           validate()
           shiny::validate(
@@ -98,6 +133,8 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       pgx,
       pcsf_compute = pcsf_compute,
       r_layout = shiny::reactive(input$layout),
+      r_cut = shiny::reactive(input$pcsf_cut),
+      r_nclust = shiny::reactive(input$pcsf_nclust),      
       watermark = WATERMARK
     )
 
@@ -108,6 +145,17 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       r_pcsf = pcsf_compute
     )
 
+    pcsf_gsetnetwork_server(
+      "gset_pcsf",
+      pgx,
+      r_contrast = shiny::reactive(input$contrast),
+      r_ntop = shiny::reactive(input$gset_ntop),
+      r_beta = shiny::reactive(input$gset_beta),
+      r_cut = shiny::reactive(input$gset_cut),
+      r_nclust = shiny::reactive(input$gset_nclust),      
+      watermark = WATERMARK
+    )
+    
     ## pcsf_plot_heatmap_server(
     ##   "pcsf_heatmap",
     ##   pgx,

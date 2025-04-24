@@ -73,7 +73,7 @@ pcsf_table_centrality_server <- function(id,
         df <- df[,cols, drop=FALSE]
       }      
       num.cols <- c("centrality", "logFC")
-
+      
       dt <- ui.DataTable(
         df,
         rownames = FALSE,

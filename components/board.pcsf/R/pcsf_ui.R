@@ -15,14 +15,9 @@ PcsfInputs <- function(id) {
       placement = "right"
     ),
     hr(),
-    withTooltip(
-      shiny::sliderInput(ns("pcsf_beta"), "Prize strength (beta):", -3, 2, 0, 1),
-      "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
-      placement = "right"
-    ),
     br(),
     bslib::accordion(
-      id = ns("compare_accordion"),
+      id = ns("pcsf_accordion"),
       open = FALSE,
       bslib::accordion_panel(
         "Options",
@@ -33,6 +28,61 @@ PcsfInputs <- function(id) {
             selected = 500, inline = TRUE
           ),
           "Select initial network size (number of top genes) for ."
+        ),
+        hr(),
+        withTooltip(
+          shiny::checkboxInput(ns("pcsf_cut"), "Cut clusters", FALSE),
+          "Cut network into smaller clusters"
+        ),
+        shiny::conditionalPanel(
+          "input.pcsf_cut == true",
+          ns = ns,
+          withTooltip(
+            shiny::selectInput(ns("pcsf_nclust"), "Number of clusters",
+                               choices = c(1,2,3,4,8,99), selected=8),
+            "Maximum number of components"
+          )
+        ),
+        hr(),
+        withTooltip(
+          shiny::sliderInput(ns("pcsf_beta"), "Prize strength (beta):", -3, 2, 0, 1),
+          "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
+          placement = "right"
+        )
+      )
+    ),
+    bslib::accordion(
+      id = ns("gset_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::radioButtons(ns("gset_ntop"), "Network size:",
+            choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
+            selected = 1000, inline = TRUE
+          ),
+          "Select initial network size (number of top genes) for ."
+        ),
+        hr(),
+        withTooltip(
+          shiny::checkboxInput(ns("gset_cut"), "Cut clusters", TRUE),
+          "Cut network into smaller clusters"
+        ),
+        shiny::conditionalPanel(
+          "input.gset_cut == true",
+          ns = ns,
+          withTooltip(
+            shiny::selectInput(ns("gset_nclust"), "Number of clusters",
+                               choices = c(1,2,3,4,8,99), selected=8),
+            "Maximum number of components"
+          )
+        ),
+        hr(),
+        withTooltip(
+          shiny::sliderInput(ns("gset_beta"), "Prize strength (beta):", -3, 2, 0, 1),
+          "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
+          placement = "right"
         )
       )
     )
@@ -50,7 +100,7 @@ PcsfUI <- function(id) {
       title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
     shiny::tabsetPanel(
-      id = ns("tabs1"),
+      id = ns("tabs"),
       shiny::tabPanel(
         "PCSF network",
         bslib::layout_columns(
@@ -80,7 +130,38 @@ PcsfUI <- function(id) {
             )
           )
         )
-      )
-    )
+      ), ## end tabpanel1
+      shiny::tabPanel(
+        "Geneset PCSF",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          bs_alert(pcsf_module_info),
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            height = "calc(100vh - 181px)",
+            pcsf_gsetnetwork_plot_ui(
+              ns("gset_pcsf"),
+              caption = paste(
+                "PCSF network analysis",
+                "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."
+              ),
+              info.text = pcsf_graph_info,
+              height = c("100%", "75vh"),
+              width = c("auto", "100%")
+            ),
+            pcsf_gsetnetwork_table_ui(
+              ns("gset_pcsf"),
+              title = "Centrality score",
+              info.text = "",
+              caption = "Table showing the centrality score of genes.",
+              width = c("100%", "100%"),
+              height = c("100%", TABLE_HEIGHT_MODAL)
+            )
+          )
+        )
+      ) ## end tabpanel2
+
+    ) ## end tabsetpanel
   )
 }

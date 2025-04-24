@@ -35,15 +35,6 @@ pcsf_plot_network_ui <- function(id, caption, info.text, height, width) {
         inline = FALSE
       ),
       "Highlight labels by scaling label size with selection."
-    ),
-    withTooltip(
-      shiny::radioButtons(ns("layout"), "Layout algorithm:",
-        choiceNames = c("Barnes-Hut", "Kamada-Kawai", "hierarchical"),
-        choiceValues = c("BH", "KK", "hierarchical"),
-        selected = "",
-        inline = FALSE
-      ),
-      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
     )
   )
 
@@ -73,7 +64,8 @@ pcsf_plot_network_server <- function(id,
                                      pgx,
                                      pcsf_compute,
                                      r_layout = reactive("KK"),
-                                     ##                                     highlightby = reactive("none"),
+                                     r_cut = reactive(FALSE),
+                                     r_nclust = reactive(8),
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -82,7 +74,12 @@ pcsf_plot_network_server <- function(id,
       # Update the network
       do.physics <- input$physics
       visNetwork::visNetworkProxy(ns("plotmodule-renderfigure")) %>%
-        visNetwork::visPhysics(enabled = do.physics)
+        visNetwork::visPhysics(
+          enabled = do.physics,
+          barnesHut = list(
+            centralGravity = 0.0  ## pull force to center [def: 0.3]
+          )
+        )
     })
 
     visnetwork.RENDER <- function() {
@@ -113,7 +110,9 @@ pcsf_plot_network_server <- function(id,
         plotlib = "visnet",
         node_cex = 30,
         label_cex = 30,
-        nlabel = -1
+        nlabel = -1,
+        cut.clusters = as.logical(r_cut()),
+        nlargest = as.integer(r_nclust())
       )
 
       plt
