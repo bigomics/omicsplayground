@@ -440,8 +440,8 @@ upload_module_computepgx_server <- function(
         colnames(Y) <- tolower(colnames(Y))
         Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
         
-        time.var <- c("minute", "hour", "day", "week", "month", "year", "age", "time")
-        sel.time <- intersect(time.var, colnames(Y))
+        time.var <- playbase::get_timevars()
+        sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
 
         if (length(sel.time) && length(unique(Y[, sel.time[1]]))>1) {
           
