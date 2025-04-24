@@ -17,7 +17,7 @@ test_that("example data loads with no error",{
   all_boards <- boards[!boards %in% c("tcga", "signature")]
 
   # get all pgx files
-  pgx_files <- list.files(normalizePath("../../data"), pattern = "*.pgx", full.names = TRUE)
+  pgx_files <- list.files(normalizePath("../../data/pgx_results"), pattern = "*.pgx", full.names = TRUE)
 
   authentication <- options()$authentication
 
@@ -25,7 +25,7 @@ test_that("example data loads with no error",{
     message(pgx_file)
     pgx <- playbase::pgx.load(pgx_file)
     boards <- all_boards[all_boards %in% names(pgx)]
-    boards <- c("dataview", "enrichment", "clustering", "compare", "correlation", "expression", "pathway", boards)
+    boards <- c("dataview", "enrichment", "clustering", "featuremap", "compare", "correlation", "expression", "pathway", "timeseries", "biomarker", "signature", "intersection", boards)
     if ("mofa" %in% boards) {
       boards <- c(boards, "snf", "lasagna", "deepnet", "mgsea")
     }
