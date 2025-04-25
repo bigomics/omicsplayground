@@ -91,7 +91,7 @@ renv: FORCE
 FORCE: ;
 
 DATE = `date +%y%m%d|sed 's/\ //g'`
-VERSION = "4.alpha"
+VERSION = "4.0-beta"
 BUILD := $(VERSION)"+"$(BRANCH)""$(DATE)
 
 version: FORCE
@@ -135,3 +135,6 @@ app.test.review:
 
 update:
 	Rscript dev/update_packages.R
+
+git.prune:
+	git fetch -p && git branch --merged | grep -v '*' | grep -v 'master' | grep -v 'devel' | xargs git branch -d

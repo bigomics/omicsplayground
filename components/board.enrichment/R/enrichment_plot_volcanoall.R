@@ -53,6 +53,7 @@ enrichment_plot_volcanoall_server <- function(id,
                                               gs_statmethod,
                                               gs_fdr,
                                               gs_lfc,
+                                              show_pv,
                                               calcGsetMeta,
                                               gset_selected,
                                               watermark = FALSE) {
@@ -93,28 +94,36 @@ enrichment_plot_volcanoall_server <- function(id,
       sel.gsets <- gset_collections[[gs_features()]]
 
       # Calc. meta scores and get Q and FC
-      FC <- vector("list", length(meta))
-      Q <- vector("list", length(meta))
-      names(FC) <- names(meta)
-      names(Q) <- names(meta)
+      FC <- Q <- P <- vector("list", length(meta))
+      names(FC) <- names(Q) <- names(P) <- names(meta)
+      i = 1
       for (i in names(meta)) {
         mx <- calcGsetMeta(i, gsmethod, pgx = pgx)
         FC[[i]] <- mx[, "fc", drop = FALSE]
         Q[[i]] <- mx[, "qv", drop = FALSE]
+        P[[i]] <- mx[, "pv", drop = FALSE]
       }
-
+      
       # Prepare output matrices
       matF <- do.call(cbind, FC)
       matQ <- do.call(cbind, Q)
-      colnames(matF) <- names(FC)
-      colnames(matQ) <- names(FC)
+      matP <- do.call(cbind, P)
+      colnames(matF) <- colnames(matQ) <- colnames(matP) <- names(FC)
 
+      S <- matQ
+      title_y <- "Significance (-log10q)"
+      if (show_pv()) {
+        S <- matP
+        title_y <- "Significance (-log10p)"
+      }      
+      
       pd <- list(
         FC = matF,
-        Q = matQ,
+        S = S,
         sel.gsets = sel.gsets,
         fdr = fdr,
         lfc = lfc,
+        title_y = title_y,
         gset_selected = gset_selected()
       )
       pd
@@ -126,20 +135,22 @@ enrichment_plot_volcanoall_server <- function(id,
 
       # Input vars
       F <- pd$FC
-      Q <- pd$Q
+      S <- pd$S
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
+      title_y <- pd[["title_y"]]
+      
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = F,
-        Q = Q,
+        Q = S,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
         names = rownames(F),
         source = "enrich_volcanoall",
-        title_y = "significance (-log10q)",
-        title_x = "effect size (log2FC)",
+        title_x = "Effect size (log2FC)",
+        title_y = title_y,
         share_axis = !input$scale_per_method,
         yrange = yrange,
         n_rows = n_rows,
@@ -150,7 +161,6 @@ enrichment_plot_volcanoall_server <- function(id,
         highlight = pd[["gset_selected"]],
         label = pd[["gset_selected"]]
       )
-
 
       return(all_plts)
     }

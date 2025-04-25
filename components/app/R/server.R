@@ -739,6 +739,7 @@ app_server <- function(input, output, session) {
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
     tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
     tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
+    tabRequireTS(PGX, session, "timeseries-tab", TRUE)
     gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
     for (tab_i in gset_tabs) {
       tabRequire(PGX, session, tab_i, "gsetX", TRUE)

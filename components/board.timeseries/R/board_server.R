@@ -58,7 +58,7 @@ TimeSeriesBoard <- function(id,
     shiny::observeEvent( pgx$samples, {
       ## set time variable
       vars <- sort(colnames(pgx$samples))
-      timevars <- unique( c(grep("time|second|minute|day|week|month|year", vars, value=TRUE, ignore.case=TRUE), vars))
+      timevars <- unique( c(grep(playbase::get_timevars(), vars, value=TRUE, ignore.case=TRUE), vars))
       shiny::updateSelectInput(session, "timevar", choices=timevars, selected=timevars[1])
 
       ## set available contrasts
