@@ -51,11 +51,13 @@ upload_module_computepgx_server <- function(
       GENETEST.METHODS <- function() {
         if (upload_datatype() == "RNA-seq") {
           mm <- c(
-            "ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma", "voom.limma", 
+            "ttest", "ttest.welch", "trend.limma", "voom.limma", 
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
-        } else {
+        } else if (upload_datatype() == "scRNA-seq") {
           mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
+        } else {
+          mm <- c("ttest", "ttest.welch", "trend.limma")
         }
         if (opt$ALLOW_CUSTOM_FC) {
           mm <- c(mm, "custom")
@@ -66,8 +68,10 @@ upload_module_computepgx_server <- function(
       GENETEST.SELECTED <- function() {
         if (upload_datatype() == "RNA-seq") {
           mm <- c("trend.limma", "deseq2.wald", "edger.qlf")
-        } else  {
+        } else if (upload_datatype() == "scRNA-seq") {
           mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
+        } else {
+          mm <- c("ttest", "trend.limma")
         }
         return(mm)
       }
@@ -75,12 +79,12 @@ upload_module_computepgx_server <- function(
       ## statistical method for GENESET level testing
       GENESET.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "rank correlation"="spearman", "camera", "fry")
+          mm <- c("fisher", "fgsea", "rank correlation"="spearman")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "rank correlation"="spearman")
         } else {
           mm <- c("fisher", "fgsea", "ssgsea+limma" = "ssgsea", "gsva+limma" = "gsva",
-            "rank correlation"="spearman", "camera", "fry")
+            "rank correlation"="spearman")
         }
         return(mm)
       }
