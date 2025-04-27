@@ -39,7 +39,7 @@ PcsfInputs <- function(id) {
           ns = ns,
           withTooltip(
             shiny::selectInput(ns("pcsf_nclust"), "Number of clusters",
-                               choices = c(1,2,3,4,8,99), selected=8),
+                               choices = c(1,4,9,16,25,99), selected=9),
             "Maximum number of components"
           )
         ),
@@ -74,7 +74,7 @@ PcsfInputs <- function(id) {
           ns = ns,
           withTooltip(
             shiny::selectInput(ns("gset_nclust"), "Number of clusters",
-                               choices = c(1,2,3,4,8,99), selected=8),
+                               choices = c(1,4,9,16,25,99), selected=9),
             "Maximum number of components"
           )
         ),
