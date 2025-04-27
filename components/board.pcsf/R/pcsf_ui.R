@@ -24,8 +24,8 @@ PcsfInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         withTooltip(
           shiny::radioButtons(ns("pcsf_ntop"), "Network size:",
-            choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
-            selected = 500, inline = TRUE
+            choices = c("S" = 200, "M" = 400, "L" = 800, "XL" = 1600),
+            selected = 400, inline = TRUE
           ),
           "Select initial network size (number of top genes) for ."
         ),
@@ -102,63 +102,82 @@ PcsfUI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
-        "PCSF network",
+        "Gene PCSF",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
+          ##--------- begin tab content ------------
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
             height = "calc(100vh - 181px)",
-            pcsf_plot_network_ui(
-              ns("pcsf_network"),
-              caption = paste(
-                "PCSF network analysis",
-                "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."
+            bslib::layout_columns(
+              col_widths = c(12),
+              pcsf_gset_seriesplot_ui(
+                ns("genepanel"),
+                caption = "",
+                info.text = pcsf_graph_info,
+                height = c("100%", "75vh"),
+                width = c("auto", "100%")
               ),
+              pcsf_gset_table_ui(
+                ns("genepanel"),
+                title = "Centrality score",
+                info.text = "",
+                caption = "Table showing the centrality score of genes.",
+                width = c("100%", "100%"),
+                height = c("100%", TABLE_HEIGHT_MODAL)
+              )
+            ),
+            pcsf_gset_networkplot_ui(
+              ns("genepanel"),
+              caption = "PCSF network analysis. Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks.",
               info.text = pcsf_graph_info,
               height = c("100%", "75vh"),
               width = c("auto", "100%")
-            ),
-            pcsf_table_centrality_ui(
-              ns("centrality_table"),
-              title = "Centrality score",
-              info.text = "",
-              caption = "Table showing the centrality score of genes.",
-              width = c("100%", "100%"),
-              height = c("100%", TABLE_HEIGHT_MODAL)
-            )
+            )            
           )
+          ##--------- end tab content ------------            
         )
-      ), ## end tabpanel1
+      ),  ## end tabpanel2
+
       shiny::tabPanel(
         "Geneset PCSF",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
+          ##--------- begin tab content ------------
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
             height = "calc(100vh - 181px)",
-            pcsf_gsetnetwork_plot_ui(
-              ns("gset_pcsf"),
-              caption = paste(
-                "PCSF network analysis",
-                "Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks."
+            bslib::layout_columns(
+              col_widths = c(12),
+              pcsf_gset_seriesplot_ui(
+                ns("gsetpanel"),
+                caption = "",
+                info.text = pcsf_graph_info,
+                height = c("100%", "75vh"),
+                width = c("auto", "100%")
               ),
+              pcsf_gset_table_ui(
+                ns("gsetpanel"),
+                title = "Centrality score",
+                info.text = "",
+                caption = "Table showing the centrality score of genes.",
+                width = c("100%", "100%"),
+                height = c("100%", TABLE_HEIGHT_MODAL)
+              )
+            ),
+            pcsf_gset_networkplot_ui(
+              ns("gsetpanel"),
+              caption = "PCSF network analysis. Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks.",
               info.text = pcsf_graph_info,
               height = c("100%", "75vh"),
               width = c("auto", "100%")
-            ),
-            pcsf_gsetnetwork_table_ui(
-              ns("gset_pcsf"),
-              title = "Centrality score",
-              info.text = "",
-              caption = "Table showing the centrality score of genes.",
-              width = c("100%", "100%"),
-              height = c("100%", TABLE_HEIGHT_MODAL)
-            )
+            )            
           )
+          ##--------- end tab content ------------            
         )
       ) ## end tabpanel2
 

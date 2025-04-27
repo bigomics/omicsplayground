@@ -20,7 +20,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     my_observers <- list()
 
     tab_elements <- list(
-      "PCSF network" = list(disable = c("gset_accordion")),
+      "Gene PCSF" = list(disable = c("gset_accordion")),      
       "Geneset PCSF" = list(disable = c("pcsf_accordion"))
     )
 
@@ -60,7 +60,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
     ## =========================================================================
-    ## =========================== MODULES =====================================
+    ## =========================== FUNCTIONS ===================================
     ## =========================================================================
 
     ## PCSF  analysis
@@ -128,25 +128,23 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       }
     )
 
-    pcsf_plot_network_server(
-      "pcsf_network",
+    ## =========================================================================
+    ## =========================== PANELS ======================================
+    ## =========================================================================
+    
+    pcsf_genepanel_server(
+      "genepanel",
       pgx,
-      pcsf_compute = pcsf_compute,
-      r_layout = shiny::reactive(input$layout),
+      r_contrast = shiny::reactive(input$contrast),
+      r_ntop = shiny::reactive(input$pcsf_ntop),
+      r_beta = shiny::reactive(input$pcsf_beta),
       r_cut = shiny::reactive(input$pcsf_cut),
       r_nclust = shiny::reactive(input$pcsf_nclust),      
       watermark = WATERMARK
     )
 
-    pcsf_table_centrality_server(
-      "centrality_table",
-      pgx,
-      r_contrast = shiny::reactive(input$contrast),
-      r_pcsf = pcsf_compute
-    )
-
-    pcsf_gsetnetwork_server(
-      "gset_pcsf",
+    pcsf_gset_server(
+      "gsetpanel",
       pgx,
       r_contrast = shiny::reactive(input$contrast),
       r_ntop = shiny::reactive(input$gset_ntop),
@@ -155,12 +153,6 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       r_nclust = shiny::reactive(input$gset_nclust),      
       watermark = WATERMARK
     )
-    
-    ## pcsf_plot_heatmap_server(
-    ##   "pcsf_heatmap",
-    ##   pgx,
-    ##   pcsf_compute = pcsf_compute,
-    ##   watermark = WATERMARK
-    ## )
+
   })
 }

@@ -12,7 +12,7 @@
 #' @param height
 #'
 #' @export
-pcsf_gsetnetwork_plot_ui <- function(id, caption, info.text, height, width) {
+pcsf_gset_networkplot_ui <- function(id, caption, info.text, height, width) {
   ns <- shiny::NS(id)
 
   plot_opts <- tagList(
@@ -20,7 +20,7 @@ pcsf_gsetnetwork_plot_ui <- function(id, caption, info.text, height, width) {
       shiny::radioButtons(ns("layout"), "Layout algorithm:",
         choiceNames = c("Barnes-Hut", "Hierarchical", "Kamada-Kawai"),
         choiceValues = c("BH", "hierarchical", "KK"),
-        selected = "BH",
+        selected = "KK",
         inline = FALSE
       ),
       "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
@@ -31,10 +31,17 @@ pcsf_gsetnetwork_plot_ui <- function(id, caption, info.text, height, width) {
         ns("highlightby"),
         "Highlight labels by:",
         choices = c("centrality", "foldchange" = "prize"),
-        selected = "centrality",
+        selected = "prize",
         inline = FALSE
       ),
       "Highlight labels by scaling label size with selection."
+    ),
+    hr(),
+    withTooltip(
+      shiny::selectInput(
+        ns("numlabels"), "Number of labels:", choices = c(0,3,5,10,99),
+        selected=3 ),
+      "Numer of labels to show."
     )
   )
 
@@ -50,6 +57,7 @@ pcsf_gsetnetwork_plot_ui <- function(id, caption, info.text, height, width) {
     options = plot_opts,
     download.fmt = c("png", "pdf", "svg"),
   )
+
 }
 
 #' UI code for table code: expression board
@@ -60,7 +68,7 @@ pcsf_gsetnetwork_plot_ui <- function(id, caption, info.text, height, width) {
 #' @param width
 #'
 #' @export
-pcsf_gsetnetwork_table_ui <- function(
+pcsf_gset_table_ui <- function(
     id,
     title,
     info.text,
@@ -82,7 +90,30 @@ pcsf_gsetnetwork_table_ui <- function(
   )
 }
 
-pcsf_gsetnetwork_settings_ui <- function(id) {
+pcsf_gset_seriesplot_ui <- function(
+    id,
+    title,
+    info.text = "",
+    caption = "",
+    width = 400,
+    height = 400) {
+
+  ns <- shiny::NS(id)
+
+  PlotModuleUI(
+    id = ns("plotmodule2"),
+    title = "PCSF network analysis",
+    plotlib = "base",
+    caption = caption,
+    info.text = info.text,
+    height = height,
+    width = width,
+    ## options = plot_opts,
+    download.fmt = c("png", "pdf", "svg"),
+  )
+}
+
+pcsf_gset_settings_ui <- function(id) {
   ns <- shiny::NS(id)
   ## ??????????
 }
@@ -96,14 +127,14 @@ pcsf_gsetnetwork_settings_ui <- function(id) {
 #'
 #' @return
 #' @export
-pcsf_gsetnetwork_server <- function(id,
-                                    pgx,
-                                    r_contrast = shiny::reactive(NULL),
-                                    r_ntop = shiny::reactive(500),
-                                    r_beta = shiny::reactive(0),
-                                    r_cut = shiny::reactive(FALSE),
-                                    r_nclust = shiny::reactive(4),
-                                    watermark = FALSE) {
+pcsf_gset_server <- function(id,
+                             pgx,
+                             r_contrast = shiny::reactive(NULL),
+                             r_ntop = shiny::reactive(500),
+                             r_beta = shiny::reactive(0),
+                             r_cut = shiny::reactive(FALSE),
+                             r_nclust = shiny::reactive(4),
+                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -120,22 +151,24 @@ pcsf_gsetnetwork_server <- function(id,
         )
     })
     
-    gset_pcsf <- shiny::eventReactive(
+    solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, r_contrast(), r_ntop(), r_beta(), r_nclust() )
+        #list( pgx$X, r_contrast(), r_ntop(), r_beta() )
+        list( pgx$X, r_ntop(), r_beta() )        
       },
       {
         shiny::req(pgx$X)
-        comparisons <- colnames(pgx$model.parameters$contr.matrix)        
-        shiny::req(r_contrast() %in% comparisons)
-        
+#        comparisons <- colnames(pgx$model.parameters$contr.matrix)        
+#        shiny::req(r_contrast() %in% comparisons)
+
+        beta=1;ntop=400;contrast=2
         beta <- 10^as.numeric(r_beta())
         ntop <- as.integer(r_ntop())
-        contrast <- r_contrast()
+#        contrast <- r_contrast()
         
         pcsf <- playbase::pgx.computePCSF_gset(
           pgx,
-          contrast,
+          contrast = NULL,
           gset.filter = "ext2",              
           gmt.rho = 0.8,
           highcor = 0.9,
@@ -158,15 +191,42 @@ pcsf_gsetnetwork_server <- function(id,
         return(pcsf)
       }
     )
+
+    gset_pcsf <- reactive({
+      pcsf <- solve_pcsf()
+      if(r_cut()) {
+        ncomp <- as.integer(r_nclust())
+        res <- playbase::pcsf.cut_and_relayout(pcsf, ncomp=ncomp)
+      } else {
+        pos <- igraph::layout_with_kk(pcsf, weights=NA)
+        rownames(pos) <- igraph::V(pcsf)$name
+        res <- list(
+          graph = pcsf,
+          layout = pos
+        )
+      }
+      return(res)
+    })
+
     
+    ##-----------------------------------------------------------------
+    ##---------------- visnetwork plot --------------------------------
+    ##-----------------------------------------------------------------
+
     visnetwork.RENDER <- function() {
       sel.layout <- input$layout
       req(sel.layout, input$highlightby)
-      
+            
+      ## compute PCSF
+      res <- gset_pcsf()
+      pcsf <- res$graph
+      layoutMatrix <- res$layout
+
       physics <- TRUE
       if (sel.layout == "hierarchical") {
         layout <- "hierarchical"
         physics <- FALSE
+        layoutMatrix <- NULL
       } else if (sel.layout == "KK") {
         layout <- "layout_with_kk"
         physics <- FALSE
@@ -176,24 +236,30 @@ pcsf_gsetnetwork_server <- function(id,
         physics <- TRUE
       }
       
-      ## compute PCSF
-      pcsf <- gset_pcsf()
-      
-      nclust <- as.integer(r_nclust())
-      dbg("[gset_pcsf] nclust=",nclust)
+      comparisons <- colnames(pgx$model.parameters$contr.matrix)        
+      shiny::req(r_contrast() %in% comparisons)
+      F <- playbase::pgx.getMetaMatrix(pgx, level='geneset')$fc
+      contrast <- r_contrast()
+      fx <- F[igraph::V(pcsf)$name, contrast]
 
+      igraph::V(pcsf)$foldchange <- fx
+      igraph::V(pcsf)$prize <- abs(fx)
+      
       plt <- playbase::plotPCSF(
         pcsf,
+        # colorby = fx,
         highlightby = input$highlightby,
         layout = layout,
+        layoutMatrix = layoutMatrix,
         physics = physics,
         plotlib = "visnet",
-        node_cex = 30,
-        label_cex = 30,
-        nlabel = 10,
-        border_width = 0.4,
-        cut.clusters = r_cut(),
-        nlargest = nclust
+        node_cex = 1.8,
+        label_cex = 0.6,
+        nlabel = as.integer(input$numlabels),
+        border_width = 0,
+        edge_length = 60,
+        cut.clusters = FALSE,
+        nlargest = -1
       )
       
       return(plt)
@@ -210,16 +276,69 @@ pcsf_gsetnetwork_server <- function(id,
     )
 
     ##-----------------------------------------------------------------
+    ##------------------- series plot ---------------------------------
+    ##-----------------------------------------------------------------
+
+    series.RENDER <- function() {
+      sel.layout <- input$layout
+      req(sel.layout, input$highlightby)
+
+      F <- playbase::pgx.getMetaMatrix(pgx, level="geneset")$fc
+      colnames(F)
+
+      ## compute PCSF
+      res <- gset_pcsf()
+      graph <- res$graph
+      pos <- res$layout
+
+      nc <- ceiling(sqrt(ncol(F)))
+      nr <- ncol(F)/nc
+      par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)
+      i=1
+      for(i in 1:ncol(F)) {
+        fx <- F[,i]
+        fx <- fx[igraph::V(graph)$name]
+        playbase::plotPCSF(
+          graph,
+          colorby = fx,
+          plotlib = "igraph",
+          highlightby = "prize",
+          layoutMatrix = pos,
+          physics = TRUE, 
+          node_cex = 1,
+          nlabel = 1,
+          label_cex = 0.7,
+          border_width = 0.2,
+          cut.clusters = FALSE,
+          nlargest = -1
+        )
+        title( colnames(F)[i], cex.main=1.2 )
+      }
+
+    }
+
+    PlotModuleServer(
+      "plotmodule2",
+      func = series.RENDER,
+      plotlib = "base",
+      res = c(70, 120), ## resolution of plots      
+      pdf.width = 12,
+      pdf.height = 6,
+      add.watermark = watermark
+    )
+    
+    ##-----------------------------------------------------------------
     ##---------------- TABLE ------------------------------------------
     ##-----------------------------------------------------------------
     
     table_data <- function() {
 
       shiny::req(r_contrast())
+      res <- gset_pcsf()
       df <- playbase::pgx.getPCSFcentrality(
         pgx,
         contrast = r_contrast(),
-        pcsf = gset_pcsf(),
+        pcsf = res$graph,
         level = "geneset",
         n = 100,
         plot = FALSE
