@@ -151,6 +151,7 @@ PcsfUI <- function(id) {
               col_widths = c(12),
               pcsf_gsetpanel_seriesplot_ui(
                 ns("gsetpanel"),
+                title = "Centrality score",
                 caption = "",
                 info.text = pcsf_graph_info,
                 height = c("100%", "75vh"),

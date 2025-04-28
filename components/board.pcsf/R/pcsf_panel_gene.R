@@ -37,7 +37,7 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
   
   PlotModuleUI(
     id = ns("plotmodule"),
-    title = "PCSF network analysis",
+    title = "Interactive network",
     plotlib = "visnetwork",
     caption = caption,
     info.text = info.text,
@@ -99,7 +99,7 @@ pcsf_genepanel_seriesplot_ui <- function(
 
   PlotModuleUI(
     id = ns("plotmodule2"),
-    title = "PCSF network analysis",
+    title = "Network by comparison",
     plotlib = "base",
     options = options,
     caption = caption,
