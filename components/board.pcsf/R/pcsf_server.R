@@ -62,71 +62,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     ## =========================================================================
     ## =========================== FUNCTIONS ===================================
     ## =========================================================================
-
-    ## PCSF  analysis
-    pcsf_compute <- shiny::eventReactive(
-      {
-        list(pgx$X, input$contrast, input$pcsf_beta, input$pcsf_ntop)
-      },
-      {
-        shiny::req(pgx$X, input$contrast, input$pcsf_ntop)
-        comparisons <- colnames(pgx$model.parameters$contr.matrix)
-
-        shiny::req(input$contrast %in% comparisons)
-
-        beta <- as.numeric(input$pcsf_beta)
-        ntop <- as.integer(input$pcsf_ntop)
-        contrast <- input$contrast
-
-        if(pgx$datatype == "multi-omics") {
-          ## Multi-omics PCSF
-          info("[PcsfBoard:pcsf_compute] computing multi-omics PCSF...")
-          datatypes <- unique(playbase::mofa.get_prefix(rownames(pgx$X)))
-          if(all(c("gx","px") %in% datatypes)) {
-            datatypes <- setdiff(datatypes, c("gx"))
-          }
-          info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
-          pcsf <- playbase::pgx.computePCSF_multiomics(
-            pgx,
-            contrast,
-            datatypes = datatypes,
-            ntop = ntop,
-            ncomp = 3,
-            beta = 10^beta,
-            rm.negedge = TRUE,
-            highcor = 0.8, 
-            dir = "both",
-            ppi = c("STRING", "GRAPHITE"),
-            as.name = c("mx")
-          ) 
-        } else {
-          ## Single-omics PCSF
-          info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")
-          pcsf <- playbase::pgx.computePCSF(
-            pgx,
-            contrast,
-            level = "gene",
-            ntop = ntop,
-            ncomp = 2,
-            beta = 10^beta,
-            dir = "both",
-            rm.negedge = TRUE,
-            as.name = c("mx")
-          )
-        }
-        
-        if (is.null(pcsf)) {
-          validate()
-          shiny::validate(
-            !is.null(pcsf),
-            "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size."
-          )
-          return(NULL)
-        }
-        
-        pcsf
-      }
-    )
+    
 
     ## =========================================================================
     ## =========================== PANELS ======================================
@@ -136,21 +72,13 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       "genepanel",
       pgx,
       r_contrast = shiny::reactive(input$contrast),
-      r_ntop = shiny::reactive(input$pcsf_ntop),
-      r_beta = shiny::reactive(input$pcsf_beta),
-      r_cut = shiny::reactive(input$pcsf_cut),
-      r_nclust = shiny::reactive(input$pcsf_nclust),      
       watermark = WATERMARK
     )
 
-    pcsf_gset_server(
+    pcsf_gsetpanel_server(
       "gsetpanel",
       pgx,
       r_contrast = shiny::reactive(input$contrast),
-      r_ntop = shiny::reactive(input$gset_ntop),
-      r_beta = shiny::reactive(input$gset_beta),
-      r_cut = shiny::reactive(input$gset_cut),
-      r_nclust = shiny::reactive(input$gset_nclust),      
       watermark = WATERMARK
     )
 

@@ -22,33 +22,32 @@ PcsfInputs <- function(id) {
       bslib::accordion_panel(
         "Options",
         icon = icon("cog", lib = "glyphicon"),
-        withTooltip(
-          shiny::radioButtons(ns("pcsf_ntop"), "Network size:",
-            choices = c("S" = 200, "M" = 400, "L" = 800, "XL" = 1600),
-            selected = 400, inline = TRUE
-          ),
-          "Select initial network size (number of top genes) for ."
-        ),
-        hr(),
-        withTooltip(
-          shiny::checkboxInput(ns("pcsf_cut"), "Cut clusters", FALSE),
-          "Cut network into smaller clusters"
-        ),
-        shiny::conditionalPanel(
-          "input.pcsf_cut == true",
-          ns = ns,
-          withTooltip(
-            shiny::selectInput(ns("pcsf_nclust"), "Number of clusters",
-                               choices = c(1,4,9,16,25,99), selected=9),
-            "Maximum number of components"
-          )
-        ),
-        hr(),
-        withTooltip(
-          shiny::sliderInput(ns("pcsf_beta"), "Prize strength (beta):", -3, 2, 0, 1),
-          "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
-          placement = "right"
-        )
+        pcsf_genepanel_settings_ui(ns("genepanel"))
+        ## withTooltip(
+        ##   shiny::radioButtons(
+        ##     ns("pcsf_ntop"), "Network size:",
+        ##     choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
+        ##     selected = 500, inline = TRUE
+        ##   ),
+        ##   "Select initial network size (number of top genes) for ."
+        ## ),
+        ## hr(),
+        ## withTooltip(
+        ##   shiny::checkboxInput(ns("pcsf_cut"), "Cut clusters", FALSE),
+        ##   "Cut network into smaller clusters"
+        ## ),
+        ## shiny::conditionalPanel(
+        ##   "input.pcsf_cut == true",
+        ##   ns = ns,
+        ##   withTooltip(
+        ##     shiny::selectInput(ns("pcsf_nclust"), "Number of clusters",
+        ##                        choices = c(1,4,9,16,25,99), selected=9),
+        ##     "Maximum number of components"
+        ##   ),
+        ##   shiny::selectInput(ns("pcsf_resolution"), "Resolution",
+        ##                        choices = c(0.01,0.05,0.1,0.2,0.5,1), selected=0.1)
+        ## ),
+        ## hr()        
       )
     ),
     bslib::accordion(
@@ -57,33 +56,30 @@ PcsfInputs <- function(id) {
       bslib::accordion_panel(
         "Options",
         icon = icon("cog", lib = "glyphicon"),
-        withTooltip(
-          shiny::radioButtons(ns("gset_ntop"), "Network size:",
-            choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
-            selected = 1000, inline = TRUE
-          ),
-          "Select initial network size (number of top genes) for ."
-        ),
-        hr(),
-        withTooltip(
-          shiny::checkboxInput(ns("gset_cut"), "Cut clusters", TRUE),
-          "Cut network into smaller clusters"
-        ),
-        shiny::conditionalPanel(
-          "input.gset_cut == true",
-          ns = ns,
-          withTooltip(
-            shiny::selectInput(ns("gset_nclust"), "Number of clusters",
-                               choices = c(1,4,9,16,25,99), selected=9),
-            "Maximum number of components"
-          )
-        ),
-        hr(),
-        withTooltip(
-          shiny::sliderInput(ns("gset_beta"), "Prize strength (beta):", -3, 2, 0, 1),
-          "Select prize strength. Smaller beta value corresponds to lower node prizes resulting in smaller solution size. A larger beta value corresponds to higher node prizes resulting in a larger graph (more greedy solution).",
-          placement = "right"
-        )
+        pcsf_gsetpanel_settings_ui(ns("gsetpanel"))
+        ## withTooltip(
+        ##   shiny::radioButtons(ns("gset_ntop"), "Network size:",
+        ##     choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
+        ##     selected = 1000, inline = TRUE
+        ##   ),
+        ##   "Select initial network size (number of top genes) for ."
+        ## ),
+        ## hr(),
+        ## withTooltip(
+        ##   shiny::checkboxInput(ns("gset_cut"), "Cut clusters", TRUE),
+        ##   "Cut network into smaller clusters"
+        ## ),
+        ## shiny::conditionalPanel(
+        ##   "input.gset_cut == true",
+        ##   ns = ns,
+        ##   withTooltip(
+        ##     shiny::selectInput(ns("gset_nclust"), "Number of clusters",
+        ##       choices = c(1,4,9,16,25,99), selected=9),
+        ##     "Maximum number of components"
+        ##   ),
+        ##   shiny::selectInput(ns("gset_resolution"), "Resolution",
+        ##     choices = c(0.01,0.05,0.1,0.2,0.5,1), selected=0.1)
+        ## )
       )
     )
   )
@@ -113,14 +109,14 @@ PcsfUI <- function(id) {
             height = "calc(100vh - 181px)",
             bslib::layout_columns(
               col_widths = c(12),
-              pcsf_gset_seriesplot_ui(
+              pcsf_genepanel_seriesplot_ui(
                 ns("genepanel"),
                 caption = "",
                 info.text = pcsf_graph_info,
                 height = c("100%", "75vh"),
                 width = c("auto", "100%")
               ),
-              pcsf_gset_table_ui(
+              pcsf_genepanel_table_ui(
                 ns("genepanel"),
                 title = "Centrality score",
                 info.text = "",
@@ -129,7 +125,7 @@ PcsfUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL)
               )
             ),
-            pcsf_gset_networkplot_ui(
+            pcsf_genepanel_networkplot_ui(
               ns("genepanel"),
               caption = "PCSF network analysis. Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks.",
               info.text = pcsf_graph_info,
@@ -153,14 +149,14 @@ PcsfUI <- function(id) {
             height = "calc(100vh - 181px)",
             bslib::layout_columns(
               col_widths = c(12),
-              pcsf_gset_seriesplot_ui(
+              pcsf_gsetpanel_seriesplot_ui(
                 ns("gsetpanel"),
                 caption = "",
                 info.text = pcsf_graph_info,
                 height = c("100%", "75vh"),
                 width = c("auto", "100%")
               ),
-              pcsf_gset_table_ui(
+              pcsf_gsetpanel_table_ui(
                 ns("gsetpanel"),
                 title = "Centrality score",
                 info.text = "",
@@ -169,7 +165,7 @@ PcsfUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL)
               )
             ),
-            pcsf_gset_networkplot_ui(
+            pcsf_gsetpanel_networkplot_ui(
               ns("gsetpanel"),
               caption = "PCSF network analysis. Functional analysis of biological networks using Prize-collection Steiner Forest algorithm that determines high-confidence subnetworks.",
               info.text = pcsf_graph_info,

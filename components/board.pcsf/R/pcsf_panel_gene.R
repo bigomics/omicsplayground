@@ -17,38 +17,27 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
 
   plot_opts <- tagList(
     withTooltip(
-      shiny::radioButtons(ns("layout"), "Layout algorithm:",
-        choiceNames = c("Barnes-Hut", "Hierarchical", "Kamada-Kawai"),
-        choiceValues = c("BH", "hierarchical", "KK"),
-        selected = "KK",
-        inline = FALSE
-      ),
-      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
-    ),
-    hr(),
-    withTooltip(
       radioButtons(
         ns("highlightby"),
         "Highlight labels by:",
         choices = c("centrality", "foldchange" = "prize"),
         selected = "prize",
-        inline = FALSE
+        inline = TRUE
       ),
       "Highlight labels by scaling label size with selection."
     ),
     hr(),
     withTooltip(
       shiny::selectInput(
-        ns("numlabels"), "Number of labels:", choices = c(0,3,5,10,99),
-        selected=3 ),
+        ns("numlabels"), "Number of labels:", choices = c(0,3,5,10,20,999),
+        selected = 10 ),
       "Numer of labels to show."
     )
   )
-
+  
   PlotModuleUI(
     id = ns("plotmodule"),
     title = "PCSF network analysis",
-    label = "a",
     plotlib = "visnetwork",
     caption = caption,
     info.text = info.text,
@@ -99,11 +88,20 @@ pcsf_genepanel_seriesplot_ui <- function(
     height = 400) {
 
   ns <- shiny::NS(id)
+  options <- tagList(
+    withTooltip(
+      shiny::selectInput(
+        ns("series_numlabels"), "Number of labels:", choices = c(0,3,5,10,20,999),
+        selected = 0 ),
+      "Numer of labels to show."
+    )
+  )
 
   PlotModuleUI(
     id = ns("plotmodule2"),
     title = "PCSF network analysis",
     plotlib = "base",
+    options = options,
     caption = caption,
     info.text = info.text,
     height = height,
@@ -115,7 +113,40 @@ pcsf_genepanel_seriesplot_ui <- function(
 
 pcsf_genepanel_settings_ui <- function(id) {
   ns <- shiny::NS(id)
-  ## ??????????
+  tagList(
+    withTooltip(
+      shiny::radioButtons(ns("ntop"), "Network size:",
+        choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
+        selected = 1000, inline = TRUE
+      ),
+      "Select initial network size (number of top genes) for ."
+    ),
+    hr(),
+    withTooltip(
+      shiny::selectInput(ns("layout.method"), "Layout algorithm:",
+        choices = c("Kamada-Kawai" = "kk","tree","circle"),        
+        selected = "kk"
+      ),
+      "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
+    ),
+    shiny::checkboxInput(ns("physics"),"enable physics",FALSE),    
+    hr(),
+    withTooltip(
+      shiny::checkboxInput(ns("cut"), "Cut clusters", TRUE),
+      "Cut network into smaller clusters"
+    ),
+    shiny::conditionalPanel(
+      "input.cut == true",
+      ns = ns,
+      withTooltip(
+        shiny::selectInput(ns("nclust"), "Number of clusters",
+          choices = c(1,4,9,16,25,99), selected=9),
+        "Maximum number of components"
+      ),
+      shiny::selectInput(ns("resolution"), "Resolution",
+        choices = c(0.01,0.05,0.1,0.2,0.5,1), selected=0.1)
+    )
+  )
 }
 
 
@@ -130,20 +161,16 @@ pcsf_genepanel_settings_ui <- function(id) {
 pcsf_genepanel_server <- function(id,
                                   pgx,
                                   r_contrast = shiny::reactive(NULL),
-                                  r_ntop = shiny::reactive(500),
-                                  r_beta = shiny::reactive(0),
-                                  r_cut = shiny::reactive(FALSE),
-                                  r_nclust = shiny::reactive(4),
                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     observeEvent(input$physics, {
       # Update the network
-      do.physics <- input$physics
+      dbg("[pcsf_gene_server:physics] id =", ns("plotmodule-renderfigure"))
       visNetwork::visNetworkProxy(ns("plotmodule-renderfigure")) %>%
         visNetwork::visPhysics(
-          enabled = do.physics,
+          enabled = input$physics,
           barnesHut = list(
             centralGravity = 0  ## pull force to center [def: 0.3]
           )
@@ -152,17 +179,13 @@ pcsf_genepanel_server <- function(id,
     
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, r_contrast(), r_ntop(), r_beta() )
+        list( pgx$X, input$ntop )        
       },
       {
         shiny::req(pgx$X)
-        comparisons <- colnames(pgx$model.parameters$contr.matrix)        
-        shiny::req(r_contrast() %in% comparisons)
+        ntop <- as.integer(input$ntop)
 
-        beta=1;ntop=400;contrast=2
-        beta <- 10^as.numeric(r_beta())
-        ntop <- as.integer(r_ntop())
-        contrast <- r_contrast()
+        dbg("[pcsf_genepanel:solve_pcsf] 2:")
         
         if(pgx$datatype == "multi-omics") {
           ## Multi-omics PCSF
@@ -174,11 +197,11 @@ pcsf_genepanel_server <- function(id,
           info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
           pcsf <- playbase::pgx.computePCSF_multiomics(
             pgx,
-            contrast,
+            contrast = NULL,
             datatypes = datatypes,
             ntop = ntop,
             ncomp = 3,
-            beta = beta,
+            beta = 1,
             rm.negedge = TRUE,
             highcor = 0.8, 
             dir = "both",
@@ -190,16 +213,17 @@ pcsf_genepanel_server <- function(id,
           info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")
           pcsf <- playbase::pgx.computePCSF(
             pgx,
-            contrast,
+            contrast = NULL,
             level = "gene",
             ntop = ntop,
             ncomp = 2,
-            beta = beta,
+            beta = 1,
             dir = "both",
             rm.negedge = TRUE,
             as.name = c("mx")
           )
         }
+        dbg("[pcsf_genepanel:solve_pcsf] 3:")
         
         if (is.null(pcsf)) {
           validate()
@@ -207,26 +231,51 @@ pcsf_genepanel_server <- function(id,
             !is.null(pcsf),
             "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size."
           )
+          dbg("[pcsf_genepanel:solve_pcsf] 3validate:")          
           return(NULL)
         }
+
+        dbg("[pcsf_genepanel:solve_pcsf] x: done!")
         
         return(pcsf)
       }
     )
 
     gene_pcsf <- reactive({
+
+      shiny::req(input$layout.method)
+      shiny::req(input$nclust)
+      
       pcsf <- solve_pcsf()
-      if(r_cut()) {
-        ncomp <- as.integer(r_nclust())
-        res <- playbase::pcsf.cut_and_relayout(pcsf, ncomp=ncomp)
+
+      input_cut <- input$cut
+      input_nclust <- input$nclust
+      input_resolution <- input$resolution
+      
+      if(input_cut) {
+        dbg("[pcsf_genepanel:gene_pcsf] 2a:")
+        ncomp <- as.integer(input$nclust)
+        res <- playbase::pcsf.cut_and_relayout(
+          pcsf,
+          ncomp = ncomp,
+          layout = input$layout.method,
+          cluster.method = c("louvain","leiden")[2],
+          leiden.resolution = as.numeric(input$resolution)
+        )
       } else {
-        pos <- igraph::layout_with_kk(pcsf, weights=NA)
-        rownames(pos) <- igraph::V(pcsf)$name
-        res <- list(
-          graph = pcsf,
-          layout = pos
+        dbg("[pcsf_genepanel:gene_pcsf] 2b:")
+        res <- playbase::pcsf.cut_and_relayout(
+          pcsf,
+          cut = FALSE,
+          layout = input$layout.method,
+          component.wise = FALSE,
+          ncomp = -1,
+          as_grid = FALSE
         )
       }
+
+      dbg("[pcsf_genepanel:gene_pcsf] x: done!")
+      
       return(res)
     })
 
@@ -236,32 +285,49 @@ pcsf_genepanel_server <- function(id,
     ##-----------------------------------------------------------------
 
     visnetwork.RENDER <- function() {
-      sel.layout <- input$layout
-      req(sel.layout, input$highlightby)
-            
+
+      dbg("[pcsf_genepanel:visnetwork.RENDER]0:")
+      
+      req(input$highlightby)
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 1: highlightby = ",input$highlightby)
+      
       ## compute PCSF
       res <- gene_pcsf()
       pcsf <- res$graph
       layoutMatrix <- res$layout
 
-      physics <- TRUE
-      if (sel.layout == "hierarchical") {
-        layout <- "hierarchical"
-        physics <- FALSE
-        layoutMatrix <- NULL
-      } else if (sel.layout == "KK") {
-        layout <- "layout_with_kk"
-        physics <- FALSE
-      } else {
-        ## barnesHut
-        layout <- "layout_with_kk"
-        physics <- TRUE
-      }
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 2: dim(layoutMatrix) = ",dim(layoutMatrix))
+      
+      physics <- FALSE
+      physics <- input$physics
+      
+      contrast <- r_contrast()
+      comparisons <- colnames(pgx$model.parameters$contr.matrix)        
+      shiny::req(contrast %in% comparisons)
+
+      F <- playbase::pgx.getMetaMatrix(pgx, level='gene')$fc
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 3b: rownames.F = ",head(rownames(F)))
+      F <- playbase::rename_by2(F, pgx$genes, "symbol", keep.prefix=TRUE)
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 3c: rownames.F = ",head(rownames(F)))
+
+      shiny::req(contrast)
+
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 4: dim.F = ",dim(F))
+      vnames <- igraph::V(pcsf)$name
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 4: head.vnames = ",head(vnames))
+      
+      fx <- F[igraph::V(pcsf)$name, contrast]
+      igraph::V(pcsf)$foldchange <- fx
+      igraph::V(pcsf)$prize <- abs(fx)
+
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 5: lenght.fx = ",length(fx))
+      dbg("[pcsf_genepanel:visnetwork.RENDER] 5: len.V = ",length(igraph::V(pcsf)))
       
       plt <- playbase::plotPCSF(
         pcsf,
+        colorby = fx,
         highlightby = input$highlightby,
-        layout = layout,
+        layout = "layout.norm",
         layoutMatrix = layoutMatrix,
         physics = physics,
         plotlib = "visnet",
@@ -273,6 +339,8 @@ pcsf_genepanel_server <- function(id,
         cut.clusters = FALSE,
         nlargest = -1
       )
+
+      dbg("[pcsf_genepanel:visnetwork.RENDER] x: done!")
       
       return(plt)
     }
@@ -292,42 +360,42 @@ pcsf_genepanel_server <- function(id,
     ##-----------------------------------------------------------------
 
     series.RENDER <- function() {
-      sel.layout <- input$layout
-      req(sel.layout, input$highlightby)
-
+      req(input$highlightby)
+      
       ## compute PCSF
       res <- gene_pcsf()
       graph <- res$graph
-      pos <- res$layout
-
+      layout <- res$layout
+      
       F <- playbase::pgx.getMetaMatrix(pgx, level="gene")$fc
       F <- playbase::rename_by2(F, pgx$genes, "symbol", keep.prefix=TRUE)
       F <- F[igraph::V(graph)$name,]
-      colnames(F)
       
       nc <- ceiling(sqrt(ncol(F)))
-      nr <- ncol(F)/nc
+      nr <- ceiling(ncol(F)/nc)
       par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)
+      
       i=1
       for(i in 1:ncol(F)) {
         fx <- F[,i]
+        
         playbase::plotPCSF(
           graph,
           plotlib = "igraph",
           colorby = fx,
           highlightby = "prize",
-          layoutMatrix = pos,
+          layoutMatrix = layout,
           physics = TRUE, 
           node_cex = 1,
-          nlabel = 1,
-          label_cex = 0.5,
+          nlabel = as.integer(input$series_numlabels),
+          label_cex = 0.7,
           border_width = 0.2,
           cut.clusters = FALSE,
           nlargest = -1
         )
         title( colnames(F)[i], cex.main=1.2 )
       }
-
+      
     }
 
     PlotModuleServer(
