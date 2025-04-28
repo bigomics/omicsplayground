@@ -125,7 +125,7 @@ intersection_scatterplot_pairs_server <- function(id,
         ## Single pairs plot
         ## ----------------------------------------------------
 
-        rho <- cor(df[, 1], df[, 2])
+        rho <- cor(df[, 1], df[, 2], use = "pairwise")
         annot.rho <- list(
           text = paste("r=", round(rho, 4)),
           font = list(size = 14),
@@ -184,7 +184,7 @@ intersection_scatterplot_pairs_server <- function(id,
         dimensions <- lapply(colnames(df), function(a) list(label = a, values = df[, a]))
 
         ## compute correlations
-        rho <- cor(df)
+        rho <- cor(df, use = "pairwise")
         rho.text <- paste("r=", as.vector(round(rho, digits = 3)))
         n <- ncol(df)
 
