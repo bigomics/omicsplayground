@@ -6,7 +6,7 @@ searchTabs <- function(board) {
         featuremap = c("Gene", "Geneset"),
         expression = c("Overview", "Top features", "Volcano by comparison", "Volcano by method"),
         correlation = c("Correlation", "Graph"),
-        enrichment = c("Enrichment", "Geneset expression", "Enrichment by comparison", "Volcano by comparison", "Volcano by method"),
+        enrichment = c("Enrichment", "Gene expression", "Enrichment by comparison", "Volcano by comparison", "Volcano by method"),
         signature = c("Volcano plots", "Enrichment", "Overlap/similarity", "Markers"),
         pathway = c("WikiPathways", "Reactome", "GO graph"),
         intersection = c("Pairwise scatter", "Signature clustering"),
