@@ -66,7 +66,14 @@ wgcna_table_genes_server <- function(id,
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
       colnames(df) <- sub("traitSignificance","TS",colnames(df))
       colnames(df) <- sub("foldChange","logFC",colnames(df))
-      
+
+      # If trait is continuous, change logFC to rho
+      # cont trait is in pgx$samples, binary ones are name-converted (not in pgx$samples)
+      is.cont <- trait %in% colnames(pgx$samples)
+      if(is.cont) {
+        colnames(df) <- sub("logFC","rho",colnames(df))
+      }
+
       DT::datatable(
         df,
         rownames = FALSE,
