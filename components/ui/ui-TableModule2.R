@@ -437,7 +437,8 @@ ui.DataTable <- function(df, rownames = TRUE,
         dt <- dt %>%        
           DT::formatStyle(
             k,
-            background = color_from_middle(df[,k], "white", "#fec34d"),
+            #            background = color_from_middle(df[,k], "white", "#fec34d"),
+            background = color_from_middle(df[,k], "white", "#f5aeae"),
             backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
             backgroundPosition = "center"
           )

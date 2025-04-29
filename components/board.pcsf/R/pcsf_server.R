@@ -18,8 +18,17 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     ## ========================================================================
 
     my_observers <- list()
-    
-    my_observers[[1]] <- observeEvent(input$pcsf_info, {
+
+    tab_elements <- list(
+      "Gene PCSF" = list(disable = c("gset_accordion")),      
+      "Geneset PCSF" = list(disable = c("pcsf_accordion"))
+    )
+
+    my_observers[[1]] <- shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+        
+    my_observers[[2]] <- observeEvent(input$pcsf_info, {
       showModal(
         modalDialog(
           title = tags$strong("PCSF Network Analysis"),
@@ -30,7 +39,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       )
     })
 
-    my_observers[[2]] <- observe({
+    my_observers[[3]] <- observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -50,69 +59,27 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
     ## =========================================================================
-    ## =========================== MODULES =====================================
+    ## =========================== FUNCTIONS ===================================
     ## =========================================================================
+    
 
-    ## PCSF  analysis
-    pcsf_compute <- shiny::eventReactive(
-      {
-        list(pgx$X, input$contrast, input$pcsf_beta, input$pcsf_ntop)
-      },
-      {
-        shiny::req(pgx$X, input$contrast, input$pcsf_ntop)
-        comparisons <- colnames(pgx$model.parameters$contr.matrix)
-
-        shiny::req(input$contrast %in% comparisons)
-
-        beta <- as.numeric(input$pcsf_beta)
-        ntop <- as.integer(input$pcsf_ntop)
-        contrast <- input$contrast
-        
-        pcsf <- playbase::pgx.computePCSF(
-          pgx,
-          contrast,
-          level = "gene",
-          ntop = ntop,
-          ncomp = 2,
-          beta = 10^beta,
-          use.corweight = TRUE,
-          dir = "both",
-          rm.negedge = TRUE,
-          as.name = c("mx")
-        )
-        if (is.null(pcsf)) {
-          validate()
-          shiny::validate(
-            !is.null(pcsf),
-            "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size."
-          )
-          return(NULL)
-        }
-        
-        pcsf
-      }
-    )
-
-    pcsf_plot_network_server(
-      "pcsf_network",
+    ## =========================================================================
+    ## =========================== PANELS ======================================
+    ## =========================================================================
+    
+    pcsf_genepanel_server(
+      "genepanel",
       pgx,
-      pcsf_compute = pcsf_compute,
-      r_layout = shiny::reactive(input$layout),
+      r_contrast = shiny::reactive(input$contrast),
       watermark = WATERMARK
     )
 
-    pcsf_table_centrality_server(
-      "centrality_table",
+    pcsf_gsetpanel_server(
+      "gsetpanel",
       pgx,
       r_contrast = shiny::reactive(input$contrast),
-      r_pcsf = pcsf_compute
+      watermark = WATERMARK
     )
 
-    ## pcsf_plot_heatmap_server(
-    ##   "pcsf_heatmap",
-    ##   pgx,
-    ##   pcsf_compute = pcsf_compute,
-    ##   watermark = WATERMARK
-    ## )
   })
 }
