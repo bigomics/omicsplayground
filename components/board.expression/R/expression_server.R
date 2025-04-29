@@ -574,9 +574,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         return(NULL)
       }
       gene1 <- res[sel.row, ]
-
-      gmt_gene_mapping <- ifelse(is.na(gene1$human_ortholog), gene1$symbol, gene1$human_ortholog)
-
+      ##gmt_gene_mapping <- ifelse(is.na(gene1$human_ortholog), gene1$symbol, gene1$human_ortholog)
+      gmt_gene_mapping <- gene1$symbol, gene1$human_ortholog)
       j <- which(rownames(pgx$GMT) == gmt_gene_mapping)
       if (length(j) == 0) {
         return(NULL)
