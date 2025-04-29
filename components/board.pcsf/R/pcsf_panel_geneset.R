@@ -198,8 +198,6 @@ pcsf_gsetpanel_server <- function(id,
       },
       {
         shiny::req(pgx$X)
-
-        ntop=400;contrast=2
         ntop <- as.integer(input$ntop)
 
         contrast <- singlecontrast()
@@ -220,7 +218,7 @@ pcsf_gsetpanel_server <- function(id,
           gmt.rho = 0.8,
           highcor = 0.9,
           ntop = ntop,
-          ncomp = 5,
+          ncomp = 10,
           beta = 1,
           dir = "both",
           rm.negedge = TRUE
