@@ -7,6 +7,7 @@ mofa_plot_pathwayheatmap_ui <- function(
     id,
     title = "",
     info.text = "",
+    info.methods = "",
     caption = "",
     label = "",
     height = 400,
@@ -26,6 +27,7 @@ mofa_plot_pathwayheatmap_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
+    info.methods = info.methods,
     options = options,
     caption = caption,
     height = height,
@@ -92,6 +94,3 @@ mofa_plot_pathwayheatmap_server <- function(id,
     
   })
 }
-
-
-

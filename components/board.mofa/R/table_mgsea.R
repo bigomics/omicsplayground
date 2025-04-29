@@ -28,8 +28,8 @@ mofa_table_mgsea_server <- function(id,
                                    mgsea,
                                    input_k = reactive(1),
                                    top = 20
-                                   )
-{
+                                   ) {
+
   moduleServer(id, function(input, output, session) {
 
     csvFunc <- function() {
