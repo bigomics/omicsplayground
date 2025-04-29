@@ -218,7 +218,7 @@ pcsf_gsetpanel_server <- function(id,
           gmt.rho = 0.8,
           highcor = 0.9,
           ntop = ntop,
-          ncomp = 10,
+          ncomp = 5,
           beta = 1,
           dir = "both",
           rm.negedge = TRUE
