@@ -27,8 +27,7 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
     my_observers[[1]] <- shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-    
-    
+        
     my_observers[[2]] <- observeEvent(input$pcsf_info, {
       showModal(
         modalDialog(

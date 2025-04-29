@@ -118,12 +118,20 @@ pcsf_gsetpanel_settings_ui <- function(id) {
   tagList(
     withTooltip(
       shiny::radioButtons(ns("ntop"), "Network size:",
-        choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
-        selected = 1000, inline = TRUE
+        choices = c("S" = 250, "M" = 750, "L" = 2000),
+        selected = 750, inline = TRUE
       ),
       "Select initial network size (number of top genes) for ."
     ),
     hr(),    
+    withTooltip(
+      shiny::radioButtons(ns("mode"), "Solution mode:",
+        choices = c("single","common"),
+        selected = "single", inline = TRUE
+      ),
+      "Select solution mode. 'single' solves for selected comparison, 'common' solves across comparisons."
+    ),
+    hr(),
     withTooltip(
       shiny::selectInput(ns("layout.method"), "Layout algorithm:",
         choices = c("Kamada-Kawai" = "kk","tree","circle"),
@@ -134,7 +142,7 @@ pcsf_gsetpanel_settings_ui <- function(id) {
     shiny::checkboxInput(ns("physics"),"enable physics",FALSE),
     hr(),
     withTooltip(
-      shiny::checkboxInput(ns("cut"), "Cut clusters", TRUE),
+      shiny::checkboxInput(ns("cut"), "Cut clusters", FALSE),
       "Cut network into smaller clusters"
     ),
     shiny::conditionalPanel(
@@ -142,7 +150,7 @@ pcsf_gsetpanel_settings_ui <- function(id) {
       ns = ns,
       withTooltip(
         shiny::selectInput(ns("nclust"), "Number of clusters",
-          choices = c(1,4,9,16,25,99), selected=9),
+          choices = c(1,4,9,16,25,99), selected=16),
         "Maximum number of components"
       ),
       shiny::selectInput(ns("resolution"), "Resolution",
@@ -178,6 +186,11 @@ pcsf_gsetpanel_server <- function(id,
           )
         )
     })
+
+    singlecontrast <- reactive({
+      if(input$mode == "common") return(NULL)
+      r_contrast()
+    })
     
     solve_pcsf <- shiny::eventReactive(
       {
@@ -189,9 +202,12 @@ pcsf_gsetpanel_server <- function(id,
         ntop=400;contrast=2
         ntop <- as.integer(input$ntop)
 
-        dbg("[pcsf_gsetpanel_server::solve_pcsf] ntop = ", ntop)
-        
-        if(any(grepl("ext2",rownames(pgx$gsetX)))) {
+        contrast <- singlecontrast()
+        comparisons <- playbase::pgx.getContrasts(pgx)
+        if(input$mode == "single") shiny::req(contrast %in% comparisons)
+
+        ## If this is metabolomics, let's use ext2 only
+        if(FALSE && any(grepl("ext2",rownames(pgx$gsetX)))) {
           gset.filter <- "ext2"
         } else {
           gset.filter <- NULL
@@ -199,7 +215,7 @@ pcsf_gsetpanel_server <- function(id,
         
         pcsf <- playbase::pgx.computePCSF_gset(
           pgx,
-          contrast = NULL,
+          contrast = contrast,
           gset.filter = gset.filter,              
           gmt.rho = 0.8,
           highcor = 0.9,
@@ -240,7 +256,6 @@ pcsf_gsetpanel_server <- function(id,
           leiden.resolution = as.numeric(input_resolution)
         )
       } else {
-        dbg("[pcsf_genepanel:gene_pcsf] 2b:")
         res <- playbase::pcsf.cut_and_relayout(
           pcsf,
           cut = FALSE,
@@ -395,7 +410,7 @@ pcsf_gsetpanel_server <- function(id,
         num.cols = num.cols,
         color.cols = num.cols,
         substr.cols = c("geneset"),
-        substr.len = 60
+        substr.len = 100
       )
             
       return(dt)

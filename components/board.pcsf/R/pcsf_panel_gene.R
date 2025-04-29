@@ -116,10 +116,18 @@ pcsf_genepanel_settings_ui <- function(id) {
   tagList(
     withTooltip(
       shiny::radioButtons(ns("ntop"), "Network size:",
-        choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
-        selected = 1000, inline = TRUE
+        choices = c("S" = 250, "M" = 750, "L" = 1500),
+        selected = 750, inline = TRUE
       ),
       "Select initial network size (number of top genes) for ."
+    ),
+    hr(),
+    withTooltip(
+      shiny::radioButtons(ns("mode"), "Solution mode:",
+        choices = c("single","common"),
+        selected = "single", inline = TRUE
+      ),
+      "Select solution mode. 'single' solves for selected comparison, 'common' solves across comparisons."
     ),
     hr(),
     withTooltip(
@@ -132,7 +140,7 @@ pcsf_genepanel_settings_ui <- function(id) {
     shiny::checkboxInput(ns("physics"),"enable physics",FALSE),    
     hr(),
     withTooltip(
-      shiny::checkboxInput(ns("cut"), "Cut clusters", TRUE),
+      shiny::checkboxInput(ns("cut"), "Cut clusters", FALSE),
       "Cut network into smaller clusters"
     ),
     shiny::conditionalPanel(
@@ -140,7 +148,7 @@ pcsf_genepanel_settings_ui <- function(id) {
       ns = ns,
       withTooltip(
         shiny::selectInput(ns("nclust"), "Number of clusters",
-          choices = c(1,4,9,16,25,99), selected=9),
+          choices = c(1,4,9,16,25,99), selected=16),
         "Maximum number of components"
       ),
       shiny::selectInput(ns("resolution"), "Resolution",
@@ -176,16 +184,23 @@ pcsf_genepanel_server <- function(id,
           )
         )
     })
+
+    singlecontrast <- reactive({
+      if(input$mode == "common") return(NULL)
+      r_contrast()
+    })
     
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, input$ntop )        
+        list( pgx$X, input$ntop, singlecontrast() )        
       },
       {
         shiny::req(pgx$X)
         ntop <- as.integer(input$ntop)
 
-        dbg("[pcsf_genepanel:solve_pcsf] 2:")
+        contrast <- singlecontrast()
+        comparisons <- playbase::pgx.getContrasts(pgx)
+        if(input$mode == "single") shiny::req(contrast %in% comparisons)
         
         if(pgx$datatype == "multi-omics") {
           ## Multi-omics PCSF
@@ -197,7 +212,7 @@ pcsf_genepanel_server <- function(id,
           info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
           pcsf <- playbase::pgx.computePCSF_multiomics(
             pgx,
-            contrast = NULL,
+            contrast = contrast,
             datatypes = datatypes,
             ntop = ntop,
             ncomp = 3,
@@ -213,17 +228,16 @@ pcsf_genepanel_server <- function(id,
           info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")
           pcsf <- playbase::pgx.computePCSF(
             pgx,
-            contrast = NULL,
+            contrast = contrast,
             level = "gene",
             ntop = ntop,
             ncomp = 2,
             beta = 1,
             dir = "both",
             rm.negedge = TRUE,
-            as.name = c("mx")
+            as.name = c("mx")            
           )
         }
-        dbg("[pcsf_genepanel:solve_pcsf] 3:")
         
         if (is.null(pcsf)) {
           validate()
@@ -231,12 +245,9 @@ pcsf_genepanel_server <- function(id,
             !is.null(pcsf),
             "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size."
           )
-          dbg("[pcsf_genepanel:solve_pcsf] 3validate:")          
           return(NULL)
         }
 
-        dbg("[pcsf_genepanel:solve_pcsf] x: done!")
-        
         return(pcsf)
       }
     )
@@ -253,7 +264,6 @@ pcsf_genepanel_server <- function(id,
       input_resolution <- input$resolution
       
       if(input_cut) {
-        dbg("[pcsf_genepanel:gene_pcsf] 2a:")
         ncomp <- as.integer(input$nclust)
         res <- playbase::pcsf.cut_and_relayout(
           pcsf,
@@ -263,7 +273,6 @@ pcsf_genepanel_server <- function(id,
           leiden.resolution = as.numeric(input$resolution)
         )
       } else {
-        dbg("[pcsf_genepanel:gene_pcsf] 2b:")
         res <- playbase::pcsf.cut_and_relayout(
           pcsf,
           cut = FALSE,
@@ -273,8 +282,6 @@ pcsf_genepanel_server <- function(id,
           as_grid = FALSE
         )
       }
-
-      dbg("[pcsf_genepanel:gene_pcsf] x: done!")
       
       return(res)
     })
@@ -285,18 +292,13 @@ pcsf_genepanel_server <- function(id,
     ##-----------------------------------------------------------------
 
     visnetwork.RENDER <- function() {
-
-      dbg("[pcsf_genepanel:visnetwork.RENDER]0:")
       
       req(input$highlightby)
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 1: highlightby = ",input$highlightby)
       
       ## compute PCSF
       res <- gene_pcsf()
       pcsf <- res$graph
       layoutMatrix <- res$layout
-
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 2: dim(layoutMatrix) = ",dim(layoutMatrix))
       
       physics <- FALSE
       physics <- input$physics
@@ -306,22 +308,12 @@ pcsf_genepanel_server <- function(id,
       shiny::req(contrast %in% comparisons)
 
       F <- playbase::pgx.getMetaMatrix(pgx, level='gene')$fc
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 3b: rownames.F = ",head(rownames(F)))
       F <- playbase::rename_by2(F, pgx$genes, "symbol", keep.prefix=TRUE)
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 3c: rownames.F = ",head(rownames(F)))
 
-      shiny::req(contrast)
-
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 4: dim.F = ",dim(F))
-      vnames <- igraph::V(pcsf)$name
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 4: head.vnames = ",head(vnames))
-      
+      shiny::req(contrast)      
       fx <- F[igraph::V(pcsf)$name, contrast]
       igraph::V(pcsf)$foldchange <- fx
       igraph::V(pcsf)$prize <- abs(fx)
-
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 5: lenght.fx = ",length(fx))
-      dbg("[pcsf_genepanel:visnetwork.RENDER] 5: len.V = ",length(igraph::V(pcsf)))
       
       plt <- playbase::plotPCSF(
         pcsf,
@@ -339,8 +331,6 @@ pcsf_genepanel_server <- function(id,
         cut.clusters = FALSE,
         nlargest = -1
       )
-
-      dbg("[pcsf_genepanel:visnetwork.RENDER] x: done!")
       
       return(plt)
     }
