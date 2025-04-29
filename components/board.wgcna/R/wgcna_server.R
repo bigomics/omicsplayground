@@ -110,7 +110,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
         me <- sort(names(out$me.genes))
         shiny::updateSelectInput(session, "selected_module", choices = me,
                                  sel = me[1])
-        tt <- sort(colnames(out$datTraits))
+        tt <- sort(colnames(out$stats$foldChange))
         shiny::updateSelectInput(session, "selected_trait", choices = tt,
           selected = tt[1])
 
