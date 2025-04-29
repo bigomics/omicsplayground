@@ -165,17 +165,13 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
-      res <- playbase::pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
+      res <- playbase::pgx.computeGlassoAroundGene(
+        X, gene,
+        lambda = 0.01,
+        nmax = NTOP
+      )
       res$meta.pcor <- res$pcor
-
-      j <- which(rownames(res$pcor) == gene)
-      P <- res$pcor
-      diag(P) <- 0
-      rho1 <- min(head(sort(P, decreasing = TRUE), 200))
-      max1 <- round(max(P), digits = 3)
-      shiny::updateSliderInput(session, "cor_graph-cor_graph_threshold", value = rho1, max = max1)
-      shiny::updateSliderInput(session, "dcga_graph_threshold", value = rho1, max = max1)
-
+      
       res
     })
 
