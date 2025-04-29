@@ -118,7 +118,11 @@ pcsf_gsetpanel_settings_ui <- function(id) {
   tagList(
     withTooltip(
       shiny::radioButtons(ns("ntop"), "Network size:",
+<<<<<<< HEAD
         choices = c("S" = 250, "M" = 750, "L" = 2000),
+=======
+        choices = c("S" = 250, "M" = 750, "L" = 1500),
+>>>>>>> ac1f314973b08dd761fe43e0f6ffdfecd923e47a
         selected = 750, inline = TRUE
       ),
       "Select initial network size (number of top genes) for ."
