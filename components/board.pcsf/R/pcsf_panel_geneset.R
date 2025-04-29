@@ -408,7 +408,7 @@ pcsf_gsetpanel_server <- function(id,
         num.cols = num.cols,
         color.cols = num.cols,
         substr.cols = c("geneset"),
-        substr.len = 100
+        substr.len = 80
       )
             
       return(dt)
