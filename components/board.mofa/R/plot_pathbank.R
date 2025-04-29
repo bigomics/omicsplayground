@@ -16,6 +16,7 @@ mofa_plot_pathbank_ui <- function(
     id,
     label = "",
     title = "",
+    info.text = "",
     caption = "",
     height = 400,
     width = 400) {
@@ -25,6 +26,7 @@ mofa_plot_pathbank_ui <- function(
     id = ns("plotmodule"),
     title = title,
     label = label,
+    info.text = info.text,
     plotlib = "svgPanZoom",
     options = NULL,
     download.fmt = c("png", "pdf", "svg"),
