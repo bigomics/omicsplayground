@@ -24,14 +24,12 @@ correlation_plot_cor_graph_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  GRAPH.LAYOUTS <- c(
-    "Fruchterman-Reingold" = "fr", "Kamada-Kawai" = "kk",
-    "graphopt" = "graphopt", "tree layout" = "tree"
-  )
   cor_graph.opts <- shiny::tagList(
-    shiny::sliderInput(ns("cor_graph_radius"), "radius:", 1, 8, 3, 1),
-    shiny::sliderInput(ns("cor_graph_threshold"), "pcor threshold:", 0, 1, 0.90),
-    shiny::selectInput(ns("cor_graph_layout"), "layout:", choices = GRAPH.LAYOUTS)
+    shiny::checkboxInput(ns("physics"), "physics", FALSE),
+    shiny::checkboxInput(ns("as_mst"), "minimum spanning tree", FALSE),    
+    shiny::sliderInput(ns("graph_threshold"), "correlation threshold:", 0, 0.5, 0.1),
+    shiny::sliderInput(ns("graph_radius"), "maximum radius:", 1, 5, 3, 1)
+    ##shiny::sliderInput(ns("edge_degree"), "edge connectivity:", 0.1, 2, 1, 0.1),    
   )
 
   PlotModuleUI(
@@ -73,23 +71,21 @@ correlation_plot_cor_graph_server <- function(
       res <- getPartialCorrelationMatrix()
       gene <- "XIST"
       rho.min <- 0.3
-      layout <- "kk"
 
       gene <- gene()
-      rho.min <- input$cor_graph_threshold
-      layout <- input$cor_graph_layout
+      rho.min <- input$graph_threshold
       numnodes <- nrow(res$cor)
-      vsize <- ifelse(numnodes > 50, 10, 12)
-      vsize <- ifelse(numnodes > 100, 8, vsize)
-      radius <- as.integer(input$cor_graph_radius)
+      vsize <- ifelse(numnodes > 50, 15, 20)
+      vsize <- ifelse(numnodes > 100, 10, vsize)
+      radius <- as.integer(input$graph_radius)
 
       gr <- playbase::pgx.plotPartialCorrelationGraph(
         res,
         gene, ## what="graph", ## degree=deg,
         plot = FALSE,
         rho.min = rho.min,
+        nb = Inf,
         nsize = -1,
-        layout = layout,
         radius = radius,
         vsize = vsize,
         edge.width = 10
@@ -103,20 +99,24 @@ correlation_plot_cor_graph_server <- function(
         return(NULL)
       }
 
+      if(input$as_mst) {
+        gr <- igraph::mst(gr)
+      }
+      
       visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
       visdata$edges$width <- 2 * visdata$edges$width
 
       if (nrow(visdata$edges) == 0 && nrow(visdata$nodes) == 1) {
         visdata$edges <- data.frame(
           from = rownames(visdata$nodes),
-          to = rownames(visdata$nodes),
+          to   = rownames(visdata$nodes),
           weight = 1,
           rho = 1,
           width = 1,
           color = "fff"
         )
       }
-
+      
       graph <- visNetwork::visNetwork(
         nodes = visdata$nodes,
         edges = visdata$edges
@@ -124,8 +124,12 @@ correlation_plot_cor_graph_server <- function(
         visNetwork::visNodes(font = list(size = 12)) %>%
         visNetwork::visEdges(hidden = FALSE, width = 4, color = list(opacity = 0.9)) %>%
         visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
-        visNetwork::visIgraphLayout(layout = "layout_nicely")
-      graph
+        visNetwork::visIgraphLayout(
+          layout = "layout_with_kk",
+          physics = input$physics
+        )
+
+      return(graph)
     }
 
     plot_csv_data <- function() {

@@ -117,7 +117,7 @@ TimeSeriesBoard.features_server <- function(id,
       genes <- table_module$rownames_all()
       genes <- head(genes, 16)
 
-      expr  <- pgx$X[genes,,drop=FALSE]
+      expr  <- if(is.null(pgx$impX)) pgx$X[genes,,drop=FALSE] else pgx$impX[genes,,drop=FALSE]
       time <- pgx$samples[,sel.timevar]
 
       ct <- contrast()
