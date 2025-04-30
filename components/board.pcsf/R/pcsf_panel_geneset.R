@@ -21,7 +21,7 @@ pcsf_gsetpanel_networkplot_ui <- function(id, caption, info.text, height, width)
         ns("highlightby"),
         "Highlight labels by:",
         choices = c("centrality", "foldchange" = "prize"),
-        selected = "prize",
+        selected = "centrality",
         inline = TRUE
       ),
       "Highlight labels by scaling label size with selection."
@@ -194,7 +194,7 @@ pcsf_gsetpanel_server <- function(id,
     
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, input$ntop )        
+        list( pgx$X, input$ntop, singlecontrast() )        
       },
       {
         shiny::req(pgx$X)
@@ -218,7 +218,7 @@ pcsf_gsetpanel_server <- function(id,
           gmt.rho = 0.8,
           highcor = 0.9,
           ntop = ntop,
-          ncomp = 10,
+          ncomp = 5,
           beta = 1,
           dir = "both",
           rm.negedge = TRUE
@@ -336,7 +336,7 @@ pcsf_gsetpanel_server <- function(id,
       F <- playbase::pgx.getMetaMatrix(pgx, level="geneset")$fc
       F <- F[ igraph::V(graph)$name,,drop=FALSE]
       
-      nc <- ceiling(sqrt(ncol(F)))
+      nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F) / nc)     
       par(mfrow = c(nr,nc), mar=c(1,1,4,1)*0.5)
       i=1
@@ -346,7 +346,7 @@ pcsf_gsetpanel_server <- function(id,
           graph,
           colorby = fx,
           plotlib = "igraph",
-          highlightby = "prize",
+          highlightby = input$highlightby,
           layoutMatrix = layout,
           node_cex = 1,
           nlabel = as.integer(input$series_numlabels),
@@ -408,7 +408,7 @@ pcsf_gsetpanel_server <- function(id,
         num.cols = num.cols,
         color.cols = num.cols,
         substr.cols = c("geneset"),
-        substr.len = 100
+        substr.len = 80
       )
             
       return(dt)

@@ -86,6 +86,7 @@ expression_plot_barplot_server <- function(id,
       psel <- rownames(res)[sel]
       gene <- psel
       srt <- ifelse(grouped, 0, 35)
+      main <- pgx$genes[psel, "gene_name"]
 
       return(list(
         pgx = pgx,
@@ -95,7 +96,8 @@ expression_plot_barplot_server <- function(id,
         grouped = grouped,
         logscale = logscale,
         showothers = showothers,
-        srt = srt
+        srt = srt,
+        main = main
       ))
     })
 
@@ -116,6 +118,7 @@ expression_plot_barplot_server <- function(id,
       fig <- playbase::pgx.plotExpression(
         pgx = pd[["pgx"]],
         probe = pd[["gene"]],
+        main = pd[["main"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
         showothers = pd[["showothers"]],

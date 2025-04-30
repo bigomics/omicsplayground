@@ -21,7 +21,7 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
         ns("highlightby"),
         "Highlight labels by:",
         choices = c("centrality", "foldchange" = "prize"),
-        selected = "prize",
+        selected = "centrality",
         inline = TRUE
       ),
       "Highlight labels by scaling label size with selection."
@@ -205,6 +205,9 @@ pcsf_genepanel_server <- function(id,
         if(pgx$datatype == "multi-omics") {
           ## Multi-omics PCSF
           info("[PcsfBoard:pcsf_compute] computing multi-omics PCSF...")
+
+          ## If both gx&px are in datasest, we prefer proteomics (px)
+          ## for building the PCSF.
           datatypes <- unique(playbase::mofa.get_prefix(rownames(pgx$X)))
           if(all(c("gx","px") %in% datatypes)) {
             datatypes <- setdiff(datatypes, c("gx"))
@@ -215,7 +218,7 @@ pcsf_genepanel_server <- function(id,
             contrast = contrast,
             datatypes = datatypes,
             ntop = ntop,
-            ncomp = 10,
+            ncomp = 5,
             beta = 1,
             rm.negedge = TRUE,
             highcor = 0.8, 
@@ -231,7 +234,7 @@ pcsf_genepanel_server <- function(id,
             contrast = contrast,
             level = "gene",
             ntop = ntop,
-            ncomp = 10,
+            ncomp = 5,
             beta = 1,
             dir = "both",
             rm.negedge = TRUE,
@@ -361,7 +364,7 @@ pcsf_genepanel_server <- function(id,
       F <- playbase::rename_by2(F, pgx$genes, "symbol", keep.prefix=TRUE)
       F <- F[igraph::V(graph)$name,]
       
-      nc <- ceiling(sqrt(ncol(F)))
+      nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F)/nc)
       par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)
       
@@ -373,7 +376,7 @@ pcsf_genepanel_server <- function(id,
           graph,
           plotlib = "igraph",
           colorby = fx,
-          highlightby = "prize",
+          highlightby = input$highlightby,
           layoutMatrix = layout,
           physics = TRUE, 
           node_cex = 1,
