@@ -194,7 +194,7 @@ pcsf_gsetpanel_server <- function(id,
     
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, input$ntop )        
+        list( pgx$X, input$ntop, singlecontrast() )        
       },
       {
         shiny::req(pgx$X)
