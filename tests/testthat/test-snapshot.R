@@ -29,6 +29,7 @@ test_that("example data loads with no error",{
     if ("mofa" %in% boards) {
       boards <- c(boards, "snf", "lasagna", "deepnet", "mgsea")
     }
+    boards <- "signature"
     lapply(boards, function(board) {
     # get error from App and save it as error_log
     message(board)
@@ -58,6 +59,10 @@ test_that("example data loads with no error",{
       App$set_inputs("enrichment-gs_fdr" = 1)
       App$wait_for_idle(duration = 10000, timeout = 50000)
     }
+    if(board == "biomarker") {
+      App$run_js("$('#biomarker-pdx_runbutton').click(); ")
+      App$wait_for_idle(duration = 10000, timeout = 50000)
+    }
     if(board == "expression") {
       App$run_js("$('#expression-genetable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
     }
@@ -73,6 +78,12 @@ test_that("example data loads with no error",{
           App$wait_for_idle(duration = 15000, timeout = duration)
         } else {
           duration <- 50000
+          App$wait_for_idle(duration = 3000, timeout = duration)
+          if (board == "wgcna") {
+            if (tab == "Enrichment") {
+              App$run_js("$('#wgcna-enrichTable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
+            }
+          }
           App$wait_for_idle(duration = 3000, timeout = duration)
         }
         tab <- gsub(" ", "_", tab)

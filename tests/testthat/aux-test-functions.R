@@ -6,7 +6,7 @@ searchTabs <- function(board) {
         featuremap = c("Gene", "Geneset"),
         expression = c("Overview", "Top features", "Volcano by comparison", "Volcano by method"),
         correlation = c("Correlation", "Graph"),
-        enrichment = c("Enrichment", "Gene expression", "Enrichment by comparison", "Volcano by comparison", "Volcano by method"),
+        enrichment = c("Enrichment", "expression", "Enrichment by comparison", "Volcano by comparison", "Volcano by method"),
         signature = c("Volcano plots", "Enrichment", "Overlap/similarity", "Markers"),
         pathway = c("WikiPathways", "Reactome", "GO graph"),
         intersection = c("Pairwise scatter", "Signature clustering"),
@@ -25,7 +25,7 @@ searchTabs <- function(board) {
 generate_js_click_code <- function(data_value) {
   js_code <- sprintf(
     "
-    const targetElement = document.querySelector('a[data-value=\"%s\"]');
+    const targetElement = document.querySelector('a[data-value*=\"%s\"]');
     if (targetElement) {
     targetElement.click();
     }
