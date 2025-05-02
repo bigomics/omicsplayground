@@ -131,7 +131,7 @@ upload_module_computepgx_server <- function(
       ## Probe filtering defaults
       PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
 
-      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset.html"
+      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
 
       htmltag_with_info_url <- function(tag, url) {
         shiny::HTML(paste("<div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>",tag,"<a href='",url,"'target='_blank' class='info-link' style='margin-left: 15px;'><i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 18px;'></i></a></div>"))
