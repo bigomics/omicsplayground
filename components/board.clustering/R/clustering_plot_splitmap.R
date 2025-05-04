@@ -110,7 +110,7 @@ clustering_plot_splitmap_server <- function(id,
       zx.idx <- filt$idx
 
       ## For large data (eg scRNAseq)
-      if (pgx$datatype == "scRNA-seq" && ncol(zx) > 3000) {
+      if (pgx$datatype == "scRNAseq" && ncol(zx) > 3000) {
         dbg("[clustering_plot_splitmap] More than 3K samples detected in data matrix.")
         dbg("[clustering_plot_splitmap] Balanced downsampling of 40 cells per celltype.")
         grp <- annot$celltype
