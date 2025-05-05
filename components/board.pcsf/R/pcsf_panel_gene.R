@@ -28,7 +28,7 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
       shiny::radioButtons(
         ns("highlightby"),
         "Highlight labels by:",
-        choices = c("centrality", "foldchange" = "prize"),
+        choices = c("foldchange" = "prize", "centrality"),
         selected = "prize",
         inline = TRUE
       ),
