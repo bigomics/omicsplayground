@@ -17,11 +17,19 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
 
   plot_opts <- tagList(
     withTooltip(
-      radioButtons(
+      shiny::selectInput(
+        ns("labelby"), "Label by:",
+        choices = c("feature", "symbol", "title" = "gene_title"),
+        selected = "feature" ),
+      "Type of label to show."
+    ),
+    hr(),
+    withTooltip(
+      shiny::radioButtons(
         ns("highlightby"),
         "Highlight labels by:",
         choices = c("centrality", "foldchange" = "prize"),
-        selected = "centrality",
+        selected = "prize",
         inline = TRUE
       ),
       "Highlight labels by scaling label size with selection."
@@ -122,12 +130,14 @@ pcsf_genepanel_settings_ui <- function(id) {
       "Select initial network size (number of top genes) for ."
     ),
     hr(),
-    withTooltip(
-      shiny::radioButtons(ns("mode"), "Solution mode:",
-        choices = c("single","common"),
-        selected = "single", inline = TRUE
+    shiny::checkboxGroupInput(
+      ns("solve_options"),
+      "Solve options:",
+      c("rho as prize" = "rho_prize",
+        "meta solution" = "meta_solution",
+        "add VHC edges" = "add_vhce" 
       ),
-      "Select solution mode. 'single' solves for selected comparison, 'common' solves across comparisons."
+      selected = c("add_vhce"), inline = TRUE
     ),
     hr(),
     withTooltip(
@@ -186,13 +196,13 @@ pcsf_genepanel_server <- function(id,
     })
 
     singlecontrast <- reactive({
-      if(input$mode == "common") return(NULL)
+      if("meta_solution" %in% input$solve_options) return(NULL)
       r_contrast()
     })
     
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, input$ntop, singlecontrast() )        
+        list( pgx$X, input$ntop, singlecontrast(), input$solve_options)        
       },
       {
         shiny::req(pgx$X)
@@ -200,53 +210,43 @@ pcsf_genepanel_server <- function(id,
 
         contrast <- singlecontrast()
         comparisons <- playbase::pgx.getContrasts(pgx)
-        if(input$mode == "single") shiny::req(contrast %in% comparisons)
+        if(!"meta_solution" %in% input$solve_options) shiny::req(contrast %in% comparisons)
         
         if(pgx$datatype == "multi-omics") {
           ## Multi-omics PCSF
           info("[PcsfBoard:pcsf_compute] computing multi-omics PCSF...")
-
           ## If both gx&px are in datasest, we prefer proteomics (px)
           ## for building the PCSF.
           datatypes <- unique(playbase::mofa.get_prefix(rownames(pgx$X)))
           if(all(c("gx","px") %in% datatypes)) {
             datatypes <- setdiff(datatypes, c("gx"))
           }
-          info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
-          pcsf <- playbase::pgx.computePCSF_multiomics(
-            pgx,
-            contrast = contrast,
-            datatypes = datatypes,
-            ntop = ntop,
-            ncomp = 5,
-            beta = 1,
-            rm.negedge = TRUE,
-            highcor = 0.8, 
-            dir = "both",
-            ppi = c("STRING", "GRAPHITE"),
-            as.name = c("mx")
-          ) 
         } else {
-          ## Single-omics PCSF
-          info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")
-          pcsf <- playbase::pgx.computePCSF(
-            pgx,
-            contrast = contrast,
-            level = "gene",
-            ntop = ntop,
-            ncomp = 5,
-            beta = 1,
-            dir = "both",
-            rm.negedge = TRUE,
-            as.name = c("mx")            
-          )
+          info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")          
+            datatypes <- NULL
         }
+        
+        info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
+        pcsf <- playbase::pgx.computePCSF(
+          pgx,
+          contrast = contrast,
+          datatypes = datatypes,
+          as_prize = ifelse("rho_prize" %in% input$solve_options,"rho","fc"),
+          use_rank = FALSE,
+          ntop = ntop,
+          ncomp = 5,
+          beta = 1,
+          rm.negedge = TRUE,
+          highcor = ifelse("add_vhce" %in% input$solve_options, 0.9, Inf),
+          dir = "both",
+          ppi = c("STRING", "GRAPHITE")
+        ) 
         
         if (is.null(pcsf)) {
           validate()
           shiny::validate(
             !is.null(pcsf),
-            "No PCSF solution found. Beta value is probably too small. Please adjust beta or increase network size."
+            "No PCSF solution found. Perhaps beta value is probably too small. Please adjust beta or increase network size."
           )
           return(NULL)
         }
@@ -265,6 +265,8 @@ pcsf_genepanel_server <- function(id,
       input_cut <- input$cut
       input_nclust <- input$nclust
       input_resolution <- input$resolution
+
+      dbg("[gene_pcsf] 1: layout.method = ", input$layout.method)
       
       if(input_cut) {
         ncomp <- as.integer(input$nclust)
@@ -307,27 +309,34 @@ pcsf_genepanel_server <- function(id,
       physics <- input$physics
       
       contrast <- r_contrast()
+      shiny::req(contrast)      
       comparisons <- colnames(pgx$model.parameters$contr.matrix)        
       shiny::req(contrast %in% comparisons)
-
+      
       F <- playbase::pgx.getMetaMatrix(pgx, level='gene')$fc
-      F <- playbase::rename_by2(F, pgx$genes, "symbol", keep.prefix=TRUE)
-
-      shiny::req(contrast)      
       fx <- F[igraph::V(pcsf)$name, contrast]
+
+      labels <- names(fx)
+      if(input$labelby %in% colnames(pgx$genes)) {
+        labels <- pgx$genes[names(fx), input$labelby]
+      }
+      
       igraph::V(pcsf)$foldchange <- fx
       igraph::V(pcsf)$prize <- abs(fx)
       
       plt <- playbase::plotPCSF(
         pcsf,
-        colorby = fx,
+        sizeby = fx,
+        colorby = fx,        
         highlightby = input$highlightby,
         layout = "layout.norm",
         layoutMatrix = layoutMatrix,
         physics = physics,
         plotlib = "visnet",
-        node_cex = 1.4,
-        label_cex = 0.85,
+        node_cex = 6,
+        node_gamma = 0.5,
+        labels = labels,
+        label_cex = 1,
         nlabel = as.integer(input$numlabels),
         border_width = 0.2,
         edge_length = 60,
@@ -361,27 +370,33 @@ pcsf_genepanel_server <- function(id,
       layout <- res$layout
       
       F <- playbase::pgx.getMetaMatrix(pgx, level="gene")$fc
-      F <- playbase::rename_by2(F, pgx$genes, "symbol", keep.prefix=TRUE)
       F <- F[igraph::V(graph)$name,]
+
+      labels <- rownames(F)
+      if(!input$labelby %in% colnames(pgx$genes)) {
+        labels <- pgx$genes[rownames(F), input$labelby]
+      }
       
       nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F)/nc)
-      par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)
-      
+      par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)      
       i=1
       for(i in 1:ncol(F)) {
-        fx <- F[,i]
-        
+        fx <- F[,i]        
         playbase::plotPCSF(
           graph,
           plotlib = "igraph",
-          colorby = fx,
+          sizeby = fx,
+          colorby = fx,          
           highlightby = input$highlightby,
           layoutMatrix = layout,
           physics = TRUE, 
           node_cex = 1,
+          node_gamma = 0.66,
+          labels = labels,
           nlabel = as.integer(input$series_numlabels),
           label_cex = 0.7,
+          edge_cex = 0.85,
           border_width = 0.2,
           cut.clusters = FALSE,
           nlargest = -1
@@ -425,14 +440,17 @@ pcsf_genepanel_server <- function(id,
 
     table.RENDER <- function(full=FALSE) {
       df <- table_data()
+
+      dbg("[pcsf_genepanel_server:table.RENDER] dim.df = ", dim(df))
+      dbg("[pcsf_genepanel_server:table.RENDER] colnames.df = ", colnames(df))
       
       if(full==FALSE) {
-        cols <- c("symbol","gene_title","centrality","logFC")
+        cols <- c("symbol","gene_title","logFC","centrality")
         cols <- intersect(cols, colnames(df))
         df <- df[,cols, drop=FALSE]
       }      
-      num.cols <- c("centrality", "logFC")
-
+      num.cols <- intersect(c("centrality", "logFC"),colnames(df))
+      
       dt <- ui.DataTable(
         df,
         rownames = FALSE,
