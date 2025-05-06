@@ -378,6 +378,7 @@ ui.DataTable <- function(df, rownames = TRUE,
     if(length(substr.len)==1) substr.len <- rep(substr.len, length(substr.cols))
     for(i in 1:length(substr.cols)) {
       k <- substr.cols[i]
+      if(all(is.na(df[k]))) next
       slen <- substr.len[i]
       item1 <- list(
         targets = k, ## with no rownames column 1 is column 2

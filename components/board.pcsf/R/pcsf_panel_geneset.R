@@ -20,8 +20,8 @@ pcsf_gsetpanel_networkplot_ui <- function(id, caption, info.text, height, width)
       radioButtons(
         ns("highlightby"),
         "Highlight labels by:",
-        choices = c("centrality", "foldchange" = "prize"),
-        selected = "centrality",
+        choices = c("foldchange" = "prize", "centrality"),
+        selected = "prize",
         inline = TRUE
       ),
       "Highlight labels by scaling label size with selection."
@@ -123,13 +123,15 @@ pcsf_gsetpanel_settings_ui <- function(id) {
       ),
       "Select initial network size (number of top genes) for ."
     ),
-    hr(),    
-    withTooltip(
-      shiny::radioButtons(ns("mode"), "Solution mode:",
-        choices = c("single","common"),
-        selected = "single", inline = TRUE
+    hr(),
+    shiny::checkboxGroupInput(
+      ns("solve_options"),
+      "Solve options:",      
+      c("rho as prize" = "rho_prize",
+        "meta solution" = "meta_solution",
+        "add VHC edges" = "add_vhce" 
       ),
-      "Select solution mode. 'single' solves for selected comparison, 'common' solves across comparisons."
+      selected = c("add_vhce"), inline = TRUE
     ),
     hr(),
     withTooltip(
@@ -188,13 +190,13 @@ pcsf_gsetpanel_server <- function(id,
     })
 
     singlecontrast <- reactive({
-      if(input$mode == "common") return(NULL)
+      if("meta_solution" %in% input$solve_options) return(NULL)
       r_contrast()
     })
     
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, input$ntop, singlecontrast() )        
+        list( pgx$X, input$ntop, singlecontrast(), input$solve_options)        
       },
       {
         shiny::req(pgx$X)
@@ -202,10 +204,10 @@ pcsf_gsetpanel_server <- function(id,
 
         contrast <- singlecontrast()
         comparisons <- playbase::pgx.getContrasts(pgx)
-        if(input$mode == "single") shiny::req(contrast %in% comparisons)
+        if(!"meta_solution" %in% input$solve_options) shiny::req(contrast %in% comparisons)
 
-        ## If this is metabolomics, let's use ext2 only
-        if(FALSE && any(grepl("ext2",rownames(pgx$gsetX)))) {
+        ## If this is metabolomics-PPI, let's use ext2 only
+        if(any(grepl("ext2",rownames(pgx$gsetX)))) {
           gset.filter <- "ext2"
         } else {
           gset.filter <- NULL
@@ -214,9 +216,11 @@ pcsf_gsetpanel_server <- function(id,
         pcsf <- playbase::pgx.computePCSF_gset(
           pgx,
           contrast = contrast,
-          gset.filter = gset.filter,              
+          gset.filter = gset.filter,
+          as_prize = ifelse("rho_prize" %in% input$solve_options,"rho","fc"),
+          use_rank = FALSE,
           gmt.rho = 0.8,
-          highcor = 0.9,
+          highcor = ifelse("add_vhce" %in% input$solve_options, 0.9, Inf),
           ntop = ntop,
           ncomp = 5,
           beta = 1,
@@ -293,17 +297,19 @@ pcsf_gsetpanel_server <- function(id,
       
       plt <- playbase::plotPCSF(
         pcsf,
-        # colorby = fx,
+        sizeby = fx,
+        colorby = fx,
         highlightby = input$highlightby,
         layout = "layout.norm",
         layoutMatrix = layoutMatrix,
         physics = physics,
         plotlib = "visnet",
-        node_cex = 1.8,
-        label_cex = 0.6,
+        node_cex = 3.5,
+        node_gamma = 0.66,
+        label_cex = 0.65,
         nlabel = as.integer(input$numlabels),
         border_width = 0,
-        edge_length = 60,
+        edge_length = 40,
         cut.clusters = FALSE,
         nlargest = -1
       )
@@ -344,6 +350,7 @@ pcsf_gsetpanel_server <- function(id,
         fx <- F[,i]
         playbase::plotPCSF(
           graph,
+          sizeby = fx,
           colorby = fx,
           plotlib = "igraph",
           highlightby = input$highlightby,
@@ -351,6 +358,7 @@ pcsf_gsetpanel_server <- function(id,
           node_cex = 1,
           nlabel = as.integer(input$series_numlabels),
           label_cex = 0.6,
+          edge_cex = 0.85,          
           border_width = 0.2,
           cut.clusters = FALSE,
           nlargest = -1
@@ -396,11 +404,11 @@ pcsf_gsetpanel_server <- function(id,
       df <- table_data()
       
       if(full==FALSE) {
-        cols <- c("geneset","centrality","logFC")
+        cols <- c("geneset","logFC","centrality")
         cols <- intersect(cols, colnames(df))
         df <- df[,cols, drop=FALSE]
       }      
-      num.cols <- c("centrality", "logFC")
+      num.cols <- intersect(c("centrality","logFC"),colnames(df))
 
       dt <- ui.DataTable(
         df,
