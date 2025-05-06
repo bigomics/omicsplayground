@@ -57,7 +57,6 @@ mofa_plot_mgsea_server <- function(id,
       }
       
       par(mar=c(4.5,4.5,1,0.5))
-      saveRDS(list(mgsea,types,input$size.par,hilight), "~/Desktop/MNT/plot.RDS")
       playbase::mgsea.plot_scatter(
         mgsea[[k]], type1=types[1], type2=types[2],
         size.par = input$size.par,
