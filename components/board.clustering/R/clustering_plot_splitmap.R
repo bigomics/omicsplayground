@@ -284,7 +284,8 @@ clustering_plot_splitmap_server <- function(id,
       X <- pd[["zx"]]
       annot <- pd[["annot"]]
       splity <- pd[["zx.idx"]]
-      
+      sample_cor <- pd[["sample_cor"]]      
+
       ## sample clustering index
       splitx <- NULL
       splitx <- filt$grp
@@ -339,11 +340,12 @@ clustering_plot_splitmap_server <- function(id,
       }
       shiny::showNotification("Rendering iHeatmap...")
 
+      if (sample_cor) idx = NULL else idx = splity
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X,
         annot = annotF,
         ytips = tooltips,
-        idx = splity,
+        idx = idx,
         splitx = splitx,
         scale = scale,
         row_annot_width = 0.025,
