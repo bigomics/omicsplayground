@@ -36,7 +36,7 @@ clustering_plot_splitmap_ui <- function(
     ),
     withTooltip(
       shiny::checkboxInput(
-        ns("sample_cor"), "Show sample-sample correlation", value = FALSE),
+        ns("sample_cor"), "show sample-sample correlation", value = FALSE),
       "Show sample-sample correlation heatmap.",
       placement = "right",
       options = list(container = "body")
@@ -129,16 +129,18 @@ clustering_plot_splitmap_server <- function(id,
       ))
 
       sel <- selected_phenotypes()
-      
+
+      sample_cor <- FALSE
       if (input$sample_cor) {
+        sample_cor <- TRUE
         zx <- cor(pgx$X, method = "pearson")
         D <- as.dist(1 - zx)
         D[which(is.nan(D) | is.na(D))] <- 1
         hc <- fastcluster::hclust(D, method = "ward.D2")
-        zx.idx <- paste0("S", cutree(hc, hm_clustk()))
+        zx.idx <- paste0("S", cutree(hc, hm_clustk()))        
       }
       
-      return(list(zx = zx, annot = annot, zx.idx = zx.idx, filt = filt))
+      return(list(zx = zx, annot = annot, zx.idx = zx.idx, filt = filt, sample_cor = sample_cor))
 
     })
     
@@ -149,7 +151,8 @@ clustering_plot_splitmap_server <- function(id,
       annot <- pd[["annot"]]
       zx.idx <- pd[["zx.idx"]]
       filt <- pd[["filt"]]
-            
+      sample_cor <- pd[["sample_cor"]]
+
       if (nrow(zx) <= 1) { return(NULL) }
       show_rownames <- TRUE
       if (nrow(zx) > input$num_rownames) show_rownames <- FALSE
@@ -218,26 +221,48 @@ clustering_plot_splitmap_server <- function(id,
       margin_bottom <- ifelse(input$margin_checkbox && !is.na(input$margin_bottom), input$margin_bottom, 5)
       margin_left <- ifelse(input$margin_checkbox && !is.na(input$margin_left), input$margin_left, 5)
 
+      if (sample_cor) {
+        splity <- NULL
+        scale.mode <- "none"
+        cluster_rows <- FALSE
+        cluster_columns <- FALSE
+        zlim <-  c(min(zx),max(zx))
+      } else {
+        cluster_rows <- TRUE
+        cluster_columns <- TRUE
+        zlim <- NULL
+      }
+      
       playbase::gx.splitmap(
         zx,
-        split = splity, splitx = splitx,
-        scale = scale.mode, show_legend = input$show_legend,
-        show_colnames = show_colnames, column_title_rot = crot,
+        split = splity,
+        splitx = splitx,
+        scale = scale.mode,
+        show_legend = input$show_legend,
+        show_colnames = show_colnames,
+        column_title_rot = crot,
         column_names_rot = input$column_names_rot,
-        cluster_rows = input$cluster_rows,
-        cluster_columns = input$cluster_cols,
+        cluster_rows = cluster_rows,
+        cluster_columns = cluster_columns,
         color_low = input$color_low,
         color_mid = input$color_mid,
         color_high = input$color_high,
+        zlim = zlim,
         show_rownames = show_rownames,
         rownames_width = input$rownames_width,
         softmax = 0,
-        na_col = "green", na_text = "x",
-        title_cex = 1, cexCol = cex1, cexRow = cex2,
+        na_col = "green",
+        na_text = "x",
+        title_cex = 1,
+        cexCol = cex1,
+        cexRow = cex2,
         annot.cex = input$annot_cex/10,
-        col.annot = annot, row.annot = NULL, annot.ht = 2.3,
+        col.annot = annot,
+        row.annot = NULL,
+        annot.ht = 2.3,
         key.offset = c(0.89, 1.01),
-        main = " ", nmax = -1,
+        main = " ",
+        nmax = -1,
         mar = c(margin_bottom, margin_left, margin_top, margin_right)
       )
       p <- grDevices::recordPlot()
@@ -313,12 +338,18 @@ clustering_plot_splitmap_server <- function(id,
         names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
-      
+
       plt <- playbase::pgx.splitHeatmapFromMatrix(
-        X = X, annot = annotF, ytips = tooltips,
-        idx = splity, splitx = splitx, scale = scale,
-        row_annot_width = 0.025, rowcex = row_cex,
-        colcex = col_cex, show_legend = input$show_legend,
+        X = X,
+        annot = annotF,
+        ytips = tooltips,
+        idx = splity,
+        splitx = splitx,
+        scale = scale,
+        row_annot_width = 0.025,
+        rowcex = row_cex,
+        colcex = col_cex,
+        show_legend = input$show_legend,
         return_x_matrix = TRUE
       )
       return(plt)
