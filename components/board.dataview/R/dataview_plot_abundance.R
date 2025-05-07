@@ -37,22 +37,16 @@ dataview_plot_abundance_server <- function(id,
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       shiny::req(res)
-      res <- list(
-        prop.counts = res$prop.counts
-      )
+      res <- list(prop.counts = res$prop.counts)
       res
     })
 
     plotly.RENDER <- function(return_csv = FALSE) {
       res <- plot_data()
       shiny::req(res)
-
       long.data <- reshape2::melt(head(res$prop.counts, 5))
       colnames(long.data) <- c("gene", "sample", "value")
-
-      if (return_csv) {
-        return(long.data)
-      }
+      if (return_csv) return(long.data)
 
       ## stacked barchart
       fig <-
