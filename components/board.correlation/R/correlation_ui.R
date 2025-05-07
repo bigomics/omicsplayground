@@ -67,8 +67,8 @@ CorrelationUI <- function(id) {
           correlation_plot_barplot_ui(
             id = ns("cor_barplot"),
             title = "Top correlated features",
-            info.text = "Barplot of the highest correlated features in respect to the selected {Gene}. The dark grey bars correspond to the 'partial correlation', which relation is computed using the amount of genes specified under Settings > Options {Nr. of genes to compute partial correlation}.",
-            info.methods = "The barplot displays the Pearson correlation value (computed using the core R stats package). The 'partial correlation' corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction, it does so using the glasso algorithm (from the glasso R package [1]) to estimate a sparse inverse covariance matrix and derive partial correlations.",
+            info.text = "Barplot of features exhibiting highest correlation with the selected {Gene}. The dark blue bars show the partial correlation coefficient. The green bars show the canonical Pearson's correlation coefficient. The number of features (N) used to compute partial correlation can be set in Settings > Options {Nr. of genes to compute partial correlation}.",
+            info.methods = "Partial correlation coefficient between any two features across samples is computed using the Glasso algorithm from the glasso R package. Specifically, canonical Pearson's correlation between the selected {Gene} and all other available features is first computed on the log2-transformed (and normalized, by default) data using the core R stats package. The top N features are then identified as those exhibiting the highest average squared correlation value. A covariance matrix is calculated on the log2-transformed and normalized transposed data matrix (samples x top N features). Glasso is then applied on the covariance matrix to estimate a sparse inverse covariance matrix. A lasso (L1) regularization of 0.01 is applied. Using the function cov2cor from the Matrix R package, the partial correlation coefficient matrix is derived from the glasso-estimated inverse covariance matrix. Compared to canonical Pearson's correlation, partial correlation coefficients measure effect size and direction of the linear relationship between two variables while adjusting for potential confounding effects (indirect effects) of other variables, therefore providing an estimate of potential direct interactions.",
             info.references = list(
               list(
                 "Friedman J (2019) glasso: Graphical Lasso: Estimation of Gaussian Graphical Models",
@@ -76,7 +76,7 @@ CorrelationUI <- function(id) {
               )
             ),
             info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
-            caption = "Barplot showing the highest correlated feature with respect to the selected feature.",
+            caption = "Barplot showing the Pearson's and partial correlation coefficients for the features exhibiting highest correlation with selected feature.",
             label = "",
             height = c("50%", "70vh"),
             width = c("auto", "100%")
@@ -84,8 +84,8 @@ CorrelationUI <- function(id) {
           correlation_table_corr_ui(
             id = ns("cor_table"),
             title = "Correlation table",
-            info.text = "Statistical results from correlated gene pairs.",
-            caption = "Correlation table of correlation and partial correlation with respect to the selected gene. ",
+            info.text = "Statistical results from canonical Pearson's correlation and partial correlation analysis between features. The column 'cor' reports the canonical Pearson's correlation. The column 'pcor' reports the partial correlation coefficients derived from the glasso-estimated inverse covariance matrix. For details on how top correlated features are inferred, please refer to the information provided for the 'Top correlated features' barplot.",
+            caption = "",
             label = "",
             height = c("50%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
@@ -94,10 +94,10 @@ CorrelationUI <- function(id) {
         correlation_plot_scattercorr_ui(
           ns("cor_scatter"),
           title = "Correlation scatter plots",
-          info.text = "Scatter plots of the co-expression of correlated gene pairs between the selected {Gene} and the top genes correlated to it (as seen on Top correlated genes plot) across the samples. The straight line correspond to the (linear) regression fit. The samples can be colored using the {Color by} plot setting and the layout of the scatter plots can be configured by using the {Layout} and {Swap XY-axes} plot settings.",
-          info.methods = "See Top correlated features",
+          info.text = "Scatter plots of log2-transformed (and normalized, by default) expression values of the selected {Gene} and the top correlated features across samples. Top correlated features are also displayed in the 'Top correlated features' barplot. In each scatter plot, each dot corresponds to a sample. The straight line corresponds to the linear regression fit. The samples can be colored using the {Color by} plot setting. The layout of the scatter plots can be configured by using the {Layout} and {Swap XY-axes} plot settings.",
+          info.methods = "For details on how top correlated features are inferred, please refer to the information provided for the 'Top correlated features' barplot.",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
-          caption = "Scatter plots of gene expression of top correlated genes.",
+          caption = "Scatter plots of log2-transformed (and normalized, by default) expression values of the selected {Gene} and the top correlated features across samples",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )

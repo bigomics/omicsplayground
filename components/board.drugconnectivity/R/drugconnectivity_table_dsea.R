@@ -13,14 +13,13 @@ drugconnectivity_table_dsea_ui <- function(
     height) {
   ns <- shiny::NS(id)
 
-  info_text <- strwrap("<b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.")
-
   TableModuleUI(
     ns("datasets"),
-    info.text = info_text,
+    title = title,
+    info.text = info.text,
+    caption = caption,
     width = width,
     height = height,
-    title = title,
     label = "b"
   )
 }
