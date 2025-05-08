@@ -33,9 +33,7 @@ EnrichmentBoard <- function(id, pgx,
         EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong>
         panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of
         significant gene sets at different FDR thresholds for all contrasts.<br><br><br><br>
-        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=4'
-        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
-        allowfullscreen></iframe></center>"), js = FALSE)
+        <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=HqdPSxCPc-jHKh1k' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"), js = FALSE)
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 

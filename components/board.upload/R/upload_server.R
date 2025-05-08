@@ -67,7 +67,7 @@ UploadBoard <- function(id,
       )
     })
 
-    shiny::observeEvent(input$module_info, {
+    shiny::observeEvent(input$upload_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>How to upload new data</strong>"),
         shiny::HTML(module_infotext),
@@ -90,7 +90,7 @@ UploadBoard <- function(id,
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
     ), js = FALSE)
 
-    module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
+    module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
 
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
