@@ -422,7 +422,7 @@ loading_table_datasets_server <- function(id,
         # ),
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = if(length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
+        selection = list(mode = "single", target = "row", selected = if (length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
         fillContainer = TRUE,
         options = list(
           dom = "ft",

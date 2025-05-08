@@ -576,10 +576,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       ## determine which column to match with pgx$GMT
       gene1 <- res[sel.row, ]
-      match.res <- apply(res[,c("symbol","human_ortholog")],2,
-        function(x) sum(x%in%rownames(pgx$GMT)))
+      match.res <- apply(
+        res[, c("symbol", "human_ortholog")], 2,
+        function(x) sum(x %in% rownames(pgx$GMT))
+      )
       match.col <- names(which.max(match.res))
-      gmt_gene_mapping <- gene1[,match.col]
+      gmt_gene_mapping <- gene1[, match.col]
       j <- which(rownames(pgx$GMT) == gmt_gene_mapping)
       if (length(j) == 0) {
         return(NULL)
