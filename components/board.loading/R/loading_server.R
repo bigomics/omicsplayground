@@ -225,13 +225,20 @@ LoadingBoard <- function(id,
         gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
     ), js = FALSE)
     module_infotext <- paste0(
-      "<center><iframe width='1120' height='630'
-        src='https://www.youtube.com/embed/elwT6ztt3Fo'
-        title='YouTube video player' frameborder='0'
-        allow='accelerometer; autoplay; clipboard-write; encrypted-media;
-        gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
+      "<center><iframe width='560' height='315' src='https://www.youtube.com/embed/YTzLkio4M_4?si=LljECgKnb0TsgZDZ&amp;start=517' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
+    sharing_infotext <- tspan(paste0(
+      "<center><iframe width='560' height='315' src='https://www.youtube.com/embed/YTzLkio4M_4?si=oF52aFP_1knRilod&amp;start=551' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
+    ))
+
+    shiny::observeEvent(input$loading_sharing, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Sharing a dataset from your library</strong>"),
+        shiny::HTML(sharing_infotext),
+        easyClose = TRUE, size = "xl"
+      ))
+    })
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
