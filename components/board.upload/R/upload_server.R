@@ -522,7 +522,7 @@ UploadBoard <- function(id,
       )
 
       samples_ui <- wizardR::wizard_step(
-        step_title = "Step 2: Upload samples",
+        step_title = tspan("Step 2: Upload samples", js = FALSE),
         step_id = "step_samples",
         server = TRUE,
         upload_table_preview_samples_ui(
@@ -684,11 +684,21 @@ UploadBoard <- function(id,
     # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
+      query_files <- check_query_files()
+      if (!is.null(query_files$datatype) && new_upload() == 2) {
+        datatype <- query_files$datatype
+        upload_datatype(datatype)
+      }
     })
 
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+      query_files <- check_query_files()
+      if (!is.null(query_files$organism) && new_upload() == 2) {
+        organism <- query_files$organism
+        upload_organism(organism)
+      }
     })
 
     observeEvent(input$start_upload, {
@@ -945,7 +955,7 @@ UploadBoard <- function(id,
         wizardR::reset("upload_wizard")
 
         # skip upload trigger at first startup
-        if (new_upload() == 0) {
+        if (new_upload() == 1) {
           return(NULL)
         }
 
@@ -976,6 +986,75 @@ UploadBoard <- function(id,
               ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
+            } else if (opt$AUTHENTICATION == "email-encrypted") { # Only data preloading on email-encrypted authentication
+              query_files <- check_query_files()
+              # Get encryption key
+              encryption_key <- tryCatch(
+                {
+                  readLines(file.path(OPG, "etc/keys/encryption.txt"))[1]
+                },
+                error = function(w) {
+                  warning("[UploadServer] ERROR: missing encryption_key file!!!")
+                  NULL
+                }
+              )
+              # if (!file.exists(encryption_key)) {
+              #   encryption_key <- NULL
+              # }
+              # Populate upload data with available
+              if (!is.null(query_files$counts) && new_upload() == 2) {
+                counts_url <- if (!is.null(encryption_key)) {
+                  decrypt_util(query_files$counts, encryption_key)
+                } else {
+                  warning("[UploadServer] No encryption key available, using raw URL")
+                  query_files$counts
+                }
+
+                # Set initial loading state
+                uploaded$counts.csv <- matrix(data = 1, nrow = 1, ncol = 1)
+                
+                future_promise({
+                  file <- read_query_files(counts_url)
+                  df <- playbase::read_counts(file)
+                  af <- playbase::read_annot(file)
+                  list(counts = df, annot = af)
+                }) %...>% 
+                (function(result) {
+                  message("[UploadServer] Future completed successfully")
+                  uploaded$counts.csv <- result$counts
+                  uploaded$annot.csv <- result$annot
+                }) %...!% 
+                (function(error) {
+                  message("[UploadServer] Future failed with error: ", error$message)
+                  warning("[UploadServer] Error processing counts file: ", error)
+                })
+              }
+              if (!is.null(query_files$samples) && new_upload() == 2) {
+                # Decrypt the URL if encryption key is available
+                samples_url <- if (!is.null(encryption_key)) {
+                  decrypt_util(query_files$samples, encryption_key)
+                } else {
+                  warning("[UploadServer] No encryption key available, using raw URL")
+                  query_files$samples
+                }
+
+                file <- read_query_files(samples_url)
+                df <- playbase::read_samples(file)
+                uploaded$samples.csv <- df
+              }
+              if (!is.null(query_files$contrasts) && new_upload() == 2) {
+                # Decrypt the URL if encryption key is available
+                contrasts_url <- if (!is.null(encryption_key)) {
+                  decrypt_util(query_files$contrasts, encryption_key)
+                } else {
+                  warning("[UploadServer] No encryption key available, using raw URL")
+                  query_files$contrasts
+                }
+
+                file <- read_query_files(contrasts_url)
+                df <- playbase::read_contrasts(file)
+                uploaded$contrasts.csv <- df
+              }
             }
           } else {
             shinyalert::shinyalert(
