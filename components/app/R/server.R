@@ -1068,7 +1068,7 @@ app_server <- function(input, output, session) {
         comment = "too many sessions. server at capacity",
         session = session
       )
-      sever::sever(sever_serverfull(opt$HOSTNAME), bg_color = "#004c7d") ## lightblue=2780e3
+      sever::sever(sever_max_sessions(opt$HOSTNAME), bg_color = "#004c7d") ## lightblue=2780e3
       session$close()
     }
   })
