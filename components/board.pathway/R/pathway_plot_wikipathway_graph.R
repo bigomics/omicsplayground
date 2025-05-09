@@ -132,7 +132,15 @@ functional_plot_wikipathway_graph_server <- function(id,
 
         # Get pathway image using WPID and fc values
         shiny::req(pathway.id)
-        svg <- playbase::wikipathview(wp = pathway.id, val = fc)
+        attempts <- 1
+        svg <- NULL
+        while(attempts < 4 && is.null(svg)) {
+          svg <- playbase::wikipathview(wp = pathway.id, val = fc)
+          if(is.null(svg)) {
+            Sys.sleep(0.5*attempts)
+            attempts <- attempts + 1
+          }
+        }
         if (is.null(svg)) {
           return(NULL)
         }
