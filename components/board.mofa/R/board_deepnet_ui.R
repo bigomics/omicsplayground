@@ -31,7 +31,7 @@ DeepNetInputs <- function(id) {
         shiny::tagList(
           shiny::radioButtons(ns("model"), "Model:", c("AE","SAE","MLP"), selected="SAE", inline=TRUE),
           shiny::selectInput(ns("layers"), "Layers:", choices = c("mini","medium","deep"),
-                           selected="mini"),
+            selected="mini"),
           shiny::sliderInput(ns("latent_dim"),"Latent dimension:",4,80,16,8),
           shiny::checkboxInput(ns("augment"), "augment data (10x)", TRUE),
           shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),
@@ -89,14 +89,25 @@ DeepNetUI <- function(id) {
               plot_deepnet_diagram_ui(
                 ns("deepnet_diagram"),
                 title = "Network model architecture",
-                info.text = "Supervised Auto-encoder",
-                caption = ""
+                info.text = "Supervised auto-encoder (SAE) on multi-omics data performed using R torch-based deep learning pipeline. Includes feature selection, SAE models, training/validation splitting, training with distinct optimizers, prediction and later feature extraction. Depicted are the (multiple) layers of the model, including input, middle, output, and the bottleneck.",
+                info.methods = "The multi-omics, log2-transformed and normalized data matrix is imputed if missing values are detected. Datatypes can be optionally selected using the {Select datatypes} option. Optionally, each data type can be 10x augmented by checking the {augment data} box. Augmentation is conducted by (i) computing average feature standard deviation; (ii) expanding the matrix (by samples) 10 times the original size; (iii) adding to the expanded matrix random noise corresponding to the product between the original average feature standard deviation and random values drawn from a Gaussian distribution. To expand the breadth of features used in the SAE, genesets from gene set enrichment analysis can be optionally added by checking the {add genesets} box as additional 'datatype'. Noise can be optionally added by checking the {add noise} box. Adding noise triggers marginal increase in feature variations without altering the biological patterns in the data and its latent space. Noise is added as the product between average feature standard deviation and random values drawn from a Gaussian distribution. Multi-omics SAE is then performed using R6 class functionalities provided in the R torch R package. A GLU activation/gating mechanism can be optionally added by checking the {use GLU} box. MultiBlockMultiTargetSAE ('MT') model is used to handle matrices of distinct features and predict multiple target variables at once. The SAE neural network is used to learn representations and make feature predictions. Internally, the model is organized into modules: (i) initialization, which converts data into torch sensors and split into training and validation; (ii) training, which sets the optimizer, defines the loss function, trains the model, and stores training and validation loss values; (iii) prediction, which runs the trained model to predict target probabilities; (iv) latent representation extraction, which returns the learned latent (encoded) representations for each view and the integrated multi-omics data; (v) feature importance by gradient, which computes feature importance for each input feature by analyzing how small changes (perturbations or gradients) may affect the output; (vi) model architecture dimensions, which returns the dimensions of encoder, decoder, and predictor layers in the model.",
+                info.references = list(
+                  list(
+                    "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703"),
+                  list("Le, L., Patterson, A., White, M. (2018). “Supervised autoencoders: Improving generalization performance with unsupervised regularizers.”, NeurIPS Proceedings.", "https://proceedings.neurips.cc/paper_files/paper/2018/file/2a38a4a9316c49e5a833517c45d31070-Paper.pdf")
+                ),
+                caption = "Supervised auto-encoder model architecture for multi-omics data. Depicted are the (multiple) layers of the model, including input, middle, output, and the bottleneck. The model is implemented using R torch-based deep learning pipeline in R. Includes feature selection, SAE models, training/validation splitting, training with distinct optimizers, prediction and later feature extraction."
               ),
               plot_deepnet_clusters_ui(
                 ns("deepnet_clusters"),
                 title = "Network clustering",
-                info.text = "Neural net clustering",
-                caption = ""
+                info.text = "Neural net clustering. Dimensional reduction of the reduced representations ('encodings') from the multi-omics supervised auto-encoder (SAE).",
+                info.methods = "Dimensional reduction of the reduced representations ('encodings') produced by the SAE model for the multi-omics data. For details on how SAE is implemented, please refer to the information provided in the network model architecture plot. Prior to dimensional reduction, small datasets are augmented by expanding the matrix (by samples) 3 times the original size. Noise is then added as the product between standard deviation and random values drawn from a Gaussian distribution. Dimensional reduction is then conducted using singular value decomposition via the R function svd. A scatter plot of the 1st component (x-axis) and 2nd component (y-axis) is presented.",
+                info.references = list(
+                  list(
+                    "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+                ),
+                caption = "Principal component analysis of the encodings from the multi-omics supervised auto-encoder (SAE). Scatter plot of the 1st principal component (x-axis) and 2nd principal component (y-axis). Each dot is a feature, coloured by its datatype."
               ),
               plot_deepnet_aescatter_ui(
                 ns("deepnet_aescatter"),
