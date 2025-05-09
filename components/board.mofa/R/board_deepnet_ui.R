@@ -151,7 +151,12 @@ DeepNetUI <- function(id) {
               plot_deepnet_lossplot_ui(
                 ns("deepnet_lossplot"),
                 title = "Loss history",
-                info.text = "Plot of loss history",
+                info.text = "Scatter plot of training and validation loss curves over the course of model training.",
+                info.methods = "Scatter plot of the training and validation loss curves over the course of model training. From the SAE multi-omics model, the vector storing the training loss at each iteration (e.g., cross-entropy loss for classification), is extracted. The vector storing the validation loss at each iteration is also extracted. Zeros values are replaced with a small positive value, 10% of the minimum nonzero loss, to enable logarithm transformation. Since loss values may spans order of magnitude, the training and validation loss values are log2-transformed for better visualization. Training and validation loss values are colored in black and green, respectively. ",
+                info.references = list(
+                  list(
+                    "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+                ),
                 caption = ""
               )
             )
