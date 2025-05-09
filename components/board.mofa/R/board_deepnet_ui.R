@@ -203,7 +203,7 @@ DeepNetUI <- function(id) {
             plot_deepnet_gradients_ui(
               ns("deepnet_gradients"),
               title = "Network gradients",
-              info.text = "Barplot showing the most important features (by gradient magnitude) for each class in each omics view",
+              info.text = "Barplot showing the most important features (by gradient magnitude) for each class in each omics view.",
               info.methods = "A list of gradient matrices, one for each omics view, is extracted from the SAE model. Each datatype-specific gradient matrix contains features and classes/labels for a phenotype. Classes/labels can be selected using the {Show condition} option. Phenotypes can selected using the {Select phenotype} option. Gradient values are measures of the importance of a feature in given phenotype class. A barplot showing the most important features (by gradient magnitude) for each class in each omics view is shown. Gradients are sorted for the selected features. By using the plot option {positive only}, positive and/or negative gradient values are shown.",
               info.references = list(
                 list(
@@ -215,6 +215,11 @@ DeepNetUI <- function(id) {
               ns("deepnet_fcvsgrad"),
               title = "Gradient vs. foldchange",
               info.text = "Foldchange vs. gradient",
+              info.methods = "",
+              info.references = list(
+                list(
+                  "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+              ),              
               caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

@@ -80,11 +80,12 @@ plot_deepnet_gradients_server <- function(id,
           par = FALSE, cex.names = cex.names
         )
       }
-      #if(type == "scatter") {
-      #  fc <- phenoFC()
-      #  par(mfrow = c(nr,nc), mar = c(4,4,2,1))
-      #  playbase::deep.plotGradientVSFoldchange(grad, fc = fc, par = FALSE)
-      #}
+
+      if(type == "scatter") {
+        fc <- phenoFC()
+        par(mfrow = c(nr,nc), mar = c(4,4,2,1))
+        playbase::deep.plotGradientVSFoldchange(grad, fc = fc, par = FALSE)
+      }
       
     }
 
