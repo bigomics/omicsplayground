@@ -228,8 +228,8 @@ DeepNetUI <- function(id) {
             table_deepnet_gradients_ui(
               ns("deepnet_table"),
               title = "Table of features' fold-change and gradient.",
-              info.text = "Table of feature gradient. For each feature, gradient values and log2FC values for each phenotype class are reported. For details on how FC is calculated, please refer to the info of the Gradient vs. foldchange scatter plot. For details on the SAE model, please refer to the info of the 'Network model architecture' scheme under the 'Model training' tab.'",
-              caption = "Table of multi-omics feature log fold-change and gradient. A datatype symbols is prepended to each feature (px=proteomics; mx=metabolomics; gx=transcriptomics). Additional feature annotations are reported in the symbol and title columns. For each feature, gradient values and log2FC values for each phenotype class are reported",
+              info.text = "Table of multi-omics feature log fold-change and gradient. A datatype symbols is prepended to each feature (px=proteomics; mx=metabolomics; gx=transcriptomics). Additional feature annotations are reported in the symbol and title columns. For each feature, gradient values and log2FC values for each phenotype class are reported. For details on how FC is calculated, please refer to the info of the Gradient vs. foldchange scatter plot. For details on the SAE model, please refer to the info of the 'Network model architecture' scheme under the 'Model training' tab.'",
+              caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
