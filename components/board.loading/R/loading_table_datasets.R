@@ -621,7 +621,8 @@ loading_table_datasets_server <- function(id,
     observeEvent(input$changename_pgx, {
       shinyalert::shinyalert(
         title = "Change name",
-        text = "Are you sure you want to change the name of your dataset?",
+        text = paste0("Are you sure you want to change the name of your dataset '",
+          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset",], "'?"),
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
@@ -629,7 +630,8 @@ loading_table_datasets_server <- function(id,
           if (x) {
             shinyalert::shinyalert(
               title = "Enter new name",
-              text = "Please enter a new name for your dataset:",
+              text = paste0("Rename your dataset '",
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset",], "' as:"),
               type = "input",
               showCancelButton = TRUE,
               callbackR = function(new_name) {
@@ -659,7 +661,8 @@ loading_table_datasets_server <- function(id,
     observeEvent(input$changedesc_pgx, {
       shinyalert::shinyalert(
         title = "Change description",
-        text = "Are you sure you want to change the description of your dataset?",
+        text = paste0("Are you sure you want to change the description of your dataset '",
+          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset",], "'?"),
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
@@ -667,7 +670,8 @@ loading_table_datasets_server <- function(id,
           if (x) {
             shinyalert::shinyalert(
               title = "Enter new description",
-              text = "Please enter a new description for your dataset:",
+              text = paste0("Change the description of your dataset '",
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset",], "' to:"),
               type = "input",
               showCancelButton = TRUE,
               callbackR = function(new_desc) {
