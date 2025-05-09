@@ -179,12 +179,12 @@ DeepNetUI <- function(id) {
               ns("deepnet_bigheatmap"),
               title = "Biomarker heatmap",
               info.text = "Heatmap of top features by (importance) across omics data types. Visualize potential biomarkers, as inferred by the SAE model, across multiple-omics data.",
-              info.methods = "",
+              info.methods = "From the SAE model, a nested list of gradients for a phenotype and each omics view is returned. The phenotype can be selected in the option {Select phenotype}. Optionally, datatypes can be set in the {Select datatypes} option to focus on a specific datatype. For each phenotype and datatype, the features are ranked by average squared gradient (importance). The rankings across phenotypes and datatypes are then combined to select a balanced set of top features. These top features are then plotted in a heatmap. For heatmap, we employ row (feature) scaling and z-score calculation, and 'ward.d2' as clustering method. This approach aids visualization of the most important features (biomarkers) across omics data types using the model’s learned gradients as feature importance scores.",
               info.references = list(
                 list(
                   "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
               ),
-              caption = ""
+              caption = "Heatmap of top features by (importance) across omics data types."
             )              
           )
         )
