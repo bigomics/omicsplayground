@@ -139,9 +139,14 @@ DeepNetUI <- function(id) {
               ),              
               plot_deepnet_confusionmatrix_ui(
                 ns("deepnet_confusionmatrix"),
-                title = "Confusion matrix",
-                info.text = "Neural net clustering",
-                caption = ""
+                title = "Confusion matrix table",
+                info.text = "The confusion matrix provides a tool to assess the performance of the classification SAE model by comparing the model’s predicted labels with the actual (ground truth) labels from the dataset.",
+                info.methods = "A confusion matrix for each phenotype as selected by {Select phenotype}, is computed from the SAE-model and returned using the train or test data as selected by the plot option {Show set}. For each phenotype, the best predicted class is extracted. The true labels are then compared to the predicted labels and shown in a confusion matrix.",
+                info.references = list(
+                  list(
+                    "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+                ),
+                caption = "Table of confusion matrix. SAE model-predicted labels vs actual (ground truth) labels from the dataset."
               ),
               plot_deepnet_lossplot_ui(
                 ns("deepnet_lossplot"),
