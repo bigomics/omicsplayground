@@ -112,8 +112,13 @@ DeepNetUI <- function(id) {
               plot_deepnet_aescatter_ui(
                 ns("deepnet_aescatter"),
                 title = "Signal reconstruction",
-                info.text = "Neural net clustering",
-                caption = ""
+                info.text = "Scatter plot of signal reconstruction. Reconstructed data from SAE model are compared to actual, input data to assess accuracy of SAE model.",
+                info.methods = "The model's SAE output is first computed on the stored, normalized omics data views. The input data are scaled, and the SAE reconstructed data are re-combined into original dimensions. A random selection of 1000 points is performed on the scaled input and reconstructed data and a scatter plot is generated. This plot would provide a visual diagnostic of the SAE's reconstruction accuracy, enabling to assess model fit and potential under- or overfitting. It informs on how well the SAE reconstructs the input data. If the SAE performed perfectly, all points should fall along the diagonal (actual ≈ reconstructed). Deviations may indicate reconstruction error which may occur in complex biological data.",
+                info.references = list(
+                  list(
+                    "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+                ),
+                caption = "Scatter plot of actual vs SAE model-reconstructed data."
               )
             ),
             bslib::layout_columns(
@@ -124,8 +129,13 @@ DeepNetUI <- function(id) {
               plot_deepnet_biomarkerheatmap_ui(
                 ns("deepnet_biomarkerheatmap"),
                 title = "Biomarker heatmap",
-                info.text = "",
-                caption = ""
+                info.text = "Heatmap of top features by (importance) across omics data types. Visualize potential biomarkers, as inferred by the SAE model, across multiple-omics data.",
+                info.methods = "From the SAE model, a nested list of gradients for a phenotype and each omics view is returned. The phenotype can be selected in the option {Select phenotype}. Optionally, datatypes can be set in the {Select datatypes} option to focus on a specific datatype. For each phenotype and datatype, the features are ranked by average squared gradient (importance). The rankings across phenotypes and datatypes are then combined to select a balanced set of top 20 features. These top features are then plotted in a heatmap. For heatmap, we employ row (feature) scaling and z-score calculation, and 'ward.d2' as clustering method. This approach aids visualization of the most important features (biomarkers) across omics data types using the model’s learned gradients as feature importance scores.",
+                info.references = list(
+                  list(
+                    "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+                ),
+              caption = "Heatmap of top features by (importance) across omics data types."
               ),              
               plot_deepnet_confusionmatrix_ui(
                 ns("deepnet_confusionmatrix"),
@@ -158,7 +168,12 @@ DeepNetUI <- function(id) {
             plot_deepnet_biomarkerheatmap_ui(
               ns("deepnet_bigheatmap"),
               title = "Biomarker heatmap",
-              info.text = "",
+              info.text = "Heatmap of top features by (importance) across omics data types. Visualize potential biomarkers, as inferred by the SAE model, across multiple-omics data.",
+              info.methods = "",
+              info.references = list(
+                list(
+                  "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
+              ),
               caption = ""
             )              
           )
