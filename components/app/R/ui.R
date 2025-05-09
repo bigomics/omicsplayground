@@ -33,7 +33,9 @@ app_ui <- function(x) {
       expiration = -1,
       http_only = TRUE,
       secure_only = TRUE,
-      redirect = "close"
+      redirect = "/close",
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/close", x$PATH_INFO)) {} else if (identical("/", x$PATH_INFO)) {
     #-------------------------------------------------------
