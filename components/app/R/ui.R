@@ -91,7 +91,7 @@ app_ui <- function(x) {
 
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
-        onClick = "logoutInApp().then(() => window.location.reload());"
+        onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
       )
 
       if (opt$AUTHENTICATION == "shinyproxy") {
