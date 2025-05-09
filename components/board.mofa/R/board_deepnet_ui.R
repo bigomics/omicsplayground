@@ -204,7 +204,7 @@ DeepNetUI <- function(id) {
               ns("deepnet_gradients"),
               title = "Network gradients",
               info.text = "Barplot showing the most important features (by gradient magnitude) for each class in each omics view.",
-              info.methods = "A list of gradient matrices, one for each omics view, is extracted from the SAE model. Each datatype-specific gradient matrix contains features and classes/labels for a phenotype. Classes/labels can be selected using the {Show condition} option. Phenotypes can selected using the {Select phenotype} option. Gradient values are measures of the importance of a feature in given phenotype class. A barplot showing the most important features (by gradient magnitude) for each class in each omics view is shown. Gradients are sorted for the selected features. By using the plot option {positive only}, positive and/or negative gradient values are shown.",
+              info.methods = "The gradient matrices, one for each omics view, is extracted from the SAE model. Each datatype-specific gradient matrix contains features and classes/labels for a phenotype. Classes/labels can be selected using the {Show condition} option. Phenotypes can selected using the {Select phenotype} option. Gradient values are measures of the importance of a feature in given phenotype class. A barplot showing the most important features (by gradient magnitude) for each class in each omics view is shown. Gradients are sorted for the selected features. By using the plot option {positive only}, positive and/or negative gradient values are shown.",
               info.references = list(
                 list(
                   "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
@@ -213,22 +213,23 @@ DeepNetUI <- function(id) {
             ),
             plot_deepnet_gradients_ui(
               ns("deepnet_fcvsgrad"),
-              title = "Gradient vs. foldchange",
-              info.text = "Foldchange vs. gradient",
-              info.methods = "",
+              title = "Feature's gradient vs. fold-change",
+              info.text = "Scatter plot of feature fold-change vs. feature SAE gradient per datatype.",
+              info.methods = "For the selected phenotype, as chosen by the {Select phenotype} option, the difference between the average expression in the phenotype classes is computed for each feature. Gene sets as inferred in the gene set enrichment analysis are also included as 'feature set'. The gradient matrices, one for each omics view, is extracted from the SAE model. For each available feature per datatype, a scatter plot of log2FC vs gradient is displayed. Feature with lowest and highest FC and gradient are coloured in blue and red, respectively.",
+#[For each datatype, the average of each squared FC and gradient feature value is computed and rank of average values computed. The two rank vectors (one for log2FC and one for gradient) are then combined by sum. This results into a feature score corresponding to the rank of log2FC and gradient. Lower scores correspond to features that have lower ranks in both FC and gradient matrices; higher scores to features that have higher log2FC and gradient ranks].
               info.references = list(
                 list(
                   "Paszke, A., et al. (2019). “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” arXiv:1912.01703,e1005752.", "https://doi.org/10.48550/arXiv.1912.01703")
-              ),              
-              caption = "",
+              ),
+              caption = "Scatter plot of feature log2 fold-change vs. feature SAE gradient per datatype.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             table_deepnet_gradients_ui(
               ns("deepnet_table"),
-              title = "Network gradients",
-              info.text = "SNF affinity matrices",
-              caption = "",
+              title = "Table of features' fold-change and gradient.",
+              info.text = "Table of feature gradient. For each feature, gradient values and log2FC values for each phenotype class are reported. For details on how FC is calculated, please refer to the info of the Gradient vs. foldchange scatter plot. For details on the SAE model, please refer to the info of the 'Network model architecture' scheme under the 'Model training' tab.'",
+              caption = "Table of multi-omics feature log fold-change and gradient. A datatype symbols is prepended to each feature (px=proteomics; mx=metabolomics; gx=transcriptomics). Additional feature annotations are reported in the symbol and title columns. For each feature, gradient values and log2FC values for each phenotype class are reported",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )

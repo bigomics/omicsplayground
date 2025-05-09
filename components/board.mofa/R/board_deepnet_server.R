@@ -287,6 +287,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       
       avgX <- X %*% mx
       F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE] - rowMeans(avgX[,-i,drop=FALSE]))
+      #F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE])
       colnames(F) <- sub("^y","",colnames(mx))
       rownames(F) <- rownames(X)
       fc <- playbase::mofa.split_data(F)
