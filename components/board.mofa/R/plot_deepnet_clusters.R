@@ -7,6 +7,8 @@ plot_deepnet_clusters_ui <- function(
     id,
     title = "",
     info.text = "",
+    info.methods,
+    info.references,
     caption = "",
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
@@ -17,9 +19,11 @@ plot_deepnet_clusters_ui <- function(
   PlotModuleUI(
     ns("plot"),
     title = title,
-    label = label,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     caption = caption,
+    label = label,
     height = height,
     width = width,
     download.fmt = c("png", "pdf", "svg")

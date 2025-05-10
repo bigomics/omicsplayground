@@ -7,19 +7,23 @@ plot_deepnet_lossplot_ui <- function(
     id,
     title = "",
     info.text = "",
+    info.methods,
+    info.references,
     caption = "",
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%"))
-{
+    width = c("auto", "100%")) {
+
   ns <- shiny::NS(id)
   
   PlotModuleUI(
     ns("plot"),
     title = title,
-    label = label,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     caption = caption,
+    label = label,
     height = height,
     width = width,
     download.fmt = c("png", "pdf", "svg")
@@ -37,8 +41,7 @@ plot_deepnet_lossplot_server <- function(id,
       net <- net()
       n <- length(net$loss_history)
       shiny::validate(shiny::need(n>0, "please run network"))
-
-      par(mfrow=c(1,1), mar=c(4,4,2,1))
+      par(mfrow = c(1,1), mar = c(4,4,2,1))
       net$plot_loss()
     }
 
