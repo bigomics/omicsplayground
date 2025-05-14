@@ -251,7 +251,7 @@ UploadBoard <- function(id,
             immediate = FALSE,
             callbackR = function(x) checked_for_log(TRUE)
           )
-          #checked_for_log(FALSE)
+          # checked_for_log(FALSE)
         } else {
           checked_for_log(TRUE)
         }
