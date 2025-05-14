@@ -18,6 +18,7 @@ upload_table_preview_counts_server <- function(
     auth,
     uploaded,
     checked_matrix,
+    is_logscale,
     checklist,
     scrollY,
     width,
@@ -26,12 +27,15 @@ upload_table_preview_counts_server <- function(
     info.text,
     caption,
     upload_datatype) {
+
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
-      shiny::req(!is.null(checked_matrix()))
-      dt <- checked_matrix()
+      #shiny::req(!is.null(checked_matrix()))
+      #dt <- checked_matrix()
+      shiny::req(!is.null(uploaded$counts.csv))
+      dt <- uploaded$counts.csv      
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXROW <- 10000
@@ -110,7 +114,6 @@ upload_table_preview_counts_server <- function(
           onclick = "window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
         )
       )
-
 
       div(
         bslib::as_fill_carrier(),
@@ -418,10 +421,14 @@ upload_table_preview_counts_server <- function(
     })
 
     output$histogram <- renderPlot({
-      counts <- checked_matrix()
+      #counts <- checked_matrix()
+      counts <- uploaded$counts.csv
       shiny::req(counts)
-      prior <- min(counts[counts > 0], na.rm = TRUE)
-      xx <- log2(prior + counts)
+      xx <- counts
+      if (!is_logscale()) {
+        prior <- min(counts[counts > 0], na.rm = TRUE)
+        xx <- log2(prior + counts)
+      }
       # Add seed to make it deterministic
       set.seed(123)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
@@ -436,11 +443,15 @@ upload_table_preview_counts_server <- function(
     })
 
     output$boxplots <- renderPlot({
-      counts <- checked_matrix()
+      #counts <- checked_matrix()
+      counts <- uploaded$counts.csv
       shiny::req(counts)
-      prior <- min(counts[counts > 0], na.rm = TRUE)
-      X <- log2(pmax(counts, 0) + prior)
-      boxplot(X, ylab = tspan("counts (log2)", js = FALSE))
+      xx <- counts
+      if (!is_logscale()) {
+        prior <- min(xx[xx > 0], na.rm = TRUE)
+        xx <- log2(pmax(xx, 0) + prior)
+      }
+      boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
 
     # error pop-up alert
