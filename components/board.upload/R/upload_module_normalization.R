@@ -173,6 +173,7 @@ upload_module_normalization_server <- function(
         }
         pos <- NULL
         if (NCOL(X) > 2) {
+          set.seed(1234)
           pos <- irlba::irlba(X, nv = 2)$v
           rownames(pos) <- colnames(X)
         }
@@ -354,6 +355,7 @@ upload_module_normalization_server <- function(
 
           ## standard dim reduction methods
           pos <- list()
+          set.seed(1234)
           pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
