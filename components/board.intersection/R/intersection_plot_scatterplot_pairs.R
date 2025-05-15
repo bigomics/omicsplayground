@@ -79,6 +79,7 @@ intersection_scatterplot_pairs_server <- function(id,
       data <- plot_data()
       df <- data[[1]]
       sel.genes <- data[[2]]
+      shiny::req(sel.genes)
       ## resort selection so that selected genes are drawn last to avoid
       ## covering them up.
       is.sel <- (rownames(df) %in% sel.genes)
