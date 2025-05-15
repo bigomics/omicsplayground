@@ -132,7 +132,7 @@ expression_plot_topgenes_server <- function(id,
         annotations <- list(
           x = 0.5,
           y = annot.y,
-          text = gene,
+          text = playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE),
           font = list(size = 10 * title.cex),
           xref = "paper",
           yref = "paper",

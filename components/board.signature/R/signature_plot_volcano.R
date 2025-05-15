@@ -101,6 +101,7 @@ signature_plot_volcano_server <- function(id,
 
       features <- rownames(fc)
       symbols <- pgx$genes[rownames(fc), "symbol"]
+      symbols <- playbase::probe2symbol(features, pgx$genes, "gene_name", fill_na = TRUE)
 
       # Get gene selected labels
       if (length(ct) == 1) {

@@ -119,6 +119,7 @@ biomarker_plot_heatmap_server <- function(id,
         shiny::req(res)
 
         X <- res$X
+        rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, "gene_name", fill_na = TRUE)
         splitx <- res$splitx
 
         playbase::gx.splitmap(X,

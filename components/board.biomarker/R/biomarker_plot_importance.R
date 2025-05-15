@@ -50,6 +50,7 @@ biomarker_plot_importance_ui <- function(
 #' @return
 #' @export
 biomarker_plot_importance_server <- function(id,
+                                             pgx,
                                              calcVariableImportance,
                                              is_computed,
                                              watermark = FALSE) {
@@ -87,6 +88,7 @@ biomarker_plot_importance_server <- function(id,
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
         R <- pmax(R, 0.05)
+        rownames(R) <- playbase::probe2symbol(rownames(R), pgx$genes, "gene_name", fill_na = TRUE)
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
         par(mar = c(8,4,1,0.2), mgp=c(2.5,0.8,0))
         barplot(t(R),
