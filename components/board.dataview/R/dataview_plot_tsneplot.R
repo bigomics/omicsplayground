@@ -53,16 +53,14 @@ dataview_plot_tsne_server <- function(id,
       shiny::req(gene, data_type)
 
       if (samples[1] == "") samples <- colnames(pgx$X)
-      if (!all(samples %in% colnames(pgx$X))) {
-        return(NULL)
-      }
-      if (!gene %in% rownames(pgx$X)) {
-        return(NULL)
-      }
-
+      if (!all(samples %in% colnames(pgx$X))) return(NULL)
+      if (!gene %in% rownames(pgx$X)) return(NULL)
+      
       ## precompute
       pp <- rownames(pgx$genes)[1]
       sel <- match(gene, pgx$genes$gene_name)
+      if (is.na(sel)) sel <- match(gene, pgx$genes$feature)
+      if (is.na(sel)) sel <- match(gene, pgx$genes$symbol)
       pp <- rownames(pgx$genes)[ifelse(is.na(sel), 1, sel)]
 
       gx <- NULL
@@ -91,7 +89,6 @@ dataview_plot_tsne_server <- function(id,
 
       fc1 <- tanh(0.99 * scale(gx)[, 1])
       fc1 <- tanh(0.99 * scale(gx, center = FALSE)[, 1])
-      #
       fc2 <- (fc1 - min(fc1))
 
       data <- data.frame(
