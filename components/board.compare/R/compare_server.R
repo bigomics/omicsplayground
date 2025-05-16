@@ -347,15 +347,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- pgx1$cluster.genes$pos[["umap2d"]]
+          posx <- playbase::rename_by(pos, pgx1$genes, new_id = target_col)
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
+          posx <- playbase::rename_by(pos, pgx2$genes, new_id = target_col)
         }
-        posx <- playbase::rename_by(pos, pgx1$genes, new_id = target_col)
         mapped.pos <- playbase::rename_by2(posx, pgx$genes,
           new_id = "rownames",
           unique = FALSE
         )
         mapped.pos <- mapped.pos[match(rownames(pgx$X), rownames(mapped.pos)), ]
+        shiny::validate(shiny::need(
+          !all(is.na(mapped.pos)),
+          "No matching features between datasets"
+        ))
         rownames(mapped.pos) <- rownames(pgx$X)
 
         p <- playbase::pgx.plotGeneUMAP(
