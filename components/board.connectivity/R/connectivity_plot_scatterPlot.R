@@ -174,7 +174,8 @@ connectivity_plot_scatterPlot_server <- function(id,
         }
 
         ## Labels for top 50
-        label.text0 <- head(rownames(df)[which(is.sel)], 50)
+        rownames_df <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+        label.text0 <- head(rownames_df[which(is.sel)], 50)
         label.text <- playbase::shortstring(label.text0, 30)
         if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
@@ -182,11 +183,11 @@ connectivity_plot_scatterPlot_server <- function(id,
         jj <- order(is.sel)
         df <- df[jj, ]
         df.color <- df.color[jj]
-        sel1 <- match(label.text0, rownames(df)) ## index for labeled
+        sel1 <- match(label.text0, playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)) ## index for labeled
 
         ## Tooltip text for all
-        gg <- rownames(df)
-        tt <- paste0("<b>", gg, "</b> ", pgx$genes[gg, "gene_title"])
+        gg <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+        tt <- paste0("<b>", gg, "</b> ", playbase::probe2symbol(gg, pgx$genes, "gene_title", fill_na = TRUE))
         tt <- gsub("_", " ", tt)
         tt <- sapply(tt, playbase::breakstring2, 50, brk = "<br>")
 
