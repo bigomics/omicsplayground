@@ -350,7 +350,7 @@ upload_module_normalization_server <- function(
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           nb <- min(30, dim(X) / 5)
-          scaledX <- t(scale(t(scale(t(X), scale = FALSE))))
+          scaledX <- playbase::double_center_scale_fast(X)
           corX <- cor(t(scaledX))
 
           ## standard dim reduction methods
