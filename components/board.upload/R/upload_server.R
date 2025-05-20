@@ -1164,7 +1164,8 @@ UploadBoard <- function(id,
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
-      caption = "This is the uploaded samples data."
+      caption = "This is the uploaded samples data.",
+      upload_datatype = upload_datatype
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
