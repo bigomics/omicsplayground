@@ -115,7 +115,7 @@ dataview_plot_correlation_server <- function(id,
       gg <- unique(df$genes)
       df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
-      df$genes <- factor(df$genes, levels = df$genes)
+      df$genes <- factor(df$genes, levels = unique(df$genes))
 
       ay <- list(overlaying = "y", side = "right", title = "")
 
