@@ -322,7 +322,8 @@ upload_module_normalization_server <- function(
               clust.method = "tsne",
               methods = methods,
               evaluate = FALSE, ## no score computation
-              xlist.init = xlist.init
+              xlist.init = xlist.init,
+              ntop = 1000
             )
           }
         )
