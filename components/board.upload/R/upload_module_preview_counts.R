@@ -623,7 +623,11 @@ upload_table_preview_counts_server <- function(
     })
 
     observeEvent(input$load_example, {
-      uploaded$counts.csv <- playbase::COUNTS
+      if (upload_datatype() == "multi-omics") {
+        uploaded$counts.csv <- playbase::COUNTS_MO
+      } else {
+        uploaded$counts.csv <- playbase::COUNTS
+      }
     })
 
 
