@@ -315,7 +315,7 @@ upload_module_normalization_server <- function(
               pheno = NULL,
               contrasts = contrasts,
               batch.pars = batch.pars,
-              clust.method = "tsne",
+              clust.method = "pca",
               methods = methods,
               evaluate = FALSE, ## no score computation
               xlist.init = xlist.init
