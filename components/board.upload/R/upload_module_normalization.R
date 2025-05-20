@@ -304,6 +304,10 @@ upload_module_normalization_server <- function(
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
+        # Remove NPM if more than 100 samples
+        if (ncol(X0) > 100) {
+          methods <- methods[methods != "NPM"]
+        }
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
         shiny::withProgress(
@@ -318,7 +322,8 @@ upload_module_normalization_server <- function(
               clust.method = "tsne",
               methods = methods,
               evaluate = FALSE, ## no score computation
-              xlist.init = xlist.init
+              xlist.init = xlist.init,
+              ntop = 1000
             )
           }
         )
