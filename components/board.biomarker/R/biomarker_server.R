@@ -228,6 +228,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
 
     biomarker_plot_importance_server(
       "pdx_importance",
+      pgx,
       calcVariableImportance,
       is_computed,
       watermark = WATERMARK
@@ -251,6 +252,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
 
     biomarker_plot_boxplots_server(
       "pdx_boxplots",
+      pgx,
       calcVariableImportance,
       is_computed,
       watermark = WATERMARK

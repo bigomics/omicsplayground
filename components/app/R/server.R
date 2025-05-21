@@ -828,6 +828,7 @@ app_server <- function(input, output, session) {
       names(label_types)[names(label_types) == "gene_title"] <- "title"
       label_types <- label_types[!grepl("pos|map|tx_len|source", names(label_types))]
       names(label_types) <- sub("^chr$","chromosome",names(label_types))
+      label_types <- label_types[!names(label_types) == "chromosome"]
 
       # default selection depending on datatype
       if (PGX$datatype %in% c("metabolomics","multi-omics")) {

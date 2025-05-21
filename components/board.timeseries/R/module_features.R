@@ -210,6 +210,7 @@ TimeSeriesBoard.features_server <- function(id,
         tt <- df$time[ii]
         xx <- df$expr[ii]
         gr <- df$group[ii]
+        g <- playbase::probe2symbol(g, pgx$genes, "gene_name", fill_na = TRUE)
         playbase::plotTimeSeries.groups(
           time=tt, y=xx, group=gr, main=g, lwd=3,
           xlab=timevar, time.factor=TRUE)

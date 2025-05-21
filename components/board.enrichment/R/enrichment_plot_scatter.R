@@ -142,6 +142,7 @@ enrichment_plot_scatter_server <- function(id,
       gset <- gset_selected()
       shiny::req(sel, gset)
       gene <- sel$gene
+      gene <- playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE)
       gset <- gset[1]
       gx <- pgx$X[sel$rn, ]
       sx <- pgx$gsetX[gset, ]
