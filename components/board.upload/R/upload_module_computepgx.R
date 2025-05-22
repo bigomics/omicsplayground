@@ -446,11 +446,10 @@ upload_module_computepgx_server <- function(
         
         time.var <- playbase::get_timevars()
         sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
-
+        
         if (length(sel.time) && length(unique(Y[, sel.time[1]]))>1) {
-          
-          timeseries <- unname(as.character(Y[, sel.time[1]]))
-          timeseries <- gsub("\\D", "", timeseries)
+
+          timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
           ia.ctx <- ia.spline.ctx <- c()
 
           i=1
@@ -470,17 +469,20 @@ upload_module_computepgx_server <- function(
           }
 
           if (length(ia.ctx) | length(ia.spline.ctx)) {
+
             shinyalert::shinyalert(title = "Interaction analysis",
-              text = paste0(sel.time[1], " found in samples.csv.",
-                "Time-interaction will be tested for valid contrasts."),
-              type = "info"
-            )
+              text = paste0("'",colnames(Y)[sel.time[1]], "' found in samples.csv.\n",
+                "Interaction with time will be tested for valid contrasts."),
+              type = "info")
+            
             if (length(ia.ctx)) {
+              ia.ctx <- gsub(":.*", "", ia.ctx)
               msg <- paste0("<p style='color: gray;'>Interaction with time will be tested<br>",
-                "for the contrasts:<br>", paste0(ia.ctx,collapse="<br>"),".</p>")
+                "for the following contrast variables:<br>", paste0(ia.ctx, collapse="<br>"), ".</p>")
             } else if (length(ia.spline.ctx)) {
+              ia.spline.ctx <- gsub(":.*", "", ia.spline.ctx)
               msg <- paste0("<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
-                "for the contrasts:<br>", paste0(ia.spline.ctx,collapse="<br>"),".</p>")
+                "for the following contrasts variables:<br>", paste0(ia.spline.ctx, collapse="<br>"),".</p>")
             }
 
             shiny::updateCheckboxGroupInput(
