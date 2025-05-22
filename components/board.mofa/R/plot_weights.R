@@ -56,6 +56,9 @@ mofa_plot_weights_server <- function(id,
       
       mfrow=c(1,ntypes)
       par(mfrow=mfrow, mar=c(4,8,1.5,0))
+      for(v in names(ww)) {
+        rownames(ww[[v]]) <- playbase::probe2symbol(rownames(ww[[v]]), pgx$genes, "gene_name", fill_na = TRUE)
+      }
       playbase::mofa.plot_weights(ww, k=k, ntop=ntop, maxchar=60)
     }
 

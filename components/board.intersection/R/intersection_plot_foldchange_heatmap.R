@@ -85,6 +85,7 @@ foldchange_heatmap_server <- function(id,
       }
       bm <- 5 - mh ## bottom margin
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
+      rownames(F1) <- playbase::probe2symbol(rownames(F1), pgx$genes, "gene_name", fill_na = TRUE)
 
       plt <- grid::grid.grabExpr({
         frame()

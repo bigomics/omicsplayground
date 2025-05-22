@@ -828,7 +828,17 @@ app_server <- function(input, output, session) {
       names(label_types)[names(label_types) == "gene_title"] <- "title"
       label_types <- label_types[!grepl("pos|map|tx_len|source", names(label_types))]
       names(label_types) <- sub("^chr$","chromosome",names(label_types))
-      label_types <- label_types[!names(label_types) == "chromosome"]
+      # if one of the label_types unique values amounts for less than 10% of total genes, remove it
+      n_genes <- nrow(PGX$genes)
+      keep_types <- sapply(label_types, function(col) {
+        if (col %in% colnames(PGX$genes)) {
+          n_unique <- length(unique(PGX$genes[, col]))
+          (n_unique / n_genes) >= 0.10
+        } else {
+          TRUE
+        }
+      })
+      label_types <- label_types[keep_types]
 
       # default selection depending on datatype
       if (PGX$datatype %in% c("metabolomics","multi-omics")) {
