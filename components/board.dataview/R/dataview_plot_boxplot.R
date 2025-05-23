@@ -25,23 +25,25 @@ dataview_plot_boxplot_ui <- function(
   )
 }
 
-dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.data_type, watermark = FALSE) {
+dataview_plot_boxplot_server <- function(id,
+                                         parent.input,
+                                         getCountsTable,
+                                         r.samples = reactive(""),
+                                         r.data_type,
+                                         watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
-    ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
-      req(res)
-
-      list(
-        counts = res$log2counts,
-        sample = colnames(res$log2counts)
-      )
+      samples <- r.samples()
+      shiny::req(res)
+      list(counts = res$log2counts, sample = colnames(res$log2counts))
     })
 
     plot.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
-
+      
       par(mar = c(8, 4, 1, 2), mgp = c(2.2, 0.8, 0))
       ## ---- xlab ------ ###
       xaxt <- "l"
@@ -115,8 +117,6 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.dat
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-
-
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

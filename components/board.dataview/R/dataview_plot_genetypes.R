@@ -29,11 +29,13 @@ dataview_plot_genetypes_ui <- function(
 
 dataview_plot_genetypes_server <- function(id,
                                            getCountsTable,
+                                           r.samples = reactive(""),
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
+      samples <- r.samples()
       shiny::req(res)
       res <- list(
         prop.counts = res$prop.counts,
