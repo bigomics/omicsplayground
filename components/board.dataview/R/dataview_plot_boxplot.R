@@ -38,7 +38,7 @@ dataview_plot_boxplot_server <- function(id,
       samples <- r.samples()
       shiny::req(res)
       list(counts = res$log2counts, sample = colnames(res$log2counts))
-    })
+     })
 
     plot.RENDER <- function() {
       res <- plot_data()

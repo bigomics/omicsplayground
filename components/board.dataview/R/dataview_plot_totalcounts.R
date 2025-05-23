@@ -13,7 +13,7 @@ dataview_plot_totalcounts_ui <- function(
     title) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList( ## AZ
+  options <- shiny::tagList(
     shiny::radioButtons(
       inputId = ns("sampleqc_plottype"),
       label = "Plot type",
@@ -72,7 +72,6 @@ dataview_plot_totalcounts_server <- function(id,
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          ## counts = log10(tbl$total.counts),
           counts = tbl$total.counts,
           ndetectedfeat = tbl$n.detected.features
         ),

@@ -226,10 +226,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       watermark = WATERMARK
     )
 
-    dataview_plot_genetypes_server(
-      "counts_genetypes",
-      getCountStatistics,
+    dataview_plot_variationcoefficient_server(
+      "variationcoefficient",
+      pgx,
       r.samples = selected_samples,
+      r.groupby = reactive(input$data_groupby),
       watermark = WATERMARK
     )
 

@@ -32,69 +32,64 @@ dataview_plot_genetypes_server <- function(id,
                                            r.samples = reactive(""),
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
       shiny::req(res)
-      res <- list(
-        prop.counts = res$prop.counts,
-        gset.genes = res$gset.genes
-      )
-      res
+      return(list(prop.counts = res$prop.counts,gset.genes = res$gset.genes))
     })
 
-    plot.RENDER <- function() {
-      res <- plot_data()
-      shiny::req(res)
+    ## plot.RENDER <- function() {
+    ##   res <- plot_data()
+    ##   shiny::req(res)
 
-      nsamples <- ncol(res$prop.counts)
-      klr <- colorRampPalette(
-        c(
-          rgb(0.2, 0.5, 0.8, 0.8),
-          rgb(0.2, 0.5, 0.8, 0.1)
-        ),
-        alpha = TRUE
-      )(nsamples)
+    ##   nsamples <- ncol(res$prop.counts)
+    ##   klr <- colorRampPalette(
+    ##     c(
+    ##       rgb(0.2, 0.5, 0.8, 0.8),
+    ##       rgb(0.2, 0.5, 0.8, 0.1)
+    ##     ),
+    ##     alpha = TRUE
+    ##   )(nsamples)
 
-      ymax <- max(colSums(res$prop.counts, na.rm = TRUE))
-      names.arg <- colnames(res$prop.counts)
-      if (length(names.arg) > 20) {
-        names.arg <- rep("", length(names.arg))
-      }
-      cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
+    ##   ymax <- max(colSums(res$prop.counts, na.rm = TRUE))
+    ##   names.arg <- colnames(res$prop.counts)
+    ##   if (length(names.arg) > 20) {
+    ##     names.arg <- rep("", length(names.arg))
+    ##   }
+    ##   cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
 
-      par(mfrow = c(1, 2), mar = c(4, 0, 2, 0.5), mgp = c(2.2, 0.8, 0))
-      frame()
-      barplot(
-        t(res$prop.counts) / nsamples,
-        horiz = TRUE, las = 1,
-        cex.lab = 1.0, border = NA,
-        ylab = "abundance (%)",
-        #
-        xlab = "abundance (%)",
-        # names.arg = names.arg, cex.names = cex.names,
-        col = klr
-      )
+    ##   par(mfrow = c(1, 2), mar = c(4, 0, 2, 0.5), mgp = c(2.2, 0.8, 0))
+    ##   frame()
+    ##   barplot(
+    ##     t(res$prop.counts) / nsamples,
+    ##     horiz = TRUE, las = 1,
+    ##     cex.lab = 1.0, border = NA,
+    ##     ylab = "abundance (%)",
+    ##     #
+    ##     xlab = "abundance (%)",
+    ##     # names.arg = names.arg, cex.names = cex.names,
+    ##     col = klr
+    ##   )
 
-      leg <- legend("topright",
-        legend = rev(colnames(res$prop.counts)),
-        fill = rev(klr), cex = 1, y.intersp = 0.75, bty = "n", plot = FALSE
-      )
-      leftx <- leg$rect$left * 0.9
-      rightx <- leg$rect$right * 0.9
-      topy <- leg$rect$top
-      bottomy <- leg$rect$bottom
-      legend(
-        x = c(leftx, rightx), y = c(topy, bottomy),
-        legend = rev(colnames(res$prop.counts)),
-        fill = rev(klr), bty = "n", cex = 0.9, y.intersp = 0.75
-      )
-    }
+    ##   leg <- legend("topright",
+    ##     legend = rev(colnames(res$prop.counts)),
+    ##     fill = rev(klr), cex = 1, y.intersp = 0.75, bty = "n", plot = FALSE
+    ##   )
+    ##   leftx <- leg$rect$left * 0.9
+    ##   rightx <- leg$rect$right * 0.9
+    ##   topy <- leg$rect$top
+    ##   bottomy <- leg$rect$bottom
+    ##   legend(
+    ##     x = c(leftx, rightx), y = c(topy, bottomy),
+    ##     legend = rev(colnames(res$prop.counts)),
+    ##     fill = rev(klr), bty = "n", cex = 0.9, y.intersp = 0.75
+    ##   )
+    ## }
 
-    modal_plot.RENDER <- function() {
-      plot.RENDER()
-    }
+    ## modal_plot.RENDER <- function() {
+    ##   plot.RENDER()
+    ## }
 
     plotly.RENDER <- function(return_csv = FALSE) {
       res <- plot_data()

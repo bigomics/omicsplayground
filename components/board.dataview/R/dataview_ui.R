@@ -225,24 +225,25 @@ DataViewUI <- function(id) {
             )
           ),
           bslib::layout_columns(
-            col_widths = c(5, 7),
-            dataview_plot_genetypes_ui(
-              ns("counts_genetypes"),
-              title = "Proportion of major gene types",
-              info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
-              caption = "Barplot showing the proportion of major gene types.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%"),
-              label = "d"
-            ),
+            col_widths = c(7, 5),
             dataview_plot_abundance_ui(
               ns("counts_abundance"),
-              title = "Proportion of major gene types per sample/group",
-              info.text = "Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting.",
-              caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
+              title = "Proportion of major gene classes per sample/group",
+              info.text = "Barplot showing the percentage of counts in terms of major gene classes such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting. By checking the plot option ' Show overall proportions', the overall proportion of each gene class across all samples in the data is displayed.",
+              caption = "Barplot showing the proportion of counts of major gene class in each sample or grouped samples, or in the overall dataset.",
               height = c("100%", TABLE_HEIGHT_MODAL),
-              label = "e",
+              label = "d",
               width = c("auto", "100%")
+            ),
+            dataview_plot_variationcoefficient_ui(
+              ns("variationcoefficient"),
+              height = c("50%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              title = "Coefficient of variation",
+              info.text = "Coefficient of variation (CV, %). CV is a common measure of experimental dispersion. It is a proxy of variation, precision, and repeatability of an assay. Samples can be grouped using the {Group by} setting.",
+              info.methods = "Coefficient of variation (CV, %). CV is calculated for each gene in the linear space as the ratio between the feature's standard deviation across samples and the absolute average feature expression across samples. Samples can be grouped using the {Group by} setting.",
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/",
+              caption = "Boxplot of coefficient of variation (%) "
             )
           )
         )
