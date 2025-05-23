@@ -13,7 +13,7 @@ dataview_plot_totalcounts_ui <- function(
     title) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList( ## AZ
+  options <- shiny::tagList(
     shiny::radioButtons(
       inputId = ns("sampleqc_plottype"),
       label = "Plot type",
