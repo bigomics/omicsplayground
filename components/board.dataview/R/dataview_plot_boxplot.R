@@ -27,11 +27,9 @@ dataview_plot_boxplot_ui <- function(
 
 dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       req(res)
-
       list(
         counts = res$log2counts,
         sample = colnames(res$log2counts)

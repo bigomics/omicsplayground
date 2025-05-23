@@ -63,11 +63,6 @@ dataview_plot_totalcounts_server <- function(id,
 
       sampleqc_plottype <- input$sampleqc_plottype
 
-      ## ylab <- paste0("total ", type, logtype)
-      ## if (data_groupby != "<ungrouped>") {
-      ##   ylab <- paste0("average total ", type, logtype)
-      ## }
-
       if (sampleqc_plottype == "Total abundance") {
         ylab <- paste0("Total ", type)
       } else if (sampleqc_plottype == "Number of detected features") {
@@ -77,7 +72,6 @@ dataview_plot_totalcounts_server <- function(id,
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          ## counts = log10(tbl$total.counts),
           counts = tbl$total.counts,
           ndetectedfeat = tbl$n.detected.features
         ),

@@ -226,15 +226,6 @@ DataViewUI <- function(id) {
           ),
           bslib::layout_columns(
             col_widths = c(7, 5),
-            ## dataview_plot_genetypes_ui(
-            ##   ns("counts_genetypes"),
-            ##   title = "Proportion of major gene types",
-            ##   info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
-            ##   caption = "Barplot showing the proportion of major gene types.",
-            ##   height = c("100%", TABLE_HEIGHT_MODAL),
-            ##   width = c("auto", "100%"),
-            ##   label = "d"
-            ## ),
             dataview_plot_abundance_ui(
               ns("counts_abundance"),
               title = "Proportion of major gene classes per sample/group",
