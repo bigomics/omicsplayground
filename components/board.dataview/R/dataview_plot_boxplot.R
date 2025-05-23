@@ -27,11 +27,9 @@ dataview_plot_boxplot_ui <- function(
 
 dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       req(res)
-
       list(
         counts = res$log2counts,
         sample = colnames(res$log2counts)
@@ -115,8 +113,6 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.dat
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-
-
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
