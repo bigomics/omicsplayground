@@ -29,10 +29,12 @@ dataview_plot_genetypes_ui <- function(
 
 dataview_plot_genetypes_server <- function(id,
                                            getCountsTable,
+                                           r.samples = reactive(""),
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       res <- getCountsTable()
+      samples <- r.samples()
       shiny::req(res)
       return(list(prop.counts = res$prop.counts,gset.genes = res$gset.genes))
     })

@@ -17,10 +17,7 @@ dataview_plot_totalcounts_ui <- function(
     shiny::radioButtons(
       inputId = ns("sampleqc_plottype"),
       label = "Plot type",
-      choices = c(
-        "Total abundance",
-        "Number of detected features"
-      )
+      choices = c("Total abundance", "Number of detected features")
     )
   )
 
@@ -41,13 +38,16 @@ dataview_plot_totalcounts_ui <- function(
 dataview_plot_totalcounts_server <- function(id,
                                              getCountStatistics,
                                              r.data_type,
+                                             r.samples = reactive(""),
                                              r.data_groupby = reactive(""),
                                              watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
       data_groupby <- r.data_groupby()
       data_type <- r.data_type()
-
+      samples <- r.samples()
       tbl <- getCountStatistics()
       req(tbl)
 

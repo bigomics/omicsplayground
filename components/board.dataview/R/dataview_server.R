@@ -131,9 +131,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
               pgx$samples, input$data_samplefilter
             )
           },
-          error = function(w) {
-            NULL
-          }
+          error = function(w) { NULL }
         )
       }
       # validate samples
@@ -200,6 +198,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     dataview_plot_totalcounts_server(
       "counts_total",
       getCountStatistics,
+      r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -208,6 +207,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       "counts_boxplot",
       input,
       getCountStatistics,
+      r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -215,20 +215,16 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     dataview_plot_histogram_server(
       "counts_histplot",
       getCountStatistics,
+      r.samples = selected_samples,
       watermark = WATERMARK
     )
 
     dataview_plot_abundance_server(
       "counts_abundance",
       getCountStatistics,
+      r.samples = selected_samples,
       watermark = WATERMARK
     )
-
-    ## dataview_plot_genetypes_server(
-    ##   "counts_genetypes",
-    ##   getCountStatistics,
-    ##   watermark = WATERMARK
-    ## )
 
     dataview_plot_variationcoefficient_server(
       "variationcoefficient",
@@ -283,15 +279,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    ##    getCountStatistics <- reactiveVal()
-    ##    observeEvent(
     getCountStatistics <- eventReactive(
       {
-        list(
-          pgx$X,
-          input$data_groupby,
-          input$data_samplefilter
-        )
+        list(pgx$X, input$data_groupby, input$data_samplefilter)
       },
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
@@ -302,6 +292,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
+        if (nsamples == 0) return(NULL)
         counts <- pgx$counts[, samples, drop = FALSE]
 
         grpvar <- input$data_groupby
