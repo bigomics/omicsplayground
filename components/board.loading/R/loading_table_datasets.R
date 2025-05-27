@@ -404,9 +404,9 @@ loading_table_datasets_server <- function(id,
       if (!is.null(auth$options$MAX_GENES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
       }
-      if (!is.null(auth$options$MAX_SAMPLES)) {
-        datasets_exceed_limits <- datasets_exceed_limits | (df$nsamples > auth$options$MAX_SAMPLES)
-      }
+      # if (!is.null(auth$options$MAX_SAMPLES)) {
+      #   datasets_exceed_limits <- datasets_exceed_limits | (df$nsamples > auth$options$MAX_SAMPLES)
+      # }
 
       selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
       if (length(selectable_rows) == 0) selectable_rows <- NULL
