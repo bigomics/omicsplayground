@@ -360,7 +360,7 @@ pcsf_genepanel_server <- function(id,
       layout <- res$layout
       
       F <- playbase::pgx.getMetaMatrix(pgx, level="gene")$fc
-      F <- F[igraph::V(graph)$name,]
+      F <- F[igraph::V(graph)$name,,drop=FALSE]
 
       labels <- rownames(F)
       labels <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
