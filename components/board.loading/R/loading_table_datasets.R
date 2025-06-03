@@ -405,9 +405,9 @@ loading_table_datasets_server <- function(id,
       if (!is.null(auth$options$MAX_GENES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
       }
-      if (!is.null(auth$options$MAX_COMPARISONS)) {
-        datasets_exceed_limits <- datasets_exceed_limits | (get_contrasts_from_user(auth) > auth$options$MAX_COMPARISONS)
-      }
+      # if (!is.null(auth$options$MAX_COMPARISONS)) {
+      #   datasets_exceed_limits <- datasets_exceed_limits | (get_contrasts_from_user(auth) > auth$options$MAX_COMPARISONS)
+      # }
       # if (!is.null(auth$options$MAX_SAMPLES)) {
       #   datasets_exceed_limits <- datasets_exceed_limits | (df$nsamples > auth$options$MAX_SAMPLES)
       # }
