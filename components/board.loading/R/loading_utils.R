@@ -87,3 +87,17 @@ andothers <- function(s, split = " ", n = 8) {
   n2 <- setdiff(length(s1), n)
   paste(paste(head(s1, n), collapse = " "), "(+", n2, "others)")
 }
+
+get_contrasts_from_user <- function(auth) {
+  FC.file <- file.path(auth$user_dir, "datasets-allFC.csv")
+  if (file.exists(FC.file)) {
+    contrast_names <- read.csv(FC.file, nrows = 1, header = TRUE, check.names = FALSE) |> colnames()
+    dataset_names <- gsub(".*\\[(.*?)\\].*", "\\1", contrast_names)
+    dataset_counts <- table(dataset_names)
+    result <- as.vector(dataset_counts)
+    names(result) <- names(dataset_counts)
+    return(result)
+  } else {
+    return(NULL)
+  }
+}

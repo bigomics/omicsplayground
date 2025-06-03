@@ -400,10 +400,14 @@ loading_table_datasets_server <- function(id,
         df_cap <- nrow(df)
       }
 
+      # Detect out of limits datasets (downgraded user might have uploaded more datasets in the past, but now they are not allowed)
       datasets_exceed_limits <- rep(FALSE, nrow(df))
       if (!is.null(auth$options$MAX_GENES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
       }
+      # if (!is.null(auth$options$MAX_COMPARISONS)) {
+      #   datasets_exceed_limits <- datasets_exceed_limits | (get_contrasts_from_user(auth) > auth$options$MAX_COMPARISONS)
+      # }
       # if (!is.null(auth$options$MAX_SAMPLES)) {
       #   datasets_exceed_limits <- datasets_exceed_limits | (df$nsamples > auth$options$MAX_SAMPLES)
       # }
@@ -416,10 +420,6 @@ loading_table_datasets_server <- function(id,
         class = "compact hover",
         rownames = menus,
         escape = FALSE,
-        # editable = list(
-        #   target = "cell",
-        #   disable = list(columns = c(1, 3:ncol(df)))
-        # ),
         extensions = c("Scroller"),
         plugins = "scrollResize",
         selection = list(mode = "single", target = "row", selected = if(length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
