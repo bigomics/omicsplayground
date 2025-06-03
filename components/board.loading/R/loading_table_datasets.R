@@ -590,7 +590,7 @@ loading_table_datasets_server <- function(id,
     shiny::observeEvent(input$recompute_pgx, {
       shinyalert::shinyalert(
         title = "Reanalyze",
-        text = "Are you sure you want to reanalyze your data? All current contrasts will be kept.",
+        text = "Are you sure you want to reanalyze your data? All current contrasts will be kept. Please note that this will count as a new dataset and will not substitute the old one.",
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
