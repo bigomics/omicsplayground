@@ -7,7 +7,9 @@ plot_deepnet_gradients_ui <- function(
     id,
     title = "",
     info.text = "",
-    caption = "",
+    info.methods,
+    info.references,
+    caption = "",    
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")
@@ -21,9 +23,11 @@ plot_deepnet_gradients_ui <- function(
   PlotModuleUI(
     ns("plot"),
     title = title,
-    label = label,
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     caption = caption,
+    label = label,
     options = options,
     height = height,
     width = width,
@@ -37,50 +41,50 @@ plot_deepnet_gradients_server <- function(id,
                                           conditions,
                                           datatypes,
                                           phenoFC,
-                                          type = c("barplot","scatter")[1],
+                                          type = c("barplot", "scatter")[1],
                                           watermark = FALSE) {
-  moduleServer(id, function(input, output, session) {
 
+  moduleServer(id, function(input, output, session) {
     
     plot.RENDER <- function(n=12) {
-      update()  ## react on updates
+      update()
             
       cond <- conditions()
       dtypes <- datatypes()
 
-      shiny::validate( shiny::need( length(cond)>0, "please select a condition"))
-      shiny::validate( shiny::need( length(dtypes)>0, "please select a datatype"))
+      shiny::validate(shiny::need(length(cond)>0, "Please select a condition"))
+      shiny::validate(shiny::need(length(dtypes)>0, "Please select a datatype"))
 
       ## check if we are too early after a change
       net <- net()
-      shiny::req( dtypes %in% names(net$X))
-      shiny::req( cond %in% net$labels[[1]])
+      shiny::req(dtypes %in% names(net$X))
+      shiny::req(cond %in% net$labels[[1]])
 
       grad <- net$get_gradients()[[1]]
       fc <- NULL
 
       grad <- grad[dtypes]
-      grad <- lapply(grad, function(g) g[,cond,drop=FALSE] )
+      grad <- lapply(grad, function(g) g[, cond, drop = FALSE] )
       ngrad <- length(grad) * ncol(grad[[1]])
 
-      nc <- min( ceiling(1.2*sqrt(ngrad)), ngrad )
+      nc <- min(ceiling(1.2*sqrt(ngrad)), ngrad)
       nr <- ceiling(ngrad/nc)
       
-      if( type == "barplot") {
-        par(mfrow=c(nr,nc), mar=c(8,4,2,1))
-        if(nr>1) par(mar=c(4,4,0.5,1))
+      if(type == "barplot") {
+        par(mfrow = c(nr,nc), mar = c(8,4,2,1))
+        if(nr > 1) par(mar = c(4,4,0.5,1))
         n <- round(36/nc)
         cex.names = 0.7 + 0.12*nc
         playbase::deep.plotMultiOmicsGradients(
-          grad, n=n, onlypositive = input$onlypositive,
-          par=FALSE, cex.names=cex.names)
+          grad, n = n, onlypositive = input$onlypositive,
+          par = FALSE, cex.names = cex.names
+        )
       }
-      
-      if( type == "scatter") {
+
+      if(type == "scatter") {
         fc <- phenoFC()
-        par(mfrow=c(nr,nc), mar=c(4,4,2,1))
-        playbase::deep.plotGradientVSFoldchange(
-          grad, fc=fc, par=FALSE)
+        par(mfrow = c(nr,nc), mar = c(4,4,2,1))
+        playbase::deep.plotGradientVSFoldchange(grad, fc = fc, par = FALSE)
       }
       
     }
@@ -88,8 +92,8 @@ plot_deepnet_gradients_server <- function(id,
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      ##func2 = plot.RENDER2,      
-      pdf.width = 12, pdf.height = 5,
+      pdf.width = 12,
+      pdf.height = 5,
       res = c(75, 110),
       add.watermark = watermark
     )

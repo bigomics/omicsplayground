@@ -123,6 +123,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
         cex.lab = cexlab,
         hilight = higenes,
         ntop = 20,
+        labeltype = "gene_name",
         plotlib = "plotly"
       )
 

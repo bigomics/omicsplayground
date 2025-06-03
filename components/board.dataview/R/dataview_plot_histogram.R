@@ -27,8 +27,13 @@ dataview_plot_histogram_ui <- function(
   )
 }
 
-dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE) {
+dataview_plot_histogram_server <- function(id,
+                                           getCountsTable,
+                                           r.samples = reactive(""),
+                                           watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
       if (length(jj) > n) jj <- sample(jj, n, replace = TRUE)
@@ -57,12 +62,10 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
     ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
+      samples <- r.samples()
       shiny::req(res)
       hh <- .gx.histogram(gx = res$log2counts, n = 2000, plot = FALSE)
-      pdata <- list(
-        histogram = hh,
-        log2counts = res$log2counts
-      )
+      pdata <- list(histogram = hh, log2counts = res$log2counts)
       pdata
     })
 

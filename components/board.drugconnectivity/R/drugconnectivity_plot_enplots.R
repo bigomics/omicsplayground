@@ -17,6 +17,8 @@ drugconnectivity_plot_enplots_ui <- function(
     label = "",
     title,
     info.text,
+    info.methods,
+    info.references,
     caption,
     height,
     width) {
@@ -30,6 +32,8 @@ drugconnectivity_plot_enplots_ui <- function(
     caption = caption,
     plotlib = "base",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,

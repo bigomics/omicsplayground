@@ -111,7 +111,7 @@ MofaUI <- function(id) {
             mofa_plot_moduleheatmap_ui(
               ns("integrated_heatmap"),
               title = "Multi-omics heatmap",
-              info.text = "...",
+              info.text = "Integrated Multi-omics heatmap. Heatmap of top features per omics type (view). Dendrogram from hierarchical clustering of samples is displayed at the top of the heatmap. Dendrogram from hierarchical clustering of top features, grouped by data type (any of gx, px, mx), is displayed on the left of the heatmap.",
               caption = "Integrated Multi-omics heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

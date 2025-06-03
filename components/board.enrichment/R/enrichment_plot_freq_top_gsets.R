@@ -131,6 +131,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       sel.zero <- which(Matrix::rowSums(abs(F), na.rm = TRUE) < 1e-4)
       if (length(sel.zero)) F <- F[-sel.zero, , drop = FALSE]
+      rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
 
       if (return_csv) {
         return(F)

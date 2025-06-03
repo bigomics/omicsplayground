@@ -33,7 +33,9 @@ app_ui <- function(x) {
       expiration = -1,
       http_only = TRUE,
       secure_only = TRUE,
-      redirect = "/close"
+      redirect = "/close",
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/close", x$PATH_INFO)) {} else if (identical("/", x$PATH_INFO)) {
     #-------------------------------------------------------
@@ -89,7 +91,7 @@ app_ui <- function(x) {
 
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
-        onClick = "logoutInApp()"
+        onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
       )
 
       if (opt$AUTHENTICATION == "shinyproxy") {
@@ -290,7 +292,7 @@ app_ui <- function(x) {
               ),
               bigdash::navbarDropdownItem(
                 "Video tutorials",
-                link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+                link = "https://bigomics.ch/tutorials/",
                 target = "_blank"
               ),
               bigdash::navbarDropdownItem(
@@ -299,8 +301,8 @@ app_ui <- function(x) {
                 target = "_blank"
               ),
               bigdash::navbarDropdownItem(
-                "Discuss on Reddit",
-                link = "https://www.reddit.com/r/omicsplayground",
+                "Submit a support ticket",
+                link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
                 target = "_blank"
               ),
               bigdash::navbarDropdownItem(
@@ -310,7 +312,7 @@ app_ui <- function(x) {
               ),
               bigdash::navbarDropdownItem(
                 "Case studies",
-                link = "https://bigomics.ch/blog/category/case-study/",
+                link = "https://bigomics.ch/case-studies/",
                 target = "_blank"
               )
             )

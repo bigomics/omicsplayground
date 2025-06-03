@@ -172,7 +172,8 @@ upload_module_normalization_server <- function(
           }
         }
         pos <- NULL
-        if (NCOL(X) > 1) {
+        if (NCOL(X) > 2) {
+          set.seed(1234)
           pos <- irlba::irlba(X, nv = 2)$v
           rownames(pos) <- colnames(X)
         }
@@ -204,6 +205,7 @@ upload_module_normalization_server <- function(
             cx <- list(X = X1, impX1 = impX1)
           }
         } else {
+          shiny::req(nrow(samples) > 2)
           m <- input$bec_method
           mm <- unique(c("uncorrected", m))
           pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
@@ -302,6 +304,10 @@ upload_module_normalization_server <- function(
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
+        # Remove NPM if more than 100 samples
+        if (ncol(X0) > 100) {
+          methods <- methods[methods != "NPM"]
+        }
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
         shiny::withProgress(
@@ -313,10 +319,11 @@ upload_module_normalization_server <- function(
               pheno = NULL,
               contrasts = contrasts,
               batch.pars = batch.pars,
-              clust.method = "tsne",
+              clust.method = "pca",
               methods = methods,
               evaluate = FALSE, ## no score computation
-              xlist.init = xlist.init
+              xlist.init = xlist.init,
+              ntop = 1000
             )
           }
         )
@@ -348,11 +355,12 @@ upload_module_normalization_server <- function(
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           nb <- min(30, dim(X) / 5)
-          scaledX <- t(scale(t(scale(t(X), scale = FALSE))))
+          scaledX <- playbase::double_center_scale_fast(X)
           corX <- cor(t(scaledX))
 
           ## standard dim reduction methods
           pos <- list()
+          set.seed(1234)
           pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
@@ -569,6 +577,7 @@ upload_module_normalization_server <- function(
 
       ## sample outlier scores
       plot_outliers <- function() {
+        shiny::validate(shiny::need(nrow(r_samples()) > 2, "Outlier detection requires at least 3 samples."))
         res <- results_outlier_methods()
         z0 <- as.numeric(input$outlier_threshold)
         zscore <- res$z.outlier
@@ -597,6 +606,7 @@ upload_module_normalization_server <- function(
       }
 
       plot_correction <- function() {
+        shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effect correction requires at least 3 samples."))
         if (input$batchcorrect) {
           plot_before_after()
         } else {
@@ -709,6 +719,9 @@ upload_module_normalization_server <- function(
           X <- r_counts()
           samples <- r_samples()
           contrasts <- r_contrasts()
+          if (nrow(samples) < 3) {
+            return(NULL)
+          }
           pars <- playbase::get_model_parameters(
             X,
             samples,

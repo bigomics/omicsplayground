@@ -91,6 +91,7 @@ enrichment_plot_geneplot_server <- function(id,
       } else {
         probe <- sel$rn
         gene <- sel$gene
+        gene <- playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE)
         ngrp <- length(unique(pgx$samples$group))
         grouped <- !input$ungroup
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)

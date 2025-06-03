@@ -124,16 +124,20 @@ dataview_table_rawdata_server <- function(id,
         annot$symbol <- NULL
       }
       ##annot$gene_name <- NULL
+
+      counts <- pgx$counts[rownames(annot), ]
+      pct.missingness <- round(rowMeans(is.na(counts)) * 100, 1)
       
       df <- data.frame(
         annot,
         rho = rho,
+        pct.missingness = pct.missingness,
         SD = sdx,
         AVG = avg,
         as.matrix(x),
         check.names = FALSE
       )
-
+      
       ## if symbol and feature as same, drop symbol column
       df <- df[order(-df$rho, -df$SD), , drop = FALSE]
 
@@ -150,7 +154,7 @@ dataview_table_rawdata_server <- function(id,
 
       numcols <- grep("gene|title", colnames(dt$df), value = TRUE, invert = TRUE)
       tabH <- 700 ## height of table
-
+      
       DT::datatable(
         dt$df,
         rownames = FALSE,

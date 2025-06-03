@@ -98,6 +98,7 @@ intersection_plot_venn_diagram_server <- function(id,
     venndiagram.RENDER <- function() {
       data <- plot_data()
       dt1 <- data[[1]]
+      shiny::req(dt1)
       plot_names <- data[[2]]
 
       label <- colnames(dt1)
