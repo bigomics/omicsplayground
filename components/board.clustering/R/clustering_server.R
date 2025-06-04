@@ -223,7 +223,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
       if (input$hm_level == "geneset") {
         ## Gene set level features #########
-
         gsets <- rownames(pgx$gsetX)
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
         gsets <- unique(gset_collections[[ft]])
@@ -401,7 +400,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       if (do.split && splitvar %in% colnames(pgx$contrasts)) {
         grp <- pgx$contrasts[colnames(zx), splitvar]
       }
-      
+
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
         gx <- pgx$X[1, ]
@@ -463,8 +462,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         if (do.split && splitvar %in% rownames(pgx$X)) {
           gg <- unique(c(splitvar, gg))
         }
+        return(gg)
       }
-
+      
       ## remove empty
       if(!is.null(grp)) {
         sel <- which(!is.na(grp))
@@ -514,12 +514,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         dim(zx)
       } else {
         ## Order by SD
-        gg <- rownames(zx)[order(-apply(zx, 1, sd, na.rm = TRUE))]
+        gg <- rownames(zx)[order(-matrixStats::rowSds(zx, na.rm = TRUE))]
         gg <- head(gg, nmax)
         gg <- addsplitgene(gg)
         zx <- zx[gg, , drop = FALSE] ## order
       }
-
+      
       ## ------------- cluster the genes???
       if (!is.null(flt$idx)) {
         idx <- flt$idx[rownames(zx)] ## override
