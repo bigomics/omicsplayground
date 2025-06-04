@@ -35,7 +35,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       ),
       "PCA/tSNE" = list(
         enable = NULL,
-        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale")
+        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk")
       ),
       "Parallel" = list(
         enable = NULL,
@@ -91,7 +91,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       names(hm_level_choices) <- hm_level_choices_names
       shiny::updateSelectInput(session, "hm_level", choices = hm_level_choices)
     })
-
+   
     ## update filter choices upon change of data set
     my_observers[[2]] <- shiny::observeEvent(
       {
@@ -448,13 +448,13 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       }
 
       ## Any BMC scaling?? ##########
-      if (do.split && input$hm_scale == "BMC") {
-        for (g in unique(grp)) {
-          jj <- which(grp == g)
-          zx1 <- zx[, jj, drop = FALSE]
-          zx[, jj] <- zx1 - rowMeans(zx1, na.rm = TRUE)
-        }
-      }
+      ## if (do.split && input$hm_scale == "BMC") {
+      ##   for (g in unique(grp)) {
+      ##     jj <- which(grp == g)
+      ##     zx1 <- zx[, jj, drop = FALSE]
+      ##     zx[, jj] <- zx1 - rowMeans(zx1, na.rm = TRUE)
+      ##   }
+      ## }
 
       ## Create reduced matrix according to topmode #######
       topmode <- "marker"
@@ -750,7 +750,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
       hm_ntop = shiny::reactive(input$hm_ntop),
-      hm_scale = shiny::reactive(input$hm_scale),
+      ##hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
       watermark = WATERMARK,

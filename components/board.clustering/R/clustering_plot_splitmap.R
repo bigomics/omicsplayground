@@ -31,9 +31,16 @@ clustering_plot_splitmap_ui <- function(
       shiny::checkboxInput(
         ns("show_legend"), "show legend",
         value = TRUE
-      ), "Show or hide the legend.",
+      ), "Show or hide the legend."
+    ),
+    withTooltip(
+      shiny::radioButtons(
+        ns("hm_scale"), "Scale:",
+        choices = c("relative", "absolute"), inline = TRUE
+      ),
+      "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
       placement = "right", options = list(container = "body")
-    )
+    )    
   )
 
   PlotModuleUI(
@@ -74,7 +81,7 @@ clustering_plot_splitmap_server <- function(id,
                                             selected_phenotypes,
                                             hm_level,
                                             hm_ntop,
-                                            hm_scale,
+                                            #hm_scale,
                                             hm_topmode,
                                             hm_clustk,
                                             watermark = FALSE,
@@ -144,8 +151,8 @@ clustering_plot_splitmap_server <- function(id,
       label_cex <- ifelse(!is.null(input$label_size), input$label_size/10, 1)  # normalize to base size 10
 
       scale.mode <- "none"
-      if (hm_scale() == "relative") { scale.mode <- "row.center" }
-      if (hm_scale() == "BMC") { scale.mode <- "row.bmc" }
+      if (input$hm_scale == "relative") { scale.mode <- "row.center" }
+      #if (input$hm_scale == "BMC") { scale.mode <- "row.bmc" }
       scale.mode
 
       ## split genes dimension in 5 groups
@@ -249,8 +256,8 @@ clustering_plot_splitmap_server <- function(id,
 
       ## -------------- variable to split samples
       scale <- "none"
-      if (hm_scale() == "relative") { scale <- "row.center" }
-      if (hm_scale() == "BMC") { scale <- "row.bmc" }
+      if (input$hm_scale == "relative") { scale <- "row.center" }
+      if (input$hm_scale == "BMC") { scale <- "row.bmc" }
 
       plt <- NULL
       pd <- plot_data()
@@ -355,11 +362,5 @@ clustering_plot_splitmap_server <- function(id,
       )
     })
 
-    # return(list(
-    #   hm_ntop = shiny::reactive(input$hm_ntop),
-    #   hm_scale = shiny::reactive(input$hm_scale),
-    #   hm_topmode = shiny::reactive(input$hm_topmode),
-    #   hm_clustk = shiny::reactive(input$hm_clustk)
-    # ))
   }) ## end of moduleServer
 }
