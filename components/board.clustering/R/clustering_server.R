@@ -135,7 +135,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
           subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
           choices <- names(subset_choices)
         }
-        choices <- c("<custom>", "<contrast>", choices)
+        choices <- c("<custom>", choices)
         choices <- sort(unique(choices))
         shiny::updateSelectInput(session, "hm_features", choices = choices)
       }
@@ -242,18 +242,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
 
         if (ft == "<all>") {
           gg <- rownames(pgx$X)
-        } else if (ft == "<contrast>") {
-          ct <- input$hm_contrast
-          shiny::req(ct)
-          shiny::req(input$hm_ntop)
-          fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
-          n1 <- floor(as.integer(input$hm_ntop) / 2)
-          gg <- unique(c(head(fc, n1), tail(fc, n1)))
-          if (input$hm_splitby == "gene") {
-            if (!(input$hm_splitvar %in% gg)) {
-              gg <- c(input$hm_splitvar, gg)
-            }
-          }
         } else if (ft %in% names(pgx$families)) {
           gg <- pgx$families[[ft]]
         } else if (ft == "<custom>" && ft != "") {

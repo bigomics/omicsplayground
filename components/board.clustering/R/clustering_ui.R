@@ -74,15 +74,6 @@ ClusteringInputs <- function(id) {
             placement = "bottom"
           )
         ),
-        shiny::conditionalPanel(
-          "input.hm_features == '<contrast>'",
-          ns = ns,
-          withTooltip(
-            shiny::selectInput(ns("hm_contrast"), NULL, choices = NULL),
-            "Select contrast to be used as signature.",
-            placement = "right", options = list(container = "body")
-          )
-        ),
         ## ----- extra filters ----        
         withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
           "Exclude genes on X/Y chromosomes."
