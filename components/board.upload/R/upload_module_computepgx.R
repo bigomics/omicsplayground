@@ -783,15 +783,21 @@ upload_module_computepgx_server <- function(
 
         nmissing.counts <- sum(is.na(counts))
         nmissing.countsX <- sum(is.na(countsX))
-        if (nmissing.counts > 0 || nmissing.countsX > 0) {
-          shinyalert::shinyalert(
-            title = "WARNING",
-            text = stringr::str_squish("Missing values (MVs) detected in your data. You chose not to impute. The following methods are unsupported with MVs: limma/voom, DESeq2 and edgeR LRT, QL F-test, Wald test. Please adjust your methods selection."),
-            type = "warning",
-            timer = 60000
-          )
+        if (nmissing.countsX > 0) {
+          mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
+          cm <- intersect(input$gene_methods, mm)
+          if (length(cm)) {
+            cm <- paste0(cm, collapse="; ")
+            ss <- paste0("Missing values (MVs) detected in your counts. No imputation selected. The following selected method(s) do not support MVs: ", cm, ". Please adjust your method(s) selection.")
+            shinyalert::shinyalert(
+              title = "WARNING",
+              text = stringr::str_squish(ss),
+              type = "warning",
+              timer = 60000
+            )
+          }
         }
-
+        
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
