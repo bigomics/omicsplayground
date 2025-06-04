@@ -9,19 +9,18 @@ ClusteringInputs <- function(id) {
   topmodes <- c("sd", "pca", "marker")
 
   settings_items1 <- tagList(
-    withTooltip(shiny::selectInput(ns("hm_level"), "Level:", choices = c("gene", "geneset")),
-      "Specify the level analysis: gene or geneset level.",
-      placement = "top", options = list(container = "body")
+    withTooltip(shiny::selectInput(ns("hm_level"), "Level:",
+      choices = c("gene", "geneset")),
+      "Specify the level analysis: gene or geneset level."
     ),
     shiny::hr(),
     withTooltip(
       shiny::radioButtons(
         ns("hm_splitby"), "Split heatmap by:",
         inline = TRUE,
-        choices = c("none", "phenotype", "gene")
+        choices = c("none", "phenotype", "contrast", "gene")
       ),
-      "Split the samples by phenotype or expression level of a gene.",
-      placement = "right", options = list(container = "body")
+      "Split the samples by phenotype, contrast or expression level of a gene."
     ),
     shiny::conditionalPanel(
       "input.hm_splitby != 'none'",

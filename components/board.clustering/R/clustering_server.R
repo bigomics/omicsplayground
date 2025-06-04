@@ -81,8 +81,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.colvar"), choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.shapevar"), choices = var.types1, selected = "<none>")
       shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
-      choices <- c("none", "phenotype", "gene")
-      choices_names <- c("none", "phenotype", tspan("gene", js = FALSE))
+      choices <- c("none", "phenotype", "contrast", "gene")
+      choices_names <- c("none", "phenotype", "contrast", tspan("gene", js = FALSE))
       names(choices) <- choices_names
       shiny::updateRadioButtons(session, "hm_splitby", choices = choices)
       shiny::updateTextAreaInput(session, "hm_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
@@ -164,6 +164,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
             cvar0, cvar
           ), 1)
           shiny::updateSelectInput(session, "hm_splitvar", choices = cvar, selected = sel)
+        }
+        if (input$hm_splitby == "contrast") {
+          cmp <- sort(playbase::pgx.getContrasts(pgx))
+          shiny::updateSelectInput(session, "hm_splitvar", choices = cmp,
+            selected = cmp[1])
         }
       }
     )
@@ -394,14 +399,21 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       if (splitby == "phenotype" && !splitvar %in% colnames(pgx$samples)) {
         return(NULL)
       }
-
+      if (splitby == "contrast" && !splitvar %in% colnames(pgx$contrasts)) {
+        return(NULL)
+      }
+      
       grp <- NULL
       ## split on a phenotype variable
       if (do.split && splitvar %in% colnames(pgx$samples)) {
         grp <- pgx$samples[colnames(zx), splitvar]
-        table(grp)
       }
 
+      ## split on a contrast
+      if (do.split && splitvar %in% colnames(pgx$contrasts)) {
+        grp <- pgx$contrasts[colnames(zx), splitvar]
+      }
+      
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
         gx <- pgx$X[1, ]
@@ -447,18 +459,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         return(NULL)
       }
 
-      ## Any BMC scaling?? ##########
-      ## if (do.split && input$hm_scale == "BMC") {
-      ##   for (g in unique(grp)) {
-      ##     jj <- which(grp == g)
-      ##     zx1 <- zx[, jj, drop = FALSE]
-      ##     zx[, jj] <- zx1 - rowMeans(zx1, na.rm = TRUE)
-      ##   }
-      ## }
-
       ## Create reduced matrix according to topmode #######
-      topmode <- "marker"
-      topmode <- "sd"
       topmode <- input$hm_topmode
       if (topmode == "marker" && length(table(grp)) <= 1) {
         topmode <- "sd"
@@ -466,14 +467,24 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       if (!do.split && topmode == "marker") {
         topmode <- "sd"
       }
+      if(splitby == "contrast") {
+        topmode <- "marker"
+      }
 
       addsplitgene <- function(gg) {
         if (do.split && splitvar %in% rownames(pgx$X)) {
           gg <- unique(c(splitvar, gg))
         }
-        gg
       }
 
+      ## remove empty
+      if(!is.null(grp)) {
+        sel <- which(!is.na(grp))
+        zx <- zx[,sel]
+        grp <- grp[sel]
+      }
+      
+      ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
         NPCA <- 5
