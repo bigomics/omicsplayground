@@ -29,10 +29,17 @@ clustering_plot_splitmap_ui <- function(
   splitmap_opts <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
-        ns("show_legend"), "show legend",
-        value = TRUE
-      ), "Show or hide the legend.",
-      placement = "right", options = list(container = "body")
+        ns("show_legend"), "show legend", value = TRUE),
+      "Show or hide the legend.",
+      placement = "right",
+      options = list(container = "body")
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("sample_cor"), "show sample-sample correlation", value = FALSE),
+      "Show sample-sample correlation heatmap.",
+      placement = "right",
+      options = list(container = "body")
     )
   )
 
@@ -79,6 +86,7 @@ clustering_plot_splitmap_server <- function(id,
                                             hm_clustk,
                                             watermark = FALSE,
                                             labeltype) {
+
   moduleServer(id, function(input, output, session) {
     fullH <- 850
 
@@ -93,6 +101,7 @@ clustering_plot_splitmap_server <- function(id,
     })
 
     plot_data <- shiny::reactive({
+
       filt <- getTopMatrix()
       shiny::req(filt)
 
@@ -100,8 +109,8 @@ clustering_plot_splitmap_server <- function(id,
       annot <- filt$annot
       zx.idx <- filt$idx
 
-      ## For large scRNAseq data
-      if (ncol(zx) > 3000) {
+      ## For large data (eg scRNAseq)
+      if (pgx$datatype == "scRNAseq" && ncol(zx) > 3000) {
         dbg("[clustering_plot_splitmap] More than 3K samples detected in data matrix.")
         dbg("[clustering_plot_splitmap] Balanced downsampling of 40 cells per celltype.")
         grp <- annot$celltype
@@ -121,20 +130,28 @@ clustering_plot_splitmap_server <- function(id,
 
       sel <- selected_phenotypes()
 
-      return(list(
-        zx = zx,
-        annot = annot,
-        zx.idx = zx.idx,
-        filt = filt
-      ))
-    })
+      sample_cor <- FALSE
+      if (input$sample_cor) {
+        sample_cor <- TRUE
+        zx <- cor(pgx$X, method = "pearson")
+        D <- as.dist(1 - zx)
+        D[which(is.nan(D) | is.na(D))] <- 1
+        hc <- fastcluster::hclust(D, method = "ward.D2")
+        zx.idx <- paste0("S", cutree(hc, hm_clustk()))        
+      }
+      
+      return(list(zx = zx, annot = annot, zx.idx = zx.idx, filt = filt, sample_cor = sample_cor))
 
+    })
+    
     base_splitmap.RENDER <- function() {
+
       pd <- plot_data()
       zx <- pd[["zx"]]
       annot <- pd[["annot"]]
       zx.idx <- pd[["zx.idx"]]
       filt <- pd[["filt"]]
+      sample_cor <- pd[["sample_cor"]]
 
       if (nrow(zx) <= 1) { return(NULL) }
       show_rownames <- TRUE
@@ -142,7 +159,7 @@ clustering_plot_splitmap_server <- function(id,
 
       # Use editor settings for text sizes
       label_cex <- ifelse(!is.null(input$label_size), input$label_size/10, 1)  # normalize to base size 10
-
+      
       scale.mode <- "none"
       if (hm_scale() == "relative") { scale.mode <- "row.center" }
       if (hm_scale() == "BMC") { scale.mode <- "row.bmc" }
@@ -168,10 +185,7 @@ clustering_plot_splitmap_server <- function(id,
       ))
 
       # Set column text size to 0 if show_colnames is FALSE
-      if (!input$show_colnames) {
-        cex1 <- 0
-      }
-
+      if (!input$show_colnames) cex1 <- 0
       show_colnames <- (cex1 > 0)
 
       # Select annot to display (user input)
@@ -182,11 +196,6 @@ clustering_plot_splitmap_server <- function(id,
         annot <- annot[, sel, drop = FALSE]
       }
 
-
-#      show_legend <- show_colnames <- TRUE
-#      show_legend <- input$hm_legend
-#      if (hm_level() == "geneset" || !is.null(splitx)) { show_legend <- FALSE }
-#      show_colnames <- (input$hm_cexCol != 0)
       rownames(zx) <- sub("HALLMARK:HALLMARK_", "HALLMARK:", rownames(zx))
       rownames(zx) <- gsub(playdata::GSET_PREFIX_REGEX, "", rownames(zx))
       rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
@@ -212,36 +221,53 @@ clustering_plot_splitmap_server <- function(id,
       margin_bottom <- ifelse(input$margin_checkbox && !is.na(input$margin_bottom), input$margin_bottom, 5)
       margin_left <- ifelse(input$margin_checkbox && !is.na(input$margin_left), input$margin_left, 5)
 
-#      if (!is.null(splitx) & (totnchar > 44 || nx >= 6)) { crot <- 90 }
-#      nrownames <- 60
-#      nrownames <- 9999
-#      if (input$hm_cexRow == 0) { nrownames <- 0 }
-
-#      shiny::showNotification("Rendering heatmap...")
+      if (sample_cor) {
+        splity <- NULL
+        scale.mode <- "none"
+        cluster_rows <- FALSE
+        cluster_columns <- FALSE
+        zlim <-  c(min(zx),max(zx))
+      } else {
+        cluster_rows <- TRUE
+        cluster_columns <- TRUE
+        zlim <- NULL
+      }
+      
       playbase::gx.splitmap(
         zx,
-        split = splity, splitx = splitx,
-        scale = scale.mode, show_legend = input$show_legend,
-        show_colnames = show_colnames, column_title_rot = crot,
+        split = splity,
+        splitx = splitx,
+        scale = scale.mode,
+        show_legend = input$show_legend,
+        show_colnames = show_colnames,
+        column_title_rot = crot,
         column_names_rot = input$column_names_rot,
-        cluster_rows = input$cluster_rows,
-        cluster_columns = input$cluster_cols,
+        cluster_rows = cluster_rows,
+        cluster_columns = cluster_columns,
         color_low = input$color_low,
         color_mid = input$color_mid,
         color_high = input$color_high,
+        zlim = zlim,
         show_rownames = show_rownames,
         rownames_width = input$rownames_width,
         softmax = 0,
-        na_col = "green", na_text = "x",
-        title_cex = 1, cexCol = cex1, cexRow = cex2,
+        na_col = "green",
+        na_text = "x",
+        title_cex = 1,
+        cexCol = cex1,
+        cexRow = cex2,
         annot.cex = input$annot_cex/10,
-        col.annot = annot, row.annot = NULL, annot.ht = 2.3,
+        col.annot = annot,
+        row.annot = NULL,
+        annot.ht = 2.3,
         key.offset = c(0.89, 1.01),
-        main = " ", nmax = -1,
+        main = " ",
+        nmax = -1,
         mar = c(margin_bottom, margin_left, margin_top, margin_right)
       )
       p <- grDevices::recordPlot()
       p
+
     }
 
     plotly_splitmap.RENDER_get <- function() {
@@ -258,6 +284,7 @@ clustering_plot_splitmap_server <- function(id,
       X <- pd[["zx"]]
       annot <- pd[["annot"]]
       splity <- pd[["zx.idx"]]
+      sample_cor <- pd[["sample_cor"]]      
 
       ## sample clustering index
       splitx <- NULL
@@ -280,18 +307,18 @@ clustering_plot_splitmap_server <- function(id,
       
       # Adjust label size based on data dimensions
       col_cex <- label_cex
+      if (ncol(X) < 50) col_cex <- label_cex * 1.2
       if (ncol(X) > 50) col_cex <- label_cex * 0.75
       if (ncol(X) > 100) col_cex <- label_cex * 0.5
       if (ncol(X) > 200) col_cex <- 0
       
       # Set column text size to 0 if show_colnames is FALSE
-      if (!input$show_colnames) {
-        col_cex <- 0
-      }
+      if (!input$show_colnames) col_cex <- 0
       
       row_cex <- label_cex
+      if (nrow(X) < 60) row_cex <- label_cex * 1.2
       if (nrow(X) > 60) row_cex <- label_cex * 0.8
-
+      
       tooltips <- NULL
       if (hm_level() == "gene") {
         getInfo <- function(g) {
@@ -312,14 +339,23 @@ clustering_plot_splitmap_server <- function(id,
         names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
+
+      if (sample_cor) idx = NULL else idx = splity
       plt <- playbase::pgx.splitHeatmapFromMatrix(
-        X = X, annot = annotF, ytips = tooltips,
-        idx = splity, splitx = splitx, scale = scale,
-        row_annot_width = 0.025, rowcex = row_cex,
-        colcex = col_cex, show_legend = input$show_legend,
+        X = X,
+        annot = annotF,
+        ytips = tooltips,
+        idx = idx,
+        splitx = splitx,
+        scale = scale,
+        row_annot_width = 0.025,
+        rowcex = row_cex,
+        colcex = col_cex,
+        show_legend = input$show_legend,
         return_x_matrix = TRUE
       )
       return(plt)
+
     }
 
     plotly_splitmap.RENDER <- function() {
@@ -355,11 +391,5 @@ clustering_plot_splitmap_server <- function(id,
       )
     })
 
-    # return(list(
-    #   hm_ntop = shiny::reactive(input$hm_ntop),
-    #   hm_scale = shiny::reactive(input$hm_scale),
-    #   hm_topmode = shiny::reactive(input$hm_topmode),
-    #   hm_clustk = shiny::reactive(input$hm_clustk)
-    # ))
   }) ## end of moduleServer
 }
