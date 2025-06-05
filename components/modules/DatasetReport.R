@@ -248,6 +248,12 @@ DatasetReportServer <- function(
               )
               files <- c(files, tmp)
             }
+            ## remove any empty files
+            zero_size_files <- files[file.size(files) == 0]
+            if(length(zero_size_files) > 0) {
+              files <- files[file.size(files) > 0]
+              message("[DatasetReportServer:download_pdf] removed ", length(zero_size_files), " empty file(s)")
+            }
 
             ## finally merge all pages
             progress$inc(1 / (ncontrasts + 1), detail = "Merging pages")
