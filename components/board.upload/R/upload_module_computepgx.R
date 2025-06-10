@@ -47,28 +47,33 @@ upload_module_computepgx_server <- function(
       ## NOTE (IK): these eventReactive can better go directly inside
       ## output$UI which is already reactive. Less reactives is good.
 
-      ## statistical method for GENE level testing
       GENETEST.METHODS <- function() {
-        if (upload_datatype() == "RNA-seq") {
+        countsX <- countsX()
+        nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
+        dt <- upload_datatype()
+        if (dt == "RNA-seq") {
           mm <- c(
             "ttest", "ttest.welch", "trend.limma", "voom.limma", 
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
-        } else if (upload_datatype() == "scRNA-seq") {
+          if (nmissing.countsX > 0) mm <- c("ttest", "ttest.welch", "trend.limma")
+        } else if (dt == "scRNA-seq") {
           mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
-        if (opt$ALLOW_CUSTOM_FC) {
-          mm <- c(mm, "custom")
-        }
+        if (opt$ALLOW_CUSTOM_FC) mm <- c(mm, "custom")
         return(mm)
       }
-      
+
       GENETEST.SELECTED <- function() {
-        if (upload_datatype() == "RNA-seq") {
+        countsX <- countsX()
+        nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
+        dt <- upload_datatype()
+        if (dt == "RNA-seq") {
           mm <- c("trend.limma", "deseq2.wald", "edger.qlf")
-        } else if (upload_datatype() == "scRNA-seq") {
+          if (nmissing.countsX > 0) mm <- c("ttest", "trend.limma")
+        } else if (dt == "scRNA-seq") {
           mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
         } else {
           mm <- c("ttest", "trend.limma")
@@ -76,7 +81,6 @@ upload_module_computepgx_server <- function(
         return(mm)
       }
 
-      ## statistical method for GENESET level testing
       GENESET.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "rank correlation"="spearman")
@@ -98,8 +102,6 @@ upload_module_computepgx_server <- function(
         return(mm)
       }
 
-
-      ## EXTRA METHODS
       EXTRA.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
@@ -311,17 +313,9 @@ upload_module_computepgx_server <- function(
                     "<h4>Gene tests:</h4>",
                     "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing"
                   ),
-                  ## GENETEST.METHODS(),
-                  ## label = shiny::HTML("
-                  ##   <div style='display: flex; align-items: center; justify-content: space-between; width: 100%;'>
-	          ##     <h4 style='margin: 0;'>Gene tests:</h4>
-                  ##     <a href='https://omicsplayground.readthedocs.io/en/latest/methods/#differential-gene-expression-testing' target='_blank' class='info-link' style='margin-left: 150px;'>
-                  ##       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
-                  ##     </a>
-                  ##   </div>
-                  ## "),
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
+                  #disabled = c("....grey-out")
                 ),
                 div(id = "interaction_analysis"), # Placeholder for the dynamic text
                 conditionalPanel(
@@ -345,14 +339,6 @@ upload_module_computepgx_server <- function(
                     "<h4>Enrichment methods:</h4>",
                     "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
                   ),
-#                  shiny::HTML("
-#                    <div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>
-#                      <h4>Enrichment methods:</h4>
-#                      <a href='https://omicsplayground.readthedocs.io/en/latest/methods/' target='_blank' class='info-link' style='margin-left: 15px;'>
-#                        <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
-#                      </a>
-#                    </div>
-#                  "),
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
@@ -378,13 +364,6 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-                ## shiny::checkboxGroupInput(
-                ##   ns("dev_options"),
-                ##   shiny::HTML("<br><h4>Developer options:</h4>"),
-                ##   choiceValues = DEV.METHODS,
-                ##   choiceNames = DEV.NAMES,
-                ##   selected = DEV.SELECTED
-                ## )
               ),
               bslib::card(
                 fileInput2(
@@ -771,7 +750,6 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
-
         counts <- countsRT()
         countsX <- countsX()
         impX <- impX()
@@ -780,23 +758,24 @@ upload_module_computepgx_server <- function(
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
         annot_table <- annotRT()
-
-        nmissing.counts <- sum(is.na(counts))
-        nmissing.countsX <- sum(is.na(countsX))
-        if (nmissing.countsX > 0) {
-          mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
-          cm <- intersect(input$gene_methods, mm)
-          if (length(cm)) {
-            cm <- paste0(cm, collapse="; ")
-            ss <- paste0("Missing values (MVs) detected in your counts. No imputation selected. The following selected method(s) do not support MVs: ", cm, ". Please adjust your method(s) selection.")
-            shinyalert::shinyalert(
-              title = "WARNING",
-              text = stringr::str_squish(ss),
-              type = "warning",
-              timer = 60000
-            )
-          }
-        }
+        
+        ## nmissing.counts <- sum(is.na(counts))
+        ## nmissing.countsX <- sum(is.na(countsX))
+        ## if (nmissing.countsX > 0) {
+        ##   mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
+        ##   cm <- intersect(input$gene_methods, mm)
+        ##   if (length(cm)) {
+        ##     cm <- paste0(cm, collapse="; ")
+        ##     ss <- paste0("Missing values (MVs) detected in your counts. No imputation selected. The following selected method(s) do not support MVs: ",
+        ##       cm, ". Please adjust your method(s) selection.")
+        ##     shinyalert::shinyalert(
+        ##       title = "WARNING",
+        ##       text = stringr::str_squish(ss),
+        ##       type = "warning",
+        ##       timer = 60000
+        ##     )
+        ##   }
+        ## }
         
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
