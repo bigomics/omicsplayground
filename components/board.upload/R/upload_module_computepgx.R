@@ -52,8 +52,7 @@ upload_module_computepgx_server <- function(
         nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
         dt <- upload_datatype()
         if (dt == "RNA-seq") {
-          mm <- c(
-            "ttest", "ttest.welch", "trend.limma", "voom.limma", 
+          mm <- c("ttest", "ttest.welch", "trend.limma", "voom.limma", 
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
           if (nmissing.countsX > 0) mm <- c("ttest", "ttest.welch", "trend.limma")
@@ -315,8 +314,9 @@ upload_module_computepgx_server <- function(
                   ),
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
-                  #disabled = c("....grey-out")
+                  #disabled = c("methods to be greyed-out")
                 ),
+                #div(id = "NA_intolerant_methods"), # Placeholder for the dynamic text
                 div(id = "interaction_analysis"), # Placeholder for the dynamic text
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
@@ -414,7 +414,7 @@ upload_module_computepgx_server <- function(
 
         return(ui)
       })
-
+      
       ## Checks specific for time series
       shiny::observeEvent(samplesRT(), {
 
@@ -456,11 +456,11 @@ upload_module_computepgx_server <- function(
             
             if (length(ia.ctx)) {
               ia.ctx <- gsub(":.*", "", ia.ctx)
-              msg <- paste0("<p style='color: gray;'>Interaction with time will be tested<br>",
+              msg <- paste0("<br><br>", "<p style='color: gray;'>Interaction with time will be tested<br>",
                 "for the following contrast variables:<br>", paste0(ia.ctx, collapse="<br>"), ".</p>")
             } else if (length(ia.spline.ctx)) {
               ia.spline.ctx <- gsub(":.*", "", ia.spline.ctx)
-              msg <- paste0("<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
+              msg <- paste0("<br><br>", "<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
                 "for the following contrasts variables:<br>", paste0(ia.spline.ctx, collapse="<br>"),".</p>")
             }
 
@@ -477,7 +477,20 @@ upload_module_computepgx_server <- function(
         }
         
       })
-      
+
+      ##------------------------------------------------------------------------
+      ## If NA in X (no imputation performed), remove NA-intolerant methods.
+      ## Temporary msg. Later work needed to grey them out.
+      ##------------------------------------------------------------------------
+      shiny::observeEvent(countsX(), {
+        if (sum(is.na(countsX())) > 0) {
+          mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
+          mm <- paste0(mm, collapse="; ")
+          msg <- paste0("Missing values detected (no imputation). The following tests were removed as do not support MVs: ", mm)
+          shinyalert::shinyalert(title = "WARNING", text = msg, type = "warning")
+        }
+      })
+
       # Input validators
       iv <- shinyvalidate::InputValidator$new()
       iv$enable()
@@ -758,25 +771,7 @@ upload_module_computepgx_server <- function(
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
         annot_table <- annotRT()
-        
-        ## nmissing.counts <- sum(is.na(counts))
-        ## nmissing.countsX <- sum(is.na(countsX))
-        ## if (nmissing.countsX > 0) {
-        ##   mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
-        ##   cm <- intersect(input$gene_methods, mm)
-        ##   if (length(cm)) {
-        ##     cm <- paste0(cm, collapse="; ")
-        ##     ss <- paste0("Missing values (MVs) detected in your counts. No imputation selected. The following selected method(s) do not support MVs: ",
-        ##       cm, ". Please adjust your method(s) selection.")
-        ##     shinyalert::shinyalert(
-        ##       title = "WARNING",
-        ##       text = stringr::str_squish(ss),
-        ##       type = "warning",
-        ##       timer = 60000
-        ##     )
-        ##   }
-        ## }
-        
+                
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
