@@ -74,12 +74,11 @@ expression_plot_volcano_server <- function(id,
                                            watermark = FALSE,
                                            pval_cap,
                                            pgx) {
+
   moduleServer(id, function(input, output, session) {
-    # reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(res())
       shiny::req(length(comp1()) > 0)
-      # calculate required inputs for plotting
 
       comp1 <- comp1()
       fdr <- as.numeric(fdr())
@@ -91,7 +90,6 @@ expression_plot_volcano_server <- function(id,
       )
 
       pval_cap <- pval_cap()
-
       qval <- pmax(res$meta.q, pval_cap)
       pval <- pmax(res$meta.p, pval_cap)
       x <- res$logFC
@@ -103,9 +101,20 @@ expression_plot_volcano_server <- function(id,
       }
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
-
       label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
 
+      shape <- rep("circle", nrow(res))
+      names(shape) <- rownames(res)
+      if (any(is.na(pgx$counts)) && !any(is.na(pgx$X))) {
+        jj <- which(!is.na(pgx$contrasts[, comp1]))
+        if (any(jj)) {
+          counts <- pgx$counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
+          nas <- apply(counts, 1, function(x) sum(is.na(x)))
+          na.features <- names(nas)[which(nas>0)]
+          shape[match(na.features, names(shape))] <- "cross"
+        }
+      }
+      
       return(list(
         x = x,
         y = y,
@@ -113,6 +122,7 @@ expression_plot_volcano_server <- function(id,
         symbols = symbols,
         features = rownames(res),
         names = names,
+        shape = shape,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
         fdr = fdr,
@@ -124,7 +134,6 @@ expression_plot_volcano_server <- function(id,
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
-
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -135,6 +144,7 @@ expression_plot_volcano_server <- function(id,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         label.cex = lab.cex,
+        shape = pd[["shape"]],
         group.names = c("group1", "group0"),
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
