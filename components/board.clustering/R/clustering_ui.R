@@ -86,6 +86,7 @@ ClusteringInputs <- function(id) {
         )
       )
     ),
+    shiny::br(),
     bslib::accordion(
       id = ns("hm_options_accordion"),
       open = FALSE,
