@@ -70,14 +70,12 @@ expression_plot_maplot_server <- function(id,
                                           genes_selected,
                                           labeltype = reactive("symbol"),
                                           watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
-    # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
       comp1 <- gx_contrast()
-      if (length(comp1) == 0) {
-        return(NULL)
-      }
+      if (length(comp1) == 0) return(NULL)
       shiny::req(pgx$X)
 
       X <- pgx$X
@@ -85,9 +83,7 @@ expression_plot_maplot_server <- function(id,
       lfc <- as.numeric(gx_lfc())
       fdr <- as.numeric(gx_fdr())
 
-      if (is.null(res)) {
-        return(NULL)
-      }
+      if (is.null(res)) return(NULL)
 
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
@@ -95,7 +91,19 @@ expression_plot_maplot_server <- function(id,
       symbols <- rownames(res)
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
-      label.names <- pgx$genes[rownames(res),]$gene_name  ## this is reactive, user-selected
+      label.names <- pgx$genes[rownames(res),]$gene_name  ## reactive, user-selected
+
+      shape <- rep("circle", nrow(res))
+      names(shape) <- rownames(res)
+      if (any(is.na(pgx$counts)) && !any(is.na(pgx$X))) {
+        jj <- which(!is.na(pgx$contrasts[, comp1]))
+        if (any(jj)) {
+          counts <- pgx$counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
+          nas <- apply(counts, 1, function(x) sum(is.na(x)))
+          na.features <- names(nas)[which(nas>0)]
+          shape[match(na.features, names(shape))] <- "cross"
+        }
+      }
 
       plot_data <- list(
         x = x,
@@ -106,6 +114,7 @@ expression_plot_maplot_server <- function(id,
         symbols = symbols,
         features = rownames(res),
         names = names,
+        shape = shape,
         fdr = fdr,
         lfc = lfc,
         label.names = label.names
@@ -130,6 +139,7 @@ expression_plot_maplot_server <- function(id,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         label.cex = lab.cex,
+        shape = pd[["shape"]],
         group.names = c("group1", "group0"),
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
@@ -149,11 +159,8 @@ expression_plot_maplot_server <- function(id,
       fig <- plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
         plotly::layout(
           font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
+          legend = list(font = list(size = 18))
         )
-      ## fig <- plotly::style(fig, marker.size = 8)
       fig
     }
 
