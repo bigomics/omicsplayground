@@ -294,7 +294,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         }
         jj <- match(toupper(gg), toupper(genes))
         pp <- rownames(pgx$X)[jj]
-        zx <- pgx$X[pp, , drop = FALSE]
+        if (is.null(pgx$impX)) {
+          zx <- pgx$X[pp, , drop = FALSE]
+        } else {
+          zx <- pgx$impX[pp, , drop = FALSE]
+        }
         if (!is.null(idx)) {
           idx <- idx[gg]
           names(idx) <- rownames(zx)
