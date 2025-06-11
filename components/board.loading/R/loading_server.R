@@ -390,11 +390,8 @@ LoadingBoard <- function(id,
       nsamples <- sum(as.integer(pgx_info$nsamples), na.rm = TRUE)
       FC.file <- file.path(auth$user_dir, "datasets-allFC.csv")
       if (file.exists(FC.file)) {
-        contrast_names <- read.csv(FC.file, nrows = 1, header = TRUE, check.names = FALSE) |> colnames()
-        data_names <- gsub("^\\[|\\].*", "", contrast_names[-1])
-        pgx.files <- pgxtable$data()$dataset
-        data_names <- data_names[data_names %in% pgx.files]
-        ncontrasts <- length(data_names)
+        contrasts <- get_contrasts_from_user(auth)
+        ncontrasts <- sum(contrasts, na.rm = TRUE)
         return(
           paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples &nbsp;&nbsp;&nbsp;", ncontrasts, "Comparisons")
         )

@@ -186,7 +186,7 @@ upload_module_normalization_server <- function(
         X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
-        
+
         ## recompute chosed correction method with full
         ## matrix. previous was done on shortened matrix.
         kk <- intersect(colnames(X1), rownames(samples))
@@ -210,16 +210,11 @@ upload_module_normalization_server <- function(
           mm <- unique(c("uncorrected", m))
           pars <- playbase::get_model_parameters(X1, samples, pheno = NULL, contrasts)
           batch.pars <- input$bec_param
-          if (any(grepl("<autodectect>", batch.pars))) {
-            batch.pars <- pars$batch.pars
-          }
-          if (any(grepl("<none>", batch.pars))) {
-            batch.pars <- ""
-          }
+          if (any(grepl("<autodectect>", batch.pars))) batch.pars <- pars$batch.pars
+          if (any(grepl("<none>", batch.pars))) batch.pars <- ""
           batch.pars <- intersect(batch.pars, colnames(samples))
-
           if (length(batch.pars)) {
-            batch <- samples[, batch.pars, drop = FALSE] ## matrix
+            batch <- samples[, batch.pars, drop = FALSE]
           } else {
             batch <- NULL
           }
@@ -258,16 +253,19 @@ upload_module_normalization_server <- function(
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
         prior <- imputedX()$prior
-        counts <- pmax(2**X - prior, 0)
-
+        counts <- pmax(2**X - prior, 0)        
         ## We use 'correctedX' to compute the 'corrected' counts but
         ## put back to original total counts
         orig.counts <- r_counts()[rownames(X), colnames(X)]
         orig.tc <- colSums(orig.counts,na.rm=TRUE)
         tc <- colSums(counts,na.rm=TRUE)
         counts <- t(t(counts) / tc * orig.tc)
-        
-        counts
+
+        ## Restore original NAs in correctedCounts.
+        jj <- which(is.na(orig.counts), arr.ind = TRUE)
+        if (any(jj)) counts[jj] <- NA
+
+        return(counts)
       })
 
       ## ------------------------------------------------------------------
