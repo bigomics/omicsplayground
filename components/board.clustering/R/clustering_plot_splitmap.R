@@ -338,6 +338,7 @@ clustering_plot_splitmap_server <- function(id,
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
         rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
+        names(tooltips) <- rownames(X)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- sapply(aa, function(x) {
