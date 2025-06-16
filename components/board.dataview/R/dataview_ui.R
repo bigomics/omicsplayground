@@ -116,7 +116,7 @@ DataViewUI <- function(id) {
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
                 title = "Gene expression",
-                info.text = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. Also, the type of expression can be selected under {Data type} under Settings > Options.",
+                info.text = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. The scale of expression can be selected under {Data type} under Settings > Options. By checking the plot option 'Show imputed sample values', grey points/bars will denote samples (if any) in which the selected gene was imputed.",
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 label = "a"
