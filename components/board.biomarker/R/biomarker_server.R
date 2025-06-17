@@ -246,6 +246,7 @@ BiomarkerBoard <- function(id, pgx, board_observers) {
     biomarker_plot_decisiontree_server(
       "pdx_decisiontree",
       calcVariableImportance,
+      pgx,
       is_computed,
       watermark = WATERMARK
     )

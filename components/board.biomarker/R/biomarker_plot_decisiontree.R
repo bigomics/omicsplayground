@@ -55,6 +55,7 @@ biomarker_plot_decisiontree_ui <- function(
 #' @export
 biomarker_plot_decisiontree_server <- function(id,
                                                calcVariableImportance,
+                                               pgx,
                                                is_computed,
                                                watermark = FALSE) {
   moduleServer(
@@ -69,6 +70,7 @@ biomarker_plot_decisiontree_server <- function(id,
       plot.RENDER <- function() {
         imp <- plot_data()
         shiny::req(imp)
+        imp$rf$frame$var <- playbase::probe2symbol(imp$rf$frame$var, pgx$genes, "gene_name", fill_na = TRUE)
         playbase::plotDecisionTreeFromImportance(
           imp=NULL, rf=imp$rf, type = input$plottype )
       }
