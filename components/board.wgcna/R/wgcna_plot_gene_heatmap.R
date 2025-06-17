@@ -42,8 +42,10 @@ wgcna_plot_gene_heatmap_server <- function(id,
       gg <- strsplit(data$genes[sel],split="\\|")[[1]]
       pp <- playbase::map_probes(pgx$genes, gg)
       pp <- intersect(pp, rownames(pgx$X))
+      df <- pgx$X[pp,]
+      rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
       playbase::gx.splitmap(
-        pgx$X[pp,], nmax=nmax,
+        df, nmax = nmax,
         col.annot = pgx$samples,
         rowlab.maxlen = maxlen,
         show_legend = show_legend,
