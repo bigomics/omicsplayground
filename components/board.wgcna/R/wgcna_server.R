@@ -167,6 +167,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     wgcna_plot_correlation_network_server(
       "corGraph",
       wgcna = wgcna,
+      pgx = pgx,
       selected_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
@@ -204,6 +205,7 @@ WgcnaBoard <- function(id, pgx, board_observers) {
     wgcna_plot_module_membership_server(
       "modulemembership",
       wgcna = wgcna,
+      pgx = pgx,
       selected_module = shiny::reactive(input$selected_module),      
       watermark = WATERMARK
     )

@@ -32,6 +32,7 @@ wgcna_plot_module_membership_ui <- function(
 
 wgcna_plot_module_membership_server <- function(id,
                                                 wgcna,
+                                                pgx,
                                                 selected_module,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -54,6 +55,12 @@ wgcna_plot_module_membership_server <- function(id,
       ## only ME genes
       sel <- which(names(rho) %in% res$me.genes[[module]])
       rho <- rho[sel]
+
+      names(rho) <- playbase::probe2symbol(names(rho), pgx$genes, "gene_name", fill_na = TRUE)
+      ## truncate long names, otherwise base plot errors
+      names(rho) <- ifelse(nchar(names(rho)) > 15,
+                           paste0(substr(names(rho), 1, 12), "..."),
+                           names(rho))
       
       if(min(rho,na.rm=TRUE)< 0) {
         ii <- unique(c(head(order(rho), ntop/2), tail(order(rho), ntop/2)))
