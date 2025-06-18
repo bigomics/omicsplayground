@@ -696,7 +696,15 @@ UploadBoard <- function(id,
       recompute_pgx(NULL) ## need to reset ???
     })
 
-    observeEvent(c(input$start_upload, recompute_pgx()), {
+    observeEvent(recompute_pgx(), {
+      req(!is.null(recompute_pgx()))
+      bigdash.selectTab(session, selected = "upload-tab")
+      shinyjs::delay(250, {
+        new_upload(new_upload() + 1)
+      })
+    }, ignoreNULL = TRUE)
+
+    observeEvent(input$start_upload, {
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
@@ -965,7 +973,6 @@ UploadBoard <- function(id,
             wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
-              bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
               upload_organism(pgx$organism)
               uploaded$samples.csv <- pgx$samples
