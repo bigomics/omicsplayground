@@ -58,7 +58,7 @@ upload_module_normalization_server <- function(
         if (negs > 0) {
           counts <- pmax(counts, 0) ## NEED RETHINK (eg: what about Olink NPX)
         }
-
+        
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
@@ -122,8 +122,15 @@ upload_module_normalization_server <- function(
           X <- playbase::imputeMissing(X, method = m)
         }
 
-        dbg("[normalization_server:imputedX] Checking for duplicated features")
-        X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+        dups <- sum(duplicated(rownames(X)))
+        if (dups > 0) {
+          if (input$average_dups == "Average") {
+            dbg("[normalization_server:imputedX] Detected ", dups, " duplicated features. Averaging...")
+            X <- playbase::counts.mergeDuplicateFeatures(X, is.counts = FALSE)
+          } else if (input$average_dups == "Keep all") {
+            rownames(X) <- playbase::make_unique(rownames(X))
+          }
+        }        
         list(X = X, prior = prior)
       })
 
@@ -137,10 +144,7 @@ upload_module_normalization_server <- function(
           ref <- NULL
           if (m == "reference") {
             ref <- input$ref_gene
-            shiny::validate(shiny::need(
-              isTruthy(ref),
-              tspan("Please select reference gene", js = FALSE)
-            ))
+            shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js = FALSE)))
             shiny::req(ref)
           }
           if(upload_datatype() == "multi-omics") {
@@ -177,7 +181,9 @@ upload_module_normalization_server <- function(
           pos <- irlba::irlba(X, nv = 2)$v
           rownames(pos) <- colnames(X)
         }
+
         list(X = X, pos = pos)
+
       })
 
       ## Technical and biological effects correction
@@ -253,12 +259,25 @@ upload_module_normalization_server <- function(
         shiny::req(dim(correctedX()$X))
         X <- correctedX()$X
         prior <- imputedX()$prior
-        counts <- pmax(2**X - prior, 0)        
+        counts <- pmax(2**X - prior, 0)
+        r_counts <- r_counts()
+        dups <- sum(duplicated(rownames(r_counts)))
+        if (dups > 0) {
+          if (input$average_dups == "Average") {
+            r_counts <- playbase::counts.mergeDuplicateFeatures(r_counts, is.counts = TRUE)
+          } else if (input$average_dups == "Keep all") {
+            rownames(r_counts) <- playbase::make_unique(rownames(r_counts))
+          }
+        }
+                
         ## We use 'correctedX' to compute the 'corrected' counts but
         ## put back to original total counts
-        orig.counts <- r_counts()[rownames(X), colnames(X)]
+        jj <- which(rownames(r_counts) %in% rownames(X))
+        kk <- which(colnames(r_counts) %in% colnames(X))
+        orig.counts <- r_counts[jj, kk]
+        #orig.counts <- r_counts()[rownames(X), colnames(X)]
         orig.tc <- colSums(orig.counts,na.rm=TRUE)
-        tc <- colSums(counts,na.rm=TRUE)
+        tc <- colSums(counts, na.rm=TRUE)
         counts <- t(t(counts) / tc * orig.tc)
 
         ## Restore original NAs in correctedCounts.
@@ -266,6 +285,7 @@ upload_module_normalization_server <- function(
         if (any(jj)) counts[jj] <- NA
 
         return(counts)
+        
       })
 
       ## ------------------------------------------------------------------
@@ -462,8 +482,16 @@ upload_module_normalization_server <- function(
       ## missing values
       plot_missingvalues <- function() {
         X0 <- r_counts()
+        dups <- sum(duplicated(rownames(X0)))
+        if (dups > 0) {
+          if (input$average_dups == "Average") {
+            X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = TRUE)
+          } else if (input$average_dups == "Keep all") {
+            rownames(X0) <- playbase::make_unique(rownames(X0))
+          }
+        }
         X1 <- imputedX()$X
-        X0 <- X0[rownames(X1), ] ## remove duplicates
+        X0 <- X0[rownames(X1), , drop = FALSE] ## remove duplicates
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
         if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
@@ -810,7 +838,7 @@ upload_module_normalization_server <- function(
                       </a>")
                 ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-                shiny::checkboxInput(ns("filtermissing"), label = "Keep NA rows", value = TRUE),
+                shiny::checkboxInput(ns("filtermissing"), label = "Keep NA rows", value = FALSE),
                 shiny::conditionalPanel(
                   "input.filtermissing == true",
                   ns = ns,
@@ -833,11 +861,19 @@ upload_module_normalization_server <- function(
                     selected = "SVD2"
                   )
                 ),
-                ## shiny::checkboxInput(ns("remove_xxl"), label="Treat XXL as NA", value=FALSE),
                 br()
               ),
               bslib::accordion_panel(
-                title = "2. Normalization",
+                title = "2. Duplicated features",
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;",
+                  shiny::p("Treatment of duplicated features:")
+                ),
+                shiny::selectInput(ns("average_dups"), NULL, choices=c("Average", "Keep all"), selected="Average"),
+                br()
+              ),
+              bslib::accordion_panel(
+                title = "3. Normalization",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
                   shiny::p("Normalize the data using one of the following methods:"),
@@ -887,7 +923,7 @@ upload_module_normalization_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                title = "3. Remove outliers",
+                title = "4. Remove outliers",
                 shiny::p("Automatically detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
                 shiny::conditionalPanel(
@@ -900,7 +936,7 @@ upload_module_normalization_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                title = "4. Batch-effect correction",
+                title = "5. Batch-effect correction",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
                   shiny::p("Automatically remove unwanted variation from your data."),
@@ -1001,7 +1037,6 @@ upload_module_normalization_server <- function(
               )
             )
           ),
-          ## div(shiny::selectInput(ns("normalizationUI"),NULL,choices=TRUE),style='display:none')
           div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
         )
 
