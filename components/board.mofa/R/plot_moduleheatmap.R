@@ -36,6 +36,7 @@ mofa_plot_moduleheatmap_ui <- function(
 
 mofa_plot_moduleheatmap_server <- function(id,
                                            mofa,
+                                           pgx,
                                            input_factor = reactive(1),
                                            show_types = reactive(NULL),
                                            ntop = c(40,40),
@@ -56,6 +57,7 @@ mofa_plot_moduleheatmap_server <- function(id,
       
       playbase::mofa.plot_heatmap(
         res, k=k, ## main=k,
+        gene_table = pgx$genes,
         ntop = n,
         split = input$split,
         type="splitmap",

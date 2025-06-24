@@ -116,7 +116,7 @@ DataViewUI <- function(id) {
               dataview_plot_expression_ui(
                 id = ns("expressionplot"),
                 title = "Gene expression",
-                info.text = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. Also, the type of expression can be selected under {Data type} under Settings > Options.",
+                info.text = "Expression of the selected gene by sample. Samples can be grouped by phenotype using the {Group by} setting. The scale of expression can be selected under {Data type} under Settings > Options. By checking the plot option 'Show imputed sample values', grey points/bars will denote samples (if any) in which the selected gene was imputed.",
                 caption = "Barplot of abundance or expression of grouped samples (or cells) for the gene selected in the Search gene.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 label = "a"
@@ -225,24 +225,25 @@ DataViewUI <- function(id) {
             )
           ),
           bslib::layout_columns(
-            col_widths = c(5, 7),
-            dataview_plot_genetypes_ui(
-              ns("counts_genetypes"),
-              title = "Proportion of major gene types",
-              info.text = "Abundance of genetypes on the loaded data. Genetypes can be ribosomal protein genes, kinases or RNA binding motifs, etc. Samples can be grouped using the {Group by} setting.",
-              caption = "Barplot showing the proportion of major gene types.",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%"),
-              label = "d"
-            ),
+            col_widths = c(7, 5),
             dataview_plot_abundance_ui(
               ns("counts_abundance"),
-              title = "Proportion of major gene types per sample/group",
-              info.text = "Barplot showing the percentage of counts in terms of major gene types such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting.",
-              caption = "Barplot showing the proportion of counts of major gene types in samples or groups.",
+              title = "Proportion of major gene classes per sample/group",
+              info.text = "Barplot showing the percentage of counts in terms of major gene classes such as ribosomal protein genes, kinases or RNA binding motifs for each group. Samples can be grouped using the {Group by} setting. By checking the plot option ' Show overall proportions', the overall proportion of each gene class across all samples in the data is displayed.",
+              caption = "Barplot showing the proportion of counts of major gene class in each sample or grouped samples, or in the overall dataset.",
               height = c("100%", TABLE_HEIGHT_MODAL),
-              label = "e",
+              label = "d",
               width = c("auto", "100%")
+            ),
+            dataview_plot_variationcoefficient_ui(
+              ns("variationcoefficient"),
+              height = c("50%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%"),
+              title = "Coefficient of variation",
+              info.text = "Coefficient of variation (CV, %). CV is a common measure of experimental dispersion. It is a proxy of variation, precision, and repeatability of an assay. Samples can be grouped using the {Group by} setting.",
+              info.methods = "Coefficient of variation (CV, %). CV is calculated for each gene in the linear space as the ratio between the feature's standard deviation across samples and the absolute average feature expression across samples. Samples can be grouped using the {Group by} setting.",
+              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/",
+              caption = "Boxplot of coefficient of variation (%) "
             )
           )
         )
@@ -259,7 +260,7 @@ DataViewUI <- function(id) {
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
           title = "Gene expression table",
-          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells).",
+          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells). The column 'pct.missingness' reports the percentage of samples in which a feature is missing (NA).",
           caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")

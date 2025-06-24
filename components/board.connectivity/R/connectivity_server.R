@@ -20,10 +20,7 @@ ConnectivityBoard <- function(
       module provides pairwise correlation plots and/or enrichment plots with
       signatures from other data sets. The <strong>Connectivity map</strong>
       shows the similarity of the contrasts profiles as a t-SNE plot.<br><br>
-      <br><br><center><iframe width='500' height='333'
-      src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
-      frameborder='0' allow='accelerometer; autoplay; encrypted-media;
-      gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+      <br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=m4qEXCuQJo6o-A9o&amp;start=38' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
     ## ================================================================================

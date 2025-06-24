@@ -12,7 +12,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
     infotext <-
       tspan("The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets. This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots. It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets. <br><br><br><br>
-        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>",
+        <center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=Tqxw_Qu2li97LYyt&amp;start=146' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>",
         js = FALSE
       )
 
@@ -340,15 +340,20 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- pgx1$cluster.genes$pos[["umap2d"]]
+          posx <- playbase::rename_by(pos, pgx1$genes, new_id = target_col)
         } else if (type == "UMAP2") {
           pos <- pgx2$cluster.genes$pos[["umap2d"]]
+          posx <- playbase::rename_by(pos, pgx2$genes, new_id = target_col)
         }
-        posx <- playbase::rename_by(pos, pgx1$genes, new_id = target_col)
         mapped.pos <- playbase::rename_by2(posx, pgx$genes,
           new_id = "rownames",
           unique = FALSE
         )
         mapped.pos <- mapped.pos[match(rownames(pgx$X), rownames(mapped.pos)), ]
+        shiny::validate(shiny::need(
+          !all(is.na(mapped.pos)),
+          "No matching features between datasets"
+        ))
         rownames(mapped.pos) <- rownames(pgx$X)
 
         p <- playbase::pgx.plotGeneUMAP(

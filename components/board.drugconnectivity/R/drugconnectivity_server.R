@@ -19,9 +19,7 @@ DrugConnectivityBoard <- function(id, pgx) {
         you can correlate your signature with known drug profiles from the L1000 database.
         An activation-heatmap compares drug activation profiles across multiple contrasts.
         This facilitates to quickly see and detect the similarities between contrasts for certain drugs.<br><br><br><br>
-        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
-        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
-        allowfullscreen></iframe></center>")
+        <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BtMQ7Y0NoIA?si=3T61_k_onEqsTMcr&amp;start=91' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>")
 
     ## ================================================================================
     ## ============================== OBSERVERS  ======================================

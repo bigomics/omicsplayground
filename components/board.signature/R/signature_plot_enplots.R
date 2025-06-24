@@ -125,6 +125,8 @@ signature_plot_enplots_server <- function(id,
           )
         }
         rownames(F)[is.na(rownames(F))] <- "NA"
+        rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
+        gset <- playbase::probe2symbol(gset, pgx$genes, "gene_name", fill_na = TRUE)
         p <- playbase::gsea.enplotly(
           F[, i],
           gset,

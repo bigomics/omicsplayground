@@ -25,9 +25,7 @@ WgcnaBoard <- function(id, pgx){
     ## ================================================================================
 
     infotext <-
-      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
-        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
+      '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=WUBozFwNdZbwpT69" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
 
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
@@ -162,6 +160,7 @@ WgcnaBoard <- function(id, pgx){
     wgcna_plot_correlation_network_server(
       "corGraph",
       wgcna = wgcna,
+      pgx = pgx,
       selected_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
@@ -199,6 +198,7 @@ WgcnaBoard <- function(id, pgx){
     wgcna_plot_module_membership_server(
       "modulemembership",
       wgcna = wgcna,
+      pgx = pgx,
       selected_module = shiny::reactive(input$selected_module),      
       watermark = WATERMARK
     )

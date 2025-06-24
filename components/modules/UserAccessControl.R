@@ -323,10 +323,18 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
 
     if (auth$logged) {
       if (!dir.exists(online_dir)) dir.create(online_dir)
-      write(NULL, file = online_file)
+      tryCatch({
+        write(NULL, file = online_file)
+      }, error = function(e) {
+        dbg("[pgx.start_heartbeat] Failed to write online file. online_dir=", online_dir, " session=", session$token, " online_file=", online_file)
+      })
     } else {
       if (file.exists(online_file)) {
-        file.remove(online_file)
+        tryCatch({
+          file.remove(online_file)
+        }, error = function(e) {
+          dbg("[pgx.start_heartbeat] Failed to remove online file. online_file=", online_file)
+        })
       }
     }
 
@@ -339,7 +347,11 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
       lapsed <- round(as.numeric(lapsed, units = "secs"), digits = 2)
       is_stale <- which(lapsed > 3 * delta)
       if (length(is_stale) > 0) {
-        file.remove(files[is_stale])
+        tryCatch({
+          file.remove(files[is_stale])
+        }, error = function(e) {
+          dbg("[pgx.start_heartbeat] Failed to remove stale online file. files=", files[is_stale])
+        })
       }
     }
 

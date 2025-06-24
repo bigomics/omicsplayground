@@ -384,6 +384,16 @@ sever_serverfull <- function(srv) {
   )
 }
 
+sever_max_sessions <- function(srv) {
+  shiny::tagList(
+    shiny::tags$h1("There is a session already running for this account!", style = "color:white;font-family:lato;"),
+    shiny::p("Please close any other tabs or sessions before launching a new one. If you already did, please wait and try again.", style = "font-size:15px;"),
+    shiny::br(),
+    shiny::br(), shiny::br(),
+    sever::reload_button("Relaunch", class = "info")
+  )
+}
+
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 all.plotly.buttons <- c(
   "toImage",

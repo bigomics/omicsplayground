@@ -253,6 +253,7 @@ MofaBoard <- function(id, pgx) {
     mofa_plot_moduleheatmap_server(
       "integrated_heatmap",
       mofa = mofa,
+      pgx = pgx,
       ntop = c(50,40),
       input_factor = reactive(NULL),      
       watermark = WATERMARK
@@ -261,6 +262,7 @@ MofaBoard <- function(id, pgx) {
     mofa_plot_moduleheatmap_server(
       "module_heatmap",
       mofa = mofa,
+      pgx = pgx,
       ntop = c(30,40),
       input_factor = reactive(input$selected_factor),      
       show_types = reactive(input$show_types),

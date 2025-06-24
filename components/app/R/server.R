@@ -618,10 +618,28 @@ app_server <- function(input, output, session) {
     ##    fields <- c("name", "datatype", "description", "date", "norm_method", "imputation_method", "bc_method", "remove_outliers")
     fields <- c("name", "datatype", "description", "date", "settings")
     fields <- intersect(fields, names(PGX))
+    gset.methods <- sort(colnames(PGX$gset.meta$meta[[1]]$fc))
+    gx.methods <- colnames(PGX$gx.meta$meta[[1]]$fc)
+    extra_methods <- c(
+      wgcna = "WGCNA",
+      mofa = "MOFA",
+      deconv = "celltype deconvolution",
+      drugs = "drug connectivity",
+      wordcloud = "wordcloud",
+      connectivity = "experiment similarity"
+    )
+    extra.compute <- unname(extra_methods[names(extra_methods) %in% names(PGX)])
+    fields <- c(fields, "gset.methods", "gx.methods", "extra.compute")
     body <- ""
     listcollapse <- function(lst) paste0(names(lst), "=", lst, collapse = "; ")
     for (f in fields) {
-      if (length(PGX[[f]]) > 1) {
+      if (f == "gset.methods") {
+        body <- paste(body, "<b>Enrichment methods:</b>&nbsp; ", paste(gset.methods, collapse = ", "), "<br>")
+      } else if (f == "gx.methods") {
+        body <- paste(body, "<b>Gene tests:</b>&nbsp; ", paste(gx.methods, collapse = ", "), "<br>")
+      } else if (f == "extra.compute") {
+        body <- paste(body, "<b>Extra analysis:</b>&nbsp; ", paste(extra.compute, collapse = ", "), "<br>")
+      } else if (length(PGX[[f]]) > 1) {
         for (n in names(PGX[[f]])) {
           val <- PGX[[f]][[n]]
           if (length(val) > 1) val <- listcollapse(val)
@@ -786,6 +804,17 @@ app_server <- function(input, output, session) {
       names(label_types)[names(label_types) == "gene_title"] <- "title"
       label_types <- label_types[!grepl("pos|map|tx_len|source", names(label_types))]
       names(label_types) <- sub("^chr$","chromosome",names(label_types))
+      # if one of the label_types unique values amounts for less than 10% of total genes, remove it
+      n_genes <- nrow(PGX$genes)
+      keep_types <- sapply(label_types, function(col) {
+        if (col %in% colnames(PGX$genes)) {
+          n_unique <- length(unique(PGX$genes[, col]))
+          (n_unique / n_genes) >= 0.10
+        } else {
+          TRUE
+        }
+      })
+      label_types <- label_types[keep_types]
 
       # default selection depending on datatype
       if (PGX$datatype %in% c("metabolomics","multi-omics")) {
@@ -1026,7 +1055,7 @@ app_server <- function(input, output, session) {
         comment = "too many sessions. server at capacity",
         session = session
       )
-      sever::sever(sever_serverfull(opt$HOSTNAME), bg_color = "#004c7d") ## lightblue=2780e3
+      sever::sever(sever_max_sessions(opt$HOSTNAME), bg_color = "#004c7d") ## lightblue=2780e3
       session$close()
     }
   })

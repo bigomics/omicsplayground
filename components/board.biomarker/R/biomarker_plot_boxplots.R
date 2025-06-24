@@ -58,6 +58,7 @@ biomarker_plot_boxplots_ui <- function(
 #' @return
 #' @export
 biomarker_plot_boxplots_server <- function(id,
+                                           pgx,
                                            calcVariableImportance,
                                            is_computed,
                                            watermark = FALSE) {
@@ -122,6 +123,7 @@ biomarker_plot_boxplots_server <- function(id,
         for (i in 1:min(12, length(vars))) {
           g <- vars[i]
           gx <- X[g, ]
+          g <- playbase::probe2symbol(g, pgx$genes, "gene_name", fill_na = TRUE)
           boxplot(
             gx ~ y,
             col = "grey85",

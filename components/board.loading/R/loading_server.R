@@ -225,13 +225,20 @@ LoadingBoard <- function(id,
         gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
     ), js = FALSE)
     module_infotext <- paste0(
-      "<center><iframe width='1120' height='630'
-        src='https://www.youtube.com/embed/elwT6ztt3Fo'
-        title='YouTube video player' frameborder='0'
-        allow='accelerometer; autoplay; clipboard-write; encrypted-media;
-        gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
+      "<center><iframe width='560' height='315' src='https://www.youtube.com/embed/YTzLkio4M_4?si=LljECgKnb0TsgZDZ&amp;start=517' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
+    sharing_infotext <- tspan(paste0(
+      "<center><iframe width='560' height='315' src='https://www.youtube.com/embed/YTzLkio4M_4?si=oF52aFP_1knRilod&amp;start=551' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
+    ))
+
+    shiny::observeEvent(input$loading_sharing, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Sharing a dataset from your library</strong>"),
+        shiny::HTML(sharing_infotext),
+        easyClose = TRUE, size = "xl"
+      ))
+    })
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -383,11 +390,8 @@ LoadingBoard <- function(id,
       nsamples <- sum(as.integer(pgx_info$nsamples), na.rm = TRUE)
       FC.file <- file.path(auth$user_dir, "datasets-allFC.csv")
       if (file.exists(FC.file)) {
-        contrast_names <- read.csv(FC.file, nrows = 1, header = TRUE, check.names = FALSE) |> colnames()
-        data_names <- gsub("^\\[|\\].*", "", contrast_names[-1])
-        pgx.files <- pgxtable$data()$dataset
-        data_names <- data_names[data_names %in% pgx.files]
-        ncontrasts <- length(data_names)
+        contrasts <- get_contrasts_from_user(auth)
+        ncontrasts <- sum(contrasts, na.rm = TRUE)
         return(
           paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples &nbsp;&nbsp;&nbsp;", ncontrasts, "Comparisons")
         )

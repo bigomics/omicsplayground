@@ -17,14 +17,6 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
 
   plot_opts <- tagList(
     withTooltip(
-      shiny::selectInput(
-        ns("labelby"), "Label by:",
-        choices = c("feature", "symbol", "title" = "gene_title"),
-        selected = "feature" ),
-      "Type of label to show."
-    ),
-    hr(),
-    withTooltip(
       shiny::radioButtons(
         ns("highlightby"),
         "Highlight labels by:",
@@ -317,9 +309,7 @@ pcsf_genepanel_server <- function(id,
       fx <- F[igraph::V(pcsf)$name, contrast]
 
       labels <- names(fx)
-      if(input$labelby %in% colnames(pgx$genes)) {
-        labels <- pgx$genes[names(fx), input$labelby]
-      }
+      labels <- playbase::probe2symbol(names(fx), pgx$genes, "gene_name", fill_na = TRUE)
       
       igraph::V(pcsf)$foldchange <- fx
       igraph::V(pcsf)$prize <- abs(fx)
@@ -370,12 +360,10 @@ pcsf_genepanel_server <- function(id,
       layout <- res$layout
       
       F <- playbase::pgx.getMetaMatrix(pgx, level="gene")$fc
-      F <- F[igraph::V(graph)$name,]
+      F <- F[igraph::V(graph)$name,,drop=FALSE]
 
       labels <- rownames(F)
-      if(!input$labelby %in% colnames(pgx$genes)) {
-        labels <- pgx$genes[rownames(F), input$labelby]
-      }
+      labels <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
       
       nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F)/nc)
@@ -383,6 +371,7 @@ pcsf_genepanel_server <- function(id,
       i=1
       for(i in 1:ncol(F)) {
         fx <- F[,i]        
+        fx[is.na(fx)] <- 0 # NA no size no color
         playbase::plotPCSF(
           graph,
           plotlib = "igraph",

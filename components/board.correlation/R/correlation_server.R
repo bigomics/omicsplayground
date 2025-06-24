@@ -24,7 +24,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     shiny::observeEvent(input$data_info, {
       shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Expression: Correlation analysis board</strong>"),
+        title = shiny::HTML("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=mBmZNx4z19MoAucQ&amp;start=156' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe><center>"),
         shiny::HTML(cor_infotext),
         easyClose = TRUE, size = "l"
       ))

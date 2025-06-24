@@ -32,10 +32,7 @@ PathwayBoard <- function(id,
     the GO graph tab. Instead of pathway maps, an annotated graph structure
     provided by the GO database is potted for every selected gene set.
     <br><br><br><br>
-    <center><iframe width='500' height='333'
-    src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
-    frameborder='0' allow='accelerometer; autoplay; encrypted-media;
-    gyroscope; picture-in-picture' allowfullscreen></iframe></center>"), js = FALSE)
+    <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=AB4FSqin7aqqYU_n&amp;start=100' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"), js = FALSE)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

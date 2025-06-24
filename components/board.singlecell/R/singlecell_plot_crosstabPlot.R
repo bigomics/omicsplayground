@@ -108,7 +108,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       scores <- scores[, topsel]
 
       ## expected counts per stat level
-      kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE]) ## approximate counts from log2X
+      kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE], na.rm = TRUE) ## approximate counts from log2X
       grp.counts <- (t(scores / rowSums(scores)) %*% matrix(kk.counts, ncol = 1))[, 1]
 
       getProportionsTable <- function(pheno, is.gene = FALSE) {

@@ -17,7 +17,8 @@ upload_table_preview_samples_server <- function(
     height,
     title,
     info.text,
-    caption) {
+    caption,
+    upload_datatype) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -343,7 +344,11 @@ upload_table_preview_samples_server <- function(
     })
 
     observeEvent(input$load_example, {
-      uploaded$samples.csv <- playbase::SAMPLES
+      if (upload_datatype() == "multi-omics") {
+        uploaded$samples.csv <- playbase::SAMPLES_MO
+      } else {
+        uploaded$samples.csv <- playbase::SAMPLES
+      }
     })
 
     TableModuleServer(

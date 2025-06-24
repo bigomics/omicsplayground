@@ -308,3 +308,15 @@ write_check_output <- function(
     write(unlist(lines), file.path(raw_dir, "CHECKS_OUTPUT"), append = TRUE)
   }
 }
+
+get_max_samples <- function(auth, upload_datatype) {
+  if (upload_datatype == "scRNA-seq") {
+    if (is.null(auth$options$MAX_SAMPLES_SC)) {
+      return(1000)
+    } else {
+      return(as.integer(auth$options$MAX_SAMPLES_SC))
+    }
+  } else {
+    return(as.integer(auth$options$MAX_SAMPLES))
+  }
+}

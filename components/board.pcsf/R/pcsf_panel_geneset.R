@@ -348,6 +348,7 @@ pcsf_gsetpanel_server <- function(id,
       i=1
       for(i in 1:ncol(F)) {
         fx <- F[,i]
+        fx[is.na(fx)] <- 0 # NA no size no color
         playbase::plotPCSF(
           graph,
           sizeby = fx,

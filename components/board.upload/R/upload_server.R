@@ -67,7 +67,7 @@ UploadBoard <- function(id,
       )
     })
 
-    shiny::observeEvent(input$module_info, {
+    shiny::observeEvent(input$upload_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>How to upload new data</strong>"),
         shiny::HTML(module_infotext),
@@ -90,7 +90,7 @@ UploadBoard <- function(id,
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
     ), js = FALSE)
 
-    module_infotext <- HTML('<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>')
+    module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
 
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
@@ -223,7 +223,6 @@ UploadBoard <- function(id,
 
     uploaded_counts <- shiny::eventReactive(
       {
-        # list(uploaded$counts.csv, upload_organism())
         list(uploaded$counts.csv)
       },
       {
@@ -231,9 +230,8 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
-        if (is.null(df0)) {
-          return(NULL)
-        }
+        if (is.null(df0)) return(NULL)
+
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -242,17 +240,18 @@ UploadBoard <- function(id,
         # action to user revert to intensities or skip correction.
         if ("e29" %in% names(res$checks)) {
           shinyalert::shinyalert(
-            title = paste("Log-transformed counts?"),
-            text = paste("Omics Playground expects linear intensities. Your data seems to be log-transformed. Would you like to undo the logarithm and convert to intensities?"),
-            confirmButtonText = "Yes, convert",
+            title = paste("Log-scale detected"),
+            text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+            html = TRUE,
+            confirmButtonText = "Yes",
             showCancelButton = TRUE,
-            cancelButtonText = "No, keep as is",
+            cancelButtonText = "No",
             inputId = "logCorrectCounts",
             closeOnEsc = FALSE,
             immediate = FALSE,
             callbackR = function(x) checked_for_log(TRUE)
           )
-          checked_for_log(FALSE)
+          # checked_for_log(FALSE)
         } else {
           checked_for_log(TRUE)
         }
@@ -279,6 +278,7 @@ UploadBoard <- function(id,
         # If error 29 exists (log2 transform detected) and user
         # confirms to convert to intensities in shinyalert do log2
         # correction (un-doing log transform).
+        check.e29 <- FALSE
         isConfirmed <- input$logCorrectCounts
         if ("e29" %in% names(res$checks) && isConfirmed) {
           dbg("[UploadBoard::checked_counts] Converting log-values to counts")
@@ -288,10 +288,11 @@ UploadBoard <- function(id,
             res$df <- res$df - min(res$df,na.rm=TRUE)
           }
           res$checks[["e29"]] <- NULL ## remove?
+          check.e29 = TRUE
         }
-
-        # Any further negative values are not allowed. We will set
-        # them to zero and inform the user.
+        
+        # Any further negative values are not allowed.
+        # We set to zero and inform the user.
         if (any(res$df < 0, na.rm = TRUE)) {
           num_neg <- sum(res$df < 0, na.rm = TRUE)
           res$df <- pmax(res$df, 0)
@@ -315,7 +316,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## check files: maximum samples allowed
         ## --------------------------------------------------------
-        MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
+        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
         if (!is.null(checked)) {
           if (ncol(checked) > MAXSAMPLES) {
             status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
@@ -339,7 +340,13 @@ UploadBoard <- function(id,
           uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
         }
 
-        list(status = status, matrix = checked)
+        if (check.e29) {
+          if (isConfirmed) isConfirmed = TRUE
+          if (is.null(isConfirmed)) isConfirmed = FALSE
+        } else {
+          isConfirmed = FALSE
+        }
+        list(status = status, matrix = checked, isConfirmed = isConfirmed)
       }
     )
 
@@ -370,7 +377,7 @@ UploadBoard <- function(id,
           status <- "ERROR: incorrect samples matrix"
         }
 
-        MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
+        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
         if (!is.null(checked)) {
           if (nrow(checked) > MAXSAMPLES) {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
@@ -527,7 +534,6 @@ UploadBoard <- function(id,
         )
       )
 
-      ## AZ: could simply use normalization_panel?
       if (upload_datatype() == "scRNA-seq") {
         normalization_panel <- wizardR::wizard_step(
           step_title = "Step 4: QC/BC",
@@ -550,25 +556,24 @@ UploadBoard <- function(id,
         server = TRUE,
         upload_module_computepgx_ui(ns("compute"))
       )
-
-##      if (upload_datatype() == "scRNA-seq") {
-        wizard <- wizardR::wizard(
-          id = ns("upload_wizard"),
-          width = 90,
-          height = 75,
-          modal = TRUE,
-          style = "dots",
-          lock_start = FALSE,
-          counts_ui,
-          samples_ui,
-          contrasts_ui,
-          normalization_panel,
-          compute_panel,
-          options = list(
-            navigation = "buttons",
-            finish = "Compute!"
-          )
+      
+      wizard <- wizardR::wizard(
+        id = ns("upload_wizard"),
+        width = 90,
+        height = 75,
+        modal = TRUE,
+        style = "dots",
+        lock_start = FALSE,
+        counts_ui,
+        samples_ui,
+        contrasts_ui,
+        normalization_panel,
+        compute_panel,
+        options = list(
+          navigation = "buttons",
+          finish = "Compute!"
         )
+      )
       ## } else {
       ##   wizard <- wizardR::wizard(
       ##     id = ns("upload_wizard"),
@@ -595,17 +600,15 @@ UploadBoard <- function(id,
     ## Check annotation matrix
     ## --------------------------------------------------------
     checked_annot <- shiny::eventReactive(
-      {
-        list(uploaded$annot.csv, uploaded$counts.csv)
-      },
-      {
-        ##     shiny::req(nrow(uploaded$annot.csv) && nrow(uploaded$counts.csv))
-
-        status <- "OK"
-        checked <- uploaded$annot.csv
-        if (!is.null(checked)) {
-          dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
-        }
+    {
+      list(uploaded$annot.csv, uploaded$counts.csv)
+    },
+    {
+      status <- "OK"
+      checked <- uploaded$annot.csv
+      if (!is.null(checked)) {
+        dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
+      }
 
         list(status = status, matrix = checked)
       }
@@ -693,7 +696,15 @@ UploadBoard <- function(id,
       recompute_pgx(NULL) ## need to reset ???
     })
 
-    observeEvent(c(input$start_upload, recompute_pgx()), {
+    observeEvent(recompute_pgx(), {
+      req(!is.null(recompute_pgx()))
+      bigdash.selectTab(session, selected = "upload-tab")
+      shinyjs::delay(250, {
+        new_upload(new_upload() + 1)
+      })
+    }, ignoreNULL = TRUE)
+
+    observeEvent(input$start_upload, {
       ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
@@ -962,7 +973,6 @@ UploadBoard <- function(id,
             wizardR::lock("upload_wizard")
             wizardR::wizard_show(ns("upload_wizard"))
             if (!is.null(recompute_pgx())) {
-              bigdash.selectTab(session, selected = "upload-tab")
               pgx <- recompute_pgx()
               upload_organism(pgx$organism)
               uploaded$samples.csv <- pgx$samples
@@ -1145,6 +1155,7 @@ UploadBoard <- function(id,
       auth = auth,
       uploaded = uploaded,
       checked_matrix = shiny::reactive(checked_counts()$matrix),
+      is_logscale = shiny::reactive(checked_counts()$isConfirmed), 
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
@@ -1164,7 +1175,8 @@ UploadBoard <- function(id,
       height = c("100%", TABLE_HEIGHT_MODAL),
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
-      caption = "This is the uploaded samples data."
+      caption = "This is the uploaded samples data.",
+      upload_datatype = upload_datatype
     )
 
     modified_ct <- upload_table_preview_contrasts_server(

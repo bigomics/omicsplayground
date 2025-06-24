@@ -11,7 +11,7 @@ BiomarkerBoard <- function(id, pgx) {
     rowH <- 320 ## row height of panel
     imgH <- 260
 
-    pdx_infotext <- tspan("The <strong>Biomarker Board</strong> performs
+    pdx_infotext <- tspan("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=0m9gvGU7jArsZNnW&amp;start=193' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center><br><br>The <strong>Biomarker Board</strong> performs
     the biomarker selection that can be used for classification or prediction purposes.
     <br><br>To better understand which genes, mutations, or gene sets influence
     the final phenotype the most, Playground calculates a variable importance
@@ -221,6 +221,7 @@ BiomarkerBoard <- function(id, pgx) {
 
     biomarker_plot_importance_server(
       "pdx_importance",
+      pgx,
       calcVariableImportance,
       is_computed,
       watermark = WATERMARK
@@ -238,12 +239,14 @@ BiomarkerBoard <- function(id, pgx) {
     biomarker_plot_decisiontree_server(
       "pdx_decisiontree",
       calcVariableImportance,
+      pgx,
       is_computed,
       watermark = WATERMARK
     )
 
     biomarker_plot_boxplots_server(
       "pdx_boxplots",
+      pgx,
       calcVariableImportance,
       is_computed,
       watermark = WATERMARK

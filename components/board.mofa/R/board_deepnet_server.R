@@ -169,7 +169,7 @@ DeepNetBoard <- function(id, pgx) {
     ## ===========================================================================
     ## ========================== BOARD FUNCTIONS ================================
     ## ===========================================================================
-    
+
     ## create reactive DeepNet object
     net <- shiny::eventReactive({
       list( input$select_pheno, input$reset )
@@ -188,7 +188,7 @@ DeepNetBoard <- function(id, pgx) {
       y <- y[ii,,drop=FALSE]
       X <- X[,ii]
       sdX <- matrixStats::rowSds(X, na.rm=TRUE)
-      xx <- playbase::mofa.split_data(X)  ## also handles single-omics
+      xx <- playbase::mofa.split_data(X) ## also handles single-omics
       
       ## Subset selection of datatypes for deepnet
       dt <- isolate(input$select_datatypes)
@@ -280,6 +280,7 @@ DeepNetBoard <- function(id, pgx) {
       
       avgX <- X %*% mx
       F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE] - rowMeans(avgX[,-i,drop=FALSE]))
+      #F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE])
       colnames(F) <- sub("^y","",colnames(mx))
       rownames(F) <- rownames(X)
       fc <- playbase::mofa.split_data(F)
