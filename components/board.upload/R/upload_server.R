@@ -316,7 +316,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## check files: maximum samples allowed
         ## --------------------------------------------------------
-        MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
+        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
         if (!is.null(checked)) {
           if (ncol(checked) > MAXSAMPLES) {
             status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
@@ -377,7 +377,7 @@ UploadBoard <- function(id,
           status <- "ERROR: incorrect samples matrix"
         }
 
-        MAXSAMPLES <- as.integer(auth$options$MAX_SAMPLES)
+        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
         if (!is.null(checked)) {
           if (nrow(checked) > MAXSAMPLES) {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
