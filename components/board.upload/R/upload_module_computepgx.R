@@ -213,6 +213,7 @@ upload_module_computepgx_server <- function(
               )
             )
           ), ## end layout_col
+
           if (!is.null(probetype()) && probetype() == "running") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
@@ -222,15 +223,18 @@ upload_module_computepgx_server <- function(
               )
             )
           },
+
           shiny::div(
             shiny::uiOutput(ns("probetype_result"))
           ),
+
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
               icon = icon("cog", lib = "glyphicon")
             ),
             style = "display: flex; justify-content: center; margin: 15px 0;"
           ),
+
           shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
@@ -244,15 +248,15 @@ upload_module_computepgx_server <- function(
                     c(
                       "append.symbol",
                       "remove.notexpressed",
-                      "remove.unknown"
-                      ## "only.proteincoding"
+                      "remove.unknown",
+                      "average.duplicated"
                     ),
                   choiceNames =
                     c(
                       "Append symbol to feature ID",
                       "Exclude all-zero features",
-                      "Exclude features without symbol"
-                      ## "Remove Rik/ORF/LOC genes"
+                      "Exclude features without symbol",
+                      "Average duplicated features"
                     ),
                   selected = PROBE_FILTER_SELECTED
                 ),
@@ -269,13 +273,11 @@ upload_module_computepgx_server <- function(
                   "input.exclude_void == true",
                   ns = ns,
                   shiny::span(style="margin-top:-15px;",
-                    shiny::textInput(
-                      ns("exclude_genes"),
-                      NULL,
-                      "LOC ORF RIK")
+                    shiny::textInput(ns("exclude_genes"), NULL, "LOC ORF RIK")
                   )
-                )
-              ),              
+                ),
+              ),
+              
               if (upload_datatype() == "scRNA-seq") {
                 bslib::card(
                   shiny::checkboxGroupInput(
@@ -414,7 +416,7 @@ upload_module_computepgx_server <- function(
 
         return(ui)
       })
-      
+
       ## Checks specific for time series
       shiny::observeEvent(samplesRT(), {
 
@@ -793,13 +795,19 @@ upload_module_computepgx_server <- function(
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
+        average.duplicated <- ("average.duplicated" %in% flt) ## new
+        batch.correct.method <- "no_batch_correct"
+        batch.pars <- "<autodetect>"
+        if (class(compute_settings$bc_method) == "list") {
+          batch.correct.method <- compute_settings$bc_method$method
+          batch.pars <- compute_settings$bc_method$param
+        }
+        ##--------------------------------
+        
         only.proteincoding <- FALSE      # DEPRECATED: use exclude_genes
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
-        # only.proteincoding <- ("only.proteincoding" %in% flt)
         filter.genes <- ("remove.notexpressed" %in% flt)
-        #use.design <- !("noLM.prune" %in% input$dev_options)
-        #prune.samples <- ("noLM.prune" %in% input$dev_options)
         use.design <- FALSE
         prune.samples <- TRUE
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -852,7 +860,6 @@ upload_module_computepgx_server <- function(
           custom.geneset = custom_geneset,
           custom_fc = custom_fc,
           #-------- preprocess options ---------
-          batch.correct = FALSE,
           norm_method = norm_method(),
           settings = list(
             ## compute settings only for info
@@ -867,9 +874,12 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
           only.known = remove.unknown,
+          average.duplicated = average.duplicated, ## new
           only.proteincoding = only.proteincoding,          
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
+          batch.correct.method = batch.correct.method, ## new
+          batch.pars <- batch.pars, ## NEW
           ##--------- 
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
@@ -880,9 +890,8 @@ upload_module_computepgx_server <- function(
           extra.methods = extra.methods,
           use.design = use.design,
           prune.samples = prune.samples,
-          #timeseries = timeseries,
           do.cluster = TRUE,
-          libx.dir = libx.dir, # needs to be replaced with libx.dir
+          libx.dir = libx.dir,
           name = dataset_name,
           datatype = upload_datatype(),
           description = input$selected_description,

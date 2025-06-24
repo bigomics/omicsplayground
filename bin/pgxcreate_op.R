@@ -34,18 +34,19 @@ pgx <- playbase::pgx.createPGX(
   probe_type = params$probe_type,
   description = params$description,
   creator = params$creator,
-  batch.correct = params$batch.correct,
+  batch.correct.method = params$batch.correct.method, ## NEW
+  batch.pars = params$batch.pars, ## NEW
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   exclude.genes = params$exclude.genes,  
   only.known = params$only.known,
+  average.duplicated = params$average.duplicated,
   only.proteincoding = params$only.proteincoding,
   only.hugo = params$only.hugo,
   convert.hugo = params$convert.hugo,
   custom.geneset = params$custom.geneset,
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
-  #timeseries = params$timeseries,
   settings = params$settings,
   sc_compute_settings = params$sc_compute_settings
 )
