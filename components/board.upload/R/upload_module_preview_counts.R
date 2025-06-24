@@ -38,7 +38,7 @@ upload_table_preview_counts_server <- function(
       dt <- uploaded$counts.csv      
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
-      MAXROW <- 10000
+      MAXROW <- 1000
       MAXCOL <- 20
       if (nrow(dt) > MAXROW) {
         dt <- head(dt, MAXROW)
@@ -443,13 +443,16 @@ upload_table_preview_counts_server <- function(
     })
 
     output$boxplots <- renderPlot({
-      #counts <- checked_matrix()
       counts <- uploaded$counts.csv
       shiny::req(counts)
       xx <- counts
       if (!is_logscale()) {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(pmax(xx, 0) + prior)
+      }
+      # Downsample to 40 columns as we do on qc/bc tab
+      if (ncol(xx) > 40) {
+        xx <- xx[, sample(1:ncol(xx), 40)]
       }
       boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
