@@ -891,6 +891,8 @@ PlotModuleServer <- function(id,
                   htmlwidgets::saveWidget(p, HTMLFILE)
                   webshot2::webshot(url = HTMLFILE, file = PDFFILE, vwidth = pdf.width * 100, vheight = pdf.height * 100)
                 } else if (plotlib %in% c("ggplot", "ggplot2")) {
+                  sysfonts::font_add_google("lato")
+                  showtext::showtext_auto()
                   p <- func()
                   pdf(PDFFILE, width = pdf.width, height = pdf.height, pointsize = pdf.pointsize)
                   print(p)
