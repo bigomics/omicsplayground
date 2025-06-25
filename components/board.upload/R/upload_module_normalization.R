@@ -91,27 +91,23 @@ upload_module_normalization_server <- function(
         if (nmissing > 0 && input$filtermissing) {
           f <- input$filterthreshold
           dbg(paste0("[normalization_server:imputedX] Threshold NA filter: ", f))
-          sample.contrasts <- playbase::contrasts.convertToLabelMatrix(contrasts,samples)
-          grp <- apply(sample.contrasts,1,paste,collapse='_')
-          if(f >= 1 || f < 0) {
-            grp.sum <- tapply(1:ncol(counts),grp,function(i) {
-              rx=counts[,i,drop=FALSE]; rowSums(!is.na(rx) & rx>0) })
-            maxsum <- apply(do.call(cbind,grp.sum),1,max,na.rm=TRUE)
+          sample.contrasts <- playbase::contrasts.convertToLabelMatrix(contrasts, samples)
+          grp <- apply(sample.contrasts, 1, paste, collapse = '_')
+          if (f >= 1) {
+            grp.sum <- tapply(1:ncol(counts), grp, function(i) {
+              rx = counts[, i, drop = FALSE]; rowSums(!is.na(rx) & rx>0) })
+            maxsum <- apply(do.call(cbind, grp.sum), 1, max, na.rm = TRUE)
             sel <- (maxsum >= 3)
-          } else if (f<0) {
-            grp.avg <- tapply(1:ncol(counts),grp,function(i) {
-              rx=counts[,i,drop=FALSE]; rowMeans(!is.na(rx) & rx>0) })
-            maxavg <- apply(do.call(cbind,grp.avg),1,max,na.rm=TRUE)
+          } else if (f < 0) {
+            grp.avg <- tapply(1:ncol(counts), grp, function(i) {
+              rx = counts[, i, drop = FALSE]; rowMeans(!is.na(rx) & rx>0) })
+            maxavg <- apply(do.call(cbind, grp.avg), 1, max,na.rm = TRUE)
             sel <- (maxavg >= abs(f))
           } else {
             sel <- (rowMeans(is.na(X)) <= f)
           }
-          nfiltered <- sum(!sel)
-          dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", nfiltered)
-          X <- X[which(sel),,drop=FALSE]
-          ## update nmissing
-          nmissing <- sum(is.na(X))
-          nrowsmissing <- sum(rowSums(is.na(X))>0)        
+          dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", sum(!sel))
+          X <- X[which(sel), , drop = FALSE]
         }
 
         ## Impute if required
@@ -254,7 +250,6 @@ upload_module_normalization_server <- function(
           if (sum(is.na(X)) > 0) X <- playbase::imputeMissing(X, method = "SVD2")
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
-          #nb <- min(30, dim(X) / 5)
           scaledX <- playbase::double_center_scale_fast(X)
           corX <- cor(t(scaledX))
 
@@ -286,8 +281,7 @@ upload_module_normalization_server <- function(
         if (input$norm_plottype == "boxplot") {
           if (ncol(X1) > 40) {
             jj <- sample(ncol(X1), 40)
-            ii <- rownames(X1) ## names!
-            ## just downsampling for boxplots
+            ii <- rownames(X1)
             if (length(ii) > 2000) ii <- sample(ii, 2000)
             X0 <- X0[ii, jj]
             X1 <- X1[ii, jj]
@@ -415,7 +409,6 @@ upload_module_normalization_server <- function(
 
           if (input$missing_plottype == "heatmap") {
             if (any(X2 > 0)) {
-              ## NA heatmap
               par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
               playbase::gx.imagemap(X2, cex = -1)
               title("missing values patterns", cex.main = 1.2)
@@ -548,12 +541,7 @@ upload_module_normalization_server <- function(
         par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
         for (m in methods) {
           if (m %in% names(pos.list)) {
-            plot(
-              pos.list[[m]],
-              col = col1,
-              cex = cex1,
-              pch = 20
-            )
+            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20)
           } else {
             plot.new()
             text(0.45, 0.5, "method failed")
@@ -588,7 +576,6 @@ upload_module_normalization_server <- function(
         pos0 <- pos0[kk, ]
         pos1 <- pos1[kk, ]
 
-        ## pheno <- r_contrasts()[,1]
         pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
         pheno <- pheno[rownames(pos0)]
         #col1 <- factor(pheno)
@@ -625,21 +612,13 @@ upload_module_normalization_server <- function(
           X <- r_counts()
           samples <- r_samples()
           contrasts <- r_contrasts()
-          if (nrow(samples) < 3) {
-            return(NULL)
-          }
-          pars <- playbase::get_model_parameters(
-            X,
-            samples,
-            pheno = NULL,
-            contrasts = contrasts
-          )
+          if (nrow(samples) < 3) return(NULL)
+          pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
           all.pars <- setdiff(colnames(samples), pars$pheno.pars)
           all.pars <- union(all.pars, pars$batch.pars)
           names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
             paste(all.pars, "*"), all.pars
           )
-          ##        all.pars <- c("<autodetect>","<none>",all.pars)
           all.pars <- c("<autodetect>", all.pars)
           return(all.pars)
         }
@@ -718,40 +697,21 @@ upload_module_normalization_server <- function(
                       </a>")
                 ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
-                shiny::checkboxInput(ns("filtermissing"), label = "Keep NA rows", value = FALSE),
-                shiny::conditionalPanel(
-                  "input.filtermissing == true",
-                  ns = ns,
+                shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
+                shiny::conditionalPanel("input.filtermissing == true", ns = ns,
                   shiny::selectInput(ns("filterthreshold"), NULL,
-                                     choices = c("0% NA"=0.0, "<10% NA"=0.1, "<20% NA"=0.2,
-                                                 ">=3 valid in any group"= 3,
-                                                 ">=50% valid in any group"= -0.5 ),  
-                                     selected = 0.2)
+                    choices = c(">10% NA"=0.1, ">20% NA"=0.2, ">50% NA"=0.5,
+                      "<=3 valid in any group"=3, "<=50% valid in any group"= -0.5),  
+                    selected = 0.2)
                 ),
                 shiny::checkboxInput(ns("impute"), label = "Impute NA", value = TRUE),
-                shiny::conditionalPanel(
-                  "input.impute == true",
-                  ns = ns,
+                shiny::conditionalPanel("input.impute == true", ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
-                    choices = c(
-                      "SVDimpute" = "SVD2",
-                      "QRILC",
-                      "MinProb"
-                    ),
-                    selected = "SVD2"
-                  )
+                    choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb"),
+                    selected = "SVD2")
                 ),
                 br()
               ),
-              #bslib::accordion_panel(
-              #  title = "2. Duplicated features",
-              #  shiny::div(
-              #    style = "display: flex; align-items: center; justify-content: space-between;",
-              #    shiny::p("Treatment of duplicated features:")
-              #  ),
-              #  shiny::selectInput(ns("average_dups"), NULL, choices=c("Average", "Keep all"), selected="Average"),
-              #  br()
-              #),
               bslib::accordion_panel(
                 title = "2. Normalization",
                 shiny::div(
@@ -772,18 +732,12 @@ upload_module_normalization_server <- function(
                         c("maxMedian", "maxSum", "quantile", "reference")
                     } else if (grepl("multi-omics", upload_datatype(),
                       ignore.case = TRUE)) {
-                        c(
-                          "multi-omics median" = "median"
+                        c("multi-omics median" = "median"
                           ## "multi-omics combat" = "combat"
                         )
                     } else {
-                      c("CPM+quantile",
-                        "TMM", 
-                        "quantile",
-                        "maxMedian",
-                        "maxSum",
-                        "reference"
-                      )
+                      c("CPM+quantile", "TMM", "quantile",
+                        "maxMedian", "maxSum", "reference")
                     },
                     selected = 1
                   ),
@@ -806,12 +760,8 @@ upload_module_normalization_server <- function(
                 title = "3. Remove outliers",
                 shiny::p("Automatically detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
-                shiny::conditionalPanel(
-                  "input.remove_outliers == true",
-                  ns = ns,
-                  shiny::sliderInput(
-                    ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1
-                  )
+                shiny::conditionalPanel("input.remove_outliers == true", ns = ns,
+                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
                 ),
                 br()
               ),
@@ -834,13 +784,7 @@ upload_module_normalization_server <- function(
                   shiny::selectInput(
                     ns("bec_method"),
                     label = "Select method:",
-                    choices = c(
-                      "ComBat",
-                      "limma",
-                      "NPM" = "NPM",
-                      "RUV" = "RUV",
-                      "SVA" = "SVA"
-                    ),
+                    choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
                     selected = "SVA"
                   ),
                   shiny::conditionalPanel(
@@ -967,7 +911,6 @@ upload_module_normalization_server <- function(
         add.watermark = FALSE
       )
 
-      
       counts <- reactive({
         shiny::req(dim(correctedX()$X))
         r_counts <- r_counts()
@@ -986,11 +929,8 @@ upload_module_normalization_server <- function(
 
       impX <- reactive({
         shiny::req(dim(correctedX()$X))
-        if (length(correctedX()) == 2) {
-          impX <- correctedX()$impX1
-        } else {
-          impX <- NULL
-        }
+        impX <- NULL
+        if (length(correctedX()) == 2) impX <- correctedX()$impX1
         return(impX)
       })
 
@@ -1001,33 +941,22 @@ upload_module_normalization_server <- function(
       })
 
       imputation_method <- reactive({
-        if (input$impute == FALSE) {
-          return(list(
-            zero_as_na = input$zero_as_na,
-            imputation = "no_imputation"
-          ))
-        } else {
-          return(list(
-            zero_as_na = input$zero_as_na,
-            imputation = input$impute_method
-          ))
-        }
+        ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
+        if (input$impute == FALSE)
+          ll <- list(zero_as_na = input$zero_as_na, imputation = "no_imputation")
+        return(ll)
       })
 
       remove_outliers <- reactive({
-        if (input$remove_outliers == FALSE) {
-          return("no_outlier_removal")
-        } else {
-          return(input$outlier_threshold)
-        }
+        ro <- input$outlier_threshold
+        if (input$remove_outliers == FALSE)  ro <- "no_outlier_removal"
+        return(ro)
       })
 
       bc_method <- reactive({
-        if (input$batchcorrect == FALSE) {
-          return("no_batch_correct")
-        } else {
-          return(list(method = input$bec_method, param = input$bec_param))
-        }
+        ll <- list(method = input$bec_method, param = input$bec_param)
+        if (input$batchcorrect == FALSE) ll <- "no_batch_correct"
+        return(ll)
       })
 
       return(
