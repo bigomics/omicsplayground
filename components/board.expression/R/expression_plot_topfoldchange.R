@@ -56,27 +56,25 @@ expression_plot_topfoldchange_server <- function(id,
                                                  res,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    # #calculate required inputs for plotting ---------------------------------
 
     plot_data <- shiny::reactive({
-      comp <- comp() # input$gx_contrast
+
+      comp <- comp()
       sel <- sel()
       res <- res()
-
-      #
       shiny::validate(shiny::need(!is.null(sel()), tspan("Please select gene in the table.", js = FALSE)))
-
+      
       psel <- rownames(res)[sel]
       gene <- pgx$genes[psel, "gene_name"]
 
-      if (is.null(sel) || length(sel) == 0) { # Ugly
-        return(list(sel = sel))
-      }
-
-      if (is.null(comp) || length(comp) == 0) {
-        return(NULL)
-      }
+      if (is.null(sel) || length(sel) == 0) return(list(sel = sel))
+      if (is.null(comp) || length(comp) == 0) return(NULL)
+      
       fc <- sapply(pgx$gx.meta$meta, function(x) x[psel, "meta.fx"])
+      if (is.na(fc)) {
+        shiny::validate(shiny::need(!is.na(fc), "Fold change for this feature is NA."))
+      }
+      
       top.up <- head(names(sort(fc[which(fc > 0)], decreasing = TRUE)), 10)
       top.dn <- head(names(sort(fc[which(fc < 0)], decreasing = FALSE)), 10)
       fc.top <- c(fc[top.up], fc[top.dn])
@@ -84,12 +82,8 @@ expression_plot_topfoldchange_server <- function(id,
       fc.top <- sort(fc.top)
       fc.top <- head(c(fc.top, rep(NA, 99)), 15)
 
+      return(list(sel = sel, fc.top = fc.top, gene = gene))
 
-      return(list(
-        sel = sel,
-        fc.top = fc.top,
-        gene = gene
-      ))
     })
 
     plotly.RENDER <- function() {
@@ -102,15 +96,10 @@ expression_plot_topfoldchange_server <- function(id,
         return(NULL)
       }
 
-      if (is.null(res) || is.null(sel)) {
-        return(NULL)
-      }
+      if (is.null(res) || is.null(sel)) return(NULL)
 
       playbase::pgx.barplot.PLOTLY(
-        data = data.frame(
-          x = names(pd[["fc.top"]]),
-          y = as.numeric(pd[["fc.top"]])
-        ),
+        data = data.frame(x = names(pd[["fc.top"]]), y = as.numeric(pd[["fc.top"]])),
         x = "x",
         y = "y",
         title = pd[["gene"]],
@@ -124,10 +113,7 @@ expression_plot_topfoldchange_server <- function(id,
 
     plot_data_csv <- function() {
       pd <- plot_data()
-      df <- data.frame(
-        name = names(pd[["fc.top"]]),
-        fc = pd[["fc.top"]]
-      )
+      df <- data.frame(name = names(pd[["fc.top"]]), fc = pd[["fc.top"]])
       return(df)
     }
 
