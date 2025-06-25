@@ -49,6 +49,8 @@ RUN R -e "devtools::install_github('metabolomicsworkbench/RefMet')"
 RUN R -e "torch::install_torch()"
 RUN R -e "install.packages('colourpicker')"
 RUN R -e "install.packages('HiClimR')"
+RUN R -e "install.packages('sysfonts')"
+RUN R -e "install.packages('showtext')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
