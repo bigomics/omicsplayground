@@ -250,7 +250,7 @@ ExpressionUI <- function(id) {
         expression_table_genetable_ui(
           ns("genetable"),
           title = "Differential expression analysis",
-          info.text = "The table shows the results of the statistical tests. Omics Playground performs DE analysis using four commonly accepted methods, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and combines the statistical results using a meta.q value that represents the highest q value among the methods. The number of stars indicate how many methods identified significant. The table is interactive (scrollable, clickable); users can sort by logFC, meta.q, or average expression in either conditions.",
+          info.text = "The table shows the results of the statistical tests. Omics Playground performs DE analysis using four commonly accepted methods, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and combines the statistical results using a meta.q value that represents the highest q value among the methods. The number of stars indicate how many methods identified significant. The table is interactive (scrollable, clickable); users can sort by logFC, meta.q, or average expression in either conditions. A logFC value of 999 indicates NA (i.e., FC could not be computed due to feature missingness).",
           caption = "Table showing the significant results of the differential expression analysis on the selected contrast.",
           width = c("100%", "100%"),
           height = c("100%", TABLE_HEIGHT_MODAL)
