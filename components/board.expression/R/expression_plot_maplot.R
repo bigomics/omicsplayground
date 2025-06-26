@@ -89,9 +89,9 @@ expression_plot_maplot_server <- function(id,
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
       symbols <- rownames(res)
-
+      
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
-      label.names <- pgx$genes[rownames(res),]$gene_name  ## reactive, user-selected
+      label.names <- pgx$genes[rownames(res),]$gene_name
 
       shape <- rep("circle", nrow(res))
       names(shape) <- rownames(res)
@@ -105,6 +105,12 @@ expression_plot_maplot_server <- function(id,
         }
       }
 
+      jj <- which(rownames(res) == genes_selected()$sel.genes)
+      if (any(jj)) {
+        fc <- y[jj]
+        shiny::validate(shiny::need(!is.na(fc), "Fold change for this feature is NA"))
+      }
+      
       plot_data <- list(
         x = x,
         y = y,
@@ -121,6 +127,7 @@ expression_plot_maplot_server <- function(id,
       )
 
       return(plot_data)
+
     })
 
 
@@ -130,7 +137,7 @@ expression_plot_maplot_server <- function(id,
 
       names <- pd[["features"]]
       label.names <- pd[["label.names"]]
-
+      
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -157,10 +164,7 @@ expression_plot_maplot_server <- function(id,
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(font = list(size = 18))
-        )
+        plotly::layout(font = list(size = 18), legend = list(font = list(size = 18)))
       fig
     }
 
