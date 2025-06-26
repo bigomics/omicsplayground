@@ -119,14 +119,17 @@ upload_table_preview_counts_server <- function(
         bslib::as_fill_carrier(),
         style = "width: 100%; display: flex; ",
         if (is.null(uploaded$counts.csv)) {
-          bslib::layout_columns(
-            col_widths = c(-3, 6, -3),
-            row_heights = list("auto", 8, 1, 2),
-            gap = "0.5rem",
-            bslib::as_fill_carrier(
-              bs_alert(tspan("The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."), closable = FALSE, translate_js = FALSE)
-            ),
-            bslib::card(
+          if (upload_datatype() == "proteomics") {
+            msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format."
+          } else {
+            msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
+          }
+            bslib::layout_columns(
+              col_widths = c(-3, 6, -3),
+              row_heights = list("auto", 8, 1, 2),
+              gap = "0.5rem",
+              bslib::as_fill_carrier(bs_alert(tspan(msg), closable = FALSE, translate_js = FALSE)),
+              bslib::card(
               if (upload_datatype() == "multi-omics") {
                 shiny::radioButtons(
                   ns("data_source"),
