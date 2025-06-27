@@ -36,8 +36,7 @@ UploadBoard <- function(id,
     compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
-    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes,
-                                                  annot.cols) {
+    checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes, annot.cols) {
       future_promise({
         detected <- playbase::check_species_probetype(
           probes = probes,
@@ -94,15 +93,11 @@ UploadBoard <- function(id,
 
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
-
       all_species <- playbase::allSpecies(col = "species_name")
       common_name <- playbase::allSpecies(col = "display_name")      
       names(all_species) <- paste0(all_species," (",common_name,")")
       names(all_species)[all_species=="No organism"] <- "<custom organism>"
-      
-      shiny::updateSelectizeInput(session, "selected_organism",
-        choices = all_species, server = TRUE
-      )
+      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
     })
 
 
@@ -164,9 +159,7 @@ UploadBoard <- function(id,
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
-        if (input$confirmload) {
-          load_uploaded_data(pgxfile)
-        }
+        if (input$confirmload) { load_uploaded_data(pgxfile) }
       }
 
       # reset new_upload to 0, so upload will not trigger when
@@ -231,7 +224,7 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
         if (is.null(df0)) return(NULL)
-
+        
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -419,7 +412,6 @@ UploadBoard <- function(id,
 
         if (is.null(checked)) {
           uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "samples.csv")
-          ## uploaded[["samples.csv"]] <<- NULL
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
@@ -982,12 +974,6 @@ UploadBoard <- function(id,
               ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
-              #              recompute_info(
-              #                list(
-              #                  "name" = pgx$name,
-              #                  "description" = pgx$description
-              #                )
-              #              )
             }
           } else {
             shinyalert::shinyalert(
@@ -1217,15 +1203,6 @@ UploadBoard <- function(id,
       is.count = TRUE,
       height = height
     )
-    
-    ## correctedX <- upload_module_batchcorrect_server(
-    ##   id = "batchcorrect",
-    ##   r_X = shiny::reactive(checked_samples_counts()$COUNTS),
-    ##   r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
-    ##   r_contrasts = modified_ct,
-    ##   r_results = modified_ct,
-    ##   is.count = TRUE
-    ## )
     
     ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
