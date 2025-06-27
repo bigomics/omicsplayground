@@ -457,7 +457,7 @@ tspan <- function(text, js = TRUE) {
   if (nchar(text) == 0) {
     return("")
   }
-  if (!grepl("gene|counts|transcriptomics|rna-seq|logcpm",
+  if (!grepl("gene|counts|transcriptomics|rna-seq|logcpm|step",
     text,
     ignore.case = TRUE
   )) {
@@ -480,6 +480,18 @@ tspan <- function(text, js = TRUE) {
   if (js) {
     text <- paste0("<span>", text, "</span>")
     text <- shiny::HTML(text)
+  }
+
+  # Integration translator (does not accept JS TRUE)
+  if (opt$INTEGRATION_TRANSLATION) {
+    keys <- c(
+      "Upload"
+    )
+    i18n.tr <- function(key) as.character(i18n_int$get_translations()[key, "integration"])
+    for (k in keys) {
+      tt <- i18n.tr(k)
+      if (grepl(k, text)) text <- gsub(k, tt, text, ignore.case = FALSE)
+    }
   }
   text
 }
