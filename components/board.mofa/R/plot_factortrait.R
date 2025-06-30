@@ -18,6 +18,11 @@ mofa_plot_factortrait_ui <- function(
       inputId = ns("cluster"),
       label = "Cluster heatmap",
       value = TRUE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("displayCorValue"),
+      label = "Display correlation values",
+      value = FALSE
     )
   )
   
@@ -37,20 +42,22 @@ mofa_plot_factortrait_ui <- function(
 mofa_plot_factortrait_server <- function(id,
                                          mofa,
                                          watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
     
     plot.RENDER <- function() {
       shiny::req(mofa())
-
-      par(mar=c(6,5,1,1))    
+      ll <- unlist(lapply(rownames(mofa()$Z), nchar))
+      par(mar = c(max(6,max(ll)/4), max(5,max(ll)/7), 2, 1))
       playbase::mofa.plot_factor_trait_correlation(
         mofa(),
         main = "",
         par = FALSE,
-        cluster = input$cluster,
+        cluster = ifelse(input$cluster, TRUE, FALSE),
         type = "wgcna",
-        cex.lab=0.9,
-        cex_text = NULL )       
+        cex.lab = 0.9,
+        textMatrix = ifelse(input$displayCorValue, TRUE, FALSE),
+      )
     }
 
     PlotModuleServer(
