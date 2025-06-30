@@ -51,6 +51,7 @@ RUN R -e "install.packages('colourpicker')"
 RUN R -e "install.packages('HiClimR')"
 RUN R -e "install.packages('sysfonts')"
 RUN R -e "install.packages('showtext')"
+RUN R -e "install.packages('imputeLCMD')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
