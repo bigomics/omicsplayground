@@ -31,26 +31,32 @@ mofa_plot_lasagna_ui <- function(
 mofa_plot_lasagna_server <- function(id,
                                      data,
                                      pgx,
-                                     input_contrast,
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     plot.RENDER <- function() {
       res <- data()
       shiny::req(res$posf)
-      k <- input_contrast()
-      shiny::req(k, pgx$X)
-      vars <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
-      vars <- sign(vars) * abs(vars)**0.5
+      
+      graph <- res$graph
+      edges <- data.frame(
+        igraph::as_edgelist(graph),
+        weight = igraph::E(graph)$weight
+      )
+      vars <- igraph::V(graph)$value
+      names(vars) <- igraph::V(graph)$name
+
+      posf <- playbase::mofa.prefix(res$posf)
+      posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),])
       
       plt <- playbase::plotly_lasagna(
-        pos = res$posf,
+        pos = posf,
         vars = vars,
-        X = pgx$X,
         min.rho = 0.01,
-        num_edges = 40
+        # edges = edges,
+        num_edges = 20
       )
-
+      
       plt %>%
         plotly::layout(
           margin = list(l=10, r=10, b=10, t=10),

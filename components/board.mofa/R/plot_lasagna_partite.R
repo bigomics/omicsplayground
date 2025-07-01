@@ -18,7 +18,10 @@ mofa_plot_lasagna_partite_ui <- function(
   
   options = tagList(
     shiny::radioButtons(ns("plottype"),"Plot type:",
-      choices=c("parallel","hive plot"="hive"))
+      choices=c("parallel","hive plot"="hive"), inline=TRUE),
+    shiny::radioButtons(ns("labeltype"), "Label type:",
+      c("feature","symbol","title"), selected="feature", inline=TRUE),
+    shiny::sliderInput(ns("xdist"),"layer spacing:",0.2,2,1,0.1)    
   )
   
   PlotModuleUI(
@@ -39,198 +42,102 @@ mofa_plot_lasagna_partite_ui <- function(
 }
 
 
-mofa_plot_lasagna_partite_adjmat_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    info.methods = "",    
-    info.references = NULL,
-    info.extra_link = NULL,    
-    caption = info.text,
-    label = "",
-    height = 400,
-    width = 400) {
-  ns <- shiny::NS(id)
-
-  PlotModuleUI(
-    ns("adjmat"),
-    title = title,
-    label = "",
-    caption = caption,
-    info.text = info.text,
-    info.references = info.references,
-    info.methods = info.methods,
-    info.extra_link = info.extra_link,
-    height = height,
-    width = width,
-    download.fmt = c("png", "pdf", "svg")
-  )
-  
-}
-
 mofa_plot_lasagna_partite_server <- function(id,
                                              data,
                                              pgx, 
-                                             input_contrast = reactive(NULL),
+                                             #input_contrast = reactive(NULL),
                                              input_datatypes = reactive(NULL),
                                              input_minrho = reactive(NULL), 
                                              input_edgetype = reactive(input$edgetype),
-                                             input_labeltype = reactive(NULL),
+                                             ##input_labeltype = reactive(NULL),
+                                             input_nodevalue = reactive(NULL),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-    plot_data <- function() {
-      
-      shiny::req(data())
-      shiny::req(pgx$X)
-
-      shiny::validate( shiny::need( !is.null(pgx$mofa), "Object has no mofa slot"))      
-      shiny::validate( shiny::need( length(input_datatypes())>=2, "You need to select at least two datatypes"))
-      
-      X <- pgx$mofa$X
-      F <- playbase::pgx.getMetaMatrix(pgx)$fc
-
-      ct=1
-      ct <- input_contrast()
-      fc <- F[,ct]
-
-      dtype <- sub(":.*","",names(fc))
-      sel <- input_datatypes()
-      sel <- intersect(sel, unique(dtype))
-      dt.features <- tapply( fc, dtype, function(x) {
-        head(names(sort(-abs(x))),50)
-      })
-      features <- lapply(sel, function(s) unlist(dt.features[names(dt.features) %in% s]))
-      features  <- intersect(unlist(features),rownames(X))
-      X <- X[features,,drop=FALSE]
-
-      fc <- fc[rownames(X)]
-      res <- list(fc=fc, X=X, groups=sel)
-      res
-    }
 
     ##------------------------------------------------------------------
     ##------------------------------------------------------------------
     ##------------------------------------------------------------------
     
     plot_mpart.RENDER <- function() {
-      res <- plot_data()
-      shiny::req(res)
 
-      labvar <- input_labeltype()
-      if(labvar=="default") {
-        labels <- pgx$genes[,"gene_name"]
-      } else if(labvar=="title") {
+      res <- data()
+      shiny::req(res)
+      
+      labvar <- input$labeltype
+      if(labvar=="title") {
         labels <- paste0(pgx$genes[,"gene_title"],
-                         " (",pgx$genes[,"symbol"],")")
+          " (",pgx$genes[,"symbol"],")")
       } else {
         labels <- pgx$genes[,labvar]  ## user reactive
       }
       labels <- playbase::mofa.strip_prefix(labels)
       labels <- paste0(pgx$genes$data_type,":",labels)
-
       names(labels) <- rownames(pgx$genes)
-      xt <- playbase::mofa.get_prefix(rownames(res$X))
+      
+      graph <- res$graph
+      group <- igraph::V(graph)$layer
+      layers <- setdiff(res$layers,c("SOURCE","SINK"))
+      value.name <- input_nodevalue()
 
+    fc <- igraph::V(graph)$value
+      names(fc) <- igraph::V(graph)$name
+      
       if(input$plottype == "parallel") {
+
         par(mar=c(0,0,0,0))
-        playbase::plotMultiPartiteGraph(
-          res$X,
-          res$fc,
-          group = xt,
-          groups = res$groups,
-          labels = labels,
-          cex.label = 0.9,
-          vx.cex = 1,
-          edge.alpha = 0.2,
-          edge.type = input_edgetype(),
-          yheight = 2,
+        playbase::plotMultiPartiteGraph2(
+          graph,
+          value.name = value.name,
+          layers = layers,
           min.rho = input_minrho(),
-          ntop = 40) 
+          ntop = 50,
+          # xpos = c(1,2,3,4,5)*2,
+          # xlim = c(-0.5,6),
+          # labpos = c(2,2,2,4,4),
+          xdist = input$xdist,
+          labels = labels,
+          cex.label = 0.8,
+          vx.cex = 1.1,
+          edge.cex = 1.3,
+          edge.alpha = 0.2,
+          edge.type = input_edgetype(),  
+          yheight = 3,
+          normalize.edges = 1,
+          strip.prefix = TRUE
+        )
+        
       }
 
       if(input$plottype == "hive") {
+
         par(mar=c(0,0,0,0))
         playbase::plotHivePlot(
           res$X,
-          res$fc,
-          group = xt,
-          groups = res$groups,
+          fc,
+          group = group,
+          groups = layers,
           labels = labels,
           cex.label = 0.9,
           vx.cex = 0.8,
           edge.alpha = 0.2,
           edge.type = input_edgetype(),
           min.rho = input_minrho(),
+          #min.rho = 0.1,
           ntop = 20) 
+
       }
     }
 
     PlotModuleServer(
       "mpart",
       func = plot_mpart.RENDER,
-      csvFunc = plot_data,
+      #csvFunc = plot_data,
       plotlib = "base",
       pdf.width = 12, pdf.height = 6,
       res = c(75, 90),
       add.watermark = watermark
     )
-
-    ##------------------------------------------------------------------
-    ##------------------------------------------------------------------
-    ##------------------------------------------------------------------
-    
-    plot_adjmat.RENDER <- function() {
-      res <- plot_data()
-      shiny::req(res)
-
-      labvar <- input_labeltype()
-      if(labvar=="title") {
-        labels <- paste0(pgx$genes[,"gene_title"],
-                         " (",pgx$genes[,"symbol"],")")
-      } else {
-        labels <- pgx$genes[,labvar]  ## user reactive
-      }
-      labels <- playbase::mofa.strip_prefix(labels)
-      labels <- paste0(pgx$genes$data_type,":",labels)
-
-      names(labels) <- rownames(pgx$genes)
-      xt <- playbase::mofa.get_prefix(rownames(res$X))
-      
-      graph <- playbase::plotMultiPartiteGraph(
-        res$X,
-        res$fc,
-        justgraph = TRUE,
-        group = xt,
-        groups = res$groups,
-        labels = labels,
-        min.rho = input_minrho(),
-        ntop = 40) 
-
-      par(mar=c(1,1,1,1)*2)
-      par(oma=c(0,0,2,0))
-      playbase::plotAdjacencyMatrixFromGraph(
-        graph,
-        nmax = 40,
-        key=TRUE, keysize=0.85, 
-        binary = FALSE,
-        mar=c(10,8)*1.2,
-        cexRow=0.9, cexCol=0.9
-      ) 
-      
-    }
-
-    PlotModuleServer(
-      "adjmat",
-      func = plot_adjmat.RENDER,
-      csvFunc = plot_data,
-      plotlib = "base",
-      pdf.width = 12, pdf.height = 6,
-      res = c(80, 85),
-      add.watermark = watermark
-    )
-
-    
     
   })
 }
