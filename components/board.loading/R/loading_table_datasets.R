@@ -402,15 +402,22 @@ loading_table_datasets_server <- function(id,
 
       # Detect out of limits datasets (downgraded user might have uploaded more datasets in the past, but now they are not allowed)
       datasets_exceed_limits <- rep(FALSE, nrow(df))
+
+      # Get CRO emails
+      cro_emails <- get_cro_emails()
+
       if (!is.null(auth$options$MAX_GENES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
       }
-      # if (!is.null(auth$options$MAX_COMPARISONS)) {
-      #   datasets_exceed_limits <- datasets_exceed_limits | (get_contrasts_from_user(auth) > auth$options$MAX_COMPARISONS)
-      # }
-      # if (!is.null(auth$options$MAX_SAMPLES)) {
-      #   datasets_exceed_limits <- datasets_exceed_limits | (df$nsamples > auth$options$MAX_SAMPLES)
-      # }
+      if (!is.null(auth$options$MAX_SAMPLES)) {
+        datasets_exceed_limits <- datasets_exceed_limits | (
+          (df$datatype == "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES_SC) |
+          (df$datatype != "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES)
+        )
+      }
+      if (!is.null(cro_emails)) {
+        datasets_exceed_limits[df$creator %in% cro_emails] <- FALSE
+      }
 
       selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
       if (length(selectable_rows) == 0) selectable_rows <- NULL
