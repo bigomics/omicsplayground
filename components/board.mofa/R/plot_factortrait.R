@@ -53,10 +53,10 @@ mofa_plot_factortrait_server <- function(id,
         mofa(),
         main = "",
         par = FALSE,
-        cluster = ifelse(input$cluster, TRUE, FALSE),
+        cluster = input$cluster,
         type = "wgcna",
         cex.lab = 0.9,
-        textMatrix = ifelse(input$displayCorValue, TRUE, FALSE),
+        textMatrix = input$displayCorValue
       )
     }
 
