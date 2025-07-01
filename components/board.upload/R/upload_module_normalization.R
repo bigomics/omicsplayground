@@ -164,14 +164,7 @@ upload_module_normalization_server <- function(
             counts <- counts[, colnames(X), drop = FALSE]
           }
         }
-        pos <- NULL
-        if (NCOL(X) > 2) {
-          set.seed(1234)
-          pos <- irlba::irlba(X, nv = 2)$v
-          rownames(pos) <- colnames(X)
-        }
-
-        return(list(counts = counts, X = X, pos = pos))
+        return(list(counts = counts, X = X))
 
       })
 
@@ -257,7 +250,7 @@ upload_module_normalization_server <- function(
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
-          corX <- cor(t(scaledX))
+          corX <- HiClimR::fastCor(t(scaledX), optBLAS = TRUE)
 
           ## standard dim reduction methods
           pos <- list()
