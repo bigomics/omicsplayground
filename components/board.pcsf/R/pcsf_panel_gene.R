@@ -313,7 +313,7 @@ pcsf_genepanel_server <- function(id,
       
       igraph::V(pcsf)$foldchange <- fx
       igraph::V(pcsf)$prize <- abs(fx)
-      
+
       plt <- playbase::plotPCSF(
         pcsf,
         sizeby = fx,
@@ -333,7 +333,6 @@ pcsf_genepanel_server <- function(id,
         cut.clusters = FALSE,
         nlargest = -1
       )
-      
       return(plt)
     }
 
@@ -364,7 +363,10 @@ pcsf_genepanel_server <- function(id,
 
       labels <- rownames(F)
       labels <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
-      
+
+      hh <- grep("^IA:", colnames(F))
+      if (any(hh)) F <- F[, -hh, drop = FALSE]
+
       nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F)/nc)
       par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)      
@@ -390,7 +392,7 @@ pcsf_genepanel_server <- function(id,
           cut.clusters = FALSE,
           nlargest = -1
         )
-        title( colnames(F)[i], cex.main=1.2 )
+        title(colnames(F)[i], cex.main = 1.2)
       }
       
     }
