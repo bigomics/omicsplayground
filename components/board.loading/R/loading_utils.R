@@ -101,3 +101,13 @@ get_contrasts_from_user <- function(auth) {
     return(NULL)
   }
 }
+
+get_cro_emails <- function() {
+  cro_emails <- file.path(ETC, "cro_emails.txt")
+  if (!file.exists(cro_emails)) {
+    cro_emails <- NULL
+  } else {
+    cro_emails <- readLines(cro_emails)
+  }
+  cro_emails
+}
