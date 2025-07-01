@@ -418,7 +418,11 @@ upload_module_computepgx_server <- function(
       })
 
       ## Checks specific for time series
-      shiny::observeEvent(samplesRT(), {
+      #shiny::observeEvent(samplesRT(), {
+      shiny::observeEvent({
+        samplesRT()
+        countsX()
+      }, {
 
         Y <- samplesRT()
         Contrasts <- contrastsRT()
@@ -466,12 +470,13 @@ upload_module_computepgx_server <- function(
                 "for the following contrasts variables:<br>", paste0(ia.spline.ctx, collapse="<br>"),".</p>")
             }
 
-            shiny::updateCheckboxGroupInput(
-              inputId = "gene_methods",
-              choices = c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf"),
-              selected = c("trend.limma", "deseq2.lrt")
-            )
-
+            choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
+            sel = c("trend.limma", "deseq2.lrt")
+            c1 <- (sum(is.na(countsX())) > 0)
+            c2 <- (upload_datatype() != "RNA-seq")
+            if (c1 | c2) { choices = sel = "trend.limma" }
+            shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
+            
             insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
               
           }
