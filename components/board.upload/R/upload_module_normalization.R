@@ -113,6 +113,7 @@ upload_module_normalization_server <- function(
         
         ## Impute if required
         if (any(is.na(X)) & input$impute) {
+          dbg("[normalization_server:imputedX] Performing imputation using ", input$impute_method)
           X <- playbase::imputeMissing(X, method = input$impute_method)
         }
 
