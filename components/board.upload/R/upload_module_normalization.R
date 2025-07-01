@@ -764,7 +764,13 @@ upload_module_normalization_server <- function(
               ),
               bslib::accordion_panel(
                 title = "3. Remove outliers",
-                shiny::p("Automatically detect and remove outlier samples."),
+                shiny::div(
+                  style = "display: flex; align-items: center; justify-content: space-between;",
+                  shiny::p("Automatically detect and remove outlier samples."),
+                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#identification-of-outlier-samples' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>")
+                ),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
                 shiny::conditionalPanel("input.remove_outliers == true", ns = ns,
                   shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
