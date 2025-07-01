@@ -63,7 +63,7 @@ expression_plot_topfoldchange_server <- function(id,
       sel <- sel()
       res <- res()
       shiny::validate(shiny::need(!is.null(sel()), tspan("Please select gene in the table.", js = FALSE)))
-      
+
       psel <- rownames(res)[sel]
       gene <- pgx$genes[psel, "gene_name"]
 
@@ -71,7 +71,7 @@ expression_plot_topfoldchange_server <- function(id,
       if (is.null(comp) || length(comp) == 0) return(NULL)
       
       fc <- sapply(pgx$gx.meta$meta, function(x) x[psel, "meta.fx"])
-      if (is.na(fc)) {
+      if (any(is.na(fc))) {
         shiny::validate(shiny::need(!is.na(fc), "Fold change for this feature is NA."))
       }
       
@@ -81,7 +81,7 @@ expression_plot_topfoldchange_server <- function(id,
       fc.top <- fc.top[head(order(-abs(fc.top)), 15)]
       fc.top <- sort(fc.top)
       fc.top <- head(c(fc.top, rep(NA, 99)), 15)
-
+      
       return(list(sel = sel, fc.top = fc.top, gene = gene))
 
     })
