@@ -147,9 +147,6 @@ TimeSeriesBoard.features_server <- function(id,
       k <- contrast()
       shiny::req(k)
 
-      #saveRDS(list(meta=pgx$gx.meta$meta, k=k), "~/Desktop/MNT/ts.1DGEmethod.RDS")
-      #saveRDS(list(meta=pgx$gx.meta$meta, k=k), "~/Desktop/MNT/ts.RDS")
-      
       kstats.full <- as.matrix(pgx$gx.meta$meta[[k]])
       sel <- grep("^p[.]*", colnames(kstats.full))
       kstats.full[, "meta.p"] <- apply(kstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
