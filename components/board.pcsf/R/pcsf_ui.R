@@ -23,31 +23,6 @@ PcsfInputs <- function(id) {
         "Options",
         icon = icon("cog", lib = "glyphicon"),
         pcsf_genepanel_settings_ui(ns("genepanel"))
-        ## withTooltip(
-        ##   shiny::radioButtons(
-        ##     ns("pcsf_ntop"), "Network size:",
-        ##     choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
-        ##     selected = 500, inline = TRUE
-        ##   ),
-        ##   "Select initial network size (number of top genes) for ."
-        ## ),
-        ## hr(),
-        ## withTooltip(
-        ##   shiny::checkboxInput(ns("pcsf_cut"), "Cut clusters", FALSE),
-        ##   "Cut network into smaller clusters"
-        ## ),
-        ## shiny::conditionalPanel(
-        ##   "input.pcsf_cut == true",
-        ##   ns = ns,
-        ##   withTooltip(
-        ##     shiny::selectInput(ns("pcsf_nclust"), "Number of clusters",
-        ##                        choices = c(1,4,9,16,25,99), selected=9),
-        ##     "Maximum number of components"
-        ##   ),
-        ##   shiny::selectInput(ns("pcsf_resolution"), "Resolution",
-        ##                        choices = c(0.01,0.05,0.1,0.2,0.5,1), selected=0.1)
-        ## ),
-        ## hr()        
       )
     ),
     bslib::accordion(
@@ -57,29 +32,6 @@ PcsfInputs <- function(id) {
         "Options",
         icon = icon("cog", lib = "glyphicon"),
         pcsf_gsetpanel_settings_ui(ns("gsetpanel"))
-        ## withTooltip(
-        ##   shiny::radioButtons(ns("gset_ntop"), "Network size:",
-        ##     choices = c("S" = 250, "M" = 500, "L" = 1000, "XL" = 2000),
-        ##     selected = 1000, inline = TRUE
-        ##   ),
-        ##   "Select initial network size (number of top genes) for ."
-        ## ),
-        ## hr(),
-        ## withTooltip(
-        ##   shiny::checkboxInput(ns("gset_cut"), "Cut clusters", TRUE),
-        ##   "Cut network into smaller clusters"
-        ## ),
-        ## shiny::conditionalPanel(
-        ##   "input.gset_cut == true",
-        ##   ns = ns,
-        ##   withTooltip(
-        ##     shiny::selectInput(ns("gset_nclust"), "Number of clusters",
-        ##       choices = c(1,4,9,16,25,99), selected=9),
-        ##     "Maximum number of components"
-        ##   ),
-        ##   shiny::selectInput(ns("gset_resolution"), "Resolution",
-        ##     choices = c(0.01,0.05,0.1,0.2,0.5,1), selected=0.1)
-        ## )
       )
     )
   )
@@ -119,8 +71,8 @@ PcsfUI <- function(id) {
               pcsf_genepanel_table_ui(
                 ns("genepanel"),
                 title = "Centrality score",
-                info.text = "",
-                caption = "Table showing the centrality score of genes.",
+                info.text = "Table reporting the log2FC and centrality score for each gene.",
+                caption = "Table reporting the log2FC and centrality score for each gene.",
                 width = c("100%", "100%"),
                 height = c("100%", TABLE_HEIGHT_MODAL)
               )
@@ -160,8 +112,8 @@ PcsfUI <- function(id) {
               pcsf_gsetpanel_table_ui(
                 ns("gsetpanel"),
                 title = "Centrality score",
-                info.text = "",
-                caption = "Table showing the centrality score of genes.",
+                info.text = "Table reporting log2FC and PCSF centrality score for each geneset.",
+                caption = "Table reporting the log2FC and PCSF centrality score for each geneset.",
                 width = c("100%", "100%"),
                 height = c("100%", TABLE_HEIGHT_MODAL)
               )
