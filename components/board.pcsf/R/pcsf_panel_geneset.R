@@ -342,9 +342,13 @@ pcsf_gsetpanel_server <- function(id,
       F <- playbase::pgx.getMetaMatrix(pgx, level="geneset")$fc
       F <- F[ igraph::V(graph)$name,,drop=FALSE]
       
+      hh <- grep("^IA:", colnames(F))
+      if (any(hh)) F <- F[, -hh, drop = FALSE]
+
       nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F) / nc)     
       par(mfrow = c(nr,nc), mar=c(1,1,4,1)*0.5)
+
       i=1
       for(i in 1:ncol(F)) {
         fx <- F[,i]
