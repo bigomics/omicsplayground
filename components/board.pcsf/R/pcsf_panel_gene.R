@@ -29,8 +29,11 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
     hr(),
     withTooltip(
       shiny::selectInput(
-        ns("numlabels"), "Number of labels:", choices = c(0,3,5,10,20,999),
-        selected = 10 ),
+        ns("numlabels"),
+        "Number of labels:",
+        choices = c(0,3,5,10,20,999),
+        selected = 10
+      ),
       "Numer of labels to show."
     )
   )
@@ -66,15 +69,12 @@ pcsf_genepanel_table_ui <- function(
     height) {
   ns <- shiny::NS(id)
 
-  table_opts <- shiny::tagList()
-
   TableModuleUI(
     ns("table"),
     info.text = info.text,
     caption = caption,
     width = width,
     height = height,
-    ##    options = table_opts,
     title = title,
   )
 }
@@ -91,8 +91,11 @@ pcsf_genepanel_seriesplot_ui <- function(
   options <- tagList(
     withTooltip(
       shiny::selectInput(
-        ns("series_numlabels"), "Number of labels:", choices = c(0,3,5,10,20,999),
-        selected = 0 ),
+        ns("series_numlabels"),
+        "Number of labels:",
+        choices = c(0,3,5,10,20,999),
+        selected = 0
+      ),
       "Numer of labels to show."
     )
   )
@@ -106,7 +109,6 @@ pcsf_genepanel_seriesplot_ui <- function(
     info.text = info.text,
     height = height,
     width = width,
-    ## options = plot_opts,
     download.fmt = c("png", "pdf", "svg"),
   )
 }
@@ -258,8 +260,6 @@ pcsf_genepanel_server <- function(id,
       input_nclust <- input$nclust
       input_resolution <- input$resolution
 
-      dbg("[gene_pcsf] 1: layout.method = ", input$layout.method)
-      
       if(input_cut) {
         ncomp <- as.integer(input$nclust)
         res <- playbase::pcsf.cut_and_relayout(
@@ -412,7 +412,6 @@ pcsf_genepanel_server <- function(id,
     ##-----------------------------------------------------------------
     
     table_data <- function() {
-
       shiny::req(r_contrast())
       res <- gene_pcsf()
       df <- playbase::pgx.getPCSFcentrality(
@@ -423,25 +422,19 @@ pcsf_genepanel_server <- function(id,
         n = 100,
         plot = FALSE
       )
-
-      ## warning. sometimes NaN
       df$centrality[is.nan(df$centrality)] <- 0
       return(df)
     }
 
-    table.RENDER <- function(full=FALSE) {
+    table.RENDER <- function(full = FALSE) {
       df <- table_data()
-
-      dbg("[pcsf_genepanel_server:table.RENDER] dim.df = ", dim(df))
-      dbg("[pcsf_genepanel_server:table.RENDER] colnames.df = ", colnames(df))
-      
-      if(full==FALSE) {
-        cols <- c("symbol","gene_title","logFC","centrality")
+      if(!full) {
+        cols <- c("symbol", "gene_title", "logFC", "centrality")
         cols <- intersect(cols, colnames(df))
-        df <- df[,cols, drop=FALSE]
-      }      
-      num.cols <- intersect(c("centrality", "logFC"),colnames(df))
-      
+        df <- df[, cols, drop = FALSE]
+      }
+      df <- df[which(!is.na(df$gene_title)), , drop = FALSE]
+      num.cols <- intersect(c("centrality", "logFC"), colnames(df))
       dt <- ui.DataTable(
         df,
         rownames = FALSE,
@@ -450,12 +443,11 @@ pcsf_genepanel_server <- function(id,
         substr.cols = c("gene_title"),
         substr.len = 50
       )
-            
       return(dt)
     }
 
     table.RENDER_modal <- function() {
-      dt <- table.RENDER(full=TRUE)
+      dt <- table.RENDER(full = TRUE)
       dt$x$options$scrollY <- SCROLLY_MODAL
       return(dt)
     }
