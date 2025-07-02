@@ -19,9 +19,13 @@ mofa_plot_lasagna_partite_ui <- function(
   options = tagList(
     shiny::radioButtons(ns("plottype"),"Plot type:",
       choices=c("parallel","hive plot"="hive"), inline=TRUE),
+    shiny::hr(),
+    shiny::sliderInput(ns("xdist"),"Layer spacing:",0.2,2,1,0.1),
+        shiny::hr(),
     shiny::radioButtons(ns("labeltype"), "Label type:",
       c("feature","symbol","title"), selected="feature", inline=TRUE),
-    shiny::sliderInput(ns("xdist"),"layer spacing:",0.2,2,1,0.1)    
+    shiny::hr(),
+    shiny::radioButtons(ns("ntop"), "Number of nodes:", c(50,200,500), inline=TRUE)
   )
   
   PlotModuleUI(
@@ -91,9 +95,7 @@ mofa_plot_lasagna_partite_server <- function(id,
           value.name = value.name,
           layers = layers,
           min.rho = input_minrho(),
-          ntop = 50,
-          # xpos = c(1,2,3,4,5)*2,
-          # xlim = c(-0.5,6),
+          ntop = as.integer(input$ntop),
           # labpos = c(2,2,2,4,4),
           xdist = input$xdist,
           labels = labels,
