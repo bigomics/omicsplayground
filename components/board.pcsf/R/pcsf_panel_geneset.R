@@ -343,7 +343,7 @@ pcsf_gsetpanel_server <- function(id,
       F <- F[ igraph::V(graph)$name,,drop=FALSE]
       
       hh <- grep("^IA:", colnames(F))
-      if (any(hh)) F <- F[, -hh, drop = FALSE]
+      if (length(hh)>0) F <- F[, -hh, drop = FALSE]
 
       nc <- ceiling(1.3*sqrt(ncol(F)))
       nr <- ceiling(ncol(F) / nc)     
