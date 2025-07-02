@@ -90,6 +90,12 @@ upload_table_preview_counts_server <- function(
                 class = "btn-sm btn-outline-primary m-1"
               )
             },
+            if (upload_datatype() != "multi-omics" && fileBrowser) {
+              actionButton(
+                ns("load_selected_from_browser"), "Load selected file",
+                class = "btn-sm btn-outline-primary m-1"
+              )
+            },
             actionButton(
               ns("load_example"), "Load example",
               class = "btn-sm btn-outline-primary m-1"
@@ -223,7 +229,9 @@ upload_table_preview_counts_server <- function(
         } ## end of if-else
       ) ## end of div
     })
-    shinyFiles::shinyFileChoose(input, "counts_csv", root = c(root = fileBrowserRoot), filetypes = c("RData", "csv"))
+    if (fileBrowser) {
+      filebrowser <- shinyfilebrowser::file_browser_server("counts_csv", path = fileBrowserRoot)
+    }
 
     output$selected_rows_text <- renderText({
       info <- available_data_table()
@@ -465,13 +473,11 @@ upload_table_preview_counts_server <- function(
     })
 
     # pass counts to uploaded when uploaded
-    observeEvent(input$counts_csv, {
+    observeEvent(c(input$counts_csv, input$load_selected_from_browser), {
       if (fileBrowser) {
-        shiny::req("list" %in% class(input$counts_csv))
-      }
-      if (!is.null(input$counts_csv$files)) {
-        name <- tail(input$counts_csv$files[[1]], 1)[[1]]
-        datapath <- paste0(fileBrowserRoot, paste(input$counts_csv$files[[1]], collapse = "/"))
+        shiny::req(filebrowser$selected())
+        name <- basename(filebrowser$selected())
+        datapath <- filebrowser$selected()
       } else {
         name <- input$counts_csv$name
         datapath <- input$counts_csv$datapath

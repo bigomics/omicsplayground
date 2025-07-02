@@ -139,6 +139,12 @@ upload_table_preview_contrasts_server <- function(
           ))
         } else {
           div(
+            if (fileBrowser) {
+              actionButton(
+                ns("load_selected_from_browser"), "Load selected file",
+                class = "btn-sm btn-outline-primary m-1"
+              )
+            },
             actionButton(
               ns("run_build_comparisons"), "Build my comparisons",
               class = "btn-sm btn-secondary m-1",
@@ -246,7 +252,10 @@ upload_table_preview_contrasts_server <- function(
       )
       # }
     })
-    shinyFiles::shinyFileChoose(input, "contrasts_csv", root = c(root = fileBrowserRoot), filetypes = c("csv"))
+    
+    if (fileBrowser) {
+      filebrowser <- shinyfilebrowser::file_browser_server("contrasts_csv", path = fileBrowserRoot)
+    }
 
     output$contrasts_stats <- renderPlot({
       ct <- uploaded$contrasts.csv
@@ -314,13 +323,11 @@ upload_table_preview_contrasts_server <- function(
     })
 
     # pass counts to uploaded when uploaded
-    observeEvent(input$contrasts_csv, {
+    observeEvent(c(input$contrasts_csv, input$load_selected_from_browser), {
       if (fileBrowser) {
-        shiny::req("list" %in% class(input$contrasts_csv))
-      }
-      if (!is.null(input$contrasts_csv$files)) {
-        name <- tail(input$contrasts_csv$files[[1]], 1)[[1]]
-        datapath <- paste0(fileBrowserRoot, paste(input$contrasts_csv$files[[1]], collapse = "/"))
+        shiny::req(filebrowser$selected())
+        name <- basename(filebrowser$selected())
+        datapath <- filebrowser$selected()
       } else {
         name <- input$contrasts_csv$name
         datapath <- input$contrasts_csv$datapath

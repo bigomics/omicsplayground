@@ -32,7 +32,7 @@ fileInputArea <- function(inputId, label, multiple = FALSE, accept = NULL,
   }
 
   if (fileBrowser) {
-    return(shinyFiles::shinyFilesButton(inputId, label='File select', title='Please select a file', multiple=FALSE))
+    return(shinyfilebrowser::file_browser_ui(inputId))
   }
 
   div(

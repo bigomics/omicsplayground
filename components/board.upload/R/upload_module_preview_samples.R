@@ -69,21 +69,29 @@ upload_table_preview_samples_server <- function(
     output$table_samples <- shiny::renderUI({
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
-        div(
-          if (!is.null(uploaded$samples.csv)) {
+        if (is.null(uploaded$samples.csv)) {
+          div(
+            if (fileBrowser) {
+              actionButton(
+                ns("load_selected_from_browser"), "Load selected file",
+                class = "btn-sm btn-outline-primary m-1"
+              )
+            },
+            shiny::actionButton(
+              ns("load_example"), "Load example",
+              class = "btn-sm btn-outline-primary m-1"
+            )
+          )
+        } else {
+          div(
             shiny::actionButton(
               ns("remove_samples"),
               "Cancel",
               icon = icon("trash-can"),
               class = "btn-sm btn-outline-danger m-1"
             )
-          } else {
-            shiny::actionButton(
-              ns("load_example"), "Load example",
-              class = "btn-sm btn-outline-primary m-1"
-            )
-          }
-        ),
+          )
+        },
         div(
           shiny::actionButton(
             ns("check_documentation_samples"),
@@ -155,8 +163,10 @@ upload_table_preview_samples_server <- function(
         }
       )
     })
-    shinyFiles::shinyFileChoose(input, "samples_csv", root = c(root = fileBrowserRoot), filetypes = c("RData", "csv"))
 
+    if (fileBrowser) {
+      filebrowser <- shinyfilebrowser::file_browser_server("samples_csv", path = fileBrowserRoot)
+    }
 
     output$error_summary <- renderUI({
       chk1 <- checklist$samples.csv$checks
@@ -270,13 +280,11 @@ upload_table_preview_samples_server <- function(
     )
 
     ## pass counts to uploaded when uploaded
-    observeEvent(input$samples_csv, {
+    observeEvent(c(input$samples_csv, input$load_selected_from_browser), {
       if (fileBrowser) {
-        shiny::req("list" %in% class(input$samples_csv))
-      }
-      if (!is.null(input$samples_csv$files)) {
-        name <- tail(input$samples_csv$files[[1]], 1)[[1]]
-        datapath <- paste0(fileBrowserRoot, paste(input$samples_csv$files[[1]], collapse = "/"))
+        shiny::req(filebrowser$selected())
+        name <- basename(filebrowser$selected())
+        datapath <- filebrowser$selected()
       } else {
         name <- input$samples_csv$name
         datapath <- input$samples_csv$datapath
