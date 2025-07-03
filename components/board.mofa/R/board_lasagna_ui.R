@@ -22,12 +22,16 @@ LasagnaInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
           shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.33,0.05),
+          shiny::hr(),
           shiny::radioButtons(
-            ns("edgetype"), "Edge type:", c("both","positive","negative"),
+            ns("edgesign"), "Edge sign:", c("both","positive","negative"),
             selected="both", inline=TRUE),
-          shiny::radioButtons(ns("node_value"),"Node value",c("logFC","rho"), inline=TRUE)
-          ##shiny::checkboxInput(ns("fc.weight"),"FC weight",TRUE)
-          ##shiny::checkboxInput(ns("sp.weight"),"SP weight",FALSE)          
+          shiny::hr(),
+          shiny::radioButtons(ns("node_value"),"Node value:",c("logFC","rho"),
+            inline=TRUE),
+          shiny::hr(),
+          ##shiny::checkboxInput(ns("fc_weight"),"FC weight",TRUE)
+          shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE)          
         )
       )
     )
