@@ -68,6 +68,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       ct1 <- colnames(pgx$mofa$contrasts)      
       ct2 <- colnames(playbase::pgx.getMetaMatrix(pgx)$fc)
       contrasts <- intersect(ct1, ct2)
+      contrasts <- contrasts[!grepl("^IA",contrasts)]  ## no interaction contrasts
       updateSelectInput(session, "contrast", choices = contrasts,
         selected = contrasts[1])
       
@@ -104,7 +105,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       )
       dbg("[LasagnaBoard:lasagna_model] creating model...")
       res <- playbase::lasagna.create_model(moxdata, pheno="contrasts",
-        ntop=1000, nc=20, add.sink=TRUE)
+        ntop=1000, nc=20, add.sink=TRUE, intra=TRUE)
       names(res)
       res$layers
       
@@ -134,9 +135,13 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       value <- input$node_value      
       
       graph <- playbase::lasagna.set_weights(
-        res, pheno, value=value, 
-        min_rho=0.1, max_edges=1000,
-        fc.weight=TRUE, sp.weight=FALSE,
+        res, pheno,
+        value=value, 
+        min_rho=0.1,
+        max_edges=1000,
+        fc.weight=TRUE,
+#        sp.weight=FALSE,
+        sp.weight = input$sp_weight,        
         prune = FALSE
       )
       res$graph <- graph
@@ -166,7 +171,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       pgx = pgx,
       input_datatypes = reactive(input$datatypes),
       input_minrho = reactive(input$minrho),
-      input_edgetype = reactive(input$edgetype),      
+      input_edgesign = reactive(input$edgesign),      
       #input_labeltype = reactive(input$labeltype),
       input_nodevalue = reactive(input$node_value),            
       watermark = WATERMARK

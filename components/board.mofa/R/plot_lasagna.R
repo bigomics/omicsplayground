@@ -14,10 +14,15 @@ mofa_plot_lasagna_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
+  options = tagList(
+    shiny::checkboxInput(ns("drawlines"),"draw connections",FALSE)
+  )
+
   PlotModuleUI(
     ns("plot"),
     plotlib = "plotly",
     title = title,
+    options = options,
     label = label,
     info.text = info.text,
     info.references = info.references,
@@ -39,21 +44,24 @@ mofa_plot_lasagna_server <- function(id,
       shiny::req(res$posf)
       
       graph <- res$graph
-      edges <- data.frame(
-        igraph::as_edgelist(graph),
-        weight = igraph::E(graph)$weight
-      )
       vars <- igraph::V(graph)$value
       names(vars) <- igraph::V(graph)$name
 
       posf <- playbase::mofa.prefix(res$posf)
       posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),])
+      edges <- NULL
+      if(input$drawlines) {
+        edges <- data.frame(
+          igraph::as_edgelist(graph),
+          weight = igraph::E(graph)$weight
+        )
+      }
       
       plt <- playbase::plotly_lasagna(
         pos = posf,
         vars = vars,
         min.rho = 0.01,
-        # edges = edges,
+        edges = edges,
         num_edges = 20
       )
       
