@@ -17,8 +17,7 @@ mofa_plot_lasagna_partite_ui <- function(
   ns <- shiny::NS(id)
   
   options = tagList(
-    shiny::radioButtons(ns("plottype"),"Plot type:",
-      choices=c("parallel","hive plot"="hive"), inline=TRUE),
+    shiny::checkboxInput(ns("showintra"),"Show intra-correlation"),
     shiny::hr(),
     shiny::sliderInput(ns("xdist"),"Layer spacing:",0.2,2,1,0.1),
         shiny::hr(),
@@ -83,53 +82,33 @@ mofa_plot_lasagna_partite_server <- function(id,
       group <- igraph::V(graph)$layer
       layers <- setdiff(res$layers,c("SOURCE","SINK"))
       value.name <- input_nodevalue()
-
-    fc <- igraph::V(graph)$value
+      
+      edge.type <- ifelse(input$showintra, "both", "inter")
+      
+      fc <- igraph::V(graph)$value
       names(fc) <- igraph::V(graph)$name
       
-      if(input$plottype == "parallel") {
-
-        par(mar=c(0,0,0,0))
-        playbase::plotMultiPartiteGraph2(
-          graph,
-          value.name = value.name,
-          layers = layers,
-          min.rho = input_minrho(),
-          ntop = as.integer(input$ntop),
-          # labpos = c(2,2,2,4,4),
-          xdist = input$xdist,
-          labels = labels,
-          cex.label = 0.8,
-          vx.cex = 1.1,
-          edge.cex = 1.3,
-          edge.alpha = 0.2,
-          edge.sign = input_edgesign(),
-          edge.type = "both",  
-          yheight = 3,
-          normalize.edges = 1,
-          strip.prefix = TRUE
-        )
-        
-      }
-
-      if(input$plottype == "hive") {
-
-        par(mar=c(0,0,0,0))
-        playbase::plotHivePlot(
-          res$X,
-          fc,
-          group = group,
-          groups = layers,
-          labels = labels,
-          cex.label = 0.9,
-          vx.cex = 0.8,
-          edge.alpha = 0.2,
-          edge.sign = input_edgesign(),
-          min.rho = input_minrho(),
-          #min.rho = 0.1,
-          ntop = 20) 
-
-      }
+      par(mar=c(0,0,0,0))
+      playbase::plotMultiPartiteGraph2(
+        graph,
+        value.name = value.name,
+        layers = layers,
+        min.rho = input_minrho(),
+        ntop = as.integer(input$ntop),
+        # labpos = c(2,2,2,4,4),
+        xdist = input$xdist,
+        labels = labels,
+        cex.label = 0.8,
+        vx.cex = 1.1,
+        edge.cex = 1.3,
+        edge.alpha = 0.2,
+        edge.sign = input_edgesign(),
+        edge.type = edge.type,
+        yheight = 3,
+        normalize.edges = 1,
+        strip.prefix = TRUE
+      )
+      
     }
 
     PlotModuleServer(

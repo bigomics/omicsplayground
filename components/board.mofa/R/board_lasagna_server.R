@@ -62,7 +62,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
     shiny::observeEvent( pgx$mofa, {
       
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
+      ##shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
       
       ## update factors in selectInput
       ct1 <- colnames(pgx$mofa$contrasts)      
@@ -82,7 +82,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       list( input$updateplots, pgx$X ) 
     }, {
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
+      ##shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
       shiny::validate( shiny::need( pgx$datatype=="multi-omics", "not multi-omics data"))
 
       shiny::req(pgx$X)
@@ -158,7 +158,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
     ## =========================== MODULES ======================================
     ## ==========================================================================
     
-    mofa_plot_lasagna_server(
+    mofa_plot_lasagna3D_server(
       "lasagna",
       data = data,
       pgx = pgx,

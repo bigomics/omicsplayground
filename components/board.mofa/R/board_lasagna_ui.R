@@ -77,7 +77,7 @@ LasagnaUI <- function(id) {
           bslib::layout_columns(
             col_widths = c(6,6),
             height = "calc(100vh - 180px)",
-            mofa_plot_lasagna_ui(
+            mofa_plot_lasagna3D_ui(
               ns("lasagna"),
               title = "Multi-layer model",
               info.text = "Layered Approach to Simultaneous Analysis of Genomic and Network Associations ('LASAGNA'). The LASAGNA plot is a stacked layer plot to visualize multi-omics data. Specifically, each layer shows a data type-specific UMAP. LASAGNA just shows the datatype-specific UMAPs overlayed.",

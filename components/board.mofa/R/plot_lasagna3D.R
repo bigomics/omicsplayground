@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-mofa_plot_lasagna_ui <- function(
+mofa_plot_lasagna3D_ui <- function(
     id,
     title = "",
     info.text = "",
@@ -33,7 +33,7 @@ mofa_plot_lasagna_ui <- function(
   )
 }
 
-mofa_plot_lasagna_server <- function(id,
+mofa_plot_lasagna3D_server <- function(id,
                                      data,
                                      pgx,
                                      watermark = FALSE) {
@@ -48,7 +48,8 @@ mofa_plot_lasagna_server <- function(id,
       names(vars) <- igraph::V(graph)$name
 
       posf <- playbase::mofa.prefix(res$posf)
-      posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),])
+      posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),,drop=FALSE])
+
       edges <- NULL
       if(input$drawlines) {
         edges <- data.frame(
