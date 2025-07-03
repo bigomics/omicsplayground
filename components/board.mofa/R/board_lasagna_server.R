@@ -61,8 +61,7 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
 
     shiny::observeEvent( pgx$mofa, {
       
-      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      ##shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
+      shiny::validate( shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
       
       ## update factors in selectInput
       ct1 <- colnames(pgx$mofa$contrasts)      
@@ -82,16 +81,11 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       list( input$updateplots, pgx$X ) 
     }, {
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      ##shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
       shiny::validate( shiny::need( pgx$datatype=="multi-omics", "not multi-omics data"))
-
       shiny::req(pgx$X)
       shiny::req(pgx$mofa)
       
-      ##pgx <- pgx.load("~/Playground/omicsplayground/data/mox-brca.pgx")
-      ##pgx <- pgx.load("~/Playground/omicsplayground/data/mox-maartenAML.pgx")
       xdata <- playbase::mofa.split_data(pgx$X)
-      dt <- c("mir","gx","px")
       dt <- input$datatypes
       if(!is.null(dt) && length(dt)>0) {
         dt <- intersect(dt, names(xdata))
@@ -114,6 +108,13 @@ LasagnaBoard <- function(id, pgx, board_observers = NULL) {
       res$posx <- pgx$mofa$posx[sel]
       res$posf <- pgx$mofa$posf[sel]
 
+      pp <- unlist(lapply(xdata,rownames))
+      ff <- unlist(lapply(res$posf,rownames))
+      if(!all(ff %in% pp)) {
+        message("ERROR: invalid MOFA data. please recompute.")
+        return(NULL)
+      }
+      
       if(0) {
         res.svd <- svd(scale(res$Y))
         pos1 <- res.svd$v[,1:2]

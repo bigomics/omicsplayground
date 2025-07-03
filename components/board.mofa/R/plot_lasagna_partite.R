@@ -74,8 +74,6 @@ mofa_plot_lasagna_partite_server <- function(id,
       } else {
         labels <- pgx$genes[,labvar]  ## user reactive
       }
-      labels <- playbase::mofa.strip_prefix(labels)
-      labels <- paste0(pgx$genes$data_type,":",labels)
       names(labels) <- rownames(pgx$genes)
       
       graph <- res$graph

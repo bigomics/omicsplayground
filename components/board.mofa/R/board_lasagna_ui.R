@@ -21,7 +21,7 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.33,0.05),
+          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
           shiny::hr(),
           shiny::radioButtons(
             ns("edgesign"), "Edge sign:", c("both","positive","negative"),
@@ -30,7 +30,6 @@ LasagnaInputs <- function(id) {
           shiny::radioButtons(ns("node_value"),"Node value:",c("logFC","rho"),
             inline=TRUE),
           shiny::hr(),
-          ##shiny::checkboxInput(ns("fc_weight"),"FC weight",TRUE)
           shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE)          
         )
       )

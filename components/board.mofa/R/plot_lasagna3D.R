@@ -44,11 +44,13 @@ mofa_plot_lasagna3D_server <- function(id,
       shiny::req(res$posf)
       
       graph <- res$graph
+      dbg("[mofa_plot_lasagna3D_server:plot.RENDER] graph$layers=",graph$layers)
+
       vars <- igraph::V(graph)$value
       names(vars) <- igraph::V(graph)$name
-
+      
       posf <- playbase::mofa.prefix(res$posf)
-      posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),,drop=FALSE])
+      posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),,drop=FALSE])      
 
       edges <- NULL
       if(input$drawlines) {
@@ -57,7 +59,7 @@ mofa_plot_lasagna3D_server <- function(id,
           weight = igraph::E(graph)$weight
         )
       }
-      
+        
       plt <- playbase::plotly_lasagna(
         pos = posf,
         vars = vars,
