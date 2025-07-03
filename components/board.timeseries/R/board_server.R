@@ -89,10 +89,7 @@ TimeSeriesBoard <- function(id,
       if (any(sdx == 0)) X <- X + runif(length(X), 0, 1e-5)
 
       ## pre-filter by SD. 
-      dbg("[timeseries_full] 1: dim.X=", dim(X))
-      ## filter by SD???
       X <- playbase::mofa.topSD(X, 4000)
-      dbg("[timeseries_full] 2: dim.X=", dim(X))
 
       ## collapse by time variable
       timevar="time"

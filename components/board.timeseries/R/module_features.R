@@ -146,7 +146,7 @@ TimeSeriesBoard.features_server <- function(id,
 
       k <- contrast()
       shiny::req(k)
-      
+
       kstats.full <- as.matrix(pgx$gx.meta$meta[[k]])
       sel <- grep("^p[.]*", colnames(kstats.full))
       kstats.full[, "meta.p"] <- apply(kstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
@@ -164,19 +164,22 @@ TimeSeriesBoard.features_server <- function(id,
         ikstats.full[, "meta.q"] <- apply(ikstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
         ikstats <- ikstats.full[, c("meta.p", "meta.q")]
         colnames(ikstats) <- c("p.interaction", "q.interaction")
-        kstats <- cbind(kstats, ikstats)
-        cols <- c(
-          "log2FC", "p.value", "q.value",
-          "p.interaction", "q.interaction",
-          "avg.0", "avg.1"
-        )
-        kstats <- kstats[, cols]
+        cm <- intersect(rownames(kstats), rownames(ikstats))
+        kstats <- cbind(kstats[cm, ], ikstats[cm, ])
+        cols <- c("log2FC", "p.value", "q.value", "p.interaction",
+          "q.interaction", "avg.0", "avg.1")
+        cols <- intersect(cols, colnames(kstats))
+        if (length(cols)>0) kstats <- kstats[, cols, drop = FALSE]
       }
 
       if (input$show_statdetails) {
-        pq.tables <- kstats.full[, grep("^p[.]|^q[.]",colnames(kstats.full)), drop = FALSE]
+        sel.p <- grep("^p[.]", colnames(kstats.full))
+        sel.q <- grep("^q[.]", colnames(kstats.full))
+        pq.tables <- kstats.full[, c(sel.p, sel.q), drop = FALSE]
         if (ik %in% names(pgx$gx.meta$meta)) {
-          ik.pq.tables <- ikstats.full[, grep("^p[.]|^q[.]", colnames(ikstats.full)), drop = FALSE]
+          sel.p <- grep("^p[.]", colnames(ikstats.full))
+          sel.q <- grep("^q[.]", colnames(ikstats.full))
+          ik.pq.tables <- ikstats.full[, c(sel.p, sel.q), drop = FALSE]
           colnames(ik.pq.tables) <- paste0(colnames(ik.pq.tables), ".interaction")
           pq.tables <- cbind(pq.tables, ik.pq.tables)
         }
@@ -184,7 +187,7 @@ TimeSeriesBoard.features_server <- function(id,
       }
 
       kstats <- as.data.frame(kstats, check.names = FALSE)
-      #kstats <- kstats[order(kstats$p.value), ]
+      kstats <- kstats[, unique(colnames(kstats))]      
       kstats <- kstats[order(-kstats$log2FC), ]
 
       return(kstats)
