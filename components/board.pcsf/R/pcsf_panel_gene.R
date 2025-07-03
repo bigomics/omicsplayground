@@ -433,7 +433,9 @@ pcsf_genepanel_server <- function(id,
         cols <- intersect(cols, colnames(df))
         df <- df[, cols, drop = FALSE]
       }
-      df <- df[which(!is.na(df$gene_title)), , drop = FALSE]
+      nas <- which(is.na(df$gene_title))
+      if (length(nas)>0) df$gene_title[nas] = "NA"
+      
       num.cols <- intersect(c("centrality", "logFC"), colnames(df))
       dt <- ui.DataTable(
         df,
