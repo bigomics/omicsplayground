@@ -44,8 +44,6 @@ mofa_plot_lasagna3D_server <- function(id,
       shiny::req(res$posf)
       
       graph <- res$graph
-      dbg("[mofa_plot_lasagna3D_server:plot.RENDER] graph$layers=",graph$layers)
-
       vars <- igraph::V(graph)$value
       names(vars) <- igraph::V(graph)$name
       
