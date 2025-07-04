@@ -730,6 +730,14 @@ app_server <- function(input, output, session) {
       shinyjs::runjs("sidebarOpen()")
       shinyjs::runjs("settingsOpen()")
 
+      # If is CRO dataset, no watermark\
+      cro_emails <- get_cro_emails()
+      if (PGX$creator %in% cro_emails) {
+        WATERMARK <<- FALSE
+      } else {
+        WATERMARK <<- auth$options$WATERMARK
+      }
+
       info("[SERVER] trigger on change dataset done!")
     }
   )

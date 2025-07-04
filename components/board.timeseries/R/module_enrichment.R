@@ -9,15 +9,6 @@ TimeSeriesBoard.enrichment_table_ui <- function(
     ) {
   ns <- shiny::NS(id)
   
-  ## options <- tagList(
-  ##   withTooltip(
-  ##     shiny::checkboxInput(
-  ##      ns("show_statdetails"),
-  ##      "Show detailed statistical methods"),
-  ##      title = "Show detailed statistical methods."
-  ##   )
-  ## )
-  
   TableModuleUI(
     ns("table"),
     info.text = info.text,

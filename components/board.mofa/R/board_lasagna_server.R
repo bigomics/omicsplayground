@@ -41,8 +41,7 @@ LasagnaBoard <- function(id, pgx) {
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Multi-layer model" = list(disable = c("mpartite_options")),
-      "Multi-partite graph" = list(disable = c("updateplots"))
-##      "Path scoring" = list(disable = c("left","right","updateplots"))
+      "Multi-partite graph" = list(disable = c())
     )
 
     shiny::observeEvent( input$tabs, {
@@ -55,11 +54,13 @@ LasagnaBoard <- function(id, pgx) {
 
     shiny::observeEvent( pgx$mofa, {
       
-      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))
+      shiny::validate( shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
       
       ## update factors in selectInput
-      contrasts <- colnames(pgx$mofa$contrasts)      
+      ct1 <- colnames(pgx$mofa$contrasts)      
+      ct2 <- colnames(playbase::pgx.getMetaMatrix(pgx)$fc)
+      contrasts <- intersect(ct1, ct2)
+      contrasts <- contrasts[!grepl("^IA",contrasts)]  ## no interaction contrasts
       updateSelectInput(session, "contrast", choices = contrasts,
         selected = contrasts[1])
       
@@ -69,27 +70,79 @@ LasagnaBoard <- function(id, pgx) {
       
     }, ignoreNULL=FALSE)
 
-    data <- shiny::eventReactive( {
-      list( input$updateplots ) 
+    lasagna_model <- shiny::eventReactive( {
+      list( input$updateplots, pgx$X ) 
     }, {
       shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      shiny::validate( shiny::need( !is.null(pgx$mofa$lasagna), "missing LASAGNA slot"))      
+      shiny::validate( shiny::need( pgx$datatype=="multi-omics", "not multi-omics data"))
+      shiny::req(pgx$X)
       shiny::req(pgx$mofa)
       
-      res <- pgx$mofa$lasagna
-      res$posx <- pgx$mofa$posx
-      res$posf <- pgx$mofa$posf
-      if(length(input$datatypes)) {
-        sel <- input$datatypes
-        sel <- intersect(sel, names(res$posx))
-        res$posx <- res$posx[sel]
-        res$posf <- res$posf[sel]
+      xdata <- playbase::mofa.split_data(pgx$X)
+      dt <- input$datatypes
+      if(!is.null(dt) && length(dt)>0) {
+        dt <- intersect(dt, names(xdata))
+        if(length(dt)) xdata <- xdata[dt]
+      }
+
+      moxdata <- list(
+        X = xdata,
+        samples = pgx$samples,
+        contrasts = pgx$contrasts
+      )
+      dbg("[LasagnaBoard:lasagna_model] creating model...")
+      res <- playbase::lasagna.create_model(moxdata, pheno="contrasts",
+        ntop=1000, nc=20, add.sink=TRUE, intra=TRUE)
+      names(res)
+      res$layers
+      
+      layers <- setdiff(res$layers, c("SOURCE","SINK"))
+      sel <- intersect(layers, names(pgx$mofa$posx))
+      res$posx <- pgx$mofa$posx[sel]
+      res$posf <- pgx$mofa$posf[sel]
+
+      pp <- unlist(lapply(xdata,rownames))
+      ff <- unlist(lapply(res$posf,rownames))
+      if(!all(ff %in% pp)) {
+        message("ERROR: invalid MOFA data. please recompute.")
+        return(NULL)
       }
       
+      if(0) {
+        res.svd <- svd(scale(res$Y))
+        pos1 <- res.svd$v[,1:2]
+        rownames(pos1) <- colnames(res$Y)
+        res$posf[['PHENO']] <- pos1
+        pos2 <- res.svd$u[,1:2]
+        rownames(pos2) <- rownames(res$Y)
+        res$posx[['PHENO']] <- pos2
+      }
+            
       return(res)
     }, ignoreNULL=FALSE)
 
+    data <- reactive({
+      shiny::req(input$contrast)
+
+      res <- lasagna_model()      
+      pheno <- input$contrast
+      value <- input$node_value      
+      
+      graph <- playbase::lasagna.set_weights(
+        res, pheno,
+        value=value, 
+        min_rho=0.1,
+        max_edges=1000,
+        fc.weight=TRUE,
+#        sp.weight=FALSE,
+        sp.weight = input$sp_weight,        
+        prune = FALSE
+      )
+      res$graph <- graph
+      res
+    })
     
+
     ## ==========================================================================
     ## ========================== BOARD FUNCTIONS ===============================
     ## ==========================================================================
@@ -99,31 +152,22 @@ LasagnaBoard <- function(id, pgx) {
     ## =========================== MODULES ======================================
     ## ==========================================================================
     
-    mofa_plot_lasagna_server(
+    mofa_plot_lasagna3D_server(
       "lasagna",
       data = data,
       pgx = pgx,
-      ##input_factor = reactive(input$selected_factor),      
-      input_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
-
-    ## mofa_lasagnaSP_server(
-    ##   "lasagnaSP",
-    ##   data = data,
-    ##   input_contrast = reactive(input$contrast),
-    ##   watermark = WATERMARK
-    ## )
 
     mofa_plot_lasagna_partite_server(
       "lasagnaPartite",
       data = data,
       pgx = pgx,
-      input_contrast = reactive(input$contrast),
       input_datatypes = reactive(input$datatypes),
       input_minrho = reactive(input$minrho),
-      input_edgetype = reactive(input$edgetype),      
-      input_labeltype = reactive(input$labeltype),            
+      input_edgesign = reactive(input$edgesign),      
+      #input_labeltype = reactive(input$labeltype),
+      input_nodevalue = reactive(input$node_value),            
       watermark = WATERMARK
     )
     

@@ -9,9 +9,11 @@ LasagnaInputs <- function(id) {
     ## data set parameters
     shiny::selectInput(ns("contrast"), "Select comparison", choices = NULL),
     shiny::br(),
-    shiny::selectInput(ns("datatypes"), "Show datatypes:", choices = NULL, multiple = TRUE),
+    shiny::selectInput(ns("datatypes"), "Show layers:", choices = NULL, multiple = TRUE),
     shiny::br(),
     shiny::actionButton(ns("updateplots"), "Update plots", size = "xs", icon=icon("refresh")),
+    shiny::br(),
+    shiny::br(),
     bslib::accordion(
       id = ns("mpartite_options"),
       open = FALSE,
@@ -19,13 +21,16 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::sliderInput(ns("minrho"),"Minimum (abs) rho:",0,0.95,0.33,0.05),
-          shiny::radioButtons(ns("edgetype"), "Edge type:",
-                              c("both","positive","negative"),
-                              selected="both", inline=TRUE),
-          shiny::radioButtons(ns("labeltype"), "Label type:",
-                              c("default","feature","symbol","title"),
-                              selected="default", inline=TRUE)
+          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
+          shiny::hr(),
+          shiny::radioButtons(
+            ns("edgesign"), "Edge sign:", c("both","positive","negative"),
+            selected="both", inline=TRUE),
+          shiny::hr(),
+          shiny::radioButtons(ns("node_value"),"Node value:",c("logFC","rho"),
+            inline=TRUE),
+          shiny::hr(),
+          shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE)          
         )
       )
     )
@@ -71,7 +76,7 @@ LasagnaUI <- function(id) {
           bslib::layout_columns(
             col_widths = c(6,6),
             height = "calc(100vh - 180px)",
-            mofa_plot_lasagna_ui(
+            mofa_plot_lasagna3D_ui(
               ns("lasagna"),
               title = "Multi-layer model",
               info.text = "Layered Approach to Simultaneous Analysis of Genomic and Network Associations ('LASAGNA'). The LASAGNA plot is a stacked layer plot to visualize multi-omics data. Specifically, each layer shows a data type-specific UMAP. LASAGNA just shows the datatype-specific UMAPs overlayed.",
@@ -115,70 +120,9 @@ LasagnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-            ## mofa_plot_lasagna_partite_adjmat_ui(
-            ##   ns("lasagnaPartite"),
-            ##   title = "Adjacency matrix",
-            ##   info.text = "",
-            ##   info.references = NULL,
-            ##   height = c("100%", TABLE_HEIGHT_MODAL),
-            ##   width = c("auto", "100%")
-            ## )
           )
         )
-      ),  ## end tabPanel      
-
-      ##----------------------------------------------------------------
-      ## shiny::tabPanel(
-      ##   ##bslib::nav_panel(      
-      ##   "Path scoring",
-      ##   bslib::layout_columns(
-      ##     col_widths = 12,
-      ##     #height = "calc(100vh - 181px)",
-      ##     ## bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for 'a Layered Approach to Simultaneous Analysis of Genomic and Network Associations'.")),
-      ##     bslib::layout_columns(
-      ##       col_widths = bslib::breakpoints(
-      ##         xxxl = c(6, 6),
-      ##         xl = c(12, 12),              
-      ##         sm = c(12, 12)
-      ##       ),
-      ##       bslib::layout_columns(
-      ##         col_widths = bslib::breakpoints(
-      ##           xxxl = c(6, 6, 12),
-      ##           xl = c(5, 3, 4),              
-      ##           sm = c(12, 12, 12)
-      ##         ),
-      ##         mofa_plot_lasagnaSP_ui(
-      ##           ns("lasagnaSP"),
-      ##           title = "Parallel coordinates",
-      ##           info.text = "LASAGNA is a acronym of 'Layered Approach to Simultaneous Analysis of Genomic and Network Associations.'",
-      ##           caption = "Scale independence and mean connectivity plots to determine the soft threshold.",
-      ##           height = c("100%", TABLE_HEIGHT_MODAL),
-      ##           width = c("auto", "100%")
-      ##         ),
-      ##         mofa_plot_lasagnaSP_scores_ui(
-      ##           ns("lasagnaSP"),
-      ##           title = "Path scores",
-      ##           info.text = "Path scores",
-      ##           caption = ""
-      ##         ),
-      ##         mofa_plot_lasagnaSP_frequency_ui(
-      ##           ns("lasagnaSP"),
-      ##           title = "Term frequency",
-      ##           info.text = "Frequency of features",
-      ##           caption = "Term frequency in top ranked shortest path solutions."
-      ##         )
-      ##       ),
-      ##       mofa_table_lasagnaSP_ui(
-      ##         ns("lasagnaSP"),
-      ##         title = "Pathscore table",
-      ##         info.text = "Clustering of features",
-      ##         caption = "Each datatype affinity matrix captures the pairwise similarities between samples, highlighting high similarities among samples within the same datatype.",
-      ##         height = c("100%", TABLE_HEIGHT_MODAL),
-      ##         width = c("auto", "100%")
-      ##       )
-      ##     )
-      ##   )
-      ## )  ## end tabPanel      
+      )  ## end tabPanel      
       
     ) ## end tabsetPanel
   )  ## end div 
