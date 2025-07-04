@@ -111,3 +111,8 @@ get_cro_emails <- function() {
   }
   cro_emails
 }
+
+get_pgxs_in_folder <- function(folder) {
+  pgxs <- dir(folder, pattern = ".*\\.pgx$")
+  length(pgxs)
+}

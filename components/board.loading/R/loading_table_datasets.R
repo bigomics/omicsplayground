@@ -108,6 +108,11 @@ loading_table_datasets_server <- function(id,
       return(info)
     })
 
+    pgx_archive_dir <-shiny::reactive({
+      shiny::req(auth$logged)
+      file.path(auth$user_dir, "data_archive")
+    })
+
     getFilteredPGXINFO <- shiny::reactive({
       ## get the filtered table of pgx datasets
       df <- getPGXINFO()
@@ -224,6 +229,76 @@ loading_table_datasets_server <- function(id,
       }
     })
 
+    observeEvent(input$import_archive_pgx, {
+        selected_row <- as.numeric(stringr::str_split(input$import_archive_pgx, "_row_")[[1]][2])
+        pgx_name <- table_data()[selected_row, "dataset"]
+
+        alert_val <- shinyalert::shinyalert(
+          inputId = "import_archive_confirm",
+          title = paste("Archive this dataset?"),
+          paste(
+            "Your dataset", pgx_name, "will be archived. You will be able to use it in the future.",
+            "Are you sure?"
+          ),
+          html = TRUE,
+          showCancelButton = TRUE,
+          showConfirmButton = TRUE
+        )
+      },
+      ignoreNULL = TRUE,
+      ignoreInit = TRUE
+      )
+
+      observeEvent(input$import_archive_confirm, {
+      if (input$import_archive_confirm) {
+        if (get_pgxs_in_folder(pgx_archive_dir()) >= 100) { # Check if archive is full
+          shinyalert::shinyalert(
+            title = "Archive limit reached",
+            text = "You have reached the maximum number of archived datasets (100). Please delete some archived datasets before archiving new ones.",
+            type = "error"
+          )
+          return()
+        }
+        selected_row <- as.numeric(stringr::str_split(input$import_archive_pgx, "_row_")[[1]][2])
+        pgx_name <- table_data()[selected_row, "dataset"]
+        pgx_name <- sub("[.]pgx$", "", pgx_name)
+        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
+        new_pgx_file <- file.path(pgx_archive_dir(), paste0(pgx_name, ".pgx"))
+
+        ## just remove if exists
+        if (file.exists(new_pgx_file)) {
+          file.remove(pgx_file)
+          reload_pgxdir(reload_pgxdir() + 1)
+          return()
+        }
+
+        shiny::withProgress(message = "Archiving dataset...", value = 0.33, {
+          pgx0 <- playbase::pgx.load(pgx_file)
+          unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
+          if ("creator" %in% names(pgx0) && !unknown.creator) {
+            file.copy(from = pgx_file, to = new_pgx_file)
+          } else {
+            pgx0$creator <- auth$email
+            if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
+            playbase::pgx.save(pgx0, file = new_pgx_file)
+          }
+        })
+
+        file.remove(pgx_file)
+
+        reload_pgxdir_public(reload_pgxdir_public() + 1)
+        reload_pgxdir(reload_pgxdir() + 1)
+
+        shinyalert::shinyalert(
+          title = "Successfully archived!",
+          paste(
+            "Your dataset", pgx_name, "has now been successfully",
+            "archived!"
+          )
+        )
+      }
+    })
+
     shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
       # Make sure there is a row selected
@@ -281,6 +356,7 @@ loading_table_datasets_server <- function(id,
         download_pgx_menuitem <- NULL
         share_public_menuitem <- NULL
         share_dataset_menuitem <- NULL
+        import_archive_menuitem <- NULL
         delete_pgx_menuitem <- NULL
 
         if (auth$options$ENABLE_PGX_DOWNLOAD) {
@@ -303,6 +379,17 @@ loading_table_datasets_server <- function(id,
             style = "border: none;",
             width = "100%",
             onclick = paste0('Shiny.onInputChange(\"', ns("share_public_pgx"), '\",this.id,{priority: "event"})')
+          )
+        }
+        if (dir.exists(pgx_archive_dir())) {
+          import_archive_menuitem <- shiny::actionButton(
+            ns(paste0("import_archive_row_", i)),
+            label = "Archive dataset",
+            icon = shiny::icon("file-import"),
+            class = "btn btn-outline-info",
+            style = "border: none;",
+            width = "100%",
+            onclick = paste0('Shiny.onInputChange(\"', ns("import_archive_pgx"), '\",this.id,{priority: "event"})')
           )
         }
         if (auth$options$ENABLE_USER_SHARE && dir.exists(pgx_shared_dir)) {
@@ -373,6 +460,7 @@ loading_table_datasets_server <- function(id,
               changedesc_pgx_menuitem,
               recompute_pgx_menuitem,
               share_public_menuitem,
+              import_archive_menuitem,
               share_dataset_menuitem,
               delete_pgx_menuitem
             )
