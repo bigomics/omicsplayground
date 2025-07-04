@@ -12,8 +12,7 @@
 ##' @param pgx
 ##' @return
 ##' @author kwee
-ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
-                            board_observers = NULL) {
+ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
@@ -24,8 +23,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     ## ===================================================================================
     ## ======================== OBSERVERS ================================================
     ## ===================================================================================
-
-    my_observers <- list()
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -56,7 +53,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       ))
     })
 
-    my_observers[[1]] <- shiny::observeEvent(pgx$Y, {
+    shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
       var.types <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
@@ -93,7 +90,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     })
    
     ## update filter choices upon change of data set
-    my_observers[[2]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         list(pgx$X, pgx$Y, pgx$samples)
       },
@@ -120,7 +117,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     )
 
     ## update choices upon change of level
-    my_observers[[3]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         c(input$hm_splitvar, input$hm_level)
       },
@@ -142,7 +139,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     )
 
     # reactive functions ##############
-    my_observers[[4]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         list(input$hm_splitby, pgx$X, pgx$samples)
       },
@@ -174,16 +171,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     )
 
     ## update filter choices upon change of data set
-    ##    my_observers[[5]] <-
     shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
-
-
-    ## assign to global list of observers. suspend by default.
-    # lapply( my_observers, function(b) b$suspend() )
-    board_observers[[id]] <- my_observers
 
     shiny::observeEvent(pgx, {
       shiny::req(pgx$datatype)

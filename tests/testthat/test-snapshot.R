@@ -14,15 +14,21 @@ test_that("example data loads with no error",{
   boards <- boards[!boards %in% c("upload", "loading", "user")]
 
   # remove problematic boards
-  boards <- boards[!boards %in% c("tcga", "signature")]
+  all_boards <- boards[!boards %in% c("tcga", "signature")]
 
   # get all pgx files
-  pgx_files <- list.files(normalizePath("../../data"), pattern = "*.pgx", full.names = TRUE)
+  pgx_files <- list.files(normalizePath("../../data/pgx_results"), pattern = "*.pgx", full.names = TRUE)
 
   authentication <- options()$authentication
 
   AppLog <- lapply(pgx_files, function(pgx_file) {
     message(pgx_file)
+    pgx <- playbase::pgx.load(pgx_file)
+    boards <- all_boards[all_boards %in% names(pgx)]
+    boards <- c("dataview", "enrichment", "clustering", "featuremap", "compare", "correlation", "expression", "pathway", "timeseries", "biomarker", "signature", "intersection", boards)
+    if ("mofa" %in% boards) {
+      boards <- c(boards, "snf", "lasagna", "deepnet", "mgsea")
+    }
     lapply(boards, function(board) {
     # get error from App and save it as error_log
     message(board)
@@ -30,7 +36,7 @@ test_that("example data loads with no error",{
     # board = boards[1]
     App <- shinytest2::AppDriver$new(
       normalizePath("../../dev/board.launch"),
-      timeout = 35000,
+      timeout = 120000,
       height = 1080,
       width = 1920,
       seed = 2910,
@@ -46,11 +52,18 @@ test_that("example data loads with no error",{
 
     withr::defer(App$stop())
 
-    #pgx_file <- normalizePath("../../data/mini-example/example-data-mini.pgx")
     App$set_inputs("pgx_path" = pgx_file)
+    pgx_file <- tools::file_path_sans_ext(basename(pgx_file))
     if(board == "enrichment") {
-      App$set_inputs("enrichment-gs_fdr" = 0.5)
+      App$set_inputs("enrichment-gs_fdr" = 1)
       App$wait_for_idle(duration = 10000, timeout = 50000)
+    }
+    if(board == "biomarker") {
+      App$run_js("$('#biomarker-pdx_runbutton').click(); ")
+      App$wait_for_idle(duration = 10000, timeout = 50000)
+    }
+    if(board == "expression") {
+      App$run_js("$('#expression-genetable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
     }
     tabs <- searchTabs(board)
     if (!is.null(tabs)){
@@ -65,13 +78,21 @@ test_that("example data loads with no error",{
         } else {
           duration <- 50000
           App$wait_for_idle(duration = 3000, timeout = duration)
+          if (board == "wgcna") {
+            if (tab == "Enrichment") {
+              App$run_js("$('#wgcna-enrichTable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
+            }
+          }
+          App$wait_for_idle(duration = 3000, timeout = duration)
         }
-        
-        App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
+        tab <- gsub(" ", "_", tab)
+        tab <- gsub("/", "_", tab)
+
+        App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
       })
     } else {
       App$wait_for_idle(duration = 3000)
-      App$expect_screenshot(cran = TRUE, name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
+      App$expect_screenshot(name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
     }
   })})
 })

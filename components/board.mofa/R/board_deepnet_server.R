@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-DeepNetBoard <- function(id, pgx, board_observers = NULL) {
+DeepNetBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -26,9 +26,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     ## ===========================================================================
     ## ============================ OBSERVERS ====================================
     ## ===========================================================================
-       
-    my_observers <- list()
-    
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Model training" = list(disable = c("show_conditions","show_datatypes")),
@@ -36,7 +34,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       "Biomarker heatmap" = list(disable = c("show_conditions","select_datatypes"))
     )
 
-    my_observers[[1]] <- shiny::observeEvent(input$tabs, {
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
@@ -45,7 +43,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    my_observers[[2]] <- shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext2),
@@ -55,7 +53,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
 
     
-    my_observers[[3]] <-  shiny::observeEvent({
+    shiny::observeEvent({
       list(pgx$samples)
     } , {
       phenotypes <- playbase::pgx.getCategoricalPhenotypes(pgx$samples)
@@ -66,7 +64,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
     
     
-    my_observers[[4]] <- shiny::observeEvent({
+    shiny::observeEvent({
       list(input$select_pheno, pgx$samples)
     }, {
       shiny::req(input$select_pheno)
@@ -78,7 +76,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
     })
     
     warned <- TRUE
-    my_observers[[5]] <- observeEvent( input$step, {
+    observeEvent( input$step, {
       optim <- "adam"
       #optim <- input$optim
       net()$fit( niter=1, optim=optim)
@@ -86,7 +84,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       update( update() + 1)
     })
     
-    my_observers[[6]] <- observeEvent( input$step20, {
+    observeEvent( input$step20, {
       pgx.showSmallModal(paste("Fitting model 20 steps... please wait"))
       optim <- "adam"
       #optim <- input$optim
@@ -96,7 +94,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       update( update() + 1)
     })
     
-    my_observers[[7]] <- observeEvent( input$step100, {
+    observeEvent( input$step100, {
       pgx.showSmallModal(paste("Fitting model 100 steps... please wait"))
       optim <- "adam"
       #optim <- input$optim
@@ -106,7 +104,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       update( update() + 1)
     })
 
-    my_observers[[8]] <- observeEvent({
+    observeEvent({
       list( 
         input$latent_dim,
         input$actfun,
@@ -120,7 +118,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
       }
     })
 
-    my_observers[[9]] <- shiny::observeEvent({
+    shiny::observeEvent({
       list(pgx$X, input$addgsets)
     },{
       
@@ -154,7 +152,7 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
 
     })
 
-    my_observers[[10]] <- shiny::observeEvent({
+    shiny::observeEvent({
       list( input$select_datatypes )
     },{
       datatypes <- input$select_datatypes
@@ -162,16 +160,11 @@ DeepNetBoard <- function(id, pgx, board_observers = NULL) {
         selected = datatypes )
     })
     
-    my_observers[[11]] <- shiny::observeEvent({
+    shiny::observeEvent({
       list( input$select_pheno, input$reset )
     },{
       update_diagram(TRUE)
     })
-    
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
     ## ===========================================================================
     ## ========================== BOARD FUNCTIONS ================================

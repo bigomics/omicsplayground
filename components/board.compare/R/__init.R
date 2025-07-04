@@ -46,27 +46,24 @@ MODULE.compare <- list(
       )
     )
   },
-  module_server = function(PGX, board_observers = NULL, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL) {
+  module_server = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL) {
     IntersectionBoard("isect",
       pgx = PGX,
       selected_gxmethods = env$diffexpr$selected_gxmethods,
-      selected_gsetmethods = env$enrich$selected_gsetmethods,
-      board_observers = board_observers
+      selected_gsetmethods = env$enrich$selected_gsetmethods
     )
 
     CompareBoard(
       "comp",
       pgx = PGX,
       pgx_dir = reactive(auth$user_dir),
-      labeltype = labeltype,
-      board_observers = board_observers
+      labeltype = labeltype
     )
 
     ConnectivityBoard("cmap",
       pgx = PGX,
       auth = auth,
-      reload_pgxdir = reload_pgxdir,
-      board_observers = board_observers
+      reload_pgxdir = reload_pgxdir
     )
   }
 )
