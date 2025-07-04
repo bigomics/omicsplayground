@@ -187,7 +187,7 @@ loading_table_datasets_public_server <- function(id,
       DT::datatable(
         df,
         class = "compact hover",
-        rownames = TRUE,
+        rownames = FALSE,
         editable = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
