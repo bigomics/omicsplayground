@@ -228,119 +228,125 @@ UploadBoard <- function(id,
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
-
-        # check if error 29 exists (log2 transform detected), give
-        # action to user revert to intensities or skip correction.
-        if ("e29" %in% names(res$checks)) {
-          shinyalert::shinyalert(
-            title = paste("Log-scale detected"),
-            text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-            html = TRUE,
-            confirmButtonText = "Yes",
-            showCancelButton = TRUE,
-            cancelButtonText = "No",
-            inputId = "logCorrectCounts",
-            closeOnEsc = FALSE,
-            immediate = FALSE,
-            callbackR = function(x) checked_for_log(TRUE)
-          )
-          # checked_for_log(FALSE)
-        } else {
+        
+        isProteomics.Olink <- FALSE
+        isProteomics <- (upload_datatype() == "proteomics")        
+        e29 <- ("e29" %in% names(res$checks))
+        samplesIN <- (!is.null(uploaded$samples.csv)) ## automatically built from counts.
+        if (isProteomics && e29 && samplesIN) { ## Special case Olink NPX
+          dbg("[upload_server:] Olink Proteomics NPX...")
+          shinyalert::shinyalert(title = "Log-scale detected", text = "Olink NPX", type = "info") ## add confirm button?
+          isProteomics.Olink <- TRUE
           checked_for_log(TRUE)
+        } else {
+          if ("e29" %in% names(res$checks)) {
+            shinyalert::shinyalert(
+              title = paste("Log-scale detected"),
+              text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+              html = TRUE,
+              confirmButtonText = "Yes",
+              showCancelButton = TRUE,
+              cancelButtonText = "No",
+              inputId = "logCorrectCounts",
+              closeOnEsc = FALSE,
+              immediate = FALSE,
+              callbackR = function(x) checked_for_log(TRUE)
+            )
+            # checked_for_log(FALSE)
+          } else {
+            checked_for_log(TRUE)
+          }
         }
-
-        res
+        return(list(res = res, isProteomics.Olink = isProteomics.Olink))
       }
     )
 
     checked_counts <- shiny::eventReactive(
-      {
-        list(checked_for_log(), uploaded_counts())
-      },
-      {
-        ## get uploaded counts
+    {
+      list(checked_for_log(), uploaded_counts()$res)
+    },
+    {
+      ## get uploaded counts
+      checked <- NULL
+      res <- uploaded_counts()$res
+      isProteomics.Olink <- uploaded_counts()$isProteomics.Olink
+      if (is.null(res)) { return(list(status = "Missing counts.csv", matrix = NULL)) }
+      
+      ## wait for dialog finished
+      shiny::req(checked_for_log())
+      
+      # If error 29 exists (log2 transform detected) and user
+      # confirms to convert to intensities in shinyalert do log2
+      # correction (un-doing log transform).
+      check.e29 <- FALSE
+      isConfirmed <- input$logCorrectCounts
+      if (is.null(isConfirmed)) isConfirmed = FALSE
+      if (isProteomics.Olink) {
+        res$checks[["e29"]] <- NULL ## remove?
+        check.e29 = TRUE
+      } else if ("e29" %in% names(res$checks) && isConfirmed) {
+        dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
+        res$df <- 2**res$df
+        min.count <- min(res$df, na.rm = TRUE)
+        if (min.count > 0) { res$df <- res$df - min.count } ## put min to zero.
+        res$checks[["e29"]] <- NULL ## remove?
+        check.e29 = TRUE
+      }
+    
+      ## No further negative values allowed. Set to zero and inform the user.
+      ## At this point, beyond Olink, we should let the user handle all negatives.
+      negs <- sum(res$df < 0, na.rm = TRUE)
+      if (negs > 0 && !isProteomics.Olink) {
+        res$df <- pmax(res$df, 0)
+        ss <- paste(negs, " negative values detected but not allowed. These are set to zero. If you wish otherwise, please correct your data manually.")
+        shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
+      }
+      
+      ## update checklist and status
+      checklist[["counts.csv"]]$checks <- res$checks
+      if (res$PASS) {
+        checked <- res$df
+        status <- "OK"
+      } else {
         checked <- NULL
-        res <- uploaded_counts()
-        if (is.null(res)) {
-          return(list(status = "Missing counts.csv", matrix = NULL))
-        }
+        status <- "ERROR: incorrect counts matrix"
+      }
 
-        ## wait for dialog finished
-        shiny::req(checked_for_log())
-
-        # If error 29 exists (log2 transform detected) and user
-        # confirms to convert to intensities in shinyalert do log2
-        # correction (un-doing log transform).
-        check.e29 <- FALSE
-        isConfirmed <- input$logCorrectCounts
-        if ("e29" %in% names(res$checks) && isConfirmed) {
-          dbg("[UploadBoard::checked_counts] Converting log-values to counts")
-          res$df <- 2**res$df
-          if (min(res$df, na.rm = TRUE) > 0) {
-            ## alway put minimum counts to zero.
-            res$df <- res$df - min(res$df,na.rm=TRUE)
-          }
-          res$checks[["e29"]] <- NULL ## remove?
-          check.e29 = TRUE
-        }
-        
-        # Any further negative values are not allowed.
-        # We set to zero and inform the user.
-        if (any(res$df < 0, na.rm = TRUE)) {
-          num_neg <- sum(res$df < 0, na.rm = TRUE)
-          res$df <- pmax(res$df, 0)
+      ## --------------------------------------------------------
+      ## check files: maximum samples allowed
+      ## --------------------------------------------------------
+      MAXSAMPLES <- get_max_samples(auth, upload_datatype())
+      if (!is.null(checked)) {
+        if (ncol(checked) > MAXSAMPLES) {
+          status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+          checked <- NULL
+          # remove only counts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+          ## uploaded[["counts.csv"]] <- NULL
+          # pop up telling user max sample reached
           shinyalert::shinyalert(
-            title = "Negative values",
-            text = paste("We have detected", num_neg, "negative values in your data. Negative values are not allowed and are set to zero. If you wish otherwise, please correct your data manually."),
-            type = "warning"
+            title = "Maximum samples reached",
+            text = paste(
+              "You have reached the maximum number of samples allowed. Please",
+              tspan("upload a new counts file with a maximum of", js = FALSE),
+              MAXSAMPLES, "samples."
+            ),
+            type = "error"
           )
         }
-
-        ## update checklist and status
-        checklist[["counts.csv"]]$checks <- res$checks
-        if (res$PASS) {
-          checked <- res$df
-          status <- "OK"
-        } else {
-          checked <- NULL
-          status <- "ERROR: incorrect counts matrix"
-        }
-
-        ## --------------------------------------------------------
-        ## check files: maximum samples allowed
-        ## --------------------------------------------------------
-        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
-        if (!is.null(checked)) {
-          if (ncol(checked) > MAXSAMPLES) {
-            status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
-            checked <- NULL
-            # remove only counts.csv from last_uploaded
-            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-            ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                MAXSAMPLES, "samples."
-              ),
-              type = "error"
-            )
-          }
-        }
-        if (is.null(checked)) {
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-        }
-
-        if (check.e29) {
-          if (isConfirmed) isConfirmed = TRUE
-          if (is.null(isConfirmed)) isConfirmed = FALSE
-        } else {
-          isConfirmed = FALSE
-        }
-        list(status = status, matrix = checked, isConfirmed = isConfirmed)
       }
+      if (is.null(checked)) {
+        uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+      }
+      
+      if (check.e29) {
+        if (isConfirmed) isConfirmed = TRUE
+        if (is.null(isConfirmed)) isConfirmed = FALSE
+      } else {
+        isConfirmed = FALSE
+      }
+      list(status = status, matrix = checked, isConfirmed = isConfirmed)
+    }
     )
 
     ## --------------------------------------------------------
