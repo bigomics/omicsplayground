@@ -199,6 +199,29 @@ LoadingBoard <- function(id,
       )
     }
 
+    shiny::observeEvent(auth, {
+      pgx_archive_dir <- file.path(auth$user_dir, "data_archive")
+      enable_archive_tabpanel <- dir.exists(pgx_archive_dir)
+
+      if (enable_archive_tabpanel) {
+        pgxtable_archive <- loading_table_datasets_public_server(
+          id = "pgxtable_archive",
+          pgx_public_dir = pgx_archive_dir,
+          reload_pgxdir_public = reload_pgxdir_public,
+          auth = auth,
+          reload_pgxdir = reload_pgxdir
+        )
+
+        loading_tsne_server(
+          id = "tsne_archive",
+          pgx.dir = reactive(pgx_archive_dir),
+          info.table = reactive(pgxtable_archive$data()),
+          r_selected = reactive(pgxtable_archive$rows_all()),
+          watermark = WATERMARK
+        )
+      }
+    })
+
     ## -----------------------------------------------------------------------------
     ## Description
     ## -----------------------------------------------------------------------------
