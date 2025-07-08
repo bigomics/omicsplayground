@@ -13,7 +13,9 @@ UploadBoard <- function(id,
                         ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
+
   moduleServer(id, function(input, output, session) {
+
     ns <- session$ns ## NAMESPACE
 
     # Some 'global' reactive variables used in this file
@@ -215,50 +217,48 @@ UploadBoard <- function(id,
     organism_checked <- reactiveVal(FALSE)
 
     uploaded_counts <- shiny::eventReactive(
-      {
-        list(uploaded$counts.csv)
-      },
-      {
-        ## --------------------------------------------------------
-        ## Single matrix counts check
-        ## --------------------------------------------------------
-        df0 <- uploaded$counts.csv
-        if (is.null(df0)) return(NULL)
-        
-        checked_for_log(FALSE)
-        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-        write_check_output(res$checks, "COUNTS", raw_dir())
-        
-        isProteomics.Olink <- FALSE
-        isProteomics <- (upload_datatype() == "proteomics")        
-        e29 <- ("e29" %in% names(res$checks))
-        samplesIN <- (!is.null(uploaded$samples.csv)) ## automatically built from counts.
-        if (isProteomics && e29 && samplesIN) { ## Special case Olink NPX
-          dbg("[upload_server:] Olink Proteomics NPX...")
-          shinyalert::shinyalert(title = "Log-scale detected", text = "Olink NPX", type = "info") ## add confirm button?
-          isProteomics.Olink <- TRUE
-          checked_for_log(TRUE)
-        } else {
-          if ("e29" %in% names(res$checks)) {
-            shinyalert::shinyalert(
-              title = paste("Log-scale detected"),
-              text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-              html = TRUE,
-              confirmButtonText = "Yes",
-              showCancelButton = TRUE,
-              cancelButtonText = "No",
-              inputId = "logCorrectCounts",
-              closeOnEsc = FALSE,
-              immediate = FALSE,
-              callbackR = function(x) checked_for_log(TRUE)
-            )
-            # checked_for_log(FALSE)
-          } else {
-            checked_for_log(TRUE)
-          }
-        }
-        return(list(res = res, isProteomics.Olink = isProteomics.Olink))
+    {
+      list(uploaded$counts.csv)
+    },
+    {
+      ## --------------------------------------------------------
+      ## Single matrix counts check
+      ## --------------------------------------------------------
+      df0 <- uploaded$counts.csv
+      if (is.null(df0)) return(NULL)
+      
+      checked_for_log(FALSE)
+      res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+      write_check_output(res$checks, "COUNTS", raw_dir())
+
+      #e29 <- ("e29" %in% names(res$checks))
+      #if (isProteomics && e29 && samplesIN) { ## Special case Olink NPX
+      #  dbg("[upload_server:] Olink Proteomics NPX...")
+      #  shinyalert::shinyalert(title = "Log-scale detected", text = "Olink NPX", type = "info") ## add confirm button?
+      #  isProteomics.Olink <- TRUE
+      #  checked_for_log(TRUE)
+      #} else {
+      #is.olink  <- upload_datatype()=="proteomics" && !is.null(uploaded$samples.csv) # samples built from counts.csv
+      if ("e29" %in% names(res$checks)) {
+        shinyalert::shinyalert(
+          title = paste("Log-scale detected"),
+          text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+          html = TRUE,
+          confirmButtonText = "Yes",
+          showCancelButton = TRUE,
+          cancelButtonText = "No",
+          inputId = "logCorrectCounts",
+          closeOnEsc = FALSE,
+          immediate = FALSE,
+          callbackR = function(x) checked_for_log(TRUE)
+        )
+        # checked_for_log(FALSE)
+      } else {
+        checked_for_log(TRUE)
       }
+      #}
+      return(list(res = res, is.olink = is.olink))
+    }
     )
 
     checked_counts <- shiny::eventReactive(
@@ -269,7 +269,7 @@ UploadBoard <- function(id,
       ## get uploaded counts
       checked <- NULL
       res <- uploaded_counts()$res
-      isProteomics.Olink <- uploaded_counts()$isProteomics.Olink
+      is.olink <- uploaded_counts()$is.olink
       if (is.null(res)) { return(list(status = "Missing counts.csv", matrix = NULL)) }
       
       ## wait for dialog finished
@@ -277,30 +277,41 @@ UploadBoard <- function(id,
       
       # If error 29 exists (log2 transform detected) and user
       # confirms to convert to intensities in shinyalert do log2
-      # correction (un-doing log transform).
+      # correction (un-doing log transform).      
+      log_prior <- 0
       check.e29 <- FALSE
       isConfirmed <- input$logCorrectCounts
       if (is.null(isConfirmed)) isConfirmed = FALSE
-      if (isProteomics.Olink) {
-        res$checks[["e29"]] <- NULL ## remove?
-        check.e29 = TRUE
-      } else if ("e29" %in% names(res$checks) && isConfirmed) {
+      #if (isProteomics.Olink) {
+      # res$df <- 2 ** res$df
+      #  res$checks[["e29"]] <- NULL ## remove?
+      #  check.e29 = TRUE
+      #} else if ("e29" %in% names(res$checks) && isConfirmed) {
+
+      dbg("----------------------MNT1: res$df[1,1] = ", res$df[1,1]) 
+      if ("e29" %in% names(res$checks) && isConfirmed) {
         dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
         res$df <- 2**res$df
         min.count <- min(res$df, na.rm = TRUE)
-        if (min.count > 0) { res$df <- res$df - min.count } ## put min to zero.
+        if (min.count > 0) { ## put min to zero.
+          res$df <- res$df - min.count
+          log_prior <- min.count
+        }
         res$checks[["e29"]] <- NULL ## remove?
         check.e29 = TRUE
       }
-    
-      ## No further negative values allowed. Set to zero and inform the user.
-      ## At this point, beyond Olink, we should let the user handle all negatives.
-      negs <- sum(res$df < 0, na.rm = TRUE)
-      if (negs > 0 && !isProteomics.Olink) {
-        res$df <- pmax(res$df, 0)
-        ss <- paste(negs, " negative values detected but not allowed. These are set to zero. If you wish otherwise, please correct your data manually.")
-        shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
-      }
+      dbg("----------------------MNT2: res$df[1,1] = ", res$df[1,1])
+
+
+      ## No further negative values allowed (in the linear space).
+      ## Set any negatives to zero and inform the user. Store value.
+      #negs <- sum(res$df < 0, na.rm = TRUE)
+      # if (negs > 0 && !isProteomics.Olink) {
+      #if (negs > 0) {
+      #res$df <- pmax(res$df, 0)
+      #ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
+      #  shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
+      #}
       
       ## update checklist and status
       checklist[["counts.csv"]]$checks <- res$checks
@@ -345,7 +356,9 @@ UploadBoard <- function(id,
       } else {
         isConfirmed = FALSE
       }
-      list(status = status, matrix = checked, isConfirmed = isConfirmed)
+
+      LL <- list(status = status, matrix = checked, isConfirmed = isConfirmed, log_prior = log_prior)
+      return(LL) 
     }
     )
 
@@ -359,9 +372,8 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$samples.csv
-        if (is.null(df0)) {
-          return(list(status = "Missing samples.csv", matrix = NULL))
-        }
+        if (is.null(df0)) { return(list(status = "Missing samples.csv", matrix = NULL)) }
+
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -397,18 +409,16 @@ UploadBoard <- function(id,
         res_counts <- NULL
 
         cc <- checked_counts()
-        if (!is.null(checked) && !is.null(cc$matrix)) {
-          cross_check <- playbase::pgx.crosscheckINPUT(
-            SAMPLES = checked,
-            COUNTS = cc$matrix
-          )
 
+        if (!is.null(checked) && !is.null(cc$matrix)) {
+          cross_check <- playbase::pgx.crosscheckINPUT(SAMPLES = checked, COUNTS = cc$matrix)
           write_check_output(cross_check$checks, "SAMPLES_COUNTS", raw_dir())
           checklist[["samples_counts"]]$checks <- cross_check$checks
 
           if (cross_check$PASS) {
             res_samples <- cross_check$SAMPLES
             res_counts <- cross_check$COUNTS
+            ## res_counts <- res_counts + checked_counts()$log_prior
             status <- "OK"
           } else {
             checked <- NULL
@@ -1148,6 +1158,7 @@ UploadBoard <- function(id,
       uploaded = uploaded,
       checked_matrix = shiny::reactive(checked_counts()$matrix),
       is_logscale = shiny::reactive(checked_counts()$isConfirmed), 
+      log_prior = shiny::reactive(checked_counts()$log_prior),
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),

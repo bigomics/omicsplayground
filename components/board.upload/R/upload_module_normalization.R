@@ -24,24 +24,22 @@ upload_module_normalization_server <- function(
     height = 720) {
   shiny::moduleServer(
     id,
+
     function(input, output, session) {
       ns <- session$ns
 
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
-        shiny::updateSelectizeInput(
-          session, "ref_gene",
-          choices = gg,
-          selected = character(0), server = TRUE
-        )
+        shiny::updateSelectizeInput(session, "ref_gene", choices = gg,
+          selected = character(0), server = TRUE)
       })
 
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## Impute
+      ## ImputedX
       imputedX <- reactive({
         
         shiny::req(dim(r_counts()))
@@ -53,9 +51,18 @@ upload_module_normalization_server <- function(
         
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
-
-        negs <- sum(counts < 0, na.rm = TRUE)
-        if (negs > 0) counts <- pmax(counts, 0) ## NEED RETHINK (eg: Olink NPX)
+        
+        ##--------------------------
+        dbg("[normalization_server:imputedX] sum(counts<0)=", sum(counts<0))
+        dbg("[normalization_server:imputedX] counts[1,1]=", counts[1, 1])
+        dbg("[normalization_server:imputedX] colnames(counts)=", colnames(counts))
+        dbg("[normalization_server:imputedX] colnames(samples)=", colnames(samples))
+        dbg("[normalization_server:imputedX] colnames(counts)=", colnames(counts))
+        dbg("[normalization_server:imputedX] colnames(samples)=", colnames(samples))
+        ##---------------------------
+        
+        #negs <- any(counts < 0, na.rm = TRUE)
+        #if (negs) counts <- pmax(counts, 0) ## NEED RETHINK (eg: Olink NPX)
         
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
@@ -73,17 +80,23 @@ upload_module_normalization_server <- function(
         } else {
           # if min != 0, no offset. if min == 0, offset =
           ## smallest non-zero value.          
-          prior0 <- 0  
+          prior0 <- 0
           if(min(counts, na.rm = TRUE) == 0 || any(is.na(counts)) ) {
             prior0 <- min(counts[counts > 0], na.rm = TRUE)  
           }
           m <- input$normalization_method
+          dbg("------------------[imputedX] MNT0: m=", m)
           prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW
           X <- log2(counts + prior) ## NEED RETHINK
         }
 
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
-        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X))>0), " rows with NAs.")        
+        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X))>0), " rows with NAs.")
+
+        dbg("--------------------[imputedX] MNT1: ", sum(is.na(counts)))
+        dbg("--------------------[imputedX] MNT2: ", sum(is.na(X)))
+        dbg("--------------------[imputedX] MNT3: ", sum(is.infinite(counts)))
+        dbg("--------------------[imputedX] MNT4: ", sum(is.infinite(X)))
 
         ## Filter probes for maximum missingness as required
         if (sum(is.na(X)) > 0 && input$filtermissing) {
@@ -115,6 +128,11 @@ upload_module_normalization_server <- function(
         if (any(is.na(X)) & input$impute) {
           X <- playbase::imputeMissing(X, method = input$impute_method)
         }
+
+        dbg("--------------------[imputedX] MNT5: ", sum(is.na(counts)))
+        dbg("--------------------[imputedX] MNT6: ", sum(is.na(X)))
+        dbg("--------------------[imputedX] MNT7: ", sum(is.infinite(counts)))
+        dbg("--------------------[imputedX] MNT8: ", sum(is.infinite(X)))
 
         return(list(counts = counts, X = X, prior = prior))
           
@@ -153,6 +171,12 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
+
+        dbg("--------------------MNT1: ", sum(is.na(counts)))
+        dbg("--------------------MNT2: ", sum(is.na(X)))
+        dbg("--------------------MNT3: ", sum(is.infinite(counts)))
+        dbg("--------------------MNT4: ", sum(is.infinite(X)))
+
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
@@ -163,15 +187,14 @@ upload_module_normalization_server <- function(
             counts <- counts[, colnames(X), drop = FALSE]
           }
         }
-        pos <- NULL
-        if (NCOL(X) > 2) {
-          set.seed(1234)
-          pos <- irlba::irlba(X, nv = 2)$v
-          rownames(pos) <- colnames(X)
-        }
-
-        return(list(counts = counts, X = X, pos = pos))
-
+        #pos <- NULL
+        #if (NCOL(X) > 2) {
+        #  set.seed(1234)
+        #  pos <- irlba::irlba(X, nv = 2)$v
+        #  rownames(pos) <- colnames(X)
+        #}
+        #return(list(counts = counts, X = X, pos = pos))
+        return(list(counts = counts, X = X))
       })
 
       correctedX <- shiny::reactive({
@@ -802,9 +825,7 @@ upload_module_normalization_server <- function(
                       choices = batch_params, ## reactive
                       selected = batch_params[1],
                       multiple = TRUE,
-                      options = list(
-                        placeholder = "Select..."
-                      )
+                      options = list(placeholder = "Select...")
                     ),
                     shiny::br()
                   )
