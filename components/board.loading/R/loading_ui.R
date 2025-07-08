@@ -135,7 +135,8 @@ LoadingUI <- function(id) {
           caption = "Table with archived datasets available in the platform.",
           ##height = c("calc(100vh - 330px)", 700),
           height = c("100%", 700),
-          width = c("100%", "100%")
+          width = c("100%", "100%"),
+          delete_button = TRUE
         ),
         loading_tsne_ui(
           ns("tsne_archive"),
