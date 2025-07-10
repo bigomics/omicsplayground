@@ -69,6 +69,8 @@ mofa_plot_lasagna_network_server <- function(id,
         graph,
         layers = NULL,
         ntop = -1,
+        ecex = 1,
+        vcex = 1,
         min_rho = min_rho,
         mst = TRUE) 
 
