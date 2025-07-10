@@ -92,7 +92,7 @@ LasagnaBoard <- function(id, pgx) {
         gsetX  <- pgx$gsetX
       }
 
-      progress$set(message = paste("creating model"), value = 0.33)
+      progress$set(message = paste("creating LASAGNA model"), value = 0.33)
       
       res <- playbase::lasagna.create_from_pgx(
         pgx,
@@ -148,7 +148,7 @@ LasagnaBoard <- function(id, pgx) {
 
       progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
-      progress$set(message = paste("solving"), value = 0.33)
+      progress$set(message = paste("computing connections..."), value = 0.66)
       
       solved <- playbase::lasagna.solve(
         res, pheno,
