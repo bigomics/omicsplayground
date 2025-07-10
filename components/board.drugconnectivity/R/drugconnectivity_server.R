@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-DrugConnectivityBoard <- function(id, pgx, board_observers = NULL) {
+DrugConnectivityBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -25,15 +25,13 @@ DrugConnectivityBoard <- function(id, pgx, board_observers = NULL) {
     ## ============================== OBSERVERS  ======================================
     ## ================================================================================
 
-    my_observers <- list()
-
-    my_observers[[1]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "dsea_method", choices = ct)
     })
 
-    my_observers[[2]] <- shiny::observeEvent(input$dsea_info, {
+    shiny::observeEvent(input$dsea_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
         shiny::HTML(dsea_infotext),
@@ -41,17 +39,12 @@ DrugConnectivityBoard <- function(id, pgx, board_observers = NULL) {
       ))
     })
 
-    my_observers[[3]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X)
       ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
     })
-
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## =========================================================================
     ## Shared Reactive functions

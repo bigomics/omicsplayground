@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-SNF_Inputs <- function(id) {
+SNFInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     ## data set parameters
@@ -24,7 +24,7 @@ SNF_Inputs <- function(id) {
   )
 }
 
-SNF_UI <- function(id) {
+SNFUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- 700 ## full height of page

@@ -11,24 +11,21 @@ MODULE.expression <- list(
       bio = "Find biomarkers"
     )
   },
-  module_server = function(PGX, board_observers = NULL, labeltype = NULL) {
+  module_server = function(PGX, labeltype = NULL) {
     info("[SERVER] calling CorrelationBoard module")
     CorrelationBoard("corr",
-      pgx = PGX, labeltype = labeltype,
-      board_observers = board_observers
+      pgx = PGX, labeltype = labeltype
     )
 
     info("[SERVER] calling BiomarkerBoard module") 
     BiomarkerBoard(
       "bio",
-      pgx = PGX,
-      board_observers = board_observers
+      pgx = PGX
     )
 
     info("[SERVER] calling TimeSeries module")
     TimeSeriesBoard("timeseries",
-      pgx = PGX, labeltype = labeltype,
-      board_observers = board_observers
+      pgx = PGX, labeltype = labeltype
     )
     
   },

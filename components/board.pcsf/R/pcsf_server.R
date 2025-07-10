@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-PcsfBoard <- function(id, pgx, board_observers=NULL) {
+PcsfBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 800
@@ -53,11 +53,6 @@ PcsfBoard <- function(id, pgx, board_observers=NULL) {
       )
     })
 
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
     ## =========================================================================
     ## =========================== FUNCTIONS ===================================
     ## =========================================================================

@@ -9,7 +9,8 @@ loading_table_datasets_public_ui <- function(
     info.text,
     caption,
     height,
-    width) {
+    width,
+    delete_button = FALSE) {
   ns <- shiny::NS(id)
 
   tagList(
@@ -27,7 +28,15 @@ loading_table_datasets_public_ui <- function(
         label = "Import dataset",
         icon = icon("file-import"),
         class = "btn btn-primary"
-      )
+      ),
+      if (delete_button) {
+        shiny::actionButton(
+          ns("deletebutton"),
+          label = "Delete dataset",
+          icon = icon("trash"),
+          class = "btn btn-danger"
+        )
+      }
     )
   )
 }
@@ -119,8 +128,10 @@ loading_table_datasets_public_server <- function(id,
       {
         if (is.null(pgxtable_public$rows_selected())) {
           shinyjs::disable(id = "importbutton")
+          shinyjs::disable(id = "deletebutton")
         } else {
           shinyjs::enable(id = "importbutton")
+          shinyjs::enable(id = "deletebutton")
         }
       },
       ignoreNULL = FALSE
@@ -170,6 +181,14 @@ loading_table_datasets_public_server <- function(id,
       reload_pgxdir(reload_pgxdir() + 1)
     })
 
+    observeEvent(input$deletebutton, {
+      selected_row <- pgxtable_public$rows_selected()
+      pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
+      pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
+      file.rename(pgx_file, paste0(pgx_file, "_"))
+      reload_pgxdir_public(reload_pgxdir_public() + 1)
+    })
+
     pgxTable_DT <- reactive({
       df <- getFilteredPGXINFO_PUBLIC()
       ## shiny::req(df)
@@ -187,7 +206,7 @@ loading_table_datasets_public_server <- function(id,
       DT::datatable(
         df,
         class = "compact hover",
-        rownames = TRUE,
+        rownames = FALSE,
         editable = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",

@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
-                             board_observers = board_observers) {
+CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -23,9 +22,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    my_observers <- list()
-
-    my_observers[[1]] <- shiny::observeEvent(input$data_info, {
+    shiny::observeEvent(input$data_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=mBmZNx4z19MoAucQ&amp;start=156' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe><center>"),
         shiny::HTML(cor_infotext),
@@ -44,11 +41,11 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
         disable = NULL
       )
     )
-    my_observers[[2]] <- shiny::observeEvent(input$tabs1, {
+    shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
     
-    my_observers[[3]] <- shiny::observeEvent(input$cor_info, {
+    shiny::observeEvent(input$cor_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Correlation Analysis Board</strong>"),
         shiny::HTML(cor_infotext),
@@ -57,7 +54,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
     })
 
     ## update filter choices upon change of data set
-    my_observers[[4]] <- shiny::observe({
+    shiny::observe({
       req(pgx$X)
       genes <- rownames(pgx$X[complete.cases(pgx$X), ])
       ## genes <- sort(pgx$genes[rownames(pgx$X), ]$gene_name)
@@ -79,15 +76,9 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature"),
       shiny::updateSelectInput(session, "cor_group", choices = px, selected = s1)
     })
 
-    my_observers[[5]] <- shiny::observeEvent(pgx$X, {
+    shiny::observeEvent(pgx$X, {
       shiny::updateTextAreaInput(session, "cor_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
     })
-
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
 
     ## =========================================================================
     ## ============================= FUNCTIONS =================================

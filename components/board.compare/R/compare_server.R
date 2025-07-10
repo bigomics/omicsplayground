@@ -4,7 +4,7 @@
 ##
 
 CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "mini-example")),
-                         labeltype = shiny::reactive("feature"), board_observers = NULL) {
+                         labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 770 # row height of panel
@@ -20,9 +20,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    my_observers <- list()
-    
-    my_observers[[1]] <- shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Compare Experiments</strong>"),
         shiny::HTML(infotext),
@@ -46,7 +44,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       )
     )
 
-    my_observers[[2]] <- shiny::observeEvent(input$tabs1, {
+    shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
@@ -55,7 +53,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     })
 
     ## upon new pgx upload
-    my_observers[[3]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         list(pgx$X)
       },
@@ -115,7 +113,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## allow trigger on explicit compare button
     contrast1 <- shiny::reactiveVal()
     contrast2 <- shiny::reactiveVal()
-    my_observers[[4]] <- shiny::observeEvent(
+    shiny::observeEvent(
       {
         list(pgx$X, input$compare_button)
       },
@@ -155,11 +153,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       ignoreInit = FALSE,
       ignoreNULL = FALSE
     )
-
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
     
     ## ============================================================================
     ## ========================= REACTIVE FUNCTIONS ===============================

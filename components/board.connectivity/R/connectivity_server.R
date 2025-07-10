@@ -7,8 +7,7 @@ ConnectivityBoard <- function(
     id,
     auth = NoAuthenticationModule(id = "auth", show_modal = FALSE),
     pgx,
-    reload_pgxdir = reactive(auth$user_dir),
-    board_observers = board_observers
+    reload_pgxdir = reactive(auth$user_dir)
     ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -28,9 +27,7 @@ ConnectivityBoard <- function(
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    my_observers <- list()
-    
-    my_observers[[1]] <- shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Connectivity Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -39,7 +36,7 @@ ConnectivityBoard <- function(
     })
 
     ## update choices upon change of data set
-    my_observers[[2]] <- shiny::observeEvent(pgx$model.parameters$contr.matrix, {
+    shiny::observeEvent(pgx$model.parameters$contr.matrix, {
       shiny::req(pgx$model.parameters$contr.matrix)
       ## update contrasts
       comparisons <- playbase::pgx.getContrasts(pgx)
@@ -52,7 +49,7 @@ ConnectivityBoard <- function(
       )
     })
 
-    my_observers[[3]] <- shiny::observe({
+    shiny::observe({
       shiny::req(pgx$X, pgx$connectivity)
       ## update sigdb choices
       my_sigdb <- "datasets-sigdb.h5"
@@ -66,27 +63,14 @@ ConnectivityBoard <- function(
       shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
     })
 
-    my_observers[[4]] <- shiny::observeEvent(pgx$X, {
+    shiny::observeEvent(pgx$X, {
       shiny::updateTextAreaInput(
         session,
         inputId = "genelist",
         placeholder = tspan("Paste your gene list", js = FALSE)
       )
     })
-    
-    my_observers[[5]] <- observe({
-      contr <- getCurrentContrast()
-      shiny::req(contr)
-      ntop <- as.integer(input$genelist_ntop)
-      top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
-      top50 <- paste(top50, collapse = " ")
-      updateTextAreaInput(session, "genelist", value = top50)
-    })
 
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
 
     ## ================================================================================
     ## =============================  FUNCTIONS =======================================
@@ -167,6 +151,15 @@ ConnectivityBoard <- function(
       names(gs) <- rownames(meta2[[ct]])
 
       list(name = ct, fc = fc, gs = gs)
+    })
+
+    observe({
+      contr <- getCurrentContrast()
+      shiny::req(contr)
+      ntop <- as.integer(input$genelist_ntop)
+      top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
+      top50 <- paste(top50, collapse = " ")
+      updateTextAreaInput(session, "genelist", value = top50)
     })
 
     cumEnrichmentTable <- shiny::reactive({
@@ -258,7 +251,7 @@ ConnectivityBoard <- function(
           ## save results back?? but what is the real filename?????
           if (!is.null(pgx$filename)) {
             pgx.filepath <- file.path(pgxdir, basename(pgx$filename))
-            playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)
+            try(playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)) # on board snap test this fails, wrap in try
           }
         }
 

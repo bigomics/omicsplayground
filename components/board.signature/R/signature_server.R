@@ -4,8 +4,7 @@
 ##
 
 SignatureBoard <- function(id, pgx,
-                           selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
-                           board_observers = NULL) {
+                           selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -44,10 +43,7 @@ SignatureBoard <- function(id, pgx,
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-
-    my_observers <- list()
-    
-    my_observers[[1]] <- shiny::observeEvent(input$info, {
+    shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
         shiny::HTML(infotext),
@@ -57,7 +53,7 @@ SignatureBoard <- function(id, pgx,
 
     ## ------------------------ observe/reactive function  -----------------------------
 
-    my_observers[[2]] <- shiny::observeEvent(input$example1, {
+    shiny::observeEvent(input$example1, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = GLYCOLISIS.METABOLITES)
       } else {
@@ -65,7 +61,7 @@ SignatureBoard <- function(id, pgx,
       }
     })
 
-    my_observers[[3]] <- shiny::observeEvent(input$example2, {
+    shiny::observeEvent(input$example2, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = CITRICACIDCYCLE.METABOLITES)
       } else {
@@ -73,7 +69,7 @@ SignatureBoard <- function(id, pgx,
       }
     })
     
-    my_observers[[4]] <- shiny::observeEvent(input$example3, {
+    shiny::observeEvent(input$example3, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
       } else {
@@ -81,7 +77,7 @@ SignatureBoard <- function(id, pgx,
       }
     })
     
-    my_observers[[5]] <- shiny::observeEvent(pgx$X, {
+    shiny::observeEvent(pgx$X, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
         shiny::updateActionButton(session, "example1", label = "[glycolisis] ")
@@ -95,7 +91,7 @@ SignatureBoard <- function(id, pgx,
       }
     })
 
-    my_observers[[6]] <- shiny::observe({
+    shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -138,11 +134,6 @@ SignatureBoard <- function(id, pgx,
       }
     })
 
-    ## add to list global of observers. suspend by default.
-    my_observers <- my_observers[!sapply(my_observers,is.null)]
-    # lapply( my_observers, function(b) b$suspend() )
-    if(!is.null(board_observers)) board_observers[[id]] <- my_observers
-    
     ## ================================================================================
     ## ======================= REACTIVE FUNCTIONS =====================================
     ## ================================================================================
