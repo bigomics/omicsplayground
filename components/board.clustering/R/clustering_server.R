@@ -198,6 +198,149 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
+      ## all genes and genesets
+      genes <- unique(pgx$genes[,"symbol"])      
+      genesets <- rownames(pgx$gsetX)
+
+      ft <- input$hm_features
+      shiny::req(ft)
+
+      if (input$hm_level == "geneset") {
+        ## Gene set level features #########
+        gsets <- rownames(pgx$gsetX)
+        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
+        gsets <- unique(gset_collections[[ft]])
+        zx <- pgx$gsetX
+        if (input$hm_customfeatures != "") {
+          gsets1 <- genesets[grep(input$hm_customfeatures, genesets, ignore.case = TRUE)]
+          if (length(gsets1) > 2) gsets <- gsets1
+        }
+        zx <- zx[intersect(gsets, rownames(zx)), ]
+      }
+
+      idx <- NULL
+      if (input$hm_level == "gene") {
+        ## Gene level features ###########
+        pp <- NULL
+        if (ft == "<all>") {
+          ## all features
+          pp <- rownames(pgx$X)
+        } else if (ft %in% names(pgx$families)) {
+          pp <- playbase::map_probes( pgx$genes, pgx$families[[ft]])
+        } else if (ft == "<custom>" && ft != "") {
+          message("[getFilteredMatrix] selecting for <custom> features")
+          customfeatures <- input$hm_customfeatures
+          gg1 <- strsplit(customfeatures, split = "[, ;\n\t]")[[1]]
+          is.regx <- grepl("[*.?\\[]", gg1[1])
+          if (length(gg1) == 1 && is.regx) {
+            gg1 <- grep(gg1, genes, ignore.case = TRUE, value = TRUE)
+          }
+          # heatmap does not like single gene
+          shiny::validate(shiny::need(
+            length(gg1) > 1 && !is.regx,
+            tspan("Please input more than 1 gene.", js = FALSE)
+          ))
+          
+          ## build index idx that determines groups/cluster of genes. 
+          idx <- NULL
+          if (any(grepl("^---", gg1))) {
+            message("[getFilteredMatrix] <custom> groups detected")
+            idx <- list()
+            kk <- c(1, grep("^---", gg1), length(gg1) + 1)
+            i=1
+            for (i in 1:(length(kk) - 1)) {
+              ii <- kk[i]:(kk[i + 1] - 1)
+              idx[[i]] <- playbase::map_probes( pgx$genes, gg1[ii] )
+            }
+            pp <- unlist(idx)
+            names(idx) <- paste0("F",1:length(idx))
+            idx <- unlist(mapply(rep, names(idx), sapply(idx,length)))
+            names(idx) <- pp
+          } else {
+            ## no grouping 
+            pp <- playbase::map_probes( pgx$genes, gg1)
+          }
+        } else {
+          warning("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
+          pp <- NULL
+          return(NULL)
+        }
+
+        if (length(pp) == 0) {
+          warning("[getFilteredMatrix] warning: no genes overlap with filter")
+          return(NULL)
+        }
+
+        if (input$hm_splitby == "gene") {
+          p1 <- playbase::map_probes(pgx$genes, input$hm_splitvar)            
+          if(length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
+        }
+
+        if (is.null(pgx$impX)) {
+          zx <- pgx$X[pp, , drop = FALSE]
+        } else {
+          zx <- pgx$impX[pp, , drop = FALSE]
+        }
+        if (!is.null(idx)) {
+          idx <- idx[pp]
+          names(idx) <- pp
+        }
+      }
+
+      if (nrow(zx) == 0) {
+        return(NULL)
+      }
+
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
+      zx <- zx[, kk, drop = FALSE]
+
+      if (input$hm_level == "gene" &&
+        "chr" %in% names(pgx$genes) &&
+        input$hm_filterXY) {
+        ## Filter out X/Y chromosomes before clustering
+        chr.col <- grep("^chr$|^chrom$", colnames(pgx$genes))
+        chr <- pgx$genes[rownames(zx), chr.col]
+        not.xy <- !(chr %in% c("X", "Y", 23, 24)) & !grepl("^X|^Y|chrX|chrY", chr)
+        table(not.xy)
+        zx <- zx[which(not.xy), ]
+        if (!is.null(idx)) idx <- idx[rownames(zx)]
+      }
+
+      if (input$hm_level == "gene" && input$hm_filterMitoRibo) {
+        ## Filter out X/Y chromosomes before clustering
+        is.ribomito <- grepl("^RP[LS]|^MT-", rownames(zx), ignore.case = TRUE)
+        table(is.ribomito)
+        zx <- zx[which(!is.ribomito), , drop = FALSE]
+        if (!is.null(idx)) idx <- idx[rownames(zx)]
+      }
+      shiny::validate(shiny::need(
+        ncol(zx) > 0, "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
+
+      flt <- list(
+        zx = zx,
+        idx = idx
+      )
+
+      return(flt) ## end of getFilteredMatrix
+    }) %>% bindEvent(
+      input$hm_samplefilter,
+      input$hm_features,
+      input$hm_level,
+      input$hm_customfeatures,
+      input$hm_samplefilter,
+      input$hm_filterXY,
+      input$hm_filterMitoRibo,
+      input$hm_contrast,
+      pgx$X,
+      ## input$hm_group,
+      input$hm_ntop
+    )
+
+
+    getFilteredMatrix.SAVE <- shiny::reactive({
+      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
+
       ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
       if (!pgx$organism %in% c("Human", "human")) {
         genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
@@ -345,7 +488,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## input$hm_group,
       input$hm_ntop
     )
-
+    
     ##' .. content for \description{} (no empty lines) ..
     ##'
     ##' .. content for \details{} ..

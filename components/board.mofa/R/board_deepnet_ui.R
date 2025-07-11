@@ -40,8 +40,12 @@ DeepNetInputs <- function(id) {
           # shiny::checkboxInput(ns("useBN"), "use BatchNorm", TRUE),        
           #shiny::checkboxInput(ns("dropout"), "use dropout", FALSE),
           shiny::checkboxInput(ns("addnoise"), "add noise", TRUE),
-          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE)
-          #shiny::checkboxInput(ns("multitarget"), "multi target", FALSE)        
+          shiny::checkboxInput(ns("useGLU"), "use GLU", FALSE),
+          shiny::checkboxInput(ns("multitarget"), "multi-target", FALSE),
+          shiny::conditionalPanel(
+            "input.multitarget == true", ns = ns,
+            shiny::selectInput(ns("select_pheno2"), NULL, choices = NULL, multiple = TRUE)
+          ),
           #shiny::selectInput(ns("optim"), "Optimizer",
           #  choices = c("adam","adamw","sgd","lbfgs"), selected="adam"),
           #shiny::selectInput(ns("actfun"), "Activation function",

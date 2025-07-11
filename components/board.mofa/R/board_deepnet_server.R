@@ -60,6 +60,10 @@ DeepNetBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "select_pheno", choices = phenotypes,
                                ## options = list(maxItems=2),
                                selected = phenotypes[1] )
+
+      shiny::updateSelectInput(session, "select_pheno2", choices = phenotypes,
+                               selected = NULL )
+
       update( update() + 1)
     })
     
@@ -178,15 +182,21 @@ DeepNetBoard <- function(id, pgx) {
       shiny::req(input$select_datatypes)      
 
       pheno <- input$select_pheno
+      if(input$multitarget) {
+        pheno2 <- input$select_pheno2      
+        pheno <- setdiff(unique(c(pheno, pheno2)),c("-","<none>"))
+      }
+      
       X <- pgx$X
       if(any(is.na(X))) {
         info("[DeepNetBoard] imputing missing values in X")
         X <- playbase::svdImpute2(X)
       }
-      y <- pgx$samples[, pheno, drop=FALSE]
-      ii <- which(rowSums(is.na(y)) == 0)
-      y <- y[ii,,drop=FALSE]
-      X <- X[,ii]
+      pheno <- intersect(pheno, colnames(pgx$samples))
+      Y <- pgx$samples[, pheno, drop=FALSE]
+      ii <- which(rowSums(is.na(Y)) == 0)  ## no missingness for now!!
+      Y <- Y[ii,,drop=FALSE]
+      X <- X[,ii,drop=FALSE]
       sdX <- matrixStats::rowSds(X, na.rm=TRUE)
       xx <- playbase::mofa.split_data(X) ## also handles single-omics
       
@@ -206,7 +216,7 @@ DeepNetBoard <- function(id, pgx) {
       if(input$augment) {
         ntime = 10
         xx <- playbase::mofa.augment(xx, ntime, z=1)
-        y  <- do.call( rbind, rep(list(y),ntime))
+        Y <- do.call( rbind, rep(list(Y),ntime))
       }
       
       l1 = 1
@@ -217,7 +227,7 @@ DeepNetBoard <- function(id, pgx) {
       loss_weights <- c(y=1/ae.wt, ae=ae.wt, l1=l1, l2=l2)
       
       ## create the Neural network
-      yy <- as.list(y)  ## one target for now...
+      yy <- as.list(Y)  ## one target for now...
       yy <- lapply(yy, as.factor)
       names(yy) <- pheno
       
