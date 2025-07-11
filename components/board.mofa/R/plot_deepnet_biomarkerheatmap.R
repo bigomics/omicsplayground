@@ -69,7 +69,6 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       if(add_annot[1]) {
         sel <- input$showpheno
         sel <- intersect(sel, colnames(pgx$samples))
-        dbg("[plot_deepnet_biomarkerheatmap_server] sel=", sel)
         annot <- pgx$samples[colnames(net$X[[1]]),sel,drop=FALSE]
       }
 
@@ -81,8 +80,6 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       names(gset.labels) <- paste0("GSET:",rownames(pgx$gsetX))
       labels <- c(gene.labels, gset.labels)
 
-      if(!is.null(annot)) dbg("[plot_deepnet_biomarkerheatmap_server] colnames.annot=", colnames(annot))
-      
       playbase::deep.plotBiomarkerHeatmap(
         net, ntop = ntop[1],
         datatypes = datatypes(),
@@ -106,7 +103,6 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       if(add_annot[2]) {
         sel <- input$showpheno
         sel <- intersect(sel, colnames(pgx$samples))
-        dbg("[plot_deepnet_biomarkerheatmap_server] sel=", sel)
         annot <- pgx$samples[colnames(net$X[[1]]),sel,drop=FALSE]
       }
       playbase::deep.plotBiomarkerHeatmap(
