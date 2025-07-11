@@ -680,15 +680,18 @@ app_server <- function(input, output, session) {
 
   shiny::observeEvent(
     {
-      auth$logged
-      env$user_settings$enable_beta()
-      PGX$name
-      trigger_on_change_dataset()
+      list(
+        auth$logged,
+        env$user_settings$enable_beta(),
+        ##PGX$name,
+        trigger_on_change_dataset()
+      )
     },
     {
-      ## trigger on change dataset
-      dbg("[SERVER] trigger on new PGX")
-
+      ## trigger on change dataset      
+      shiny::req(PGX$X)      
+      info("[SERVER] trigger on change dataset")
+      
       ## Set navbar color based on datatype
       if (PGX$datatype == "multi-omics") {
         js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #00923b'")
@@ -697,11 +700,11 @@ app_server <- function(input, output, session) {
         js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #004ca7'")
         shinyjs::runjs(js_code)
       }
-
+      
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
       DATATYPEPGX <<- tolower(PGX$datatype)
-
+      
       ## change language
       if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
         lang <- "proteomics"
@@ -710,13 +713,12 @@ app_server <- function(input, output, session) {
       } else {
         lang <- "RNA-seq"
       }
-      dbg("[SERVER] changing 'language' to", lang)
       shiny.i18n::update_lang(lang, session)
-
+      
       tab_control()
 
       is.logged <- auth$logged
-
+      
       ## hide all main tabs until we have an object
       if (is.null(PGX) || is.null(PGX$name) || !is.logged) {
         warning("[SERVER] !!! no data. hiding menu.")
@@ -729,15 +731,15 @@ app_server <- function(input, output, session) {
       ## show all main tabs
       shinyjs::runjs("sidebarOpen()")
       shinyjs::runjs("settingsOpen()")
-
+      
       # If is CRO dataset, no watermark\
       cro_emails <- get_cro_emails()
-      if (PGX$creator %in% cro_emails) {
+      if (!is.null(PGX$creator) && PGX$creator %in% cro_emails) {
         WATERMARK <<- FALSE
       } else {
         WATERMARK <<- auth$options$WATERMARK
       }
-
+      
       info("[SERVER] trigger on change dataset done!")
     }
   )

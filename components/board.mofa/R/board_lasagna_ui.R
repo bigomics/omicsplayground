@@ -6,10 +6,13 @@
 LasagnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    ## data set parameters
     shiny::selectInput(ns("contrast"), "Select comparison", choices = NULL),
-    shiny::br(),
-    shiny::selectInput(ns("datatypes"), "Show layers:", choices = NULL, multiple = TRUE),
+    shiny::selectInput(ns("layers"), "Show layers:", choices = NULL, multiple = TRUE),
+    shiny::conditionalPanel(
+      "input.layers && input.layers.indexOf('gset') > -1",
+      ns = ns,
+      shiny::selectInput(ns("gsfilter"),"Geneset filter:",choices=NULL)          
+    ),
     shiny::br(),
     shiny::actionButton(ns("updateplots"), "Update plots", size = "xs", icon=icon("refresh")),
     shiny::br(),
@@ -21,16 +24,15 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
+          ##shiny::checkboxInput(ns("top50"),"top 50",TRUE),
+          shiny::checkboxInput(ns("pos_edges"),"positive edges",FALSE),          
+          shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
           shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
           shiny::hr(),
-          shiny::radioButtons(
-            ns("edgesign"), "Edge sign:", c("both","positive","negative"),
-            selected="both", inline=TRUE),
+          shiny::radioButtons(ns("node_value"),"Node value:",
+            choices=c("logFC","rho"), selected="logFC", inline=TRUE),
           shiny::hr(),
-          shiny::radioButtons(ns("node_value"),"Node value:",c("logFC","rho"),
-            inline=TRUE),
-          shiny::hr(),
-          shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE)          
+          shiny::radioButtons(ns("ntop"), "Number of nodes:", c(50,1000), inline=TRUE)
         )
       )
     )
@@ -49,6 +51,7 @@ my_navset_card_tab <- function(...) {
 
 MPARTITE_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
+NETWORK_INFO = "Multi-type network"
 
 LasagnaUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
@@ -85,7 +88,7 @@ LasagnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            mofa_plot_clustering_ui(
+            mofa_plot_lasagna_clustering_ui(
               ns("clusters"),
               title = "Feature UMAP per datatype",
               info.text = "Feature-level UMAP clustering per data type. Visually explore signatures of distinct datatypes across the same set of samples. Feature-level clustering enables assessment of how the distinct data types/modalities define distinct (functional) groups. This analysis may reveal that distinct data types capture different heterogeneities in the data, potentially associated with unique biological functions. On the other end, similar clustering patterns between distinct data types may indicate shared regulation.",
@@ -116,6 +119,29 @@ LasagnaUI <- function(id) {
               title = "Multi-partite graph",
               ## caption = NULL,
               info.text = MPARTITE_INFO,
+              info.references = NULL,
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )
+          )
+        )
+      ),
+      ## end tabPanel      
+      ## ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "Multi-type network",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          row_heights = c("auto",1),
+          bs_alert(HTML(NETWORK_INFO)),
+          bslib::layout_columns(
+            col_widths = c(12),            
+            height = "calc(100vh - 180px)",
+            mofa_plot_lasagna_network_ui(
+              ns("lasagnaNetwork"),
+              title = "Multi-type network",
+              info.text = NETWORK_INFO,
               info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

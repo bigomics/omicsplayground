@@ -155,8 +155,10 @@ pcsf_genepanel_settings_ui <- function(id) {
           choices = c(1,4,9,16,25,99), selected=16),
         "Maximum number of components"
       ),
-      shiny::selectInput(ns("resolution"), "Resolution",
-        choices = c(0.01,0.05,0.1,0.2,0.5,1), selected=0.1)
+      withTooltip(
+        shiny::sliderInput(ns("resolution"), "Resolution:", 0, 1, 0.4, 0.1),
+        "Choose cluster resolution. Higher value yield bigger clusters."
+      )
     )
   )
 }
@@ -257,9 +259,6 @@ pcsf_genepanel_server <- function(id,
       pcsf <- solve_pcsf()
 
       input_cut <- input$cut
-      input_nclust <- input$nclust
-      input_resolution <- input$resolution
-
       if(input_cut) {
         ncomp <- as.integer(input$nclust)
         res <- playbase::pcsf.cut_and_relayout(
@@ -267,7 +266,7 @@ pcsf_genepanel_server <- function(id,
           ncomp = ncomp,
           layout = input$layout.method,
           cluster.method = c("louvain","leiden")[2],
-          leiden.resolution = as.numeric(input$resolution)
+          leiden.resolution = 1 - as.numeric(input$resolution)
         )
       } else {
         res <- playbase::pcsf.cut_and_relayout(
