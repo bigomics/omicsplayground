@@ -6,9 +6,13 @@
 LasagnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    ## data set parameters
     shiny::selectInput(ns("contrast"), "Select comparison", choices = NULL),
     shiny::selectInput(ns("layers"), "Show layers:", choices = NULL, multiple = TRUE),
+    shiny::conditionalPanel(
+      "input.layers && input.layers.indexOf('gset') > -1",
+      ns = ns,
+      shiny::selectInput(ns("gsfilter"),"Geneset filter:",choices=NULL)          
+    ),
     shiny::br(),
     shiny::actionButton(ns("updateplots"), "Update plots", size = "xs", icon=icon("refresh")),
     shiny::br(),
@@ -20,18 +24,15 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
-          ## shiny::hr(),
-          ## shiny::radioButtons(
-          ##   ns("edgesign"), "Edge sign:", c("both","positive","negative"),
-          ##   selected="both", inline=TRUE),
-          shiny::hr(),
-          shiny::radioButtons(ns("node_value"),"Node value:",c("logFC","rho"),
-            inline=TRUE),
-          shiny::hr(),
-          shiny::radioButtons(ns("ntop"), "Number of nodes:", c(50,1000), inline=TRUE),
+          ##shiny::checkboxInput(ns("top50"),"top 50",TRUE),
+          shiny::checkboxInput(ns("pos_edges"),"positive edges",FALSE),          
           shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
-          shiny::selectInput(ns("gsfilter"),"Geneset filter:",choices=NULL)          
+          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
+          shiny::hr(),
+          shiny::radioButtons(ns("node_value"),"Node value:",
+            choices=c("logFC","rho"), selected="logFC", inline=TRUE),
+          shiny::hr(),
+          shiny::radioButtons(ns("ntop"), "Number of nodes:", c(50,1000), inline=TRUE)
         )
       )
     )

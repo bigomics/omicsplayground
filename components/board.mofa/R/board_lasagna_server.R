@@ -40,7 +40,7 @@ LasagnaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Multi-layer model" = list(disable = c("mpartite_options")),
+      "Multi-layer model" = list(disable = c("mpartite_options","gsfilter")),
       "Multi-partite graph" = list(disable = c()),
       "Multi-type network" = list(disable = c())
     )
@@ -173,16 +173,18 @@ LasagnaBoard <- function(id, pgx) {
       if(!input$gsfilter %in% c("","*")) {
         gsfilter <- list(gset = input$gsfilter)
       }
+
+      edge.sign <- ifelse(input$pos_edges, "pos", "both")
       
       ## prune graph for plotting
       pruned <- playbase::lasagna.prune_graph(
         res$graph,
         ntop = ntop,
         layers = NULL,
+        filter = gsfilter,
         normalize.edges = TRUE,
         min.rho = input$minrho,
-        # edge.sign = "both",
-        filter = gsfilter,
+        edge.sign = edge.sign,
         edge.type="both",
         prune = FALSE
       )
