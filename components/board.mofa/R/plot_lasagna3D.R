@@ -49,7 +49,6 @@ mofa_plot_lasagna3D_server <- function(id,
       
       posf <- playbase::mofa.prefix(res$posf)
       posf <- lapply(posf, function(x) x[(rownames(x) %in% names(vars)),,drop=FALSE])      
-
       edges <- NULL
       if(input$drawlines) {
         edges <- data.frame(
