@@ -18,6 +18,18 @@ LasagnaInputs <- function(id) {
     shiny::br(),
     shiny::br(),
     bslib::accordion(
+      id = ns("clust_options"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Cluster options",
+        icon = icon("cog", lib = "glyphicon"),
+        shiny::tagList(
+          shiny::radioButtons(ns("clustmethod"),"Cluster method:",
+            choices=c("pca","tsne","umap"), selected="pca", inline=TRUE)
+        )
+      )
+    ),
+    bslib::accordion(
       id = ns("mpartite_options"),
       open = FALSE,
       bslib::accordion_panel(
