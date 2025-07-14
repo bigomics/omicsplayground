@@ -40,9 +40,9 @@ LasagnaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Multi-layer model" = list(disable = c("mpartite_options","gsfilter")),
-      "Multi-partite graph" = list(disable = c()),
-      "Multi-type network" = list(disable = c())
+        "Multi-layer model" = list(disable = c("mpartite_options","gsfilter")),
+        "Multi-partite graph" = list(disable = c("clust_options")),
+        "Multi-type network" = list(disable = c("clust_options"))
     )
 
     shiny::observeEvent( input$tabs, {
@@ -117,11 +117,25 @@ LasagnaBoard <- function(id, pgx) {
       k=layers[1]
       for(k in layers) {
         ii <- which(igraph::V(res$graph)$layer == k)
-        sv <- svd(res$X[ii,,drop=FALSE], nv=2, nu=2)
+        cx <- res$X[ii,,drop=FALSE]
+        cx <- cx - rowMeans(cx, na.rm=TRUE)
+        sv <- svd(cx, nv=2, nu=2)
         posx[[k]] <-sv$v[,1:2]
-        posf[[k]] <-sv$u[,1:2]
+        posf[[k]] <- sv$u[,1:2]
+        colnames(posf[[k]]) <- c("PC1","PC2")
+        if(input$clustmethod == "umap" && nrow(cx)>10) {
+            nb <- max(min(15, nrow(cx)/3),2)
+            posf[[k]] <- uwot::umap(cx, n_neighbors=nb)
+            colnames(posf[[k]]) <- c("UMAP-x","UMAP-y")
+        }
+        if(input$clustmethod == "tsne" && nrow(cx)>10) {
+            nb <- max(min(15, nrow(cx)/5),2)
+            posf[[k]] <- Rtsne::Rtsne(cx, check_duplicates=FALSE,
+                                      perplexity=nb)$Y            
+            colnames(posf[[k]]) <- c("tSNE-x","tSNE-y")
+        }
         rownames(posx[[k]]) <- colnames(res$X)
-        rownames(posf[[k]]) <- rownames(res$X)[ii]
+        rownames(posf[[k]]) <- rownames(cx)
       }
       res$posf <- posf
       res$posx <- posx

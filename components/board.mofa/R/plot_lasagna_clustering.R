@@ -57,8 +57,10 @@ mofa_plot_lasagna_clustering_server <- function(id,
         pos1 <- posf[[i]]
         rho1 <- rho[rownames(pos1)]
         col1 <- playbase::colorscale(rho1, gamma=1)
+        xlab <- colnames(pos1)[1]
+        ylab <- colnames(pos1)[2]
         plot(pos1, col = col1, pch = 20, cex = 1.4,
-          xlab = "UMAP1", ylab = "UMAP2", las = 1)
+          xlab = xlab, ylab = ylab, las = 1)
         title(toupper(names(posf)[i]), cex.main = 1.2)          
       }
     }
