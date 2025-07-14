@@ -17,14 +17,12 @@ plot_deepnet_biomarkerheatmap_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    ##selectInput(ns("ntop"), "Number of features:", c(20,30,50,100,200)),
-    shiny::selectInput(ns("showpheno"), "Show phenotypes:", choices=NULL, multiple=TRUE)
+    selectInput(ns("ntop"), "Number of features:", c(20,30,50,100,200))
   )
   
   PlotModuleUI(
     ns("plot"),
     title = title,
-    options = options,
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -48,29 +46,12 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  datatypes = reactive(NULL),
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    shiny::observeEvent({
-      list( pgx$samples, net() )
-    },{
-      shiny::req(pgx$samples)
-      shiny::req(net())      
-      pheno <- sort(colnames(pgx$samples))
-      pheno <- unique(c(names(net()$Y),pheno))
-      selected <- head(pheno,4)
-      shiny::updateSelectInput(session, "showpheno", choices = pheno,
-        selected = selected)
-    })
-    
     
     plot.RENDER <- function(n=12) {
       update()  ## react on updates
       net <- net()
       annot <- NULL
-      if(add_annot[1]) {
-        sel <- input$showpheno
-        sel <- intersect(sel, colnames(pgx$samples))
-        annot <- pgx$samples[colnames(net$X[[1]]),sel,drop=FALSE]
-      }
+      if(add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]),]      
 
       # set labels
       gene.labels <- playbase::mofa.strip_prefix(pgx$genes$gene_name)
@@ -79,7 +60,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       gset.labels <- paste0("GSET:",rownames(pgx$gsetX))
       names(gset.labels) <- paste0("GSET:",rownames(pgx$gsetX))
       labels <- c(gene.labels, gset.labels)
-
+      
       playbase::deep.plotBiomarkerHeatmap(
         net, ntop = ntop[1],
         datatypes = datatypes(),
@@ -100,11 +81,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       nsamples <- ncol(net$X[[1]])
       annot <- NULL
-      if(add_annot[2]) {
-        sel <- input$showpheno
-        sel <- intersect(sel, colnames(pgx$samples))
-        annot <- pgx$samples[colnames(net$X[[1]]),sel,drop=FALSE]
-      }
+      if(add_annot[2]) annot <- pgx$samples[colnames(net$X[[1]]),]
       playbase::deep.plotBiomarkerHeatmap(
         net,
         ntop = ntop[2],
