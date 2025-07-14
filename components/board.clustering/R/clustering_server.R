@@ -198,15 +198,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
-      ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
-      if (!pgx$organism %in% c("Human", "human")) {
-        genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
-        genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog),
-          rownames(genes), genes$human_ortholog
-        )
-      } else {
-        genes <- as.character(rownames(pgx$genes[rownames(pgx$X), ]))
-      }
+      ## all genes and genesets
+      genes <- unique(pgx$genes[,"symbol"])      
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
@@ -228,19 +221,16 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
-        gg <- pgx$families[[1]]
-
+        pp <- NULL
         if (ft == "<all>") {
-          gg <- rownames(pgx$X)
+          ## all features
+          pp <- rownames(pgx$X)
         } else if (ft %in% names(pgx$families)) {
-          gg <- pgx$families[[ft]]
+          pp <- playbase::map_probes( pgx$genes, pgx$families[[ft]])
         } else if (ft == "<custom>" && ft != "") {
           message("[getFilteredMatrix] selecting for <custom> features")
-          customfeatures <- "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3"
-          customfeatures <- "CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR --- CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 --- TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
           customfeatures <- input$hm_customfeatures
           gg1 <- strsplit(customfeatures, split = "[, ;\n\t]")[[1]]
-
           is.regx <- grepl("[*.?\\[]", gg1[1])
           if (length(gg1) == 1 && is.regx) {
             gg1 <- grep(gg1, genes, ignore.case = TRUE, value = TRUE)
@@ -250,49 +240,50 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
             length(gg1) > 1 && !is.regx,
             tspan("Please input more than 1 gene.", js = FALSE)
           ))
-
-          gg1 <- gg1[toupper(gg1) %in% toupper(genes) | grepl("---", gg1)]
+          
+          ## build index idx that determines groups/cluster of genes. 
           idx <- NULL
           if (any(grepl("^---", gg1))) {
             message("[getFilteredMatrix] <custom> groups detected")
-            idx <- rep("F1", length(gg1))
-            names(idx) <- gg1
+            idx <- list()
             kk <- c(1, grep("^---", gg1), length(gg1) + 1)
+            i=1
             for (i in 1:(length(kk) - 1)) {
               ii <- kk[i]:(kk[i + 1] - 1)
-              idx[ii] <- paste0("F", i)
+              idx[[i]] <- playbase::map_probes( pgx$genes, gg1[ii] )
             }
-            gg1 <- gg1[grep("---", gg1, invert = TRUE)]
-            idx <- idx[gg1]
+            pp <- unlist(idx)
+            names(idx) <- paste0("F",1:length(idx))
+            idx <- unlist(mapply(rep, names(idx), sapply(idx,length)))
+            names(idx) <- pp
+          } else {
+            ## no grouping 
+            pp <- playbase::map_probes( pgx$genes, gg1)
           }
-          gg <- gg1
         } else {
           warning("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
-          gg <- NULL
+          pp <- NULL
           return(NULL)
         }
 
-        gg <- gg[which(toupper(gg) %in% toupper(genes))]
-        if (length(gg) == 0) {
+        if (length(pp) == 0) {
           warning("[getFilteredMatrix] warning: no genes overlap with filter")
           return(NULL)
         }
 
         if (input$hm_splitby == "gene") {
-          if (!(input$hm_splitvar %in% gg)) {
-            gg <- c(input$hm_splitvar, gg)
-          }
+          p1 <- playbase::map_probes(pgx$genes, input$hm_splitvar)            
+          if(length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
         }
-        jj <- match(toupper(gg), toupper(genes))
-        pp <- rownames(pgx$X)[jj]
+
         if (is.null(pgx$impX)) {
           zx <- pgx$X[pp, , drop = FALSE]
         } else {
           zx <- pgx$impX[pp, , drop = FALSE]
         }
         if (!is.null(idx)) {
-          idx <- idx[gg]
-          names(idx) <- rownames(zx)
+          idx <- idx[pp]
+          names(idx) <- pp
         }
       }
 
@@ -345,7 +336,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## input$hm_group,
       input$hm_ntop
     )
-
+    
     ##' .. content for \description{} (no empty lines) ..
     ##'
     ##' .. content for \details{} ..
