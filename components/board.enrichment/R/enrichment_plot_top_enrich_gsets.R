@@ -29,6 +29,17 @@ enrichment_plot_top_enrich_gsets_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        ns("label_features"),
+        "Display labels on the plot",
+        TRUE
+      ),
+      "Display labels on the plot."
+    )
+  )
+
   PlotModuleUI(
     id = ns("plotmodule"),
     plotlib = "plotly",
@@ -41,6 +52,7 @@ enrichment_plot_top_enrich_gsets_ui <- function(
     info.extra_link = info.extra_link,
     height = height,
     width = width,
+    options = options,
     download.fmt = c("png", "pdf", "svg")
   )
 }
@@ -169,7 +181,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             xlab = "Rank in ordered dataset",
             ylab = "Rank metric",
             ticklen = 0.25,
-            yth = 1, ## threshold for which points get label
+            yth = ifelse(input$label_features, 1, 999), ## threshold for which points get label
             cbar.width = 32,
             tooltips = NULL,
             cex.text = cex.text,
