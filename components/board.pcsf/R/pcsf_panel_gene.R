@@ -330,7 +330,8 @@ pcsf_genepanel_server <- function(id,
         border_width = 0.2,
         edge_length = 60,
         cut.clusters = FALSE,
-        nlargest = -1
+        nlargest = -1,
+        hilight_single = table$rownames_selected()
       )
       return(plt)
     }
@@ -453,11 +454,11 @@ pcsf_genepanel_server <- function(id,
       return(dt)
     }
 
-    TableModuleServer(
+    table <- TableModuleServer(
       "table",
       func = table.RENDER,
       func2 = table.RENDER_modal,
-      selector = "none"
+      selector = "single"
     )
 
     
