@@ -39,7 +39,7 @@ PcsfInputs <- function(id) {
 
 pcsf_module_info <- "The PCSF network analysis uses the Prize-collection Steiner Forest algorithm to determine high-correlated subnetworks of the most differentially expressed genes. Interactions from STRING and pathway databases are used as template. The PCSF solution may be used to identify 'driver' genes that appear as hubs in the computed network."
 
-pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differential genes using the STRING database as backbone. 'Driver' genes appear as hubs in the network computed using a page-rank centrality measure."
+pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differential genes using the STRING database as backbone. 'Driver' genes appear as hubs in the network computed using a page-rank centrality measure. Click a gene on the centrality score table to highlight it in the network."
 
 PcsfUI <- function(id) {
   ns <- NS(id)
@@ -71,7 +71,7 @@ PcsfUI <- function(id) {
               pcsf_genepanel_table_ui(
                 ns("genepanel"),
                 title = "Centrality score",
-                info.text = "Table reporting the log2FC and centrality score for each gene.",
+                info.text = "Table reporting the log2FC and centrality score for each gene. Click on a gene to highlight it in the network.",
                 caption = "Table reporting the log2FC and centrality score for each gene.",
                 width = c("100%", "100%"),
                 height = c("100%", TABLE_HEIGHT_MODAL)
@@ -112,7 +112,7 @@ PcsfUI <- function(id) {
               pcsf_gsetpanel_table_ui(
                 ns("gsetpanel"),
                 title = "Centrality score",
-                info.text = "Table reporting log2FC and PCSF centrality score for each geneset.",
+                info.text = "Table reporting log2FC and PCSF centrality score for each geneset. Click on a geneset to highlight it in the network.",
                 caption = "Table reporting the log2FC and PCSF centrality score for each geneset.",
                 width = c("100%", "100%"),
                 height = c("100%", TABLE_HEIGHT_MODAL)
