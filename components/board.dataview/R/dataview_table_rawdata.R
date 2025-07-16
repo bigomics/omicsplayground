@@ -64,7 +64,11 @@ dataview_table_rawdata_server <- function(id,
 
       logx <- parse_sample(pgx$X)
       if (data_scale == "counts") {
-        x <- parse_sample(pgx$counts)
+        # So old datasets work (they can be missaligned)
+        jj <- which(rownames(pgx$X) %in% rownames(pgx$counts))
+        dt <- pgx$counts[rownames(pgx$X)[jj], ]
+        ##
+        x <- parse_sample(dt)
       } else {
         x <- logx
       }
