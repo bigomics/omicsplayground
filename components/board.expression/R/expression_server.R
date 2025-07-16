@@ -613,6 +613,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
 
     genetable <- expression_table_genetable_server(
       id = "genetable",
+      pgx = pgx,
+      comp = shiny::reactive(input$gx_contrast),
       res = filteredDiffExprTable,
       organism = pgx$organism,
       show_pv = shiny::reactive(input$show_pv),
