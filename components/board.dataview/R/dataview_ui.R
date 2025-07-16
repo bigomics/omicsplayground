@@ -260,7 +260,7 @@ DataViewUI <- function(id) {
         dataview_table_rawdata_ui(
           ns("rawdatatable"),
           title = "Gene expression table",
-          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells). The column 'pct.missingness' reports the percentage of samples in which a feature is missing (NA).",
+          info.text = "The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar. If the data type selected is counts, the geometric mean is calculated. The SD column reports the standard deviation of expression across samples (or cells). The column 'pct.missingness' reports the percentage of samples in which a feature is missing (NA). If missing values are detected in uploaded counts or abundance data and imputation is performed, imputed values are displayed in light red in the table.",
           caption = "The table shows the gene expression values per sample, or average expression values across the groups.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")
