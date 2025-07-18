@@ -104,7 +104,6 @@ expression_table_genetable_server <- function(id,
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) df$feature <- NULL
       
       if (!showdetails) {
-        #hide.cols <- grep("^AveExpr|p$|q$|ortho|title", colnames(df))
         hide.cols <- grep("p$|q$|ortho", colnames(df))
         hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
         if (length(hide.cols)) df <- df[, -hide.cols]
