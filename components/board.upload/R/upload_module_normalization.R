@@ -707,7 +707,7 @@ upload_module_normalization_server <- function(
                 shiny::checkboxInput(ns("impute"), label = "Impute NA", value = FALSE),
                 shiny::conditionalPanel("input.impute == true", ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
-                    choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb"),
+                    choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
                     selected = "SVD2")
                 ),
                 br()
