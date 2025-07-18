@@ -21,8 +21,12 @@ expression_table_genetable_ui <- function(
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("gx_top10"), tspan("top 10 up/down genes"), FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_top10"), tspan("Top 10 up/down genes"), FALSE),
       "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
+      placement = "top", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("show_pct_na"), tspan("Show percent missingness"), FALSE),
+      "Display a column reporting the percentage of missingness for each feature.",
       placement = "top", options = list(container = "body")
     )
   )
@@ -100,7 +104,8 @@ expression_table_genetable_server <- function(id,
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) df$feature <- NULL
       
       if (!showdetails) {
-        hide.cols <- grep("^AveExpr|p$|q$|ortho|title", colnames(df))
+        #hide.cols <- grep("^AveExpr|p$|q$|ortho|title", colnames(df))
+        hide.cols <- grep("p$|q$|ortho", colnames(df))
         hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
         if (length(hide.cols)) df <- df[, -hide.cols]
       }
@@ -109,16 +114,17 @@ expression_table_genetable_server <- function(id,
       numeric.cols <- colnames(df)[numeric.cols]
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
       fx <- df[, fx.col]
-      
-      comp <- comp()
-      samples <- colnames(pgx$counts)
-      jj <- which(!is.na(pgx$contrasts[, comp]))
-      if (length(jj) > 0) samples <- rownames(pgx$contrasts)[jj]
-      counts <- pgx$counts[rownames(df), samples, drop = FALSE]
-      df$pct.missingness <- unname(round(rowMeans(is.na(counts)) * 100, 1))
-      jj <- which(!colnames(df) %in% c("symbol", "pct.missingness"))
-      cl <- c("symbol", "pct.missingness", colnames(df)[jj]) 
-      df <- df[, cl, drop = FALSE]
+
+      if (input$show_pct_na) {
+        comp <- comp()
+        samples <- colnames(pgx$counts)
+        jj <- which(!is.na(pgx$contrasts[, comp]))
+        if (length(jj) > 0) samples <- rownames(pgx$contrasts)[jj]
+        counts <- pgx$counts[rownames(df), samples, drop = FALSE]
+        df$pct.NA <- unname(round(rowMeans(is.na(counts)) * 100, 1))
+      } else {
+        df <- df[, which(colnames(df) != "pct.NA"), drop = FALSE]
+      }
       
       DT::datatable(
         df,
