@@ -14,6 +14,7 @@ upload_module_normalization_ui <- function(id, height = "100%") {
   uiOutput(ns("normalization"), fill = TRUE)
 }
 
+
 upload_module_normalization_server <- function(
     id,
     r_counts,
@@ -48,55 +49,52 @@ upload_module_normalization_server <- function(
         samples <- r_samples()        
         contrasts <- r_contrasts()
         shiny::req(dim(contrasts))
-        
+
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
-        
+
         ##--------------------------
         dbg("[normalization_server:imputedX] sum(counts<0)=", sum(counts<0))
         dbg("[normalization_server:imputedX] counts[1,1]=", counts[1, 1])
-        dbg("[normalization_server:imputedX] colnames(counts)=", colnames(counts))
-        dbg("[normalization_server:imputedX] colnames(samples)=", colnames(samples))
+        dbg("[normalization_server:imputedX] range(counts)=", range(counts))
         dbg("[normalization_server:imputedX] colnames(counts)=", colnames(counts))
         dbg("[normalization_server:imputedX] colnames(samples)=", colnames(samples))
         ##---------------------------
-        
-        #negs <- any(counts < 0, na.rm = TRUE)
-        #if (negs) counts <- pmax(counts, 0) ## NEED RETHINK (eg: Olink NPX)
-        
+
+        ## Olink NPX are passed on up to here unaltered.
+        is.olink <- upload_datatype() == "proteomics" && any(counts<0, na.rm=TRUE)
+        if (is.olink) {
+          dbg("[normalization_server:imputedX] is.olink = ", is.olink)
+          counts <- 2**counts
+          shiny::updateCheckboxInput(session, "normalize", value = FALSE)
+        }
+
+        if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
+
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
 
-        ## Set prior. 
         is.multiomics <- playbase::is.multiomics(rownames(counts))
         if(is.multiomics) {
-          ## This is the scaled log1p transform with autoscaling on
-          ## non-zero quantile. For the moment only applied to
-          ## multi-omics. Note is also performs median scaling.
+          ## Scaled log1p transform with autoscaling on non-zero quantile.
+          ## Only applied to multi-omics. It also performs median scaling.
           X <- playbase::mofa.log1s(counts, q=0.20)
-          prior <- 0  ## ???
+          prior <- 0
         } else {
-          # if min != 0, no offset. if min == 0, offset =
-          ## smallest non-zero value.          
           prior0 <- 0
           if(min(counts, na.rm = TRUE) == 0 || any(is.na(counts)) ) {
             prior0 <- min(counts[counts > 0], na.rm = TRUE)  
           }
           m <- input$normalization_method
-          dbg("------------------[imputedX] MNT0: m=", m)
-          prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW
-          X <- log2(counts + prior) ## NEED RETHINK
+          prior <- ifelse(grepl("CPM|TMM",m), 1, prior0)
+          X <- log2(counts + prior)
         }
 
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
         dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X))>0), " rows with NAs.")
 
-        dbg("--------------------[imputedX] MNT1: ", sum(is.na(counts)))
-        dbg("--------------------[imputedX] MNT2: ", sum(is.na(X)))
-        dbg("--------------------[imputedX] MNT3: ", sum(is.infinite(counts)))
-        dbg("--------------------[imputedX] MNT4: ", sum(is.infinite(X)))
 
         ## Filter probes for maximum missingness as required
         if (sum(is.na(X)) > 0 && input$filtermissing) {
@@ -113,8 +111,7 @@ upload_module_normalization_server <- function(
             grp.avg <- tapply(1:ncol(counts), grp, function(i) {
               rx = counts[, i, drop = FALSE]; rowMeans(!is.na(rx)) })
             maxavg <- apply(do.call(cbind, grp.avg), 1, max, na.rm = TRUE)
-            sel <- (maxavg >= 0.5)
-            #sel <- (maxavg >= abs(f))
+            sel <- (maxavg >= 0.5) # maxavg >= abs(f)
           } else {
             sel <- (rowMeans(is.na(X)) <= f)
           }
@@ -129,13 +126,8 @@ upload_module_normalization_server <- function(
           X <- playbase::imputeMissing(X, method = input$impute_method)
         }
 
-        dbg("--------------------[imputedX] MNT5: ", sum(is.na(counts)))
-        dbg("--------------------[imputedX] MNT6: ", sum(is.na(X)))
-        dbg("--------------------[imputedX] MNT7: ", sum(is.infinite(counts)))
-        dbg("--------------------[imputedX] MNT8: ", sum(is.infinite(X)))
-
         return(list(counts = counts, X = X, prior = prior))
-          
+
       })
       
       ## Normalize
@@ -171,12 +163,6 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
-
-        dbg("--------------------MNT1: ", sum(is.na(counts)))
-        dbg("--------------------MNT2: ", sum(is.na(X)))
-        dbg("--------------------MNT3: ", sum(is.infinite(counts)))
-        dbg("--------------------MNT4: ", sum(is.infinite(X)))
-
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
@@ -187,13 +173,6 @@ upload_module_normalization_server <- function(
             counts <- counts[, colnames(X), drop = FALSE]
           }
         }
-        #pos <- NULL
-        #if (NCOL(X) > 2) {
-        #  set.seed(1234)
-        #  pos <- irlba::irlba(X, nv = 2)$v
-        #  rownames(pos) <- colnames(X)
-        #}
-        #return(list(counts = counts, X = X, pos = pos))
         return(list(counts = counts, X = X))
       })
 

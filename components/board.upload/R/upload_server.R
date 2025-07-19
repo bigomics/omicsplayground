@@ -230,33 +230,32 @@ UploadBoard <- function(id,
       checked_for_log(FALSE)
       res <- playbase::pgx.checkINPUT(df0, "COUNTS")
       write_check_output(res$checks, "COUNTS", raw_dir())
-
-      #e29 <- ("e29" %in% names(res$checks))
-      #if (isProteomics && e29 && samplesIN) { ## Special case Olink NPX
-      #  dbg("[upload_server:] Olink Proteomics NPX...")
-      #  shinyalert::shinyalert(title = "Log-scale detected", text = "Olink NPX", type = "info") ## add confirm button?
-      #  isProteomics.Olink <- TRUE
-      #  checked_for_log(TRUE)
-      #} else {
-      #is.olink  <- upload_datatype()=="proteomics" && !is.null(uploaded$samples.csv) # samples built from counts.csv
-      if ("e29" %in% names(res$checks)) {
-        shinyalert::shinyalert(
-          title = paste("Log-scale detected"),
-          text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-          html = TRUE,
-          confirmButtonText = "Yes",
-          showCancelButton = TRUE,
-          cancelButtonText = "No",
-          inputId = "logCorrectCounts",
-          closeOnEsc = FALSE,
-          immediate = FALSE,
-          callbackR = function(x) checked_for_log(TRUE)
-        )
-        # checked_for_log(FALSE)
-      } else {
+      
+      is.olink  <- (upload_datatype() == "proteomics") &&
+        (!is.null(uploaded$samples.csv)) && # samples built from counts.csv
+        ("e29" %in% names(res$checks))
+      if (is.olink) {
+        shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info") 
         checked_for_log(TRUE)
+      } else {
+        if ("e29" %in% names(res$checks)) {
+          shinyalert::shinyalert(
+            title = paste("Log-scale detected"),
+            text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+            html = TRUE,
+            confirmButtonText = "Yes",
+            showCancelButton = TRUE,
+            cancelButtonText = "No",
+            inputId = "logCorrectCounts",
+            closeOnEsc = FALSE,
+            immediate = FALSE,
+            callbackR = function(x) checked_for_log(TRUE)
+          )
+          # checked_for_log(FALSE)
+        } else {
+          checked_for_log(TRUE)
+        }
       }
-      #}
       return(list(res = res, is.olink = is.olink))
     }
     )
@@ -282,36 +281,34 @@ UploadBoard <- function(id,
       check.e29 <- FALSE
       isConfirmed <- input$logCorrectCounts
       if (is.null(isConfirmed)) isConfirmed = FALSE
-      #if (isProteomics.Olink) {
-      # res$df <- 2 ** res$df
-      #  res$checks[["e29"]] <- NULL ## remove?
-      #  check.e29 = TRUE
-      #} else if ("e29" %in% names(res$checks) && isConfirmed) {
 
-      dbg("----------------------MNT1: res$df[1,1] = ", res$df[1,1]) 
-      if ("e29" %in% names(res$checks) && isConfirmed) {
-        dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
-        res$df <- 2**res$df
-        min.count <- min(res$df, na.rm = TRUE)
-        if (min.count > 0) { ## put min to zero.
-          res$df <- res$df - min.count
-          log_prior <- min.count
+      if (!is.olink) {
+        if ("e29" %in% names(res$checks) && isConfirmed) {
+          dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
+          res$df <- 2**res$df
+          min.count <- min(res$df, na.rm = TRUE)
+          if (min.count > 0) { ## put min to zero.
+            res$df <- res$df - min.count
+            log_prior <- min.count
+          }
+          res$checks[["e29"]] <- NULL ## remove?
+          check.e29 = TRUE
         }
+      } else {
+        #res$df <- 2 ** res$df
         res$checks[["e29"]] <- NULL ## remove?
         check.e29 = TRUE
       }
-      dbg("----------------------MNT2: res$df[1,1] = ", res$df[1,1])
-
-
-      ## No further negative values allowed (in the linear space).
-      ## Set any negatives to zero and inform the user. Store value.
-      #negs <- sum(res$df < 0, na.rm = TRUE)
-      # if (negs > 0 && !isProteomics.Olink) {
-      #if (negs > 0) {
-      #res$df <- pmax(res$df, 0)
-      #ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
-      #  shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
-      #}
+      
+      # For data != Olink NPX, no further negative values allowed (in the linear space).
+      # Set any negatives to zero and inform the user. Store value.
+      # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
+      negs <- sum(res$df < 0, na.rm = TRUE)
+      if (negs > 0 && !is.olink) {
+        res$df <- pmax(res$df, 0)
+        ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
+        shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
+      }
       
       ## update checklist and status
       checklist[["counts.csv"]]$checks <- res$checks
@@ -1158,7 +1155,7 @@ UploadBoard <- function(id,
       uploaded = uploaded,
       checked_matrix = shiny::reactive(checked_counts()$matrix),
       is_logscale = shiny::reactive(checked_counts()$isConfirmed), 
-      log_prior = shiny::reactive(checked_counts()$log_prior),
+      #log_prior = shiny::reactive(checked_counts()$log_prior),
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
