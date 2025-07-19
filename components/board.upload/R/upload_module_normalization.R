@@ -53,14 +53,6 @@ upload_module_normalization_server <- function(
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
-        ##--------------------------
-        dbg("[normalization_server:imputedX] sum(counts<0)=", sum(counts<0))
-        dbg("[normalization_server:imputedX] counts[1,1]=", counts[1, 1])
-        dbg("[normalization_server:imputedX] range(counts)=", range(counts))
-        dbg("[normalization_server:imputedX] colnames(counts)=", colnames(counts))
-        dbg("[normalization_server:imputedX] colnames(samples)=", colnames(samples))
-        ##---------------------------
-
         ## Olink NPX are passed on up to here unaltered.
         is.olink <- upload_datatype() == "proteomics" && any(counts<0, na.rm=TRUE)
         if (is.olink) {
