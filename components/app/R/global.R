@@ -303,3 +303,5 @@ i18n$set_translation_language("RNA-seq")
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
+reticulate::py_require("plotly")
+reticulate::py_require("kaleido")

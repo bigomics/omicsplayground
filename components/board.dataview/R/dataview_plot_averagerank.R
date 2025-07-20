@@ -35,7 +35,8 @@ dataview_plot_averagerank_ui <- function(id,
     caption = caption,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    show.ai = TRUE
   )
 }
 
@@ -191,7 +192,8 @@ dataview_plot_averagerank_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      show.ai = TRUE
     )
   }) ## end of moduleServer
 }

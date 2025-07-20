@@ -35,7 +35,8 @@ dataview_plot_abundance_ui <- function(
     options = options,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    show.ai = TRUE
   )
 }
 
@@ -150,8 +151,9 @@ dataview_plot_abundance_server <- function(id,
       csvFunc = plot_data_csv,
       res = c(90, 170),
       pdf.width = 6,
-      pdf.height = 6,
-      add.watermark = watermark
+      pdf.height = 6,      
+      add.watermark = watermark,
+      show.ai = TRUE
     )
   }) ## end of moduleServer
 }

@@ -35,9 +35,13 @@ PlotModuleUI <- function(id,
                          translate_js = TRUE,
                          editor = FALSE,
                          ns_parent = function(a){return(a)},
-                         plot_type = "volcano") {
+                         plot_type = "volcano",
+                         show.ai = FALSE) {
   ns <- shiny::NS(id)
 
+  ## ------------ only when DEVMODE ---------------
+  show.ai <- (show.ai && opt$DEVMODE)
+  
   # Svg is only available if watermark is disabled
   if (opt$WATERMARK) {
     download.fmt <- download.fmt[download.fmt != "svg"]
@@ -204,7 +208,18 @@ PlotModuleUI <- function(id,
     )
   }
 
-  # Build cards or single plot
+  ai.button <- NULL
+  if (show.ai) {
+    ## NOTE: using cards seems the button does not appear!!
+    dbg("[PlotModuleUI] showing AI button for id=",id)
+    ai.button <- ExplainPlotUI(ns("explainplot"))
+  }
+  dbg("[PlotModuleUI] is.null(ai.button)=",is.null(ai.button))    
+  
+  #------------------------------------------------------------------------
+  #---------------- Build cards or single plot ----------------------------
+  #------------------------------------------------------------------------
+
   if (cards) {
     tabs <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
@@ -310,7 +325,7 @@ PlotModuleUI <- function(id,
   )
   
   header <- shiny::fillRow(
-    flex = c(1, NA, NA, NA, NA, NA, NA, NA),
+    flex = c(1, NA, NA, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
     shiny::div(
       class = "plotmodule-title",
@@ -325,8 +340,9 @@ PlotModuleUI <- function(id,
       shiny::div()
     },
     header_buttons,
-    info_button,
-    options.button,
+    shiny::div(class = "ai-button", title = "AI", ai.button),
+    shiny::div(class = "info-button", title = "Plot information", info_button),
+    shiny::div(class = "options-button", title = "Plot options", options.button),
     editor_button,    
     shiny::div(class = "download-button", title = "download", dload.button),
     shiny::div(class = "zoom-button", title = "zoom", zoom.button)
@@ -544,10 +560,12 @@ PlotModuleServer <- function(id,
                              vis.delay = 3,
                              card = NULL,
                              editor = FALSE,
-                             parent_session = NULL) {
+                             parent_session = NULL,
+                             show.ai = FALSE) {
   moduleServer(
     id,
     function(input, output, session) {
+
       ns <- session$ns
       filename <- sub("-$", "", ns("")) ## filename root
 
@@ -561,7 +579,9 @@ PlotModuleServer <- function(id,
         },
         ignoreInit = TRUE
       )
-
+      
+      show.ai <- (show.ai && opt$DEVMODE)
+      
       ## --------------------------------------------------------------------------------
       ## ------------------------ Plotly editor------------------------------------------
       ## --------------------------------------------------------------------------------
@@ -1222,6 +1242,51 @@ PlotModuleServer <- function(id,
         })
       }
 
+      ## ------------------------------------------------------------------------
+      ## ----------------------- ExplainPlotModule (AI) -------------------------
+      ## ------------------------------------------------------------------------
+
+      if(show.ai) {
+        ##-------- create context string from info 
+        
+        info2 <- lapply(info, function(a) paste(unlist(a),collapse="; "))
+
+        ## add table data to context (check if it is not too big!!!)
+        dbg("[ui/ExplainPlotModule]  id = ", id)
+        dbg("[ui/ExplainPlotModule]  ns.id = ", ns(id))
+
+        if(FALSE && !is.null(csvFunc) && !is.null(csvFunc())) {
+          ## SOME BUG!!! It hangs here!!!!
+          data <- csvFunc()
+          if (is.list(data) && !is.data.frame(data)) data <- data[[1]]
+          dbg("[ui-PlotModule] dim(data_table) = ", dim(data))
+          if( !is.null(dim(data)) && nrow(data) < 100 && NCOL(data) < 100) {
+            dbg("[ui-PlotModule] adding datatable to context")
+            info2$data <- paste(as.character(
+              knitr::kable(data,format="markdown")),collapse="\n")
+          }
+        }
+        
+        ## add settings to context
+#        dbg("[ui-PlotModule]  namespace.ns = ", ns(""))
+#        settings <- getSettings(ns, session)
+#        info2 <- c(info2, list("Settings" = settings$settings_str))
+#        dbg("[ui-PlotModule]  info2$Settings = ", info2$Settings)
+          
+        ## create context as string
+        names(info2) <- toupper(names(info2))
+        dbg("[ui/ExplainPlotModule]  names(info2) = ",names(info2))
+        context <- paste0(names(info2), ": ", info2,collapse="\n")        
+        
+        ExplainPlotModule(
+          id = "explainplot",
+          plot_fun = func,
+          context = context,
+          chat = NULL,
+          plotlib = plotlib
+        )
+      }
+      
       ## --------------------------------------------------------------------------------
       ## ---------------------------- UI ------------------------------------------------
       ## --------------------------------------------------------------------------------
