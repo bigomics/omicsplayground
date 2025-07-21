@@ -107,8 +107,6 @@ expression_table_genetable_server <- function(id,
 
       numeric.cols <- which(sapply(df, is.numeric))
       numeric.cols <- colnames(df)[numeric.cols]
-      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
-      fx <- df[, fx.col]
       
       comp <- comp()
       samples <- colnames(pgx$counts)
@@ -119,6 +117,8 @@ expression_table_genetable_server <- function(id,
       jj <- which(!colnames(df) %in% c("symbol", "pct.missingness"))
       cl <- c("symbol", "pct.missingness", colnames(df)[jj]) 
       df <- df[, cl, drop = FALSE]
+      fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
+      fx <- df[, fx.col]
       
       DT::datatable(
         df,
