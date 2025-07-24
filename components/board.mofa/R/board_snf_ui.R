@@ -6,20 +6,19 @@
 SNFInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    ## data set parameters
     bslib::accordion(
       id = ns("data_type_accordion"),
-      open = FALSE,
-      bslib::accordion_panel(
-        "Options",
-        icon = icon("cog", lib = "glyphicon"),
-        shiny::tagList(
-          shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
-            choices = c(500, 1000, 2000, 4000, 8000),
-            selected = 1000
-          )
-        )
-      )
+      open = FALSE
+      ## bslib::accordion_panel(
+      ##   "Options",
+      ##   icon = icon("cog", lib = "glyphicon"),
+      ##   shiny::tagList(
+      ##     shiny::selectInput(ns("ngenes"), tspan("Number genes:"),
+      ##       choices = c(500, 1000, 2000, 4000, 8000),
+      ##       selected = 1000
+      ##     )
+      ##   )
+      ## )
     )
   )
 }
@@ -36,7 +35,6 @@ SNFUI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
       shiny::tabPanel(
         "SNF Clustering",
         bslib::layout_columns(
@@ -67,7 +65,6 @@ SNFUI <- function(id) {
                 info.text = "Clustering of SNF-integrated multi-omics data. Heatmap of normalized multi-omics data. The SNF clusters capture multi-omic features exhibiting similar behavior. Therefore, the heatmap is well versed to enable assessment of samples' clustering driven by multiple data types/modalities.",
                 info.methods = "Heatmap of normalized multi-omics data. Pearson correlation is used as similarity measure. The clustering and number of clusters was determined using the Louvain method.",
                 info.references = list(list("Wang B, Mezlini A, Demir F, Fiume M, Zu T, Brudno M, Haibe-Kains B, Goldenberg A (2014). “Similarity Network Fusion: a fast and effective method to aggregate multiple data types on a genome wide scale.” Nature Methods.", "https://www.nature.com/articles/nmeth.2810")),
-                ##caption = "Clustering of SNF-integrated multi-omics data. Heatmap of normalized multi-omics data. Samples' clustering is driven by Similarity Network Fusion (SNF) method. Euclidean distance is used as similarity measure.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
