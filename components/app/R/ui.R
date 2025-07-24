@@ -266,17 +266,6 @@ app_ui <- function(x) {
                 )
               )
             )
-            ## div(style = "display: inline-block; ",
-            ## bigdash::navbarDropdown(
-            ##   "Actions",
-            ##   style = "display: inline-block; border: 1px; padding: 2px 6px;",
-            ##   tags$li(
-            ##     actionLink("menu_createreport", "Create report")
-            ##   ),
-            ##   tags$li(
-            ##     actionLink("menu_reanalyze", "Reanalyze")
-            ##   )
-            ## ))
           ),
           div.upgradebutton,
           div.invitebutton,
@@ -358,10 +347,10 @@ app_ui <- function(x) {
                     inputId = "selected_labeltype",
                     label = "Label type:",
                     choices = c("feature", "symbol", "name"),
-                    selected = NULL,
+                    selected = "feature",
                     width = "100%"
                   ),
-                  "Choose a label type to be displayed in the heatmap.",
+                  "Choose a label type to be displayed in the plots",
                   placement = "right", options = list(container = "body")
                 )
               )
