@@ -145,7 +145,7 @@ upload_table_preview_counts_server <- function(
                       shiny::radioButtons(
                         ns("data_processing"),
                         label = "Select data processing level:",
-                        choices = c("Raw data" = "raw", "Normalized data (also batch corrected if selected on computation)" = "normalized"),
+                        choices = c("Raw" = "raw", "Normalized (also batch corrected if selected on computation)" = "normalized"),
                         selected = "raw",
                         inline = TRUE
                       )
