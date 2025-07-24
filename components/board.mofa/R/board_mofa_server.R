@@ -108,6 +108,8 @@ MofaBoard <- function(id, pgx) {
         has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
         shiny::validate( shiny::need(has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
         mofa <- pgx$mofa        
+
+        dbg("----------------input$selected_labeltype=", input$selected_labeltype)
         
         ## update factors in selectInput
         factors <- colnames(mofa$W)

@@ -76,25 +76,6 @@ app_server <- function(input, output, session) {
       domain = opt$DOMAIN,
       blocked_domain = opt$BLOCKED_DOMAIN
     )
-    ## } else if (authentication == "firebase") {
-    ##   auth <- FirebaseAuthenticationModule(
-    ##     id = "auth",
-    ##     domain = opt$DOMAIN,
-    ##     firebase.rds = "firebase.rds",
-    ##     credentials_file = credentials_file,
-    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-    ##     allow_new_users = opt$ALLOW_NEW_USERS
-    ##   )
-    ## } else if (authentication == "email-link") {
-    ##   auth <- EmailLinkAuthenticationModule(
-    ##     id = "auth",
-    ##     pgx_dir = PGX.DIR,
-    ##     domain = opt$DOMAIN,
-    ##     firebase.rds = "firebase.rds",
-    ##     credentials_file = credentials_file,
-    ##     allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-    ##     allow_new_users = opt$ALLOW_NEW_USERS
-    ##   )
   } else if (authentication == "login-code") {
     auth <- LoginCodeAuthenticationModule(
       id = "auth",
@@ -201,8 +182,6 @@ app_server <- function(input, output, session) {
 
   ########################################################### TEST
 
-  ########################################################### TEST
-
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
@@ -250,9 +229,6 @@ app_server <- function(input, output, session) {
     } else {
       MODULES_ACTIVE <- MODULES_TRANSCRIPTOMICS
     }
-    # if (env$load$is_data_loaded() == 2) {
-    #   MODULES_ACTIVE <- MODULES_MULTIOMICS
-    # }
     if (env$load$is_data_loaded() == 1) {
       bigdash.hideMenuElement(session, "Clustering")
       bigdash.hideMenuElement(session, "Expression")
@@ -262,7 +238,6 @@ app_server <- function(input, output, session) {
       bigdash.hideMenuElement(session, "MultiOmics (beta)")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # bigdash.unloadSidebar()
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
     MODULES_TO_LOAD <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_ACTIVE
  
@@ -325,7 +300,6 @@ app_server <- function(input, output, session) {
       )
 
       insertBigTabUI <- function(ui) {
-        ## if( inherits(class(ui),"list")) ui <- list(ui)
         for (i in 1:length(ui)) {
           shiny::insertUI(
             selector = "#big-tabs",
@@ -334,17 +308,6 @@ app_server <- function(input, output, session) {
             immediate = TRUE
           )
         }
-        # shinyjs::runjs(
-        #   "$('.big-tab')
-        #   .each((index, el) => {
-        #   let settings = $(el)
-        #     .find('.tab-settings')
-        #     .first();
-
-        #   $(settings).data('target', $(el).data('name'));
-        #   $(settings).appendTo('#settings-content');
-        # });"
-        # )
         bigdash.openSettings()
       }
       insertBigTabItem <- function(tab) {
@@ -683,7 +646,6 @@ app_server <- function(input, output, session) {
       list(
         auth$logged,
         env$user_settings$enable_beta(),
-        ##PGX$name,
         trigger_on_change_dataset()
       )
     },
@@ -748,8 +710,7 @@ app_server <- function(input, output, session) {
     ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
-
-    ## do we have libx libraries?
+    
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
     ## Beta features
@@ -763,7 +724,6 @@ app_server <- function(input, output, session) {
 
     ## Dynamically show upon availability in pgx object
     info("[SERVER] disabling extra features")
-    ##tabRequire(PGX, session, "wgcna-tab", "wgcna", TRUE)
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
     tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
     tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
@@ -779,8 +739,6 @@ app_server <- function(input, output, session) {
     # WGCNA will be available upon gmt refactoring
     if (DATATYPEPGX == "metabolomics") {
       info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
-      #bigdash.hideTab(session, "pcsf-tab")
-      #bigdash.hideTab(session, "wgcna-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
 
@@ -826,15 +784,7 @@ app_server <- function(input, output, session) {
       })
       label_types <- label_types[keep_types]
 
-      # default selection depending on datatype
-      if (PGX$datatype %in% c("metabolomics","multi-omics")) {
-        sel.labeltype <- c("gene_title","symbol","feature")
-        sel.labeltype <- intersect(sel.labeltype,label_types)[1]
-      } else {
-        sel.labeltype <- c("symbol","feature","gene_title")
-        sel.labeltype <- intersect(sel.labeltype,label_types)[1]
-      }
-      
+      sel.labeltype <- "feature"      
       shiny::updateSelectInput(
         session,
         "selected_labeltype",
@@ -850,14 +800,7 @@ app_server <- function(input, output, session) {
       input$selected_labeltype
     },
     {
-      # update app reactiveVal. NOTE: to be DEPRECATED. instead use
-      # the gene_name columns as below. This will be automatically
-      # available for all pgx during app.
       labeltype(input$selected_labeltype)
-
-      # TESTING: update gene_name column in pgx$genes. NOTE: we need
-      # to test whether all modules functions work if gene_name is
-      # changed. gene_name was old-style and was to be removed. 
       if(!is.null(PGX$genes)) {
         lab <- input$selected_labeltype
         if(lab == "gene_title") {
@@ -919,9 +862,7 @@ app_server <- function(input, output, session) {
     )
 
     warn_timeout <- function() {
-      if (!auth$logged) {
-        return(NULL)
-      }
+      if (!auth$logged) { return(NULL) }
       shinyalert::shinyalert(
         title = "Warning!",
         text = "Your FREE session is expiring soon",
@@ -934,9 +875,7 @@ app_server <- function(input, output, session) {
     ## At the end of the timeout the user can choose type of referral
     ## modal and gain additional analysis time. We reset the timer.
     session_timeout <- function() {
-      if (!auth$logged) {
-        return(NULL)
-      }
+      if (!auth$logged) { return(NULL) }
       shinyalert::shinyalert(
         title = "FREE session expired!",
         text = "Sorry. Your free session has expired. To extend your session you can refer Omics Playground to a friend. Do you want to logout or invite a friend?",
@@ -1161,12 +1100,6 @@ app_server <- function(input, output, session) {
     ## run logout sequence
     userLogoutSequence(auth, action = "user.logout")
 
-    ## this triggers a fresh session. good for resetting all
-    ## parameters.
-    ## (IK 16-07-2023: some bug for firebase-based login, reload
-    ## loop. To be fixed!!!
-    ## dbg("[SERVER:userLogout] >>> reloading session")
-    ## session$reload()
   })
 
   ## This code listens to the JS quit signal
