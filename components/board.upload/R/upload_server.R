@@ -698,6 +698,7 @@ UploadBoard <- function(id,
 
     observeEvent(recompute_pgx(), {
       req(!is.null(recompute_pgx()))
+      upload_datatype(recompute_pgx()$datatype)
       bigdash.selectTab(session, selected = "upload-tab")
       shinyjs::delay(250, {
         new_upload(new_upload() + 1)
