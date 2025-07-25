@@ -46,54 +46,42 @@ dataview_plot_averagerank_server <- function(id,
                                              r.data_type = reactive("counts"),
                                              labeltype,
                                              watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y)
       shiny::req(r.gene())
-
-      ## dereference reactives
       gene <- r.gene()
       samples <- r.samples()
       data_type <- r.data_type()
 
-      if (!all(samples %in% colnames(pgx$X))) {
-        return(NULL)
-      }
-      if (!gene %in% rownames(pgx$X)) {
-        return(NULL)
-      }
-      
-      if (data_type %in% c("counts", "abundance")) {
-        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE),
-          decreasing = TRUE
-        )
+      if (!all(samples %in% colnames(pgx$X))) return(NULL)
+      if (!gene %in% rownames(pgx$X)) return(NULL)      
+
+      mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
+      ylab <- tspan("average counts (log2)", js = FALSE)
+      if (data_type == "counts") {
+        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         ylab <- tspan("average counts", js = FALSE)
-      }
-      if (data_type %in% c("logCPM", "log2")) {
-        mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
-        ylab <- tspan("average counts (log2)", js = FALSE)
       }
 
       ann <- pgx$genes[names(mean.fc), , drop = FALSE]
       sel <- which(names(mean.fc) == gene)
-
       
       if (input$show_all_isoforms && labeltype() != "feature") {
         symbol <- playbase::probe2symbol(gene, ann, "symbol", fill_na = TRUE)
-        sel2 <- which(ann$symbol == symbol) ## isoforms
+        sel2 <- which(ann$symbol == symbol)
         sel <- unique(c(sel2, sel))
       } else {
         sel <- sel
       }
 
-      pd <- list(
-        df = data.frame(mean.fc = mean.fc, gene = names(mean.fc)),
-        sel = sel,
-        gene = gene,
-        ylab = ylab
-      )
-      pd
+      df <- data.frame(mean.fc = mean.fc, gene = names(mean.fc))
+      pd <- list(df = df, sel = sel, gene = gene, ylab = ylab)
+
+      return(pd)
+
     })
 
     plot.RENDER <- function() {
@@ -109,9 +97,7 @@ dataview_plot_averagerank_server <- function(id,
 
       # subsample for speed
       ii <- 1:length(mean.fc)
-      if (length(ii) > 200) {
-        ii <- c(1:200, seq(201, length(mean.fc), 10))
-      }
+      if (length(ii) > 200) ii <- c(1:200, seq(201, length(mean.fc), 10))
       
       fig <- plotly::plot_ly(
         x = ii,
@@ -177,8 +163,7 @@ dataview_plot_averagerank_server <- function(id,
     }
 
     modal_plot.RENDER <- function() {
-      fig <- plot.RENDER() %>%
-        plotly_modal_default()
+      fig <- plot.RENDER() %>% plotly_modal_default()
       fig
     }
 
