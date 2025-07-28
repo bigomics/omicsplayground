@@ -330,14 +330,16 @@ clustering_plot_splitmap_server <- function(id,
       if (hm_level() == "gene") {
         getInfo <- function(g) {
           aa <- paste0(
-            "<b>", pgx$genes[g, "gene_name"], "</b>. ",
+            "<b>", pgx$genes[g, "feature"], "</b> ",
+            "(", pgx$genes[g, "symbol"], "): ",
             pgx$genes[g, "gene_title"], "."
           )
           playbase::breakstring2(aa, 50, brk = "<br>")
         }
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
-        rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
+        symbol <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
+        rownames(X) <- playbase::make_unique(symbol)
         names(tooltips) <- rownames(X)
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
