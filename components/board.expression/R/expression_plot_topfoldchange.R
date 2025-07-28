@@ -64,7 +64,7 @@ expression_plot_topfoldchange_server <- function(id,
       res <- res()
       shiny::validate(shiny::need(!is.null(sel) && length(sel) > 0, tspan("Please select gene in the table.", js = FALSE)))
 
-      psel <- sel #rownames(res)[sel]
+      psel <- sel
       gene <- pgx$genes[psel, "gene_name"]
 
       if (is.null(sel) || length(sel) == 0) return(list(sel = sel))
