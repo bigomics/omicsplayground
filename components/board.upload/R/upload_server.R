@@ -101,8 +101,30 @@ UploadBoard <- function(id,
       names(all_species)[all_species=="No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
     })
+    
+    output$proteomics_subtype_ui <- shiny::renderUI({
+      if (upload_datatype() == "proteomics") {
+        shiny::selectInput(
+          ns("proteomics_type"),
+          label = "Proteomics type:",
+          choices = c("MS", "Olink NPX"),
+          selected = "MS",
+          width = "150px"
+        )
+      } else {
+        NULL
+      }
+    })
 
-
+    is.olink <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
+        return(input$proteomics_type == "Olink NPX")
+      } else {
+        return(FALSE)
+      }
+    })
+    
     ## ============================================================================
     ## ================== NEW DATA UPLOAD =========================================
     ## ============================================================================
@@ -231,10 +253,8 @@ UploadBoard <- function(id,
       res <- playbase::pgx.checkINPUT(df0, "COUNTS")
       write_check_output(res$checks, "COUNTS", raw_dir())
       
-      is.olink  <- (upload_datatype() == "proteomics") &&
-        (!is.null(uploaded$samples.csv)) && # samples built from counts.csv
-        ("e29" %in% names(res$checks))
-      if (is.olink) {
+      olink <- is.olink()
+      if (olink) {
         shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info") 
         checked_for_log(TRUE)
       } else {
@@ -251,12 +271,13 @@ UploadBoard <- function(id,
             immediate = FALSE,
             callbackR = function(x) checked_for_log(TRUE)
           )
-          # checked_for_log(FALSE)
         } else {
           checked_for_log(TRUE)
         }
       }
-      return(list(res = res, is.olink = is.olink))
+
+      return(list(res = res, olink = olink))
+
     }
     )
 
@@ -268,7 +289,7 @@ UploadBoard <- function(id,
       ## get uploaded counts
       checked <- NULL
       res <- uploaded_counts()$res
-      is.olink <- uploaded_counts()$is.olink
+      olink <- uploaded_counts()$olink
       if (is.null(res)) { return(list(status = "Missing counts.csv", matrix = NULL)) }
       
       ## wait for dialog finished
@@ -282,7 +303,11 @@ UploadBoard <- function(id,
       isConfirmed <- input$logCorrectCounts
       if (is.null(isConfirmed)) isConfirmed = FALSE
 
-      if (!is.olink) {
+      ## RESTORE AVERAGE RANK PLOT.
+      if (olink) {
+        res$checks[["e29"]] <- NULL
+        check.e29 = TRUE
+      } else {
         if ("e29" %in% names(res$checks) && isConfirmed) {
           dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
           res$df <- 2**res$df
@@ -291,20 +316,16 @@ UploadBoard <- function(id,
             res$df <- res$df - min.count
             log_prior <- min.count
           }
-          res$checks[["e29"]] <- NULL ## remove?
+          res$checks[["e29"]] <- NULL
           check.e29 = TRUE
         }
-      } else {
-        #res$df <- 2 ** res$df
-        res$checks[["e29"]] <- NULL ## remove?
-        check.e29 = TRUE
       }
-      
+
       # For data != Olink NPX, no further negative values allowed (in the linear space).
       # Set any negatives to zero and inform the user. Store value.
       # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
       negs <- sum(res$df < 0, na.rm = TRUE)
-      if (negs > 0 && !is.olink) {
+      if (negs > 0 && !olink) {
         res$df <- pmax(res$df, 0)
         ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
         shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
@@ -1162,7 +1183,8 @@ UploadBoard <- function(id,
       title = "Uploaded Counts",
       info.text = "This is the uploaded counts data.",
       caption = "This is the uploaded counts data.",
-      upload_datatype = upload_datatype
+      upload_datatype = upload_datatype,
+      is.olink = is.olink
     )
 
     upload_table_preview_samples_server(
@@ -1203,6 +1225,7 @@ UploadBoard <- function(id,
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
       upload_datatype = upload_datatype,
+      is.olink = is.olink,
       is.count = TRUE,
       height = height
     )

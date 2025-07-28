@@ -26,7 +26,9 @@ upload_table_preview_counts_server <- function(
     title,
     info.text,
     caption,
-    upload_datatype) {
+    upload_datatype,
+    is.olink
+    ) {
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -500,18 +502,20 @@ upload_table_preview_counts_server <- function(
         datafile <- input$counts_csv$datapath[sel[1]]
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)        
-
+        
         df.samples <- NULL
-        if (upload_datatype() == "proteomics") {
+        if (upload_datatype() == "proteomics" && is.olink()) {
           df <- tryCatch( { playbase::read_Olink_NPX(datafile) },
             error = function(w) { NULL }
           )
+          if (is.null(df)) {
+            shinyalert::shinyalert(
+              title = "Error",
+              text = "You data are not in Official Olink NPX format. Please correct the data."
+            )
+          }
           if (!is.null(df)) {
             df.samples <- tryCatch( { playbase::read_Olink_samples(datafile) },
-              error = function(w) { NULL }
-            )
-          } else {
-            df <- tryCatch( { playbase::read_counts(datafile) },
               error = function(w) { NULL }
             )
           }
@@ -520,21 +524,24 @@ upload_table_preview_counts_server <- function(
             error = function(w) { NULL }
           )
         }
-        
-        if (is.null(df)) {
-          data_error_modal(path = datafile, data_type = "counts")
-        } else {
-          uploaded$counts.csv <- df
-          af <- playbase::read_annot(datafile) # counts filecontains annotation
-          uploaded$annot.csv <- af
-        }
-
-        if (upload_datatype() == "proteomics" && !is.null(df.samples)) {
-          uploaded$samples.csv <- df.samples ## special case Olink NPX.
-        }
-
+      } else {
+        df <- tryCatch( { playbase::read_counts(datafile) },
+          error = function(w) { NULL }
+        )
       }
-
+      
+      if (is.null(df)) {
+        data_error_modal(path = datafile, data_type = "counts")
+      } else {
+        uploaded$counts.csv <- df
+        af <- playbase::read_annot(datafile) # counts filecontains annotation
+        uploaded$annot.csv <- af
+      }
+      
+      if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {
+        uploaded$samples.csv <- df.samples
+      }
+      
       ## ##---samples---##
       ## sel <- grep("samples", tolower(input$counts_csv$name))
       ## if (length(sel)) {

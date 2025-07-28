@@ -21,6 +21,7 @@ upload_module_normalization_server <- function(
     r_samples,
     r_contrasts,
     upload_datatype,
+    is.olink,
     is.count = FALSE,
     height = 720) {
   shiny::moduleServer(
@@ -54,13 +55,12 @@ upload_module_normalization_server <- function(
         counts[which(is.infinite(counts))] <- NA
 
         ## Olink NPX are passed on up to here unaltered.
-        is.olink <- upload_datatype() == "proteomics" && any(counts<0, na.rm=TRUE)
-        if (is.olink) {
-          dbg("[normalization_server:imputedX] is.olink = ", is.olink)
+        if (is.olink()) {
+          dbg("[normalization_server:imputedX] Olink NPX Proteomics")
           counts <- 2**counts
           shiny::updateCheckboxInput(session, "normalize", value = FALSE)
         }
-
+        
         if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
 
         if (input$zero_as_na) {
@@ -125,7 +125,7 @@ upload_module_normalization_server <- function(
       ## Normalize
       normalizedX <- reactive({
         shiny::req(dim(imputedX()$X))
-        X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
+        X <- imputedX()$X ## can be imputed or not. log2. Can have negatives.
         prior <- imputedX()$prior
         if (input$normalize) {
           m <- input$normalization_method
