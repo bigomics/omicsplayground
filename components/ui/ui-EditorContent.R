@@ -53,8 +53,12 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
 
           bslib::accordion_panel(
             "Aspect Ratio",
-            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom Aspect Ratio", value = FALSE),
-            numericInput(ns_parent("aspect_ratio"), "Aspect Ratio", value = 0.5, min = 0.1, max = 10)
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
+              ns = ns_parent
+            )
           ),
 
           # Additional Settings
