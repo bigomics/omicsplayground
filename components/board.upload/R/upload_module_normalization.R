@@ -14,34 +14,34 @@ upload_module_normalization_ui <- function(id, height = "100%") {
   uiOutput(ns("normalization"), fill = TRUE)
 }
 
+
 upload_module_normalization_server <- function(
     id,
     r_counts,
     r_samples,
     r_contrasts,
     upload_datatype,
+    is.olink,
     is.count = FALSE,
     height = 720) {
   shiny::moduleServer(
     id,
+
     function(input, output, session) {
       ns <- session$ns
 
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
-        shiny::updateSelectizeInput(
-          session, "ref_gene",
-          choices = gg,
-          selected = character(0), server = TRUE
-        )
+        shiny::updateSelectizeInput(session, "ref_gene", choices = gg,
+          selected = character(0), server = TRUE)
       })
 
       ## ------------------------------------------------------------------
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## Impute
+      ## ImputedX
       imputedX <- reactive({
         
         shiny::req(dim(r_counts()))
@@ -50,40 +50,43 @@ upload_module_normalization_server <- function(
         samples <- r_samples()        
         contrasts <- r_contrasts()
         shiny::req(dim(contrasts))
-        
+
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
 
-        negs <- sum(counts < 0, na.rm = TRUE)
-        if (negs > 0) counts <- pmax(counts, 0) ## NEED RETHINK (eg: Olink NPX)
+        ## Olink NPX are passed on up to here unaltered.
+        if (is.olink()) {
+          dbg("[normalization_server:imputedX] Olink NPX Proteomics")
+          counts <- 2**counts
+          shiny::updateCheckboxInput(session, "normalize", value = FALSE)
+        }
         
+        if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
+
         if (input$zero_as_na) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
 
-        ## Set prior. 
         is.multiomics <- playbase::is.multiomics(rownames(counts))
         if(is.multiomics) {
-          ## This is the scaled log1p transform with autoscaling on
-          ## non-zero quantile. For the moment only applied to
-          ## multi-omics. Note is also performs median scaling.
+          ## Scaled log1p transform with autoscaling on non-zero quantile.
+          ## Only applied to multi-omics. It also performs median scaling.
           X <- playbase::mofa.log1s(counts, q=0.20)
-          prior <- 0  ## ???
+          prior <- 0
         } else {
-          # if min != 0, no offset. if min == 0, offset =
-          ## smallest non-zero value.          
-          prior0 <- 0  
+          prior0 <- 0
           if(min(counts, na.rm = TRUE) == 0 || any(is.na(counts)) ) {
             prior0 <- min(counts[counts > 0], na.rm = TRUE)  
           }
           m <- input$normalization_method
-          prior <- ifelse(grepl("CPM|TMM",m), 1, prior0) ## NEW
-          X <- log2(counts + prior) ## NEED RETHINK
+          prior <- ifelse(grepl("CPM|TMM",m), 1, prior0)
+          X <- log2(counts + prior)
         }
 
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
-        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X))>0), " rows with NAs.")        
+        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X))>0), " rows with NAs.")
+
 
         ## Filter probes for maximum missingness as required
         if (sum(is.na(X)) > 0 && input$filtermissing) {
@@ -100,8 +103,7 @@ upload_module_normalization_server <- function(
             grp.avg <- tapply(1:ncol(counts), grp, function(i) {
               rx = counts[, i, drop = FALSE]; rowMeans(!is.na(rx)) })
             maxavg <- apply(do.call(cbind, grp.avg), 1, max, na.rm = TRUE)
-            sel <- (maxavg >= 0.5)
-            #sel <- (maxavg >= abs(f))
+            sel <- (maxavg >= 0.5) # maxavg >= abs(f)
           } else {
             sel <- (rowMeans(is.na(X)) <= f)
           }
@@ -113,18 +115,17 @@ upload_module_normalization_server <- function(
         
         ## Impute if required
         if (any(is.na(X)) & input$impute) {
-          dbg("[normalization_server:imputedX] Performing imputation using ", input$impute_method)
           X <- playbase::imputeMissing(X, method = input$impute_method)
         }
 
         return(list(counts = counts, X = X, prior = prior))
-          
+
       })
       
       ## Normalize
       normalizedX <- reactive({
         shiny::req(dim(imputedX()$X))
-        X <- imputedX()$X ## can be imputed or not (see above). log2. Can have negatives.
+        X <- imputedX()$X ## can be imputed or not. log2. Can have negatives.
         prior <- imputedX()$prior
         if (input$normalize) {
           m <- input$normalization_method
@@ -165,7 +166,6 @@ upload_module_normalization_server <- function(
           }
         }
         return(list(counts = counts, X = X))
-
       })
 
       correctedX <- shiny::reactive({
@@ -250,7 +250,7 @@ upload_module_normalization_server <- function(
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
-          corX <- HiClimR::fastCor(t(scaledX), optBLAS = TRUE)
+          corX <- cor(t(scaledX))
 
           ## standard dim reduction methods
           pos <- list()
@@ -707,7 +707,7 @@ upload_module_normalization_server <- function(
                 shiny::checkboxInput(ns("impute"), label = "Impute NA", value = FALSE),
                 shiny::conditionalPanel("input.impute == true", ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
-                    choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
+                    choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb"),
                     selected = "SVD2")
                 ),
                 br()
@@ -727,12 +727,17 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
-                    choices = if(grepl("proteomics|metabolomics", upload_datatype(), ignore.case = TRUE)) {
-                      c("maxMedian", "maxSum", "quantile", "reference")
-                    } else if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-                      c("multi-omics median" = "median")
+                    choices = if(grepl("proteomics|metabolomics", upload_datatype(),
+                      ignore.case = TRUE)) {
+                        c("maxMedian", "maxSum", "quantile", "reference")
+                    } else if (grepl("multi-omics", upload_datatype(),
+                      ignore.case = TRUE)) {
+                        c("multi-omics median" = "median"
+                          ## "multi-omics combat" = "combat"
+                        )
                     } else {
-                      c("CPM", "CPM+quantile", "TMM", "maxMedian", "maxSum", "reference")
+                      c("CPM+quantile", "TMM", "quantile",
+                        "maxMedian", "maxSum", "reference")
                     },
                     selected = 1
                   ),
@@ -753,13 +758,7 @@ upload_module_normalization_server <- function(
               ),
               bslib::accordion_panel(
                 title = "3. Remove outliers",
-                shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("Automatically detect and remove outlier samples."),
-                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#identification-of-outlier-samples' target='_blank' class='info-link' style='margin-left: 15px;'>
-                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
-                      </a>")
-                ),
+                shiny::p("Automatically detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
                 shiny::conditionalPanel("input.remove_outliers == true", ns = ns,
                   shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
@@ -797,9 +796,7 @@ upload_module_normalization_server <- function(
                       choices = batch_params, ## reactive
                       selected = batch_params[1],
                       multiple = TRUE,
-                      options = list(
-                        placeholder = "Select..."
-                      )
+                      options = list(placeholder = "Select...")
                     ),
                     shiny::br()
                   )

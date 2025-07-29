@@ -19,6 +19,7 @@ upload_table_preview_samples_server <- function(
     info.text,
     caption,
     upload_datatype) {
+
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -46,7 +47,6 @@ upload_table_preview_samples_server <- function(
     table.RENDER <- function() {
       dt <- table_data()
       req(!is.null(dt))
-
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -158,21 +158,17 @@ upload_table_preview_samples_server <- function(
     output$error_summary <- renderUI({
       chk1 <- checklist$samples.csv$checks
       chk2 <- checklist$samples_counts$checks
-
       div(
         style = "display: flex; justify-content: right; vertical-align: text-bottom; margin: 8px;",
         check_to_html(
           checklist$samples.csv$checks,
-          ## pass_msg = "All samples checks passed",
           pass_msg = "Samples matrix OK. ",
-          null_msg = "Samples checks not run yet.
-                            Fix any errors with samples first. ",
+          null_msg = "Samples checks not run yet. Fix any errors with samples first. ",
           false_msg = "Samples checks: warning ",
           details = FALSE
         ),
         check_to_html(
           checklist$samples_counts$checks,
-          ##          pass_msg = tspan("All samples-counts checks passed"),
           pass_msg = tspan("Samples-counts OK.", js = FALSE),
           null_msg = tspan("Samples-counts checks not run yet.
                         Fix any errors with samples or counts first.", js = FALSE),
@@ -257,17 +253,16 @@ upload_table_preview_samples_server <- function(
             )
             err.html <- paste(err.html, err2)
           }
-          shinyalert::shinyalert(
-            title = "Warning",
-            text = err.html,
-            html = TRUE
-          )
+          shinyalert::shinyalert(title = "Warning", text = err.html, html = TRUE)
         }
       }
     )
 
     ## pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
+
+      counts <- uploaded$counts.csv
+      shiny::req(nrow(counts))
       # check if samples is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$samples_csv$name)[1]
       if (ext != "csv") {
@@ -289,31 +284,20 @@ upload_table_preview_samples_server <- function(
       }
 
       # Save file
-      file.copy(
-        from = input$samples_csv$datapath,
-        to = paste0(raw_dir(), "/samples.csv"),
-        overwrite = TRUE
-      )
-
-      df <- tryCatch(
-        {
-          playbase::read.as_matrix(input$samples_csv$datapath)
-        },
-        error = function(w) {
-          NULL
-        }
+      datafile <- input$samples_csv$datapath
+      file.copy(from = datafile, to = paste0(raw_dir(), "/samples.csv"), overwrite = TRUE)
+      df <- tryCatch( { playbase::read.as_matrix(datafile) },
+        error = function(w) { NULL }
       )
       if (is.null(df)) {
-        data_error_modal(
-          path = input$samples_csv$datapath,
-          data_type = "samples"
-        )
+        data_error_modal(path = datafile, data_type = "samples")
       } else {
         uploaded$samples.csv <- df
       }
     })
 
     observeEvent(input$remove_samples, {
+
       delete_all_files_samples <- function(value) {
         if (value) {
           uploaded$samples.csv <- NULL
