@@ -118,6 +118,10 @@ singlecell_plot_crosstabPlot_server <- function(id,
           X <- playbase::rename_by(pgx$X, pgx$genes, "symbol")
           pheno <- pgx$genes[pheno, ]$symbol
           gx <- X[which(xgene == pheno), kk, drop = FALSE]
+          # Handle case where multiple genes have same symbol, happens easily on weird species
+          if (nrow(gx) > 1) {
+            gx <- colMeans(gx, na.rm = TRUE)
+          }
           gx.highTH <- mean(gx, na.rm = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
