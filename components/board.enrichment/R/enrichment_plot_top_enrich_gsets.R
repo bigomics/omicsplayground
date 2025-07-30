@@ -37,6 +37,14 @@ enrichment_plot_top_enrich_gsets_ui <- function(
         TRUE
       ),
       "Display labels on the plot."
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("full_yaxis"),
+        "Show full y-axis",
+        TRUE
+      ),
+      "Show full range on y-axis"
     )
   )
 
@@ -181,7 +189,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             xlab = "Rank in ordered dataset",
             ylab = "Rank metric",
             ticklen = 0.25,
-            yth = ifelse(input$label_features, 1, 999), ## threshold for which points get label
+            yth = ifelse(input$label_features, 0.1, 999), ## threshold for which points get label
+            yq = ifelse(input$full_yaxis, 0, 0.01),  ## limits for y-range
             cbar.width = 32,
             tooltips = NULL,
             cex.text = cex.text,
