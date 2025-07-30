@@ -140,7 +140,7 @@ clustering_plot_splitmap_server <- function(id,
       sample_cor <- FALSE
       if (input$sample_cor) {
         sample_cor <- TRUE
-        zx <- cor(pgx$X, method = "pearson")
+        zx <- cor(pgx$X, method = "pearson", use="pairwise.complete.obs")
         D <- as.dist(1 - zx)
         D[which(is.nan(D) | is.na(D))] <- 1
         hc <- fastcluster::hclust(D, method = "ward.D2")
