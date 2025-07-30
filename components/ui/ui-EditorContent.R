@@ -4,6 +4,7 @@
 ##
 
 getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
+
   # Default editor content
   volcano_content <- shiny::div(
     class = "popup-modal",
@@ -45,10 +46,14 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           bslib::accordion_panel(
             "Margins",
             checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
-            numericInput(ns_parent("margin_left"), "Left", value = 10),
-            numericInput(ns_parent("margin_right"), "Right", value = 10),
-            numericInput(ns_parent("margin_top"), "Top", value = 10),
-            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            conditionalPanel(
+              condition = "input.margin_checkbox==true",
+              ns = ns_parent,
+              numericInput(ns_parent("margin_left"), "Left", value = 10),
+              numericInput(ns_parent("margin_right"), "Right", value = 10),
+              numericInput(ns_parent("margin_top"), "Top", value = 10),
+              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            )
           ),
 
           bslib::accordion_panel(
@@ -100,31 +105,31 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             "General",
             shiny::checkboxInput(
               ns_parent("show_legend"),
-              "Show Legend",
+              "Show legend",
               value = TRUE
             ),
             shiny::checkboxInput(
               ns_parent("show_colnames"),
-              "Show Column Names",
+              "Show column names",
               value = TRUE
             ),
             shiny::numericInput(
               ns_parent("column_names_rot"),
-              "Column Names Rotation",
+              "Column names rotation",
               value = 45,
               min = 0,
               max = 90
             ),
-            shiny::numericInput(
-              ns_parent("num_rownames"),
-              "Max Number of Row Names",
-              value = 50,
-              min = 0,
-              max = 1000
-            ),
+            ## shiny::numericInput(
+            ##   ns_parent("num_rownames"),
+            ##   "Max number of row names",
+            ##   value = 50,
+            ##   min = 0,
+            ##   max = 1000
+            ## ),
             shiny::numericInput(
               ns_parent("rownames_width"),
-              "Row Names Width",
+              "Row names width",
               value = 40,
               min = 10,
               max = 200
@@ -140,14 +145,14 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             )
           ),
           # Clustering Options
-          bslib::accordion_panel(
-            "Dendograms",
-            bslib::layout_column_wrap(
-              width = 1/2,
-              checkboxInput(ns_parent("cluster_rows"), "Rows", value = TRUE),
-              checkboxInput(ns_parent("cluster_cols"), "Columns", value = TRUE)
-            )
-          ),
+          ## bslib::accordion_panel(
+          ##   "Dendograms",
+          ##   bslib::layout_column_wrap(
+          ##     width = 1/2,
+          ##     checkboxInput(ns_parent("cluster_rows"), "Rows", value = TRUE),
+          ##     checkboxInput(ns_parent("cluster_cols"), "Columns", value = TRUE)
+          ##   )
+          ## ),
           # Color Scheme
           bslib::accordion_panel(
             "Color Scheme",
@@ -170,11 +175,15 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           # Margins
           bslib::accordion_panel(
             "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
-            numericInput(ns_parent("margin_left"), "Left", value = 10),
-            numericInput(ns_parent("margin_right"), "Right", value = 10),
-            numericInput(ns_parent("margin_top"), "Top", value = 10),
-            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
+            conditionalPanel(
+              condition = "input.margin_checkbox==true",
+              ns = ns_parent,
+              numericInput(ns_parent("margin_left"), "Left", value = 10),
+              numericInput(ns_parent("margin_right"), "Right", value = 10),
+              numericInput(ns_parent("margin_top"), "Top", value = 10),
+              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            )
           )
         ),
         shiny::div(
