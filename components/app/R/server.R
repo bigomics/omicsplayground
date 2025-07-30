@@ -579,7 +579,7 @@ app_server <- function(input, output, session) {
     shiny::req(PGX$name)
     pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
     ##    fields <- c("name", "datatype", "description", "date", "norm_method", "imputation_method", "bc_method", "remove_outliers")
-    fields <- c("name", "datatype", "description", "date", "settings")
+    fields <- c("name", "datatype", "description", "date", "settings", "versions")
     fields <- intersect(fields, names(PGX))
     gset.methods <- sort(colnames(PGX$gset.meta$meta[[1]]$fc))
     gx.methods <- colnames(PGX$gx.meta$meta[[1]]$fc)
