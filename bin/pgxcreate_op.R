@@ -8,8 +8,8 @@
 
 message("[create PGX process] : starting process")
 args <- commandArgs(trailingOnly = TRUE)
-
 temp_dir <- args[1]
+OPG <- args[2]
 if (!exists("temp_dir")) temp_dir <- getwd()
 
 params_from_op <- file.path(temp_dir, "params.RData")
@@ -71,6 +71,9 @@ pgx <- playbase::pgx.computePGX(
   libx.dir = params$libx.dir,
   user_input_dir = temp_dir
 )
+
+# embed opg version
+pgx$versions$omicsplayground_version <- scan(file.path(OPG, "VERSION"), character())[1]
 
 # annotate pgx
 
