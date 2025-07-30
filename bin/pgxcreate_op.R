@@ -8,6 +8,7 @@
 
 message("[create PGX process] : starting process")
 args <- commandArgs(trailingOnly = TRUE)
+
 temp_dir <- args[1]
 OPG <- args[2]
 if (!exists("temp_dir")) temp_dir <- getwd()
