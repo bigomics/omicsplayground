@@ -147,7 +147,7 @@ clustering_plot_splitmap_server <- function(id,
       sample_cor <- FALSE
       if (input$plot_type == "sample correlation") {
         sample_cor <- TRUE
-        zx <- cor(pgx$X, method = "pearson")
+        zx <- cor(pgx$X, method = "pearson", use="pairwise.complete.obs")
         D <- as.dist(1 - zx)
         D[which(is.nan(D) | is.na(D))] <- 1
         hc <- fastcluster::hclust(D, method = "ward.D2")
@@ -327,24 +327,27 @@ clustering_plot_splitmap_server <- function(id,
       if (hm_level() == "gene") {
         getInfo <- function(g) {
           aa <- paste0(
-            "<b>", pgx$genes[g, "gene_name"], "</b>. ",
+            "<b>", pgx$genes[g, "feature"], "</b> ",
+            "(", pgx$genes[g, "symbol"], "): ",
             pgx$genes[g, "gene_title"], "."
           )
           playbase::breakstring2(aa, 50, brk = "<br>")
         }
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
-        rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
-        names(tooltips) <- rownames(X)
+        symbol <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na=TRUE)
+        rownames(X) <- symbol 
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- sapply(aa, function(x) {
           playbase::breakstring2(x, 50, brk = "<br>")
         })
-        names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
 
+      #rownames(X) <- playbase::make_unique(rownames(X))  ## important
+      #names(tooltips) <- rownames(X)
+      
       if (sample_cor) idx = NULL else idx = splity
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X,

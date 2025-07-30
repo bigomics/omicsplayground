@@ -141,6 +141,16 @@ upload_table_preview_counts_server <- function(
                   condition = sprintf("input['%s'] == 'pgx'", ns("data_source")),
                   div(
                     div(
+                      style = "margin-bottom: 15px;",
+                      shiny::radioButtons(
+                        ns("data_processing"),
+                        label = "Select data processing level:",
+                        choices = c("Raw" = "raw", "Normalized (also batch corrected if selected on computation)" = "normalized"),
+                        selected = "raw",
+                        inline = TRUE
+                      )
+                    ),
+                    div(
                       style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
                       span("Selected:", style = "font-weight: bold;"),
                       textOutput(ns("selected_rows_text")),
@@ -299,46 +309,76 @@ upload_table_preview_counts_server <- function(
     
     observeEvent(input$load_selected, {
 
-      fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
-      numfiles <- sum(!sapply(fileinputs,is.null))
-      if(numfiles < 2) {
+      # Validate minimum number of inputs based on data source
+      enough_inputs <- TRUE
+      error_title <- ""
+      
+      if (input$data_source == "pgx") {
+        if (length(input$available_data_table_rows_selected) < 2) {
+          enough_inputs <- FALSE
+          error_title <- "Not enough datasets selected"
+        }
+      } else if (input$data_source == "multi-csv") {
+        fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
+        numfiles <- sum(!sapply(fileinputs,is.null))
+        if(numfiles < 2) {
+          enough_inputs <- FALSE
+          error_title <- "Not enough input files"
+        }
+      }
+      
+      if (!enough_inputs) {
         shinyalert::shinyalert(
-          title = "Not enough input files",
-          text = "Multi-omics needs minimal two data files",
+          title = error_title,
+          text = "Multi-omics needs minimal two data sources",
           type = "error"
         )
         return(NULL)
       }
       
+      # Load data once and cache both data frames and column names
+      data_cache <- list()
       col_lists <- list()
       file_names <- character()
-      if (input$data_source == "pgx") { # Case from pgx not implemented yet
-        #for (i in 1:length(input$available_data_table_rows_selected)) {
-          info <- available_data_table()
-          datasets <- info$dataset[input$available_data_table_rows_selected]
-          for (i in 1:length(datasets)) {
-            dataset <- datasets[i]
-            pgxfile <- file.path(auth$user_dir, paste0(dataset, ".pgx"))
-            df <- playbase::pgx.load(pgxfile)$counts
-            col_lists[[i]] <- colnames(df)
-            file_names[i] <- dataset
+      datatypes <- character()
+      
+      if (input$data_source == "pgx") {
+        info <- available_data_table()
+        datasets <- info$dataset[input$available_data_table_rows_selected]
+        for (i in 1:length(datasets)) {
+          dataset <- datasets[i]
+          pgxfile <- file.path(auth$user_dir, paste0(dataset, ".pgx"))
+          pgx_data <- playbase::pgx.load(pgxfile)
+          # Use raw or normalized data based on selection
+          if (input$data_processing == "normalized" && !is.null(pgx_data$X)) {
+            df <- pgx_data$X
+          } else {
+            df <- pgx_data$counts
           }
-        #}
+          data_cache[[i]] <- df
+          col_lists[[i]] <- colnames(df)
+          file_names[i] <- dataset
+          datatypes[i] <- info$datatype[input$available_data_table_rows_selected[i]]
+        }
       } else {
         for (i in 1:3) {
           file_input <- input[[paste0("file_input_", i)]]
           if (!is.null(file_input)) {
             df <- playbase::read_counts(file_input$datapath)
+            data_cache[[i]] <- df
             col_lists[[i]] <- colnames(df)
             file_names[i] <- file_input$name
+            datatypes[i] <- input[[paste0("datatype_", i)]]
           }
         }
       }
 
       ## remove empty
       sel <- which(!is.na(file_names))
+      data_cache <- data_cache[sel]
       col_lists <- col_lists[sel]
       file_names <- file_names[sel]
+      datatypes <- datatypes[sel]
       
       if (length(col_lists) > 1) {
         common_cols <- Reduce(intersect, col_lists)
@@ -374,34 +414,23 @@ upload_table_preview_counts_server <- function(
               type = "warning"
             )
           }
-          col_lists[[1]] <- common_cols
         }
+      } else {
+        common_cols <- col_lists[[1]]
       }
+
+      # Use cached data instead of reloading
       combined_df <- NULL
-      for (i in 1:max(3, length(input$available_data_table_rows_selected))) {
-        if (input$data_source == "pgx") {
-          dataset <- available_data_table()[input$available_data_table_rows_selected[i], "dataset"]
-          if (is.na(dataset)) {
-            next
-          } else {
-            pgxfile <- file.path(auth$user_dir, paste0(dataset, ".pgx"))
-            df <- playbase::pgx.load(pgxfile)$counts
-          }
-        } else {
-          file_path <- input[[paste0("file_input_", i)]]$datapath
-          if (is.null(file_path)) {
-            next
-          }
-          df <- playbase::read_counts(file_path)
-        }
-        prefix <- switch(input[[paste0("datatype_", i)]],
+      for (i in 1:length(data_cache)) {
+        df <- data_cache[[i]]
+        prefix <- switch(datatypes[i],
           "RNA-seq" = "gx",
           "Proteomics" = "px",
           "Metabolomics" = "mx",
           "mx" # default fallback
         )
         rownames(df) <- paste0(prefix, ":", rownames(df))
-        df <- df[, col_lists[[1]], drop = FALSE]
+        df <- df[, common_cols, drop = FALSE]
         combined_df <- rbind(combined_df, df)
       }
       uploaded$counts.csv <- combined_df
