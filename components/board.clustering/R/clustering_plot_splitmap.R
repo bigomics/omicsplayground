@@ -338,18 +338,19 @@ clustering_plot_splitmap_server <- function(id,
         }
         tooltips <- sapply(rownames(X), getInfo)
         labeled_features <- NULL
-        symbol <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na = TRUE)
-        rownames(X) <- playbase::make_unique(symbol)
-        names(tooltips) <- rownames(X)
+        symbol <- playbase::probe2symbol(rownames(X), pgx$genes, labeltype(), fill_na=TRUE)
+        rownames(X) <- symbol 
       } else {
         aa <- gsub("_", " ", rownames(X)) ## just geneset names
         tooltips <- sapply(aa, function(x) {
           playbase::breakstring2(x, 50, brk = "<br>")
         })
-        names(tooltips) <- rownames(X)
       }
       shiny::showNotification("Rendering iHeatmap...")
 
+      #rownames(X) <- playbase::make_unique(rownames(X))  ## important
+      #names(tooltips) <- rownames(X)
+      
       if (sample_cor) idx = NULL else idx = splity
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X,
