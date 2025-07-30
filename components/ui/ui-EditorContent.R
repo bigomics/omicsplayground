@@ -101,17 +101,26 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         bslib::accordion(
           id = ns("plot_options_accordion"),
           # Basic Options
+          ## bslib::accordion_panel(
+          ##   "General",
+          ##   shiny::checkboxInput(
+          ##     ns_parent("show_legend"),
+          ##     "Show legend",
+          ##     value = TRUE
+          ##   ),
+          ##   shiny::checkboxInput(
+          ##     ns_parent("show_colnames"),
+          ##     "Show column names",
+          ##     value = TRUE
+          ##   ),
+          ## ),
+          # Text Sizes
           bslib::accordion_panel(
-            "General",
-            shiny::checkboxInput(
-              ns_parent("show_legend"),
-              "Show legend",
-              value = TRUE
-            ),
-            shiny::checkboxInput(
-              ns_parent("show_colnames"),
-              "Show column names",
-              value = TRUE
+            "Labels",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              numericInput(ns_parent("label_size"), "Label size:", value = 10),
+              numericInput(ns_parent("annot_cex"), "Annotation size:", value = 12)
             ),
             shiny::numericInput(
               ns_parent("column_names_rot"),
@@ -133,16 +142,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               value = 40,
               min = 10,
               max = 200
-            )
-          ),
-          # Text Sizes
-          bslib::accordion_panel(
-            "Text Sizes",
-            bslib::layout_column_wrap(
-              width = 1/2,
-              numericInput(ns_parent("label_size"), "Labels", value = 8),
-              numericInput(ns_parent("annot_cex"), "Annotation", value = 10)
-            )
+            )            
           ),
           # Clustering Options
           ## bslib::accordion_panel(

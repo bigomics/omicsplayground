@@ -35,6 +35,7 @@ clustering_plot_splitmap_ui <- function(
       ),
       "Show gene-sample heatmap or sample-sample correlation plot."
     ),
+    shiny::hr(),
     withTooltip(
       shiny::radioButtons(
         ns("hm_scale"), "Row scaling:",
@@ -44,6 +45,7 @@ clustering_plot_splitmap_ui <- function(
       "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
       placement = "right", options = list(container = "body")
     ),
+    shiny::hr(),    
     withTooltip(
       shiny::checkboxInput(
         ns("show_legend"), "show legend",
@@ -54,7 +56,13 @@ clustering_plot_splitmap_ui <- function(
       shiny::checkboxInput(
         ns("show_rownames"), "show row names",
         value = TRUE
-      ), "Show or hide the rownames (features)."
+      ), "Show or hide the row names (features)."
+    ),    
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_colnames"), "show column names",
+        value = TRUE
+      ), "Show or hide the column names (samples)."
     )    
   )
 
