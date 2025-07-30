@@ -45,9 +45,9 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
 
           bslib::accordion_panel(
             "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
+            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
             conditionalPanel(
-              condition = "input.margin_checkbox==true",
+              condition = "input.margin_checkbox",
               ns = ns_parent,
               numericInput(ns_parent("margin_left"), "Left", value = 10),
               numericInput(ns_parent("margin_right"), "Right", value = 10),
