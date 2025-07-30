@@ -42,7 +42,7 @@ enrichment_plot_top_enrich_gsets_ui <- function(
       shiny::checkboxInput(
         ns("full_yaxis"),
         "Show full y-axis",
-        TRUE
+        FALSE
       ),
       "Show full range on y-axis"
     )
