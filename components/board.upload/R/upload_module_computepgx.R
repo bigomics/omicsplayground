@@ -942,7 +942,7 @@ upload_module_computepgx_server <- function(
         new.job <- list(
           process = processx::process$new(
             "Rscript",
-            args = c(script_path, tmpdir),
+            args = c(script_path, tmpdir, OPG),
             supervise = TRUE,
             stderr = "|",
             stdout = "|"
