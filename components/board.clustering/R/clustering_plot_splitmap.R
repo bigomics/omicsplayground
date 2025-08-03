@@ -150,12 +150,13 @@ clustering_plot_splitmap_server <- function(id,
         ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
       ))
 
-      sel <- selected_phenotypes()
-
       sample_cor <- FALSE
       if (input$plot_type == "sample correlation") {
         sample_cor <- TRUE
-        zx <- cor(pgx$X, method = "pearson", use="pairwise.complete.obs")
+        X <- pgx$X
+        if(input$hm_scale=="row.center") X <- X - rowMeans(X, na.rm=TRUE)
+        if(input$hm_scale=="row") X <- t(scale(t(X)))
+        zx <- cor(X, method = "pearson", use="pairwise.complete.obs")
         D <- as.dist(1 - zx)
         D[which(is.nan(D) | is.na(D))] <- 1
         hc <- fastcluster::hclust(D, method = "ward.D2")
@@ -212,15 +213,17 @@ clustering_plot_splitmap_server <- function(id,
         annot <- annot[, sel, drop = FALSE]
       }
 
-      rownames(zx) <- sub("HALLMARK:HALLMARK_", "HALLMARK:", rownames(zx))
-      rownames(zx) <- gsub(playdata::GSET_PREFIX_REGEX, "", rownames(zx))
-      rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
       if (hm_level() == "gene") {
         rownames(zx) <- sub(".*:", "", rownames(zx))
         rownames(zx) <- playbase::probe2symbol(rownames(zx), pgx$genes, labeltype(), fill_na = TRUE)
       }
       
-      if (hm_level() == "geneset") { rownames(zx) <- tolower(rownames(zx)) }
+      if (hm_level() == "geneset") {
+        rownames(zx) <- sub("HALLMARK:HALLMARK_", "HALLMARK:", rownames(zx))
+        rownames(zx) <- gsub(playdata::GSET_PREFIX_REGEX, "", rownames(zx))
+        rownames(zx) <- tolower(rownames(zx))
+      }
+      rownames(zx) <- substring(rownames(zx), 1, 50) ## cut long names...
 
       crot <- 0
       totnchar <- nchar(paste0(unique(splitx), collapse = ""))
@@ -237,12 +240,14 @@ clustering_plot_splitmap_server <- function(id,
       margin_bottom <- ifelse(input$margin_checkbox && !is.na(input$margin_bottom), input$margin_bottom, 5)
       margin_left <- ifelse(input$margin_checkbox && !is.na(input$margin_left), input$margin_left, 5)
 
+      scale.mode <- input$hm_scale
       if (sample_cor) {
         splity <- NULL
+        splity <- splitx
         scale.mode <- "none"
         cluster_rows <- FALSE
         cluster_columns <- FALSE
-        zlim <-  c(min(zx),max(zx))
+        zlim <-  c(min(zx,na.rm=TRUE),max(zx,na.rm=TRUE))
       } else {
         cluster_rows <- TRUE
         cluster_columns <- TRUE
@@ -253,7 +258,7 @@ clustering_plot_splitmap_server <- function(id,
         zx,
         split = splity,
         splitx = splitx,
-        scale = input$hm_scale,
+        scale = scale.mode,
         show_legend = input$show_legend,
         show_colnames = show_colnames,
         column_title_rot = crot,
@@ -283,7 +288,6 @@ clustering_plot_splitmap_server <- function(id,
       )
       p <- grDevices::recordPlot()
       p
-
     }
 
     plotly_splitmap.RENDER_get <- function() {
@@ -299,7 +303,6 @@ clustering_plot_splitmap_server <- function(id,
       sample_cor <- pd[["sample_cor"]]      
 
       ## sample clustering index
-      splitx <- NULL
       splitx <- filt$grp
 
       ## iheatmapr needs factors for sharing between groups
@@ -352,18 +355,27 @@ clustering_plot_splitmap_server <- function(id,
         })
       }
       shiny::showNotification("Rendering iHeatmap...")
-
-      #rownames(X) <- playbase::make_unique(rownames(X))  ## important
-      #names(tooltips) <- rownames(X)
       
-      if (sample_cor) idx = NULL else idx = splity
+      if (sample_cor) {
+        idx <- splitx
+        scale.mode <- "none"
+        zlim <- c(min(X,na.rm=TRUE),max(X,na.rm=TRUE))
+        symm <- TRUE
+      } else {
+        idx <- splity
+        scale.mode <- input$hm_scale
+        zlim <- NULL
+        symm <- FALSE
+      }
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X,
         annot = annotF,
         ytips = tooltips,
         idx = idx,
         splitx = splitx,
-        scale = input$hm_scale,
+        scale = scale.mode,
+        zlim = zlim,
+        symm = symm,
         row_annot_width = 0.025,
         rowcex = ifelse(input$show_rownames, row_cex,0),
         colcex = col_cex,
