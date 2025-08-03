@@ -250,7 +250,7 @@ upload_module_normalization_server <- function(
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
-          corX <- cor(t(scaledX))
+          corX <- HiClimR::fastCor(t(scaledX), optBLAS = TRUE)
 
           ## standard dim reduction methods
           pos <- list()
