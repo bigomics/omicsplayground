@@ -13,9 +13,11 @@ UploadBoard <- function(id,
                         ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
-  moduleServer(id, function(input, output, session) {
-    ns <- session$ns ## NAMESPACE
 
+  moduleServer(id, function(input, output, session) {
+
+    ns <- session$ns ## NAMESPACE
+    
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
@@ -105,6 +107,39 @@ UploadBoard <- function(id,
       )
     })
 
+    observeEvent(input$start_search, {
+      if (input$dataset_identifier != "") {
+        ID <- input$dataset_identifier
+        is.valid.ID <- playbase::is.GEO.id.valid(ID)
+        if (!is.valid.ID) {
+          msg <- paste0(ID, " seems not a valid ID. Please use a valid dataset ID.")
+          shinyalert::shinyalert(text = msg, type = "error")
+          ID <- ""
+        } else {
+          msg <- paste0("Searching ", ID, " in ReCount and GEO databases...")
+          shiny::withProgress(message = msg, value = 0.5, {
+            GEO <- tryCatch({ playbase::pgx.getGEOseries(id = ID, get.info = FALSE)},
+              error = function(w) { NULL } )
+          })
+          if (!is.null(GEO)) {
+            counts <- GEO[["counts"]]
+            samples <- GEO[["samples"]]
+            msg <- paste0("Success! ", ID, " found in ", GEO[["source"]])
+            shinyalert::shinyalert(text = msg, type = "success")
+            cm <- intersect(colnames(counts), rownames(samples))
+            uploaded$counts.csv <- counts[, cm]
+            uploaded$samples.csv <- samples[cm, ]
+            rm(GEO)
+          } else {
+            msg <- paste0(ID, " not found in ReCount and GEO. Please try a different ID.")
+            shinyalert::shinyalert(text = msg, type = "error")
+          }
+        }
+      } else {
+        msg <- paste0("Please add a dataset ID")
+        shinyalert::shinyalert(text = msg, type = "warning")
+      }
+    })
 
     ## ============================================================================
     ## ================== NEW DATA UPLOAD =========================================
@@ -230,7 +265,11 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         ## Single matrix counts check
         ## --------------------------------------------------------
+        
         df0 <- uploaded$counts.csv
+
+        dbg("-------------------MNT1: dim(df0)=", dim(df0))
+        
         if (is.null(df0)) {
           return(NULL)
         }
@@ -353,6 +392,9 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$samples.csv
+
+        dbg("-------------------MNT2: dim(df0)=", dim(df0))
+
         if (is.null(df0)) {
           return(list(status = "Missing samples.csv", matrix = NULL))
         }
@@ -741,10 +783,8 @@ UploadBoard <- function(id,
 
           summary_checks <- summary_checks[find_content]
 
-
           # get the names of each list within summary checks
           get_all_codes <- sapply(summary_checks, function(x) names(x))
-
 
           # check if any any code is error code
           error_list <- playbase::PGX_CHECKS
@@ -1152,7 +1192,8 @@ UploadBoard <- function(id,
       title = "Uploaded Counts",
       info.text = "This is the uploaded counts data.",
       caption = "This is the uploaded counts data.",
-      upload_datatype = upload_datatype
+      upload_datatype = upload_datatype,
+      public_dataset_id = input$dataset_identifier
     )
 
     upload_table_preview_samples_server(

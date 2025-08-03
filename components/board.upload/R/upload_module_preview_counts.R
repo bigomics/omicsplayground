@@ -25,8 +25,12 @@ upload_table_preview_counts_server <- function(
     title,
     info.text,
     caption,
-    upload_datatype) {
+    upload_datatype,
+    public_dataset_id
+    ) {
+
   moduleServer(id, function(input, output, session) {
+
     ns <- session$ns
 
     table_data <- shiny::reactive({
@@ -54,10 +58,8 @@ upload_table_preview_counts_server <- function(
     table.RENDER <- function() {
       dt <- table_data()
       req(!is.null(dt))
-
       is.integer <- is.integer(dt) || all(round(dt) == dt, na.rm = TRUE)
       digits <- ifelse(is.integer, 0, 2)
-
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -110,7 +112,6 @@ upload_table_preview_counts_server <- function(
           onclick = "window.open('https://omicsplayground.readthedocs.io/en/latest/dataprep/counts/', '_blank')"
         )
       )
-
 
       div(
         bslib::as_fill_carrier(),
@@ -454,8 +455,7 @@ upload_table_preview_counts_server <- function(
         err.html <- check_to_html(
           checks,
           pass_msg = tspan("All counts checks passed", js = FALSE),
-          null_msg = tspan("Counts checks not run yet.
-                            Fix any errors with counts first.", js = FALSE),
+          null_msg = tspan("Counts checks not run yet. Fix any errors with counts first.", js = FALSE),
           false_msg = tspan("Counts checks: warning", js = FALSE),
           details = TRUE
         )
@@ -465,10 +465,15 @@ upload_table_preview_counts_server <- function(
           html = TRUE
         )
       }
-    })
+    }) 
+
+    #observeEvent(upload_datatype, {
+    #  dbg("-------public_dataset_id=", public_dataset_id)
+    #})
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
+      dbg("-----------input$counts_csv$name=", input$counts_csv$name)
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
       if (!all(ext %in% c("csv", "RData"))) {
