@@ -54,7 +54,7 @@ MofaUI <- function(id) {
   #  shiny::div(
   bslib::page_fillable(
     fillable_mobile = FALSE,  # not working here... 
-    boardHeader(title = "Multi-Omics Factor Analyis", info_link = ns("info")),
+    boardHeader(title = "Multi-Omics Factor Analysis", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
 

@@ -228,23 +228,21 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         } else if (ft %in% names(pgx$families)) {
           pp <- playbase::map_probes( pgx$genes, pgx$families[[ft]])
         } else if (ft == "<custom>" && ft != "") {
-          message("[getFilteredMatrix] selecting for <custom> features")
           customfeatures <- input$hm_customfeatures
           gg1 <- strsplit(customfeatures, split = "[, ;\n\t]")[[1]]
-          is.regx <- grepl("[*.?\\[]", gg1[1])
-          if (length(gg1) == 1 && is.regx) {
+          is.regex <- grepl("[*?\\[]", gg1[1])
+          if (length(gg1) == 1 && is.regex) {
             gg1 <- grep(gg1, genes, ignore.case = TRUE, value = TRUE)
           }
           # heatmap does not like single gene
           shiny::validate(shiny::need(
-            length(gg1) > 1 && !is.regx,
+            length(gg1) > 1 && !is.regex,
             tspan("Please input more than 1 gene.", js = FALSE)
           ))
           
           ## build index idx that determines groups/cluster of genes. 
           idx <- NULL
           if (any(grepl("^---", gg1))) {
-            message("[getFilteredMatrix] <custom> groups detected")
             idx <- list()
             kk <- c(1, grep("^---", gg1), length(gg1) + 1)
             i=1
@@ -441,7 +439,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         topmode <- "sd"
       }
       if(splitby == "contrast") {
-        topmode <- "marker"
+        # topmode <- "marker"  ## really?
       }
 
       addsplitgene <- function(gg) {

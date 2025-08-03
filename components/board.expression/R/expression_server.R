@@ -382,7 +382,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
 
       if (gene.selected && !gset.selected) {
         ## only gene selected: color all genes with same name, label selected
-        this.feature <- rownames(df1)[genetable_rows_selected()]
+        this.feature <- genetable$rownames_selected()
         this.symbol <- res[this.feature, "symbol"]
         sel.features <- rownames(res)[which(res$symbol == this.symbol)]
         ## lab.features <- this.feature
@@ -447,7 +447,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
       id = "plots_barplot",
       comp = shiny::reactive(input$gx_contrast),
       pgx = pgx,
-      sel = genetable_rows_selected,
+      sel = genetable$rownames_selected,
       res = filteredDiffExprTable,
       watermark = WATERMARK
     )
@@ -456,7 +456,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
       id = "plots_topfoldchange",
       comp = shiny::reactive(input$gx_contrast),
       pgx = pgx,
-      sel = genetable_rows_selected,
+      sel = genetable$rownames_selected,
       res = filteredDiffExprTable,
       watermark = WATERMARK
     )
@@ -572,7 +572,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
         return(NULL)
       }
       ## get table
-      sel.row <- genetable_rows_selected()
+      sel.row <- genetable$rownames_selected()
       if (is.null(sel.row)) {
         return(NULL)
       }
