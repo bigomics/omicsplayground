@@ -467,9 +467,10 @@ upload_table_preview_counts_server <- function(
       }
     }) 
 
-    #observeEvent(upload_datatype, {
-    #  dbg("-------public_dataset_id=", public_dataset_id)
-    #})
+    observeEvent(input$counts_csv, {
+      dbg("-------uploaded$counts.csv: ", dim(uploaded$counts.csv))
+      dbg("-------uploaded$samples.csv: ", dim(uploaded$samples.csv))
+    })
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {

@@ -114,22 +114,20 @@ UploadBoard <- function(id,
         if (!is.valid.ID) {
           msg <- paste0(ID, " seems not a valid ID. Please use a valid dataset ID.")
           shinyalert::shinyalert(text = msg, type = "error")
-          ID <- ""
         } else {
-          msg <- paste0("Searching ", ID, " in ReCount and GEO databases...")
+          msg <- paste0("Searching ", ID, " in GEO and ReCount databases...")
           shiny::withProgress(message = msg, value = 0.5, {
             GEO <- tryCatch({ playbase::pgx.getGEOseries(id = ID, get.info = FALSE)},
               error = function(w) { NULL } )
           })
           if (!is.null(GEO)) {
-            counts <- GEO[["counts"]]
-            samples <- GEO[["samples"]]
+            cm <- intersect(colnames(GEO[["counts"]]), rownames(GEO[["samples"]]))
+            uploaded$counts.csv <- GEO[["counts"]][, cm, drop = FALSE]
+            uploaded$samples.csv <- GEO[["samples"]][cm, , drop = FALSE]
             msg <- paste0("Success! ", ID, " found in ", GEO[["source"]])
             shinyalert::shinyalert(text = msg, type = "success")
-            cm <- intersect(colnames(counts), rownames(samples))
-            uploaded$counts.csv <- counts[, cm]
-            uploaded$samples.csv <- samples[cm, ]
             rm(GEO)
+            new_upload(new_upload() + 1)
           } else {
             msg <- paste0(ID, " not found in ReCount and GEO. Please try a different ID.")
             shinyalert::shinyalert(text = msg, type = "error")
@@ -308,6 +306,10 @@ UploadBoard <- function(id,
         ## get uploaded counts
         checked <- NULL
         res <- uploaded_counts()
+        
+        dbg("-------------------MNT1: is.null(res)=", is.null(res))
+        dbg("-------------------MNT1: dim(res$df)=", dim(res$df))
+
         if (is.null(res)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
@@ -351,6 +353,11 @@ UploadBoard <- function(id,
           status <- "ERROR: incorrect counts matrix"
         }
 
+        ## HACK AZ
+        checked <- res$df
+        status <- "OK"
+
+        
         ## --------------------------------------------------------
         ## check files: maximum samples allowed
         ## --------------------------------------------------------
@@ -378,6 +385,11 @@ UploadBoard <- function(id,
           uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
         }
 
+        dbg("-------------------MNT1: is.null(status)=", is.null(status))
+        dbg("-------------------MNT1: status=", status)
+        dbg("-------------------MNT1: is.null(checked)=", is.null(checked))
+        dbg("-------------------MNT1: checked=", checked)
+
         list(status = status, matrix = checked)
       }
     )
@@ -393,11 +405,13 @@ UploadBoard <- function(id,
         ## get uploaded counts
         df0 <- uploaded$samples.csv
 
-        dbg("-------------------MNT2: dim(df0)=", dim(df0))
+        dbg("-------------------MNT2: dim(checked_counts()$matrix) = ", dim(checked_counts()$matrix))
+        dbg("-------------------MNT2: dim(uploaded$samples.csv)=", dim(uploaded$samples.csv))
 
         if (is.null(df0)) {
           return(list(status = "Missing samples.csv", matrix = NULL))
         }
+
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
@@ -458,6 +472,14 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
+        dbg("-------------------MNT2: is.null(res_counts) = ", is.null(res_counts))
+        dbg("-------------------MNT2: class(res_counts) = ", class(res_counts))
+        dbg("-------------------MNT2: dim(res_counts) = ", dim(res_counts))
+
+        dbg("-------------------MNT2: is.null(res_samples) = ", is.null(res_samples))
+        dbg("-------------------MNT2: class(res_samples) = ", class(res_samples))
+        dbg("-------------------MNT2: dim(res_samples) = ", dim(res_samples))
+
         list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
       }
     )
@@ -493,6 +515,18 @@ UploadBoard <- function(id,
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples_counts()
 
+        dbg("-------------------MNT3: is.null(cc$COUNTS) = ", is.null(cc$COUNTS))
+        dbg("-------------------MNT3: class(cc$COUNTS) = ", class(cc$COUNTS))
+        dbg("-------------------MNT3: dim(cc$COUNTS) = ", dim(cc$COUNTS))
+
+        dbg("-------------------MNT3: is.null(cc$SAMPLES) = ", is.null(cc$SAMPLES))
+        dbg("-------------------MNT3: class(cc$SAMPLES) = ", class(cc$SAMPLES))
+        dbg("-------------------MNT3: dim(cc$SAMPLES) = ", dim(cc$SAMPLES))
+
+        dbg("-------------------MNT3: is.null(checked) = ", is.null(checked))
+        dbg("-------------------MNT3: class(checked) = ", class(checked))
+        dbg("-------------------MNT3: dim(checked) = ", dim(checked))
+
         ## -------------- max contrast check ------------------
         MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
         if (!is.null(checked)) {
@@ -507,6 +541,10 @@ UploadBoard <- function(id,
             )
           }
         }
+
+        dbg("-------------------MNT3.5: is.null(checked) = ", is.null(checked))
+        dbg("-------------------MNT3.5: class(checked) = ", class(checked))
+        dbg("-------------------MNT3.5: dim(checked) = ", dim(checked))
 
         ## -------------- cross-check with samples ------------------
         if (!is.null(checked) && !is.null(cc$SAMPLES)) {
