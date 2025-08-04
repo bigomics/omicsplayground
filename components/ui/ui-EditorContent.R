@@ -4,6 +4,7 @@
 ##
 
 getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
+
   # Default editor content
   volcano_content <- shiny::div(
     class = "popup-modal",
@@ -44,11 +45,15 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
 
           bslib::accordion_panel(
             "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
-            numericInput(ns_parent("margin_left"), "Left", value = 10),
-            numericInput(ns_parent("margin_right"), "Right", value = 10),
-            numericInput(ns_parent("margin_top"), "Top", value = 10),
-            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
+            conditionalPanel(
+              condition = "input.margin_checkbox",
+              ns = ns_parent,
+              numericInput(ns_parent("margin_left"), "Left", value = 10),
+              numericInput(ns_parent("margin_right"), "Right", value = 10),
+              numericInput(ns_parent("margin_top"), "Top", value = 10),
+              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            )
           ),
 
           bslib::accordion_panel(
@@ -74,9 +79,6 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           if (cards) {
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
               bigLoaders::useSpinner()
-          } else {
-            # outputFunc(ns("renderfigure_2")) %>%
-            #   bigLoaders::useSpinner()
           }
         )
       )
@@ -95,58 +97,28 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
           id = ns("plot_options_accordion"),
-          # Basic Options
+          # Text Sizes
           bslib::accordion_panel(
-            "General",
-            shiny::checkboxInput(
-              ns_parent("show_legend"),
-              "Show Legend",
-              value = TRUE
-            ),
-            shiny::checkboxInput(
-              ns_parent("show_colnames"),
-              "Show Column Names",
-              value = TRUE
+            "Labels",
+            bslib::layout_column_wrap(
+              width = 1/2,
+              numericInput(ns_parent("label_size"), "Label size:", value = 10),
+              numericInput(ns_parent("annot_cex"), "Annotation size:", value = 12)
             ),
             shiny::numericInput(
               ns_parent("column_names_rot"),
-              "Column Names Rotation",
+              "Column names rotation",
               value = 45,
               min = 0,
               max = 90
             ),
             shiny::numericInput(
-              ns_parent("num_rownames"),
-              "Max Number of Row Names",
-              value = 50,
-              min = 0,
-              max = 1000
-            ),
-            shiny::numericInput(
               ns_parent("rownames_width"),
-              "Row Names Width",
+              "Row names width",
               value = 40,
               min = 10,
               max = 200
-            )
-          ),
-          # Text Sizes
-          bslib::accordion_panel(
-            "Text Sizes",
-            bslib::layout_column_wrap(
-              width = 1/2,
-              numericInput(ns_parent("label_size"), "Labels", value = 8),
-              numericInput(ns_parent("annot_cex"), "Annotation", value = 10)
-            )
-          ),
-          # Clustering Options
-          bslib::accordion_panel(
-            "Dendograms",
-            bslib::layout_column_wrap(
-              width = 1/2,
-              checkboxInput(ns_parent("cluster_rows"), "Rows", value = TRUE),
-              checkboxInput(ns_parent("cluster_cols"), "Columns", value = TRUE)
-            )
+            )            
           ),
           # Color Scheme
           bslib::accordion_panel(
@@ -170,11 +142,15 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           # Margins
           bslib::accordion_panel(
             "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom Margins", value = FALSE),
-            numericInput(ns_parent("margin_left"), "Left", value = 10),
-            numericInput(ns_parent("margin_right"), "Right", value = 10),
-            numericInput(ns_parent("margin_top"), "Top", value = 10),
-            numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
+            conditionalPanel(
+              condition = "input.margin_checkbox==true",
+              ns = ns_parent,
+              numericInput(ns_parent("margin_left"), "Left", value = 10),
+              numericInput(ns_parent("margin_right"), "Right", value = 10),
+              numericInput(ns_parent("margin_top"), "Top", value = 10),
+              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+            )
           )
         ),
         shiny::div(
@@ -182,9 +158,6 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           if (cards) {
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
-          } else {
-            # outputFunc(ns("renderfigure_2")) %>%
-            #   bigLoaders::useSpinner()
           }
         )
       )
