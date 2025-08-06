@@ -52,7 +52,7 @@ singlecell_plot_mappingplot_ui <- function(
     options = mapping.opts,
     title = title,
     caption = caption,
-    download.fmt = c("png", "pdf", "svg"),
+    download.fmt = c("png", "pdf", "svg", "csv"),
     height = height,
     width = width
   )
@@ -116,39 +116,97 @@ singlecell_plot_mappingplot_server <- function(id,
       refset <- refset() # input$refset2
       view <- view()
 
+      # Apply grouping aggregation if needed
+      if (grpvar != "<ungrouped>" && grpvar %in% colnames(pgx$samples)) {
+        grp <- pgx$samples[rownames(score), grpvar]
+        shiny::validate(shiny::need(length(unique(grp)) > 1, "Filter is too restrictive, two samples at least are required."))
+        pos <- apply(pos, 2, function(x) tapply(x, grp, median))
+        score <- apply(score, 2, function(x) tapply(x, grp, mean))
+        ii <- hclust(dist(score))$order
+        jj <- hclust(dist(t(score)))$order
+        score <- score[ii, jj]
+      }
+
+      # Prepare final plot data based on view type
+      final_data <- list()
+      if (view == "dotmap") {
+        # For dotmap: transform the score data
+        score_transformed <- score**1.5
+        rownames(score_transformed) <- paste("", rownames(score_transformed), "  ")
+        final_data$plot_matrix <- t(score_transformed)
+        final_data$plot_type <- "dotmap"
+      }
+
+      if (view == "heatmap") {
+        usermode <- "PRO"
+
+        if (!is.null(usermode) && usermode >= "PRO") {
+          # PRO mode: prepare all.scores with all methods
+          kk <- head(colnames(score)[order(-colMeans(score**2))], 18)
+          kk <- intersect(colnames(score), kk)
+          all.scores <- pgx$deconv[[refset]]
+
+          if (grpvar != "<ungrouped>" && grpvar %in% colnames(pgx$samples)) {
+            grp <- pgx$samples[rownames(all.scores[[1]]), grpvar]
+            for (i in 1:length(all.scores)) {
+              all.scores[[i]] <- apply(
+                all.scores[[i]], 2,
+                function(x) tapply(x, grp, mean)
+              )
+              ii <- rownames(score)
+              all.scores[[i]] <- all.scores[[i]][ii, kk]
+            }
+          }
+
+          # Process each method's scores for plotting
+          processed_scores <- list()
+          for (k in 1:length(all.scores)) {
+            ii <- rownames(score)
+            score1 <- all.scores[[k]][ii, kk]
+            score1 <- score1 / (1e-8 + rowSums(score1))
+            processed_scores[[names(all.scores)[k]]] <- t(score1**1)
+          }
+
+          final_data$plot_matrices <- processed_scores
+          final_data$plot_type <- "heatmap_pro"
+          final_data$selected_features <- kk
+        } else {
+          # Non-PRO mode: single heatmap
+          score1 <- score
+          score1 <- score1 / (1e-8 + rowSums(score1))
+          final_data$plot_matrix <- t(score1**2)
+          final_data$plot_type <- "heatmap_basic"
+        }
+      }
+
       return(list(
         grpvar = grpvar,
         score = score,
         refset = refset,
         pgx = pgx,
         pos = pos,
-        view = view
+        view = view,
+        final_data = final_data
       ))
     })
 
     plot.render <- function() {
       pd <- plot_data()
-
-      if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
-        grp <- pd[["pgx"]]$samples[rownames(pd[["score"]]), pd[["grpvar"]]]
-        shiny::validate(shiny::need(length(unique(grp)) > 1, "Filter is too restrictive, two samples at least are required."))
-        pd[["pos"]] <- apply(pd[["pos"]], 2, function(x) tapply(x, grp, median))
-        pd[["score"]] <- apply(pd[["score"]], 2, function(x) tapply(x, grp, mean))
-        ii <- hclust(dist(pd[["score"]]))$order
-        jj <- hclust(dist(t(pd[["score"]])))$order
-        pd[["score"]] <- pd[["score"]][ii, jj]
+      if (is.null(pd) || is.null(pd$final_data)) {
+        return(NULL)
       }
+
+      final_data <- pd$final_data
       b0 <- 0.1 + 0.70 * pmax(30 - ncol(pd[["score"]]), 0)
 
-      if (pd[["view"]] == "dotmap") {
-        #
+      if (final_data$plot_type == "dotmap") {
+        # Dotmap visualization
         par(mfrow = c(1, 1), mar = c(0, 0, 8, 1), oma = c(1, 1, 1, 1) * 0.25)
-        score3 <- pd[["score"]]**1.5
-        rownames(score3) <- paste("", rownames(score3), "  ")
+        score3 <- final_data$plot_matrix
         tl.srt <- 90
-        tl.cex <- ifelse(nrow(pd[["score"]]) > 60, 0.7, 0.85)
+        tl.cex <- ifelse(nrow(score3) > 60, 0.7, 0.85)
         if (max(sapply(rownames(score3), nchar)) > 30) tl.srt <- 45
-        corrplot::corrplot(t(score3),
+        corrplot::corrplot(score3,
           mar = c(b0, 1, 4, 0.5),
           cl.lim = c(0, max(score3)), cl.pos = "n",
           tl.cex = tl.cex, tl.col = "grey20",
@@ -156,59 +214,61 @@ singlecell_plot_mappingplot_server <- function(id,
         )
       }
 
-      if (pd[["view"]] == "heatmap") {
-        usermode <- "PRO"
-        if (!is.null(usermode) && usermode >= "PRO") {
-          kk <- head(colnames(pd[["score"]])[order(-colMeans(pd[["score"]]**2))], 18)
-          kk <- intersect(colnames(pd[["score"]]), kk)
-          all.scores <- pd[["pgx"]]$deconv[["LM22"]]
-          all.scores <- pd[["pgx"]]$deconv[[pd[["refset"]]]]
-          if (pd[["grpvar"]] != "<ungrouped>" && pd[["grpvar"]] %in% colnames(pd[["pgx"]]$samples)) {
-            grp <- pd[["pgx"]]$samples[rownames(all.scores[[1]]), pd[["grpvar"]]]
-            for (i in 1:length(all.scores)) {
-              all.scores[[i]] <- apply(
-                all.scores[[i]], 2,
-                function(x) tapply(x, grp, mean)
-              )
-              ii <- rownames(pd[["score"]])
-              all.scores[[i]] <- all.scores[[i]][ii, kk]
-            }
-          }
-
-          nm <- length(all.scores)
+      if (final_data$plot_type == "heatmap_pro") {
+        # PRO mode heatmap with multiple methods
+        processed_scores <- final_data$plot_matrices
+        nm <- length(processed_scores)
+        m <- 3
+        n <- 2
+        if (nm > 6) {
           m <- 3
-          n <- 2
-          if (nm > 6) {
-            m <- 3
-            n <- 3
-          }
-          if (nm > 9) {
-            m <- 4
-            n <- 3
-          }
-          rr <- 2 + max(nchar(colnames(pd[["score"]]))) / 2
-          par(mfrow = c(m, n), mar = c(0, 0.3, 2, 0.3), oma = c(10, 0, 0, rr), xpd = TRUE)
-          k <- 1
-          for (k in 1:length(all.scores)) {
-            ii <- rownames(pd[["score"]])
-            score1 <- all.scores[[k]][ii, kk]
-            if (k %% n != 0) colnames(score1) <- rep("", ncol(score1))
-            if ((k - 1) %/% n != (nm - 1) %/% n) rownames(score1) <- rep("", nrow(score1))
-            score1 <- score1 / (1e-8 + rowSums(score1))
-            if (nrow(score1) > 100) rownames(score1) <- rep("", nrow(score1))
-            playbase::gx.imagemap(t(score1**1), cex = 0.85, main = "", clust = FALSE)
-            title(main = names(all.scores)[k], cex.main = 1.1, line = 0.4, font.main = 1)
-          }
-        } else {
-          score1 <- pd[["score"]]
-          score1 <- score1 / (1e-8 + rowSums(score1))
-          if (nrow(score1) > 100) rownames(score1) <- rep("", nrow(pd[["score"]]))
-          playbase::gx.heatmap(t(score1**2),
-            scale = "none",
-            cexRow = 1, cexCol = 0.6, col = heat.colors(16),
-            mar = c(b0, 15), key = FALSE, keysize = 0.5
-          )
+          n <- 3
         }
+        if (nm > 9) {
+          m <- 4
+          n <- 3
+        }
+        rr <- 2 + max(nchar(final_data$selected_features)) / 2
+        par(mfrow = c(m, n), mar = c(0, 0.3, 2, 0.3), oma = c(10, 0, 0, rr), xpd = TRUE)
+
+        k <- 1
+        for (k in 1:length(processed_scores)) {
+          method_name <- names(processed_scores)[k]
+          score_matrix <- processed_scores[[k]]
+          # Handle subplot labeling
+          if ((k - 1) %/% n != (nm - 1) %/% n) colnames(score_matrix) <- rep("", ncol(score_matrix))
+          if (k %% n != 0) rownames(score_matrix) <- rep("", nrow(score_matrix))
+          if (nrow(score_matrix) > 100) rownames(score_matrix) <- rep("", nrow(score_matrix))
+
+          playbase::gx.imagemap(score_matrix, cex = 0.85, main = "", clust = FALSE)
+          title(main = method_name, cex.main = 1.1, line = 0.4, font.main = 1)
+          k <- k + 1
+        }
+      }
+
+      if (final_data$plot_type == "heatmap_basic") {
+        # Basic heatmap
+        score_matrix <- final_data$plot_matrix
+        if (nrow(pd[["score"]]) > 100) rownames(score_matrix) <- rep("", nrow(pd[["score"]]))
+
+        playbase::gx.heatmap(score_matrix,
+          scale = "none",
+          cexRow = 1, cexCol = 0.6, col = heat.colors(16),
+          mar = c(b0, 15), key = FALSE, keysize = 0.5
+        )
+      }
+    }
+
+    plot_data_csv <- function() {
+      plot_result <- plot_data()
+      final_plot_data <- plot_result$final_data
+
+      if (final_plot_data$plot_type == "dotmap") {
+        final_plot_data$plot_matrix
+      } else if (final_plot_data$plot_type == "heatmap_pro") {
+        do.call(rbind, final_plot_data$plot_matrices)
+      } else if (final_plot_data$plot_type == "heatmap_basic") {
+        final_plot_data$plot_matrix
       }
     }
 
@@ -217,7 +277,8 @@ singlecell_plot_mappingplot_server <- function(id,
       func = plot.render,
       res = c(85, 95),
       pdf.width = 8, pdf.height = 8,
-      add.watermark = watermark
+      add.watermark = watermark,
+      csvFunc = plot_data_csv
     )
   }) ## end of moduleServer
 }
