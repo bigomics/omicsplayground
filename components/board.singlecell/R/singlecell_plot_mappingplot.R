@@ -232,11 +232,12 @@ singlecell_plot_mappingplot_server <- function(id,
         par(mfrow = c(m, n), mar = c(0, 0.3, 2, 0.3), oma = c(10, 0, 0, rr), xpd = TRUE)
 
         k <- 1
-        for (method_name in names(processed_scores)) {
-          score_matrix <- processed_scores[[method_name]]
+        for (k in 1:length(processed_scores)) {
+          method_name <- names(processed_scores)[k]
+          score_matrix <- processed_scores[[k]]
           # Handle subplot labeling
-          if (k %% n != 0) colnames(score_matrix) <- rep("", ncol(score_matrix))
-          if ((k - 1) %/% n != (nm - 1) %/% n) rownames(score_matrix) <- rep("", nrow(score_matrix))
+          if ((k - 1) %/% n != (nm - 1) %/% n) colnames(score_matrix) <- rep("", ncol(score_matrix))
+          if (k %% n != 0) rownames(score_matrix) <- rep("", nrow(score_matrix))
           if (nrow(score_matrix) > 100) rownames(score_matrix) <- rep("", nrow(score_matrix))
 
           playbase::gx.imagemap(score_matrix, cex = 0.85, main = "", clust = FALSE)
