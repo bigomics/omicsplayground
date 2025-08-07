@@ -10,6 +10,7 @@ upload_table_preview_samples_ui <- function(id) {
 
 upload_table_preview_samples_server <- function(
     id,
+    orig_sample_matrix,
     uploaded,
     checklist,
     scrollY,
@@ -21,8 +22,11 @@ upload_table_preview_samples_server <- function(
     upload_datatype) {
 
   moduleServer(id, function(input, output, session) {
+
     ns <- session$ns
 
+    sel_vars <- reactiveVal(NULL)
+    
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- uploaded$samples.csv
@@ -44,10 +48,32 @@ upload_table_preview_samples_server <- function(
       dt
     })
 
+    orig_vars <- shiny::reactive({ return(colnames(orig_sample_matrix)) })
+    output$col_sel <- renderUI({
+      req(orig_vars())
+      dt <- table_data()
+      shiny::checkboxGroupInput(ns("vars_selected"),
+        label = "Retain variable:", choices = orig_vars(),
+        selected = colnames(dt), inline = TRUE)
+    })
+        
     table.RENDER <- function() {
       dt <- table_data()
       req(!is.null(dt))
-      DT::datatable(dt,
+
+      c1 <- !is.null(input$vars_selected) && ncol(dt)>0
+      shiny::validate(shiny::need(c1, "Please select at least 1 variable."))
+      if (!all(input$vars_selected %in% colnames(dt))) {
+        rec.vars <- input$vars_selected[which(!input$vars_selected %in% colnames(dt))]
+        cm <- intersect(rownames(dt), rownames(orig_sample_matrix))
+        dt <- cbind(dt[cm, , drop = FALSE], orig_sample_matrix[cm, rec.vars, drop = FALSE])
+      } else {
+        dt <- dt[, input$vars_selected, drop = FALSE]
+      }
+      uploaded$samples.csv <- dt
+      
+      DT::datatable(
+        dt,
         class = "compact hover",
         rownames = TRUE,
         extensions = c("Buttons", "Scroller"),
@@ -122,15 +148,18 @@ upload_table_preview_samples_server <- function(
             col_widths = 12,
             bslib::layout_columns(
               col_widths = c(8, 4),
-              TableModuleUI(
-                ns("samples_datasets"),
-                width = width,
-                height = height,
-                title = title,
-                info.text = info.text,
-                caption = caption,
-                label = "",
-                show.maximize = FALSE
+              div(
+                uiOutput(ns("col_sel")),
+                TableModuleUI(
+                  ns("samples_datasets"),
+                  width = width,
+                  height = height,
+                  title = title,
+                  info.text = info.text,
+                  caption = caption,
+                  label = "",
+                  show.maximize = FALSE
+                )
               ),
               bslib::navset_card_pill(
                 bslib::nav_panel(
@@ -192,6 +221,7 @@ upload_table_preview_samples_server <- function(
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
       shiny::req(nrow(Y))
+      shiny::validate(shiny::need(ncol(Y)>0, "Please select at least 1 variable."))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
@@ -260,7 +290,6 @@ upload_table_preview_samples_server <- function(
 
     ## pass counts to uploaded when uploaded
     observeEvent(input$samples_csv, {
-
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
       # check if samples is csv (necessary due to drag and drop of any file)
@@ -328,11 +357,17 @@ upload_table_preview_samples_server <- function(
     })
 
     observeEvent(input$load_example, {
-      if (upload_datatype() == "multi-omics") {
-        uploaded$samples.csv <- playbase::SAMPLES_MO
-      } else {
-        uploaded$samples.csv <- playbase::SAMPLES
+      df <- playbase::SAMPLES
+      if (upload_datatype() == "multi-omics") df <- playbase::SAMPLES_MO
+      vars <- sel_vars()
+      if (is.null(vars) || length(vars) == 0) {
+        vars <- colnames(df)
+        sel_vars(vars)
       }
+      if (!is.null(vars) && all(vars %in% colnames(df))) {
+        df <- df[, vars, drop = FALSE]
+      }
+      uploaded$samples.csv <- df
     })
 
     TableModuleServer(

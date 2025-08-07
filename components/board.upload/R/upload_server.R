@@ -1189,6 +1189,7 @@ UploadBoard <- function(id,
 
     upload_table_preview_samples_server(
       "samples_preview",
+      orig_sample_matrix = uploaded$samples.csv,
       uploaded,
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
