@@ -265,12 +265,10 @@ UploadBoard <- function(id,
         ## --------------------------------------------------------
         
         df0 <- uploaded$counts.csv
+        if (is.null(df0)) return(NULL)
 
-        dbg("-------------------MNT1: dim(df0)=", dim(df0))
-        
-        if (is.null(df0)) {
-          return(NULL)
-        }
+        dbg("-------------------MNT1: dim(df0)=", dim(df0))        
+
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -306,13 +304,10 @@ UploadBoard <- function(id,
         ## get uploaded counts
         checked <- NULL
         res <- uploaded_counts()
+        if (is.null(res)) return(list(status = "Missing counts.csv", matrix = NULL))
         
-        dbg("-------------------MNT1: is.null(res)=", is.null(res))
-        dbg("-------------------MNT1: dim(res$df)=", dim(res$df))
-
-        if (is.null(res)) {
-          return(list(status = "Missing counts.csv", matrix = NULL))
-        }
+        dbg("-------------------MNT2: is.null(res)=", is.null(res))
+        dbg("-------------------MNT3: dim(res$df)=", dim(res$df))
 
         ## wait for dialog finished
         shiny::req(checked_for_log())
@@ -385,11 +380,12 @@ UploadBoard <- function(id,
           uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
         }
 
-        dbg("-------------------MNT1: is.null(status)=", is.null(status))
-        dbg("-------------------MNT1: status=", status)
-        dbg("-------------------MNT1: is.null(checked)=", is.null(checked))
-        dbg("-------------------MNT1: checked=", checked)
-
+        dbg("-------------------MNT4: is.null(status)=", is.null(status))
+        dbg("-------------------MNT5: status=", status)
+        dbg("-------------------MNT6: is.null(checked)=", is.null(checked))
+        dbg("-------------------MNT7: class(checked)=", class(checked))
+        dbg("-------------------MNT8: dim(checked)=", dim(checked))
+          
         list(status = status, matrix = checked)
       }
     )
@@ -404,13 +400,10 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$samples.csv
+        if (is.null(df0)) return(list(status = "Missing samples.csv", matrix = NULL))
 
-        dbg("-------------------MNT2: dim(checked_counts()$matrix) = ", dim(checked_counts()$matrix))
-        dbg("-------------------MNT2: dim(uploaded$samples.csv)=", dim(uploaded$samples.csv))
-
-        if (is.null(df0)) {
-          return(list(status = "Missing samples.csv", matrix = NULL))
-        }
+        dbg("---------MNT9: dim(checked_counts()$matrix) = ", dim(checked_counts()$matrix))
+        dbg("---------MNT10: dim(uploaded$samples.csv)=", dim(uploaded$samples.csv))
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
@@ -472,13 +465,8 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
-        dbg("-------------------MNT2: is.null(res_counts) = ", is.null(res_counts))
-        dbg("-------------------MNT2: class(res_counts) = ", class(res_counts))
-        dbg("-------------------MNT2: dim(res_counts) = ", dim(res_counts))
-
-        dbg("-------------------MNT2: is.null(res_samples) = ", is.null(res_samples))
-        dbg("-------------------MNT2: class(res_samples) = ", class(res_samples))
-        dbg("-------------------MNT2: dim(res_samples) = ", dim(res_samples))
+        dbg("-------------------MNT11: dim(res_counts) = ", dim(res_counts))
+        dbg("-------------------MNT12: dim(res_samples) = ", dim(res_samples))
 
         list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
       }
@@ -515,17 +503,17 @@ UploadBoard <- function(id,
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples_counts()
 
-        dbg("-------------------MNT3: is.null(cc$COUNTS) = ", is.null(cc$COUNTS))
-        dbg("-------------------MNT3: class(cc$COUNTS) = ", class(cc$COUNTS))
-        dbg("-------------------MNT3: dim(cc$COUNTS) = ", dim(cc$COUNTS))
+        dbg("-------------------MNT13: is.null(cc$COUNTS) = ", is.null(cc$COUNTS))
+        dbg("-------------------MNT14: class(cc$COUNTS) = ", class(cc$COUNTS))
+        dbg("-------------------MNT15: dim(cc$COUNTS) = ", dim(cc$COUNTS))
 
-        dbg("-------------------MNT3: is.null(cc$SAMPLES) = ", is.null(cc$SAMPLES))
-        dbg("-------------------MNT3: class(cc$SAMPLES) = ", class(cc$SAMPLES))
-        dbg("-------------------MNT3: dim(cc$SAMPLES) = ", dim(cc$SAMPLES))
+        dbg("-------------------MNT16: is.null(cc$SAMPLES) = ", is.null(cc$SAMPLES))
+        dbg("-------------------MNT17: class(cc$SAMPLES) = ", class(cc$SAMPLES))
+        dbg("-------------------MNT18: dim(cc$SAMPLES) = ", dim(cc$SAMPLES))
 
-        dbg("-------------------MNT3: is.null(checked) = ", is.null(checked))
-        dbg("-------------------MNT3: class(checked) = ", class(checked))
-        dbg("-------------------MNT3: dim(checked) = ", dim(checked))
+        dbg("-------------------MNT19: is.null(checked) = ", is.null(checked))
+        dbg("-------------------MNT20: class(checked) = ", class(checked))
+        dbg("-------------------MNT21: dim(checked) = ", dim(checked))
 
         ## -------------- max contrast check ------------------
         MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
@@ -542,9 +530,9 @@ UploadBoard <- function(id,
           }
         }
 
-        dbg("-------------------MNT3.5: is.null(checked) = ", is.null(checked))
-        dbg("-------------------MNT3.5: class(checked) = ", class(checked))
-        dbg("-------------------MNT3.5: dim(checked) = ", dim(checked))
+        dbg("-------------------MNT22: is.null(checked) = ", is.null(checked))
+        dbg("-------------------MNT23: class(checked) = ", class(checked))
+        dbg("-------------------MNT24: dim(checked) = ", dim(checked))
 
         ## -------------- cross-check with samples ------------------
         if (!is.null(checked) && !is.null(cc$SAMPLES)) {
