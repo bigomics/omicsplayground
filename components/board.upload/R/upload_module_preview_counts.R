@@ -27,7 +27,8 @@ upload_table_preview_counts_server <- function(
     info.text,
     caption,
     upload_datatype,
-    is.olink
+    is.olink,
+    public_dataset_id
     ) {
 
   moduleServer(id, function(input, output, session) {
@@ -484,6 +485,11 @@ upload_table_preview_counts_server <- function(
         )
         shinyalert::shinyalert(title = "Warning", text = err.html, html = TRUE)
       }
+    })
+
+    observeEvent(input$counts_csv, {
+      dbg("-------MNT.K1: uploaded$counts.csv: ", dim(uploaded$counts.csv))
+      dbg("-------MNT.K2: uploaded$samples.csv: ", dim(uploaded$samples.csv))
     })
 
     # pass counts to uploaded when uploaded
