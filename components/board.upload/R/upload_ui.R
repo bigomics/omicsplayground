@@ -17,10 +17,12 @@ UploadUI <- function(id) {
         div(
           style = "display: flex; flex-direction: row; align-items: center; gap: 20px;",
           shiny::conditionalPanel(
+            #condition = sprintf("input.%s <= 0", ns("public_data_opts")),
             condition = sprintf("input['%s'] <= 0", ns("public_data_opts")),
             shiny::actionButton(ns("show_upload_opts"), "Upload your data", class = "btn-primary upload-btn-large")
           ),
           shiny::conditionalPanel(
+            #condition = sprintf("input.%s <= 0", ns("show_upload_opts")),
             condition = sprintf("input['%s'] <= 0", ns("show_upload_opts")),
             shiny::actionButton(ns("public_data_opts"), "Retrieve public data", class = "btn-primary upload-btn-large")
           )
@@ -46,6 +48,7 @@ UploadUI <- function(id) {
         ")),
 
         shiny::conditionalPanel(
+          #condition = sprintf("input.%s > 0", ns("show_upload_opts")),
           condition = sprintf("input['%s'] > 0", ns("show_upload_opts")),
           div(
             style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",
@@ -79,6 +82,7 @@ UploadUI <- function(id) {
         ),
         
         shiny::conditionalPanel(
+          #condition = sprintf("input.%s > 0", ns("public_data_opts")),
           condition = sprintf("input['%s'] > 0", ns("public_data_opts")),
           div(
             style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",

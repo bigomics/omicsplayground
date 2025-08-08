@@ -101,7 +101,8 @@ UploadBoard <- function(id,
       names(all_species)[all_species=="No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
     })
-    
+
+    ## AZ: 7/8/2025: disappeared!!!! Tell Xavier.
     output$proteomics_subtype_ui <- shiny::renderUI({
       if (upload_datatype() == "proteomics") {
         shiny::selectInput(
@@ -132,6 +133,8 @@ UploadBoard <- function(id,
         if (!is.valid.ID) {
           msg <- paste0(ID, " seems not a valid ID. Please use a valid dataset ID.")
           shinyalert::shinyalert(text = msg, type = "error")
+          ID <- ""
+          dbg("-----------------ID=",ID)
         } else {
           msg <- paste0("Searching ", ID, " in GEO and ReCount databases...")
           shiny::withProgress(message = msg, value = 0.5, {
@@ -505,7 +508,6 @@ UploadBoard <- function(id,
         list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
       }
     )
-
 
     ## --------------------------------------------------------
     ## Check contrast matrix
@@ -1230,7 +1232,6 @@ UploadBoard <- function(id,
         }
       }
     )
-
 
     ## =====================================================================
     ## ======================== MODULES SERVERS ============================

@@ -37,6 +37,7 @@ upload_table_preview_counts_server <- function(
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$counts.csv))
       dt <- uploaded$counts.csv      
+      dbg("-----------MNT1: public_dataset_id=",public_dataset_id)
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXROW <- 1000
@@ -532,6 +533,8 @@ upload_table_preview_counts_server <- function(
           overwrite = TRUE
         )
       }
+
+      dbg("-----------public_dataset_id = ", public_dataset_id)
 
       ##---counts---##
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
