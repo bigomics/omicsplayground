@@ -17,13 +17,8 @@ UploadUI <- function(id) {
         div(
           style = "display: flex; flex-direction: row; align-items: center; gap: 20px;",
           shiny::conditionalPanel(
-            #condition = sprintf("input.%s <= 0", ns("public_data_opts")),
-            condition = sprintf("input['%s'] <= 0", ns("public_data_opts")),
-            shiny::actionButton(ns("show_upload_opts"), "Upload your data", class = "btn-primary upload-btn-large")
-          ),
-          shiny::conditionalPanel(
-            #condition = sprintf("input.%s <= 0", ns("show_upload_opts")),
-            condition = sprintf("input['%s'] <= 0", ns("show_upload_opts")),
+            condition = sprintf("input['%s'] == 0 && input['%s'] == 0", ns("public_data_opts"), ns("show_upload_opts")),
+            shiny::actionButton(ns("show_upload_opts"), "Upload your data", class = "btn-primary upload-btn-large"),
             shiny::actionButton(ns("public_data_opts"), "Retrieve public data", class = "btn-primary upload-btn-large")
           )
         ),
@@ -48,7 +43,6 @@ UploadUI <- function(id) {
         ")),
 
         shiny::conditionalPanel(
-          #condition = sprintf("input.%s > 0", ns("show_upload_opts")),
           condition = sprintf("input['%s'] > 0", ns("show_upload_opts")),
           div(
             style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",
@@ -58,16 +52,17 @@ UploadUI <- function(id) {
                 closable = FALSE, translate = TRUE, html = TRUE)
             ),
             br(),
+
             div(
               p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
               shiny::selectInput(
                 ns("selected_datatype"), NULL,
                 choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq",
                   "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"),
-                selected = DEFAULTS$datatype,
-                width = "400px"
+                selected = DEFAULTS$datatype, width = "400px"
               )
             ),
+
             div(
               p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
               shiny::selectInput(
@@ -76,13 +71,13 @@ UploadUI <- function(id) {
               )
             ),
             br(),
+
             shiny::actionButton(ns("start_upload"), "Start upload", class = "btn-primary"),
             br()
           )
         ),
         
         shiny::conditionalPanel(
-          #condition = sprintf("input.%s > 0", ns("public_data_opts")),
           condition = sprintf("input['%s'] > 0", ns("public_data_opts")),
           div(
             style = "display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 150px; margin-top: 120px;",
@@ -92,10 +87,30 @@ UploadUI <- function(id) {
                 closable = FALSE, translate = TRUE, html = TRUE)
             ),
             br(),
+
+            div(
+              p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+              shiny::selectInput(
+                ns("selected_datatype"), NULL,
+                choices = c("Transcriptomics", "Proteomics"),
+                selected = "Transcriptomics", width = "400px"
+              )
+            ),
+
+            div(
+              p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+              shiny::selectInput(
+                inputId = ns("selected_organism"), label = NULL,
+                choices = playbase::SPECIES_TABLE$species_name, multiple = FALSE, width = "400px"
+              )
+            ),
+
+            br(),
             div(
               p("Dataset identifier:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
               shiny::textInput(ns("dataset_identifier"), label = NULL, width = "400px")
             ),
+
             br(),
             shiny::actionButton(ns("start_search"), "Start search & download", class = "btn-primary"),
             br()
