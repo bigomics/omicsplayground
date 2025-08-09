@@ -11,6 +11,8 @@ upload_table_preview_samples_ui <- function(id) {
 upload_table_preview_samples_server <- function(
     id,
     orig_sample_matrix,
+    loaded_samples,
+    vars_selected,
     uploaded,
     checklist,
     scrollY,
@@ -25,11 +27,9 @@ upload_table_preview_samples_server <- function(
 
     ns <- session$ns
 
-    sel_vars <- reactiveVal(NULL)
-    
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
-      dt <- uploaded$samples.csv
+      dt <- orig_sample_matrix()
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXSHOW <- 100
@@ -45,33 +45,37 @@ upload_table_preview_samples_server <- function(
         n1 <- ncol0 - MAXSHOW
         colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
       }
+      vars_selected <- vars_selected()
+      vars_selected <- intersect(vars_selected, colnames(dt))
+      dt <- dt[, vars_selected, drop = FALSE]
+      uploaded$samples.csv <- dt
+      loaded_samples(TRUE)
       dt
     })
 
-    orig_vars <- shiny::reactive({ return(colnames(orig_sample_matrix)) })
-    output$col_sel <- renderUI({
-      req(orig_vars())
-      dt <- table_data()
-      shiny::checkboxGroupInput(ns("vars_selected"),
-        label = "Retain variable:", choices = orig_vars(),
-        selected = colnames(dt), inline = TRUE)
+    shiny::observeEvent(input$vars_selected, {
+      if (all(input$vars_selected %in% colnames(orig_sample_matrix()))) {
+        vars_selected(input$vars_selected)
+      }
     })
-        
+
+    shiny::observeEvent(orig_sample_matrix(), {
+      vars_selected(colnames(orig_sample_matrix()))
+    })
+
+    output$col_sel <- renderUI({
+      shiny::checkboxGroupInput(
+        ns("vars_selected"),
+        label = "Retain variable:",
+        choices = colnames(orig_sample_matrix()),
+        selected = colnames(orig_sample_matrix()),
+        inline = TRUE
+      )
+    })
+
     table.RENDER <- function() {
       dt <- table_data()
       req(!is.null(dt))
-
-      c1 <- !is.null(input$vars_selected) && ncol(dt)>0
-      shiny::validate(shiny::need(c1, "Please select at least 1 variable."))
-      if (!all(input$vars_selected %in% colnames(dt))) {
-        rec.vars <- input$vars_selected[which(!input$vars_selected %in% colnames(dt))]
-        cm <- intersect(rownames(dt), rownames(orig_sample_matrix))
-        dt <- cbind(dt[cm, , drop = FALSE], orig_sample_matrix[cm, rec.vars, drop = FALSE])
-      } else {
-        dt <- dt[, input$vars_selected, drop = FALSE]
-      }
-      uploaded$samples.csv <- dt
-      
       DT::datatable(
         dt,
         class = "compact hover",
@@ -95,7 +99,7 @@ upload_table_preview_samples_server <- function(
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
         div(
-          if (!is.null(uploaded$samples.csv)) {
+          if (loaded_samples()) {
             shiny::actionButton(
               ns("remove_samples"),
               "Cancel",
@@ -121,7 +125,7 @@ upload_table_preview_samples_server <- function(
 
       div(
         bslib::as_fill_carrier(),
-        if (is.null(uploaded$samples.csv)) {
+        if (!loaded_samples()) {
           bslib::layout_columns(
             col_widths = c(-3, 6, -3),
             row_heights = list("auto", 8, 1, 2),
@@ -148,18 +152,18 @@ upload_table_preview_samples_server <- function(
             col_widths = 12,
             bslib::layout_columns(
               col_widths = c(8, 4),
-              div(
-                uiOutput(ns("col_sel")),
-                TableModuleUI(
-                  ns("samples_datasets"),
-                  width = width,
-                  height = height,
-                  title = title,
-                  info.text = info.text,
-                  caption = caption,
-                  label = "",
-                  show.maximize = FALSE
-                )
+              TableModuleUI(
+                ns("samples_datasets"),
+                width = width,
+                height = height,
+                title = title,
+                info.text = info.text,
+                caption = caption,
+                options = tagList(
+                  uiOutput(ns("col_sel"))
+                ),
+                label = "",
+                show.maximize = FALSE
               ),
               bslib::navset_card_pill(
                 bslib::nav_panel(
@@ -323,6 +327,8 @@ upload_table_preview_samples_server <- function(
       } else {
         uploaded$samples.csv <- df
       }
+      orig_sample_matrix(df)
+      loaded_samples(TRUE)
     })
 
     observeEvent(input$remove_samples, {
@@ -354,20 +360,17 @@ upload_table_preview_samples_server <- function(
       } else {
         delete_all_files_samples(TRUE)
       }
+      loaded_samples(FALSE)
+      vars_selected(NULL)
+      orig_sample_matrix(NULL)
     })
 
     observeEvent(input$load_example, {
       df <- playbase::SAMPLES
       if (upload_datatype() == "multi-omics") df <- playbase::SAMPLES_MO
-      vars <- sel_vars()
-      if (is.null(vars) || length(vars) == 0) {
-        vars <- colnames(df)
-        sel_vars(vars)
-      }
-      if (!is.null(vars) && all(vars %in% colnames(df))) {
-        df <- df[, vars, drop = FALSE]
-      }
       uploaded$samples.csv <- df
+      loaded_samples(TRUE)
+      orig_sample_matrix(df)
     })
 
     TableModuleServer(

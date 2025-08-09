@@ -21,6 +21,9 @@ UploadBoard <- function(id,
     # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
+    loaded_samples <- shiny::reactiveVal(FALSE)
+    orig_sample_matrix <- shiny::reactiveVal(NULL)
+    vars_selected <- shiny::reactiveVal(NULL)
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
@@ -974,6 +977,9 @@ UploadBoard <- function(id,
           upload_description(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
+          loaded_samples(FALSE)
+          orig_sample_matrix(NULL)
+          vars_selected(NULL)
         })
 
         reset_upload_text_input(reset_upload_text_input() + 1)
@@ -1189,7 +1195,9 @@ UploadBoard <- function(id,
 
     upload_table_preview_samples_server(
       "samples_preview",
-      orig_sample_matrix = uploaded$samples.csv,
+      orig_sample_matrix = orig_sample_matrix,
+      loaded_samples = loaded_samples,
+      vars_selected = vars_selected,
       uploaded,
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
