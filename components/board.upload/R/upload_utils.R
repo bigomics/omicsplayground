@@ -308,3 +308,26 @@ write_check_output <- function(
     write(unlist(lines), file.path(raw_dir, "CHECKS_OUTPUT"), append = TRUE)
   }
 }
+
+# Check if there are counts/samples file links on the query parameters
+check_query_files <- function() {
+  counts <- shiny::getQueryString()$counts
+  samples <- shiny::getQueryString()$samples
+  contrasts <- shiny::getQueryString()$contrasts
+  datatype <- shiny::getQueryString()$datatype
+  organism <- shiny::getQueryString()$organism
+  return(list(
+    counts = counts,
+    samples = samples,
+    contrasts = contrasts,
+    datatype = datatype,
+    organism = organism
+  ))
+}
+
+# Read query files
+read_query_files <- function(url) {
+  destination <- tempfile(fileext = ".csv")
+  download.file(url, destination)
+  return(destination)
+}
