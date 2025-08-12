@@ -13,31 +13,98 @@ upload_table_preview_counts_ui <- function(id) {
 }
 
 upload_table_preview_counts_server <- function(
-    id,
-    create_raw_dir,
-    auth,
-    uploaded,
-    checked_matrix,
-    is_logscale,
-    checklist,
-    scrollY,
-    width,
-    height,
-    title,
-    info.text,
-    caption,
-    upload_datatype,
-    is.olink,
-    public_dataset_id
-    ) {
+                                               id,
+                                               create_raw_dir,
+                                               auth,
+                                               uploaded,
+                                               checked_matrix,
+                                               is_logscale,
+                                               checklist,
+                                               scrollY,
+                                               width,
+                                               height,
+                                               title,
+                                               info.text,
+                                               caption,
+                                               upload_datatype,
+                                               is.olink,
+                                               public_dataset_id
+                                               ) {
 
   moduleServer(id, function(input, output, session) {
+
     ns <- session$ns
 
+    GEO_alert_shown <- reactiveVal(FALSE)
+
+    shiny::insertUI(
+      selector = "head",
+      where = "beforeEnd",
+      ui = list(
+        tags$style(HTML("
+        #custom-progress-modal {
+          position: fixed;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%);
+          background-color: #ffffff;
+          color: black;
+          padding: 30px 50px;
+          font-size: 20px;
+          font-weight: bold;
+          border-radius: 10px;
+          z-index: 1050;
+          text-align: center;
+        }
+        #custom-progress-bar {
+          height: 15px;
+          background-color: #007bff;
+          width: 40%;
+          transition: width 0.3s ease;
+          color: white;
+          font-weight: bold;
+          line-height: 25px;
+          animation: pulse-blue 2s infinite;
+          transform-origin: center;
+        }
+       @keyframes pulse-blue {
+          0% { box-shadow: 0 0 8px 2px #007bff;
+            transform: scale(1.2); }
+          50% { box-shadow: 0 0 18px 8px #3399ff;
+            transform: scale(1.4); }
+          100% { box-shadow: 0 0 8px 2px #007bff;
+            transform: scale(1); }
+       }
+        #custom-progress-container {
+          width: 100%;
+          background-color: #e9ecef;
+          border-radius: 0.25rem;
+          overflow: hidden;
+          margin-top: 15px;
+        }
+        .shiny-notification{ display: none !important; }
+      ")),
+      tags$script(HTML("
+          Shiny.addCustomMessageHandler('updateProgressBar', function(message) {
+            var val = message.value;
+            var pb = document.getElementById('custom-progress-bar');
+            if(pb) {
+              pb.style.width = val + '%';
+              pb.textContent = val + '%';
+            }
+          });
+        "))
+      )
+    )
+    
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$counts.csv))
-      dt <- uploaded$counts.csv      
-      dbg("-----------MNT1: public_dataset_id=",public_dataset_id)
+      dt <- uploaded$counts.csv
+
+      dbg("---------class(public_dataset_id) = ", class(public_dataset_id))
+      dbg("---------public_dataset_id = ", public_dataset_id())
+      dbg("---------class(upload_datatype) = ", class(upload_datatype))
+
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXROW <- 1000
@@ -60,10 +127,8 @@ upload_table_preview_counts_server <- function(
     table.RENDER <- function() {
       dt <- table_data()
       req(!is.null(dt))
-
       is.integer <- is.integer(dt) || all(round(dt) == dt, na.rm = TRUE)
       digits <- ifelse(is.integer, 0, 2)
-
       DT::datatable(dt,
         class = "compact hover",
         rownames = TRUE,
@@ -84,6 +149,7 @@ upload_table_preview_counts_server <- function(
     }
 
     output$table_counts <- shiny::renderUI({
+
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin: 8px;",
         if (is.null(uploaded$counts.csv)) {
@@ -117,95 +183,31 @@ upload_table_preview_counts_server <- function(
         )
       )
 
-      div(
-        bslib::as_fill_carrier(),
-        style = "width: 100%; display: flex; ",
-        if (is.null(uploaded$counts.csv)) {
-          if (upload_datatype() == "proteomics") {
-            msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format."
-          } else {
-            msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
+      if (public_dataset_id() != "") {
+
+        ID <- public_dataset_id()
+        msg <- paste0("Retrieving ", ID, " from GEO or ReCount databases...")
+        showModal(modalDialog(
+          div(id = "custom-progress-modal", msg,
+            div(id = "custom-progress-container",
+              div(id = "custom-progress-bar"))),
+          footer = NULL, fade = FALSE))
+        progress <- shiny::Progress$new(session, min = 0, max = 100)
+        GEO <- tryCatch({ playbase::pgx.getGEOseries(id = ID, get.info = FALSE)},
+          error = function(w) { NULL })
+        removeModal()
+
+        if (!is.null(GEO)) {
+          if (!GEO_alert_shown()) {
+            msg <- paste0("Success! ", ID, " found in ", GEO[["source"]])
+            shinyalert::shinyalert(text = msg, type = "success")            
+            GEO_alert_shown(TRUE)
           }
-            bslib::layout_columns(
-              col_widths = c(-3, 6, -3),
-              row_heights = list("auto", 8, 1, 2),
-              gap = "0.5rem",
-              bslib::as_fill_carrier(bs_alert(tspan(msg), closable = FALSE, translate_js = FALSE)),
-              bslib::card(
-              if (upload_datatype() == "multi-omics") {
-                shiny::radioButtons(
-                  ns("data_source"),
-                  label = "Select input files from:",
-                  choices = c("multi-csv", "pgx", "single-csv"),
-                  selected = "multi-csv",
-                  inline = TRUE
-                )
-              },
-              if (upload_datatype() == "multi-omics") {
-                shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'pgx'", ns("data_source")),
-                  div(
-                    div(
-                      style = "margin-bottom: 15px;",
-                      shiny::radioButtons(
-                        ns("data_processing"),
-                        label = "Select data processing level:",
-                        choices = c("Raw" = "raw", "Normalized (also batch corrected if selected on computation)" = "normalized"),
-                        selected = "raw",
-                        inline = TRUE
-                      )
-                    ),
-                    div(
-                      style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
-                      span("Selected:", style = "font-weight: bold;"),
-                      textOutput(ns("selected_rows_text")),
-                    ),
-                    div(
-                      style = "height: 350px; overflow-y: auto;",
-                      DT::DTOutput(ns("available_data_table"))
-                    ),
-                    style = "width: 100%; max-height: 400px; overflow-y: auto;"
-                  ),
-                  selection = "multiple",
-                  options = list(pageLength = 5, dom = "tp", scrollY = TRUE)
-                )
-              },
-
-              if (upload_datatype() == "multi-omics") {
-                shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'multi-csv'", ns("data_source")),
-                  shiny::uiOutput(ns("dynamic_file_inputs"))#,
-                )
-              },
-
-              if (upload_datatype() == "multi-omics") {
-                shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'single-csv'", ns("data_source")),
-                  fileInputArea(
-                    ns("counts_csv"),
-                    shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                    multiple = FALSE,
-                    accept = c(".csv"),
-                    width = "100%"
-                  )
-                )
-              },
-
-              if (upload_datatype() != "multi-omics") {
-                fileInputArea(
-                  ns("counts_csv"),
-                  shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                  multiple = FALSE,
-                  accept = c(".csv"),
-                  width = "100%"
-                )
-              },
-              style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
-            ),
-            action_buttons,
-            br()
-          )
-        },
+          uploaded$counts.csv <- GEO[["counts"]]
+          uploaded$samples.csv <- GEO[["samples"]]
+          GEO <- NULL
+        }
+        
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
             col_widths = 12,
@@ -229,8 +231,129 @@ upload_table_preview_counts_server <- function(
             ),
             bslib::layout_columns(action_buttons, br(), uiOutput(ns("error_summary")))
           )
-        } ## end of if-else
-      ) ## end of div
+        } else {
+          div("No counts data available for this public dataset.")
+        }
+
+      } else {
+
+        div(
+          bslib::as_fill_carrier(),
+          style = "width: 100%; display: flex; ",
+          if (is.null(uploaded$counts.csv)) {
+            if (upload_datatype() == "proteomics") {
+              msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format."
+            } else {
+              msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
+            }
+            bslib::layout_columns(
+              col_widths = c(-3, 6, -3),
+              row_heights = list("auto", 8, 1, 2),
+              gap = "0.5rem",
+              bslib::as_fill_carrier(bs_alert(tspan(msg), closable = FALSE, translate_js = FALSE)),
+              bslib::card(
+                if (upload_datatype() == "multi-omics") {
+                  shiny::radioButtons(
+                    ns("data_source"),
+                    label = "Select input files from:",
+                    choices = c("multi-csv", "pgx", "single-csv"),
+                    selected = "multi-csv",
+                    inline = TRUE
+                  )
+                },
+                if (upload_datatype() == "multi-omics") {
+                  shiny::conditionalPanel(
+                    condition = sprintf("input['%s'] == 'pgx'", ns("data_source")),
+                    div(
+                      div(
+                        style = "margin-bottom: 15px;",
+                        shiny::radioButtons(
+                          ns("data_processing"),
+                          label = "Select data processing level:",
+                          choices = c("Raw" = "raw", "Normalized (also batch corrected if selected on computation)" = "normalized"),
+                          selected = "raw",
+                          inline = TRUE
+                        )
+                      ),
+                      div(
+                        style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
+                        span("Selected:", style = "font-weight: bold;"),
+                        textOutput(ns("selected_rows_text")),
+                        ),
+                      div(
+                        style = "height: 350px; overflow-y: auto;",
+                        DT::DTOutput(ns("available_data_table"))
+                      ),
+                      style = "width: 100%; max-height: 400px; overflow-y: auto;"
+                    ),
+                    selection = "multiple",
+                    options = list(pageLength = 5, dom = "tp", scrollY = TRUE)
+                  )
+                },
+
+                if (upload_datatype() == "multi-omics") {
+                  shiny::conditionalPanel(
+                    condition = sprintf("input['%s'] == 'multi-csv'", ns("data_source")),
+                    shiny::uiOutput(ns("dynamic_file_inputs"))#,
+                  )
+                },
+
+                if (upload_datatype() == "multi-omics") {
+                  shiny::conditionalPanel(
+                    condition = sprintf("input['%s'] == 'single-csv'", ns("data_source")),
+                    fileInputArea(
+                      ns("counts_csv"),
+                      shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
+                      multiple = FALSE,
+                      accept = c(".csv"),
+                      width = "100%"
+                    )
+                  )
+                },
+
+                if (upload_datatype() != "multi-omics") {
+                  fileInputArea(
+                    ns("counts_csv"),
+                    shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
+                    multiple = FALSE,
+                    accept = c(".csv"),
+                    width = "100%"
+                  )
+                },
+                
+                style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
+              ),
+              action_buttons,
+              br()
+            )
+          },
+          if (!is.null(uploaded$counts.csv)) {
+            bslib::layout_columns(
+              col_widths = 12,
+              bslib::layout_columns(
+                col_widths = c(8, 4),
+                TableModuleUI(
+                  ns("counts_datasets"),
+                  width = width,
+                  height = height,
+                  title = title,
+                  info.text = info.text,
+                  caption = caption,
+                  label = "",
+                  show.maximize = FALSE,
+                  translate_js = FALSE
+                ),
+                bslib::navset_card_pill(
+                  bslib::nav_panel(title = "Histogram", br(), plotOutput(ns("histogram"))),
+                  bslib::nav_panel(title = "Box plots", br(), plotOutput(ns("boxplots")))
+                )
+              ),
+              bslib::layout_columns(action_buttons, br(), uiOutput(ns("error_summary")))
+            )
+          } ## end of if-else
+        ) ## end of div
+      }
+      
     })
 
     output$selected_rows_text <- renderText({
@@ -487,12 +610,7 @@ upload_table_preview_counts_server <- function(
         shinyalert::shinyalert(title = "Warning", text = err.html, html = TRUE)
       }
     })
-
-    observeEvent(input$counts_csv, {
-      dbg("-------MNT.K1: uploaded$counts.csv: ", dim(uploaded$counts.csv))
-      dbg("-------MNT.K2: uploaded$samples.csv: ", dim(uploaded$samples.csv))
-    })
-
+      
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
@@ -533,9 +651,7 @@ upload_table_preview_counts_server <- function(
           overwrite = TRUE
         )
       }
-
-      dbg("-----------public_dataset_id = ", public_dataset_id)
-
+      
       ##---counts---##
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
@@ -581,7 +697,7 @@ upload_table_preview_counts_server <- function(
       if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {
         uploaded$samples.csv <- df.samples
       }
-      
+
       ## ##---samples---##
       ## sel <- grep("samples", tolower(input$counts_csv$name))
       ## if (length(sel)) {
@@ -679,3 +795,4 @@ upload_table_preview_counts_server <- function(
     )
   }) ## end of moduleServer
 } ## end of server
+                                                                                                        

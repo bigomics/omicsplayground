@@ -27,6 +27,7 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
+    public_dataset_id <- reactiveVal(NULL)
     upload_gset_methods <- reactiveVal(NULL)
     upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
@@ -127,39 +128,21 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_search, {
+      dbg("-------public_dataset_id = ", public_dataset_id())
       if (input$dataset_identifier != "") {
-        ID <- input$dataset_identifier
-        is.valid.ID <- playbase::is.GEO.id.valid(ID)
-        if (!is.valid.ID) {
-          msg <- paste0(ID, " seems not a valid ID. Please use a valid dataset ID.")
-          shinyalert::shinyalert(text = msg, type = "error")
-          ID <- ""
-          dbg("-----------------ID=",ID)
+        ID <- public_dataset_id()
+        valid.ID <- playbase::is.GEO.id.valid(ID)
+        if (!valid.ID) {
+          msg <- paste0(ID, " seems not valid. Please use a valid dataset ID.")
+          shinyalert::shinyalert(text = msg, type = "error")           
         } else {
-          msg <- paste0("Searching ", ID, " in GEO and ReCount databases...")
-          shiny::withProgress(message = msg, value = 0.5, {
-            GEO <- tryCatch({ playbase::pgx.getGEOseries(id = ID, get.info = FALSE)},
-              error = function(w) { NULL } )
-          })
-          if (!is.null(GEO)) {
-            cm <- intersect(colnames(GEO[["counts"]]), rownames(GEO[["samples"]]))
-            uploaded$counts.csv <- GEO[["counts"]][, cm, drop = FALSE]
-            uploaded$samples.csv <- GEO[["samples"]][cm, , drop = FALSE]
-            msg <- paste0("Success! ", ID, " found in ", GEO[["source"]])
-            shinyalert::shinyalert(text = msg, type = "success")
-            rm(GEO)
-            new_upload(new_upload() + 1)
-          } else {
-            msg <- paste0(ID, " not found in ReCount and GEO. Please try a different ID.")
-            shinyalert::shinyalert(text = msg, type = "error")
-          }
+          new_upload(new_upload() + 1)
         }
       } else {
-        msg <- paste0("Please add a dataset ID")
-        shinyalert::shinyalert(text = msg, type = "warning")
+        shinyalert::shinyalert(text = "Please enter a dataset ID", type = "error")           
       }
     })
-
+    
     ## ============================================================================
     ## ================== NEW DATA UPLOAD =========================================
     ## ============================================================================
@@ -284,8 +267,6 @@ UploadBoard <- function(id,
       df0 <- uploaded$counts.csv
       if (is.null(df0)) return(NULL)
 
-      dbg("-------------------MNT1: dim(df0)=", dim(df0))
-      
       checked_for_log(FALSE)
       res <- playbase::pgx.checkINPUT(df0, "COUNTS")
       write_check_output(res$checks, "COUNTS", raw_dir())
@@ -328,10 +309,7 @@ UploadBoard <- function(id,
       res <- uploaded_counts()$res
       olink <- uploaded_counts()$olink
       if (is.null(res)) { return(list(status = "Missing counts.csv", matrix = NULL)) }
-
-      dbg("-------------------MNT2: is.null(res)=", is.null(res))
-      dbg("-------------------MNT3: dim(res$df)=", dim(res$df))
-
+      
       ## wait for dialog finished
       shiny::req(checked_for_log())
       
@@ -343,7 +321,6 @@ UploadBoard <- function(id,
       isConfirmed <- input$logCorrectCounts
       if (is.null(isConfirmed)) isConfirmed = FALSE
 
-      ## RESTORE AVERAGE RANK PLOT.
       if (olink) {
         res$checks[["e29"]] <- NULL
         check.e29 = TRUE
@@ -381,10 +358,6 @@ UploadBoard <- function(id,
         status <- "ERROR: incorrect counts matrix"
       }
 
-      ## HACK AZ
-      checked <- res$df
-      status <- "OK"
-
       ## --------------------------------------------------------
       ## check files: maximum samples allowed
       ## --------------------------------------------------------
@@ -412,12 +385,6 @@ UploadBoard <- function(id,
         uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
       }
 
-      dbg("-------------------MNT4: is.null(status)=", is.null(status))
-      dbg("-------------------MNT5: status=", status)
-      dbg("-------------------MNT6: is.null(checked)=", is.null(checked))
-      dbg("-------------------MNT7: class(checked)=", class(checked))
-      dbg("-------------------MNT8: dim(checked)=", dim(checked))
-
       if (check.e29) {
         if (isConfirmed) isConfirmed = TRUE
         if (is.null(isConfirmed)) isConfirmed = FALSE
@@ -441,9 +408,6 @@ UploadBoard <- function(id,
         ## get uploaded counts
         df0 <- uploaded$samples.csv
         if (is.null(df0)) { return(list(status = "Missing samples.csv", matrix = NULL)) }
-
-        dbg("---------MNT9: dim(checked_counts()$matrix) = ", dim(checked_counts()$matrix))
-        dbg("---------MNT10: dim(uploaded$samples.csv)=", dim(uploaded$samples.csv))
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
@@ -502,10 +466,8 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
-        dbg("-------------------MNT11: dim(res_counts) = ", dim(res_counts))
-        dbg("-------------------MNT12: dim(res_samples) = ", dim(res_samples))
-
-        list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
+        LL <- list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
+        return(LL)
       }
     )
 
@@ -537,18 +499,6 @@ UploadBoard <- function(id,
         ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples_counts()
 
-        dbg("-------------------MNT13: is.null(cc$COUNTS) = ", is.null(cc$COUNTS))
-        dbg("-------------------MNT14: class(cc$COUNTS) = ", class(cc$COUNTS))
-        dbg("-------------------MNT15: dim(cc$COUNTS) = ", dim(cc$COUNTS))
-
-        dbg("-------------------MNT16: is.null(cc$SAMPLES) = ", is.null(cc$SAMPLES))
-        dbg("-------------------MNT17: class(cc$SAMPLES) = ", class(cc$SAMPLES))
-        dbg("-------------------MNT18: dim(cc$SAMPLES) = ", dim(cc$SAMPLES))
-
-        dbg("-------------------MNT19: is.null(checked) = ", is.null(checked))
-        dbg("-------------------MNT20: class(checked) = ", class(checked))
-        dbg("-------------------MNT21: dim(checked) = ", dim(checked))
-
         ## -------------- max contrast check ------------------
         MAXCONTRASTS <- as.integer(auth$options$MAX_COMPARISONS)
         if (!is.null(checked)) {
@@ -563,10 +513,6 @@ UploadBoard <- function(id,
             )
           }
         }
-
-        dbg("-------------------MNT22: is.null(checked) = ", is.null(checked))
-        dbg("-------------------MNT23: class(checked) = ", class(checked))
-        dbg("-------------------MNT24: dim(checked) = ", dim(checked))
 
         ## -------------- cross-check with samples ------------------
         if (!is.null(checked) && !is.null(cc$SAMPLES)) {
@@ -602,6 +548,7 @@ UploadBoard <- function(id,
 
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
+
       counts_ui <- wizardR::wizard_step(
         step_title = tspan("Step 1: Upload counts", js = FALSE),
         step_id = "step_counts",
@@ -616,10 +563,10 @@ UploadBoard <- function(id,
         step_id = "step_samples",
         server = TRUE,
         upload_table_preview_samples_ui(
-            ns("samples_preview")
+          ns("samples_preview")
         )
       )
-
+      
       contrasts_ui <- wizardR::wizard_step(
         step_title = "Step 3: Create comparisons",
         step_id = "step_comparisons",
@@ -785,6 +732,11 @@ UploadBoard <- function(id,
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+    })
+
+    ## NEW AZ
+    observeEvent(input$dataset_identifier, {
+      public_dataset_id(input$dataset_identifier)
     })
 
     observeEvent(input$start_upload, {
@@ -1237,6 +1189,16 @@ UploadBoard <- function(id,
     ## ======================== MODULES SERVERS ============================
     ## =====================================================================
 
+    shiny::observeEvent(uploaded$counts.csv, {
+      dbg("-----------------------------")
+      dbg("-------FINAL CHECKS----------")
+      dbg("----dim(checked_counts()$matrix) = ", dim(checked_counts()$matrix))
+      dbg("----dim(uploaded$counts.csv) = ", dim(uploaded$counts.csv))
+      dbg("----all.equal = ", all.equal(uploaded$counts.csv, checked_counts()$matrix))
+      dbg("----public_dataset_id = ", public_dataset_id())
+      dbg("-------------------------------------")
+    })
+
     upload_table_preview_counts_server(
       id = "counts_preview",
       create_raw_dir = create_raw_dir,
@@ -1253,7 +1215,7 @@ UploadBoard <- function(id,
       caption = "This is the uploaded counts data.",
       upload_datatype = upload_datatype,
       is.olink = is.olink,
-      public_dataset_id = input$dataset_identifier
+      public_dataset_id = public_dataset_id
     )
 
     upload_table_preview_samples_server(
@@ -1372,8 +1334,6 @@ UploadBoard <- function(id,
       reset_upload_text_input = reset_upload_text_input,
       probetype = probetype
     )
-
-
 
     ## ------------------------------------------------
     ## Board return object
