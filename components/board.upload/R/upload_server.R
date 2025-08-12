@@ -349,7 +349,7 @@ UploadBoard <- function(id,
       ## --------------------------------------------------------
       MAXSAMPLES <- get_max_samples(auth, upload_datatype())
       if (!is.null(checked)) {
-        if (ncol(checked) > MAXSAMPLES) {
+        if (ncol(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
           status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
           checked <- NULL
           # remove only counts.csv from last_uploaded
@@ -364,6 +364,13 @@ UploadBoard <- function(id,
               MAXSAMPLES, "samples."
             ),
             type = "error"
+          )
+        } else if (ncol(checked) > MAXSAMPLES && upload_datatype() == "scRNA-seq") {
+          status <- "OK"
+          shinyalert::shinyalert(
+            title = "Maximum cells reached",
+            text = paste("You have reached the maximum number of cells allowed: ", MAXSAMPLES, ". SuperCell will be performed."),
+            type = "warning"
           )
         }
       }
@@ -411,7 +418,7 @@ UploadBoard <- function(id,
 
         MAXSAMPLES <- get_max_samples(auth, upload_datatype())
         if (!is.null(checked)) {
-          if (nrow(checked) > MAXSAMPLES) {
+          if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
             ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
@@ -420,6 +427,13 @@ UploadBoard <- function(id,
               title = "Maximum samples reached",
               text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
               type = "error"
+            )
+          } else if (nrow(checked) > MAXSAMPLES && upload_datatype() == "scRNA-seq") {
+            status <- "OK"
+            shinyalert::shinyalert(
+              title = "Maximum cells reached",
+              text = paste("You have reached the maximum number of cells allowed: ", MAXSAMPLES, ". SuperCell will be performed."),
+              type = "warning"
             )
           }
         }
