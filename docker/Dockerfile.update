@@ -10,7 +10,7 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:v3.5.18
+FROM bigomics/omicsplayground:beta
 
 ARG BRANCH=master
 ARG update_playdata=false
@@ -29,31 +29,31 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # RUN apt update && apt install -y fonts-lato
 
 #------------------------------------------------------------
-# Install quarto tinytext, to be removed when new image is built
+# Install quarto tinytext, to be removed when new image is built  # NEEDS TO BE MOVED TO BASE
 #------------------------------------------------------------
-RUN R -e "install.packages('torch')"
-RUN R -e "install.packages('GGally')"
-RUN R -e "install.packages('IntNMF')"
-RUN R -e "BiocManager::install('multtest')"
-RUN R -e "install.packages('metap')"
-RUN R -e "install.packages('plotrix')"
-RUN R -e "install.packages('RcppML')"
-RUN R -e "install.packages('RGCCA')"
-RUN R -e "install.packages('rpart.plot')"
-RUN R -e "install.packages('SNFtool')"
-RUN R -e "BiocManager::install('MOFA2')"
-RUN R -e "BiocManager::install('MOFAdata')"
-RUN R -e "BiocManager::install('nipalsMCIA')"
-RUN R -e "devtools::install_github('mkanai/grimon')"
-RUN R -e "devtools::install_github('metabolomicsworkbench/RefMet')"
-RUN R -e "torch::install_torch()"
-RUN R -e "install.packages('colourpicker')"
-RUN R -e "install.packages('HiClimR')"
-RUN R -e "install.packages('sysfonts')"
-RUN R -e "install.packages('showtext')"
-RUN R -e "install.packages('imputeLCMD')"
-RUN R -e "devtools::install_github('daattali/shinyfilebrowser')"
-RUN R -e "install.packages('OlinkAnalyze')"
+#RUN R -e "install.packages('torch')"
+#RUN R -e "install.packages('GGally')"
+#RUN R -e "install.packages('IntNMF')"
+#RUN R -e "BiocManager::install('multtest')"
+#RUN R -e "install.packages('metap')"
+#RUN R -e "install.packages('plotrix')"
+#RUN R -e "install.packages('RcppML')"
+#RUN R -e "install.packages('RGCCA')"
+#RUN R -e "install.packages('rpart.plot')"
+#RUN R -e "install.packages('SNFtool')"
+#RUN R -e "BiocManager::install('MOFA2')"
+#RUN R -e "BiocManager::install('MOFAdata')"
+#RUN R -e "BiocManager::install('nipalsMCIA')"
+#RUN R -e "devtools::install_github('mkanai/grimon')"
+#RUN R -e "devtools::install_github('metabolomicsworkbench/RefMet')"
+#RUN R -e "torch::install_torch()"
+#RUN R -e "install.packages('colourpicker')"
+#RUN R -e "install.packages('HiClimR')"
+#RUN R -e "install.packages('sysfonts')"
+#RUN R -e "install.packages('showtext')"
+#RUN R -e "install.packages('imputeLCMD')"
+#RUN R -e "devtools::install_github('daattali/shinyfilebrowser')"
+#RUN R -e "install.packages('OlinkAnalyze')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
@@ -135,11 +135,11 @@ RUN if [ $update_bigdash = true ]; then \
 fi
 
 #------------------------------------------------------------
-# Install PlotNeuralNet for neural network visualization
+# Install PlotNeuralNet for neural network visualization # NEEDS TO BE MOVED TO BASE
 #------------------------------------------------------------
-WORKDIR /opt
-RUN git clone https://github.com/HarisIqbal88/PlotNeuralNet.git
-RUN apt update && apt install -y texlive-latex-base texlive-latex-extra pdf2svg
+#WORKDIR /opt
+#RUN git clone https://github.com/HarisIqbal88/PlotNeuralNet.git
+#RUN apt update && apt install -y texlive-latex-base texlive-latex-extra pdf2svg
 
 #------------------------------------------------------------
 # Update configuration files into the Docker image
