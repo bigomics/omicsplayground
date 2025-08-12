@@ -847,7 +847,8 @@ upload_module_computepgx_server <- function(
           regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
           regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
           regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
-          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE),
+          supercell_threshold = as.integer(auth$options$MAX_SAMPLES_SC)
         )
         
         ## Define create_pgx function arguments
