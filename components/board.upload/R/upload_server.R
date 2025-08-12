@@ -103,6 +103,12 @@ UploadBoard <- function(id,
       names(all_species) <- paste0(all_species," (",common_name,")")
       names(all_species)[all_species=="No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+
+      if (opt$ENABLE_MULTIOMICS) {
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)", "multi-omics (beta)"), selected = DEFAULTS$datatype)
+      } else {
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)"), selected = DEFAULTS$datatype)
+      }
     })
     
     output$proteomics_subtype_ui <- shiny::renderUI({
