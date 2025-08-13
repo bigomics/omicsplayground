@@ -128,18 +128,17 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_search, {
-      dbg("-------public_dataset_id = ", public_dataset_id())
-      if (input$dataset_identifier != "") {
-        ID <- public_dataset_id()
+      ID <- public_dataset_id()
+      if (ID != "") {
         valid.ID <- playbase::is.GEO.id.valid(ID)
         if (!valid.ID) {
           msg <- paste0(ID, " seems not valid. Please use a valid dataset ID.")
-          shinyalert::shinyalert(text = msg, type = "error")           
+          shinyalert::shinyalert(text = msg, type = "error")
         } else {
           new_upload(new_upload() + 1)
         }
       } else {
-        shinyalert::shinyalert(text = "Please enter a dataset ID", type = "error")           
+        shinyalert::shinyalert(text = "Please enter a dataset ID", type = "error")
       }
     })
     
@@ -734,7 +733,6 @@ UploadBoard <- function(id,
       upload_organism(input$selected_organism)
     })
 
-    ## NEW AZ
     observeEvent(input$dataset_identifier, {
       public_dataset_id(input$dataset_identifier)
     })
@@ -1188,16 +1186,6 @@ UploadBoard <- function(id,
     ## =====================================================================
     ## ======================== MODULES SERVERS ============================
     ## =====================================================================
-
-    shiny::observeEvent(uploaded$counts.csv, {
-      dbg("-----------------------------")
-      dbg("-------FINAL CHECKS----------")
-      dbg("----dim(checked_counts()$matrix) = ", dim(checked_counts()$matrix))
-      dbg("----dim(uploaded$counts.csv) = ", dim(uploaded$counts.csv))
-      dbg("----all.equal = ", all.equal(uploaded$counts.csv, checked_counts()$matrix))
-      dbg("----public_dataset_id = ", public_dataset_id())
-      dbg("-------------------------------------")
-    })
 
     upload_table_preview_counts_server(
       id = "counts_preview",

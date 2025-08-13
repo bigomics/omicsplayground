@@ -100,11 +100,6 @@ upload_table_preview_counts_server <- function(
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$counts.csv))
       dt <- uploaded$counts.csv
-
-      dbg("---------class(public_dataset_id) = ", class(public_dataset_id))
-      dbg("---------public_dataset_id = ", public_dataset_id())
-      dbg("---------class(upload_datatype) = ", class(upload_datatype))
-
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXROW <- 1000
@@ -186,20 +181,20 @@ upload_table_preview_counts_server <- function(
       if (public_dataset_id() != "") {
 
         ID <- public_dataset_id()
-        msg <- paste0("Retrieving ", ID, " from GEO or ReCount databases...")
+        msg <- paste0("Retrieving ", ID, " from GEO, ReCount, or ArrayExpress...<br>", "May take up to 20 minutes...")
         showModal(modalDialog(
-          div(id = "custom-progress-modal", msg,
+          div(id = "custom-progress-modal", HTML(msg),
             div(id = "custom-progress-container",
               div(id = "custom-progress-bar"))),
           footer = NULL, fade = FALSE))
         progress <- shiny::Progress$new(session, min = 0, max = 100)
-        GEO <- tryCatch({ playbase::pgx.getGEOseries(id = ID, get.info = FALSE)},
+        GEO <- tryCatch({ playbase::pgx.getGEOseries(accession = ID, get.info = FALSE)},
           error = function(w) { NULL })
         removeModal()
 
         if (!is.null(GEO)) {
           if (!GEO_alert_shown()) {
-            msg <- paste0("Success! ", ID, " found in ", GEO[["source"]])
+            msg <- paste0("Success! ", ID, " found in ", GEO[["source"]], ".\nWe're preparing it...")
             shinyalert::shinyalert(text = msg, type = "success")            
             GEO_alert_shown(TRUE)
           }
