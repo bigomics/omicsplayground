@@ -92,8 +92,8 @@ UploadUI <- function(id) {
               p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
               shiny::selectInput(
                 ns("selected_datatype"), NULL,
-                choices = c("Transcriptomics", "Proteomics"),
-                selected = "Transcriptomics", width = "400px"
+                choices = c("RNA-seq", "mRNA microarray"),
+                selected = "RNA-seq", width = "400px"
               )
             ),
 
