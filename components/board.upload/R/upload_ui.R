@@ -63,6 +63,15 @@ UploadUI <- function(id) {
               )
             ),
 
+            shiny::conditionalPanel(
+              condition = sprintf("input['%s'] == 'proteomics'", ns("selected_datatype")),
+              div(style = "width: 22%;",
+                shiny::selectInput(ns("proteomics_type"),
+                  label = tags$b("Proteomics type:"), choices = c("MS", "Olink NPX"),
+                  selected = "MS", width = "150px")
+              )
+            ),
+            
             div(
               p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
               shiny::selectInput(

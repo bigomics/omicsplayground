@@ -103,21 +103,6 @@ UploadBoard <- function(id,
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
     })
 
-    ## AZ: 7/8/2025: disappeared!!!! Tell Xavier.
-    output$proteomics_subtype_ui <- shiny::renderUI({
-      if (upload_datatype() == "proteomics") {
-        shiny::selectInput(
-          ns("proteomics_type"),
-          label = "Proteomics type:",
-          choices = c("MS", "Olink NPX"),
-          selected = "MS",
-          width = "150px"
-        )
-      } else {
-        NULL
-      }
-    })
-
     is.olink <- shiny::reactive({
       req(upload_datatype())
       if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {

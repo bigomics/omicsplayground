@@ -181,7 +181,7 @@ upload_table_preview_counts_server <- function(
       if (public_dataset_id() != "") {
 
         ID <- public_dataset_id()
-        msg <- paste0("Retrieving ", ID, " from GEO, ReCount, or ArrayExpress...<br>", "May take up to 20 minutes...")
+        msg <- paste0("Retrieving ", ID, " from GEO, ReCount, or ArrayExpress...<br>", "Please wait. Most datasets take 2-3 mins.")
         showModal(modalDialog(
           div(id = "custom-progress-modal", HTML(msg),
             div(id = "custom-progress-container",
