@@ -182,16 +182,17 @@ upload_table_preview_counts_server <- function(
 
         ID <- public_dataset_id()
         msg <- paste0("Retrieving ", ID, " from GEO, ReCount, or ArrayExpress...<br>", "Please wait. Most datasets take 2-3 mins.")
+        
         showModal(modalDialog(
           div(id = "custom-progress-modal", HTML(msg),
             div(id = "custom-progress-container",
               div(id = "custom-progress-bar"))),
           footer = NULL, fade = FALSE))
-        progress <- shiny::Progress$new(session, min = 0, max = 100)
+        progress <- shiny::Progress$new(session, min = 0, max = 100)          
         GEO <- tryCatch({ playbase::pgx.getGEOseries(accession = ID, get.info = FALSE)},
-          error = function(w) { NULL })
+        error = function(w) { NULL })
         removeModal()
-
+        
         if (!is.null(GEO)) {
           if (!GEO_alert_shown()) {
             msg <- paste0("Success! ", ID, " found in ", GEO[["source"]], ".\nWe're preparing it...")
