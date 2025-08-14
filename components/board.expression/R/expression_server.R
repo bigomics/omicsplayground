@@ -323,11 +323,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes > 0)]
 
-      # convert symbol to rownames (module is based on rownames)
-
-      ortholog_genes <- ifelse(is.na(pgx$genes$human_ortholog), pgx$genes$symbol, pgx$genes$human_ortholog)
-
-      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), ortholog_genes), ])
+      # selection based on symbol
+      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), pgx$genes$symbol), ])
       return(matched_rownames)
     })
 
