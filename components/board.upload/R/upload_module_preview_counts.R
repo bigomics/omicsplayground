@@ -195,7 +195,7 @@ upload_table_preview_counts_server <- function(
         if (!is.null(GEO)) {
           if (!GEO_alert_shown()) {
             msg <- paste0("Success! ", ID, " found in ", GEO[["source"]], ".\nWe're preparing it...")
-            shinyalert::shinyalert(text = msg, type = "success")            
+            shinyalert::shinyalert(text = msg, type = "success", timer = 4000)            
             GEO_alert_shown(TRUE)
           }
           uploaded$counts.csv <- GEO[["counts"]]
