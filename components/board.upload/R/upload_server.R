@@ -347,9 +347,9 @@ UploadBoard <- function(id,
       ## --------------------------------------------------------
       ## check files: maximum samples allowed
       ## --------------------------------------------------------
-      MAXSAMPLES <- get_max_samples(auth, upload_datatype())
+      MAXSAMPLES <- auth$options$MAX_SAMPLES
       if (!is.null(checked)) {
-        if (ncol(checked) > MAXSAMPLES) {
+        if (ncol(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
           status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
           checked <- NULL
           # remove only counts.csv from last_uploaded
@@ -362,6 +362,24 @@ UploadBoard <- function(id,
               "You have reached the maximum number of samples allowed. Please",
               tspan("upload a new counts file with a maximum of", js = FALSE),
               MAXSAMPLES, "samples."
+            ),
+            type = "error"
+          )
+        }
+        # Hard stop for scRNA-seq
+        if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
+          status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+          checked <- NULL
+          # remove only counts.csv from last_uploaded
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+          ## uploaded[["counts.csv"]] <- NULL
+          # pop up telling user max sample reached
+          shinyalert::shinyalert(
+            title = "Maximum samples reached",
+            text = paste(
+              "You have reached the maximum number of cells allowed. Please",
+              tspan("upload a new counts file with a maximum of", js = FALSE),
+              "100.000 cells."
             ),
             type = "error"
           )
@@ -409,9 +427,9 @@ UploadBoard <- function(id,
           status <- "ERROR: incorrect samples matrix"
         }
 
-        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
+        MAXSAMPLES <- auth$options$MAX_SAMPLES
         if (!is.null(checked)) {
-          if (nrow(checked) > MAXSAMPLES) {
+          if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
             ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
@@ -419,6 +437,24 @@ UploadBoard <- function(id,
             shinyalert::shinyalert(
               title = "Maximum samples reached",
               text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
+              type = "error"
+            )
+          }
+          # Hard stop for scRNA-seq
+          if (nrow(checked) > 100000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+            checked <- NULL
+            # remove only counts.csv from last_uploaded
+            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+            ## uploaded[["counts.csv"]] <- NULL
+            # pop up telling user max sample reached
+            shinyalert::shinyalert(
+              title = "Maximum samples reached",
+              text = paste(
+                "You have reached the maximum number of cells allowed. Please",
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                "100.000 cells."
+              ),
               type = "error"
             )
           }

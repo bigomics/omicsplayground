@@ -438,6 +438,7 @@ upload_module_computepgx_server <- function(
           ia.ctx <- ia.spline.ctx <- c()
 
           i=1
+          shiny::req(Contrasts)
           for (i in 1:ncol(Contrasts)) {
             ctx <- colnames(Contrasts)[i]
             if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next;
