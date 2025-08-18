@@ -1194,7 +1194,7 @@ UploadBoard <- function(id,
       caption = "This is the uploaded counts data.",
       upload_datatype = upload_datatype,
       is.olink = is.olink,
-      public_dataset_id = public_dataset_id
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     upload_table_preview_samples_server(
