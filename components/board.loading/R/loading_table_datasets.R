@@ -499,7 +499,6 @@ loading_table_datasets_server <- function(id,
       }
       if (!is.null(auth$options$MAX_SAMPLES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (
-          (df$datatype == "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES_SC) |
           (df$datatype != "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES)
         )
       }
