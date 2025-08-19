@@ -189,8 +189,8 @@ upload_table_preview_counts_server <- function(
               div(id = "custom-progress-bar"))),
           footer = NULL, fade = FALSE))
         progress <- shiny::Progress$new(session, min = 0, max = 100)          
-        GEO <- tryCatch({ playbase::pgx.getGEOseries(accession = ID, get.info = FALSE)},
-        error = function(w) { NULL })
+        GEO <- tryCatch({ playbase::pgx.getGEOseries(accession = ID, archs.h5 = NULL, get.info = FALSE)},
+          error = function(w) { NULL })
         removeModal()
         
         if (!is.null(GEO)) {
@@ -199,9 +199,13 @@ upload_table_preview_counts_server <- function(
             shinyalert::shinyalert(text = msg, type = "success", timer = 4000)            
             GEO_alert_shown(TRUE)
           }
+          dbg("-----------------MNT1: source = ", GEO[["source"]])
+          dbg("-----------------MNT2: dim(samples) = ", dim(GEO[["samples"]]))
+          dbg("-----------------MNT3: colnames(samples) = ", colnames(GEO[["samples"]]))
           uploaded$counts.csv <- GEO[["counts"]]
           uploaded$samples.csv <- GEO[["samples"]]
-          GEO <- NULL
+          dbg("-----------------MNT4: dim(uploaded$samples.csv) = ", dim(uploaded$samples.csv))
+          #GEO <- NULL
         }
         
         if (!is.null(uploaded$counts.csv)) {

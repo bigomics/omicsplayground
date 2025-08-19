@@ -21,15 +21,31 @@ upload_table_preview_samples_server <- function(
     title,
     info.text,
     caption,
-    upload_datatype) {
+    upload_datatype,
+    public_dataset_id
+    ) {
 
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
 
+    public_metadata_full <- shiny::reactiveVal(NULL)
+    shiny::observe({
+      if (public_dataset_id() != "" && !is.null(uploaded$samples.csv)) {
+        orig_sample_matrix(uploaded$samples.csv)
+        if (is.null(public_metadata_full())) {
+          public_metadata_full(orig_sample_matrix())
+        }
+      }
+    })
+
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
-      dt <- orig_sample_matrix()
+      dt <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
+        public_metadata_full()
+      } else {
+        orig_sample_matrix()
+      }      
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXSHOW <- 100
@@ -50,25 +66,43 @@ upload_table_preview_samples_server <- function(
       dt <- dt[, vars_selected, drop = FALSE]
       uploaded$samples.csv <- dt
       loaded_samples(TRUE)
-      dt
+      return(dt)
     })
 
     shiny::observeEvent(input$vars_selected, {
-      if (all(input$vars_selected %in% colnames(orig_sample_matrix()))) {
+      dt_cols <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
+        colnames(public_metadata_full())
+      } else {
+        colnames(orig_sample_matrix())
+      }
+      if (all(input$vars_selected %in% dt_cols)) {
         vars_selected(input$vars_selected)
       }
     })
-
-    shiny::observeEvent(orig_sample_matrix(), {
-      vars_selected(colnames(orig_sample_matrix()))
+   
+    shiny::observe({
+      cols <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
+        colnames(public_metadata_full())
+      } else {
+        colnames(orig_sample_matrix())
+      }
+      current_selected <- vars_selected()
+      if (is.null(current_selected) || length(current_selected) == 0 || !all(current_selected %in% cols)) {
+        vars_selected(cols)
+      }
     })
 
     output$col_sel <- renderUI({
+      choices <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
+        colnames(public_metadata_full())
+      } else {
+        colnames(orig_sample_matrix())
+      }
       shiny::checkboxGroupInput(
         ns("vars_selected"),
         label = "Retain variable:",
-        choices = colnames(orig_sample_matrix()),
-        selected = colnames(orig_sample_matrix()),
+        choices = choices,
+        selected = vars_selected(),
         inline = TRUE
       )
     })
@@ -125,7 +159,7 @@ upload_table_preview_samples_server <- function(
 
       div(
         bslib::as_fill_carrier(),
-        if (!loaded_samples()) {
+        if (!loaded_samples() && public_dataset_id() == "") {
           bslib::layout_columns(
             col_widths = c(-3, 6, -3),
             row_heights = list("auto", 8, 1, 2),

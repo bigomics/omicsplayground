@@ -394,6 +394,7 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$samples.csv
+
         if (is.null(df0)) { return(list(status = "Missing samples.csv", matrix = NULL)) }
 
         ## Single matrix counts check
@@ -1210,7 +1211,8 @@ UploadBoard <- function(id,
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
-      upload_datatype = upload_datatype
+      upload_datatype = upload_datatype,
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
