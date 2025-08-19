@@ -201,7 +201,8 @@ upload_table_preview_counts_server <- function(
           }
           uploaded$counts.csv <- GEO[["counts"]]
           uploaded$samples.csv <- GEO[["samples"]]
-          #GEO <- NULL
+          cm <- intersect(colnames(GEO[["counts"]]), rownames(GEO[["samples"]]))
+          GEO <- NULL
         }
         
         if (!is.null(uploaded$counts.csv)) {
