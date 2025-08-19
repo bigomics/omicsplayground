@@ -199,12 +199,8 @@ upload_table_preview_counts_server <- function(
             shinyalert::shinyalert(text = msg, type = "success", timer = 4000)            
             GEO_alert_shown(TRUE)
           }
-          dbg("-----------------MNT1: source = ", GEO[["source"]])
-          dbg("-----------------MNT2: dim(samples) = ", dim(GEO[["samples"]]))
-          dbg("-----------------MNT3: colnames(samples) = ", colnames(GEO[["samples"]]))
           uploaded$counts.csv <- GEO[["counts"]]
           uploaded$samples.csv <- GEO[["samples"]]
-          dbg("-----------------MNT4: dim(uploaded$samples.csv) = ", dim(uploaded$samples.csv))
           #GEO <- NULL
         }
         
