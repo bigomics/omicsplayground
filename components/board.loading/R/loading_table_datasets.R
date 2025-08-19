@@ -505,6 +505,9 @@ loading_table_datasets_server <- function(id,
       if (!is.null(cro_emails)) {
         datasets_exceed_limits[df$creator %in% cro_emails] <- FALSE
       }
+      if (!auth$options$ENABLE_MULTIOMICS) { #multi-omics disabled, grey them out
+        datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
+      }
 
       selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
       if (length(selectable_rows) == 0) selectable_rows <- NULL
