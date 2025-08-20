@@ -37,66 +37,6 @@ upload_table_preview_counts_server <- function(
 
     GEO_alert_shown <- reactiveVal(FALSE)
 
-    shiny::insertUI(
-      selector = "head",
-      where = "beforeEnd",
-      ui = list(
-        tags$style(HTML("
-        #custom-progress-modal {
-          position: fixed;
-          top: 50% !important;
-          left: 50% !important;
-          transform: translate(-50%, -50%);
-          background-color: #ffffff;
-          color: black;
-          padding: 30px 50px;
-          font-size: 20px;
-          font-weight: bold;
-          border-radius: 10px;
-          z-index: 1050;
-          text-align: center;
-        }
-        #custom-progress-bar {
-          height: 15px;
-          background-color: #007bff;
-          width: 40%;
-          transition: width 0.3s ease;
-          color: white;
-          font-weight: bold;
-          line-height: 25px;
-          animation: pulse-blue 2s infinite;
-          transform-origin: center;
-        }
-       @keyframes pulse-blue {
-          0% { box-shadow: 0 0 8px 2px #007bff;
-            transform: scale(1.2); }
-          50% { box-shadow: 0 0 18px 8px #3399ff;
-            transform: scale(1.4); }
-          100% { box-shadow: 0 0 8px 2px #007bff;
-            transform: scale(1); }
-       }
-        #custom-progress-container {
-          width: 100%;
-          background-color: #e9ecef;
-          border-radius: 0.25rem;
-          overflow: hidden;
-          margin-top: 15px;
-        }
-        .shiny-notification{ display: none !important; }
-      ")),
-      tags$script(HTML("
-          Shiny.addCustomMessageHandler('updateProgressBar', function(message) {
-            var val = message.value;
-            var pb = document.getElementById('custom-progress-bar');
-            if(pb) {
-              pb.style.width = val + '%';
-              pb.textContent = val + '%';
-            }
-          });
-        "))
-      )
-    )
-    
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$counts.csv))
       dt <- uploaded$counts.csv
