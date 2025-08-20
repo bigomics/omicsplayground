@@ -104,6 +104,7 @@ UploadBoard <- function(id,
       names(all_species) <- paste0(all_species," (",common_name,")")
       names(all_species)[all_species=="No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+      shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
     })
 
     is.olink <- shiny::reactive({
@@ -720,6 +721,16 @@ UploadBoard <- function(id,
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+    })
+
+    observeEvent(input$selected_datatype_public, {
+      upload_datatype(input$selected_datatype_public)
+      updateSelectInput(session, "selected_datatype", selected = input$selected_datatype_public)
+    })
+
+    observeEvent(input$selected_organism_public, {
+      upload_organism(input$selected_organism_public)
+      updateSelectInput(session, "selected_organism", selected = input$selected_organism_public)
     })
 
     observeEvent(input$dataset_identifier, {
