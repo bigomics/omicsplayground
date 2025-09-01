@@ -169,6 +169,8 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
         input$btn_upload_new
       },
       {
+        bigdash.openSettings(lock = TRUE)
+        bigdash.openSidebar()
         bigdash.selectTab(session, selected = "upload-tab")
       }
     )
