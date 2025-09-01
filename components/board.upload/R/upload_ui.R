@@ -22,15 +22,7 @@ UploadUI <- function(id) {
           p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
           shiny::selectInput(
             ns("selected_datatype"), NULL,
-            choices = c(
-              "RNA-seq",
-              "mRNA microarray",
-              "proteomics",
-              "scRNA-seq",
-              "metabolomics (beta)" = "metabolomics",
-              "multi-omics (beta)" = "multi-omics"
-            ),
-            selected = DEFAULTS$datatype,
+            choices = NULL,
             width = "400px"
           ),
           shiny::uiOutput(ns("proteomics_subtype_ui"))
