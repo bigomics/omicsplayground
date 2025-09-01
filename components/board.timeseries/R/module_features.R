@@ -152,8 +152,12 @@ TimeSeriesBoard.features_server <- function(id,
       kstats.full[, "meta.p"] <- apply(kstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
       sel <- grep("^q[.]*", colnames(kstats.full))
       kstats.full[, "meta.q"] <- apply(kstats.full[, sel, drop = FALSE], 1, function(x) x[which.max(x)])
-      kstats <- kstats.full[, c("meta.fx", "meta.p", "meta.q", "avg.0", "avg.1")]
-      colnames(kstats) <- c("log2FC", "p.value", "q.value", "avg.0", "avg.1")
+      cols <- c("meta.fx", "meta.p", "meta.q", "avg.0", "avg.1")
+      cols <- intersect(cols, colnames(kstats.full))
+      kstats <- kstats.full[, cols]
+      col_mapping <- c("meta.fx" = "log2FC", "meta.p" = "p.value", "meta.q" = "q.value", "avg.0" = "avg.0", "avg.1" = "avg.1")
+      new_names <- col_mapping[cols]
+      colnames(kstats) <- new_names
 
       ik <- paste0("IA:", k)
       if (ik %in% names(pgx$gx.meta$meta)) {
