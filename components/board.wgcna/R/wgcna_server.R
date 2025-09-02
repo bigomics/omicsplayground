@@ -53,61 +53,67 @@ WgcnaBoard <- function(id, pgx){
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
 
-    wgcna <- shiny::eventReactive(
-      {
-        list(input$compute, pgx$X)
-      },
-      {
-        require(WGCNA)
-        all.req <- all(c("stats","TOM") %in% names(pgx$wgcna))
-        
-        dbg("[wgcna] 0: input$compute =", input$compute)
-        dbg("[wgcna] 0: pgx$name =", pgx$name)
+    # Reactive value to track forced recomputation
+    force_recompute <- shiny::reactiveVal(FALSE)
 
-        ## NEED RETHINK!!! if input$compute >0 !!!
-        if (input$compute == 0 && "wgcna" %in% names(pgx) && all.req) {
-          message("[wgcna] >>> using pre-computed WGCNA results...")
-          out <- pgx$wgcna
-          ## old style had these settings
-          if(is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
-          if(is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
-          if(is.null(pgx$wgcna$power)) out$power <- 6
+    wgcna <- shiny::reactive({
+      require(WGCNA)
+      all.req <- all(c("stats") %in% names(pgx$wgcna)) && any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
 
-        } else {
-          pgx.showSmallModal("Recalculating WGCNA with new parameters...")
-          progress <- shiny::Progress$new()
-          on.exit(progress$close())
-          progress$set(message = "Calculating WGCNA...", value = 0)
+      dbg("[wgcna] 0: input$compute =", input$compute)
+      dbg("[wgcna] 0: pgx$name =", pgx$name)
 
-          message("[wgcna] >>> Calculating WGCNA...")          
-          out <- playbase::pgx.wgcna(
-            pgx = pgx,
-            ngenes = as.integer(input$ngenes),
-            #gset.filter = "PATHWAY|HALLMARK|^GO|^C[1-9]",
-            gset.filter = NULL,
-            minmodsize = as.integer(input$minmodsize),
-            power = as.numeric(input$power),
+      # Use pre-computed results only if they exist, conditions are met, AND we're not forcing recomputation
+      if ("wgcna" %in% names(pgx) && all.req && !force_recompute()) {
+        message("[wgcna] >>> using pre-computed WGCNA results...")
+        out <- pgx$wgcna
+        ## old style had these settings
+        if(is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
+        if(is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
+        if(is.null(pgx$wgcna$power)) out$power <- 6
+
+      } else {
+        pgx.showSmallModal("Recalculating WGCNA with new parameters...")
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        progress$set(message = "Calculating WGCNA...", value = 0)
+
+        message("[wgcna] >>> Calculating WGCNA...")
+        out <- playbase::pgx.wgcna(
+          pgx = pgx,
+          ngenes = as.integer(input$ngenes),
+          #gset.filter = "PATHWAY|HALLMARK|^GO|^C[1-9]",
+          gset.filter = NULL,
+          minmodsize = as.integer(input$minmodsize),
+          power = as.numeric(input$power),
 #           deepsplit = as.integer(input$deepsplit),
 #           cutheight = as.numeric(input$cutheight),
-            minKME = as.numeric(input$minkme),
-            networktype = input$networktype,
-            ## tomtype = input$tomtype,
-            numericlabels = FALSE
-          )
-          shiny::removeModal()
-        }
+          minKME = as.numeric(input$minkme),
+          networktype = input$networktype,
+          ## tomtype = input$tomtype,
+          numericlabels = FALSE
+        )
+        shiny::removeModal()
 
-        ## update Inputs
-        me <- sort(names(out$me.genes))
-        shiny::updateSelectInput(session, "selected_module", choices = me,
-                                 sel = me[1])
-        tt <- sort(colnames(out$datTraits))
-        shiny::updateSelectInput(session, "selected_trait", choices = tt,
-          selected = tt[1])
-
-        out
+        # Reset the force recompute flag after computation
+        force_recompute(FALSE)
       }
-    )
+
+      ## update Inputs
+      me <- sort(names(out$me.genes))
+      shiny::updateSelectInput(session, "selected_module", choices = me,
+                               sel = me[1])
+      tt <- sort(colnames(out$datTraits))
+      shiny::updateSelectInput(session, "selected_trait", choices = tt,
+        selected = tt[1])
+
+      out
+    })
+
+    # Observer to trigger recomputation when compute button is clicked
+    shiny::observeEvent(input$compute, {
+      force_recompute(TRUE)
+    }, ignoreInit = TRUE)
 
     
     ## ================================================================================
