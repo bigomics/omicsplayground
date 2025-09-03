@@ -54,6 +54,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #RUN R -e "install.packages('imputeLCMD')"
 #RUN R -e "devtools::install_github('daattali/shinyfilebrowser')"
 #RUN R -e "install.packages('OlinkAnalyze')"
+RUN R -e "devtools::install_github('seandavi/GEOquery')" # Need newer GEOquery version than our BioC version has (for public data retr)
 
 #------------------------------------------------------------
 # Add supporting R libraries
