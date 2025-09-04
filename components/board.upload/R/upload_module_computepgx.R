@@ -479,7 +479,7 @@ upload_module_computepgx_server <- function(
             shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
             
             insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
-              
+            
           }
          
         }
