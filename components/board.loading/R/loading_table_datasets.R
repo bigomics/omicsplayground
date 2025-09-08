@@ -509,8 +509,8 @@ loading_table_datasets_server <- function(id,
         datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
       }
 
-      selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
-      if (length(selectable_rows) == 0) selectable_rows <- NULL
+      # Add the exceed limits flag to the dataframe
+      df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
 
       DT::datatable(
         df,
@@ -519,7 +519,6 @@ loading_table_datasets_server <- function(id,
         escape = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = if(length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
         fillContainer = TRUE,
         options = list(
           dom = "ft",
@@ -529,16 +528,25 @@ loading_table_datasets_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
-          rowCallback = DT::JS(
-            "function(row, data, displayNum, index) {",
-            "  var exceedLimits = ", jsonlite::toJSON(datasets_exceed_limits), ";",
-            "  if(index >= ", df_cap, " || exceedLimits[index]) {", # Grey out rows that exceed max datasets or size limits
-            "    $(row).css('opacity', '0.5');",
-            "    $('td:first-child', row).css('pointer-events', 'none');", # Disable clicks on menu buttons
-            "    $('td:first-child button', row).prop('disabled', true);", # Disable the buttons themselves
-            "  }",
-            "}"
-          ),
+                    rowCallback = DT::JS(sprintf(
+            "function(row, data, displayNum, displayIndex) {
+              var colNames = %s;
+              
+              // Find the exceeds_limits column index (add 1 for rownames column offset)
+              var exceedsLimitsIdx = colNames.indexOf('exceeds_limits');
+              if(exceedsLimitsIdx >= 0) exceedsLimitsIdx += 1;
+              
+              // Check if this row exceeds limits
+              var exceedsLimits = (exceedsLimitsIdx >= 0) ? (data[exceedsLimitsIdx] === 'TRUE' || data[exceedsLimitsIdx] === true) : false;
+              
+              if(exceedsLimits) {
+                $(row).css('opacity', '0.5');
+                $(row).css('pointer-events', 'none');
+                $('button', row).prop('disabled', true);
+              }
+            }",
+            jsonlite::toJSON(colnames(df))
+          )),
           columnDefs = list(
             list(width = "60px", targets = target1),
             ## list(width = "30vw", targets = target2),
@@ -551,7 +559,10 @@ loading_table_datasets_server <- function(id,
                 "}"
               )
             ),
-            list(sortable = FALSE, targets = ncol(df))
+            list(sortable = FALSE, targets = ncol(df)),
+            list(visible = FALSE, targets = c(
+              match("exceeds_limits", colnames(df))
+            )) # Hide helper columns
           )
         ) ## end of options.list
       )
