@@ -509,8 +509,9 @@ loading_table_datasets_server <- function(id,
         datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
       }
 
-      selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
-      if (length(selectable_rows) == 0) selectable_rows <- NULL
+      # Add the exceed limits flag to the dataframe
+      df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
+      df$original_row_idx <- seq_len(nrow(df))
 
       DT::datatable(
         df,
@@ -530,59 +531,14 @@ loading_table_datasets_server <- function(id,
           autoWidth = TRUE,
                     rowCallback = DT::JS(sprintf(
             "function(row, data, displayNum, displayIndex) {
-              var dfCap = %d;
-              var maxGenes = %s;
-              var maxSamples = %s;
-              var enableMultiomics = %s;
-              var croEmails = %s;
               var colNames = %s;
               
-              // Get row data - data array corresponds to table columns
-              var originalIndex = this.api().row(row).index();
-              var exceedsLimits = false;
+              // Find the exceeds_limits column index (add 1 for rownames column offset)
+              var exceedsLimitsIdx = colNames.indexOf('exceeds_limits');
+              if(exceedsLimitsIdx >= 0) exceedsLimitsIdx += 1;
               
-              // Check if row index exceeds dataset capacity
-              if(originalIndex >= dfCap) {
-                exceedsLimits = true;
-              } else {
-                // Find column indices (add 1 because DataTable has rownames column at index 0)
-                var ngenesIdx = colNames.indexOf('ngenes');
-                var nsamplesIdx = colNames.indexOf('nsamples');
-                var datatypeIdx = colNames.indexOf('datatype');
-                var creatorIdx = colNames.indexOf('creator');
-                
-                // Adjust for rownames column offset
-                if(ngenesIdx >= 0) ngenesIdx += 1;
-                if(nsamplesIdx >= 0) nsamplesIdx += 1;
-                if(datatypeIdx >= 0) datatypeIdx += 1;
-                if(creatorIdx >= 0) creatorIdx += 1;
-                
-                // Extract values from row data
-                var ngenes = (ngenesIdx >= 0) ? (parseInt(data[ngenesIdx]) || 0) : 0;
-                var nsamples = (nsamplesIdx >= 0) ? (parseInt(data[nsamplesIdx]) || 0) : 0;
-                var datatype = (datatypeIdx >= 0) ? (data[datatypeIdx] || '') : '';
-                var creator = (creatorIdx >= 0) ? (data[creatorIdx] || '') : '';
-                
-                // Check gene limits
-                if(maxGenes !== null && ngenes > maxGenes) {
-                  exceedsLimits = true;
-                }
-                
-                // Check sample limits (but not for scRNAseq)
-                if(maxSamples !== null && datatype !== 'scRNAseq' && nsamples > maxSamples) {
-                  exceedsLimits = true;
-                }
-                
-                // Check multiomics restriction
-                if(!enableMultiomics && datatype === 'multi-omics') {
-                  exceedsLimits = true;
-                }
-                
-                // Override limits for CRO emails
-                if(croEmails && Array.isArray(croEmails) && croEmails.includes(creator)) {
-                  exceedsLimits = false;
-                }
-              }
+              // Check if this row exceeds limits
+              var exceedsLimits = (exceedsLimitsIdx >= 0) ? (data[exceedsLimitsIdx] === 'TRUE' || data[exceedsLimitsIdx] === true) : false;
               
               if(exceedsLimits) {
                 $(row).css('opacity', '0.5');
@@ -590,11 +546,6 @@ loading_table_datasets_server <- function(id,
                 $('button', row).prop('disabled', true);
               }
             }",
-            df_cap,
-            ifelse(is.null(auth$options$MAX_GENES), "null", auth$options$MAX_GENES),
-            ifelse(is.null(auth$options$MAX_SAMPLES), "null", auth$options$MAX_SAMPLES),
-            tolower(as.character(auth$options$ENABLE_MULTIOMICS)),
-            jsonlite::toJSON(get_cro_emails()),
             jsonlite::toJSON(colnames(df))
           )),
           columnDefs = list(
@@ -609,7 +560,11 @@ loading_table_datasets_server <- function(id,
                 "}"
               )
             ),
-            list(sortable = FALSE, targets = ncol(df))
+            list(sortable = FALSE, targets = ncol(df)),
+            list(visible = FALSE, targets = c(
+              match("original_row_idx", colnames(df)) - 1,
+              match("exceeds_limits", colnames(df)) - 1
+            )) # Hide helper columns
           )
         ) ## end of options.list
       )
