@@ -519,7 +519,6 @@ loading_table_datasets_server <- function(id,
         escape = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = if(length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
         fillContainer = TRUE,
         options = list(
           dom = "ft",
@@ -529,16 +528,75 @@ loading_table_datasets_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
-          rowCallback = DT::JS(
-            "function(row, data, displayNum, index) {",
-            "  var exceedLimits = ", jsonlite::toJSON(datasets_exceed_limits), ";",
-            "  if(index >= ", df_cap, " || exceedLimits[index]) {", # Grey out rows that exceed max datasets or size limits
-            "    $(row).css('opacity', '0.5');",
-            "    $('td:first-child', row).css('pointer-events', 'none');", # Disable clicks on menu buttons
-            "    $('td:first-child button', row).prop('disabled', true);", # Disable the buttons themselves
-            "  }",
-            "}"
-          ),
+                    rowCallback = DT::JS(sprintf(
+            "function(row, data, displayNum, displayIndex) {
+              var dfCap = %d;
+              var maxGenes = %s;
+              var maxSamples = %s;
+              var enableMultiomics = %s;
+              var croEmails = %s;
+              var colNames = %s;
+              
+              // Get row data - data array corresponds to table columns
+              var originalIndex = this.api().row(row).index();
+              var exceedsLimits = false;
+              
+              // Check if row index exceeds dataset capacity
+              if(originalIndex >= dfCap) {
+                exceedsLimits = true;
+              } else {
+                // Find column indices (add 1 because DataTable has rownames column at index 0)
+                var ngenesIdx = colNames.indexOf('ngenes');
+                var nsamplesIdx = colNames.indexOf('nsamples');
+                var datatypeIdx = colNames.indexOf('datatype');
+                var creatorIdx = colNames.indexOf('creator');
+                
+                // Adjust for rownames column offset
+                if(ngenesIdx >= 0) ngenesIdx += 1;
+                if(nsamplesIdx >= 0) nsamplesIdx += 1;
+                if(datatypeIdx >= 0) datatypeIdx += 1;
+                if(creatorIdx >= 0) creatorIdx += 1;
+                
+                // Extract values from row data
+                var ngenes = (ngenesIdx >= 0) ? (parseInt(data[ngenesIdx]) || 0) : 0;
+                var nsamples = (nsamplesIdx >= 0) ? (parseInt(data[nsamplesIdx]) || 0) : 0;
+                var datatype = (datatypeIdx >= 0) ? (data[datatypeIdx] || '') : '';
+                var creator = (creatorIdx >= 0) ? (data[creatorIdx] || '') : '';
+                
+                // Check gene limits
+                if(maxGenes !== null && ngenes > maxGenes) {
+                  exceedsLimits = true;
+                }
+                
+                // Check sample limits (but not for scRNAseq)
+                if(maxSamples !== null && datatype !== 'scRNAseq' && nsamples > maxSamples) {
+                  exceedsLimits = true;
+                }
+                
+                // Check multiomics restriction
+                if(!enableMultiomics && datatype === 'multi-omics') {
+                  exceedsLimits = true;
+                }
+                
+                // Override limits for CRO emails
+                if(croEmails && Array.isArray(croEmails) && croEmails.includes(creator)) {
+                  exceedsLimits = false;
+                }
+              }
+              
+              if(exceedsLimits) {
+                $(row).css('opacity', '0.5');
+                $(row).css('pointer-events', 'none');
+                $('button', row).prop('disabled', true);
+              }
+            }",
+            df_cap,
+            ifelse(is.null(auth$options$MAX_GENES), "null", auth$options$MAX_GENES),
+            ifelse(is.null(auth$options$MAX_SAMPLES), "null", auth$options$MAX_SAMPLES),
+            tolower(as.character(auth$options$ENABLE_MULTIOMICS)),
+            jsonlite::toJSON(get_cro_emails()),
+            jsonlite::toJSON(colnames(df))
+          )),
           columnDefs = list(
             list(width = "60px", targets = target1),
             ## list(width = "30vw", targets = target2),
