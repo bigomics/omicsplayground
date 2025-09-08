@@ -511,7 +511,6 @@ loading_table_datasets_server <- function(id,
 
       # Add the exceed limits flag to the dataframe
       df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
-      df$original_row_idx <- seq_len(nrow(df))
 
       DT::datatable(
         df,
@@ -562,8 +561,7 @@ loading_table_datasets_server <- function(id,
             ),
             list(sortable = FALSE, targets = ncol(df)),
             list(visible = FALSE, targets = c(
-              match("original_row_idx", colnames(df)) - 1,
-              match("exceeds_limits", colnames(df)) - 1
+              match("exceeds_limits", colnames(df))
             )) # Hide helper columns
           )
         ) ## end of options.list
