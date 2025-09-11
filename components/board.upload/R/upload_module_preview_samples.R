@@ -29,23 +29,15 @@ upload_table_preview_samples_server <- function(
 
     ns <- session$ns
 
-    public_metadata_full <- shiny::reactiveVal(NULL)
     shiny::observe({
-      if (public_dataset_id() != "" && !is.null(uploaded$samples.csv)) {
+      if (is.null(orig_sample_matrix()) && !is.null(uploaded$samples.csv)) {
         orig_sample_matrix(uploaded$samples.csv)
-        if (is.null(public_metadata_full())) {
-          public_metadata_full(orig_sample_matrix())
-        }
       }
     })
 
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
-      dt <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
-        public_metadata_full()
-      } else {
-        orig_sample_matrix()
-      }      
+      dt <- orig_sample_matrix()
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXSHOW <- 100
@@ -70,22 +62,14 @@ upload_table_preview_samples_server <- function(
     })
 
     shiny::observeEvent(input$vars_selected, {
-      dt_cols <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
-        colnames(public_metadata_full())
-      } else {
-        colnames(orig_sample_matrix())
-      }
+      dt_cols <- colnames(orig_sample_matrix())
       if (all(input$vars_selected %in% dt_cols)) {
         vars_selected(input$vars_selected)
       }
     })
    
     shiny::observe({
-      cols <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
-        colnames(public_metadata_full())
-      } else {
-        colnames(orig_sample_matrix())
-      }
+      cols <- colnames(orig_sample_matrix())
       current_selected <- vars_selected()
       if (is.null(current_selected) || length(current_selected) == 0 || !all(current_selected %in% cols)) {
         vars_selected(cols)
@@ -93,11 +77,7 @@ upload_table_preview_samples_server <- function(
     })
 
     output$col_sel <- renderUI({
-      choices <- if (public_dataset_id() != "" && !is.null(public_metadata_full())) {
-        colnames(public_metadata_full())
-      } else {
-        colnames(orig_sample_matrix())
-      }
+      choices <- colnames(orig_sample_matrix())
       shiny::checkboxGroupInput(
         ns("vars_selected"),
         label = "Retain variable:",
