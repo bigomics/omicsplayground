@@ -19,7 +19,7 @@ jobs:
         run: |
             # Read the version from VERSION file
             current_version=$(cat VERSION)
-            number_version=$(echo "$current_version" | grep -oP '^v\K\d+\.\d+\.\d+')
+            number_version=$(echo "$current_version" | grep -oP '\d+\.\d+\.\d+')
 
             # Increment the last part of the version
             parts=(${number_version//./ })
