@@ -1198,7 +1198,12 @@ LoginCodeAuthenticationModule <- function(id,
         input_code <- entered_code()
         input_code <- gsub(" ", "", input_code)
         # Look for universal login code on pgx dir (to bypass client email issues)
-        universal_login_code <- readLines(file.path(PGX.DIR, USER$email, "universal_login_code"))
+        universal_login_code_file <- file.path(PGX.DIR, USER$email, "universal_login_code")
+        if (file.exists(universal_login_code_file)) {
+          universal_login_code <- readLines(universal_login_code_file)
+        } else {
+          universal_login_code <- NULL
+        }
         if (!is.null(universal_login_code)) {
           login.OK <- (input_code == login_code) || (input_code == universal_login_code)
         } else {
