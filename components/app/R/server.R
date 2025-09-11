@@ -240,7 +240,7 @@ app_server <- function(input, output, session) {
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
     MODULES_TO_LOAD <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_ACTIVE
- 
+
     lapply(names(MODULES_TO_REMOVE[MODULES_TO_REMOVE]), function(x) {
       if (x == "DataView") {
         bigdash.removeTab(session, "dataview-tab")
@@ -650,10 +650,10 @@ app_server <- function(input, output, session) {
       )
     },
     {
-      ## trigger on change dataset      
-      shiny::req(PGX$X)      
+      ## trigger on change dataset
+      shiny::req(PGX$X)
       info("[SERVER] trigger on change dataset")
-      
+
       ## Set navbar color based on datatype
       if (PGX$datatype == "multi-omics") {
         js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #00923b'")
@@ -662,11 +662,11 @@ app_server <- function(input, output, session) {
         js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #004ca7'")
         shinyjs::runjs(js_code)
       }
-      
+
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
       DATATYPEPGX <<- tolower(PGX$datatype)
-      
+
       ## change language
       if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
         lang <- "proteomics"
@@ -676,11 +676,11 @@ app_server <- function(input, output, session) {
         lang <- "RNA-seq"
       }
       shiny.i18n::update_lang(lang, session)
-      
+
       tab_control()
 
       is.logged <- auth$logged
-      
+
       ## hide all main tabs until we have an object
       if (is.null(PGX) || is.null(PGX$name) || !is.logged) {
         warning("[SERVER] !!! no data. hiding menu.")
@@ -693,7 +693,7 @@ app_server <- function(input, output, session) {
       ## show all main tabs
       shinyjs::runjs("sidebarOpen()")
       shinyjs::runjs("settingsOpen()")
-      
+
       # If is CRO dataset, no watermark\
       cro_emails <- get_cro_emails()
       if (!is.null(PGX$creator) && PGX$creator %in% cro_emails) {
@@ -701,7 +701,7 @@ app_server <- function(input, output, session) {
       } else {
         WATERMARK <<- auth$options$WATERMARK
       }
-      
+
       info("[SERVER] trigger on change dataset done!")
     }
   )
@@ -710,7 +710,7 @@ app_server <- function(input, output, session) {
     ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
-    
+
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
     ## Beta features
@@ -758,10 +758,10 @@ app_server <- function(input, output, session) {
   # populate labeltype selector based on pgx$genes
   observeEvent(
     {
-      list( PGX$X, PGX$name )
+      list(PGX$X, PGX$name)
     },
     {
-      req(PGX$genes)      
+      req(PGX$genes)
       genes_mat <- PGX$genes
       # remove NA columns and columns with only 1 unique value
       genes_mat <- genes_mat[, colMeans(is.na(genes_mat)) < 1, drop = FALSE]
@@ -771,7 +771,7 @@ app_server <- function(input, output, session) {
       names(label_types) <- label_types
       names(label_types)[names(label_types) == "gene_title"] <- "title"
       label_types <- label_types[!grepl("pos|map|tx_len|source", names(label_types))]
-      names(label_types) <- sub("^chr$","chromosome",names(label_types))
+      names(label_types) <- sub("^chr$", "chromosome", names(label_types))
       # if one of the label_types unique values amounts for less than 10% of total genes, remove it
       n_genes <- nrow(PGX$genes)
       keep_types <- sapply(label_types, function(col) {
@@ -784,7 +784,7 @@ app_server <- function(input, output, session) {
       })
       label_types <- label_types[keep_types]
 
-      sel.labeltype <- "feature"      
+      sel.labeltype <- "feature"
       shiny::updateSelectInput(
         session,
         "selected_labeltype",
@@ -801,13 +801,13 @@ app_server <- function(input, output, session) {
     },
     {
       labeltype(input$selected_labeltype)
-      if(!is.null(PGX$genes)) {
+      if (!is.null(PGX$genes)) {
         lab <- input$selected_labeltype
-        if(lab == "gene_title") {
-          tt <- paste0(PGX$genes[,"gene_title"]," (",PGX$genes[,"symbol"],")")
+        if (lab == "gene_title") {
+          tt <- paste0(PGX$genes[, "gene_title"], " (", PGX$genes[, "symbol"], ")")
           PGX$genes$gene_name <- tt
-        } else if(lab %in% colnames(PGX$genes)) {          
-          PGX$genes$gene_name <- PGX$genes[,lab]
+        } else if (lab %in% colnames(PGX$genes)) {
+          PGX$genes$gene_name <- PGX$genes[, lab]
         } else {
           PGX$genes$gene_name <- rownames(PGX$genes)
         }
@@ -862,7 +862,9 @@ app_server <- function(input, output, session) {
     )
 
     warn_timeout <- function() {
-      if (!auth$logged) { return(NULL) }
+      if (!auth$logged) {
+        return(NULL)
+      }
       shinyalert::shinyalert(
         title = "Warning!",
         text = "Your FREE session is expiring soon",
@@ -875,7 +877,9 @@ app_server <- function(input, output, session) {
     ## At the end of the timeout the user can choose type of referral
     ## modal and gain additional analysis time. We reset the timer.
     session_timeout <- function() {
-      if (!auth$logged) { return(NULL) }
+      if (!auth$logged) {
+        return(NULL)
+      }
       shinyalert::shinyalert(
         title = "FREE session expired!",
         text = "Sorry. Your free session has expired. To extend your session you can refer Omics Playground to a friend. Do you want to logout or invite a friend?",
@@ -1099,7 +1103,6 @@ app_server <- function(input, output, session) {
 
     ## run logout sequence
     userLogoutSequence(auth, action = "user.logout")
-
   })
 
   ## This code listens to the JS quit signal

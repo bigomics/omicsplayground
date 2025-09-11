@@ -41,7 +41,7 @@ MODULE.compare <- list(
         CompareUI("comp")
       ),
       list(
-        "cmap-tab", 
+        "cmap-tab",
         ConnectivityUI("cmap")
       )
     )

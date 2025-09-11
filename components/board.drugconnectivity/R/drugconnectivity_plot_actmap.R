@@ -59,14 +59,12 @@ drugconnectivity_plot_actmap_server <- function(id,
                                                 dsea_table,
                                                 getActiveDSEA,
                                                 watermark = FALSE) {
-
   moduleServer(
     id, function(input, output, session) {
       dseaPlotActmap <- function(pgx,
                                  dmethod,
                                  contr, nterms,
-                                 nfc, colorbar = FALSE
-                                 ) {
+                                 nfc, colorbar = FALSE) {
         if (is.null(pgx$drugs)) {
           return(NULL)
         }
@@ -77,7 +75,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         ctx <- sort(ctx[!grepl("^IA:", ctx)])
         nes <- nes[, ctx, drop = FALSE]
         qv <- qv[, ctx, drop = FALSE]
-        
+
         score <- nes * (1 - qv)**2
         score[is.na(score)] <- 0
         score <- score[order(-score[, contr]**2), , drop = FALSE] ## sort by score

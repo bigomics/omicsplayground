@@ -14,7 +14,7 @@ plot_deepnet_diagram_ui <- function(
     height = 400,
     width = 400) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(
     ns("plot"),
     plotlib = "svgPanZoom",
@@ -35,40 +35,41 @@ plot_deepnet_diagram_server <- function(id,
                                         update,
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    svgfile <- NULL
 
-    svgfile <- NULL    
-    
-    plot.RENDER <- eventReactive({
-      list( update(), net() )
-    },{      
-      
-      if(update()==TRUE || is.null(svgfile)) {
-        net <- net() ## do not react everytime      
-        progress <- shiny::Progress$new(session, min=0, max=1)
-        on.exit(progress$close())
-        progress$set(message = paste("Creating diagram..."), value = 0.33)
-        svgfile <<- playbase::deep.plotNeuralNet(
-          net,
-          svgfile = NULL,
-          rm.files = FALSE
+    plot.RENDER <- eventReactive(
+      {
+        list(update(), net())
+      },
+      {
+        if (update() == TRUE || is.null(svgfile)) {
+          net <- net() ## do not react everytime
+          progress <- shiny::Progress$new(session, min = 0, max = 1)
+          on.exit(progress$close())
+          progress$set(message = paste("Creating diagram..."), value = 0.33)
+          svgfile <<- playbase::deep.plotNeuralNet(
+            net,
+            svgfile = NULL,
+            rm.files = FALSE
+          )
+          update(FALSE)
+        }
+
+        validate(
+          need(!is.null(svgfile), "Could not create model diagram")
         )
-        update(FALSE)
+        img.svg <- readChar(svgfile, nchars = file.info(svgfile)$size)
+        pz <- svgPanZoom::svgPanZoom(
+          img.svg,
+          controlIconsEnabled = TRUE,
+          zoomScaleSensitivity = 0.4,
+          minZoom = 1,
+          maxZoom = 5,
+          viewBox = FALSE
+        )
+        return(pz)
       }
-
-      validate(
-        need(!is.null(svgfile), "Could not create model diagram")
-      )
-      img.svg <- readChar(svgfile, nchars = file.info(svgfile)$size)
-      pz <- svgPanZoom::svgPanZoom(
-        img.svg,
-        controlIconsEnabled = TRUE,
-        zoomScaleSensitivity = 0.4,
-        minZoom = 1,
-        maxZoom = 5,
-        viewBox = FALSE
-      )
-      return(pz)
-    })
+    )
 
     PlotModuleServer(
       "plot",
@@ -78,7 +79,5 @@ plot_deepnet_diagram_server <- function(id,
       res = c(90, 130),
       add.watermark = watermark
     )
-
-
   })
 }

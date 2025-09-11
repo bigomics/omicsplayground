@@ -36,7 +36,7 @@ dataview_plot_genetypes_server <- function(id,
       res <- getCountsTable()
       samples <- r.samples()
       shiny::req(res)
-      return(list(prop.counts = res$prop.counts,gset.genes = res$gset.genes))
+      return(list(prop.counts = res$prop.counts, gset.genes = res$gset.genes))
     })
 
     ## plot.RENDER <- function() {

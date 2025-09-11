@@ -11,7 +11,8 @@ MofaInputs <- function(id) {
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_factor"), "Select factor:", choices = NULL),
     shiny::selectizeInput(ns("show_types"), "Show datatypes:",
-                          choices = NULL, multiple = TRUE),
+      choices = NULL, multiple = TRUE
+    ),
     shiny::br(),
     bslib::accordion(
       id = ns("data_type_accordion"),
@@ -53,12 +54,12 @@ MofaUI <- function(id) {
 
   #  shiny::div(
   bslib::page_fillable(
-    fillable_mobile = FALSE,  # not working here... 
+    fillable_mobile = FALSE, # not working here...
     boardHeader(title = "Multi-Omics Factor Analysis", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------      
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Overview",
         bslib::layout_columns(
@@ -82,11 +83,11 @@ MofaUI <- function(id) {
               mofa_plot_dendrogram_ui(
                 ns("dendrogram"),
                 title = "Feature clustering",
-                caption = "Factor clustering",                
+                caption = "Factor clustering",
                 info.text = "Gene modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
-              ),              
+              ),
               mofa_plot_variance_ui(
                 ns("variance_view"),
                 title = "Variance per type",
@@ -116,12 +117,12 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-          )          
+          )
         )
       ),
 
 
-      ##----------------------------------------------------------------      
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Response",
         bslib::layout_columns(
@@ -132,8 +133,8 @@ MofaUI <- function(id) {
             height = "calc(100vh - 180px)",
             col_widths = bslib::breakpoints(
               xxxl = c(12, 12),
-              lg = c(6,6),
-              sm = c(12, 12)               
+              lg = c(6, 6),
+              sm = c(12, 12)
             ),
             bslib::layout_columns(
               col_widths = bslib::breakpoints(
@@ -177,8 +178,8 @@ MofaUI <- function(id) {
           )
         )
       ),
-      
-      ##----------------------------------------------------------------
+
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Weights",
         bslib::layout_columns(
@@ -188,7 +189,7 @@ MofaUI <- function(id) {
           bslib::layout_columns(
             height = "calc(100vh - 180px)",
             col_widths = bslib::breakpoints(
-              lg = c(6,6,6,3,3),
+              lg = c(6, 6, 6, 3, 3),
               sm = c(12, 12, 12, 12)
             ),
             mofa_plot_weights_ui(
@@ -229,12 +230,12 @@ MofaUI <- function(id) {
               caption = "Module heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )                          
+            )
           )
         )
       ), ## tabPanel
- 
-      ##----------------------------------------------------------------
+
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Enrichment",
         bslib::layout_columns(
@@ -254,13 +255,13 @@ MofaUI <- function(id) {
               caption = "Functional analysis of factor",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),            
+            ),
             mofa_plot_pathwayheatmap_ui(
               ns("pathwayheatmap"),
               title = "Pathway heatmap",
               info.text = "...",
-              #info.methods = "",
-              #info.references = "",
+              # info.methods = "",
+              # info.references = "",
               caption = "Integrated Multi-omics heatmap.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
@@ -271,7 +272,7 @@ MofaUI <- function(id) {
               caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
-            ),                        
+            ),
             mofa_table_factorenrichment_ui(
               ns("mofa_factorenrichment"),
               title = "Factor enrichment table",
@@ -286,11 +287,10 @@ MofaUI <- function(id) {
               info.text = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )                          
+            )
           )
         )
       ) ## tabPanel
-      
     )
   )
 }

@@ -16,7 +16,7 @@ dataview_plot_variationcoefficient_ui <- function(
   ns <- shiny::NS(id)
 
   menu_grouped <- "<code>grouped</code>"
-  
+
   PlotModuleUI(
     ns("pltmod"),
     title = title,
@@ -37,17 +37,16 @@ dataview_plot_variationcoefficient_server <- function(id,
                                                       r.samples,
                                                       r.groupby,
                                                       watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       shiny::req(pgx$X, pgx$samples)
       counts <- pgx$counts
       Y <- pgx$samples
       samples <- r.samples()
       groupby <- r.groupby()
-      if (!all(samples %in% rownames(Y))) return(NULL)
+      if (!all(samples %in% rownames(Y))) {
+        return(NULL)
+      }
 
       if (groupby == "<ungrouped>") {
         res <- as.matrix(playbase::compute_CV(counts))
@@ -56,7 +55,9 @@ dataview_plot_variationcoefficient_server <- function(id,
         ph <- as.character(Y[samples, groupby])
         ph.groups <- split(seq_along(ph), ph)
         LL <- lapply(ph.groups, function(sel) {
-          if (length(sel) <= 1) return(NULL)
+          if (length(sel) <= 1) {
+            return(NULL)
+          }
           playbase::compute_CV(counts[, sel, drop = FALSE])
         })
         LL <- LL[!sapply(LL, is.null)]
@@ -66,7 +67,6 @@ dataview_plot_variationcoefficient_server <- function(id,
 
       rm(counts, samples)
       return(res)
-
     })
 
     plot.RENDER <- function() {
@@ -91,7 +91,9 @@ dataview_plot_variationcoefficient_server <- function(id,
       fig
     }
 
-    modal_plot.RENDER <- function() { plot.RENDER() }
+    modal_plot.RENDER <- function() {
+      plot.RENDER()
+    }
 
     modal_plotly.RENDER <- function() {
       plotly.RENDER() %>%
@@ -100,17 +102,17 @@ dataview_plot_variationcoefficient_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      #plotlib = "base",
-      #plotlib2 = "base",
+      # plotlib = "base",
+      # plotlib2 = "base",
       plotlib = "plotly",
-      #func = plot.RENDER,
-      #func2 = modal_plot.RENDER,
+      # func = plot.RENDER,
+      # func2 = modal_plot.RENDER,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data,
-      #renderFunc = shiny::renderPlot,
-      #renderFunc2 = shiny::renderPlot,
-      #res = c(100, 170) * 0.85,
+      # renderFunc = shiny::renderPlot,
+      # renderFunc2 = shiny::renderPlot,
+      # res = c(100, 170) * 0.85,
       res = c(90, 170),
       pdf.width = 6,
       pdf.height = 6,

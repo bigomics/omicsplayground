@@ -29,7 +29,7 @@ SNFBoard <- function(id, pgx) {
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
-    
+
     shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
@@ -43,25 +43,30 @@ SNFBoard <- function(id, pgx) {
     ## ============================= REACTIVES ================================
     ## ========================================================================
 
-    mofa <- shiny::eventReactive( pgx$mofa, {
+    mofa <- shiny::eventReactive(pgx$mofa,
+      {
+        shiny::validate(shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
 
-      shiny::validate( shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))      
+        mofa <- pgx$mofa
+        if (!"snf" %in% names(pgx$mofa)) {
+          snf <- playbase::snf.cluster(mofa$xx, pheno = NULL, plot = FALSE)
+          mofa$snf <- snf
+        }
 
-      mofa <- pgx$mofa
-      if(!"snf" %in% names(pgx$mofa)) {
-        snf <- playbase::snf.cluster(mofa$xx, pheno=NULL, plot=FALSE) 
-        mofa$snf <- snf
-      }
-            
-      return(mofa)
-    }, ignoreNULL = FALSE)
-  
-    pgx_samples <- shiny::eventReactive(pgx$samples, {
-      pgx_samples <- pgx$samples
-      return(pgx_samples)
-    }, ignoreNULL = FALSE)
+        return(mofa)
+      },
+      ignoreNULL = FALSE
+    )
 
-    
+    pgx_samples <- shiny::eventReactive(pgx$samples,
+      {
+        pgx_samples <- pgx$samples
+        return(pgx_samples)
+      },
+      ignoreNULL = FALSE
+    )
+
+
     ## ========================================================================
     ## =========================== MODULES ====================================
     ## ========================================================================
@@ -72,7 +77,7 @@ SNFBoard <- function(id, pgx) {
       pgx_samples = pgx_samples,
       watermark = WATERMARK
     )
-    
+
     mofa_plot_snf_heatmap_server(
       "snf_heatmap",
       mofa = mofa,

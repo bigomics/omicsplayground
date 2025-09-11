@@ -4,8 +4,7 @@
 ##
 
 
-dataview_table_rawdata_ui <- function(
-                                      id,
+dataview_table_rawdata_ui <- function(id,
                                       width,
                                       height,
                                       title,
@@ -43,9 +42,7 @@ dataview_table_rawdata_server <- function(id,
                                           r.samples = reactive(""),
                                           r.groupby = reactive(""),
                                           scrollY = "auto") {
-
   moduleServer(id, function(input, output, session) {
-
     table_data <- shiny::reactive({
       gene <- r.gene()
       data_scale <- r.data_type()
@@ -110,15 +107,18 @@ dataview_table_rawdata_server <- function(id,
       x95 <- quantile(as.vector(x0[which(x0 > 0)]), probs = 0.95)
       x99 <- quantile(as.vector(x0[which(x0 > 0)]), probs = 0.99)
 
-      if (NCOL(x) == 0 || nrow(x) == 0) return(NULL)
+      if (NCOL(x) == 0 || nrow(x) == 0) {
+        return(NULL)
+      }
 
       # create final dataframe
       annot <- pgx$genes[rownames(x), ]
       cl <- c("feature", "symbol", "gene_title")
       if (!input$show_full_table) annot <- annot[, cl]
 
-      if ("human_ortholog" %in% colnames(annot))
+      if ("human_ortholog" %in% colnames(annot)) {
         colnames(annot)[colnames(annot) == "human_ortholog"] <- "ortholog"
+      }
 
       # hide symbol column if symbol is feature
       if (mean(head(annot$feature, 1000) == head(annot$symbol, 1000), na.rm = TRUE) > 0.8) {
@@ -136,16 +136,15 @@ dataview_table_rawdata_server <- function(id,
         as.matrix(x),
         check.names = FALSE
       )
-      
+
       # if symbol and feature as same, drop symbol column
       df <- df[order(-df$rho, -df$SD), , drop = FALSE]
 
       list(df = df, groupby = groupby, samples = samples, data_scale = data_scale, x95 = x95, x99 = x99)
-
     })
 
     rawdataTable.RENDER <- function() {
-      dt <- table_data()      
+      dt <- table_data()
       req(dt, dt$df)
       DF <- dt$df
       groupby <- dt$groupby
@@ -155,17 +154,19 @@ dataview_table_rawdata_server <- function(id,
       numcols <- grep("gene|title", colnames(DF), value = TRUE, invert = TRUE)
       tabH <- 700
 
-      na.map=NULL; rm.cols=NULL
-      is.imp <- sum(is.na(pgx$counts))>0 && sum(is.na(pgx$X))==0
+      na.map <- NULL
+      rm.cols <- NULL
+      is.imp <- sum(is.na(pgx$counts)) > 0 && sum(is.na(pgx$X)) == 0
       if (is.imp && data_scale == "log2") {
-        if(groupby != "<ungrouped>" && groupby %in% colnames(pgx$samples)) {
+        if (groupby != "<ungrouped>" && groupby %in% colnames(pgx$samples)) {
           group <- pgx$samples[samples, groupby]
           if (!is.null(group)) {
             allgroups <- sort(unique(group))
-            i=1; na.map=list()
-            for(i in 1:length(allgroups)) {
+            i <- 1
+            na.map <- list()
+            for (i in 1:length(allgroups)) {
               jj <- which(pgx$samples[samples, groupby] == allgroups[i])
-              samples1 <- intersect(samples, rownames(pgx$samples)[jj]) 
+              samples1 <- intersect(samples, rownames(pgx$samples)[jj])
               counts <- pgx$counts[rownames(DF), samples1, drop = FALSE]
               nas <- apply(counts, 2, function(x) unname(which(is.na(x))))
               nas <- nas[sapply(nas, length) > 0]
@@ -179,15 +180,15 @@ dataview_table_rawdata_server <- function(id,
           na.map <- apply(counts, 2, function(x) unname(which(is.na(x))))
           na.map <- na.map[sapply(na.map, length) > 0]
         }
-        i=1
-        for(i in 1:length(na.map)) {
+        i <- 1
+        for (i in 1:length(na.map)) {
           imp.info <- ifelse(seq_len(nrow(DF)) %in% na.map[[i]], "yes", "no")
           DF <- cbind(DF, imp.info)
           colnames(DF)[ncol(DF)] <- paste0(names(na.map)[i], ".impinfo")
         }
         rm.cols <- grep(".impinfo", colnames(DF)) - 1 # zero-based index
       }
-      
+
       DTable <- DT::datatable(
         DF,
         rownames = FALSE,
@@ -206,13 +207,15 @@ dataview_table_rawdata_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(list(targets = rm.cols, visible = FALSE))
         )
-      );
+      )
       if (!is.null(na.map)) {
-        i=1
-        for(i in 1:length(na.map)) {
+        i <- 1
+        for (i in 1:length(na.map)) {
           ss <- paste0(names(na.map)[i], ".impinfo")
-          DTable <- DTable %>% DT::formatStyle(names(na.map)[i], valueColumns = ss,
-            backgroundColor = DT::styleEqual("yes","#FFE4E1"))
+          DTable <- DTable %>% DT::formatStyle(names(na.map)[i],
+            valueColumns = ss,
+            backgroundColor = DT::styleEqual("yes", "#FFE4E1")
+          )
         }
       }
       DTable <- DTable %>%
@@ -226,13 +229,13 @@ dataview_table_rawdata_server <- function(id,
         )
       DTable
     }
-    
+
     rawdataTable.RENDER_modal <- shiny::reactive({
       dt <- rawdataTable.RENDER()
       dt$df$options$scrollY <- SCROLLY_MODAL
       dt
     })
-    
+
     TableModuleServer(
       "datasets",
       func = rawdataTable.RENDER,

@@ -39,61 +39,63 @@ mofa_plot_moduleheatmap_server <- function(id,
                                            pgx,
                                            input_factor = reactive(1),
                                            show_types = reactive(NULL),
-                                           ntop = c(40,40),
+                                           ntop = c(40, 40),
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    render_plot <- function(legend, maxchar, n, show_colnames)  {
-      res <- mofa()      
+    render_plot <- function(legend, maxchar, n, show_colnames) {
+      res <- mofa()
       k <- input_factor()
       factors <- colnames(res$F)
-      if(!is.null(k)) shiny::req(k %in% factors)
+      if (!is.null(k)) shiny::req(k %in% factors)
 
       show_types <- show_types()
       dtypes <- names(res$ww)
-      if(is.null(show_types)) show_types <- dtypes
-      shiny::validate(need(length(show_types)>0,
-                           "Please select at least one datatype"))
-      
+      if (is.null(show_types)) show_types <- dtypes
+      shiny::validate(need(
+        length(show_types) > 0,
+        "Please select at least one datatype"
+      ))
+
       playbase::mofa.plot_heatmap(
-        res, k=k, ## main=k,
+        res,
+        k = k, ## main=k,
         gene_table = pgx$genes,
         ntop = n,
         split = input$split,
-        type="splitmap",
+        type = "splitmap",
         annot = "pheno",
         maxchar = maxchar,
         show_types = show_types,
         show_legend = legend,
         show_colnames = show_colnames,
-        mar = c(3,0,0,0),
+        mar = c(3, 0, 0, 0),
         annot.ht = 0.9,
-        cexRow = 0.9)
+        cexRow = 0.9
+      )
     }
 
     plot.RENDER <- function() {
-      render_plot(legend=FALSE, maxchar=30, n=ntop[1],
-                  show_colnames=FALSE)
+      render_plot(
+        legend = FALSE, maxchar = 30, n = ntop[1],
+        show_colnames = FALSE
+      )
     }
-    
+
     plot.RENDER2 <- function() {
-      render_plot(legend=TRUE, maxchar=80, n=ntop[2],
-                  show_colnames=TRUE)
+      render_plot(
+        legend = TRUE, maxchar = 80, n = ntop[2],
+        show_colnames = TRUE
+      )
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
+      func2 = plot.RENDER2,
       pdf.width = 8,
       pdf.height = 12,
       res = c(80, 100),
       add.watermark = watermark
     )
-
-    
   })
 }
-
-
-

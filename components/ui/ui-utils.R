@@ -493,7 +493,7 @@ tspan.SAVE <- function(label) {
 }
 
 #' Create a loading spinner element
-#' 
+#'
 #' @param id The ID for the loader container
 #' @return A shiny div element containing the loader
 #' @export

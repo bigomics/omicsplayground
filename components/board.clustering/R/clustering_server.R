@@ -88,7 +88,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       names(hm_level_choices) <- hm_level_choices_names
       shiny::updateSelectInput(session, "hm_level", choices = hm_level_choices)
     })
-   
+
     ## update filter choices upon change of data set
     shiny::observeEvent(
       {
@@ -164,8 +164,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         if (input$hm_splitby == "contrast") {
           cmp <- sort(playbase::pgx.getContrasts(pgx))
-          shiny::updateSelectInput(session, "hm_splitvar", choices = cmp,
-            selected = cmp[1])
+          shiny::updateSelectInput(session, "hm_splitvar",
+            choices = cmp,
+            selected = cmp[1]
+          )
         }
       }
     )
@@ -179,7 +181,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     shiny::observeEvent(pgx, {
       shiny::req(pgx$datatype)
       datatype <- pgx$datatype
-      if (datatype %in% c("scRNA-seq","scRNAseq")) {
+      if (datatype %in% c("scRNA-seq", "scRNAseq")) {
         shiny::updateRadioButtons(session, "hm_splitby", selected = "phenotype")
       }
     })
@@ -199,7 +201,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
       ## all genes and genesets
-      genes <- unique(pgx$genes[,"symbol"])      
+      genes <- unique(pgx$genes[, "symbol"])
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
@@ -226,7 +228,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           ## all features
           pp <- rownames(pgx$X)
         } else if (ft %in% names(pgx$families)) {
-          pp <- playbase::map_probes( pgx$genes, pgx$families[[ft]])
+          pp <- playbase::map_probes(pgx$genes, pgx$families[[ft]])
         } else if (ft == "<custom>" && ft != "") {
           customfeatures <- input$hm_customfeatures
           gg1 <- strsplit(customfeatures, split = "[, ;\n\t]")[[1]]
@@ -239,24 +241,24 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
             length(gg1) > 1 && !is.regex,
             tspan("Please input more than 1 gene.", js = FALSE)
           ))
-          
-          ## build index idx that determines groups/cluster of genes. 
+
+          ## build index idx that determines groups/cluster of genes.
           idx <- NULL
           if (any(grepl("^---", gg1))) {
             idx <- list()
             kk <- c(1, grep("^---", gg1), length(gg1) + 1)
-            i=1
+            i <- 1
             for (i in 1:(length(kk) - 1)) {
               ii <- kk[i]:(kk[i + 1] - 1)
-              idx[[i]] <- playbase::map_probes( pgx$genes, gg1[ii] )
+              idx[[i]] <- playbase::map_probes(pgx$genes, gg1[ii])
             }
             pp <- unlist(idx)
-            names(idx) <- paste0("F",1:length(idx))
-            idx <- unlist(mapply(rep, names(idx), sapply(idx,length)))
+            names(idx) <- paste0("F", 1:length(idx))
+            idx <- unlist(mapply(rep, names(idx), sapply(idx, length)))
             names(idx) <- pp
           } else {
-            ## no grouping 
-            pp <- playbase::map_probes( pgx$genes, gg1)
+            ## no grouping
+            pp <- playbase::map_probes(pgx$genes, gg1)
           }
         } else {
           warning("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
@@ -270,8 +272,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
 
         if (input$hm_splitby == "gene") {
-          p1 <- playbase::map_probes(pgx$genes, input$hm_splitvar)            
-          if(length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
+          p1 <- playbase::map_probes(pgx$genes, input$hm_splitvar)
+          if (length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
         }
 
         if (is.null(pgx$impX)) {
@@ -334,7 +336,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## input$hm_group,
       input$hm_ntop
     )
-    
+
     ##' .. content for \description{} (no empty lines) ..
     ##'
     ##' .. content for \details{} ..
@@ -373,7 +375,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (splitby == "contrast" && !splitvar %in% colnames(pgx$contrasts)) {
         return(NULL)
       }
-      
+
       grp <- NULL
       ## split on a phenotype variable
       if (do.split && splitvar %in% colnames(pgx$samples)) {
@@ -438,7 +440,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (!do.split && topmode == "marker") {
         topmode <- "sd"
       }
-      if(splitby == "contrast") {
+      if (splitby == "contrast") {
         # topmode <- "marker"  ## really?
       }
 
@@ -448,14 +450,14 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         return(gg)
       }
-      
+
       ## remove empty
-      if(!is.null(grp)) {
+      if (!is.null(grp)) {
         sel <- which(!is.na(grp))
-        zx <- zx[,sel]
+        zx <- zx[, sel]
         grp <- grp[sel]
       }
-      
+
       ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
@@ -503,7 +505,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         gg <- addsplitgene(gg)
         zx <- zx[gg, , drop = FALSE] ## order
       }
-      
+
       ## ------------- cluster the genes???
       if (!is.null(flt$idx)) {
         idx <- flt$idx[rownames(zx)] ## override
@@ -733,7 +735,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
       hm_ntop = shiny::reactive(input$hm_ntop),
-      ##hm_scale = shiny::reactive(input$hm_scale),
+      ## hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
       watermark = WATERMARK,

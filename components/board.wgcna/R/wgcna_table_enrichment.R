@@ -16,7 +16,7 @@ wgcna_table_enrichment_ui <- function(
   options <- tagList(
     checkboxInput(ns("showallmodules"), "Show all modules")
   )
-  
+
   TableModuleUI(
     ns("datasets"),
     title = title,
@@ -33,9 +33,8 @@ wgcna_table_enrichment_server <- function(id,
                                           wgcna,
                                           selected_module
                                           ## enrich_table
-                                          ) {
+) {
   moduleServer(id, function(input, output, session) {
-
     table_data <- function() {
       gse <- wgcna()$gse
       k <- selected_module()
@@ -45,26 +44,26 @@ wgcna_table_enrichment_server <- function(id,
       } else {
         df <- do.call(rbind, gse)
       }
-      if(!"score" %in% colnames(df)) {
+      if (!"score" %in% colnames(df)) {
         df$odd.ratio[is.infinite(df$odd.ratio)] <- 99
         df$score <- df$odd.ratio * -log10(df$p.value)
       }
       cols <- c(
         "module", "geneset", "score", "p.value", "q.value",
-        "overlap", "genes")
+        "overlap", "genes"
+      )
       cols <- intersect(cols, colnames(df))
       df <- df[, cols]
       df <- df[order(-df$score), ]
       df
     }
-    
-    render_table <- function(full=FALSE) {
 
+    render_table <- function(full = FALSE) {
       df <- table_data()
-      if(!full) {
-        cols <- c("geneset","score","q.value","overlap","genes")
+      if (!full) {
+        cols <- c("geneset", "score", "q.value", "overlap", "genes")
         cols <- intersect(cols, colnames(df))
-        df <- df[,cols]
+        df <- df[, cols]
       }
 
       numeric.cols <- grep("score|value|ratio", colnames(df))
@@ -94,7 +93,7 @@ wgcna_table_enrichment_server <- function(id,
                 "}"
               )
             )
-          )          
+          )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
@@ -105,15 +104,14 @@ wgcna_table_enrichment_server <- function(id,
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
-
     }
 
     RENDER <- function() {
-      render_table(full=FALSE)
+      render_table(full = FALSE)
     }
 
     RENDER_modal <- function() {
-      dt <- render_table(full=TRUE)
+      dt <- render_table(full = TRUE)
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     }

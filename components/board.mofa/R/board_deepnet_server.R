@@ -22,16 +22,16 @@ DeepNetBoard <- function(id, pgx) {
     ## update network diagram if model changes and reset
     update <- reactiveVal(0)
     update_diagram <- reactiveVal(FALSE)
-    
+
     ## ===========================================================================
     ## ============================ OBSERVERS ====================================
     ## ===========================================================================
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Model training" = list(disable = c("show_conditions","show_datatypes")),
+      "Model training" = list(disable = c("show_conditions", "show_datatypes")),
       "Gradient vs. foldchange" = list(disable = c("select_datatypes")),
-      "Biomarker heatmap" = list(disable = c("show_conditions","select_datatypes"))
+      "Biomarker heatmap" = list(disable = c("show_conditions", "select_datatypes"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -52,249 +52,287 @@ DeepNetBoard <- function(id, pgx) {
       ))
     })
 
-    
-    shiny::observeEvent({
-      list(pgx$samples)
-    } , {
-      phenotypes <- playbase::pgx.getCategoricalPhenotypes(pgx$samples)
-      shiny::updateSelectInput(session, "select_pheno", choices = phenotypes,
-                               ## options = list(maxItems=2),
-                               selected = phenotypes[1] )
-      update( update() + 1)
-    })
-    
-    
-    shiny::observeEvent({
-      list(input$select_pheno, pgx$samples)
-    }, {
-      shiny::req(input$select_pheno)
-      shiny::req(pgx$samples)
-      if(!input$select_pheno %in% colnames(pgx$samples)) return(NULL)
-      conditions <- sort(unique(pgx$samples[, input$select_pheno]))
-      shiny::updateSelectInput(session, "show_conditions", choices = conditions,
-                               selected = head(conditions,3) )      
-    })
-    
+
+    shiny::observeEvent(
+      {
+        list(pgx$samples)
+      },
+      {
+        phenotypes <- playbase::pgx.getCategoricalPhenotypes(pgx$samples)
+        shiny::updateSelectInput(session, "select_pheno",
+          choices = phenotypes,
+          ## options = list(maxItems=2),
+          selected = phenotypes[1]
+        )
+        update(update() + 1)
+      }
+    )
+
+
+    shiny::observeEvent(
+      {
+        list(input$select_pheno, pgx$samples)
+      },
+      {
+        shiny::req(input$select_pheno)
+        shiny::req(pgx$samples)
+        if (!input$select_pheno %in% colnames(pgx$samples)) {
+          return(NULL)
+        }
+        conditions <- sort(unique(pgx$samples[, input$select_pheno]))
+        shiny::updateSelectInput(session, "show_conditions",
+          choices = conditions,
+          selected = head(conditions, 3)
+        )
+      }
+    )
+
     warned <- TRUE
-    observeEvent( input$step, {
+    observeEvent(input$step, {
       optim <- "adam"
-      #optim <- input$optim
-      net()$fit( niter=1, optim=optim)
+      # optim <- input$optim
+      net()$fit(niter = 1, optim = optim)
       warned <<- FALSE
-      update( update() + 1)
+      update(update() + 1)
     })
-    
-    observeEvent( input$step20, {
+
+    observeEvent(input$step20, {
       pgx.showSmallModal(paste("Fitting model 20 steps... please wait"))
       optim <- "adam"
-      #optim <- input$optim
-      net()$fit( niter=20, optim=optim)
+      # optim <- input$optim
+      net()$fit(niter = 20, optim = optim)
       shiny::removeModal()
       warned <<- FALSE
-      update( update() + 1)
+      update(update() + 1)
     })
-    
-    observeEvent( input$step100, {
+
+    observeEvent(input$step100, {
       pgx.showSmallModal(paste("Fitting model 100 steps... please wait"))
       optim <- "adam"
-      #optim <- input$optim
-      net()$fit( niter=100, optim=optim)
+      # optim <- input$optim
+      net()$fit(niter = 100, optim = optim)
       shiny::removeModal()
       warned <<- FALSE
-      update( update() + 1)
+      update(update() + 1)
     })
 
-    observeEvent({
-      list( 
-        input$latent_dim,
-        input$actfun,
-        input$l1regularization,
-        input$l2regularization
-      )
-    }, {
-      if(!warned) {
-        shinyalert::shinyalert("","Please reset and run your network again after adjusting network options.")
-        warned <<- TRUE
+    observeEvent(
+      {
+        list(
+          input$latent_dim,
+          input$actfun,
+          input$l1regularization,
+          input$l2regularization
+        )
+      },
+      {
+        if (!warned) {
+          shinyalert::shinyalert("", "Please reset and run your network again after adjusting network options.")
+          warned <<- TRUE
+        }
       }
-    })
+    )
 
-    shiny::observeEvent({
-      list(pgx$X, input$addgsets)
-    },{
-      
-      shiny::req(pgx$X)
-      shiny::req(!is.null(input$addgsets) && length(input$addgsets))
-      
-      if(!all(grepl(":",rownames(pgx$X)))) {
-        dbg("[DeepNetBoard] 0: SINGLE OMICS???")
-        shiny::updateSelectInput(
-          session, "select_datatypes", choices = "gx", selected = "gx")
-        shiny::updateSelectInput(
-          session, "show_datatypes", choices = "gx", selected = "gx")
-        return(NULL)
+    shiny::observeEvent(
+      {
+        list(pgx$X, input$addgsets)
+      },
+      {
+        shiny::req(pgx$X)
+        shiny::req(!is.null(input$addgsets) && length(input$addgsets))
+
+        if (!all(grepl(":", rownames(pgx$X)))) {
+          dbg("[DeepNetBoard] 0: SINGLE OMICS???")
+          shiny::updateSelectInput(
+            session, "select_datatypes",
+            choices = "gx", selected = "gx"
+          )
+          shiny::updateSelectInput(
+            session, "show_datatypes",
+            choices = "gx", selected = "gx"
+          )
+          return(NULL)
+        }
+
+        ## update datatype selectinput
+        sel.datatype <- input$select_datatypes
+
+        datatypes <- sort(unique(sub(":.*", "", rownames(pgx$X))))
+        if (input$addgsets) {
+          datatypes <- unique(c(datatypes, "GSET"))
+          sel.datatype <- unique(c(sel.datatype, "GSET"))
+        }
+        sel.datatype <- intersect(sel.datatype, datatypes)
+
+        if (length(sel.datatype) == 0) sel.datatype <- datatypes
+        shiny::updateSelectInput(session, "select_datatypes",
+          choices = datatypes,
+          selected = sel.datatype
+        )
+        shiny::updateSelectInput(session, "show_datatypes",
+          choices = datatypes,
+          selected = sel.datatype
+        )
       }
+    )
 
-      ## update datatype selectinput
-      sel.datatype <- input$select_datatypes
-
-      datatypes <- sort(unique(sub(":.*","",rownames(pgx$X))))
-      if(input$addgsets) {
-        datatypes <- unique(c(datatypes, "GSET"))
-        sel.datatype <- unique(c(sel.datatype, "GSET"))
+    shiny::observeEvent(
+      {
+        list(input$select_datatypes)
+      },
+      {
+        datatypes <- input$select_datatypes
+        shiny::updateSelectInput(session, "show_datatypes",
+          choices = datatypes,
+          selected = datatypes
+        )
       }
-      sel.datatype <- intersect(sel.datatype, datatypes)
+    )
 
-      if(length(sel.datatype)==0) sel.datatype <- datatypes
-      shiny::updateSelectInput(session, "select_datatypes", choices = datatypes,
-        selected = sel.datatype )
-      shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
-        selected = sel.datatype )
+    shiny::observeEvent(
+      {
+        list(input$select_pheno, input$reset)
+      },
+      {
+        update_diagram(TRUE)
+      }
+    )
 
-    })
-
-    shiny::observeEvent({
-      list( input$select_datatypes )
-    },{
-      datatypes <- input$select_datatypes
-      shiny::updateSelectInput(session, "show_datatypes", choices = datatypes,
-        selected = datatypes )
-    })
-    
-    shiny::observeEvent({
-      list( input$select_pheno, input$reset )
-    },{
-      update_diagram(TRUE)
-    })
-    
     ## ===========================================================================
     ## ========================== BOARD FUNCTIONS ================================
     ## ===========================================================================
 
     ## create reactive DeepNet object
-    net <- shiny::eventReactive({
-      list( input$select_pheno, input$reset )
-    }, {
-      shiny::req(input$select_pheno)
-      shiny::req(input$select_datatypes)      
+    net <- shiny::eventReactive(
+      {
+        list(input$select_pheno, input$reset)
+      },
+      {
+        shiny::req(input$select_pheno)
+        shiny::req(input$select_datatypes)
 
-      pheno <- input$select_pheno
-      X <- pgx$X
-      if(any(is.na(X))) {
-        info("[DeepNetBoard] imputing missing values in X")
-        X <- playbase::svdImpute2(X)
-      }
-      y <- pgx$samples[, pheno, drop=FALSE]
-      ii <- which(rowSums(is.na(y)) == 0)
-      y <- y[ii,,drop=FALSE]
-      X <- X[,ii]
-      sdX <- matrixStats::rowSds(X, na.rm=TRUE)
-      xx <- playbase::mofa.split_data(X) ## also handles single-omics
-      
-      ## Subset selection of datatypes for deepnet
-      dt <- isolate(input$select_datatypes)
-      if(length(dt)) {
-        xx <- xx[setdiff(dt,"GSET")]
-      }
-      
-      if(input$addgsets) {
-        info("[DeepNetBoard] adding genesets ")
-        gsetx <- pgx$gsetX[,ii]
-        xx <- c( xx, list(GSET=gsetx))
-        update_diagram(TRUE)        
-      }
-      
-      if(input$augment) {
-        ntime = 10
-        xx <- playbase::mofa.augment(xx, ntime, z=1)
-        y  <- do.call( rbind, rep(list(y),ntime))
-      }
-      
-      l1 = 1
-      l2 = 100
-      ae.wt=3
-      if( input$model == "AE")  ae.wt <- 1e3
-      if( input$model == "MLP") ae.wt <- 1e-3      
-      loss_weights <- c(y=1/ae.wt, ae=ae.wt, l1=l1, l2=l2)
-      
-      ## create the Neural network
-      yy <- as.list(y)  ## one target for now...
-      yy <- lapply(yy, as.factor)
-      names(yy) <- pheno
-      
-      info("[DeepNetBoard] creating DeepNet model: ", input$model)
-      latent_dim <- input$latent_dim
+        pheno <- input$select_pheno
+        X <- pgx$X
+        if (any(is.na(X))) {
+          info("[DeepNetBoard] imputing missing values in X")
+          X <- playbase::svdImpute2(X)
+        }
+        y <- pgx$samples[, pheno, drop = FALSE]
+        ii <- which(rowSums(is.na(y)) == 0)
+        y <- y[ii, , drop = FALSE]
+        X <- X[, ii]
+        sdX <- matrixStats::rowSds(X, na.rm = TRUE)
+        xx <- playbase::mofa.split_data(X) ## also handles single-omics
 
-      if(input$layers == "mini") {
-        num_layers = list(c(latent_dim), c(), c())
-      } else if(input$layers == "deep") {
-        num_layers = list(c(0.5, latent_dim), c(0.99, 0.5, 025), c(0.99, 0.5, 0.25))
-      } else {
-        num_layers = list(c(0.5,latent_dim), c(0.5), c(0.5))
+        ## Subset selection of datatypes for deepnet
+        dt <- isolate(input$select_datatypes)
+        if (length(dt)) {
+          xx <- xx[setdiff(dt, "GSET")]
+        }
+
+        if (input$addgsets) {
+          info("[DeepNetBoard] adding genesets ")
+          gsetx <- pgx$gsetX[, ii]
+          xx <- c(xx, list(GSET = gsetx))
+          update_diagram(TRUE)
+        }
+
+        if (input$augment) {
+          ntime <- 10
+          xx <- playbase::mofa.augment(xx, ntime, z = 1)
+          y <- do.call(rbind, rep(list(y), ntime))
+        }
+
+        l1 <- 1
+        l2 <- 100
+        ae.wt <- 3
+        if (input$model == "AE") ae.wt <- 1e3
+        if (input$model == "MLP") ae.wt <- 1e-3
+        loss_weights <- c(y = 1 / ae.wt, ae = ae.wt, l1 = l1, l2 = l2)
+
+        ## create the Neural network
+        yy <- as.list(y) ## one target for now...
+        yy <- lapply(yy, as.factor)
+        names(yy) <- pheno
+
+        info("[DeepNetBoard] creating DeepNet model: ", input$model)
+        latent_dim <- input$latent_dim
+
+        if (input$layers == "mini") {
+          num_layers <- list(c(latent_dim), c(), c())
+        } else if (input$layers == "deep") {
+          num_layers <- list(c(0.5, latent_dim), c(0.99, 0.5, 025), c(0.99, 0.5, 0.25))
+        } else {
+          num_layers <- list(c(0.5, latent_dim), c(0.5), c(0.5))
+        }
+
+        net <- playbase::MultiOmicsSAE$new(
+          xx,
+          yy,
+          model = "MT",
+          num_layers = num_layers,
+          ntop = 1000,
+          loss_weights = loss_weights,
+          # dropout = as.numeric(0.10 * input$dropout),
+          add_noise = as.numeric(1.2 * input$addnoise),
+          # actfun = input$actfun,
+          actfun = "leaky",
+          use_glu = 2 * input$useGLU, ## GLU mode
+          use_bn = TRUE
+          # use_bn = input$useBN
+          # scale = input$scaleinput,
+          # sd_weight = input$sdweight
+        )
+
+        info("[DeepNetBoard] finished creating model!")
+        ## update_diagram(TRUE)      ## need update?
+        warned <<- FALSE
+        return(net)
       }
-      
-      net <- playbase::MultiOmicsSAE$new(
-        xx,
-        yy,
-        model = "MT",
-        num_layers = num_layers,
-        ntop = 1000,
-        loss_weights = loss_weights,
-        #dropout = as.numeric(0.10 * input$dropout),
-        add_noise = as.numeric(1.2 * input$addnoise),
-        #actfun = input$actfun,
-        actfun = "leaky",        
-        use_glu = 2*input$useGLU,  ## GLU mode
-        use_bn = TRUE
-        # use_bn = input$useBN                
-        # scale = input$scaleinput,
-        # sd_weight = input$sdweight
-      )
+    )
 
-      info("[DeepNetBoard] finished creating model!")
-      ## update_diagram(TRUE)      ## need update?
-      warned <<- FALSE
-      return(net)
-    })
 
-    
-    phenoFC <- eventReactive({
-      list(input$select_pheno)
-    } , {
-      ## Calculate correspoding T-test statistics
-      pheno <- input$select_pheno
-      y <- pgx$samples[,pheno]
-      X <- pgx$X
-      if(!all(grepl("[:]",rownames(X)))) {
-        rownames(X) <- paste0("gx:",rownames(X))        
-      }      
-      gsetX <- pgx$gsetX
-      rownames(gsetX) <- paste0("GSET:",rownames(gsetX))
-      X <- rbind(X, gsetX)
-      
-      ii <- which(!is.na(y))
-      y <- y[ii]
-      X <- X[,ii]      
-      
-      mx <- model.matrix( ~ 0 + y)
-      mx <- t(t(mx) / colSums(mx))
-      
-      avgX <- X %*% mx
-      F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE] - rowMeans(avgX[,-i,drop=FALSE]))
-      #F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE])
-      colnames(F) <- sub("^y","",colnames(mx))
-      rownames(F) <- rownames(X)
-      fc <- playbase::mofa.split_data(F)
-      return(fc)
-    })
+    phenoFC <- eventReactive(
+      {
+        list(input$select_pheno)
+      },
+      {
+        ## Calculate correspoding T-test statistics
+        pheno <- input$select_pheno
+        y <- pgx$samples[, pheno]
+        X <- pgx$X
+        if (!all(grepl("[:]", rownames(X)))) {
+          rownames(X) <- paste0("gx:", rownames(X))
+        }
+        gsetX <- pgx$gsetX
+        rownames(gsetX) <- paste0("GSET:", rownames(gsetX))
+        X <- rbind(X, gsetX)
 
-    
+        ii <- which(!is.na(y))
+        y <- y[ii]
+        X <- X[, ii]
+
+        mx <- model.matrix(~ 0 + y)
+        mx <- t(t(mx) / colSums(mx))
+
+        avgX <- X %*% mx
+        F <- sapply(1:ncol(mx), function(i) avgX[, i, drop = FALSE] - rowMeans(avgX[, -i, drop = FALSE]))
+        # F <- sapply( 1:ncol(mx), function(i) avgX[,i,drop=FALSE])
+        colnames(F) <- sub("^y", "", colnames(mx))
+        rownames(F) <- rownames(X)
+        fc <- playbase::mofa.split_data(F)
+        return(fc)
+      }
+    )
+
+
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
 
     plot_deepnet_diagram_server(
       "deepnet_diagram",
-      net = net,  ## not reacting, only read
+      net = net, ## not reacting, only read
       update = update_diagram,
       watermark = WATERMARK
     )
@@ -337,7 +375,7 @@ DeepNetBoard <- function(id, pgx) {
       update = update,
       type = "scatter",
       conditions = reactive(input$show_conditions),
-      datatype = reactive(input$show_datatypes),      
+      datatype = reactive(input$show_datatypes),
       phenoFC = phenoFC,
       watermark = WATERMARK
     )
@@ -346,7 +384,7 @@ DeepNetBoard <- function(id, pgx) {
       "deepnet_table",
       net = net,
       pgx = pgx,
-      phenoFC = phenoFC,      
+      phenoFC = phenoFC,
       conditions = reactive(input$show_conditions),
       datatype = reactive(input$show_datatypes)
     )
@@ -362,10 +400,10 @@ DeepNetBoard <- function(id, pgx) {
       "deepnet_biomarkerheatmap",
       net = net,
       pgx = pgx,
-      ntop = c(20,32),
-      rmar = c(0,40),
-      show_legend = c(0,1),
-      add_annot = c(0,1),
+      ntop = c(20, 32),
+      rmar = c(0, 40),
+      show_legend = c(0, 1),
+      add_annot = c(0, 1),
       update = update,
       watermark = WATERMARK
     )
@@ -374,16 +412,16 @@ DeepNetBoard <- function(id, pgx) {
       "deepnet_bigheatmap",
       net = net,
       pgx = pgx,
-      ntop = c(50,50),      
+      ntop = c(50, 50),
       plot.res = c(110, 110),
-      add_annot = c(1,1),
-      show_legend = c(1,1),
-      rmar = c(40,40),
+      add_annot = c(1, 1),
+      show_legend = c(1, 1),
+      rmar = c(40, 40),
       update = update,
-      datatypes = reactive(input$show_datatypes),      
+      datatypes = reactive(input$show_datatypes),
       watermark = WATERMARK
     )
-    
+
     return(NULL)
   })
 } ## end of Board

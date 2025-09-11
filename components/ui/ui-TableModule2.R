@@ -273,7 +273,7 @@ TableModuleServer <- function(id,
         rows_selected = shiny::reactive(input$datatable_rows_selected),
         rows_all = shiny::reactive(input$datatable_rows_all),
         row_last_clicked = shiny::reactive(input$row_last_clicked),
-        search = shiny::reactive(input$datatable_search),        
+        search = shiny::reactive(input$datatable_search),
         rownames_current = shiny::reactive({
           rns <- rownames(func()$x$data)
           if (is.null(rns)) rns <- 1:nrow(func()$x$data)
@@ -349,44 +349,46 @@ CardUI <- function(...,
 #'
 #' @param target  Target column
 #' @param length  Maximum string length
-#' 
+#'
 trunc_display_row <- function(target, length) {
   list(
     targets = target, ## with no rownames column 1 is column 2
     render = DT::JS(paste0(
       "function(data, type, row, meta) {",
-      "return type === 'display' && data.length > ",length," ?",
-      "'<span title=\"' + data + '\">' + data.substr(0, ",length,
-      ") + '...</span>' : data;}"))
+      "return type === 'display' && data.length > ", length, " ?",
+      "'<span title=\"' + data + '\">' + data.substr(0, ", length,
+      ") + '...</span>' : data;}"
+    ))
   )
 }
 
 
 #' Standard/default datatable.
 #'
-#' 
+#'
 ui.DataTable <- function(df, rownames = TRUE,
                          num.cols = NULL,
                          color.cols = NULL,
                          substr.cols = NULL,
                          substr.len = 60,
                          ...) {
-
-  columnDefs = NULL
-  if(!is.null(substr.cols)) {
-    columnDefs = list()
-    if(length(substr.len)==1) substr.len <- rep(substr.len, length(substr.cols))
-    for(i in 1:length(substr.cols)) {
+  columnDefs <- NULL
+  if (!is.null(substr.cols)) {
+    columnDefs <- list()
+    if (length(substr.len) == 1) substr.len <- rep(substr.len, length(substr.cols))
+    for (i in 1:length(substr.cols)) {
       k <- substr.cols[i]
-      if(all(is.na(df[k]))) next
+      if (all(is.na(df[k]))) next
       slen <- substr.len[i]
       item1 <- list(
         targets = k, ## with no rownames column 1 is column 2
         render = DT::JS(
           "function(data, type, row, meta) {",
-          paste0("return type === 'display' && data.length > ",slen," ?"),
-          paste0("'<span title=\"' + data + '\">' + data.substr(0, ",slen,
-            ") + '...</span>' : data; }")
+          paste0("return type === 'display' && data.length > ", slen, " ?"),
+          paste0(
+            "'<span title=\"' + data + '\">' + data.substr(0, ", slen,
+            ") + '...</span>' : data; }"
+          )
         )
       )
       columnDefs <- c(columnDefs, list(item1))
@@ -409,7 +411,7 @@ ui.DataTable <- function(df, rownames = TRUE,
       scrollY = 100,
       scroller = TRUE,
       deferRender = TRUE,
-      columnDefs =  columnDefs
+      columnDefs = columnDefs
     ) ## end of options.list
   )
 
@@ -417,29 +419,29 @@ ui.DataTable <- function(df, rownames = TRUE,
   dt <- dt %>%
     DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
 
-  if(!is.null(num.cols)) {
+  if (!is.null(num.cols)) {
     dt <- dt %>% DT::formatSignif(columns = num.cols, digits = 4)
   }
 
   ## add column coloring
-  if(!is.null(color.cols)) {
-    if(is.integer(color.cols)) color.cols <- colnames(df)[color.cols]
-    for(k in color.cols) {
-      minx <- min(df[,k], na.rm=TRUE)
-      if(minx < 0) {
+  if (!is.null(color.cols)) {
+    if (is.integer(color.cols)) color.cols <- colnames(df)[color.cols]
+    for (k in color.cols) {
+      minx <- min(df[, k], na.rm = TRUE)
+      if (minx < 0) {
         dt <- dt %>%
           DT::formatStyle(
             k,
-            background = color_from_middle(df[,k], "lightblue", "#f5aeae"),
+            background = color_from_middle(df[, k], "lightblue", "#f5aeae"),
             backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
             backgroundPosition = "center"
           )
       } else {
-        dt <- dt %>%        
+        dt <- dt %>%
           DT::formatStyle(
             k,
             #            background = color_from_middle(df[,k], "white", "#fec34d"),
-            background = color_from_middle(df[,k], "white", "#f5aeae"),
+            background = color_from_middle(df[, k], "white", "#f5aeae"),
             backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
             backgroundPosition = "center"
           )

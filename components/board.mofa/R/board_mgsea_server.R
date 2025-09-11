@@ -43,35 +43,33 @@ MGseaBoard <- function(id, pgx) {
     ## ===================== REACTIVES =====================================
     ## =====================================================================
 
-    mofa <- shiny::eventReactive( pgx$mofa, {
-
+    mofa <- shiny::eventReactive(pgx$mofa, {
       has.mofa <- "mofa" %in% names(pgx) && !is.null(pgx$mofa)
-      shiny::validate( shiny::need( has.mofa, "missing MOFA slot"))      
-      
+      shiny::validate(shiny::need(has.mofa, "missing MOFA slot"))
+
       ## update factors in selectInputs
-      enr <- pgx$mofa$mgsea      
+      enr <- pgx$mofa$mgsea
       contrasts <- names(enr)
       updateSelectInput(session, "contrast", choices = contrasts)
-      
-      return( pgx$mofa )
+
+      return(pgx$mofa)
     })
 
 
     mgsea_table_selected <- reactive({
-
       shiny::req(mgsea_table$data())
-      
-      has.selection <- length(mgsea_table$rownames_selected())>0 
+
+      has.selection <- length(mgsea_table$rownames_selected()) > 0
       search_key <- mgsea_table$search()
-      has.search <- length(search_key)>0 && search_key[1]!=""
-      
-      if(has.search && !has.selection) {
+      has.search <- length(search_key) > 0 && search_key[1] != ""
+
+      if (has.search && !has.selection) {
         sel <- mgsea_table$rownames_all()
-      } else if(has.selection) {
+      } else if (has.selection) {
         sel <- mgsea_table$rownames_selected()
       } else {
-        ##sel <- NULL
-        sel <- head( mgsea_table$rownames_all(), 20)
+        ## sel <- NULL
+        sel <- head(mgsea_table$rownames_all(), 20)
       }
       sel
     })
@@ -79,11 +77,13 @@ MGseaBoard <- function(id, pgx) {
     ## =====================================================================
     ## ======================= MODULES =====================================
     ## =====================================================================
-    
+
     mgsea_plot_enrichment_server(
       "menrichment",
       pgx = pgx,
-      gsea = reactive({ mofa()$mgsea }),
+      gsea = reactive({
+        mofa()$mgsea
+      }),
       input_k = reactive(input$contrast),
       select = mgsea_table_selected,
       req.selection = TRUE,
@@ -110,16 +110,16 @@ MGseaBoard <- function(id, pgx) {
       "pathwayheatmap",
       mofa = mofa,
       pgx = pgx,
-      input_factor = reactive(NULL),            
+      input_factor = reactive(NULL),
       selected = mgsea_table_selected,
       watermark = WATERMARK
     )
-    
+
     # Table Modules
     mgsea_table <- mofa_table_mgsea_server(
       "mgsea_table",
       mgsea = reactive(mofa()$mgsea),
-      input_k = reactive(input$contrast)            
+      input_k = reactive(input$contrast)
     )
 
     return(NULL)

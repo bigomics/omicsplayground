@@ -26,9 +26,9 @@ mofa_plot_correlation_network_ui <- function(
 }
 
 mofa_plot_correlation_network_server <- function(id,
-                                                  wgcna.compute,
-                                                  selected_module,
-                                                  watermark = FALSE) {
+                                                 wgcna.compute,
+                                                 selected_module,
+                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     corGraph.RENDER <- shiny::reactive({
       out <- wgcna.compute()

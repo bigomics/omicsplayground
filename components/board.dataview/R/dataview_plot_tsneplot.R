@@ -53,9 +53,13 @@ dataview_plot_tsne_server <- function(id,
       shiny::req(gene, data_type)
 
       if (samples[1] == "") samples <- colnames(pgx$X)
-      if (!all(samples %in% colnames(pgx$X))) return(NULL)
-      if (!gene %in% rownames(pgx$X)) return(NULL)
-      
+      if (!all(samples %in% colnames(pgx$X))) {
+        return(NULL)
+      }
+      if (!gene %in% rownames(pgx$X)) {
+        return(NULL)
+      }
+
       ## precompute
       pp <- rownames(pgx$genes)[1]
       sel <- match(gene, pgx$genes$gene_name)

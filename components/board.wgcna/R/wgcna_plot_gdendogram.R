@@ -4,15 +4,14 @@
 ##
 
 wgcna_plot_gdendogram_ui <- function(
-  id,
-  title = "",
-  label = "",
-  info.text = "",
-  caption = "",
-  height = 400,
-  width = 400,
-  ...
-  ) {
+    id,
+    title = "",
+    label = "",
+    info.text = "",
+    caption = "",
+    height = 400,
+    width = 400,
+    ...) {
   ns <- shiny::NS(id)
   PlotModuleUI(
     ns("plot"),
@@ -31,10 +30,9 @@ wgcna_plot_gdendogram_server <- function(id,
                                          wgcna.compute,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     RENDER <- function() {
       res <- wgcna.compute()
-      playbase::wgcna.plotDendroAndColors(res, main="")
+      playbase::wgcna.plotDendroAndColors(res, main = "")
     }
 
     PlotModuleServer(

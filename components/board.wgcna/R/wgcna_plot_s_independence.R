@@ -11,7 +11,7 @@ wgcna_plot_s_independence_ui <- function(
     caption = info.text,
     height,
     width,
-    ... ) {
+    ...) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -31,14 +31,13 @@ wgcna_plot_s_independence_server <- function(id,
                                              wgcna.compute,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     RENDER <- shiny::reactive({
       out <- wgcna.compute()
       shiny::req(out)
 
       networktype <- out$networktype
-      if(is.null(networktype)) networktype <- "signed"
-      
+      if (is.null(networktype)) networktype <- "signed"
+
       ## Choose a set of soft-thresholding powers
       powers <- c(c(1:10), seq(from = 12, to = 20, by = 2))
       ## Call the network topology analysis function

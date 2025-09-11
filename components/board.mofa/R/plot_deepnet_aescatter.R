@@ -12,10 +12,9 @@ plot_deepnet_aescatter_ui <- function(
     caption = "",
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%"))
-{
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -33,32 +32,35 @@ plot_deepnet_aescatter_ui <- function(
 plot_deepnet_aescatter_server <- function(id,
                                           net,
                                           update,
-                                         watermark = FALSE) {
+                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    plot.RENDER <- function(n=12) {
-      update()  ## react on updates
-      net <- net()      
-      par(mfrow=c(1,1), mar=c(4,4,2,1))
+    plot.RENDER <- function(n = 12) {
+      update() ## react on updates
+      net <- net()
+      par(mfrow = c(1, 1), mar = c(4, 4, 2, 1))
       playbase::deep.plotAutoEncoderReconstructions(
-        net, dtypes="mixed", par=FALSE) 
+        net,
+        dtypes = "mixed", par = FALSE
+      )
     }
 
-    plot.RENDER2 <- function(n=12) {
-      update()  ## react on updates
+    plot.RENDER2 <- function(n = 12) {
+      update() ## react on updates
       net <- net()
       ntypes <- length(net$X)
       nc <- ceiling(sqrt(ntypes))
       nr <- ceiling(ntypes / nc)
-      par(mfrow=c(nr,nc), mar=c(4,5,3,3))
+      par(mfrow = c(nr, nc), mar = c(4, 5, 3, 3))
       playbase::deep.plotAutoEncoderReconstructions(
-        net, dtypes=NULL, par=FALSE) 
+        net,
+        dtypes = NULL, par = FALSE
+      )
     }
 
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
+      func2 = plot.RENDER2,
       pdf.width = 10, pdf.height = 10,
       res = c(75, 100),
       add.watermark = watermark

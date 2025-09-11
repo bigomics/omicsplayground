@@ -12,10 +12,9 @@ plot_deepnet_clusters_ui <- function(
     caption = "",
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%"))
-{
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -35,37 +34,39 @@ plot_deepnet_clusters_server <- function(id,
                                          update,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    plot.RENDER <- function(n=12) {
-      
-      update()  ## react on updates
+    plot.RENDER <- function(n = 12) {
+      update() ## react on updates
       net <- net()
       nsamples <- ncol(net$X[[1]])
       cex <- ifelse(nsamples < 40, 1.4, 1.15)
-      cex <- ifelse(nsamples > 100, 0.9, cex)      
-      par(mfrow=c(1,1), mar=c(4,4,2,1))
-      playbase::deep.plotRedux(net, method="pca",
-        views="multi-omics", par=FALSE, cex=cex) 
+      cex <- ifelse(nsamples > 100, 0.9, cex)
+      par(mfrow = c(1, 1), mar = c(4, 4, 2, 1))
+      playbase::deep.plotRedux(net,
+        method = "pca",
+        views = "multi-omics", par = FALSE, cex = cex
+      )
     }
 
-    plot.RENDER2 <- function(n=12) {
-      update()  ## react on updates
+    plot.RENDER2 <- function(n = 12) {
+      update() ## react on updates
       net <- net()
       nsamples <- ncol(net$X[[1]])
       cex <- ifelse(nsamples < 40, 1.4, 1.15)
       cex <- ifelse(nsamples > 100, 0.9, cex)
       ntypes <- length(net$X)
       nc <- ceiling(sqrt(ntypes))
-      nr <- ceiling(ntypes/nc)
-      par(mfrow=c(nr,nc), mar=c(4,4,2,1))
+      nr <- ceiling(ntypes / nc)
+      par(mfrow = c(nr, nc), mar = c(4, 4, 2, 1))
       playbase::deep.plotRedux(
-        net, method="pca", views=NULL, par=FALSE, cex=cex) 
+        net,
+        method = "pca", views = NULL, par = FALSE, cex = cex
+      )
     }
 
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
+      func2 = plot.RENDER2,
       pdf.width = 10, pdf.height = 10,
       res = c(75, 120),
       add.watermark = watermark

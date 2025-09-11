@@ -20,23 +20,21 @@ upload_module_normalizationSC_server <- function(id,
                                                  upload_datatype,
                                                  is.count = FALSE,
                                                  height = 720) {
-
   shiny::moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-      
+
       ## ------------------------------------------------------------------
       ## Plot UI
       ## ------------------------------------------------------------------
 
       output$normalization <- shiny::renderUI({
-
         shiny::req(r_counts())
-        counts <- r_counts()        
+        counts <- r_counts()
         nFeature_RNA <- Matrix::colSums(counts > 0, na.rm = TRUE)
         qF <- quantile(nFeature_RNA, probs = c(0.01, 0.99))
-        
+
         shiny::req(r_samples())
         samples <- r_samples()
 
@@ -49,11 +47,11 @@ upload_module_normalizationSC_server <- function(id,
           "S.Score", "celltype.azimuth"
         )
         metadata_vars <- unique(c(metadata_vars0, metadata_vars1))
-        
+
         dimred.infotext <- "Dimensionality reduction simplifies large datasets by computing representative data points capable of preserving the biological information while reducing data dimensionality. We employ two non-linear methods for scRNA-seq data: t-distributed stochastic neighbor embedding (t-SNE), and Unifold Manifold Approximation and Projection (UMAP). https://omicsplayground.readthedocs.io/en/latest/methods/#clustering"
 
         cellqc.infotext <- "Data QC. Violin plots of number of cDNA molecules (e.g., UMIs) in each cell (nCount_RNA), number of unique genes in each cell (nFeature_RNA), percentage of mitochondrial gene expression in each cell (percent_mt), percentage of ribosomal gene expression in each cell (percent_ribo), percentage of globin gene expression in each cell (percent_hb), G2M cell cysle score, S cell cycle score."
-        
+
         dimred.options <- tagList(
           shiny::radioButtons(
             ns("dimred_plottype"),
@@ -73,25 +71,24 @@ upload_module_normalizationSC_server <- function(id,
         )
 
         navmenu <- tagList(
-          
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
             bslib::accordion(
               multiple = FALSE,
               style = "background-color: #F7FAFD99;",
-
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 1em;'> Single-cell transcriptomics</span>"),
                 shiny::div(style = "display: flex; align-items: center; justify-content: space-between;"),
                 shiny::div(
                   style = "background-color: #f0f0f0; padding: 2px; border-radius: 5px; margin-top: 0.01px;",
-                  HTML(paste0("<span style='font-size: 1em;'>Number of features: </span>",
+                  HTML(paste0(
+                    "<span style='font-size: 1em;'>Number of features: </span>",
                     "<span style='font-size: 1em;'>", nrow(counts), "</span><br>",
                     "<span style='font-size: 1em;'>Number of cells: </span>",
-                    "<span style='font-size: 1em;'>", ncol(counts), "</span>"))
+                    "<span style='font-size: 1em;'>", ncol(counts), "</span>"
+                  ))
                 )
               ),
-              
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 1em;'> Define cell types with Azimuth</span>"),
                 shiny::div(style = "display: flex; align-items: center; justify-content: space-between;"),
@@ -108,7 +105,6 @@ upload_module_normalizationSC_server <- function(id,
                 ),
                 shiny::br()
               ),
-              
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 1em;'> Visualize cell clusters</span>"),
                 shiny::div(style = "display: flex; align-items: center; justify-content: space-between;"),
@@ -121,7 +117,6 @@ upload_module_normalizationSC_server <- function(id,
                 ),
                 shiny::br()
               ),
-
               bslib::accordion_panel(
                 title = HTML("<span style='font-size: 1em;'> Cell filtering</span>"),
                 shiny::p("Remove cells based on QC variables"),
@@ -134,15 +129,15 @@ upload_module_normalizationSC_server <- function(id,
                   "input.remove_cells == true",
                   ns = ns,
                   shiny::sliderInput(ns("nfeature_threshold"), "Detected genes per cell:",
-                    min = 0, max = max(nFeature_RNA), value = c(qF[1], qF[2])),
+                    min = 0, max = max(nFeature_RNA), value = c(qF[1], qF[2])
+                  ),
                   shiny::sliderInput(ns("mt_threshold"), "MT expresssion threshold (%):", 1, 100, 10, 0),
                   shiny::sliderInput(ns("hb_threshold"), "HB expression threshold (%):", 1, 100, 10, 0)
                 ),
                 shiny::br()
               )
-            ))
-          )
-
+            )
+          ))
         )
 
         ## ---------------------------- UI ----------------------------------
@@ -168,7 +163,7 @@ upload_module_normalizationSC_server <- function(id,
                 options = cellstats.options,
                 height = c("auto", "100%"),
                 show.maximize = TRUE,
-                ),
+              ),
               PlotModuleUI(
                 ns("plot2"),
                 title = "Dimensional reduction",
@@ -178,11 +173,12 @@ upload_module_normalizationSC_server <- function(id,
                 height = c("auto", "100%"),
                 show.maximize = TRUE
               ),
-              )
+            )
           ),
           div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE),
-            style = "visibility:hidden")
-        )            
+            style = "visibility:hidden"
+          )
+        )
         return(ui)
       })
 
@@ -193,8 +189,8 @@ upload_module_normalizationSC_server <- function(id,
 
       ## Downsampled & normalized data.
       ## Downsample 1000 cells.
-      ds_norm_Counts <- shiny::reactive({ 
-        options(future.globals.maxSize= 4*1024^100)
+      ds_norm_Counts <- shiny::reactive({
+        options(future.globals.maxSize = 4 * 1024^100)
         shiny::req(r_counts())
         shiny::req(r_samples())
         counts <- r_counts()
@@ -209,12 +205,11 @@ upload_module_normalizationSC_server <- function(id,
         if (ncol(counts) > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
           kk <- sample(colnames(counts), cells_trs)
-          counts <- counts[, kk, drop = FALSE] 
+          counts <- counts[, kk, drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
         }
 
         if (input$ref_atlas != "<select>") {
-
           dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", input$ref_atlas)
           counts <- as(counts, "dgCMatrix")
@@ -241,8 +236,7 @@ upload_module_normalizationSC_server <- function(id,
                 celltype.azimuth <- azm[, kk]
               }
             }
-            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)          
-
+            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
           } else if (is.vector(azm)) {
             dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth atlas *might* be incorrect. Please double check.")
             samples <- cbind(samples, celltype.azimuth = azm)
@@ -259,20 +253,23 @@ upload_module_normalizationSC_server <- function(id,
           dbg("[normalizationSC_server] Performing PCA, tSNE and UMAP...")
           shiny::withProgress(message = "Performing PCA, tSNE, UMAP...", value = 0.5, {
             pos.list[["pca"]] <- irlba::irlba(nX1, nv = 2, nu = 0)$v
-            pos.list[["tsne"]] <- Rtsne::Rtsne(t(nX1), perplexity = 2*nb, check_duplicates=F)$Y
+            pos.list[["tsne"]] <- Rtsne::Rtsne(t(nX1), perplexity = 2 * nb, check_duplicates = F)$Y
             pos.list[["umap"]] <- uwot::umap(t(nX1), n_neighbors = max(2, nb))
             pos.list <- lapply(pos.list, function(x) {
-              rownames(x)=colnames(nX1); return(x) })
+              rownames(x) <- colnames(nX1)
+              return(x)
+            })
           })
           dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
-          
+
           dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
           options(Seurat.object.assay.calcn = TRUE)
           getOption("Seurat.object.assay.calcn")
           counts <- as(counts, "dgCMatrix")
           shiny::withProgress(message = "Creating & preprocessing Seurat object...", value = 0.9, {
             SO <- playbase::pgx.createSeuratObject(counts, samples,
-              batch = NULL, filter = FALSE, preprocess = FALSE)
+              batch = NULL, filter = FALSE, preprocess = FALSE
+            )
             SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
           })
           dbg("[normalizationSC_server] Seurat object created & preprocessed.")
@@ -299,9 +296,8 @@ upload_module_normalizationSC_server <- function(id,
           rm(counts, samples)
           return(NULL)
         }
-        
       })
-      
+
       ## ------------------------------------------------------------------
       ## Plot functions
       ## ------------------------------------------------------------------
@@ -313,22 +309,29 @@ upload_module_normalizationSC_server <- function(id,
         require(ggplot2)
         library(ggpubr)
         require(vioplot)
-        vars <- input$clusterBy        
+        vars <- input$clusterBy
 
-        shiny::validate(shiny::need(!is.null(vars),
-          "For QC, please select a QC variable from the options."))
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For QC, please select a QC variable from the options."
+        ))
 
-        shiny::validate(shiny::need(length(vars) <= 4,
-          "Please select up to 4 QC variables for visualization."))        
+        shiny::validate(shiny::need(
+          length(vars) <= 4,
+          "Please select up to 4 QC variables for visualization."
+        ))
 
-        if ("seurat_clusters" %in% colnames(meta))
-          meta$seurat_clusters <- as.character(meta$seurat_clusters) 
+        if ("seurat_clusters" %in% colnames(meta)) {
+          meta$seurat_clusters <- as.character(meta$seurat_clusters)
+        }
 
-        i=1; class.vars=c()
-        for(i in 1:length(vars))
+        i <- 1
+        class.vars <- c()
+        for (i in 1:length(vars)) {
           class.vars <- c(class.vars, class(meta[, vars[i]]))
+        }
         names(class.vars) <- vars
-        num.vars <- vars[which(class.vars %in% c("numeric","integer"))]
+        num.vars <- vars[which(class.vars %in% c("numeric", "integer"))]
         char.vars <- vars[which(class.vars %in% c("character"))]
 
         gen.pars <- function(plist) {
@@ -336,19 +339,22 @@ upload_module_normalizationSC_server <- function(id,
             x <- x + theme(axis.text.x = element_text(size = 13))
             x <- x + theme(axis.text.y = element_text(size = 13))
             x <- x + RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black",
-              fill = NA, size = 1, linewidth = 2))
+            x <- x + theme(panel.border = element_rect(
+              color = "black",
+              fill = NA, size = 1, linewidth = 2
+            ))
           })
           return(plist1)
         }
-        
+
         if (!input$groupby_celltype) {
           meta$IDENT0 <- "IDENT"
-          i=1; plist=list()
+          i <- 1
+          plist <- list()
           for (i in 1:length(vars)) {
             v <- vars[i]
             if (v %in% num.vars) {
-              if (all(range(meta[, v]) %in% c(0,0))) {
+              if (all(range(meta[, v]) %in% c(0, 0))) {
                 meta[, v] <- runif(nrow(meta), min = 0, max = 1e-5)
               }
               pp <- ggplot(meta, aes_string(x = "IDENT0", y = v))
@@ -375,7 +381,8 @@ upload_module_normalizationSC_server <- function(id,
             }
             if (v %in% char.vars) {
               tt <- data.frame(table(meta[, v]))
-              pp <- ggplot(tt, aes(x = Var1, y = Freq)) + geom_bar(stat = "identity", fill = "dim gray")
+              pp <- ggplot(tt, aes(x = Var1, y = Freq)) +
+                geom_bar(stat = "identity", fill = "dim gray")
               plist[[v]] <- pp + labs(title = v) + ylab("Number of cells")
             }
           }
@@ -386,18 +393,20 @@ upload_module_normalizationSC_server <- function(id,
             (plist[[1]] + plist[[2]])
           } else if (length(plist) == 3) {
             (plist[[1]] + plist[[2]]) / (plist[[3]] + patchwork::plot_spacer())
-          } else if (length(plist) == 4) {            
+          } else if (length(plist) == 4) {
             (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
-            #ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
+            # ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
           }
         } else {
           grp <- "celltype.azimuth"
-          legend.idx = 0
-          i=1; plist=list()
+          legend.idx <- 0
+          i <- 1
+          plist <- list()
           for (i in 1:length(vars)) {
             v <- vars[i]
             if (v %in% num.vars) {
-              pp <- ggplot(meta, aes_string(y = v, x = grp)) + geom_boxplot()
+              pp <- ggplot(meta, aes_string(y = v, x = grp)) +
+                geom_boxplot()
               pp <- pp + RotatedAxis() + xlab("") + theme(legend.position = "none")
               ylab <- v
               if (grepl("percent", v)) {
@@ -425,23 +434,23 @@ upload_module_normalizationSC_server <- function(id,
               } else {
                 tt <- data.frame(t(table(meta[, v], meta[, grp])))
                 colnames(tt)[1:2] <- c("celltype.azimuth", v)
-                pp <- ggplot(tt,  aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
+                pp <- ggplot(tt, aes_string(x = v, y = "Freq", fill = "celltype.azimuth"))
                 pp <- pp + geom_bar(stat = "identity") + ylab("Number of cells") + labs(title = v)
                 if (legend.idx != 0) pp <- pp + theme(legend.position = "none")
                 plist[[v]] <- pp
-                legend.idx = i
+                legend.idx <- i
               }
             }
           }
-          #jj1 <- which(!names(plist) %in% char.vars)
-          #jj2 <- which(names(plist) %in% char.vars)
-          #plist <- plist[c(jj1, jj2)]
+          # jj1 <- which(!names(plist) %in% char.vars)
+          # jj2 <- which(names(plist) %in% char.vars)
+          # plist <- plist[c(jj1, jj2)]
           plist <- gen.pars(plist)
           if (length(plist) == 1) {
             plist[[1]]
           } else if (length(plist) == 2) {
             (plist[[1]] + plist[[2]])
-          } else if (length(plist) == 3) {            
+          } else if (length(plist) == 3) {
             (plist[[1]] + plist[[2]]) / (plist[[3]] + patchwork::plot_spacer())
           } else if (length(plist) == 4) {
             (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
@@ -456,7 +465,7 @@ upload_module_normalizationSC_server <- function(id,
           dim(ds_norm_Counts()$pos.tsne),
           dim(ds_norm_Counts()$pos.umap)
         )
-        pos.list <-  list(
+        pos.list <- list(
           pca = ds_norm_Counts()$pos.pca,
           tsne = ds_norm_Counts()$pos.tsne,
           umap = ds_norm_Counts()$pos.umap
@@ -465,11 +474,15 @@ upload_module_normalizationSC_server <- function(id,
         samples <- ds_norm_Counts()$samples
         vars <- input$clusterBy
 
-        shiny::validate(shiny::need(length(vars) <= 4,
-          "Please select up to 4 metadata variables for clusters visualization."))
+        shiny::validate(shiny::need(
+          length(vars) <= 4,
+          "Please select up to 4 metadata variables for clusters visualization."
+        ))
 
-        shiny::validate(shiny::need(!is.null(vars),
-          "For clustering, please select a metadata variable from the menu on the left."))
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For clustering, please select a metadata variable from the menu on the left."
+        ))
 
         m <- tolower(input$dimred_plottype)
         if (length(vars) <= 2) {
@@ -478,11 +491,11 @@ upload_module_normalizationSC_server <- function(id,
           par(mfrow = c(2, 2))
         } else if (length(vars) > 4 & length(vars) <= 6) {
           par(mfrow = c(2, 3))
-        } else  if (length(vars) > 6 & length(vars) <= 8) {
+        } else if (length(vars) > 6 & length(vars) <= 8) {
           par(mfrow = c(3, 3))
         }
         i <- 1
-        for(i in 1:length(vars)) {
+        for (i in 1:length(vars)) {
           v <- samples[, vars[i]]
           ss <- c("nFeature_RNA", "nCount_RNA")
           ## if (vars[i] %in% ss) { v <- log2(v + 1) }
@@ -535,8 +548,10 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(r_samples())
         return(r_samples())
       })
-      
-      azimuth_ref <- shiny::reactive({ return(input$ref_atlas) })
+
+      azimuth_ref <- shiny::reactive({
+        return(input$ref_atlas)
+      })
 
       nfeat_thr <- shiny::reactive({
         shiny::req(input$remove_cells)
@@ -552,7 +567,7 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(input$remove_cells)
         return(input$hb_threshold)
       })
-      
+
       LL <- list(
         counts = counts,
         samples = samples,
@@ -566,7 +581,6 @@ upload_module_normalizationSC_server <- function(id,
       )
 
       return(LL) ## pointing to reactive
-
     } ## end-of-server
   )
 }

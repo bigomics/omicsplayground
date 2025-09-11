@@ -51,12 +51,12 @@ enrichment_plot_volcano_server <- function(id,
 
       shiny::req(pgx$X)
       shiny::validate(shiny::need(!is.null(gset_selected()), tspan("Please select a geneset.", js = FALSE)))
-      
+
       comp <- 1
       gs <- 1
       comp <- gs_contrast()
       shiny::req(pgx$X)
-      
+
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
 
@@ -66,7 +66,7 @@ enrichment_plot_volcano_server <- function(id,
       limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q, meta.p = meta.p)
       gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
-      
+
       gset <- geneDetails()$feature
 
       gset <- playbase::probe2symbol(gset, pgx$genes, "gene_name")
@@ -91,7 +91,7 @@ enrichment_plot_volcano_server <- function(id,
 
       xlim <- c(-1, 1) * max(abs(fx), na.rm = TRUE)
       ylim <- c(0, 12)
-      
+
       y <- -log10(qval)
       ylab <- "Significance (-log10q)"
       ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
@@ -101,7 +101,7 @@ enrichment_plot_volcano_server <- function(id,
         ylab <- "Significance (-log10p)"
         ylim <- c(0, max(12, 1.1 * max(-log10(pval), na.rm = TRUE)))
       }
-      
+
       return(list(
         x = fx,
         y = y,

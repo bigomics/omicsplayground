@@ -38,7 +38,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     ## update filter choices upon change of data set
     shiny::observe({
-
       shiny::req(pgx$Y, pgx$samples)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
@@ -122,7 +121,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
               pgx$samples, input$data_samplefilter
             )
           },
-          error = function(w) { NULL }
+          error = function(w) {
+            NULL
+          }
         )
       }
       # validate samples
@@ -283,7 +284,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
-        if (nsamples == 0) return(NULL)
+        if (nsamples == 0) {
+          return(NULL)
+        }
         counts <- pgx$counts[, samples, drop = FALSE]
 
         grpvar <- input$data_groupby

@@ -44,7 +44,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
-    
+
     shiny::observeEvent(input$cor_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Correlation Analysis Board</strong>"),
@@ -84,7 +84,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## ============================= FUNCTIONS =================================
     ## =========================================================================
 
-    
+
     filterExpression <- function(X, gene) {
       ## filter genes
       ft <- input$cor_filter
@@ -162,7 +162,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         nmax = NTOP
       )
       res$meta.pcor <- res$pcor
-      
+
       res
     })
 
