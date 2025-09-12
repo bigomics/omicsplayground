@@ -736,7 +736,7 @@ upload_module_normalization_server <- function(
                           ## "multi-omics combat" = "combat"
                         )
                     } else {
-                      c("CPM+quantile", "TMM", "quantile",
+                      c("CPM", "CPM+quantile", "TMM", "quantile",
                         "maxMedian", "maxSum", "reference")
                     },
                     selected = 1
