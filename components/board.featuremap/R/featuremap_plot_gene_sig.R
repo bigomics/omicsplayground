@@ -38,7 +38,7 @@ featuremap_plot_gene_sig_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
-       pheno <- sigvar()
+      pheno <- sigvar()
       ref <- ref_group()
 
       pos <- pgx$cluster.genes$pos[["umap2d"]]

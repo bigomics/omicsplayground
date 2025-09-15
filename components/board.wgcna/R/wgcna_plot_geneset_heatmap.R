@@ -12,7 +12,7 @@ wgcna_plot_geneset_heatmap_ui <- function(
     height,
     width) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -31,53 +31,53 @@ wgcna_plot_geneset_heatmap_server <- function(id,
                                               selected_module,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
       wgcna <- wgcna()
       mod <- selected_module()
       df <- wgcna$gse[[mod]]
-      ##sel <- head(rownames(df),20)
-      sel <- head(df$geneset,20)
-      shiny::req(mod, length(sel)>0)
+      ## sel <- head(rownames(df),20)
+      sel <- head(df$geneset, 20)
+      shiny::req(mod, length(sel) > 0)
 
-      gsetX <- pgx$gsetX[sel,,drop=FALSE]
+      gsetX <- pgx$gsetX[sel, , drop = FALSE]
       playbase::gx.splitmap(
-        gsetX, nmax=50,
+        gsetX,
+        nmax = 50,
         col.annot = pgx$samples,
-        ##cexCol = 0.01, cexRow = 0.01,
+        ## cexCol = 0.01, cexRow = 0.01,
         rowlab.maxlen = 120,
         show_legend = FALSE,
-        show_colnames = FALSE,        
+        show_colnames = FALSE,
         split = 1,
-        main = paste("Module",mod),
+        main = paste("Module", mod),
         verbose = 2
       )
-      
     }
 
     plot.RENDER2 <- function() {
       wgcna <- wgcna()
       mod <- selected_module()
       df <- wgcna$gse[[mod]]
-      sel <- head(rownames(df),40)
+      sel <- head(rownames(df), 40)
 
       playbase::gx.splitmap(
-        pgx$gsetX[sel,], nmax=50,
-        ##mar = c(1,1), # keysize=1,
+        pgx$gsetX[sel, ],
+        nmax = 50,
+        ## mar = c(1,1), # keysize=1,
         col.annot = pgx$samples,
-        ##cexCol = 0.01, cexRow = 0.01,
+        ## cexCol = 0.01, cexRow = 0.01,
         rowlab.maxlen = 200,
         show_legend = TRUE,
         split = 1,
-        main = paste("Module",mod)
+        main = paste("Module", mod)
       )
     }
 
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
-      ##csvFunc = csvFunc,
+      func2 = plot.RENDER2,
+      ## csvFunc = csvFunc,
       pdf.width = 8, pdf.height = 6,
       res = c(80, 100),
       add.watermark = watermark

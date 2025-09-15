@@ -63,7 +63,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       FC[which(is.infinite(FC))] <- NA
       P[which(is.na(P))] <- 1
       Q[which(is.na(Q))] <- 1
-      
+
       fdr <- as.numeric(gs_fdr())
       lfc <- as.numeric(gs_lfc())
       gset_collections <- playbase::pgx.getGeneSetCollections(
@@ -78,7 +78,7 @@ enrichment_plot_volcanomethods_server <- function(id,
         S <- P
         title_y <- "Significance (-log10p)"
       }
-      
+
       pd <- list(
         FC = FC,
         S = S,
@@ -153,7 +153,7 @@ enrichment_plot_volcanomethods_server <- function(id,
 
       fc <- pd[["FC"]]
       sig <- pd[["S"]] ## can be q or p value
-      
+
       gene_names <- rep(rownames(fc), each = ncol(fc))
       fc <- data.frame(fc) %>%
         tidyr::pivot_longer(

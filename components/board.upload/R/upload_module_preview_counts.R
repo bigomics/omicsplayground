@@ -27,15 +27,13 @@ upload_table_preview_counts_server <- function(
     info.text,
     caption,
     upload_datatype,
-    is.olink
-    ) {
-
+    is.olink) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$counts.csv))
-      dt <- uploaded$counts.csv      
+      dt <- uploaded$counts.csv
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXROW <- 1000
@@ -124,12 +122,12 @@ upload_table_preview_counts_server <- function(
           } else {
             msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
           }
-            bslib::layout_columns(
-              col_widths = c(-3, 6, -3),
-              row_heights = list("auto", 8, 1, 2),
-              gap = "0.5rem",
-              bslib::as_fill_carrier(bs_alert(tspan(msg), closable = FALSE, translate_js = FALSE)),
-              bslib::card(
+          bslib::layout_columns(
+            col_widths = c(-3, 6, -3),
+            row_heights = list("auto", 8, 1, 2),
+            gap = "0.5rem",
+            bslib::as_fill_carrier(bs_alert(tspan(msg), closable = FALSE, translate_js = FALSE)),
+            bslib::card(
               if (upload_datatype() == "multi-omics") {
                 shiny::radioButtons(
                   ns("data_source"),
@@ -168,14 +166,12 @@ upload_table_preview_counts_server <- function(
                   options = list(pageLength = 5, dom = "tp", scrollY = TRUE)
                 )
               },
-
               if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
                   condition = sprintf("input['%s'] == 'multi-csv'", ns("data_source")),
-                  shiny::uiOutput(ns("dynamic_file_inputs"))#,
+                  shiny::uiOutput(ns("dynamic_file_inputs")) # ,
                 )
               },
-
               if (upload_datatype() == "multi-omics") {
                 shiny::conditionalPanel(
                   condition = sprintf("input['%s'] == 'single-csv'", ns("data_source")),
@@ -188,7 +184,6 @@ upload_table_preview_counts_server <- function(
                   )
                 )
               },
-
               if (upload_datatype() != "multi-omics") {
                 fileInputArea(
                   ns("counts_csv"),
@@ -245,32 +240,33 @@ upload_table_preview_counts_server <- function(
 
     output$available_data_table <- DT::renderDT({
       info <- available_data_table()
-      DT::datatable(data.frame("Dataset" = info$dataset, "Type" = info$datatype), 
-      class = "compact hover",
-      rownames = FALSE,
-      options = list(
-        dom = 'ft',
-        paging = FALSE,
-        ordering = TRUE,
-        info = FALSE,
-        search = list(regex = FALSE, caseInsensitive = TRUE)
-      ))
+      DT::datatable(data.frame("Dataset" = info$dataset, "Type" = info$datatype),
+        class = "compact hover",
+        rownames = FALSE,
+        options = list(
+          dom = "ft",
+          paging = FALSE,
+          ordering = TRUE,
+          info = FALSE,
+          search = list(regex = FALSE, caseInsensitive = TRUE)
+        )
+      )
     })
 
     output$dynamic_file_inputs <- renderUI({
       bslib::layout_column_wrap(
-          style = bslib::css(grid_template_columns = "8fr 3fr 1fr"),
-          class = "m-0",
-          fileInput(ns("file_input_1"), label = NULL, multiple = FALSE, accept = c(".csv")),
-          selectInput(ns("datatype_1"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics")),
-          actionButton(ns("remove_input_1"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
-          fileInput(ns("file_input_2"), label = NULL, multiple = FALSE, accept = c(".csv")),
-          selectInput(ns("datatype_2"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Proteomics"),
-          actionButton(ns("remove_input_2"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
-          fileInput(ns("file_input_3"), label = NULL, multiple = FALSE, accept = c(".csv")),
-          selectInput(ns("datatype_3"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Metabolomics"),
-          actionButton(ns("remove_input_3"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger")
-        )
+        style = bslib::css(grid_template_columns = "8fr 3fr 1fr"),
+        class = "m-0",
+        fileInput(ns("file_input_1"), label = NULL, multiple = FALSE, accept = c(".csv")),
+        selectInput(ns("datatype_1"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics")),
+        actionButton(ns("remove_input_1"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
+        fileInput(ns("file_input_2"), label = NULL, multiple = FALSE, accept = c(".csv")),
+        selectInput(ns("datatype_2"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Proteomics"),
+        actionButton(ns("remove_input_2"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
+        fileInput(ns("file_input_3"), label = NULL, multiple = FALSE, accept = c(".csv")),
+        selectInput(ns("datatype_3"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Metabolomics"),
+        actionButton(ns("remove_input_3"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger")
+      )
     })
 
     lapply(1:3, function(i) {
@@ -281,25 +277,27 @@ upload_table_preview_counts_server <- function(
       })
     })
 
-    observeEvent({
-      list(input$file_input_1, input$file_input_2, input$file_input_3)
-    },{
-      fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
-      if(sum(!sapply(fileinputs,is.null))>=2) {
-        shinyjs::removeClass(id = "load_selected", class = "btn-outline-primary")
-        shinyjs::addClass(id = "load_selected", class = "btn-primary")
-      } else {
-        shinyjs::addClass(id = "load_selected", class = "btn-outline-primary")
-        shinyjs::removeClass(id = "load_selected", class = "btn-primary")
+    observeEvent(
+      {
+        list(input$file_input_1, input$file_input_2, input$file_input_3)
+      },
+      {
+        fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
+        if (sum(!sapply(fileinputs, is.null)) >= 2) {
+          shinyjs::removeClass(id = "load_selected", class = "btn-outline-primary")
+          shinyjs::addClass(id = "load_selected", class = "btn-primary")
+        } else {
+          shinyjs::addClass(id = "load_selected", class = "btn-outline-primary")
+          shinyjs::removeClass(id = "load_selected", class = "btn-primary")
+        }
       }
-    })
-    
-    observeEvent(input$load_selected, {
+    )
 
+    observeEvent(input$load_selected, {
       # Validate minimum number of inputs based on data source
       enough_inputs <- TRUE
       error_title <- ""
-      
+
       if (input$data_source == "pgx") {
         if (length(input$available_data_table_rows_selected) < 2) {
           enough_inputs <- FALSE
@@ -307,13 +305,13 @@ upload_table_preview_counts_server <- function(
         }
       } else if (input$data_source == "multi-csv") {
         fileinputs <- list(input$file_input_1, input$file_input_2, input$file_input_3)
-        numfiles <- sum(!sapply(fileinputs,is.null))
-        if(numfiles < 2) {
+        numfiles <- sum(!sapply(fileinputs, is.null))
+        if (numfiles < 2) {
           enough_inputs <- FALSE
           error_title <- "Not enough input files"
         }
       }
-      
+
       if (!enough_inputs) {
         shinyalert::shinyalert(
           title = error_title,
@@ -322,13 +320,13 @@ upload_table_preview_counts_server <- function(
         )
         return(NULL)
       }
-      
+
       # Load data once and cache both data frames and column names
       data_cache <- list()
       col_lists <- list()
       file_names <- character()
       datatypes <- character()
-      
+
       if (input$data_source == "pgx") {
         info <- available_data_table()
         datasets <- info$dataset[input$available_data_table_rows_selected]
@@ -366,7 +364,7 @@ upload_table_preview_counts_server <- function(
       col_lists <- col_lists[sel]
       file_names <- file_names[sel]
       datatypes <- datatypes[sel]
-      
+
       if (length(col_lists) > 1) {
         common_cols <- Reduce(intersect, col_lists)
         if (length(common_cols) == 0) {
@@ -387,7 +385,7 @@ upload_table_preview_counts_server <- function(
                 mismatch_text <- paste0(
                   mismatch_text,
                   "\nFile '", file_names[i], "' is missing columns: ",
-                  paste(missing, collapse=", ")
+                  paste(missing, collapse = ", ")
                 )
               }
             }
@@ -436,7 +434,7 @@ upload_table_preview_counts_server <- function(
     })
 
     output$histogram <- renderPlot({
-      #counts <- checked_matrix()
+      # counts <- checked_matrix()
       counts <- uploaded$counts.csv
       shiny::req(counts)
       xx <- counts
@@ -466,14 +464,18 @@ upload_table_preview_counts_server <- function(
         xx <- log2(pmax(xx, 0) + prior)
       }
       # Downsample to 40 columns as we do on qc/bc tab
-      if (ncol(xx) > 40) { xx <- xx[, sample(1:ncol(xx), 40)] }
+      if (ncol(xx) > 40) {
+        xx <- xx[, sample(1:ncol(xx), 40)]
+      }
       boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
 
     # error pop-up alert
     observeEvent(checklist$counts.csv$checks, {
       checks <- checklist$counts.csv$checks
-      if (is.null(checks)) { return(NULL) }
+      if (is.null(checks)) {
+        return(NULL)
+      }
       if (length(checks) > 0) {
         err.html <- check_to_html(
           checks,
@@ -501,7 +503,7 @@ upload_table_preview_counts_server <- function(
 
       # if counts not in file name, give warning and return
       ss <- "count|expression|abundance|concentration|params.rdata"
-      if (!any(grepl(ss,tolower(input$counts_csv$name)))) {
+      if (!any(grepl(ss, tolower(input$counts_csv$name)))) {
         shinyalert::shinyalert(
           title = tspan("Counts not in filename.", js = FALSE),
           text = tspan("Please ensure the file name contains 'counts', e.g., counts_dataset.csv or counts.csv.", js = FALSE),
@@ -527,17 +529,22 @@ upload_table_preview_counts_server <- function(
         )
       }
 
-      ##---counts---##
+      ## ---counts---##
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
         datafile <- input$counts_csv$datapath[sel[1]]
         datafile.name <- input$counts_csv$name
-        file.ext <- tools::file_ext(datafile.name)        
-        
+        file.ext <- tools::file_ext(datafile.name)
+
         df.samples <- NULL
         if (upload_datatype() == "proteomics" && is.olink()) {
-          df <- tryCatch( { playbase::read_Olink_NPX(datafile) },
-            error = function(w) { NULL }
+          df <- tryCatch(
+            {
+              playbase::read_Olink_NPX(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
           )
           if (is.null(df)) {
             shinyalert::shinyalert(
@@ -546,21 +553,36 @@ upload_table_preview_counts_server <- function(
             )
           }
           if (!is.null(df)) {
-            df.samples <- tryCatch( { playbase::read_Olink_samples(datafile) },
-              error = function(w) { NULL }
+            df.samples <- tryCatch(
+              {
+                playbase::read_Olink_samples(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
           }
         } else {
-          df <- tryCatch( { playbase::read_counts(datafile) },
-            error = function(w) { NULL }
+          df <- tryCatch(
+            {
+              playbase::read_counts(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
           )
         }
       } else {
-        df <- tryCatch( { playbase::read_counts(datafile) },
-          error = function(w) { NULL }
+        df <- tryCatch(
+          {
+            playbase::read_counts(datafile)
+          },
+          error = function(w) {
+            NULL
+          }
         )
       }
-      
+
       if (is.null(df)) {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
@@ -568,11 +590,11 @@ upload_table_preview_counts_server <- function(
         af <- playbase::read_annot(datafile) # counts filecontains annotation
         uploaded$annot.csv <- af
       }
-      
+
       if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {
         uploaded$samples.csv <- df.samples
       }
-      
+
       ## ##---samples---##
       ## sel <- grep("samples", tolower(input$counts_csv$name))
       ## if (length(sel)) {
@@ -602,7 +624,7 @@ upload_table_preview_counts_server <- function(
       ##     uploaded$contrasts.csv <- df
       ##   }
       ## }
-      
+
       sel <- grep("params.RData", input$counts_csv$name)
       if (length(sel)) {
         if (opt$DEVMODE) {
@@ -618,7 +640,6 @@ upload_table_preview_counts_server <- function(
 
 
     observeEvent(input$remove_counts, {
-
       delete_all_files_counts <- function(value) {
         if (value) {
           uploaded$counts.csv <- NULL
@@ -657,7 +678,7 @@ upload_table_preview_counts_server <- function(
         shinyalert::shinyalert(
           title = "Error",
           text = "Olink NPX example data not yet available. Please upload yours or change data type."
-        )        
+        )
       } else {
         uploaded$counts.csv <- playbase::COUNTS
       }

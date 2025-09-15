@@ -5,8 +5,7 @@
 
 PathwayBoard <- function(id,
                          pgx,
-                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))
-                         ) {
+                         selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750
@@ -48,8 +47,8 @@ PathwayBoard <- function(id,
 
     shiny::observe({
       shiny::req(pgx$X)
-      #ct <- colnames(pgx$model.parameters$contr.matrix)
-      ct <- playbase::pgx.getContrasts(pgx)      
+      # ct <- colnames(pgx$model.parameters$contr.matrix)
+      ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })

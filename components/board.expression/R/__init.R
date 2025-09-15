@@ -17,7 +17,7 @@ MODULE.expression <- list(
       pgx = PGX, labeltype = labeltype
     )
 
-    info("[SERVER] calling BiomarkerBoard module") 
+    info("[SERVER] calling BiomarkerBoard module")
     BiomarkerBoard(
       "bio",
       pgx = PGX
@@ -27,7 +27,6 @@ MODULE.expression <- list(
     TimeSeriesBoard("timeseries",
       pgx = PGX, labeltype = labeltype
     )
-    
   },
   module_ui = function() {
     list(

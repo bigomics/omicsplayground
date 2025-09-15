@@ -243,7 +243,7 @@ DatasetReportServer <- function(
               qmd_file <- "visreport-bigpage.qmd"
             }
             all_ct <- paste(sel_contrasts, collapse = ",")
-            
+
             # Prepare section parameters for dataset reports
             section_args <- c(
               "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
@@ -251,7 +251,7 @@ DatasetReportServer <- function(
               "-P", paste0("sections_differential:", tolower(input$section_differential)),
               "-P", paste0("sections_enrichment:", tolower(input$section_enrichment))
             )
-            
+
             system2(
               "quarto",
               args = c(
@@ -280,7 +280,7 @@ DatasetReportServer <- function(
                 detail = paste0("summarizing comparison ", i, "/", ncontrasts)
               )
               tmp <- tempfile()
-              
+
               # Prepare section parameters for comparison report
               section_args <- c(
                 "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
@@ -289,7 +289,7 @@ DatasetReportServer <- function(
                 "-P", paste0("sections_functional:", tolower(input$section_functional)),
                 "-P", paste0("sections_drug:", tolower(input$section_drug))
               )
-              
+
               system2(
                 "quarto",
                 args = c(
@@ -311,7 +311,7 @@ DatasetReportServer <- function(
             }
             ## remove any empty files
             zero_size_files <- files[file.size(files) == 0]
-            if(length(zero_size_files) > 0) {
+            if (length(zero_size_files) > 0) {
               files <- files[file.size(files) > 0]
               message("[DatasetReportServer:download_pdf] removed ", length(zero_size_files), " empty file(s)")
             }

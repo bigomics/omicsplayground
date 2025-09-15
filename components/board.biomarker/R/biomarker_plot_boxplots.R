@@ -68,11 +68,11 @@ biomarker_plot_boxplots_server <- function(id,
         res <- calcVariableImportance()
         shiny::req(res)
         shiny::req(is_computed())
-        
+
         ## get variables used in the tree solution
         leafs <- setdiff(res$rf$frame$var, "<leaf>")
         vars <- res$rf$orig.names[leafs]
-        
+
         if (length(vars) == 0) {
           return(NULL)
         }

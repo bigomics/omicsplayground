@@ -4,8 +4,7 @@
 ##
 
 EnrichmentBoard <- function(id, pgx,
-                            selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))
-                            ) {
+                            selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -66,7 +65,7 @@ EnrichmentBoard <- function(id, pgx,
         selected = sel2
       )
     })
-    
+
     shiny::observe({
       shiny::req(pgx$X)
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
@@ -96,7 +95,7 @@ EnrichmentBoard <- function(id, pgx,
         label = if (input$show_pv) "P-value" else "FDR"
       )
     })
-      
+
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
@@ -148,7 +147,6 @@ EnrichmentBoard <- function(id, pgx,
     }
 
     getFullGeneSetTable <- shiny::reactive({
-
       shiny::req(pgx$X)
       shiny::req(input$gs_contrast)
       shiny::req(input$gs_features)
@@ -156,21 +154,23 @@ EnrichmentBoard <- function(id, pgx,
       gene_symbols <- pgx$genes[rownames(pgx$gx.meta$meta[[comp]]), "symbol"]
       names(gene_symbols) <- rownames(pgx$gx.meta$meta[[comp]])
 
-      if (!(comp %in% names(pgx$gset.meta$meta)))
+      if (!(comp %in% names(pgx$gset.meta$meta))) {
         return(NULL)
-      
+      }
+
       mx <- pgx$gset.meta$meta[[comp]]
-      
+
       outputs <- NULL
       gsmethod <- colnames(unclass(mx$fc))
       gsmethod <- input$gs_statmethod
 
-      if (is.null(gsmethod) || length(gsmethod) == 0)
+      if (is.null(gsmethod) || length(gsmethod) == 0) {
         return(NULL)
+      }
 
       lfc <- as.numeric(input$gs_lfc)
       fdr <- as.numeric(input$gs_fdr)
-      
+
       ## filter gene sets for table
       gsfeatures <- "<all>"
       gsfeatures <- input$gs_features
@@ -182,12 +182,12 @@ EnrichmentBoard <- function(id, pgx,
       }
 
       rpt <- NULL
-      
+
       if (is.null(outputs) || length(gsmethod) > 1) {
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
         qv <- unclass(mx$q)[, gsmethod, drop = FALSE]
         scores <- unclass(mx$fc)[, gsmethod, drop = FALSE]
-        
+
         ## Methods have all very difference "fold-change" estimators.
         ## We use the meta.fx (average of all genes in gset)
         fx <- do.call(cbind, rep(list(mx$meta.fx), length(gsmethod)))
@@ -196,7 +196,7 @@ EnrichmentBoard <- function(id, pgx,
         pv[is.na(pv)] <- 1
         qv[is.na(qv)] <- 1
         fx[is.na(fx)] <- 0
-        
+
         is.sig <- (qv <= fdr & abs(fx) >= lfc)
         stars <- sapply(rowSums(is.sig, na.rm = TRUE), playbase::star.symbols, pch = "\u2605")
         names(stars) <- rownames(mx)
@@ -211,17 +211,17 @@ EnrichmentBoard <- function(id, pgx,
           gset.size <- Matrix::colSums(pgx$GMT[, rownames(mx), drop = FALSE] != 0)
           names(gset.size) <- rownames(mx)
         }
-        
+
         ## ---------- report *average* group expression FOLD CHANGE
         ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
         s1 <- names(which(pgx$model.parameters$exp.matrix[, comp] > 0))
         s0 <- names(which(pgx$model.parameters$exp.matrix[, comp] < 0))
-        
+
         jj <- intersect(rownames(mx), colnames(pgx$GMT))
         rnaX <- pgx$X
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
-        
-        gsdiff.method <- "fc" ## OLD default        
+
+        gsdiff.method <- "fc" ## OLD default
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1], na.rm = TRUE)
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0], na.rm = TRUE)
@@ -229,7 +229,7 @@ EnrichmentBoard <- function(id, pgx,
         } else {
           ## WARNING!!! THIS SHOULD BE IN PGXCOMPUTE or
           ## pgx.initialize. Here is just correction in case not done.
-          pp <- intersect( rownames(pgx$GMT), rownames(rnaX))
+          pp <- intersect(rownames(pgx$GMT), rownames(rnaX))
           G <- Matrix::t(pgx$GMT[pp, jj] != 0)
           ngenes <- Matrix::rowSums(G, na.rm = TRUE)
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
@@ -238,7 +238,7 @@ EnrichmentBoard <- function(id, pgx,
           AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0], na.rm = TRUE) / ngenes
           remove(rnaX)
         }
-        
+
         ## hack to reflect foldchange...
         mean0 <- (AveExpr0 + AveExpr1) / 2
         AveExpr1 <- mean0 + meta.fc / 2
@@ -271,27 +271,28 @@ EnrichmentBoard <- function(id, pgx,
             AveExpr1 = AveExpr1[gs]
           )
         }
-        
+
         ## add extra score, p/q value columns
         colnames(pv) <- paste0("p.", colnames(pv))
         colnames(scores) <- paste0("score.", colnames(scores))
         jj <- match(gs, rownames(mx))
-        rpt <- cbind(rpt, q = qv[jj, , drop = FALSE],
-          pv[jj, , drop = FALSE], scores[jj, , drop = FALSE])
+        rpt <- cbind(rpt,
+          q = qv[jj, , drop = FALSE],
+          pv[jj, , drop = FALSE], scores[jj, , drop = FALSE]
+        )
 
-        if (length(gsmethod) == 1)
+        if (length(gsmethod) == 1) {
           colnames(rpt)[colnames(rpt) == gsmethod] <- paste0("q.", gsmethod)
-
+        }
       } else {
         ## show original table (single method)
         rpt <- outputs[[gsmethod]]
       }
-      
-      rpt <- rpt[order(rpt$meta.q, -rpt$logFC), ] ## positive
-      rpt <- data.frame(rpt)      
-      
-      return(rpt)
 
+      rpt <- rpt[order(rpt$meta.q, -rpt$logFC), ] ## positive
+      rpt <- data.frame(rpt)
+
+      return(rpt)
     })
 
     getFilteredGeneSetTable <- shiny::reactive({
@@ -304,8 +305,8 @@ EnrichmentBoard <- function(id, pgx,
       }
 
       res <- getFullGeneSetTable()
-      
-      
+
+
       ## just show significant genes
       if (!input$gs_showall && nrow(res) > 0) {
         lfc <- as.numeric(input$gs_lfc)
@@ -329,14 +330,17 @@ EnrichmentBoard <- function(id, pgx,
         res <- res[order(-fx), , drop = FALSE]
       }
 
-      if (!input$show_pv)
+      if (!input$show_pv) {
         res <- res[, -grep("^p.", colnames(res)), drop = FALSE]
-      
+      }
+
       res <- data.frame(res)
 
       if (nrow(res) == 0) {
-        shiny::validate(shiny::need(nrow(res) > 0,
-          tspan("No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
+        shiny::validate(shiny::need(
+          nrow(res) > 0,
+          tspan("No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)
+        ))
         return(NULL)
       }
       return(res)
@@ -366,7 +370,9 @@ EnrichmentBoard <- function(id, pgx,
 
     gset_selected <- shiny::reactive({
       i <- as.integer(gseatable$rows_selected())
-      if (is.null(i) || length(i) == 0) return(NULL)
+      if (is.null(i) || length(i) == 0) {
+        return(NULL)
+      }
       rpt <- getFilteredGeneSetTable()
       gs <- rownames(rpt)[i]
       return(gs)
@@ -379,7 +385,9 @@ EnrichmentBoard <- function(id, pgx,
       comp <- 1
       comp <- input$gs_contrast
       gs <- gset_selected()
-      if (is.null(gs) || length(gs) == 0) return(NULL)
+      if (is.null(gs) || length(gs) == 0) {
+        return(NULL)
+      }
 
       mx <- pgx$gx.meta$meta[[comp]]
       gxmethods <- selected_gxmethods() ## from module-expression
@@ -409,9 +417,10 @@ EnrichmentBoard <- function(id, pgx,
       genes <- cbind(genes, limma1)
       genes <- genes[which(!is.na(genes$fc) & !is.na(rownames(genes))), , drop = FALSE]
 
-      if (nrow(genes) > 0)
+      if (nrow(genes) > 0) {
         genes <- genes[order(-abs(genes$fc)), , drop = FALSE]
-      
+      }
+
       return(genes)
     })
 
@@ -566,7 +575,7 @@ EnrichmentBoard <- function(id, pgx,
     )
 
     # Gene set enrichment for all contrasts
-    
+
     enrichment_table_gset_enrich_all_contrasts_server(
       "fctable",
       pgx = pgx,

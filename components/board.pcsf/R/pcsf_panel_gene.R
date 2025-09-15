@@ -31,13 +31,13 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
       shiny::selectInput(
         ns("numlabels"),
         "Number of labels:",
-        choices = c(0,3,5,10,20,999),
+        choices = c(0, 3, 5, 10, 20, 999),
         selected = 10
       ),
       "Numer of labels to show."
     )
   )
-  
+
   PlotModuleUI(
     id = ns("plotmodule"),
     title = "Interactive network",
@@ -49,7 +49,6 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
     options = plot_opts,
     download.fmt = c("png", "pdf", "svg"),
   )
-
 }
 
 #' UI code for table code: expression board
@@ -86,14 +85,13 @@ pcsf_genepanel_seriesplot_ui <- function(
     caption = "",
     width = 400,
     height = 400) {
-
   ns <- shiny::NS(id)
   options <- tagList(
     withTooltip(
       shiny::selectInput(
         ns("series_numlabels"),
         "Number of labels:",
-        choices = c(0,3,5,10,20,999),
+        choices = c(0, 3, 5, 10, 20, 999),
         selected = 0
       ),
       "Numer of labels to show."
@@ -127,21 +125,22 @@ pcsf_genepanel_settings_ui <- function(id) {
     shiny::checkboxGroupInput(
       ns("solve_options"),
       "Solve options:",
-      c("rho as prize" = "rho_prize",
+      c(
+        "rho as prize" = "rho_prize",
         "meta solution" = "meta_solution",
-        "add VHC edges" = "add_vhce" 
+        "add VHC edges" = "add_vhce"
       ),
       selected = c("add_vhce"), inline = TRUE
     ),
     hr(),
     withTooltip(
       shiny::selectInput(ns("layout.method"), "Layout algorithm:",
-        choices = c("Kamada-Kawai" = "kk","tree","circle"),        
+        choices = c("Kamada-Kawai" = "kk", "tree", "circle"),
         selected = "kk"
       ),
       "Select graph layout algorithm. Barnes-Hut is a physics-based force-directed layout that is interactive. The Kamada-Kawai layout is based on a physical model of springs but is static. The hierachical layout places nodes as a hierarchical tree."
     ),
-    shiny::checkboxInput(ns("physics"),"enable physics",FALSE),    
+    shiny::checkboxInput(ns("physics"), "enable physics", FALSE),
     hr(),
     withTooltip(
       shiny::checkboxInput(ns("cut"), "Cut clusters", FALSE),
@@ -152,7 +151,8 @@ pcsf_genepanel_settings_ui <- function(id) {
       ns = ns,
       withTooltip(
         shiny::selectInput(ns("nclust"), "Number of clusters",
-          choices = c(1,4,9,16,25,99), selected=16),
+          choices = c(1, 4, 9, 16, 25, 99), selected = 16
+        ),
         "Maximum number of components"
       ),
       withTooltip(
@@ -186,19 +186,21 @@ pcsf_genepanel_server <- function(id,
         visNetwork::visPhysics(
           enabled = input$physics,
           barnesHut = list(
-            centralGravity = 0  ## pull force to center [def: 0.3]
+            centralGravity = 0 ## pull force to center [def: 0.3]
           )
         )
     })
 
     singlecontrast <- reactive({
-      if("meta_solution" %in% input$solve_options) return(NULL)
+      if ("meta_solution" %in% input$solve_options) {
+        return(NULL)
+      }
       r_contrast()
     })
-    
+
     solve_pcsf <- shiny::eventReactive(
       {
-        list( pgx$X, input$ntop, singlecontrast(), input$solve_options)        
+        list(pgx$X, input$ntop, singlecontrast(), input$solve_options)
       },
       {
         shiny::req(pgx$X)
@@ -206,28 +208,28 @@ pcsf_genepanel_server <- function(id,
 
         contrast <- singlecontrast()
         comparisons <- playbase::pgx.getContrasts(pgx)
-        if(!"meta_solution" %in% input$solve_options) shiny::req(contrast %in% comparisons)
-        
-        if(pgx$datatype == "multi-omics") {
+        if (!"meta_solution" %in% input$solve_options) shiny::req(contrast %in% comparisons)
+
+        if (pgx$datatype == "multi-omics") {
           ## Multi-omics PCSF
           info("[PcsfBoard:pcsf_compute] computing multi-omics PCSF...")
           ## If both gx&px are in datasest, we prefer proteomics (px)
           ## for building the PCSF.
           datatypes <- unique(playbase::mofa.get_prefix(rownames(pgx$X)))
-          if(all(c("gx","px") %in% datatypes)) {
+          if (all(c("gx", "px") %in% datatypes)) {
             datatypes <- setdiff(datatypes, c("gx"))
           }
         } else {
-          info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")          
-            datatypes <- NULL
+          info("[PcsfBoard:pcsf_compute] computing single-omics PCSF...")
+          datatypes <- NULL
         }
-        
+
         info("[PcsfBoard:pcsf_compute] datatypes =", datatypes)
         pcsf <- playbase::pgx.computePCSF(
           pgx,
           contrast = contrast,
           datatypes = datatypes,
-          as_prize = ifelse("rho_prize" %in% input$solve_options,"rho","fc"),
+          as_prize = ifelse("rho_prize" %in% input$solve_options, "rho", "fc"),
           use_rank = FALSE,
           ntop = ntop,
           ncomp = 5,
@@ -236,8 +238,8 @@ pcsf_genepanel_server <- function(id,
           highcor = ifelse("add_vhce" %in% input$solve_options, 0.9, Inf),
           dir = "both",
           ppi = c("STRING", "GRAPHITE")
-        ) 
-        
+        )
+
         if (is.null(pcsf)) {
           validate()
           shiny::validate(
@@ -252,20 +254,19 @@ pcsf_genepanel_server <- function(id,
     )
 
     gene_pcsf <- reactive({
-
       shiny::req(input$layout.method)
       shiny::req(input$nclust)
-      
+
       pcsf <- solve_pcsf()
 
       input_cut <- input$cut
-      if(input_cut) {
+      if (input_cut) {
         ncomp <- as.integer(input$nclust)
         res <- playbase::pcsf.cut_and_relayout(
           pcsf,
           ncomp = ncomp,
           layout = input$layout.method,
-          cluster.method = c("louvain","leiden")[2],
+          cluster.method = c("louvain", "leiden")[2],
           leiden.resolution = 1 - as.numeric(input$resolution)
         )
       } else {
@@ -278,45 +279,44 @@ pcsf_genepanel_server <- function(id,
           as_grid = FALSE
         )
       }
-      
+
       return(res)
     })
 
-    
-    ##-----------------------------------------------------------------
-    ##---------------- visnetwork plot --------------------------------
-    ##-----------------------------------------------------------------
+
+    ## -----------------------------------------------------------------
+    ## ---------------- visnetwork plot --------------------------------
+    ## -----------------------------------------------------------------
 
     visnetwork.RENDER <- function() {
-      
       req(input$highlightby)
-      
+
       ## compute PCSF
       res <- gene_pcsf()
       pcsf <- res$graph
       layoutMatrix <- res$layout
-      
+
       physics <- FALSE
       physics <- input$physics
-      
+
       contrast <- r_contrast()
-      shiny::req(contrast)      
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)        
+      shiny::req(contrast)
+      comparisons <- colnames(pgx$model.parameters$contr.matrix)
       shiny::req(contrast %in% comparisons)
-      
-      F <- playbase::pgx.getMetaMatrix(pgx, level='gene')$fc
+
+      F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
       fx <- F[igraph::V(pcsf)$name, contrast]
 
       labels <- names(fx)
       labels <- playbase::probe2symbol(names(fx), pgx$genes, "gene_name", fill_na = TRUE)
-      
+
       igraph::V(pcsf)$foldchange <- fx
       igraph::V(pcsf)$prize <- abs(fx)
 
       plt <- playbase::plotPCSF(
         pcsf,
         sizeby = fx,
-        colorby = fx,        
+        colorby = fx,
         highlightby = input$highlightby,
         layout = "layout.norm",
         layoutMatrix = layoutMatrix,
@@ -346,20 +346,20 @@ pcsf_genepanel_server <- function(id,
       vis.delay = 5 ## important! graph physics needs to settle
     )
 
-    ##-----------------------------------------------------------------
-    ##------------------- series plot ---------------------------------
-    ##-----------------------------------------------------------------
+    ## -----------------------------------------------------------------
+    ## ------------------- series plot ---------------------------------
+    ## -----------------------------------------------------------------
 
     series.RENDER <- function() {
       req(input$highlightby)
-      
+
       ## compute PCSF
       res <- gene_pcsf()
       graph <- res$graph
       layout <- res$layout
-      
-      F <- playbase::pgx.getMetaMatrix(pgx, level="gene")$fc
-      F <- F[igraph::V(graph)$name,,drop=FALSE]
+
+      F <- playbase::pgx.getMetaMatrix(pgx, level = "gene")$fc
+      F <- F[igraph::V(graph)$name, , drop = FALSE]
 
       labels <- rownames(F)
       labels <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
@@ -367,21 +367,21 @@ pcsf_genepanel_server <- function(id,
       hh <- grep("^IA:", colnames(F))
       if (any(hh)) F <- F[, -hh, drop = FALSE]
 
-      nc <- ceiling(1.3*sqrt(ncol(F)))
-      nr <- ceiling(ncol(F)/nc)
-      par(mfrow=c(nr,nc), mar=c(1,1,4,1)*0.5)      
-      i=1
-      for(i in 1:ncol(F)) {
-        fx <- F[,i]        
+      nc <- ceiling(1.3 * sqrt(ncol(F)))
+      nr <- ceiling(ncol(F) / nc)
+      par(mfrow = c(nr, nc), mar = c(1, 1, 4, 1) * 0.5)
+      i <- 1
+      for (i in 1:ncol(F)) {
+        fx <- F[, i]
         fx[is.na(fx)] <- 0 # NA no size no color
         playbase::plotPCSF(
           graph,
           plotlib = "igraph",
           sizeby = fx,
-          colorby = fx,          
+          colorby = fx,
           highlightby = input$highlightby,
           layoutMatrix = layout,
-          physics = TRUE, 
+          physics = TRUE,
           node_cex = 1,
           node_gamma = 0.66,
           labels = labels,
@@ -394,23 +394,22 @@ pcsf_genepanel_server <- function(id,
         )
         title(colnames(F)[i], cex.main = 1.2)
       }
-      
     }
 
     PlotModuleServer(
       "plotmodule2",
       func = series.RENDER,
       plotlib = "base",
-      res = c(70, 120), ## resolution of plots      
+      res = c(70, 120), ## resolution of plots
       pdf.width = 12,
       pdf.height = 6,
       add.watermark = watermark
     )
-    
-    ##-----------------------------------------------------------------
-    ##---------------- TABLE ------------------------------------------
-    ##-----------------------------------------------------------------
-    
+
+    ## -----------------------------------------------------------------
+    ## ---------------- TABLE ------------------------------------------
+    ## -----------------------------------------------------------------
+
     table_data <- function() {
       shiny::req(r_contrast())
       res <- gene_pcsf()
@@ -428,14 +427,14 @@ pcsf_genepanel_server <- function(id,
 
     table.RENDER <- function(full = FALSE) {
       df <- table_data()
-      if(!full) {
+      if (!full) {
         cols <- c("symbol", "gene_title", "logFC", "centrality")
         cols <- intersect(cols, colnames(df))
         df <- df[, cols, drop = FALSE]
       }
       nas <- which(is.na(df$gene_title))
-      if (length(nas)>0) df$gene_title[nas] = "NA"
-      
+      if (length(nas) > 0) df$gene_title[nas] <- "NA"
+
       num.cols <- intersect(c("centrality", "logFC"), colnames(df))
       dt <- ui.DataTable(
         df,
@@ -460,7 +459,5 @@ pcsf_genepanel_server <- function(id,
       func2 = table.RENDER_modal,
       selector = "single"
     )
-
-    
   }) ## end of moduleServer
 }

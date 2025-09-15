@@ -13,9 +13,8 @@ plot_deepnet_lossplot_ui <- function(
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
     width = c("auto", "100%")) {
-
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -35,13 +34,12 @@ plot_deepnet_lossplot_server <- function(id,
                                          update,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
-      update()  ## react on updates
+      update() ## react on updates
       net <- net()
       n <- length(net$loss_history)
-      shiny::validate(shiny::need(n>0, "please run network"))
-      par(mfrow = c(1,1), mar = c(4,4,2,1))
+      shiny::validate(shiny::need(n > 0, "please run network"))
+      par(mfrow = c(1, 1), mar = c(4, 4, 2, 1))
       net$plot_loss()
     }
 

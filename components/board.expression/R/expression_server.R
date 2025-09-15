@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
-                            ) {
+ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -30,9 +29,9 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
 
-    #================================================================================
-    #=============================== observers ======================================
-    #================================================================================
+    # ================================================================================
+    # =============================== observers ======================================
+    # ================================================================================
 
     shiny::observeEvent(input$gx_info,
       {
@@ -86,7 +85,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
         }
       }
     )
-    
+
     # observe functions to project DT from invalidating equal row_select
     gsettable_rows_selected <- reactiveVal()
 
@@ -133,7 +132,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
     #-----------------------------------------------------------------
     # --------------------- FUNCTIONS --------------------------------
     #-----------------------------------------------------------------
-    
+
     getDEGtable <- function(pgx, testmethods, comparison, add.pq, lfc, fdr) {
       shiny::req(pgx$X)
 
@@ -195,8 +194,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
       AveExpr0 <- mean0 - logFC / 2
 
       aa <- intersect(c("symbol", "gene_title"), colnames(pgx$genes))
-      chr.col <- head(intersect(c("map","chr"),colnames(pgx$genes)),1)
-      if(length(chr.col)>0) aa <- c(aa, chr.col)
+      chr.col <- head(intersect(c("map", "chr"), colnames(pgx$genes)), 1)
+      if (length(chr.col) > 0) aa <- c(aa, chr.col)
       gene.annot <- pgx$genes[rownames(mx), aa]
 
       res <- data.frame(
@@ -576,10 +575,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")
 
       ## determine which column to match with pgx$GMT
       gene1 <- res[sel.row, ]
-      match.res <- apply(res[,c("symbol","human_ortholog")],2,
-        function(x) sum(x%in%rownames(pgx$GMT)))
+      match.res <- apply(
+        res[, c("symbol", "human_ortholog")], 2,
+        function(x) sum(x %in% rownames(pgx$GMT))
+      )
       match.col <- names(which.max(match.res))
-      gmt_gene_mapping <- gene1[,match.col]
+      gmt_gene_mapping <- gene1[, match.col]
       j <- which(rownames(pgx$GMT) == gmt_gene_mapping)
       if (length(j) == 0) {
         return(NULL)

@@ -50,7 +50,7 @@ expression_table_genetable_ui <- function(
 #'
 #' @export
 expression_table_genetable_server <- function(id,
-                                              pgx, 
+                                              pgx,
                                               comp,
                                               res,
                                               organism,
@@ -59,22 +59,20 @@ expression_table_genetable_server <- function(id,
                                               scrollY,
                                               cont,
                                               watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     table_data <- function() {
-
       res <- res()
       req(res)
-      
+
       if ("gene_title" %in% colnames(res)) {
         res$gene_title <- playbase::shortstring(res$gene_title, 50)
       }
 
       na.fc <- which(is.na(res$logFC))
-      if (any(na.fc)) res$logFC[na.fc] = 999
-      
+      if (any(na.fc)) res$logFC[na.fc] <- 999
+
       if (show_pv()) {
         res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
       } else {
@@ -102,7 +100,7 @@ expression_table_genetable_server <- function(id,
       if (organism %in% c("Human", "human")) df$human_ortholog <- NULL
 
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) df$feature <- NULL
-      
+
       if (!showdetails) {
         hide.cols <- grep("p$|q$|ortho", colnames(df))
         hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
@@ -124,7 +122,7 @@ expression_table_genetable_server <- function(id,
       } else {
         df <- df[, which(colnames(df) != "pct.NA"), drop = FALSE]
       }
-      
+
       DT::datatable(
         df,
         rownames = FALSE,

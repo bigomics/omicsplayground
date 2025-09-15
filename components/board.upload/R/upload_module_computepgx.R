@@ -52,7 +52,8 @@ upload_module_computepgx_server <- function(
         nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
         dt <- upload_datatype()
         if (dt == "RNA-seq") {
-          mm <- c("ttest", "ttest.welch", "trend.limma", "voom.limma", 
+          mm <- c(
+            "ttest", "ttest.welch", "trend.limma", "voom.limma",
             "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt"
           )
           if (nmissing.countsX > 0) mm <- c("ttest", "ttest.welch", "trend.limma")
@@ -82,12 +83,14 @@ upload_module_computepgx_server <- function(
 
       GENESET.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "rank correlation"="spearman")
+          mm <- c("fisher", "fgsea", "rank correlation" = "spearman")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("fisher", "fgsea", "rank correlation"="spearman")
+          mm <- c("fisher", "fgsea", "rank correlation" = "spearman")
         } else {
-          mm <- c("fisher", "fgsea", "ssgsea+limma" = "ssgsea", "gsva+limma" = "gsva",
-            "rank correlation"="spearman")
+          mm <- c("fisher", "fgsea",
+            "ssgsea+limma" = "ssgsea", "gsva+limma" = "gsva",
+            "rank correlation" = "spearman"
+          )
         }
         return(mm)
       }
@@ -105,11 +108,15 @@ upload_module_computepgx_server <- function(
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
         } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("drug connectivity"="drugs", "wordcloud",
-                  "experiment similarity"="connectivity", "WGCNA"="wgcna")
+          mm <- c(
+            "drug connectivity" = "drugs", "wordcloud",
+            "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+          )
         } else {
-          mm <- c("celltype deconvolution"="deconv", "drug connectivity"="drugs",
-                  "wordcloud", "experiment similarity"="connectivity", "WGCNA"="wgcna")
+          mm <- c(
+            "celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
+            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+          )
         }
         return(mm)
       }
@@ -122,9 +129,9 @@ upload_module_computepgx_server <- function(
         }
         return(mm)
       }
-             
+
       ONESAMPLE.GENE_METHODS <- c("ttest", "ttest.welch")
-      if(opt$ALLOW_CUSTOM_FC) {
+      if (opt$ALLOW_CUSTOM_FC) {
         ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
       }
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
@@ -135,20 +142,22 @@ upload_module_computepgx_server <- function(
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
 
       htmltag_with_info_url <- function(tag, url) {
-        shiny::HTML(paste("<div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>",tag,"<a href='",url,"'target='_blank' class='info-link' style='margin-left: 15px;'><i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 18px;'></i></a></div>"))
+        shiny::HTML(paste("<div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>", tag, "<a href='", url, "'target='_blank' class='info-link' style='margin-left: 15px;'><i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 18px;'></i></a></div>"))
       }
 
       htmltag_with_info_popup <- function(tag, info.text) {
         shiny::div(
-          style = 'display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;',
+          style = "display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;",
           tag,
           div(
             style = "margin-left:15px;",
             DropdownMenu(
               info.text,
               size = "xs",
-              icon = shiny::icon("info", class='fa-solid fa-circle-info info-icon',
-                                 style='color:blue; font-size: 18px;'),
+              icon = shiny::icon("info",
+                class = "fa-solid fa-circle-info info-icon",
+                style = "color:blue; font-size: 18px;"
+              ),
               status = "default",
               width = "150px"
             )
@@ -162,16 +171,17 @@ upload_module_computepgx_server <- function(
           DropdownMenu(
             info.text,
             size = "xs",
-            icon = shiny::icon("info", class='fa-solid fa-circle-info info-icon',
-              style='color:blue; font-size: 18px;'),
+            icon = shiny::icon("info",
+              class = "fa-solid fa-circle-info info-icon",
+              style = "color:blue; font-size: 18px;"
+            ),
             status = "default",
             width = "150px"
           )
         )
       }
-      
-      output$UI <- shiny::renderUI({
 
+      output$UI <- shiny::renderUI({
         upload_annot_table_ui <- NULL
 
         if (auth$options$ENABLE_ANNOT) {
@@ -223,18 +233,15 @@ upload_module_computepgx_server <- function(
               )
             )
           },
-
           shiny::div(
             shiny::uiOutput(ns("probetype_result"))
           ),
-
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
               icon = icon("cog", lib = "glyphicon")
             ),
             style = "display: flex; justify-content: center; margin: 15px 0;"
           ),
-
           shiny::conditionalPanel(
             "input.options%2 == 1",
             ns = ns,
@@ -264,20 +271,24 @@ upload_module_computepgx_server <- function(
                   style = "margin-top:-22px;",
                   shiny::checkboxInput(
                     ns("exclude_void"),
-                    shiny::span( "Exclude void features:",
+                    shiny::span(
+                      "Exclude void features:",
                       inline_info_button(
-                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored.")),
-                    FALSE)
+                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored."
+                      )
+                    ),
+                    FALSE
+                  )
                 ),
                 conditionalPanel(
                   "input.exclude_void == true",
                   ns = ns,
-                  shiny::span(style="margin-top:-15px;",
+                  shiny::span(
+                    style = "margin-top:-15px;",
                     shiny::textInput(ns("exclude_genes"), NULL, "LOC ORF RIK")
                   )
                 ),
               ),
-              
               if (upload_datatype() == "scRNA-seq") {
                 bslib::card(
                   shiny::checkboxGroupInput(
@@ -316,9 +327,9 @@ upload_module_computepgx_server <- function(
                   ),
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
-                  #disabled = c("methods to be greyed-out")
+                  # disabled = c("methods to be greyed-out")
                 ),
-                #div(id = "NA_intolerant_methods"), # Placeholder for the dynamic text
+                # div(id = "NA_intolerant_methods"), # Placeholder for the dynamic text
                 div(id = "interaction_analysis"), # Placeholder for the dynamic text
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
@@ -418,82 +429,89 @@ upload_module_computepgx_server <- function(
       })
 
       ## Checks specific for time series
-      #shiny::observeEvent(samplesRT(), {
-      shiny::observeEvent({
-        samplesRT()
-        countsX()
-      }, {
+      # shiny::observeEvent(samplesRT(), {
+      shiny::observeEvent(
+        {
+          samplesRT()
+          countsX()
+        },
+        {
+          Y <- samplesRT()
+          Contrasts <- contrastsRT()
+          colnames(Y) <- tolower(colnames(Y))
+          Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
 
-        Y <- samplesRT()
-        Contrasts <- contrastsRT()
-        colnames(Y) <- tolower(colnames(Y))
-        Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
-        
-        time.var <- playbase::get_timevars()
-        sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
-        
-        if (length(sel.time) && length(unique(Y[, sel.time[1]]))>1) {
+          time.var <- playbase::get_timevars()
+          sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
 
-          timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
-          ia.ctx <- ia.spline.ctx <- c()
+          if (length(sel.time) && length(unique(Y[, sel.time[1]])) > 1) {
+            timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
+            ia.ctx <- ia.spline.ctx <- c()
 
-          i=1
-          shiny::req(Contrasts)
-          for (i in 1:ncol(Contrasts)) {
-            ctx <- colnames(Contrasts)[i]
-            if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next;
-            tt <- table(data.frame(ctx = Contrasts[,ctx], time = Y[,sel.time[1]]))
-            zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
+            i <- 1
+            shiny::req(Contrasts)
+            for (i in 1:ncol(Contrasts)) {
+              ctx <- colnames(Contrasts)[i]
+              if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next
+              tt <- table(data.frame(ctx = Contrasts[, ctx], time = Y[, sel.time[1]]))
+              zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
 
-            if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
-              if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
-            } else {
-              if (!any(zeros.obs >= (ncol(tt)-1))) {
-                ia.spline.ctx <- c(ia.spline.ctx, ctx)
+              if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
+                if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
+              } else {
+                if (!any(zeros.obs >= (ncol(tt) - 1))) {
+                  ia.spline.ctx <- c(ia.spline.ctx, ctx)
+                }
               }
             }
-          }
 
-          if (length(ia.ctx) | length(ia.spline.ctx)) {
+            if (length(ia.ctx) | length(ia.spline.ctx)) {
+              shinyalert::shinyalert(
+                title = "Interaction analysis",
+                text = paste0(
+                  "'", colnames(Y)[sel.time[1]], "' found in samples.csv.\n",
+                  "Interaction with time will be tested for valid contrasts."
+                ),
+                type = "info"
+              )
 
-            shinyalert::shinyalert(title = "Interaction analysis",
-              text = paste0("'",colnames(Y)[sel.time[1]], "' found in samples.csv.\n",
-                "Interaction with time will be tested for valid contrasts."),
-              type = "info")
-            
-            if (length(ia.ctx)) {
-              ia.ctx <- gsub(":.*", "", ia.ctx)
-              msg <- paste0("<br><br>", "<p style='color: gray;'>Interaction with time will be tested<br>",
-                "for the following contrast variables:<br>", paste0(ia.ctx, collapse="<br>"), ".</p>")
-            } else if (length(ia.spline.ctx)) {
-              ia.spline.ctx <- gsub(":.*", "", ia.spline.ctx)
-              msg <- paste0("<br><br>", "<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
-                "for the following contrasts variables:<br>", paste0(ia.spline.ctx, collapse="<br>"),".</p>")
+              if (length(ia.ctx)) {
+                ia.ctx <- gsub(":.*", "", ia.ctx)
+                msg <- paste0(
+                  "<br><br>", "<p style='color: gray;'>Interaction with time will be tested<br>",
+                  "for the following contrast variables:<br>", paste0(ia.ctx, collapse = "<br>"), ".</p>"
+                )
+              } else if (length(ia.spline.ctx)) {
+                ia.spline.ctx <- gsub(":.*", "", ia.spline.ctx)
+                msg <- paste0(
+                  "<br><br>", "<p style='color: gray;'>Interaction with time (spline) will be tested<br>",
+                  "for the following contrasts variables:<br>", paste0(ia.spline.ctx, collapse = "<br>"), ".</p>"
+                )
+              }
+
+              choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
+              sel <- c("trend.limma", "deseq2.lrt")
+              c1 <- (sum(is.na(countsX())) > 0)
+              c2 <- (upload_datatype() != "RNA-seq")
+              if (c1 | c2) {
+                choices <- sel <- "trend.limma"
+              }
+              shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
+
+              insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
             }
-
-            choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
-            sel = c("trend.limma", "deseq2.lrt")
-            c1 <- (sum(is.na(countsX())) > 0)
-            c2 <- (upload_datatype() != "RNA-seq")
-            if (c1 | c2) { choices = sel = "trend.limma" }
-            shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
-            
-            insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
-              
           }
-         
         }
-        
-      })
+      )
 
-      ##------------------------------------------------------------------------
+      ## ------------------------------------------------------------------------
       ## If NA in X (no imputation performed), remove NA-intolerant methods.
       ## Temporary msg. Later work needed to grey them out.
-      ##------------------------------------------------------------------------
+      ## ------------------------------------------------------------------------
       shiny::observeEvent(countsX(), {
         if (sum(is.na(countsX())) > 0) {
           mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
-          mm <- paste0(mm, collapse="; ")
+          mm <- paste0(mm, collapse = "; ")
           msg <- paste0("Missing values detected (no imputation). The following tests were removed as do not support MVs: ", mm)
           shinyalert::shinyalert(title = "WARNING", text = msg, type = "warning")
         }
@@ -607,7 +625,6 @@ upload_module_computepgx_server <- function(
       })
 
       shiny::observeEvent(contrastsRT(), {
-
         contrasts <- as.data.frame(contrastsRT())
         has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
         if (any(has_one)) {
@@ -732,7 +749,7 @@ upload_module_computepgx_server <- function(
               title = "Invalid custom fold changes",
               text = paste0(
                 "Missing required columns: ",
-                paste(missing_cols, collapse=", "),
+                paste(missing_cols, collapse = ", "),
                 ". Each contrast must have .logFC, .P.Value and .adj.P.Val columns."
               ),
               type = "error",
@@ -779,7 +796,7 @@ upload_module_computepgx_server <- function(
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
         annot_table <- annotRT()
-                
+
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
@@ -790,7 +807,7 @@ upload_module_computepgx_server <- function(
         gx.methods <- input$gene_methods
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-        if(input$do_extra == FALSE) extra.methods <- c()
+        if (input$do_extra == FALSE) extra.methods <- c()
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
@@ -808,9 +825,9 @@ upload_module_computepgx_server <- function(
           batch.correct.method <- compute_settings$bc_method$method
           batch.pars <- compute_settings$bc_method$param
         }
-        ##--------------------------------
-        
-        only.proteincoding <- FALSE      # DEPRECATED: use exclude_genes
+        ## --------------------------------
+
+        only.proteincoding <- FALSE # DEPRECATED: use exclude_genes
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
         filter.genes <- ("remove.notexpressed" %in% flt)
@@ -818,8 +835,8 @@ upload_module_computepgx_server <- function(
         prune.samples <- TRUE
         this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
         exclude_genes <- NULL
-        if(input$exclude_void) exclude_genes <- input$exclude_genes
-        
+        if (input$exclude_void) exclude_genes <- input$exclude_genes
+
         # if no raw_dir (happens when we auto-load example data via
         # button), or user click compute a second time
         if (is.null(raw_dir())) raw_dir(create_raw_dir(auth))
@@ -828,19 +845,19 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         pgx_save_folder <- auth$user_dir
 
-        ##-----------------------------------------------
+        ## -----------------------------------------------
         ## Params for scRNA-seq
         do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
-        if (!any(nfeature_threshold)) nfeature_threshold = FALSE
+        if (!any(nfeature_threshold)) nfeature_threshold <- FALSE
         mt_threshold <- sc_compute_settings()$mt_threshold
-        if (!any(mt_threshold)) mt_threshold = FALSE
+        if (!any(mt_threshold)) mt_threshold <- FALSE
         hb_threshold <- sc_compute_settings()$hb_threshold
-        if (!any(hb_threshold)) hb_threshold = FALSE
+        if (!any(hb_threshold)) hb_threshold <- FALSE
         sc.covs <- as.character(input$regress_covariates)
         sc_compute_settings.PARS <- list(
-          ##azimuth_ref <- to add
-          ##nfeature_threshold = sc_compute_settings()$nfeature_threshold,
+          ## azimuth_ref <- to add
+          ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
           nfeature_threshold = nfeature_threshold,
           mt_threshold = mt_threshold,
           hb_threshold = hb_threshold,
@@ -850,7 +867,7 @@ upload_module_computepgx_server <- function(
           regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
           regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
         )
-        
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -881,12 +898,12 @@ upload_module_computepgx_server <- function(
           exclude.genes = exclude_genes,
           only.known = remove.unknown,
           average.duplicated = average.duplicated, ## new
-          only.proteincoding = only.proteincoding,          
+          only.proteincoding = only.proteincoding,
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
           batch.correct.method = batch.correct.method, ## new
           batch.pars <- batch.pars, ## NEW
-          ##--------- 
+          ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
@@ -915,7 +932,7 @@ upload_module_computepgx_server <- function(
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
-        
+
         # Remove global variables
         try(rm(annot_table))
         try(rm(custom_geneset))

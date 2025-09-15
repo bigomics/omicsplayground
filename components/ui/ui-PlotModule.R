@@ -34,7 +34,9 @@ PlotModuleUI <- function(id,
                          translate = TRUE,
                          translate_js = TRUE,
                          editor = FALSE,
-                         ns_parent = function(a){return(a)},
+                         ns_parent = function(a) {
+                           return(a)
+                         },
                          plot_type = "volcano") {
   ns <- shiny::NS(id)
 
@@ -179,11 +181,11 @@ PlotModuleUI <- function(id,
       # shiny::conditionalPanel(
       #   condition = "input.downloadOption == 'pdf'",
       #   ns = ns,
-        shiny::checkboxInput(
-          inputId = ns("get_pdf_settings"),
-          label = "Include plot settings (PDF)",
-          TRUE
-        ),
+      shiny::checkboxInput(
+        inputId = ns("get_pdf_settings"),
+        label = "Include plot settings (PDF)",
+        TRUE
+      ),
       # ),
       download_buttons
     ),
@@ -263,10 +265,10 @@ PlotModuleUI <- function(id,
         ref <- info.references[[i]]
         name <- ref[[1]]
         link <- ref[[2]]
-        
+
         # Create the formatted HTML string
         formatted_ref <- paste0("[", i, "] ", name, " <a href='", link, "' target='_blank'>", link, "</a><br>")
-        
+
         # Append the formatted string to the HTML code
         html_code <- paste0(html_code, formatted_ref)
       }
@@ -308,7 +310,7 @@ PlotModuleUI <- function(id,
     status = "default",
     width = "300px"
   )
-  
+
   header <- shiny::fillRow(
     flex = c(1, NA, NA, NA, NA, NA, NA, NA),
     class = "plotmodule-header",
@@ -327,7 +329,7 @@ PlotModuleUI <- function(id,
     header_buttons,
     info_button,
     options.button,
-    editor_button,    
+    editor_button,
     shiny::div(class = "download-button", title = "download", dload.button),
     shiny::div(class = "zoom-button", title = "zoom", zoom.button)
   )
@@ -336,9 +338,9 @@ PlotModuleUI <- function(id,
   ## --------------- modal UI (former output$popupfig) ----------------------
   ## ------------------------------------------------------------------------
 
-  height.2="100%"
-  height.2="calc(80vh - 100px)"
-  
+  height.2 <- "100%"
+  height.2 <- "calc(80vh - 100px)"
+
   if (cards) {
     tabs_modal <- lapply(1:length(card_names), function(x) {
       bslib::nav_panel(
@@ -402,7 +404,7 @@ PlotModuleUI <- function(id,
       class = "popup-plot-body",
       height = "80vh",
       col_widths = 12,
-      row_heights = list(1,"auto"),
+      row_heights = list(1, "auto"),
       shiny::div(class = "popup-plot", plot_cards_modal),
       caption2
     )
@@ -438,10 +440,10 @@ PlotModuleUI <- function(id,
   }
 
   e <- bslib::card(
-    #bslib::card_header(header),
-    #class = "plotmodule",
-    #full_screen = FALSE,
-    #style = paste0("height:", height.1, ";overflow: visible;"),
+    # bslib::card_header(header),
+    # class = "plotmodule",
+    # full_screen = FALSE,
+    # style = paste0("height:", height.1, ";overflow: visible;"),
     bslib::as.card_item(div(header)),
     bslib::card_body(
       gap = "0px",
@@ -461,7 +463,9 @@ PlotModuleUI <- function(id,
           track_open = TRUE
         )
       ),
-      if (editor) {editor_content},
+      if (editor) {
+        editor_content
+      },
       if (cards) {
         div(
           lapply(1:length(card_names), function(x) {
@@ -922,11 +926,11 @@ PlotModuleServer <- function(id,
                   )
                 } else if (plotlib == "ggiraph") {
                   p <- func()
-                  SVGFILE <- tempfile(fileext=".svg")
+                  SVGFILE <- tempfile(fileext = ".svg")
                   ggiraph::dsvg(SVGFILE)
                   print(p)
                   dev.off()
-                  system(paste("convert ",SVGFILE," ",PDFFILE))
+                  system(paste("convert ", SVGFILE, " ", PDFFILE))
                   unlink(SVGFILE)
                 } else { ## end base
                   pdf(PDFFILE, pointsize = pdf.pointsize)
@@ -979,7 +983,7 @@ PlotModuleServer <- function(id,
                   dev.off()
                 } else if (plotlib == "grid") {
                   svglite::svglite(file, width = input$pdf_width, height = input$pdf_height)
-                  func() # Call the plotting function directly  
+                  func() # Call the plotting function directly
                   dev.off()
                 } else if (plotlib == "svgPanZoom") {
                   p <- func()

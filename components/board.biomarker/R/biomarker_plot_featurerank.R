@@ -57,7 +57,7 @@ biomarker_plot_featurerank_server <- function(id,
       pgx <- pgx
       ft_level <- ft_level()
 
-      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$genes)      
+      shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$genes)
       features <- NULL
       X <- NULL
       if (ft_level == "geneset") {
@@ -69,41 +69,44 @@ biomarker_plot_featurerank_server <- function(id,
         X <- pgx$X
         if (any(is.na(X))) X <- pgx$impX
       }
-      
+
       ## ------------ intersect features, set minimum set size
       genes <- toupper(pgx$genes$symbol)
       features <- lapply(features, toupper)
       features <- lapply(features, function(f) intersect(toupper(f), genes))
       features <- features[sapply(features, length) >= 10]
-      features <- features[setdiff(names(features), c("<all>",""))]
-      shiny::validate(shiny::need( length(features) >= 3, "No valid feature sets"))
-      
-      ##------------- Supercell (scRNAseq very slow otherwise)
-      ##------------- Or random downsampling by cell type?
+      features <- features[setdiff(names(features), c("<all>", ""))]
+      shiny::validate(shiny::need(length(features) >= 3, "No valid feature sets"))
+
+      ## ------------- Supercell (scRNAseq very slow otherwise)
+      ## ------------- Or random downsampling by cell type?
       Y <- NULL
-      if (pgx$datatype == "scRNAseq" && ncol(pgx$counts)>500) {
+      if (pgx$datatype == "scRNAseq" && ncol(pgx$counts) > 500) {
         message("[biomarkers: feature-set scores] scRNAseq. Down-sampling by cell type")
         Y <- pgx$samples
         ct <- unique(Y$celltype)
-        i=1; cells=c()
-        for(i in 1:length(ct)) {
+        i <- 1
+        cells <- c()
+        for (i in 1:length(ct)) {
           jj <- which(Y$celltype == ct[i])
-          size <- ifelse(length(jj)>20, 20, length(jj))
-          cells <- c(cells, rownames(Y)[sample(jj,size)])
+          size <- ifelse(length(jj) > 20, 20, length(jj))
+          cells <- c(cells, rownames(Y)[sample(jj, size)])
         }
         Y <- Y[unique(cells), , drop = FALSE]
         X <- playbase::logCPM(pgx$counts[, rownames(Y)], total = 1e4, prior = 1)
         X <- as.matrix(X)
         message("[biomarkers: feature-set scores] Down-sampling completed")
       }
-      
+
       if (is.null(Y)) Y <- pgx$Y
 
-      ##------------- rm redundant/unneeded pheno
-      kk <- c("nCount_SCT", "nCount_RNA", "nFeature_SCT", "SCT_snn_res.1",
-        "orig.ident", "percent.ribo", "percent.hb", ".cell_cycle", "S.Score", "G2M.Score")
+      ## ------------- rm redundant/unneeded pheno
+      kk <- c(
+        "nCount_SCT", "nCount_RNA", "nFeature_SCT", "SCT_snn_res.1",
+        "orig.ident", "percent.ribo", "percent.hb", ".cell_cycle", "S.Score", "G2M.Score"
+      )
       Y <- Y[, !colnames(Y) %in% kk, drop = FALSE]
-      
+
       ## ------------ Just to get current samples
       samples <- playbase::selectSamplesFromSelectedLevels(Y, samplefilter())
       X <- X[, samples, drop = FALSE]
@@ -140,7 +143,7 @@ biomarker_plot_featurerank_server <- function(id,
         annot <- annot[match(unique(annot$symbol), annot$symbol), ]
         rownames(annot) <- annot$symbol
       }
-      
+
       for (i in 1:ncol(Y)) {
         if (!interactive()) progress$inc(1 / ncol(Y))
 
@@ -150,11 +153,11 @@ biomarker_plot_featurerank_server <- function(id,
         names(score) <- names(features)
 
         for (j in 1:length(features)) {
-
           pp <- features[[j]]
 
-          if (gene.level)
+          if (gene.level) {
             pp <- playbase::filterProbes(annot, features[[j]])
+          }
 
           sdtop <- 1000
           pp <- head(pp[order(-sdx[pp])], sdtop)
@@ -162,7 +165,10 @@ biomarker_plot_featurerank_server <- function(id,
           X1 <- playbase::rename_by(X, pgx$genes, "symbol")
           pp <- intersect(pp, rownames(X1))
           X1 <- X1[pp, , drop = FALSE]
-          if (nrow(X1) == 0) { score[j]=NA; next }
+          if (nrow(X1) == 0) {
+            score[j] <- NA
+            next
+          }
 
           s1 <- s2 <- 1
           method <- input$clust_featureRank_method
@@ -181,9 +187,14 @@ biomarker_plot_featurerank_server <- function(id,
               {
                 suppressWarnings(limma::eBayes(limma::lmFit(X1[, jj, drop = FALSE], design)))
               },
-              error = function(w) { NA }
+              error = function(w) {
+                NA
+              }
             )
-            if (all(is.na(fit))) { score[j]=NA; next }
+            if (all(is.na(fit))) {
+              score[j] <- NA
+              next
+            }
 
             suppressWarnings(suppressMessages(top <- limma::topTable(fit)))
             s2 <- mean(-log10(1e-99 + top$adj.P.Val), na.rm = TRUE)
@@ -191,23 +202,23 @@ biomarker_plot_featurerank_server <- function(id,
 
           f <- 1
           f <- (1 - exp(-(length(pp) / 20)**2)) ## penalize smaller sets
-          score[j] <- f * (s1 * s2) ** ifelse(method == "meta", 0.5, 1)
+          score[j] <- f * (s1 * s2)**ifelse(method == "meta", 0.5, 1)
         }
 
         S[, i] <- score
-
       }
 
       S[is.na(S)] <- 0
 
       return(S)
-
     })
 
     render_featureRank <- function() {
       S <- calcFeatureRanking()
       c1 <- (is.null(S) || nrow(S) == 0 || ncol(S) == 0)
-      if (c1) return(NULL)
+      if (c1) {
+        return(NULL)
+      }
 
       ## top scoring
       S <- tail(S[order(rowSums(S, na.rm = TRUE)), , drop = FALSE], 25)

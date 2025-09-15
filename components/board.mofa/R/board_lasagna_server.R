@@ -40,12 +40,12 @@ LasagnaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-        "Multi-layer model" = list(disable = c("mpartite_options","gsfilter")),
-        "Multi-partite graph" = list(disable = c("clust_options")),
-        "Multi-type network" = list(disable = c("clust_options"))
+      "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter")),
+      "Multi-partite graph" = list(disable = c("clust_options")),
+      "Multi-type network" = list(disable = c("clust_options"))
     )
 
-    shiny::observeEvent( input$tabs, {
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
@@ -53,124 +53,134 @@ LasagnaBoard <- function(id, pgx) {
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
-    shiny::observeEvent( pgx$mofa, {
-      
-      shiny::validate( shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
-      
-      ## update factors in selectInput
-      ct1 <- colnames(pgx$mofa$contrasts)      
-      ct2 <- colnames(playbase::pgx.getMetaMatrix(pgx)$fc)
-      contrasts <- intersect(ct1, ct2)
-      contrasts <- contrasts[!grepl("^IA",contrasts)]  ## no interaction contrasts
-      updateSelectInput(session, "contrast", choices = contrasts,
-        selected = contrasts[1])
-      
-      datatypes <- setdiff( names(pgx$mofa$xx), c("gset"))
-      datatypes2 <- unique(c(datatypes,"gset"))
-      updateSelectInput(session, "layers", choices = datatypes2,
-        selected = datatypes)
-      
-    }, ignoreNULL=FALSE)
+    shiny::observeEvent(pgx$mofa,
+      {
+        shiny::validate(shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
 
-    lasagna_model <- shiny::eventReactive( {
-      list( input$updateplots, pgx$X ) 
-    }, {
-      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      shiny::validate( shiny::need( pgx$datatype=="multi-omics", "not multi-omics data"))
-      
-      shiny::req(pgx$X)
-      shiny::req(pgx$mofa)
+        ## update factors in selectInput
+        ct1 <- colnames(pgx$mofa$contrasts)
+        ct2 <- colnames(playbase::pgx.getMetaMatrix(pgx)$fc)
+        contrasts <- intersect(ct1, ct2)
+        contrasts <- contrasts[!grepl("^IA", contrasts)] ## no interaction contrasts
+        updateSelectInput(session, "contrast",
+          choices = contrasts,
+          selected = contrasts[1]
+        )
 
-      progress <- shiny::Progress$new(session, min=0, max=1)
-      on.exit(progress$close())
-      
-      ##xdata <- playbase::mofa.split_data(pgx$X)
-      layers <- input$layers
-      add_gsets <- "gset" %in% layers 
-      gsetX <- NULL
-      if(add_gsets) {
-        gsetX  <- pgx$gsetX
-      }
+        datatypes <- setdiff(names(pgx$mofa$xx), c("gset"))
+        datatypes2 <- unique(c(datatypes, "gset"))
+        updateSelectInput(session, "layers",
+          choices = datatypes2,
+          selected = datatypes
+        )
+      },
+      ignoreNULL = FALSE
+    )
 
-      progress$set(message = paste("creating LASAGNA model"), value = 0.33)
-      
-      res <- playbase::lasagna.create_from_pgx(
-        pgx,
-        xdata = NULL,
-        add_gsets = add_gsets,
-        gsetX = gsetX,
-        pheno = "contrasts",
-        ntop = 2000,
-        nc = 20,
-        layers = layers,
-        add.sink = TRUE,
-        intra = TRUE,
-        fully_connect = FALSE,
-        add.revpheno = TRUE
-      )
+    lasagna_model <- shiny::eventReactive(
+      {
+        list(input$updateplots, pgx$X)
+      },
+      {
+        shiny::validate(shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
+        shiny::validate(shiny::need(pgx$datatype == "multi-omics", "not multi-omics data"))
 
-      progress$set(message = paste("computing positions..."), value = 0.33)
+        shiny::req(pgx$X)
+        shiny::req(pgx$mofa)
 
-      layers <- setdiff(res$layers, c("SOURCE","SINK"))
-      posx <- list()
-      posf <- list()
-      k=layers[1]
-      for(k in layers) {
-        ii <- which(igraph::V(res$graph)$layer == k)
-        cx <- res$X[ii,,drop=FALSE]
-        cx <- cx - rowMeans(cx, na.rm=TRUE)
-        sv <- svd(cx, nv=2, nu=2)
-        posx[[k]] <-sv$v[,1:2]
-        posf[[k]] <- sv$u[,1:2]
-        colnames(posf[[k]]) <- c("PC1","PC2")
-        if(input$clustmethod == "umap" && nrow(cx)>10) {
-            nb <- max(min(15, nrow(cx)/3),2)
-            posf[[k]] <- uwot::umap(cx, n_neighbors=nb)
-            colnames(posf[[k]]) <- c("UMAP-x","UMAP-y")
+        progress <- shiny::Progress$new(session, min = 0, max = 1)
+        on.exit(progress$close())
+
+        ## xdata <- playbase::mofa.split_data(pgx$X)
+        layers <- input$layers
+        add_gsets <- "gset" %in% layers
+        gsetX <- NULL
+        if (add_gsets) {
+          gsetX <- pgx$gsetX
         }
-        if(input$clustmethod == "tsne" && nrow(cx)>10) {
-            nb <- max(min(15, nrow(cx)/5),2)
-            posf[[k]] <- Rtsne::Rtsne(cx, check_duplicates=FALSE,
-                                      perplexity=nb)$Y            
-            colnames(posf[[k]]) <- c("tSNE-x","tSNE-y")
+
+        progress$set(message = paste("creating LASAGNA model"), value = 0.33)
+
+        res <- playbase::lasagna.create_from_pgx(
+          pgx,
+          xdata = NULL,
+          add_gsets = add_gsets,
+          gsetX = gsetX,
+          pheno = "contrasts",
+          ntop = 2000,
+          nc = 20,
+          layers = layers,
+          add.sink = TRUE,
+          intra = TRUE,
+          fully_connect = FALSE,
+          add.revpheno = TRUE
+        )
+
+        progress$set(message = paste("computing positions..."), value = 0.33)
+
+        layers <- setdiff(res$layers, c("SOURCE", "SINK"))
+        posx <- list()
+        posf <- list()
+        k <- layers[1]
+        for (k in layers) {
+          ii <- which(igraph::V(res$graph)$layer == k)
+          cx <- res$X[ii, , drop = FALSE]
+          cx <- cx - rowMeans(cx, na.rm = TRUE)
+          sv <- svd(cx, nv = 2, nu = 2)
+          posx[[k]] <- sv$v[, 1:2]
+          posf[[k]] <- sv$u[, 1:2]
+          colnames(posf[[k]]) <- c("PC1", "PC2")
+          if (input$clustmethod == "umap" && nrow(cx) > 10) {
+            nb <- max(min(15, nrow(cx) / 3), 2)
+            posf[[k]] <- uwot::umap(cx, n_neighbors = nb)
+            colnames(posf[[k]]) <- c("UMAP-x", "UMAP-y")
+          }
+          if (input$clustmethod == "tsne" && nrow(cx) > 10) {
+            nb <- max(min(15, nrow(cx) / 5), 2)
+            posf[[k]] <- Rtsne::Rtsne(cx,
+              check_duplicates = FALSE,
+              perplexity = nb
+            )$Y
+            colnames(posf[[k]]) <- c("tSNE-x", "tSNE-y")
+          }
+          rownames(posx[[k]]) <- colnames(res$X)
+          rownames(posf[[k]]) <- rownames(cx)
         }
-        rownames(posx[[k]]) <- colnames(res$X)
-        rownames(posf[[k]]) <- rownames(cx)
-      }
-      res$posf <- posf
-      res$posx <- posx
+        res$posf <- posf
+        res$posx <- posx
 
-      gs <- NULL
-      ii <- which(igraph::V(res$graph)$layer == "gset")
-      if(length(ii)) {
-        gs <- gsub("gset:|:.*|_.*","",igraph::V(res$graph)$name[ii])
-        gs <- names(which(table(gs) >= 3))
-        gs <- c("*",gs)
-      }
-      shiny::updateSelectInput(session, "gsfilter", choices=gs)
+        gs <- NULL
+        ii <- which(igraph::V(res$graph)$layer == "gset")
+        if (length(ii)) {
+          gs <- gsub("gset:|:.*|_.*", "", igraph::V(res$graph)$name[ii])
+          gs <- names(which(table(gs) >= 3))
+          gs <- c("*", gs)
+        }
+        shiny::updateSelectInput(session, "gsfilter", choices = gs)
 
-      return(res)
-    }, ignoreNULL=FALSE)
+        return(res)
+      },
+      ignoreNULL = FALSE
+    )
 
     solved_data <- reactive({
-      
       shiny::req(input$contrast)
 
-      res <- lasagna_model()      
+      res <- lasagna_model()
       pheno <- input$contrast
-      value <- input$node_value      
+      value <- input$node_value
 
-      progress <- shiny::Progress$new(session, min=0, max=1)
+      progress <- shiny::Progress$new(session, min = 0, max = 1)
       on.exit(progress$close())
       progress$set(message = paste("computing connections..."), value = 0.66)
-      
+
       solved <- playbase::lasagna.solve(
         res, pheno,
-        value = value, 
+        value = value,
         min_rho = 0.1,
         max_edges = 1000,
         fc.weight = TRUE,
-        sp.weight = input$sp_weight,        
+        sp.weight = input$sp_weight,
         prune = FALSE
       )
       res$graph <- solved
@@ -179,17 +189,16 @@ LasagnaBoard <- function(id, pgx) {
     })
 
     pruned_data <- reactive({
-      
-      res <- solved_data()      
+      res <- solved_data()
       ntop <- as.integer(input$ntop)
       gsfilter <- NULL
 
-      if(!input$gsfilter %in% c("","*")) {
+      if (!input$gsfilter %in% c("", "*")) {
         gsfilter <- list(gset = input$gsfilter)
       }
 
       edge.sign <- ifelse(input$pos_edges, "pos", "both")
-      
+
       ## prune graph for plotting
       pruned <- playbase::lasagna.prune_graph(
         res$graph,
@@ -199,35 +208,35 @@ LasagnaBoard <- function(id, pgx) {
         normalize.edges = TRUE,
         min.rho = input$minrho,
         edge.sign = edge.sign,
-        edge.type="both",
+        edge.type = "both",
         prune = FALSE
       )
 
       res$graph <- pruned
       return(res)
     })
-    
+
 
     ## ==========================================================================
     ## ========================== BOARD FUNCTIONS ===============================
     ## ==========================================================================
 
-    
+
     ## ==========================================================================
     ## =========================== MODULES ======================================
     ## ==========================================================================
-    
+
     mofa_plot_lasagna3D_server(
       "lasagna",
       data = solved_data,
       pgx = pgx,
       watermark = WATERMARK
     )
-    
+
     mofa_plot_lasagna_clustering_server(
       "clusters",
       data = solved_data,
-      ##pgx = pgx,
+      ## pgx = pgx,
       input_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
@@ -236,7 +245,7 @@ LasagnaBoard <- function(id, pgx) {
       "lasagnaPartite",
       data = pruned_data,
       pgx = pgx,
-      input_nodevalue = reactive(input$node_value),            
+      input_nodevalue = reactive(input$node_value),
       watermark = WATERMARK
     )
 

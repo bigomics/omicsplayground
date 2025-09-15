@@ -4,7 +4,6 @@
 ##
 
 getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
-
   # Default editor content
   volcano_content <- shiny::div(
     class = "popup-modal",
@@ -20,7 +19,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           bslib::accordion_panel(
             "Color Scheme",
             bslib::layout_column_wrap(
-              width = 1/2,
+              width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_up"), "Up",
                 "#f23451"
@@ -36,13 +35,12 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           bslib::accordion_panel(
             "Text sizes",
             bslib::layout_column_wrap(
-              width = 1/2,
+              width = 1 / 2,
               numericInput(ns_parent("label_size"), "Labels", value = 4),
               numericInput(ns_parent("marker_size"), "Points", value = 1),
               numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
             )
           ),
-
           bslib::accordion_panel(
             "Margins",
             checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
@@ -55,7 +53,6 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
             )
           ),
-
           bslib::accordion_panel(
             "Aspect Ratio",
             checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
@@ -101,7 +98,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           bslib::accordion_panel(
             "Labels",
             bslib::layout_column_wrap(
-              width = 1/2,
+              width = 1 / 2,
               numericInput(ns_parent("label_size"), "Label size:", value = 10),
               numericInput(ns_parent("annot_cex"), "Annotation size:", value = 12)
             ),
@@ -118,13 +115,13 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               value = 40,
               min = 10,
               max = 200
-            )            
+            )
           ),
           # Color Scheme
           bslib::accordion_panel(
             "Color Scheme",
             bslib::layout_column_wrap(
-              width = 1/2,
+              width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_high"), "High",
                 "#f23451"
@@ -194,10 +191,12 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             shiny::selectInput(
               ns_parent("bars_order"),
               "Sort bars by:",
-              choices = c("Alphabetical" = "alphabetical",
-                          "Value (ascending)" = "ascending",
-                          "Value (descending)" = "descending",
-                          "Custom (drag & drop)" = "custom"),
+              choices = c(
+                "Alphabetical" = "alphabetical",
+                "Value (ascending)" = "ascending",
+                "Value (descending)" = "descending",
+                "Custom (drag & drop)" = "custom"
+              ),
               selected = "alphabetical"
             ),
             shiny::conditionalPanel(
@@ -228,4 +227,4 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "heatmap" = heatmap_content,
     "barplot" = barplot_content
   )
-} 
+}

@@ -23,7 +23,9 @@ enrichment_plot_volcanoall_ui <- function(
     ),
     withTooltip(
       shiny::radioButtons(ns("n_contrasts"), "Number of contrasts shown:",
-        c("1", "4", "6", "all"), inline = TRUE, selected = "6"),
+        c("1", "4", "6", "all"),
+        inline = TRUE, selected = "6"
+      ),
       "Number of contrasts shown in Volcano plots."
     )
   )
@@ -57,13 +59,11 @@ enrichment_plot_volcanoall_server <- function(id,
                                               calcGsetMeta,
                                               gset_selected,
                                               watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(gs_features())
-      
+
       meta <- pgx$gset.meta$meta
       ctx <- names(meta)[!grepl("^IA:", names(meta))]
 
@@ -79,7 +79,7 @@ enrichment_plot_volcanoall_server <- function(id,
         ctx1 <- ctx1[!is.na(ctx1)]
         ctx1 <- unique(c(sel_ctx, ctx1))
       }
-      
+
       meta <- meta[ctx1]
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
@@ -96,14 +96,14 @@ enrichment_plot_volcanoall_server <- function(id,
       # Calc. meta scores and get Q and FC
       FC <- Q <- P <- vector("list", length(meta))
       names(FC) <- names(Q) <- names(P) <- names(meta)
-      i = 1
+      i <- 1
       for (i in names(meta)) {
         mx <- calcGsetMeta(i, gsmethod, pgx = pgx)
         FC[[i]] <- mx[, "fc", drop = FALSE]
         Q[[i]] <- mx[, "qv", drop = FALSE]
         P[[i]] <- mx[, "pv", drop = FALSE]
       }
-      
+
       # Prepare output matrices
       matF <- do.call(cbind, FC)
       matQ <- do.call(cbind, Q)
@@ -115,8 +115,8 @@ enrichment_plot_volcanoall_server <- function(id,
       if (show_pv()) {
         S <- matP
         title_y <- "Significance (-log10p)"
-      }      
-      
+      }
+
       pd <- list(
         FC = matF,
         S = S,
@@ -139,7 +139,7 @@ enrichment_plot_volcanoall_server <- function(id,
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       title_y <- pd[["title_y"]]
-      
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = F,

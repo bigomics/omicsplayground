@@ -43,9 +43,7 @@ dataview_plot_abundance_server <- function(id,
                                            getCountsTable,
                                            r.samples = reactive(""),
                                            watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
@@ -60,13 +58,14 @@ dataview_plot_abundance_server <- function(id,
     plotly.RENDER <- function(return_csv = FALSE) {
       res <- plot_data()
       shiny::req(res)
-      
-      if (!input$show_overall_prop) {
 
+      if (!input$show_overall_prop) {
         long.data <- reshape2::melt(head(res$prop.counts, 5))
         colnames(long.data) <- c("gene", "sample", "value")
-        if (return_csv) return(long.data)
-        
+        if (return_csv) {
+          return(long.data)
+        }
+
         ## stacked barchart
         fig <-
           plotly::plot_ly(
@@ -93,13 +92,14 @@ dataview_plot_abundance_server <- function(id,
           plotly_default()
         fig
       } else {
-
         avg.prop <- head(rowMeans(res$prop.counts, na.rm = TRUE), 15)
         genes <- head(res$gset.genes, 15)
         family <- paste0(names(avg.prop), "  ")
         family <- factor(family, levels = family)
         df <- data.frame(family = family, prop = avg.prop, genes = genes)
-        if (return_csv) return(df)
+        if (return_csv) {
+          return(df)
+        }
 
         ## stacked barchart
         fig <-
@@ -127,9 +127,8 @@ dataview_plot_abundance_server <- function(id,
           plotly_default()
         fig
       }
-
     }
-    
+
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER() %>%
         plotly_modal_default() %>%

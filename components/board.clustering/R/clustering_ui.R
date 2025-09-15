@@ -9,8 +9,10 @@ ClusteringInputs <- function(id) {
   topmodes <- c("sd", "pca", "marker")
 
   settings_items1 <- tagList(
-    withTooltip(shiny::selectInput(ns("hm_level"), "Level:",
-      choices = c("gene", "geneset")),
+    withTooltip(
+      shiny::selectInput(ns("hm_level"), "Level:",
+        choices = c("gene", "geneset")
+      ),
       "Specify the level analysis: gene or geneset level."
     ),
     shiny::hr(),
@@ -36,8 +38,10 @@ ClusteringInputs <- function(id) {
     ),
     ## ----- level ----
     shiny::hr(),
-    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:",
-      choices = NULL, multiple = TRUE),
+    withTooltip(
+      shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:",
+        choices = NULL, multiple = TRUE
+      ),
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
@@ -74,12 +78,14 @@ ClusteringInputs <- function(id) {
             placement = "bottom"
           )
         ),
-        ## ----- extra filters ----        
-        withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
+        ## ----- extra filters ----
+        withTooltip(
+          shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
           "Exclude genes on X/Y chromosomes."
         ),
         withTooltip(
-          shiny::checkboxInput( ns("hm_filterMitoRibo"),
+          shiny::checkboxInput(
+            ns("hm_filterMitoRibo"),
             tspan("exclude mito/ribo genes"), FALSE
           ),
           "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes."

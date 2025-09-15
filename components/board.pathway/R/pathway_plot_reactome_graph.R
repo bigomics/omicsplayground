@@ -71,7 +71,7 @@ functional_plot_reactome_graph_server <- function(id,
         )
         return(res)
       }
-      
+
       get_image <- shiny::reactive({
         res <- plot_data()
         shiny::req(res, res$df)
@@ -106,12 +106,14 @@ functional_plot_reactome_graph_server <- function(id,
         pathway.id <- df[sel.row, "reactome.id"]
         pathway.name <- df[sel.row, "pathway"]
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
-        
+
         ## folder with predownloaded SBGN files
         # sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
         # sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         imgfile <- playbase::getReactomeSVG(
-          pathway.id, val=fc, as.img=TRUE)
+          pathway.id,
+          val = fc, as.img = TRUE
+        )
 
         return(imgfile)
       })

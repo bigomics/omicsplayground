@@ -5,14 +5,13 @@ TimeSeriesBoard.enrichment_table_ui <- function(
     info.text = "Table of enriched genesets. Table reporting the genesets along with the correlation value (rho) and the p.value. ",
     caption = "Table of enriched genesets. Table reporting the genesets along with the correlation value (rho) and the p.value. ",
     height = c("40%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
-  
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
-    #options = options,
+    # options = options,
     height = height,
     caption = caption,
     width = width,
@@ -32,10 +31,9 @@ TimeSeriesBoard.enrichment_lolliplot_ui <- function(
     info.references = list(),
     info.extra_link = "extra.link",
     height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
-    
+
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
@@ -57,84 +55,83 @@ TimeSeriesBoard.enrichment_server <- function(id,
                                               data,
                                               select_module,
                                               watermark = FALSE) {
-  
   moduleServer(id, function(input, output, session) {
-
-    ##-----------------------------------------------------
-    ##----------------------- Data -----------------------
-    ##-----------------------------------------------------
+    ## -----------------------------------------------------
+    ## ----------------------- Data -----------------------
+    ## -----------------------------------------------------
 
     gset_data <- function() {
       k <- select_module()
       shiny::req(k)
       res <- data()
       gset.rho <- res$gset.rho
-      if(is.null(gset.rho)) {
-        df <- data.frame( geneset = "", rho = 1, p.value=1 )[0,]        
+      if (is.null(gset.rho)) {
+        df <- data.frame(geneset = "", rho = 1, p.value = 1)[0, ]
         return(df)
       }
-      
-      rho <- res$gset.rho[,k]
+
+      rho <- res$gset.rho[, k]
       names(rho) <- rownames(gset.rho)
 
-      rho <- sort(rho, decreasing=TRUE)      
-      pv <- playbase::cor.pvalue(rho, ncol(pgx$X))      
-      df <- data.frame( geneset = names(rho), rho = rho, p.value=pv )
+      rho <- sort(rho, decreasing = TRUE)
+      pv <- playbase::cor.pvalue(rho, ncol(pgx$X))
+      df <- data.frame(geneset = names(rho), rho = rho, p.value = pv)
       return(df)
     }
-    
-    ##-----------------------------------------------------
-    ##----------------------- Plot -----------------------
-    ##-----------------------------------------------------
-    
-    render_plot <- function(nshort=60, ntop=12, cex=0.85) {
+
+    ## -----------------------------------------------------
+    ## ----------------------- Plot -----------------------
+    ## -----------------------------------------------------
+
+    render_plot <- function(nshort = 60, ntop = 12, cex = 0.85) {
       library(ggplot2)
       library(plotly)
       df <- gset_data()
-      shiny::validate(shiny::need(nrow(df)>0, "no genesets"))
-      
-      sel <- table_module$rows_all()      
+      shiny::validate(shiny::need(nrow(df) > 0, "no genesets"))
+
+      sel <- table_module$rows_all()
       shiny::req(sel)
-      
+
       order1 <- order(df$rho[sel])
-      sel <- sel[c(head(order1,ntop), tail(order1,ntop))]
-      top <- df[sel,]
+      sel <- sel[c(head(order1, ntop), tail(order1, ntop))]
+      top <- df[sel, ]
       values <- top$rho
-      names(values) <- playbase::shortstring(top$geneset,nshort)
+      names(values) <- playbase::shortstring(top$geneset, nshort)
       ## sizes <- rowSums(pgx$GMT[,names(values)]!=0)
-      playbase::ggLollipopPlot(values, sizes = NULL, xlab = "value",
-        cex.text = cex) 
+      playbase::ggLollipopPlot(values,
+        sizes = NULL, xlab = "value",
+        cex.text = cex
+      )
     }
 
     render_plot.modal <- function() {
-      render_plot(nshort=120, ntop=18, cex=1)
+      render_plot(nshort = 120, ntop = 18, cex = 1)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = render_plot,
-      func2 = render_plot,      
+      func2 = render_plot,
       plotlib = "base",
-      ##csvFunc = gset_data, ##  *** downloadable data as CSV
+      ## csvFunc = gset_data, ##  *** downloadable data as CSV
       res = c(72, 110), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
       add.watermark = watermark
     )
 
-    ##-----------------------------------------------------
-    ##----------------------- Table -----------------------
-    ##-----------------------------------------------------
+    ## -----------------------------------------------------
+    ## ----------------------- Table -----------------------
+    ## -----------------------------------------------------
 
     render_table <- function() {
-
       df <- gset_data()
       shiny::req(df)
 
       dbg("[TimeSeriesBoard.enrichment_server:render_table] dim(df) =", dim(df))
-      shiny::validate(shiny::need(nrow(df)>0, "no genesets"))      
-      
-      numeric.cols <- c("rho","p.value")
+      shiny::validate(shiny::need(nrow(df) > 0, "no genesets"))
+
+      numeric.cols <- c("rho", "p.value")
       DT::datatable(
         df,
         rownames = FALSE,
@@ -172,6 +169,5 @@ TimeSeriesBoard.enrichment_server <- function(id,
       func = render_table,
       selector = "none"
     )
-    
   }) ## end of moduleServer
 }

@@ -39,7 +39,7 @@ CorrelationInputs <- function(id) {
         withTooltip(
           shiny::radioButtons(ns("pcor_ntop"), tspan("Nr. of genes to compute partial correlation."),
             c(50, 100, 250),
-        selected = 100, inline = TRUE
+            selected = 100, inline = TRUE
           ),
           "Number of top genes to compute partial correlation",
           placement = "top"

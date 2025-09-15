@@ -13,7 +13,6 @@ mofa_plot_snf_ui <- function(
     label = "",
     height = 400,
     width = 400) {
-  
   ns <- shiny::NS(id)
 
   options <- tagList(
@@ -34,7 +33,7 @@ mofa_plot_snf_ui <- function(
       )
     )
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -54,9 +53,7 @@ mofa_plot_snf_server <- function(id,
                                  mofa,
                                  pgx_samples,
                                  watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     observeEvent(mofa(), {
       res <- mofa()
       phenos <- colnames(res$samples)
@@ -72,30 +69,31 @@ mofa_plot_snf_server <- function(id,
       res <- mofa()
       pgx_samples <- pgx_samples()
       snf <- res$snf
-      validate(need(!is.null(res), "missing MOFA data."))          
+      validate(need(!is.null(res), "missing MOFA data."))
       type <- input$type
-      
+
       if (type == "Affinity matrix") {
-        par(mfrow = c(2,2), mar = c(6,1,2,8))
+        par(mfrow = c(2, 2), mar = c(6, 1, 2, 8))
         ndim <- ncol(snf$affinityMatrix[[1]])
-        if (ndim > 20) par(mar = c(3,1,2,4))
+        if (ndim > 20) par(mar = c(3, 1, 2, 4))
         nmat <- length(snf$affinityMatrix) + 1
-        if (nmat > 4) par(mfrow = c(3,3)) 
-        playbase::snf.plot_affinity(snf, k = 0.5, par = FALSE) 
+        if (nmat > 4) par(mfrow = c(3, 3))
+        playbase::snf.plot_affinity(snf, k = 0.5, par = FALSE)
       }
 
       if (type == "t-SNE") {
         ph <- input$tsne_colorby
         cc <- factor(pgx_samples[, ph])
-        par(mfrow = c(2,2), mar = c(5,5,2,1))
-        i = 1
+        par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
+        i <- 1
         for (i in 1:length(snf$posx)) {
-          plot(snf$posx[[i]], col = cc, pch = 19, cex = 1,
-               xlab = "tSNE 1", ylab = "tSNE 2", las = 1)
+          plot(snf$posx[[i]],
+            col = cc, pch = 19, cex = 1,
+            xlab = "tSNE 1", ylab = "tSNE 2", las = 1
+          )
           title(names(snf$posx)[i], cex.main = 1.4)
         }
       }
-
     }
 
     PlotModuleServer(
@@ -105,6 +103,5 @@ mofa_plot_snf_server <- function(id,
       res = c(80, 100),
       add.watermark = watermark
     )
-    
   })
 }

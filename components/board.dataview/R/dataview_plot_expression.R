@@ -56,9 +56,7 @@ dataview_plot_expression_server <- function(id,
                                             r.data_type = reactive("counts"),
                                             r.data_groupby = reactive("<ungrouped>"),
                                             watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
@@ -69,14 +67,21 @@ dataview_plot_expression_server <- function(id,
       groupby <- r.data_groupby()
       xgenes <- rownames(pgx$X)
 
-      if (samples[1] == "") return(NULL)
-      if (gene == "") return(NULL)
-      if (!gene %in% xgenes) return(NULL)
-        
+      if (samples[1] == "") {
+        return(NULL)
+      }
+      if (gene == "") {
+        return(NULL)
+      }
+      if (!gene %in% xgenes) {
+        return(NULL)
+      }
+
       grpvar <- 1
       grp <- rep(NA, length(samples))
-      if (groupby != "<ungrouped>")
+      if (groupby != "<ungrouped>") {
         grp <- factor(as.character(pgx$samples[samples, groupby]))
+      }
 
       # Req to avoid error on dataset change
       shiny::req(length(grp) == length(samples))
@@ -91,7 +96,7 @@ dataview_plot_expression_server <- function(id,
         gx[which(is.na(gx))] <- 0
         ylab <- tspan("Counts (log2)", js = FALSE)
       }
-      
+
       pd <- list(
         df = data.frame(x = gx, samples = samples, group = grp),
         geneplot_type = input$geneplot_type,
@@ -101,7 +106,6 @@ dataview_plot_expression_server <- function(id,
       )
 
       return(pd)
-
     })
 
     output$rank_list <- renderUI({
@@ -144,8 +148,9 @@ dataview_plot_expression_server <- function(id,
       if (input$show_imputed_values) {
         counts.values <- pgx$counts[unique(pd$gene), df$samples]
         x.values <- pgx$X[unique(pd$gene), df$samples]
-        if (any(is.na(counts.values)) && !any(is.na(x.values)))
+        if (any(is.na(counts.values)) && !any(is.na(x.values))) {
           points.color[which(is.na(counts.values))] <- "#C1C1C1"
+        }
       }
 
       if (pd$groupby != "<ungrouped>") {
@@ -158,7 +163,7 @@ dataview_plot_expression_server <- function(id,
         data_mean <- tapply(df$x, df$group, mean)
         data_sd <- tapply(df$x, df$group, sd)
         data <- data.frame(group = names(data_mean), mean = data_mean, sd = data_sd)
-        
+
         if (!is.null(input$bars_order)) {
           if (input$bars_order == "ascending") {
             data$group <- reorder(data$group, data$mean)
@@ -166,10 +171,10 @@ dataview_plot_expression_server <- function(id,
           } else if (input$bars_order == "descending") {
             data$group <- reorder(data$group, -data$mean)
             df$group <- reorder(df$group, -df$x)
-          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) && 
-                    all(input$rank_list_basic %in% unique(data$group))) {
+          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) &&
+            all(input$rank_list_basic %in% unique(data$group))) {
             data$group <- factor(data$group, levels = valid_ranks)
-            df$group <- factor(df$group, levels = valid_ranks) 
+            df$group <- factor(df$group, levels = valid_ranks)
           }
         }
 
@@ -181,7 +186,7 @@ dataview_plot_expression_server <- function(id,
             data = data, x = ~group, y = ~mean, type = "bar",
             name = pd$gene, error_y = ~ list(array = sd, color = "#000000"),
             marker = list(color = input$bar_color)
-          )          
+          )
           fig <- fig %>% plotly::add_markers(
             x = df$group, y = df$x,
             type = "scatter", showlegend = FALSE,
@@ -199,7 +204,7 @@ dataview_plot_expression_server <- function(id,
           fig <- fig %>%
             plotly::add_trace(
               data = df, x = ~group, y = ~x,
-              type = 'scatter', mode = 'markers',
+              type = "scatter", mode = "markers",
               marker = list(color = ~points.color, size = 8),
               showlegend = FALSE, inherit = FALSE
             ) %>%
@@ -221,17 +226,18 @@ dataview_plot_expression_server <- function(id,
             df <- df[order(df$x), ]
           } else if (input$bars_order == "descending") {
             df <- df[order(-df$x), ]
-          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) && 
-                    all(input$rank_list_basic %in% unique(df$samples))) {
+          } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) &&
+            all(input$rank_list_basic %in% unique(df$samples))) {
             df$samples <- factor(df$samples, levels = input$rank_list_basic)
             df <- df[order(df$samples), ]
           }
           df$samples <- factor(df$samples, levels = df$samples)
         }
 
-        points.color[which(points.color=="black")] <- input$bar_color 
+        points.color[which(points.color == "black")] <- input$bar_color
         fig <- plotly::plot_ly(
-          df, x = ~samples, y = ~x,
+          df,
+          x = ~samples, y = ~x,
           type = "bar", name = pd$gene,
           marker = list(color = points.color),
           hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"

@@ -26,8 +26,8 @@ wgcna_plot_MTrelationships_ui <- function(
     options = options,
     height = height,
     width = width,
-    # FIXME png and pdf is not working, to avoid crash, we decided to remove it    
-    download.fmt = c("png","pdf","csv","svg")
+    # FIXME png and pdf is not working, to avoid crash, we decided to remove it
+    download.fmt = c("png", "pdf", "csv", "svg")
   )
 }
 
@@ -35,19 +35,22 @@ wgcna_plot_MTrelationships_server <- function(id,
                                               wgcna.compute,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       res <- wgcna.compute()
       playbase::wgcna.plotModuleTraitHeatmap(
-        res, setpar=FALSE, cluster=input$cluster,
-        justdata = TRUE) 
+        res,
+        setpar = FALSE, cluster = input$cluster,
+        justdata = TRUE
+      )
     }
-    
+
     RENDER <- function() {
       res <- wgcna.compute()
       par(mar = c(6, 8, 1, 0.4))
       playbase::wgcna.plotModuleTraitHeatmap(
-        res, setpar=FALSE, cluster=input$cluster, main='') 
+        res,
+        setpar = FALSE, cluster = input$cluster, main = ""
+      )
     }
 
     PlotModuleServer(

@@ -13,7 +13,7 @@ mofa_plot_factorcorheatmap_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -27,15 +27,16 @@ mofa_plot_factorcorheatmap_ui <- function(
 }
 
 mofa_plot_factorcorheatmap_server <- function(id,
-                                           mofa,
-                                           watermark = FALSE) {
+                                              mofa,
+                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
       shiny::req(mofa())
-      par(mar=c(6,5,2,1))    
+      par(mar = c(6, 5, 2, 1))
       playbase::mofa.plot_factor_corheatmap(
-        mofa(), main=NULL, marx=0.8, cexRow=1.3, cexCol=1.3) 
+        mofa(),
+        main = NULL, marx = 0.8, cexRow = 1.3, cexCol = 1.3
+      )
     }
 
     PlotModuleServer(
@@ -45,7 +46,5 @@ mofa_plot_factorcorheatmap_server <- function(id,
       res = c(70, 110),
       add.watermark = watermark
     )
-
-    
   })
 }
