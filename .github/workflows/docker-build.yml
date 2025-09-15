@@ -24,12 +24,11 @@ on:
         required: true
         type: boolean
         default: true
-  workflow_run:
-    workflows: ["update OPG version"]
-    types:
-      - completed
+  push:
     branches:
       - master
+    paths:
+      - VERSION
 
 jobs:
 
