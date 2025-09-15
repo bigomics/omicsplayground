@@ -184,7 +184,7 @@ opt.default <- list(
   APACHE_COOKIE_PATH = OPG,
   ALLOW_CUSTOM_FC = FALSE,
   DEVMODE = FALSE,
-  ENABLE_MULTIOMICS = FALSE
+  ENABLE_MULTIOMICS = TRUE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
