@@ -50,7 +50,7 @@ clustering_table_clustannot_server <- function(
       rho <- getClustAnnotCorrelation()
       rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
-      rownames(df) <- rownames(rho)
+      rownames(df) <- make.unique(rownames(rho))
       return(df)
     })
 
