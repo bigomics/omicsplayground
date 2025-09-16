@@ -146,7 +146,7 @@ clustering_plot_clusterannot_server <- function(id,
         names(x) <- sub(".*:", "", names(x))
         names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
         y <- names(x)
-        y <- factor(y, levels = y)
+        y <- factor(y, levels = unique(y))
         anntitle <- function(tt) {
           list(
             x = 0.5, y = 1.0,
