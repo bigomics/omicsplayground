@@ -14,7 +14,8 @@ wgcna_table_genes_ui <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("showpvalues"),"Show p-values", FALSE)
+    shiny::checkboxInput(ns("showpvalues"),"Show p-values", FALSE),
+    shiny::checkboxInput(ns("showall"),"Show all modules", FALSE)
   )
   
   TableModuleUI(
@@ -60,8 +61,12 @@ wgcna_table_genes_server <- function(id,
       if(input$showpvalues==FALSE) {
         df <- df[, grep("pvalue", colnames(df), invert=TRUE, ignore.case=TRUE), drop=FALSE]
       }
+
       ## only those in module
-      df <- df[ which(df$module == module), , drop=FALSE ]      
+      if(!input$showall) {
+        df <- df[ which(df$module == module), , drop=FALSE ]
+      }
+
       numeric.cols <- grep("^module$|symbol|feature", colnames(df), invert=TRUE)
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
       colnames(df) <- sub("traitSignificance","TS",colnames(df))
@@ -92,7 +97,15 @@ wgcna_table_genes_server <- function(id,
         ) 
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
-        DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "10px", lineHeight = "70%") %>%
+        DT::formatStyle(
+          "score",
+          background = color_from_middle(df$score, "lightblue", "#f5aeae"),
+          backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center"
+        ) 
+
+
     }
 
     RENDER_modal <- function() {

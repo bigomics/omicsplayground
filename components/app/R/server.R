@@ -235,7 +235,7 @@ app_server <- function(input, output, session) {
       bigdash.hideMenuElement(session, "GeneSets")
       bigdash.hideMenuElement(session, "Compare")
       bigdash.hideMenuElement(session, "SystemsBio")
-      bigdash.hideMenuElement(session, "MultiOmics (beta)")
+      bigdash.hideMenuElement(session, "MultiOmics")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -285,7 +285,7 @@ app_server <- function(input, output, session) {
         lapply(names(MODULE.multiomics$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
-        bigdash.hideMenuElement(session, "MultiOmics (beta)")
+        bigdash.hideMenuElement(session, "MultiOmics")
         loaded$multiomics <- 0
       }
     })
@@ -396,7 +396,7 @@ app_server <- function(input, output, session) {
             info("[SERVER] initializing MultiOmics module")
             mod <- MODULE.multiomics
             insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "MultiOmics (beta)")
+            bigdash.showMenuElement(session, "MultiOmics")
             lapply(names(MODULE.multiomics$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
@@ -511,7 +511,8 @@ app_server <- function(input, output, session) {
       loaded$systems <- 1
       tab_control()
     }
-    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
+    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab",
+      "mwgcna-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
