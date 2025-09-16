@@ -266,6 +266,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           return(NULL)
         }
 
+        # Ensure that the genes are in X
+        pp <- intersect(pp, rownames(pgx$X))
+
         if (length(pp) == 0) {
           warning("[getFilteredMatrix] warning: no genes overlap with filter")
           return(NULL)
