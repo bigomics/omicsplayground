@@ -448,6 +448,9 @@ SignatureBoard <- function(id, pgx,
       fc <- meta$fc
       qv <- meta$qv
 
+      # Filter features
+      features <- features[features %in% rownames(fc)]
+
       # Get contrasts, FC, and gene info
       fc <- fc[features, contr]
       qv <- qv[features, contr]
