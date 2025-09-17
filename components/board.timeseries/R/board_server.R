@@ -57,6 +57,11 @@ TimeSeriesBoard <- function(id,
       ## set time variable
       vars <- sort(colnames(pgx$samples))
       timevars <- unique(c(grep(playbase::get_timevars(), vars, value = TRUE, ignore.case = TRUE), vars))
+      ## filter timevars to only include those with more than 1 unique value
+      valid_timevars <- timevars[sapply(timevars, function(var) {
+        var %in% colnames(pgx$samples) && length(unique(pgx$samples[, var])) > 1
+      })]
+      timevars <- valid_timevars
       shiny::updateSelectInput(session, "timevar", choices = timevars, selected = timevars[1])
 
       ## set available contrasts
