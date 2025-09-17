@@ -30,6 +30,12 @@ on:
     paths:
       - VERSION
 
+  pull_request:
+    branches:
+      - master
+    paths:
+      - VERSION
+
 jobs:
 
   build:
