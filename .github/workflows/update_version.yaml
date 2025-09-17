@@ -37,11 +37,15 @@ jobs:
             # Set as environment variable for next steps
             echo "NEW_VERSION=$BUILD" >> $GITHUB_ENV
 
-      - name: Commit and push version changes
+      - name: Update changelog
+        run: |
+            make changelog
+
+      - name: Commit and push version changes + changelog
         run: |
             git config --local user.name "$GITHUB_ACTOR"
             git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-            git add VERSION
+            git add VERSION FEATURES.md CHANGELOG.md CHANGELOG-full.md CHANGELOG-pr.md 
             git commit -m "Update version to $NEW_VERSION"
             git pull --ff-only
             git push origin
@@ -52,3 +56,11 @@ jobs:
             git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
             git tag $NEW_VERSION
             git push origin $NEW_VERSION
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$NEW_VERSION" \
+            --title "Release $NEW_VERSION" \
+            --notes-file FEATURES.md
