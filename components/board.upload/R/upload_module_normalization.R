@@ -853,6 +853,7 @@ upload_module_normalization_server <- function(
                 options = norm.options,
                 info.text = normalization.infotext,
                 height = c("auto", "100%"),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#normalization",
                 show.maximize = FALSE
               ),
               PlotModuleUI(
@@ -862,6 +863,7 @@ upload_module_normalization_server <- function(
                 caption = score.infotext,
                 options = outlier.options,
                 height = c("auto", "100%"),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#identification-of-outlier-samples",
                 show.maximize = FALSE
               ),
               PlotModuleUI(
@@ -870,6 +872,7 @@ upload_module_normalization_server <- function(
                 options = bec.options,
                 info.text = batcheff.infotext,
                 height = c("auto", "100%"),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction",
                 show.maximize = FALSE
               )
             )
