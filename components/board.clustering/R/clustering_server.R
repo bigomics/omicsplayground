@@ -390,6 +390,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         grp <- pgx$contrasts[colnames(zx), splitvar]
       }
 
+      shiny::validate(
+        shiny::need(is.null(grp) || any(!is.na(grp)), "Selected grouping and filter combination is not valid (no samples left).")
+      )
+
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
         gx <- pgx$X[1, ]
