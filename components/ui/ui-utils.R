@@ -506,3 +506,19 @@ create_loader <- function(id) {
     )
   )
 }
+
+clean_custom_features <- function(features) {
+  # Remove quotes and clean up the features string
+  features <- gsub("['\"]", "", features)
+
+  # Split by common separators and clean each feature
+  feature_list <- strsplit(features, "[,;\n\t]+")[[1]]
+
+  # Trim whitespace and remove empty strings
+  feature_list <- trimws(feature_list)
+  feature_list <- feature_list[feature_list != ""]
+
+  # Rejoin with commas
+  features <- paste(feature_list, collapse = ", ")
+  return(features)
+}
