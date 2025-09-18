@@ -239,8 +239,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           }
           # heatmap does not like single gene
           shiny::validate(shiny::need(
-            length(gg1) > 1 && !is.regex,
-            tspan("Please input more than 1 gene.", js = FALSE)
+            length(gg1) > 1 && !is.regex && sum(gg1 %in% genes) > 1,
+            tspan("Please input more than 1 valid gene.", js = FALSE)
           ))
 
           ## build index idx that determines groups/cluster of genes.
