@@ -290,9 +290,12 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
       if ("<custom>" %in% sel) {
         custum.genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+        if (length(custum.genes) == 0) {
+          custum.genes <- c()
+        }
         if (length(custum.genes) > 0) {
           custum.probes <- playbase::map_probes(pgx$genes, custum.genes)
-          filtprobes <- c(custom.probes, filtprobes)
+          filtprobes <- c(custum.probes, filtprobes)
         }
       }
       filtprobes
