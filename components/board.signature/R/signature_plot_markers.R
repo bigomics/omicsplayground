@@ -207,6 +207,8 @@ signature_plot_markers_server <- function(id,
       shiny::req(res)
 
       features <- markers$features
+      # make sure features are in pgx$X
+      features <- intersect(features, rownames(pgx$X))
       gx <- pgx$X[features, , drop = FALSE]
       if (nrow(gx) == 0) {
         cat("WARNING:: Markers:: markers do not match!!\n")
