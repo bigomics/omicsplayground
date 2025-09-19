@@ -93,20 +93,21 @@ WgcnaBoard <- function(id, pgx) {
       } else {
         out <- compute_wgcna()
       }
+      out
+    })
 
+    shiny::observeEvent(wgcna(), {
       ## update Inputs
-      me <- sort(names(out$me.genes))
+      me <- sort(names(wgcna()$me.genes))
       shiny::updateSelectInput(session, "selected_module",
         choices = me,
         sel = me[1]
       )
-      tt <- sort(colnames(out$datTraits))
+      tt <- sort(colnames(wgcna()$datTraits))
       shiny::updateSelectInput(session, "selected_trait",
         choices = tt,
         selected = tt[1]
       )
-
-      out
     })
 
     shiny::observeEvent(input$compute,
