@@ -28,6 +28,10 @@ upload_table_preview_samples_server <- function(
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
+      vars_selected <- vars_selected()
+      vars_selected <- intersect(vars_selected, colnames(dt))
+      dt <- dt[, vars_selected, drop = FALSE]
+      uploaded$samples.csv <- dt
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXSHOW <- 100
@@ -43,10 +47,6 @@ upload_table_preview_samples_server <- function(
         n1 <- ncol0 - MAXSHOW
         colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
       }
-      vars_selected <- vars_selected()
-      vars_selected <- intersect(vars_selected, colnames(dt))
-      dt <- dt[, vars_selected, drop = FALSE]
-      uploaded$samples.csv <- dt
       loaded_samples(TRUE)
       dt
     })
