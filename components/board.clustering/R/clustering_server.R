@@ -214,7 +214,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         gsets <- unique(gset_collections[[ft]])
         zx <- pgx$gsetX
         if (input$hm_customfeatures != "") {
-          gsets1 <- genesets[grep(input$hm_customfeatures, genesets, ignore.case = TRUE)]
+          customfeatures <- clean_custom_features(input$hm_customfeatures)
+          gsets1 <- genesets[grep(customfeatures, genesets, ignore.case = TRUE)]
           if (length(gsets1) > 2) gsets <- gsets1
         }
         zx <- zx[intersect(gsets, rownames(zx)), ]
@@ -230,7 +231,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         } else if (ft %in% names(pgx$families)) {
           pp <- playbase::map_probes(pgx$genes, pgx$families[[ft]])
         } else if (ft == "<custom>" && ft != "") {
-          customfeatures <- input$hm_customfeatures
+          customfeatures <- clean_custom_features(input$hm_customfeatures)
           gg1 <- strsplit(customfeatures, split = "[, ;\n\t]")[[1]]
           is.regex <- grepl("[*?\\[]", gg1[1])
           if (length(gg1) == 1 && is.regex) {
@@ -238,8 +239,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           }
           # heatmap does not like single gene
           shiny::validate(shiny::need(
-            length(gg1) > 1 && !is.regex,
-            tspan("Please input more than 1 gene.", js = FALSE)
+            length(gg1) > 1 && !is.regex && sum(gg1 %in% genes) > 1,
+            tspan("Please input more than 1 valid gene.", js = FALSE)
           ))
 
           ## build index idx that determines groups/cluster of genes.
@@ -389,6 +390,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (do.split && splitvar %in% colnames(pgx$contrasts)) {
         grp <- pgx$contrasts[colnames(zx), splitvar]
       }
+
+      shiny::validate(
+        shiny::need(is.null(grp) || any(!is.na(grp)), "Selected grouping and filter combination is not valid (no samples left).")
+      )
 
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {

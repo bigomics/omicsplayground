@@ -41,7 +41,8 @@ wgcna_plot_gene_heatmap_server <- function(id,
       gg <- strsplit(data$genes[sel], split = "\\|")[[1]]
       pp <- playbase::map_probes(pgx$genes, gg)
       pp <- intersect(pp, rownames(pgx$X))
-      df <- pgx$X[pp, ]
+      df <- pgx$X[pp, , drop = FALSE]
+      shiny::validate(shiny::need(nrow(df) > 1, "Geneset should contain at least two genes to plot a heatmap."))
       rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
       playbase::gx.splitmap(
         df,

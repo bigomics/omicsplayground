@@ -421,7 +421,6 @@ upload_module_normalization_server <- function(
 
           if (input$missing_plottype == "ratio plot") {
             if (any(X2 > 0)) {
-              ## NA ratio plot
               par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
               x.avg <- rowMeans(X1, na.rm = TRUE)
               x.nar <- rowMeans(is.na(X0))
@@ -430,10 +429,28 @@ upload_module_normalization_server <- function(
               aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
               barplot(rbind(x.nar2, 1 - x.nar2),
                 beside = FALSE, names.arg = aa, las = 1,
-                xlab = "average intensity (log2)", ylab = "missing value ratio"
-              )
+                xlab = "average intensity (log2)", ylab = "missing value ratio")
               title("missingness vs. average intensity")
             } else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")
+            }
+          }
+
+          if (input$missing_plottype == "missingness per sample") {
+            if (any(X2 > 0)) {
+              par(mfrow = c(1,1), mar = c(5, 5, 2, 2), mgp = c(2.5, 0.75, 0))
+              X3 <- imputedX()$X
+              pct.na <- colMeans(is.na(X3))*100
+              bp <- barplot(pct.na, col = "grey", xaxt = "n",
+                ylab = "Missing %", ylim = c(0, max(pct.na)+10),
+                cex.lab = 1.5, las = 2)
+              text(x = bp, y = par("usr")[3] - 0.02 * diff(par("usr")[3:4]),
+                labels = names(pct.na), srt = 45, adj = 1, xpd = TRUE, cex = 1)
+              title("missingness per sample"); grid()
+              rm(X3)
+            }
+            else {
               plot.new()
               text(0.5, 0.5, "no missing values")
             }
@@ -656,8 +673,11 @@ upload_module_normalization_server <- function(
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
         missing.options <- tagList(
-          shiny::radioButtons(ns("missing_plottype"), "Plot type:", c("heatmap", "ratio plot"),
-            selected = "heatmap", inline = TRUE
+          shiny::radioButtons(ns("missing_plottype"),
+            "Plot type:",
+            c("heatmap", "ratio plot", "missingness per sample"),
+            selected = "heatmap",
+            inline = TRUE
           ),
         )
 
