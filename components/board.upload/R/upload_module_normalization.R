@@ -445,8 +445,9 @@ upload_module_normalization_server <- function(
               bp <- barplot(pct.na, col = "grey", xaxt = "n",
                 ylab = "Missing %", ylim = c(0, max(pct.na)+10),
                 cex.lab = 1.5, las = 2)
+              cex <- max(0.7, min(1.5, 5 / ncol(X3)))
               text(x = bp, y = par("usr")[3] - 0.02 * diff(par("usr")[3:4]),
-                labels = names(pct.na), srt = 45, adj = 1, xpd = TRUE, cex = 1)
+                labels = names(pct.na), srt = 45, adj = 1, xpd = TRUE, cex = cex)
               title("missingness per sample"); grid()
               rm(X3)
             }
@@ -455,6 +456,32 @@ upload_module_normalization_server <- function(
               text(0.5, 0.5, "no missing values")
             }
           }
+
+          if (input$missing_plottype == "missingness across features") {
+            if (any(X2 > 0)) {
+              par(mfrow = c(1,1), mar = c(2, 3.5, 2, 2), mgp = c(2.5, 0.75, 0))
+              X3 <- imputedX()$X
+              pct.na <- round(rowMeans(is.na(X3))*100)
+              hh <- hist(pct.na, xlim = c(0, 100), col = "grey", main = "",
+                las = 1, tcl = -0.1, mgp = c(2.5, 0.5, 0), yaxs="i",
+                xlab = "Missingness across features (%)", ylab = "Number of features")
+              abline(v = mean(pct.na), col = "red")
+              abline(v = median(pct.na), col = "blue")
+              xpos <- 90
+              ypos <- max(hh$counts) * 0.95
+              lab1 <- paste0("Mean: ", round(mean(pct.na)), "%")
+              lab2 <- paste0("Median: ", round(median(pct.na)), "%")
+              text(xpos, ypos, labels = lab1, col = "red")
+              text(xpos, ypos-(ypos*8/100), labels = lab2, col = "blue")
+              title("Distribution of missing values across features"); grid()
+              rm(X3)
+            }
+            else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")
+            }
+          }
+
         }
       }
 
@@ -675,7 +702,7 @@ upload_module_normalization_server <- function(
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"),
             "Plot type:",
-            c("heatmap", "ratio plot", "missingness per sample"),
+            c("heatmap", "ratio plot", "missingness per sample", "missingness across features"),
             selected = "heatmap",
             inline = TRUE
           ),
