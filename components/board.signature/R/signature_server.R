@@ -267,7 +267,7 @@ SignatureBoard <- function(id, pgx,
         shiny::withProgress(message = "Computing GSEA ...", value = 0.8, {
           res <- lapply(1:ncol(F), function(i) {
             set.seed(123)
-            shiny::validate(shiny::need(gmt$gset %in% names(F[, i]), "Signature features not found in the dataset."))
+            shiny::validate(shiny::need(any(gmt$gset %in% names(F[, i])), "Signature features not found in the dataset."))
             suppressWarnings(suppressMessages(
               res <- fgsea::fgsea(gmt, stats = F[, i], nperm = 1000, nproc = 1)
             ))
@@ -279,7 +279,7 @@ SignatureBoard <- function(id, pgx,
         res1 <- data.frame(do.call(rbind, res))
         res1$ES <- NULL
       } else {
-        shiny::validate(shiny::need(gmt$gset %in% rownames(F), "Signature features not found in the dataset."))
+        shiny::validate(shiny::need(any(gmt$gset %in% rownames(F)), "Signature features not found in the dataset."))
         i <- 1
         fx <- 1 * (rownames(F) %in% gmt[[1]])
         rho <- cor(apply(F, 2, rank, na.last = "keep"), fx, use = "pairwise")[, 1]
