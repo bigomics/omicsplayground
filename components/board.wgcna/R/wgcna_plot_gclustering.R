@@ -36,7 +36,7 @@ wgcna_plot_gclustering_server <- function(id,
       res <- wgcna()
       par(mar=c(5,5,1,1))
       ##playbase::wgcna.plotMDS(res, main="", scale=FALSE)
-      playbase::wgcna.plotFeatureUMAP(res, nhub=3, method="clust")
+      playbase::wgcna.plotFeatureUMAP(res, nhub=3, main="", method="clust")
     }
 
     PlotModuleServer(

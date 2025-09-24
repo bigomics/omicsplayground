@@ -10,7 +10,8 @@ MODULE.systems <- list(
       wgcna = "Network analysis",
       tcga = "TCGA analysis",
       cell = "Single cell",
-      pcsf = "Protein networks"
+      pcsf = "Protein networks",
+      consensus = "Consensus WGCNA"
     )
   },
   module_ui = function() {
@@ -39,6 +40,11 @@ MODULE.systems <- list(
         "pcsf-tab",
         PcsfInputs("pcsf"),
         create_loader("pcsf-loader")
+      ),
+      bigdash::bigTabItem(
+        "consensus-tab",
+        ConsensusWGCNA_Inputs("consensus"),
+        create_loader("consensus-loader")
       )
     )
   },
@@ -63,6 +69,10 @@ MODULE.systems <- list(
       list(
         "pcsf-tab",
         PcsfUI("pcsf")
+      ),
+      list(
+        "consensus-tab",
+        ConsensusWGCNA_UI("consensus")
       )
     )
   },
@@ -86,6 +96,12 @@ MODULE.systems <- list(
     PcsfBoard("pcsf",
       pgx = PGX
     )
+
+    ConsensusWGCNA_Board(
+      id = "consensus",
+      pgx = PGX
+    )     
+    
   }
 )
 

@@ -32,16 +32,23 @@ multiwgcna_plot_lasagna_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg")
   )
+}
 
+
+multiwgcna_plot_lasagna_inputs <- function(id) {
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::checkboxInput(ns("norm_edges"),"normalize edges",TRUE),
+    shiny::checkboxInput(ns("consensus"),"consensus",FALSE),              
+    shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
+    shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05)
+  )
 }
 
 multiwgcna_plot_lasagna_server <- function(id,
                                            mwgcna,
                                            r_phenotype = reactive(NULL),
-                                           r_layers = reactive(NULL),
-                                           r_edgenorm = reactive(NULL),
-                                           r_edgepos = reactive(NULL),
-                                           r_solvesp = reactive(NULL)
+                                           r_layers = reactive(NULL)
                                            ) {
   moduleServer(id, function(input, output, session) {
 
@@ -89,24 +96,29 @@ multiwgcna_plot_lasagna_server <- function(id,
       pheno = colnames(obj$Y)[1]
       pheno <- r_phenotype()
       shiny::req(!is.null(pheno))
-      shiny::req(!is.null(r_edgepos()))
-      shiny::req(!is.null(r_edgenorm()))
-      shiny::req(!is.null(r_solvesp()))
+
+      ## from my module inputs
+      sp.weight <- input$sp_weight
+      min.rho <- input$minrho
+      consensus <- input$consensus
+      normalize.edges <- input$norm_edges
       
+      ## 'solve' model
       graph <- playbase::lasagna.solve(
         obj, pheno,
         min_rho = 0.01,
         max_edges = 1000,
         value = "logFC",
-        sp.weight = r_solvesp(),
+        sp.weight = sp.weight,
         prune = FALSE) 
 
       ## prune graph for plotting
       subgraph <- playbase::lasagna.prune_graph(
-        graph, ntop=50,
+        graph,
+        ntop = 50,
         layers = NULL,
-        normalize.edges = r_edgenorm(),
-        min.rho = 0.3,
+        normalize.edges = normalize.edges,
+        min.rho = min.rho,
         edge.sign = "both",
         edge.type = "both", ## inter or intra
         prune = FALSE
@@ -116,15 +128,15 @@ multiwgcna_plot_lasagna_server <- function(id,
       par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
       playbase::plotMultiPartiteGraph2(
         subgraph,
-        min.rho = 0.1,
+        min.rho = 0,
         ntop = -50,
         xdist = 1.25,
         cex.label = 0.9,
         vx.cex = 1.1,
         edge.cex = 1.1,
         edge.alpha = 0.3,
-        edge.sign = ifelse(r_edgepos(), "pos", "both"),
-        edge.type = ifelse(input$showintra, "both", "inter"),  
+        edge.sign = ifelse(consensus, "consensus", "both"),
+        edge.type = ifelse(input$showintra, "both2", "inter"),  
         yheight = 3.2,
         normalize.edges = 1,
         strip.prefix = TRUE,

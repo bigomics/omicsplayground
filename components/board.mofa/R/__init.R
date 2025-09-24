@@ -6,10 +6,10 @@ MODULE.multiomics <- list(
     c(
       snf = "SNF",
       lasagna = "LASAGNA",
-      mgsea = "multiGSEA",
+      mgsea = "MultiGSEA",
       mofa = "MOFA",
       deepnet = "DeepLearning",
-      mwgcna = "multiWGCNA"
+      mwgcna = "MultiWGCNA"
     )
   },
 
@@ -52,6 +52,7 @@ MODULE.multiomics <- list(
 
     info("[SERVER] calling MultiWGCNABoard module")
     MultiWGCNA_Board("mwgcna", pgx = PGX)
+
   },
 
   module_help = function() {
@@ -74,6 +75,7 @@ MODULE.multiomics <- list(
       
       bigdash::sidebarTabHelp("mwgcna-tab", "MultiOmics WGCNA",
         tspan("WGCNA for multi-omics"))
+      
     )
   }  
   

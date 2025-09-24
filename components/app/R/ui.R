@@ -146,6 +146,7 @@ app_ui <- function(x) {
           cell = "Cell profiling",
           pcsf = "PCSF",
           wgcna = "WGCNA",
+          consensus = "Consensus WGCNA",          
           tcga = "TCGA survival (beta)"
         ),
         "MultiOmics" = MODULE.multiomics$module_menu()
@@ -516,6 +517,11 @@ app_ui <- function(x) {
             "Single-Cell Profiling",
             tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
+          ),
+          bigdash::sidebarTabHelp(
+            "consensus-tab",
+            "Consensus WGCNA",
+            tspan("Consensus analysis using the WGCNA framework")
           ),
           !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),

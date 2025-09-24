@@ -68,7 +68,7 @@ multiwgcna_plot_dendrograms_server <- function(id,
       
       i=1
       for(i in 1:length(wgcna)) {
-        power <- wgcna[[i]]$power
+        power <- wgcna[[i]]$net$power
         playbase::wgcna.plotDendroAndColors(
           wgcna = wgcna[[i]],
           main = paste0("Dendrogram for ",names(wgcna)[i]," (p=",power,")"),

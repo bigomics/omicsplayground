@@ -39,11 +39,14 @@ MultiWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-        "Dendrograms" = list(disable = c("phenotype","module")),                                
-        "Module-Trait" = list(disable = c("phenotype","module")),
-        "Module correlation" = list(disable = c("phenotype","module")),
-        "WGCNA-Lasagna" = list(disable = c("module")),
-        "Feature table" = list(disable = c("layers"))
+        "Dendrograms" = list(disable = c("phenotype","module","lasagna_options")),
+        "Module-Trait" = list(disable = c("phenotype","module","mwgcna_options",
+          "lasagna_options")),
+        "Module correlation" = list(disable = c("module", "mwgcna_options",
+          "lasagna_options")),
+        "WGCNA-Lasagna" = list(disable = c("module","mwgcna_options")),
+        "Feature Table" = list(disable = c("layers","mwgcna_options",
+          "lasagna_options"))
     )
 
     shiny::observeEvent( input$tabs, {
@@ -83,7 +86,8 @@ MultiWGCNA_Board <- function(id, pgx) {
       dataX$gset <- pgx$gsetX
 
       if(input$power == "<auto>") {
-        power <- NULL
+        #power <- NULL
+        power <- "iqr"
       } else {
         power <- as.numeric(input$power)
       }
@@ -158,21 +162,19 @@ MultiWGCNA_Board <- function(id, pgx) {
       mwgcna = r_multiwgcna,
       r_layers = reactive(input$layers)
     )
-
+    
     multiwgcna_plot_modulecorr_server(
       "multiwgcnaCorr",
       mwgcna = r_multiwgcna,
-      r_layers = reactive(input$layers)
+      r_layers = reactive(input$layers),
+      r_phenotype = reactive(input$phenotype)
     )
 
     multiwgcna_plot_lasagna_server(
       "multiwgcnaLasagna",
       mwgcna = r_multiwgcna,
       r_phenotype = reactive(input$phenotype),
-      r_layers = reactive(input$layers),
-      r_edgenorm = reactive(input$edge_norm),
-      r_edgepos = reactive(input$edge_pos),
-      r_solvesp = reactive(input$solveSP)
+      r_layers = reactive(input$layers)
     )
 
     multiwgcna_table_modulegenes_server(
@@ -188,6 +190,14 @@ MultiWGCNA_Board <- function(id, pgx) {
       mwgcna = r_multiwgcna,      
       r_module = reactive(input$module)
     )
+
+    multiwgcna_table_crossgenes_server(
+      id = "multiwgcnaCrossgene",
+      mwgcna = r_multiwgcna,
+      r_annot = reactive(pgx$genes),
+      r_module = reactive(input$module)      
+    )
+
     
     return(NULL)
   })

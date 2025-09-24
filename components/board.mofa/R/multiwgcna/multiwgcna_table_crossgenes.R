@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-multiwgcna_table_modulegenes_ui <- function(
+multiwgcna_table_crossgenes_ui <- function(
     id,
     label = "a",
     title = "Title",
@@ -24,7 +24,7 @@ multiwgcna_table_modulegenes_ui <- function(
   TableModuleUI(
     ns("table"),
     info.text = info.text,
-    options = options,
+    #options = options,
     width = width,
     height = height,
     title = title,
@@ -33,100 +33,63 @@ multiwgcna_table_modulegenes_ui <- function(
   )
 }
 
-multiwgcna_table_modulegenes_server <- function(id,
-                                                mwgcna,
-                                                r_annot,
-                                                r_phenotype = reactive(NULL),
-                                                r_module = reactive(NULL)
-                                                )
+multiwgcna_table_crossgenes_server <- function(id,
+                                               mwgcna,
+                                               r_annot,
+                                               r_module
+                                               )
 {
   moduleServer(id, function(input, output, session) {
 
     table_df <- function() {
 
       wgcna <- mwgcna()
-
-      pheno <- r_phenotype()
       module <- r_module()
       annot <- r_annot()
 
       shiny::req(wgcna)
-      shiny::req(pheno)
       shiny::req(module)
       shiny::req(annot)      
       
-      if(input$showallmodules) module <- NULL
-      
-      df <- list()
-      for(dt in names(wgcna)) {
-        stats <- playbase::wgcna.getGeneStats(
-          wgcna = wgcna[[dt]],
-          trait = pheno,
-          plot = FALSE,
-          module = module,
-          col = NULL,
-          main = NULL)
-        
-        if(nrow(stats)>0) {
-          stats$feature <- NULL
-          df[[dt]] <- cbind(feature=rownames(stats), stats)
-        }
-      }
-      
-      cols <- Reduce(intersect, lapply(df,colnames))
-      df <- lapply(df, function(a) a[,cols] ) 
-      for(i in 1:length(df)) rownames(df[[i]]) <- paste0(names(df)[i],":",rownames(df[[i]]))
-      names(df) <- NULL
-      df <- do.call(rbind, df)
-      
+      df <- playbase::wgcna.getModuleCrossGenes(
+        wgcna,
+        ref = NULL,
+        multi = TRUE,
+        ngenes = 100,
+        modules = module
+      )[[1]]
+            
       if(!is.null(annot)) {
         ## if we have titles, add them
-        title2 <- playbase::probe2symbol(df$feature, annot, query="gene_title")
+        title2 <- playbase::probe2symbol(df$gene, annot, query="gene_title")
         if(!all(title2 %in% c(NA,"","NA"))) df$title <- title2
         ## if we have symbols (and they differ from features), add them
-        symbol <- playbase::probe2symbol(df$feature, annot, query="symbol")        
+        symbol <- playbase::probe2symbol(df$gene, annot, query="symbol")        
         df$symbol <- NULL
-        nqq <- mean(symbol != df$feature & !is.na(symbol), na.rm=TRUE)
-        if( nqq > 0.5) df$symbol <- symbol        
+        nqq <- mean(symbol != df$gene & !is.na(symbol), na.rm=TRUE)
+        if(nqq > 0.5) df$symbol <- symbol        
       }
       
       ## df <- df[df$module %in% module,]  ## select??
-      df <- df[order(-df$score),]
+      df <- df[order(-df$rho),]
       
       return(df)
     }
     
-    render_table <- function(full=TRUE) {
+    render_table <- function() {
 
-      dbg("[modulegenes_server:render_table] 1:")
-      
       df <- table_df()      
-      
+
       ## set correct types for filter
       df$module <- factor(df$module)
-
-      dbg("[modulegenes_server:render_table] 2:")
       
-      if(!full) {
-        sel <- c("module","feature","symbol","title","score","traitSignificance","moduleMembership")
-      } else {
-        sel <- c("module","feature","symbol","title","score")
-        sel <- unique(c(sel, colnames(df)))
-      }
-      
+      sel <- c("module","gene","symbol","title","rho")
       sel <- intersect(sel, colnames(df))
       df <- df[,sel]
       
-      dbg("[modulegenes_server:render_table] 3:")
-      
-      
-      ## rename
-      colnames(df) <- sub("moduleMembership","MM",colnames(df))
-      colnames(df) <- sub("traitSignificance","TS",colnames(df))
-      
       numeric.cols <- which(sapply(df, class) == "numeric")
-
-      DT::datatable(
+      
+      dt <- DT::datatable(
         df,
         rownames = FALSE, #
         extensions = c("Buttons", "Scroller"),
@@ -143,10 +106,10 @@ multiwgcna_table_modulegenes_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           columnDefs = list(
-            list(
-              targets = c(1), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 30, false )")
-            ),
+          ##   list(
+          ##     targets = c(1), ## without rownames column 2 is target 1
+          ##     render = DT::JS("$.fn.dataTable.render.ellipsis( 30, false )")
+          ##   ),
             list(
               targets = c(2), ## without rownames column 3 is target 2
               render = DT::JS("$.fn.dataTable.render.ellipsis( 40, false )")
@@ -157,27 +120,24 @@ multiwgcna_table_modulegenes_server <- function(id,
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(
-          "score",
-          background = color_from_middle(df$score, "lightblue", "#f5aeae"),
+          "rho",
+          background = color_from_middle(df$rho, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
-        ) 
+        )
+
+      return(dt)
     }
 
     table.RENDER <- function() {
-      render_table(full=FALSE)
+      render_table()
     }
-
-    table.RENDER2 <- function() {
-      render_table(full=TRUE)
-    }    
     
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
-      func2 = table.RENDER2,
-      csvFunc = table_df,
-      selector = "single"
+      csvFunc = table_df
+      ##selector = "single"
     )
 
     return(table)

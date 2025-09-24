@@ -22,7 +22,7 @@ multiwgcna_plot_moduletrait_ui <- function(
     shiny::checkboxInput(
       inputId = ns("showtop"),
       label = "Show top modules (max. 20)",
-      value = TRUE
+      value = FALSE
     ),
     shiny::checkboxInput(
       inputId = ns("showvalues"),
@@ -101,7 +101,7 @@ multiwgcna_plot_moduletrait_server <- function(id,
         par(mfrow=c(nr,nc), mar=c(8,12,3,1))
         i=1
         for(i in 1:length(wgcna)) {
-
+          
           playbase::wgcna.plotModuleTraitHeatmap(
             wgcna[[i]],
             multi = FALSE,

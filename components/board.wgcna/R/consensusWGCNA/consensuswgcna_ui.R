@@ -3,55 +3,43 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-MultiWGCNA_Inputs <- function(id) {
+ConsensusWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
-    shiny::selectInput(ns("layers"), "Layers:", choices = NULL, multiple = TRUE),
-    shiny::conditionalPanel(
-      "input.layers && input.layers.indexOf('gset') > -1",
-      ns = ns,
-      shiny::selectInput(ns("gsfilter"),"Geneset filter:",choices=NULL)          
-    ),
+    shinyjs::hidden(shiny::selectInput(ns("splitpheno"), "Consensus by:", choices=NULL)),
+    shinyjs::hidden(shiny::selectInput(ns("splitdata"), "Consensus by:", choices=NULL,
+      multiple=TRUE)),              
     shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE),
+    shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
+    shiny::br(),
+    shiny::actionButton(ns("compute"), "Compute", size = "xs", icon=icon("refresh")),
     shiny::br(),
     shiny::br(),
     bslib::accordion(
       id = ns("mwgcna_options"),
-      open = FALSE,
+      #open = NULL,
       bslib::accordion_panel(
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
-        shiny::tagList(
-          shiny::selectInput(ns("clust"),"Cluster method:",c("average","complete")),
-          shiny::selectInput(ns("power"),"Soft power:",
-            choices=c("<auto>",1,3,6,9,12,20), "<auto>"),
+        shiny::tagList(          
+          shiny::selectInput(ns("power"),"Soft treshold:",
+            choices=c("<auto>",3,6,9,12,20), "<auto>"),
           shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
           shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
             2000),
-          shiny::br(),
-          shiny::actionButton(ns("updateplots"), "Compute", size = "xs",
-            icon=icon("refresh"))
+          shiny::selectInput(ns("minmodsize"),"Min. module size:", choices=c(5,10,20,40,100),
+            10)
         )
       )
-    ),
-    shiny::br(),
-    bslib::accordion(
-      id = ns("lasagna_options"),
-      open = FALSE,
-      bslib::accordion_panel(
-        "Lasagna options",
-        icon = icon("cog", lib = "glyphicon"),
-        multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna")) 
-      )
-    )    
+    )
+
   )
 }
 
 
-MULTIWGCNA_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
+CONSENSUSWGCNA_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
-MultiWGCNA_UI <- function(id) {
+ConsensusWGCNA_UI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- 700 ## full height of page
@@ -59,7 +47,7 @@ MultiWGCNA_UI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   shiny::div(
-    boardHeader(title = "Multi-WGCNA", info_link = ns("info")),
+    boardHeader(title = "Consensus-WGCNA", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
 
@@ -69,28 +57,47 @@ MultiWGCNA_UI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          row_heights = c("auto", 1, 0.7),
+          bs_alert(HTML("<b>Consensus-WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets.")),
           bslib::layout_columns(
-            col_widths = c(12),
+            col_widths = c(6,6),
             #height = "calc(100vh - 180px)",
             height = "100vh",
-            multiwgcna_plot_dendrograms_ui(
-              ns("multiwgcnaDendro"),
-              title = "Dendrograms and module colors",
+            consensusWGCNA_plot_dendrograms_ui(
+              ns("consensusWGCNADendro"),
+              title = "Dendrograms and Module Colors",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )
-          ),
+            ),
+            consensusWGCNA_plot_power_ui(
+              ns("consensusWGCNAPower"),
+              title = "Scale and Connectivity Plots",
+              caption = "...",
+              info.text = "...",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )            
+          )
+        )
+      ),
+
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        ##bslib::nav_panel(      
+        "Sample Clustering",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c("auto",1),
+          bs_alert(HTML("<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
           bslib::layout_columns(
             col_widths = c(12),
-            #height = "calc(100vh - 180px)",
             height = "100vh",
-            multiwgcna_plot_power_ui(
-              ns("multiwgcnaPower"),
-              title = "Scale and connectivity plots",
+            consensusWGCNA_plot_sampletree_ui(
+              ns("consensusWGCNASampleTree"),
+              title = "Sample Tree and Traits",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -112,57 +119,9 @@ MultiWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
-            multiwgcna_plot_moduletrait_ui(
-              ns("multiwgcnaTrait"),
-              title = "Module-trait heatmaps",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          )
-        )
-      ),
-      
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        ##bslib::nav_panel(      
-        "Module correlation",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
-          bslib::layout_columns(
-            col_widths = c(12),
-            height = "100vh",
-            multiwgcna_plot_modulecorr_ui(
-              ns("multiwgcnaCorr"),
-              title = "Module-module correlation heatmaps",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          )
-        )
-      ),
-
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        ##bslib::nav_panel(      
-        "WGCNA-Lasagna",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
-          bslib::layout_columns(
-            col_widths = c(12),
-            height = "100vh",
-            multiwgcna_plot_lasagna_ui(
-              ns("multiwgcnaLasagna"),
-              title = "Module-module correlation heatmaps",
+            consensusWGCNA_plot_moduletrait_ui(
+              ns("consensusWGCNATrait"),
+              title = "Module-Trait Heatmaps",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -181,30 +140,50 @@ MultiWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
+            col_widths = c(6,6),
+            height = "100vh",            
+            consensusWGCNA_table_modulegenes_ui(
+              ns("consensusWGCNATable"),
+              title = "Module Features",
+              caption = "...",
+              info.text = "...",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            consensusWGCNA_table_enrichment_ui(
+              ns("consensusWGCNAEnrichment"),
+              title = "Module Enrichment",
+              caption = "...",
+              info.text = "...",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )
+          )
+        )
+      ),
+
+      ##----------------------------------------------------------------
+      shiny::tabPanel(
+        "Preservation",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c("auto",1),
+          bs_alert(HTML("<b>Preservation analysis</b> is an application of WGCNA to assess whether the same modules are preserved across different datasets.")),
+          bslib::layout_columns(
             col_widths = c(5,7),
             height = "100vh",            
-            bslib::layout_columns(
-              col_widths = c(12),
-              multiwgcna_table_modulegenes_ui(
-                ns("multiwgcnaTable"),
-                title = "Module members",
-                caption = "...",
-                info.text = "...",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              multiwgcna_table_crossgenes_ui(
-                ns("multiwgcnaCrossgene"),
-                title = "Correlated genes (gME)",
-                caption = "...",
-                info.text = "...",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              )
+            consensusWGCNA_plot_preservationDendro_ui(
+              ns("consensusWGCNAPreservation"),
+              title = "Eigengene Dendro",
+              caption = "...",
+              info.text = "...",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             ),
-            multiwgcna_table_enrichment_ui(
-              ns("multiwgcnaEnrichment"),
-              title = "Module enrichment",
+            consensusWGCNA_plot_preservationHeatmap_ui(
+              ns("consensusWGCNAPreservation"),
+              title = "Preservation Heatmap",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -213,7 +192,7 @@ MultiWGCNA_UI <- function(id) {
           )
         )
       )
-
+            
       
     ) ## end tabsetPanel
   )  ## end div 

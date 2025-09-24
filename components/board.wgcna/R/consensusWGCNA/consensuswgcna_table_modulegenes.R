@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-multiwgcna_table_modulegenes_ui <- function(
+consensusWGCNA_table_modulegenes_ui <- function(
     id,
     label = "a",
     title = "Title",
@@ -15,11 +15,17 @@ multiwgcna_table_modulegenes_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(
+      inputId = ns("fulltable"),
+      label = "Show full table",
+      value = FALSE
+    ),
+    shiny::checkboxInput(
       inputId = ns("showallmodules"),
       label = "Show all modules",
       value = FALSE
     )
   )
+
   
   TableModuleUI(
     ns("table"),
@@ -33,99 +39,78 @@ multiwgcna_table_modulegenes_ui <- function(
   )
 }
 
-multiwgcna_table_modulegenes_server <- function(id,
-                                                mwgcna,
-                                                r_annot,
-                                                r_phenotype = reactive(NULL),
-                                                r_module = reactive(NULL)
-                                                )
+consensusWGCNA_table_modulegenes_server <- function(id,
+                                                    mwgcna,
+                                                    r_annot,
+                                                    r_phenotype = reactive(NULL),
+                                                    r_module = reactive(NULL)
+                                                    )
 {
   moduleServer(id, function(input, output, session) {
 
     table_df <- function() {
 
-      wgcna <- mwgcna()
-
+      cons <- mwgcna()
+      
       pheno <- r_phenotype()
       module <- r_module()
       annot <- r_annot()
-
-      shiny::req(wgcna)
+      
+      shiny::req(cons)
       shiny::req(pheno)
       shiny::req(module)
       shiny::req(annot)      
-      
+
       if(input$showallmodules) module <- NULL
       
-      df <- list()
-      for(dt in names(wgcna)) {
-        stats <- playbase::wgcna.getGeneStats(
-          wgcna = wgcna[[dt]],
-          trait = pheno,
-          plot = FALSE,
-          module = module,
-          col = NULL,
-          main = NULL)
-        
-        if(nrow(stats)>0) {
-          stats$feature <- NULL
-          df[[dt]] <- cbind(feature=rownames(stats), stats)
-        }
-      }
+      stats <- playbase::wgcna.getConsensusGeneStats(
+        cons,
+        stats = cons$stats,
+        trait = pheno,
+        module = module
+      )
+
+      dbg(" names(stats) = ",names(stats))
       
-      cols <- Reduce(intersect, lapply(df,colnames))
-      df <- lapply(df, function(a) a[,cols] ) 
-      for(i in 1:length(df)) rownames(df[[i]]) <- paste0(names(df)[i],":",rownames(df[[i]]))
-      names(df) <- NULL
-      df <- do.call(rbind, df)
+      which_table <- ifelse(input$fulltable, "full", "consensus")
+      df <- stats[[which_table]]
+
+      dbg(" dim(df) = ",dim(df))
       
       if(!is.null(annot)) {
-        ## if we have titles, add them
-        title2 <- playbase::probe2symbol(df$feature, annot, query="gene_title")
-        if(!all(title2 %in% c(NA,"","NA"))) df$title <- title2
-        ## if we have symbols (and they differ from features), add them
-        symbol <- playbase::probe2symbol(df$feature, annot, query="symbol")        
-        df$symbol <- NULL
-        nqq <- mean(symbol != df$feature & !is.na(symbol), na.rm=TRUE)
-        if( nqq > 0.5) df$symbol <- symbol        
+        df$title <- playbase::probe2symbol(df$feature, annot, query="gene_title")
+        symbol <- playbase::probe2symbol(df$feature, annot, query="symbol")
+        if(mean(df$feature == symbol) < 0.2) df$symbol <- symbol        
       }
       
       ## df <- df[df$module %in% module,]  ## select??
-      df <- df[order(-df$score),]
-      
+      sort.sign <- -sign(mean(df$score))
+      df <- df[order(sort.sign * df$score),]
+
       return(df)
     }
     
     render_table <- function(full=TRUE) {
 
-      dbg("[modulegenes_server:render_table] 1:")
-      
       df <- table_df()      
       
       ## set correct types for filter
       df$module <- factor(df$module)
-
-      dbg("[modulegenes_server:render_table] 2:")
       
       if(!full) {
-        sel <- c("module","feature","symbol","title","score","traitSignificance","moduleMembership")
-      } else {
-        sel <- c("module","feature","symbol","title","score")
-        sel <- unique(c(sel, colnames(df)))
+        cols <- c("module","feature","symbol","title")
+        score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
+        cols <- c(cols, colnames(df)[which(score.cols)], "consensus")
+        cols <- intersect(cols, colnames(df))
+        df <- df[,cols]
       }
-      
-      sel <- intersect(sel, colnames(df))
-      df <- df[,sel]
-      
-      dbg("[modulegenes_server:render_table] 3:")
-      
       
       ## rename
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
       colnames(df) <- sub("traitSignificance","TS",colnames(df))
       
       numeric.cols <- which(sapply(df, class) == "numeric")
-
+      
       DT::datatable(
         df,
         rownames = FALSE, #
@@ -145,14 +130,14 @@ multiwgcna_table_modulegenes_server <- function(id,
           columnDefs = list(
             list(
               targets = c(1), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 30, false )")
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 20, false )")
             ),
             list(
-              targets = c(2), ## without rownames column 3 is target 2
+              targets = c(2), ## without rownames column 2 is target 1
               render = DT::JS("$.fn.dataTable.render.ellipsis( 40, false )")
             )
           )                    
-        ) ## end of options.list
+        ) ## end of options
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
@@ -176,7 +161,6 @@ multiwgcna_table_modulegenes_server <- function(id,
       "table",
       func = table.RENDER,
       func2 = table.RENDER2,
-      csvFunc = table_df,
       selector = "single"
     )
 

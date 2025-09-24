@@ -503,7 +503,8 @@ app_server <- function(input, output, session) {
       loaded$compare <- 1
       tab_control()
     }
-    if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
+    if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab",
+      "pcsf-tab", "consensus-tab") && loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -511,8 +512,8 @@ app_server <- function(input, output, session) {
       loaded$systems <- 1
       tab_control()
     }
-    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab",
-      "mwgcna-tab") && loaded$multiomics == 0) {
+    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
+      "deepnet-tab", "mwgcna-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -714,12 +715,16 @@ app_server <- function(input, output, session) {
     
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
-    ## Beta features
+    ## Hide beta main tabs
     info("[SERVER] disabling beta features")
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
+    bigdash.toggleTab(session, "consensus-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta)        
+
+    ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-
+    
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
 
@@ -738,8 +743,8 @@ app_server <- function(input, output, session) {
 
     ## Hide PCSF and WGCNA for metabolomics.
     # WGCNA will be available upon gmt refactoring
-    if (DATATYPEPGX == "metabolomics") {
-      info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+    if (PGX$datatype == "metabolomics") {
+      info("[SERVER] disabling modules for metabolomics data")
       bigdash.hideTab(session, "cmap-tab")
     }
 
