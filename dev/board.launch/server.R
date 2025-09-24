@@ -56,7 +56,7 @@ app_server <- function(input, output, session) {
       id = "auth",
       mail_creds = file.path(ETC, "gmail_creds"),
       domain = opt$DOMAIN,
-      user_database = user_database,
+      user_database = NULL,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
       )
@@ -95,5 +95,18 @@ app_server <- function(input, output, session) {
   
   observeEvent(input$pgx_path, {
     trigger_server()
+  })
+
+  output$current_user <- shiny::renderText({
+    ## trigger on change of user
+    shiny::req(auth$logged)
+    if (is.null(auth$logged) || !auth$logged) {
+      return("(not logged in)")
+    }
+
+    user <- auth$email
+    if (is.null(user) || user %in% c("", NA)) user <- auth$username
+    if (is.null(user) || user %in% c("", NA)) user <- "User"
+    user
   })
 }

@@ -56,9 +56,7 @@ expression_plot_topfoldchange_server <- function(id,
                                                  res,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       comp <- comp()
       sel <- sel()
       res <- res()
@@ -67,23 +65,26 @@ expression_plot_topfoldchange_server <- function(id,
       psel <- sel
       gene <- pgx$genes[psel, "gene_name"]
 
-      if (is.null(sel) || length(sel) == 0) return(list(sel = sel))
-      if (is.null(comp) || length(comp) == 0) return(NULL)
-      
+      if (is.null(sel) || length(sel) == 0) {
+        return(list(sel = sel))
+      }
+      if (is.null(comp) || length(comp) == 0) {
+        return(NULL)
+      }
+
       fc <- sapply(pgx$gx.meta$meta, function(x) x[psel, "meta.fx"])
       if (any(is.na(fc))) {
         shiny::validate(shiny::need(!is.na(fc), "Fold change for this feature is NA."))
       }
-      
+
       top.up <- head(names(sort(fc[which(fc > 0)], decreasing = TRUE)), 10)
       top.dn <- head(names(sort(fc[which(fc < 0)], decreasing = FALSE)), 10)
       fc.top <- c(fc[top.up], fc[top.dn])
       fc.top <- fc.top[head(order(-abs(fc.top)), 15)]
       fc.top <- sort(fc.top)
       fc.top <- head(c(fc.top, rep(NA, 99)), 15)
-      
-      return(list(sel = sel, fc.top = fc.top, gene = gene))
 
+      return(list(sel = sel, fc.top = fc.top, gene = gene))
     })
 
     plotly.RENDER <- function() {
@@ -96,7 +97,9 @@ expression_plot_topfoldchange_server <- function(id,
         return(NULL)
       }
 
-      if (is.null(res) || is.null(sel)) return(NULL)
+      if (is.null(res) || is.null(sel)) {
+        return(NULL)
+      }
 
       playbase::pgx.barplot.PLOTLY(
         data = data.frame(x = names(pd[["fc.top"]]), y = as.numeric(pd[["fc.top"]])),

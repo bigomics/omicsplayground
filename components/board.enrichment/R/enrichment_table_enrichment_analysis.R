@@ -50,11 +50,14 @@ enrichment_table_enrichment_analysis_server <- function(id,
     })
 
     gseatable.RENDER <- function() {
-
       rpt <- table_data()
 
-      if (is.null(rpt)) return(NULL)
-      if (nrow(rpt) == 0) return(NULL)
+      if (is.null(rpt)) {
+        return(NULL)
+      }
+      if (nrow(rpt) == 0) {
+        return(NULL)
+      }
 
       if ("GS" %in% colnames(rpt)) rpt$GS <- playbase::shortstring(rpt$GS, 72)
       if ("size" %in% colnames(rpt)) rpt$size <- as.integer(rpt$size)
@@ -62,18 +65,20 @@ enrichment_table_enrichment_analysis_server <- function(id,
       fx <- NULL
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
       if (length(fx.col) > 0) fx <- rpt[, fx.col]
-      
+
       jj <- which(sapply(rpt, function(col) is.numeric(col) && !is.integer(col)))
       if (length(jj) > 0) rpt[, jj] <- round(rpt[, jj], digits = 4)
       jj <- which(sapply(rpt, is.character) | sapply(rpt, is.factor))
       if (length(jj) > 0) rpt[, jj] <- apply(rpt[, jj, drop = FALSE], 2, playbase::shortstring, 100)
 
-      if (!input$gs_showqvalues)
+      if (!input$gs_showqvalues) {
         rpt <- rpt[, grep("^q[.]|^q$", colnames(rpt), invert = TRUE)]
-      
-      if (!input$show_scores)
-        rpt <- rpt [, -grep("^score.", colnames(rpt)), drop = FALSE]
-      
+      }
+
+      if (!input$show_scores) {
+        rpt <- rpt[, -grep("^score.", colnames(rpt)), drop = FALSE]
+      }
+
       ## wrap genesets names with known links.
       GS_link <- playbase::wrapHyperLink(
         rep_len("<i class='fa-solid fa-arrow-up-right-from-square weblink'></i>", nrow(rpt)),

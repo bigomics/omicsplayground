@@ -39,91 +39,103 @@ MofaBoard <- function(id, pgx) {
       ))
     })
 
-    
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor","selected_module","selected_trait","show_types")),
-      "Response" = list(disable = c("show_types","selected_module","selected_trait")),
-      "Weights" = list(disable = c("selected_module","selected_trait")),
-      "Enrichment" = list(disable = c("selected_module","selected_trait",
-                                      "show_types")),
-      "gsetMOFA" = list(disable = c("show_types"))      
+      "Overview" = list(disable = c("selected_factor", "selected_module", "selected_trait", "show_types")),
+      "Response" = list(disable = c("show_types", "selected_module", "selected_trait")),
+      "Weights" = list(disable = c("selected_module", "selected_trait")),
+      "Enrichment" = list(disable = c(
+        "selected_module", "selected_trait",
+        "show_types"
+      )),
+      "gsetMOFA" = list(disable = c("show_types"))
     )
-    
-    shiny::observeEvent( input$tabs, {
+
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
     shiny::observeEvent(
       list(
         input$compute
-      ), {
+      ),
+      {
+        shiny::req(pgx$X, input$kernel, input$numfactors)
 
-      shiny::req(pgx$X, input$kernel, input$numfactors)
+        if (input$compute == 0) {
+          return(NULL)
+        }
 
-      if(input$compute==0) return(NULL)
+        if (!is.null(pgx$datatype) && pgx$datatype != "multi-omics") {
+          shinyalert::shinyalert("Error", "This is not a multi-omics dataset.")
+          return(NULL)
+        }
 
-      if(!is.null(pgx$datatype) && pgx$datatype != "multi-omics") {
-        shinyalert::shinyalert("Error", "This is not a multi-omics dataset.")
-        return(NULL)
-      }
-      
-      kernel <- input$kernel
-      pgx.showSmallModal(paste("Calculating",kernel,"...<br>please wait"))
-      progress <- shiny::Progress$new(session, min=0, max=1)
-      on.exit(progress$close())
+        kernel <- input$kernel
+        pgx.showSmallModal(paste("Calculating", kernel, "...<br>please wait"))
+        progress <- shiny::Progress$new(session, min = 0, max = 1)
+        on.exit(progress$close())
 
-      numfactors <- as.integer(input$numfactors)
-      numfactors <- min( numfactors, min(dim(pgx$X)) )        
+        numfactors <- as.integer(input$numfactors)
+        numfactors <- min(numfactors, min(dim(pgx$X)))
 
-      dbg("[MofaBoard] *** recalculating MOFA ***")
-      progress$set(message = paste("Calculating",kernel,"..."), value = 0.33)
-      mofa <- playbase::pgx.compute_mofa(
+        dbg("[MofaBoard] *** recalculating MOFA ***")
+        progress$set(message = paste("Calculating", kernel, "..."), value = 0.33)
+        mofa <- playbase::pgx.compute_mofa(
           pgx,
           kernel = kernel,
           numfactors = numfactors,
           add_gsets = input$add_gsets,
           factorizations = FALSE
-      )
-      
-      shiny::removeModal()
-      message("[mofa] compute MOFA done!")
-      
-      pgx$mofa <- mofa  ## should trigger new mofa
-      
-    }, ignoreNULL = FALSE)
+        )
+
+        shiny::removeModal()
+        message("[mofa] compute MOFA done!")
+
+        pgx$mofa <- mofa ## should trigger new mofa
+      },
+      ignoreNULL = FALSE
+    )
 
     ## =======================================================================
     ## ======================= PRECOMPUTE FUNCTION ===========================
     ## =======================================================================
-    
+
     mofa <- shiny::eventReactive(
       list(
         pgx$X,
         pgx$mofa
-      ), {        
+      ),
+      {
         shiny::req(pgx$X)
-        
+
         mofa <- NULL
-        has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)     
-        shiny::validate( shiny::need(has.mofa, "No MOFA slot in object. Please recompute MOFA"))        
-        mofa <- pgx$mofa        
-        
+        has.mofa <- ("mofa" %in% names(pgx)) && !is.null(pgx$mofa)
+        shiny::validate(shiny::need(has.mofa, "No MOFA slot in object. Please recompute MOFA"))
+        mofa <- pgx$mofa
+
         ## update factors in selectInput
         factors <- colnames(mofa$W)
-        dtypes  <- names(mofa$ww)
-        sel.dtypes <- grep("^gset",dtypes,value=TRUE,invert=TRUE)
+        dtypes <- names(mofa$ww)
+        sel.dtypes <- grep("^gset", dtypes, value = TRUE, invert = TRUE)
         contrasts <- colnames(mofa$contrasts)
         phenotypes <- colnames(mofa$samples)
         traits <- colnames(pgx$mofa$Y)
-        updateSelectInput(session, "selected_factor", choices = factors,
-                          selected = factors[1])
-        updateSelectInput(session, "selected_trait", choices = traits,
-                          selected = traits[1])
-        updateSelectInput(session, "show_types", choices = dtypes,
-                          selected = sel.dtypes)
-        
-        return( mofa )
+        updateSelectInput(session, "selected_factor",
+          choices = factors,
+          selected = factors[1]
+        )
+        updateSelectInput(session, "selected_trait",
+          choices = traits,
+          selected = traits[1]
+        )
+        updateSelectInput(session, "show_types",
+          choices = dtypes,
+          selected = sel.dtypes
+        )
+
+        return(mofa)
       }
     )
 
@@ -133,22 +145,22 @@ MofaBoard <- function(id, pgx) {
     enrichmentTable_selected <- reactive({
       tbl <- enrichmentTable
       shiny::req(tbl$data())
-      
-      has.selection <- length(tbl$rownames_selected())>0 
+
+      has.selection <- length(tbl$rownames_selected()) > 0
       search_key <- tbl$search()
-      has.search <- length(search_key)>0 && search_key[1]!=""
-      
-      if(has.search && !has.selection) {
+      has.search <- length(search_key) > 0 && search_key[1] != ""
+
+      if (has.search && !has.selection) {
         sel <- tbl$rownames_all()
-      } else if(has.selection) {
+      } else if (has.selection) {
         sel <- tbl$rownames_selected()
       } else {
-        sel <- head( tbl$rownames_all(), 20)
+        sel <- head(tbl$rownames_all(), 20)
       }
       sel
     })
 
-    
+
     ## ========================================================================
     ## =========================== MODULES ====================================
     ## ========================================================================
@@ -164,14 +176,14 @@ MofaBoard <- function(id, pgx) {
     mofa_plot_variance_server(
       "variance_view",
       type = "view",
-      mofa = mofa,      
+      mofa = mofa,
       watermark = WATERMARK
     )
-    
+
     mofa_plot_variance_server(
       "variance_factor",
       type = "factor",
-      mofa = mofa,      
+      mofa = mofa,
       watermark = WATERMARK
     )
 
@@ -183,7 +195,7 @@ MofaBoard <- function(id, pgx) {
       show_types = reactive(input$show_types),
       watermark = WATERMARK
     )
-    
+
     mofa_plot_enrichment_server(
       "plotenrichment",
       mofa = mofa,
@@ -191,7 +203,7 @@ MofaBoard <- function(id, pgx) {
       input_k = reactive(input$selected_factor),
       ntop = 15,
       select = enrichmentTable_selected,
-      req.selection = TRUE,      
+      req.selection = TRUE,
       watermark = WATERMARK
     )
 
@@ -224,7 +236,7 @@ MofaBoard <- function(id, pgx) {
 
     mofa_plot_dendrogram_server(
       "dendrogram",
-      mofa = mofa,      
+      mofa = mofa,
       watermark = WATERMARK
     )
 
@@ -254,8 +266,8 @@ MofaBoard <- function(id, pgx) {
       "integrated_heatmap",
       mofa = mofa,
       pgx = pgx,
-      ntop = c(50,40),
-      input_factor = reactive(NULL),      
+      ntop = c(50, 40),
+      input_factor = reactive(NULL),
       watermark = WATERMARK
     )
 
@@ -263,17 +275,17 @@ MofaBoard <- function(id, pgx) {
       "module_heatmap",
       mofa = mofa,
       pgx = pgx,
-      ntop = c(30,40),
-      input_factor = reactive(input$selected_factor),      
+      ntop = c(30, 40),
+      input_factor = reactive(input$selected_factor),
       show_types = reactive(input$show_types),
       watermark = WATERMARK
     )
-    
+
     mofa_plot_pathwayheatmap_server(
       "pathwayheatmap",
       mofa = mofa,
       pgx = pgx,
-      input_factor = reactive(NULL),            
+      input_factor = reactive(NULL),
       selected = enrichmentTable_selected,
       watermark = WATERMARK
     )
@@ -286,7 +298,7 @@ MofaBoard <- function(id, pgx) {
       show_types = reactive(input$show_types),
       watermark = WATERMARK
     )
-    
+
 
     ## ------------- Table Modules --------------------------
 
@@ -296,11 +308,11 @@ MofaBoard <- function(id, pgx) {
       selected_factor = reactive(input$selected_factor),
       pgx = pgx
     )
-    
+
     enrichmentTable <- mofa_table_factorenrichment_server(
       "mofa_factorenrichment",
       gsea = reactive(mofa()$gsea),
-      selected_factor = reactive(input$selected_factor)            
+      selected_factor = reactive(input$selected_factor)
     )
 
     mofa_table_enrichmentgenes_server(

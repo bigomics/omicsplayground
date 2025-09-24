@@ -19,7 +19,6 @@ MODULE.clustering <- list(
     FeatureMapBoard("clusterfeatures",
       pgx = PGX, labeltype = labeltype
     )
-    
   },
   module_ui = function() {
     list(

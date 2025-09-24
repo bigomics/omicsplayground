@@ -12,7 +12,6 @@ MODULE.multiomics <- list(
       mwgcna = "MultiWGCNA"
     )
   },
-
   module_ui = function() {
     list(
       bigdash::bigTabItem("mofa-tab", MofaInputs("mofa"), create_loader("mofa-loader")),
@@ -33,14 +32,13 @@ MODULE.multiomics <- list(
       list("mwgcna-tab", MultiWGCNA_UI("mwgcna"))
     )
   },
-
   module_server = function(PGX) {
     info("[SERVER] calling MofaBoard module")
     MofaBoard("mofa", pgx = PGX)
 
     info("[SERVER] calling MGseaBoard module")
     MGseaBoard("mgsea", pgx = PGX)
-          
+
     info("[SERVER] calling SNFBoard module")
     SNFBoard("snf", pgx = PGX)
 
@@ -54,10 +52,10 @@ MODULE.multiomics <- list(
     MultiWGCNA_Board("mwgcna", pgx = PGX)
 
   },
-
   module_help = function() {
     list(
-      bigdash::sidebarTabHelp("mofa-tab", "MOFA",
+      bigdash::sidebarTabHelp(
+        "mofa-tab", "MOFA",
         tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
                   integration method based on matrix factorization.")),
 
@@ -77,6 +75,5 @@ MODULE.multiomics <- list(
         tspan("WGCNA for multi-omics"))
       
     )
-  }  
-  
+  }
 )

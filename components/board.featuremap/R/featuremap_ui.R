@@ -134,7 +134,7 @@ FeatureMapUI <- function(id) {
               info.text = "The contents of this table can be subsetted by selecting (by click&drag) on the Feature UMAP plot.",
               caption = "",
               height = height2,
-                width = c("auto", "100%")
+              width = c("auto", "100%")
             )
           )
         )

@@ -7,26 +7,28 @@ mofa_plot_lasagna_partite_ui <- function(
     id,
     title = "",
     info.text = "",
-    info.methods = "",    
+    info.methods = "",
     info.references = NULL,
-    info.extra_link = NULL,    
+    info.extra_link = NULL,
     caption = info.text,
     label = "",
     height = 400,
     width = 400) {
   ns <- shiny::NS(id)
-  
-  options = tagList(
-    shiny::checkboxInput(ns("showintra"),"show intra-correlation"),
-    shiny::checkboxInput(ns("prune"),"prune nodes"),
+
+  options <- tagList(
+    shiny::checkboxInput(ns("showintra"), "show intra-correlation"),
+    shiny::checkboxInput(ns("prune"), "prune nodes"),
     shiny::hr(),
-    shiny::sliderInput(ns("xdist"),"Layer spacing:",0.2,2,1,0.1),
-        shiny::hr(),
+    shiny::sliderInput(ns("xdist"), "Layer spacing:", 0.2, 2, 1, 0.1),
+    shiny::hr(),
     shiny::radioButtons(ns("labeltype"), "Label type:",
-      c("feature","symbol","title"), selected="feature", inline=TRUE),
-    shiny::checkboxInput(ns("strip_prefix"),"strip prefix", TRUE)        
+      c("feature", "symbol", "title"),
+      selected = "feature", inline = TRUE
+    ),
+    shiny::checkboxInput(ns("strip_prefix"), "strip prefix", TRUE)
   )
-  
+
   PlotModuleUI(
     ns("plotmodule"),
     title = title,
@@ -41,17 +43,15 @@ mofa_plot_lasagna_partite_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg", "csv")
   )
-  
 }
 
 
 mofa_plot_lasagna_partite_server <- function(id,
                                              data,
-                                             pgx, 
+                                             pgx,
                                              input_nodevalue = reactive(NULL),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- function() {
       res <- data()
       data <- visNetwork::toVisNetworkData(res$graph)
@@ -59,27 +59,28 @@ mofa_plot_lasagna_partite_server <- function(id,
       return(df)
     }
 
-    
-    plot_render <- function() {
 
+    plot_render <- function() {
       res <- data()
       shiny::req(res)
-      
+
       labtype <- input$labeltype
-      if(labtype=="title") {
-        labels <- paste0(pgx$genes[,"gene_title"],
-          " (",pgx$genes[,"symbol"],")")
+      if (labtype == "title") {
+        labels <- paste0(
+          pgx$genes[, "gene_title"],
+          " (", pgx$genes[, "symbol"], ")"
+        )
       } else {
-        labels <- pgx$genes[,labtype]  ## user reactive
+        labels <- pgx$genes[, labtype] ## user reactive
       }
       names(labels) <- rownames(pgx$genes)
-      
+
       graph <- res$graph
-      layers <- setdiff(res$layers,c("SOURCE","SINK"))
-      value.name <- input_nodevalue()      
-      edge.type <- ifelse(input$showintra, "both", "inter")      
-      
-      par(mar=c(0,0,0,0))
+      layers <- setdiff(res$layers, c("SOURCE", "SINK"))
+      value.name <- input_nodevalue()
+      edge.type <- ifelse(input$showintra, "both", "inter")
+
+      par(mar = c(0, 0, 0, 0))
       playbase::plotMultiPartiteGraph2(
         graph,
         value.name = value.name,
@@ -99,7 +100,6 @@ mofa_plot_lasagna_partite_server <- function(id,
         strip.prefix2 = input$strip_prefix,
         prune = input$prune
       )
-      
     }
 
     PlotModuleServer(
@@ -111,6 +111,5 @@ mofa_plot_lasagna_partite_server <- function(id,
       res = c(75, 90),
       add.watermark = watermark
     )
-    
   })
 }

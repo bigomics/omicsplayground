@@ -4,14 +4,13 @@
 ##
 
 wgcna_plot_sampledendrogram_ui <- function(
-  id,
-  title = "",
-  label = "",
-  info.text = "",
-  caption = "",
-  height,
-  width
-  ) {
+    id,
+    title = "",
+    label = "",
+    info.text = "",
+    caption = "",
+    height,
+    width) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -31,17 +30,20 @@ wgcna_plot_sampledendrogram_server <- function(id,
                                                what,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
-        res, what = what, justdata=TRUE) 
+        res,
+        what = what, justdata = TRUE
+      )
     }
-    
+
     RENDER <- function() {
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
-        res, what = what, main="") 
+        res,
+        what = what, main = ""
+      )
     }
 
     PlotModuleServer(

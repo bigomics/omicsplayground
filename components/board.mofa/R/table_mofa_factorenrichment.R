@@ -13,10 +13,10 @@ mofa_table_factorenrichment_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
-  options = tagList(
-    shiny::checkboxInput(ns("onlyshared"),"only shared pathways",FALSE)
+  options <- tagList(
+    shiny::checkboxInput(ns("onlyshared"), "only shared pathways", FALSE)
   )
-  
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
@@ -30,37 +30,33 @@ mofa_table_factorenrichment_ui <- function(
 }
 
 mofa_table_factorenrichment_server <- function(id,
-                                         gsea,
-                                         selected_factor = reactive(1)
-                                         )
-{
+                                               gsea,
+                                               selected_factor = reactive(1)) {
   moduleServer(id, function(input, output, session) {
-
-    table.RENDER <- function(full=FALSE) {
-
+    table.RENDER <- function(full = FALSE) {
       gsea <- gsea()
 
-      validate(need(!is.null(table), "missing GSEA data."))            
-      k=1
-      k <- selected_factor()  ## which factor/phenotype
+      validate(need(!is.null(table), "missing GSEA data."))
+      k <- 1
+      k <- selected_factor() ## which factor/phenotype
       shiny::req(k)
-     
+
       df <- gsea$table[[k]]
-      df <- df[order(-df$NES),]
-      df <- df[,grep("pathway|NES|pval|padj|size|leadingEdge",colnames(df))]      
-      if( input$onlyshared) {
+      df <- df[order(-df$NES), ]
+      df <- df[, grep("pathway|NES|pval|padj|size|leadingEdge", colnames(df))]
+      if (input$onlyshared) {
         size.cols <- grep("^size", colnames(df))
-        sel <- apply(df[, size.cols], 1, function(x) all(x>0))
+        sel <- apply(df[, size.cols], 1, function(x) all(x > 0))
         df <- df[sel, ]
       }
-      df <- data.frame(factor=k, df, check.names=FALSE)
-      if(!full) {
+      df <- data.frame(factor = k, df, check.names = FALSE)
+      if (!full) {
         ## filter out pvalue columns
-        df <- df[,grep("pval|leadingEdge",colnames(df),invert=TRUE)]
+        df <- df[, grep("pval|leadingEdge", colnames(df), invert = TRUE)]
       }
-      
-      numeric.cols <- grep("NES|score|pval|padj|rho",colnames(df))
-      
+
+      numeric.cols <- grep("NES|score|pval|padj|rho", colnames(df))
+
       DT::datatable(
         df,
         rownames = FALSE, #
@@ -87,7 +83,7 @@ mofa_table_factorenrichment_server <- function(id,
                 "}"
               )
             )
-          )          
+          )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
@@ -97,17 +93,17 @@ mofa_table_factorenrichment_server <- function(id,
           background = color_from_middle(df$NES, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
-        ) 
+        )
     }
 
-    table.RENDER2 <- function(full=FALSE) {
-      table.RENDER(full=TRUE)
+    table.RENDER2 <- function(full = FALSE) {
+      table.RENDER(full = TRUE)
     }
-        
+
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
-      func2 = table.RENDER2,      
+      func2 = table.RENDER2,
       selector = "single"
     )
 

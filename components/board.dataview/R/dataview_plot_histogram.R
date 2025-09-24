@@ -31,9 +31,7 @@ dataview_plot_histogram_server <- function(id,
                                            getCountsTable,
                                            r.samples = reactive(""),
                                            watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
       if (length(jj) > n) jj <- sample(jj, n, replace = TRUE)

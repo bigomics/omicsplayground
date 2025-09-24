@@ -10,8 +10,7 @@ mofa_plot_dummy_ui <- function(
     caption = "",
     label = "",
     height = c("100%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -30,7 +29,6 @@ mofa_plot_dummy_server <- function(id,
                                    mofa,
                                    watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       mf <- mofa()
       plot(sin)

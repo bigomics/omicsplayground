@@ -14,10 +14,10 @@ mofa_plot_weights_ui <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("show_top"),"Show top features", TRUE)
+    shiny::checkboxInput(ns("show_top"), "Show top features", TRUE)
   )
 
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -38,8 +38,7 @@ mofa_plot_weights_server <- function(id,
                                      show_types = reactive(NULL),
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    plot.RENDER <- function(ntop=8) {
+    plot.RENDER <- function(ntop = 8) {
       res <- mofa()
       k <- input_factor()
       factors <- colnames(res$F)
@@ -48,33 +47,31 @@ mofa_plot_weights_server <- function(id,
       show_types <- show_types()
       dtypes <- names(res$ww)
       show_types <- intersect(show_types, dtypes)
-      if(is.null(show_types)) show_types <- dtypes
-      shiny::validate(need(length(show_types)>0, "Please select at least one datatype"))
+      if (is.null(show_types)) show_types <- dtypes
+      shiny::validate(need(length(show_types) > 0, "Please select at least one datatype"))
       ww <- res$ww[show_types]
       ntypes <- length(ww)
       ntop <- ifelse(input$show_top, ntop, -1)
-      
-      mfrow=c(1,ntypes)
-      par(mfrow=mfrow, mar=c(4,8,1.5,0))
-      for(v in names(ww)) {
+
+      mfrow <- c(1, ntypes)
+      par(mfrow = mfrow, mar = c(4, 8, 1.5, 0))
+      for (v in names(ww)) {
         rownames(ww[[v]]) <- playbase::probe2symbol(rownames(ww[[v]]), pgx$genes, "gene_name", fill_na = TRUE)
       }
-      playbase::mofa.plot_weights(ww, k=k, ntop=ntop, maxchar=60)
+      playbase::mofa.plot_weights(ww, k = k, ntop = ntop, maxchar = 60)
     }
 
     plot.RENDER2 <- function() {
-      plot.RENDER(n=16) 
+      plot.RENDER(n = 16)
     }
 
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
+      func2 = plot.RENDER2,
       pdf.width = 12, pdf.height = 5,
       res = c(75, 110),
       add.watermark = watermark
     )
-
-    
   })
 }

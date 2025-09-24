@@ -16,7 +16,7 @@ wgcna_plot_module_membership_ui <- function(
   opts <- shiny::tagList(
     shiny::checkboxInput(ns("show_cov"), "covariance", FALSE)
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -36,15 +36,14 @@ wgcna_plot_module_membership_server <- function(id,
                                                 selected_module,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    render_plot <- function(ntop=30) {
+    render_plot <- function(ntop = 30) {
       res <- wgcna()
       module <- selected_module()
-      shiny::req(!is.null(module) & module!='')
-      
-      rho <- res$stats[['moduleMembership']][,module]
+      shiny::req(!is.null(module) & module != "")
+
+      rho <- res$stats[["moduleMembership"]][, module]
       rho[is.na(rho) | is.infinite(rho)] <- 0
-      
+
       ylab0 <- "Eigengene correlation (rho)"
       if (input$show_cov) {
         sdx <- apply(res$datExpr, 2, sd, na.rm = TRUE)
@@ -59,35 +58,37 @@ wgcna_plot_module_membership_server <- function(id,
       names(rho) <- playbase::probe2symbol(names(rho), pgx$genes, "gene_name", fill_na = TRUE)
       ## truncate long names, otherwise base plot errors
       names(rho) <- ifelse(nchar(names(rho)) > 15,
-                           paste0(substr(names(rho), 1, 12), "..."),
-                           names(rho))
-      
-      if(min(rho,na.rm=TRUE)< 0) {
-        ii <- unique(c(head(order(rho), ntop/2), tail(order(rho), ntop/2)))
+        paste0(substr(names(rho), 1, 12), "..."),
+        names(rho)
+      )
+
+      if (min(rho, na.rm = TRUE) < 0) {
+        ii <- unique(c(head(order(rho), ntop / 2), tail(order(rho), ntop / 2)))
       } else {
         ii <- tail(order(rho), ntop)
       }
       len <- max(nchar(names(rho)))
-      bmar <- min(max(round(len/2),6),12)
-      par(mar=c(bmar,4,2,0.1))
-      barplot( sort(rho[ii],decreasing=TRUE),
-              ylab = ylab0, las = 3,
-              cex.names = 0.90, main = NULL )
+      bmar <- min(max(round(len / 2), 6), 12)
+      par(mar = c(bmar, 4, 2, 0.1))
+      barplot(sort(rho[ii], decreasing = TRUE),
+        ylab = ylab0, las = 3,
+        cex.names = 0.90, main = NULL
+      )
       title(module, line = 1)
     }
 
     RENDER <- function() {
-      render_plot(ntop=20)
+      render_plot(ntop = 20)
     }
 
     RENDER2 <- function() {
-      render_plot(ntop=50)
+      render_plot(ntop = 50)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = RENDER,
-      func2 = RENDER2,      
+      func2 = RENDER2,
       pdf.width = 8, pdf.height = 5,
       res = c(80, 120),
       add.watermark = watermark

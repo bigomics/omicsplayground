@@ -10,8 +10,7 @@ mofa_plot_covariate_ui <- function(
     caption = "",
     label = "",
     height = 400,
-    width  = 400) {
-
+    width = 400) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -22,7 +21,7 @@ mofa_plot_covariate_ui <- function(
     )
   )
 
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -40,12 +39,13 @@ mofa_plot_covariate_server <- function(id,
                                        mofa,
                                        watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
       res <- mofa()
       do_collapse <- !input$expand_conditions
       playbase::mofa.plot_covariate_correlation(
-        res, collapse = do_collapse)
+        res,
+        collapse = do_collapse
+      )
     }
 
     PlotModuleServer(

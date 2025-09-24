@@ -25,8 +25,7 @@ TimeSeriesBoard.features_plot <- function(
     ),
     info.extra_link = "extra.link",
     height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
   options <- tagList(
@@ -36,11 +35,11 @@ TimeSeriesBoard.features_plot <- function(
       FALSE
     )
   )
-  
+
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
-    ##plotlib = "plotly",
+    ## plotlib = "plotly",
     options = options,
     info.text = info.text,
     info.methods = info.methods,
@@ -60,8 +59,7 @@ TimeSeriesBoard.features_table <- function(
     info.text = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
     caption = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value correspond to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
     height = c("40%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
   options <- tagList(
@@ -73,7 +71,7 @@ TimeSeriesBoard.features_table <- function(
       title = "Show detailed statistical methods."
     )
   )
-  
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
@@ -107,43 +105,39 @@ TimeSeriesBoard.features_server <- function(id,
                                             timevar,
                                             contrast,
                                             watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-      
-      sel.timevar <- timevar()      
+      sel.timevar <- timevar()
       genes <- rownames(pgx$X)
       genes <- table_module$rownames_all()
       genes <- head(genes, 16)
 
-      expr  <- if(is.null(pgx$impX)) pgx$X[genes,,drop=FALSE] else pgx$impX[genes,,drop=FALSE]
-      time <- pgx$samples[,sel.timevar]
+      expr <- if (is.null(pgx$impX)) pgx$X[genes, , drop = FALSE] else pgx$impX[genes, , drop = FALSE]
+      time <- pgx$samples[, sel.timevar]
 
       ct <- contrast()
-      group <- pgx$contrasts[,ct]
+      group <- pgx$contrasts[, ct]
       group[is.na(group)] <- "others"
 
-      if(!input$show_others) {
-        kk <- which(!is.na(pgx$contrasts[,ct]))      
-        expr  <- expr[,kk,drop=FALSE]
+      if (!input$show_others) {
+        kk <- which(!is.na(pgx$contrasts[, ct]))
+        expr <- expr[, kk, drop = FALSE]
         time <- time[kk]
         group <- group[kk]
       }
 
       ngenes <- length(genes)
       xgenes <- as.vector(mapply(rep, genes, ncol(expr)))
-      xexpr  <- as.vector(t(expr))
-      xtime  <- rep(time, ngenes)
+      xexpr <- as.vector(t(expr))
+      xtime <- rep(time, ngenes)
       xgroup <- rep(group, ngenes)
-      
+
       ## long format
-      df <- data.frame(gene=xgenes, expr = xexpr, time=xtime, group=xgroup)      
+      df <- data.frame(gene = xgenes, expr = xexpr, time = xtime, group = xgroup)
       df
     })
 
     stats_data <- shiny::reactive({
-
       k <- contrast()
       shiny::req(k)
 
@@ -170,10 +164,12 @@ TimeSeriesBoard.features_server <- function(id,
         colnames(ikstats) <- c("p.interaction", "q.interaction")
         cm <- intersect(rownames(kstats), rownames(ikstats))
         kstats <- cbind(kstats[cm, ], ikstats[cm, ])
-        cols <- c("log2FC", "p.value", "q.value", "p.interaction",
-          "q.interaction", "avg.0", "avg.1")
+        cols <- c(
+          "log2FC", "p.value", "q.value", "p.interaction",
+          "q.interaction", "avg.0", "avg.1"
+        )
         cols <- intersect(cols, colnames(kstats))
-        if (length(cols)>0) kstats <- kstats[, cols, drop = FALSE]
+        if (length(cols) > 0) kstats <- kstats[, cols, drop = FALSE]
       }
 
       if (input$show_statdetails) {
@@ -191,17 +187,16 @@ TimeSeriesBoard.features_server <- function(id,
       }
 
       kstats <- as.data.frame(kstats, check.names = FALSE)
-      kstats <- kstats[, unique(colnames(kstats))]      
+      kstats <- kstats[, unique(colnames(kstats))]
       kstats <- kstats[order(-kstats$log2FC), ]
 
       return(kstats)
-
     })
-    
-    ##-----------------------------------------------------
-    ##----------------------- Plot -----------------------
-    ##-----------------------------------------------------
-    
+
+    ## -----------------------------------------------------
+    ## ----------------------- Plot -----------------------
+    ## -----------------------------------------------------
+
     render_plot <- function() {
       library(ggplot2)
       library(plotly)
@@ -209,60 +204,59 @@ TimeSeriesBoard.features_server <- function(id,
       shiny::req(df)
 
       timevar <- timevar()
-      
-      par(mfrow=c(3,3), mar=c(5,4,2,1))
-      genes <- head(unique(df$gene),9)
-      for(g in genes) {
+
+      par(mfrow = c(3, 3), mar = c(5, 4, 2, 1))
+      genes <- head(unique(df$gene), 9)
+      for (g in genes) {
         ii <- which(df$gene == g)
         tt <- df$time[ii]
         xx <- df$expr[ii]
         gr <- df$group[ii]
         g <- playbase::probe2symbol(g, pgx$genes, "gene_name", fill_na = TRUE)
         playbase::plotTimeSeries.groups(
-          time=tt, y=xx, group=gr, main=g, lwd=3,
-          xlab=timevar, time.factor=TRUE)
+          time = tt, y = xx, group = gr, main = g, lwd = 3,
+          xlab = timevar, time.factor = TRUE
+        )
       }
-      
     }
 
     PlotModuleServer(
       "plot",
       func = render_plot,
       plotlib = "base",
-      ##csvFunc = plot_data, ##  *** downloadable data as CSV
+      ## csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 110), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
       add.watermark = watermark
     )
 
-    ##-----------------------------------------------------
-    ##----------------------- Table -----------------------
-    ##-----------------------------------------------------
+    ## -----------------------------------------------------
+    ## ----------------------- Table -----------------------
+    ## -----------------------------------------------------
 
-    render_table <- function(full=FALSE) {
-
+    render_table <- function(full = FALSE) {
       df <- stats_data()
       shiny::req(df)
-      ft <- gsub("[;].*",";...",rownames(df))
-      df <- as.data.frame(df, check.names=FALSE)
-      
+      ft <- gsub("[;].*", ";...", rownames(df))
+      df <- as.data.frame(df, check.names = FALSE)
+
       ## add module information
-      module <- data()$modules      
+      module <- data()$modules
       module <- module[match(rownames(df), names(module))]
       module[is.na(module)] <- "-"
-      
+
       ## do not show symbol column if symbol==feature
-      symbol <- pgx$genes[rownames(df),"symbol"]
-      na.symbol <- is.na(symbol) | symbol==""
-      if(!full && mean(!na.symbol)>0.66) {
-        df1 <- cbind(module=module, symbol=symbol, df)        
-      } else if(!full) {
-        df1 <- cbind(module=module, feature=ft, df)        
+      symbol <- pgx$genes[rownames(df), "symbol"]
+      na.symbol <- is.na(symbol) | symbol == ""
+      if (!full && mean(!na.symbol) > 0.66) {
+        df1 <- cbind(module = module, symbol = symbol, df)
+      } else if (!full) {
+        df1 <- cbind(module = module, feature = ft, df)
       } else {
-        df1 <- cbind(module=module, feature=ft, symbol=symbol, df)        
-      } 
-      
+        df1 <- cbind(module = module, feature = ft, symbol = symbol, df)
+      }
+
       numeric.cols <- colnames(df)
       DT::datatable(
         df1,
@@ -286,15 +280,14 @@ TimeSeriesBoard.features_server <- function(id,
     }
 
     render_table2 <- function() {
-      render_table(full=TRUE) 
+      render_table(full = TRUE)
     }
-    
+
     table_module <- TableModuleServer(
       "table",
       func = render_table,
       func2 = render_table2,
       selector = "none"
     )
-    
   }) ## end of moduleServer
 }

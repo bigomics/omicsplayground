@@ -25,7 +25,7 @@ mofa_plot_factortrait_ui <- function(
       value = FALSE
     )
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -42,13 +42,11 @@ mofa_plot_factortrait_ui <- function(
 mofa_plot_factortrait_server <- function(id,
                                          mofa,
                                          watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
       shiny::req(mofa())
       ll <- unlist(lapply(rownames(mofa()$Z), nchar))
-      par(mar = c(max(6,max(ll)/4), max(5,max(ll)/7), 2, 1))
+      par(mar = c(max(6, max(ll) / 4), max(5, max(ll) / 7), 2, 1))
       playbase::mofa.plot_factor_trait_correlation(
         mofa(),
         main = "",
@@ -68,7 +66,5 @@ mofa_plot_factortrait_server <- function(id,
       res = c(75, 110),
       add.watermark = watermark
     )
-
-    
   })
 }

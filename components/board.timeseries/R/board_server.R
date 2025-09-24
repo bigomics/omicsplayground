@@ -14,9 +14,7 @@
 ##' @author kwee
 TimeSeriesBoard <- function(id,
                             pgx,
-                            labeltype = shiny::reactive("feature")
-                            ) {
-
+                            labeltype = shiny::reactive("feature")) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 850 ## full height of page
@@ -38,7 +36,7 @@ TimeSeriesBoard <- function(id,
       ),
       "Statistics" = list(
         enable = NULL,
-        disable = c("timefactor","module","knn")
+        disable = c("timefactor", "module", "knn")
       )
     )
 
@@ -55,75 +53,77 @@ TimeSeriesBoard <- function(id,
       ))
     })
 
-    shiny::observeEvent( pgx$samples, {
+    shiny::observeEvent(pgx$samples, {
       ## set time variable
       vars <- sort(colnames(pgx$samples))
-      timevars <- unique( c(grep(playbase::get_timevars(), vars, value=TRUE, ignore.case=TRUE), vars))
-      shiny::updateSelectInput(session, "timevar", choices=timevars, selected=timevars[1])
+      timevars <- unique(c(grep(playbase::get_timevars(), vars, value = TRUE, ignore.case = TRUE), vars))
+      ## filter timevars to only include those with more than 1 unique value
+      valid_timevars <- timevars[sapply(timevars, function(var) {
+        var %in% colnames(pgx$samples) && length(unique(pgx$samples[, var])) > 1
+      })]
+      timevars <- valid_timevars
+      shiny::updateSelectInput(session, "timevar", choices = timevars, selected = timevars[1])
 
       ## set available contrasts
       contrasts <- playbase::pgx.getContrasts(pgx)
       contrasts <- contrasts[!grepl("^IA:", contrasts)]
-      shiny::updateSelectInput(session, "contrast", choices=contrasts, selected=contrasts[1])
+      shiny::updateSelectInput(session, "contrast", choices = contrasts, selected = contrasts[1])
     })
 
     ## ===========================================================================
     ## ======================== REACTIVES ========================================
     ## ===========================================================================
-    
+
     timeseries_full <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(input$timevar)
-      ##shiny::req(input$knn)
-      
-      X <- if(is.null(pgx$impX)) pgx$X else pgx$impX
+      ## shiny::req(input$knn)
+
+      X <- if (is.null(pgx$impX)) pgx$X else pgx$impX
       sdx <- matrixStats::rowSds(X, na.rm = TRUE)
       if (any(sdx == 0)) X <- X + runif(length(X), 0, 1e-5)
 
-      ## pre-filter by SD. 
+      ## pre-filter by SD.
       X <- playbase::mofa.topSD(X, 4000)
 
       ## collapse by time variable
-      timevar="time"
+      timevar <- "time"
       timevar <- input$timevar
-      time  <- pgx$samples[,timevar]
+      time <- pgx$samples[, timevar]
       timeX <- t(playbase::rowmean(t(X), time))
       cX <- t(scale(t(X)))
-      timeZ <- t( playbase::rowmean(t(cX), time))
-      
+      timeZ <- t(playbase::rowmean(t(cX), time))
+
       ## compute gene clusters. Actually this should be precomputed in
       ## pgx$cluster.genes???
       clust <- playbase::pgx.FindClusters(
         t(timeZ),
-        km.sizes = c(4,6,9,12),
+        km.sizes = c(4, 6, 9, 12),
         method = "kmeans"
       )[[1]]
       rownames(clust) <- rownames(timeZ)
 
       knn <- as.integer(input$knn)
-      modules <- clust[,paste0("kmeans.",knn)]
-      modules <- paste0("T",modules)
+      modules <- clust[, paste0("kmeans.", knn)]
+      modules <- paste0("T", modules)
       names(modules) <- rownames(clust)
-      
+
       ## compute geneset enrichment
       gset.rho <- NULL
-      if(!is.null(pgx$gsetX) && nrow(pgx$gsetX)) {
-        mX <- playbase::rowmean( playbase::rowscale(X), modules)
+      if (!is.null(pgx$gsetX) && nrow(pgx$gsetX)) {
+        mX <- playbase::rowmean(playbase::rowscale(X), modules)
         gset.rho <- cor(t(pgx$gsetX), t(mX))
       }
-      
+
       res <- list(X = timeX, Z = timeZ, modules = modules, gset.rho = gset.rho)
       return(res)
-
     })
-    
-    timeseries_filtered <- shiny::reactive({
 
+    timeseries_filtered <- shiny::reactive({
       res <- timeseries_full()
       shiny::req(res)
 
-      if(input$filtermodules) {
-        
+      if (input$filtermodules) {
         filtered.modules <- playbase::wgcna.filterColors(
           res$Z,
           res$modules,
@@ -135,16 +135,16 @@ TimeSeriesBoard <- function(id,
       } else {
         filtered.modules <- res$modules
       }
-      zz <- res$Z[,]
-      xx <- res$X[,]        
+      zz <- res$Z[, ]
+      xx <- res$X[, ]
       time <- colnames(res$Z)
-      
+
       ## remove grey group?
-      if(1) {
-        jj <- which(!filtered.modules %in% c(NA,0,"---","grey","T0"))
-        if(length(jj)>0) {
-          zz <- zz[jj,]
-          xx <- xx[jj,]        
+      if (1) {
+        jj <- which(!filtered.modules %in% c(NA, 0, "---", "grey", "T0"))
+        if (length(jj) > 0) {
+          zz <- zz[jj, ]
+          xx <- xx[jj, ]
           filtered.modules <- filtered.modules[jj]
         }
       }
@@ -157,18 +157,19 @@ TimeSeriesBoard <- function(id,
         choices = modulenames,
         selected = modulenames[1]
       )
-      
-      res <- list(X=xx, Z = zz, time = time,
-                  modules = filtered.modules,
-                  gset.rho = res$gset.rho )
-      return(res)
 
+      res <- list(
+        X = xx, Z = zz, time = time,
+        modules = filtered.modules,
+        gset.rho = res$gset.rho
+      )
+      return(res)
     })
-    
+
     ## ============================================================================
     ## =============================== MODULES ====================================
     ## ============================================================================
-    
+
     TimeSeriesBoard.parcoord_server(
       id = "parcoord",
       pgx = pgx,
@@ -196,11 +197,10 @@ TimeSeriesBoard <- function(id,
     TimeSeriesBoard.features_server(
       id = "features",
       pgx = pgx,
-      data = timeseries_full,      
-      contrast = shiny::reactive(input$contrast),      
+      data = timeseries_full,
+      contrast = shiny::reactive(input$contrast),
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK
     )
-
   }) ## end of moduleServer
 } ## end of Board

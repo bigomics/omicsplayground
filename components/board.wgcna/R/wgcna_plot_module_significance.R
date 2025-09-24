@@ -12,7 +12,7 @@ wgcna_plot_module_significance_ui <- function(
     height,
     width) {
   ns <- shiny::NS(id)
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -30,28 +30,29 @@ wgcna_plot_module_significance_server <- function(id,
                                                   selected_module,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     RENDER <- function() {
       res <- wgcna.compute()
       module <- selected_module()
       shiny::req(module)
-      rho <- res$stats$moduleTraitCor[module,]
-      ##rho <- rho[order(names(rho))]
-      rho <- rho[order(rho, decreasing=TRUE)]
-      par(mar=c(6,4,2,0.1))
-      barplot( rho,
-              ylab = "Trait correlation (rho)",
-              main = "",
-              width=1, las=3, names.arg='')
-      dy <- 0.04*diff(range(rho))
-      text(x = (-0.33 + 1:length(rho))*1.2,
-           y = par("usr")[3] - dy,
-           labels = names(rho),
-           xpd = NA,
-           srt = 45,
-           adj = 0.965,
-           cex = 0.9)
-
+      rho <- res$stats$moduleTraitCor[module, ]
+      ## rho <- rho[order(names(rho))]
+      rho <- rho[order(rho, decreasing = TRUE)]
+      par(mar = c(6, 4, 2, 0.1))
+      barplot(rho,
+        ylab = "Trait correlation (rho)",
+        main = "",
+        width = 1, las = 3, names.arg = ""
+      )
+      dy <- 0.04 * diff(range(rho))
+      text(
+        x = (-0.33 + 1:length(rho)) * 1.2,
+        y = par("usr")[3] - dy,
+        labels = names(rho),
+        xpd = NA,
+        srt = 45,
+        adj = 0.965,
+        cex = 0.9
+      )
     }
 
     PlotModuleServer(

@@ -32,22 +32,23 @@ mofa_plot_centrality_server <- function(id,
                                         show_types = reactive(NULL),
                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       res <- mofa()
       shiny::req(res)
       k <- input_factor()
       shiny::req(k %in% colnames(res$F))
-      
+
       show_types <- show_types()
       y <- res$pheno
       labels <- pgx$genes$gene_name
       names(labels) <- pgx$genes$feature
-      
-      par(mar=c(4,4,1,0.5))
+
+      par(mar = c(4, 4, 1, 0.5))
       playbase::mofa.plot_centrality(
-        res, k=k, show_types=show_types, labels=labels,
-        transpose=FALSE, main = "")
+        res,
+        k = k, show_types = show_types, labels = labels,
+        transpose = FALSE, main = ""
+      )
     }
 
     PlotModuleServer(

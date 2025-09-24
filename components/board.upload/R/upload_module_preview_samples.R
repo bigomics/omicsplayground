@@ -22,14 +22,16 @@ upload_table_preview_samples_server <- function(
     info.text,
     caption,
     upload_datatype) {
-
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns
 
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
+      vars_selected <- vars_selected()
+      vars_selected <- intersect(vars_selected, colnames(dt))
+      dt <- dt[, vars_selected, drop = FALSE]
+      uploaded$samples.csv <- dt
       nrow0 <- nrow(dt)
       ncol0 <- ncol(dt)
       MAXSHOW <- 100
@@ -45,10 +47,6 @@ upload_table_preview_samples_server <- function(
         n1 <- ncol0 - MAXSHOW
         colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
       }
-      vars_selected <- vars_selected()
-      vars_selected <- intersect(vars_selected, colnames(dt))
-      dt <- dt[, vars_selected, drop = FALSE]
-      uploaded$samples.csv <- dt
       loaded_samples(TRUE)
       dt
     })
@@ -225,7 +223,7 @@ upload_table_preview_samples_server <- function(
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
       shiny::req(nrow(Y))
-      shiny::validate(shiny::need(ncol(Y)>0, "Please select at least 1 variable."))
+      shiny::validate(shiny::need(ncol(Y) > 0, "Please select at least 1 variable."))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
       sel <- head(c(sel, 1), 1)
       y <- Y[, sel]
@@ -319,8 +317,13 @@ upload_table_preview_samples_server <- function(
       # Save file
       datafile <- input$samples_csv$datapath
       file.copy(from = datafile, to = paste0(raw_dir(), "/samples.csv"), overwrite = TRUE)
-      df <- tryCatch( { playbase::read.as_matrix(datafile) },
-        error = function(w) { NULL }
+      df <- tryCatch(
+        {
+          playbase::read.as_matrix(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
       )
       if (is.null(df)) {
         data_error_modal(path = datafile, data_type = "samples")
@@ -332,7 +335,6 @@ upload_table_preview_samples_server <- function(
     })
 
     observeEvent(input$remove_samples, {
-
       delete_all_files_samples <- function(value) {
         if (value) {
           uploaded$samples.csv <- NULL

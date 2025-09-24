@@ -197,7 +197,7 @@ upload_module_makecontrast_server <- function(
         df1 <- df[ss, pp, drop = FALSE]
         cond <- apply(df1, 1, paste, collapse = ".")
         names(cond) <- cond
-        
+
         if (max(sapply(cond, function(x) nchar(x))) > 15) {
           shinyalert::shinyalert(
             title = "Warning",

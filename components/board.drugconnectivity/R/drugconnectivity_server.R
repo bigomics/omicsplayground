@@ -55,10 +55,14 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::req(pgx$drugs, input$dsea_contrast, input$dsea_method)
 
       contr <- input$dsea_contrast
-      if (is.null(contr)) return(NULL)
+      if (is.null(contr)) {
+        return(NULL)
+      }
 
       dmethod <- input$dsea_method
-      if (is.null(dmethod)) return(NULL)
+      if (is.null(dmethod)) {
+        return(NULL)
+      }
 
       dr <- pgx$drugs[[dmethod]]
 

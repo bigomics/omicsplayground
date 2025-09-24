@@ -26,10 +26,10 @@ correlation_plot_cor_graph_ui <- function(
 
   cor_graph.opts <- shiny::tagList(
     shiny::checkboxInput(ns("physics"), "physics", FALSE),
-    shiny::checkboxInput(ns("as_mst"), "minimum spanning tree", FALSE),    
+    shiny::checkboxInput(ns("as_mst"), "minimum spanning tree", FALSE),
     shiny::sliderInput(ns("graph_threshold"), "correlation threshold:", 0, 0.5, 0.1),
     shiny::sliderInput(ns("graph_radius"), "maximum radius:", 1, 5, 3, 1)
-    ##shiny::sliderInput(ns("edge_degree"), "edge connectivity:", 0.1, 2, 1, 0.1),    
+    ## shiny::sliderInput(ns("edge_degree"), "edge connectivity:", 0.1, 2, 1, 0.1),
   )
 
   PlotModuleUI(
@@ -99,24 +99,24 @@ correlation_plot_cor_graph_server <- function(
         return(NULL)
       }
 
-      if(input$as_mst) {
+      if (input$as_mst) {
         gr <- igraph::mst(gr)
       }
-      
+
       visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
       visdata$edges$width <- 2 * visdata$edges$width
 
       if (nrow(visdata$edges) == 0 && nrow(visdata$nodes) == 1) {
         visdata$edges <- data.frame(
           from = rownames(visdata$nodes),
-          to   = rownames(visdata$nodes),
+          to = rownames(visdata$nodes),
           weight = 1,
           rho = 1,
           width = 1,
           color = "fff"
         )
       }
-      
+
       graph <- visNetwork::visNetwork(
         nodes = visdata$nodes,
         edges = visdata$edges

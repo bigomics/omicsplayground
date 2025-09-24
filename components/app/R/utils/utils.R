@@ -119,7 +119,7 @@ tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
 tabRequireTS <- function(pgx, session, tabname, enable = TRUE) {
   time.vars <- playbase::get_timevars()
   found.time.var <- grep(time.vars, colnames(pgx$samples), ignore.case = TRUE)
-  if(length(found.time.var) > 0 && enable) {
+  if (length(found.time.var) > 0 && enable) {
     bigdash.showTab(session, tabname)
   } else {
     bigdash.hideTab(session, tabname)

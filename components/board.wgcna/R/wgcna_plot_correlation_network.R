@@ -11,8 +11,7 @@ wgcna_plot_correlation_network_ui <- function(
     label = "",
     height,
     width,
-    ...
-    ) {
+    ...) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -34,7 +33,6 @@ wgcna_plot_correlation_network_server <- function(id,
                                                   selected_module,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     RENDER <- function() {
       out <- wgcna()
       k <- selected_module()
@@ -42,7 +40,9 @@ wgcna_plot_correlation_network_server <- function(id,
       rownames(out$stats$moduleMembership) <- playbase::probe2symbol(rownames(out$stats$moduleMembership), pgx$genes, "gene_name", fill_na = TRUE)
       colnames(out$datExpr) <- playbase::probe2symbol(colnames(out$datExpr), pgx$genes, "gene_name", fill_na = TRUE)
       playbase::wgcna.plotModuleHubGenes(
-        out, modules=k, alpha=0.5, setpar=TRUE) 
+        out,
+        modules = k, alpha = 0.5, setpar = TRUE
+      )
     }
 
     PlotModuleServer(

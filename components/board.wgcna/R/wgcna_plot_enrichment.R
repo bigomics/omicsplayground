@@ -30,7 +30,6 @@ wgcna_plot_enrichment_server <- function(id,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     enrichPlot.RENDER <- function() {
-
       df <- enrichTable_module$data()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
@@ -39,7 +38,7 @@ wgcna_plot_enrichment_server <- function(id,
       ii <- enrichTable_module$rows_all()
       shiny::req(ii)
       df <- df[ii, , drop = FALSE]
-      df <- head(df, 20)      
+      df <- head(df, 20)
       gs.top <- df$geneset
       xlim0 <- c(0, max(df$score))
       col1 <- c("grey90", "#f5bfbf")[1 + 1 * (df$q.value < 0.05)]
@@ -50,7 +49,7 @@ wgcna_plot_enrichment_server <- function(id,
       )
       text(0, (nrow(df):1) - 0.48, gs.top, adj = 0, pos = 4, cex = 0.8)
     }
-    
+
 
     PlotModuleServer(
       "plot",

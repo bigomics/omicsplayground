@@ -70,12 +70,12 @@ expression_plot_maplot_server <- function(id,
                                           genes_selected,
                                           labeltype = reactive("symbol"),
                                           watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       comp1 <- gx_contrast()
-      if (length(comp1) == 0) return(NULL)
+      if (length(comp1) == 0) {
+        return(NULL)
+      }
       shiny::req(pgx$X)
 
       X <- pgx$X
@@ -83,15 +83,17 @@ expression_plot_maplot_server <- function(id,
       lfc <- as.numeric(gx_lfc())
       fdr <- as.numeric(gx_fdr())
 
-      if (is.null(res)) return(NULL)
+      if (is.null(res)) {
+        return(NULL)
+      }
 
       y <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
       ylim <- c(-1, 1) * max(abs(y), na.rm = TRUE)
       x <- rowMeans(X[rownames(res), ], na.rm = TRUE)
       symbols <- rownames(res)
-      
+
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
-      label.names <- pgx$genes[rownames(res),]$gene_name
+      label.names <- pgx$genes[rownames(res), ]$gene_name
 
       shape <- rep("circle", nrow(res))
       names(shape) <- rownames(res)
@@ -100,7 +102,7 @@ expression_plot_maplot_server <- function(id,
         if (any(jj)) {
           counts <- pgx$counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
           nas <- apply(counts, 1, function(x) sum(is.na(x)))
-          na.features <- names(nas)[which(nas>0)]
+          na.features <- names(nas)[which(nas > 0)]
           shape[match(na.features, names(shape))] <- "cross"
         }
       }
@@ -110,7 +112,7 @@ expression_plot_maplot_server <- function(id,
         fc <- y[jj]
         shiny::validate(shiny::need(!is.na(fc), "Fold change for this feature is NA"))
       }
-      
+
       plot_data <- list(
         x = x,
         y = y,
@@ -127,7 +129,6 @@ expression_plot_maplot_server <- function(id,
       )
 
       return(plot_data)
-
     })
 
 
@@ -137,7 +138,7 @@ expression_plot_maplot_server <- function(id,
 
       names <- pd[["features"]]
       label.names <- pd[["label.names"]]
-      
+
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],

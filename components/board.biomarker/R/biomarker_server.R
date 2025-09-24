@@ -160,7 +160,7 @@ BiomarkerBoard <- function(id, pgx) {
         samples
       }
     )
-    
+
     ## calculate variable importance upon compute button
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
       ## This code also features a progress indicator.
@@ -187,30 +187,31 @@ BiomarkerBoard <- function(id, pgx) {
         return(NULL)
       }
       shiny::isolate(sel <- input_pdx_select())
-      
-      progress$inc( 0.33, detail = "Calculating variable importance. Please wait...")
-      if(pgx$datatype == "multi-omics") {
+
+      progress$inc(0.33, detail = "Calculating variable importance. Please wait...")
+      if (pgx$datatype == "multi-omics") {
         res <- playbase::pgx.compute_importance(
           pgx,
           pheno = ph,
-          level="genes",
-          multiomics = 2,  ## 2-pass
+          level = "genes",
+          multiomics = 2, ## 2-pass
           filter_features = ft,
           select_features = sel,
           select_samples = selected_samples(),
-          nfeatures = 50) 
-
+          nfeatures = 50
+        )
       } else {
         res <- playbase::pgx.compute_importance(
           pgx,
           pheno = ph,
-          level="genes",
+          level = "genes",
           filter_features = ft,
           select_features = sel,
           select_samples = selected_samples(),
-          nfeatures = 50) 
+          nfeatures = 50
+        )
       }
-      
+
       is_computed(TRUE)
       return(res)
     })

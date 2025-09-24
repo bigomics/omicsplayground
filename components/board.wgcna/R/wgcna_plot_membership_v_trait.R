@@ -12,11 +12,11 @@ wgcna_plot_membership_v_trait_ui <- function(
     height,
     width) {
   ns <- shiny::NS(id)
-  
+
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("showallmodules"),"Show all modules", FALSE)
+    shiny::checkboxInput(ns("showallmodules"), "Show all modules", FALSE)
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -36,37 +36,36 @@ wgcna_plot_membership_v_trait_server <- function(id,
                                                  selected_trait,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
       shiny::req(!is.null(input$showallmodules))
       shiny::req(res)
-      shiny::req(!is.null(module) &&  module!="")
-      shiny::req(!is.null(trait) && trait!="")
+      shiny::req(!is.null(module) && module != "")
+      shiny::req(!is.null(trait) && trait != "")
 
       module <- ifelse( input$showallmodules, NULL, module)
       
       df <- playbase::wgcna.getGeneStats(
         res,
         module = module,
-        trait=trait,
+        trait = trait,
         plot = FALSE
       ) 
       df
     }
-    
+
     RENDER <- function() {
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
       shiny::req(!is.null(input$showallmodules))
       col <- "black"
-      if(input$showallmodules) col <- NULL
+      if (input$showallmodules) col <- NULL
       shiny::req(res)
-      shiny::req(!is.null(module) &&  module!="")
-      shiny::req(!is.null(trait) && trait!="")
+      shiny::req(!is.null(module) && module != "")
+      shiny::req(!is.null(trait) && trait != "")
 
       module <- ifelse( input$showallmodules, NULL, module)
       

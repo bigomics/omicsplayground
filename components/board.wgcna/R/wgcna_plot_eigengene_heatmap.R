@@ -14,9 +14,9 @@ wgcna_plot_eigengene_heatmap_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("addtraits"),"Add traits", TRUE)
+    shiny::checkboxInput(ns("addtraits"), "Add traits", TRUE)
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -34,18 +34,21 @@ wgcna_plot_eigengene_heatmap_server <- function(id,
                                                 wgcna,
                                                 watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       res <- wgcna()
       playbase::wgcna.plotEigenGeneAdjacencyHeatmap(
-        res, add_traits = input$addtraits, justdata=TRUE)
+        res,
+        add_traits = input$addtraits, justdata = TRUE
+      )
     }
-    
+
     plot.RENDER <- function() {
       res <- wgcna()
       playbase::wgcna.plotEigenGeneAdjacencyHeatmap(
-        res, add_traits = input$addtraits,
-        main = "", marx=0.7)
+        res,
+        add_traits = input$addtraits,
+        main = "", marx = 0.7
+      )
     }
 
     PlotModuleServer(

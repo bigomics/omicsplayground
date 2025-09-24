@@ -11,7 +11,7 @@ wgcna_plot_gclustering_ui <- function(
     caption = "",
     height = 400,
     width = 400,
-    ...) { 
+    ...) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -31,7 +31,6 @@ wgcna_plot_gclustering_server <- function(id,
                                           wgcna,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     RENDER <- function() {
       res <- wgcna()
       par(mar=c(5,5,1,1))

@@ -8,7 +8,7 @@ WgcnaInputs <- function(id) {
   bigdash::tabSettings(
     ## data set parameters
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
-    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),    
+    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),
     br(),
     bslib::accordion(
       id = ns("compare_accordion"),
@@ -22,13 +22,13 @@ WgcnaInputs <- function(id) {
             selected = 2000
           ),
           shiny::selectInput(ns("networktype"), "Network type",
-            choices = c("unsigned","signed","signed hybrid"), selected = "signed"
+            choices = c("unsigned", "signed", "signed hybrid"), selected = "signed"
           ),
           shiny::sliderInput(ns("power"), "Power", 1, 20, 12),
           # shiny::sliderInput(ns("cutheight"), "Merge cut height",0.05,0.8,0.15,0.05),
           shiny::sliderInput(ns("minkme"), "Minimum KME", 0, 0.9, 0.3, 0.1),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
-            choices = c(10, 20, 30, 50, 100),  selected = 20
+            choices = c(10, 20, 30, 50, 100), selected = 20
           ),
           shiny::br(),
           shiny::actionButton(
@@ -135,7 +135,6 @@ WgcnaUI <- function(id) {
           )
         )
       ),
-
       shiny::tabPanel(
         "Eigengenes",
         bslib::layout_columns(
@@ -143,7 +142,7 @@ WgcnaUI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Eigengene analysis.</b> The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(a)</b> Module-trait correlation identifies modules that are significantly associated with the measured traits. <b>(b)</b> Clustering of eigengenes. <b>(c)</b> Clustering of trait vectors. <b>(d)</b> Correlation of eigengene and traits as heatmap, <b>(e)</b> as dendrogram and <b>(f)</b> as graph.")),
           bslib::layout_columns(
-            col_widths = c(4,4,4,4,4,4),
+            col_widths = c(4, 4, 4, 4, 4, 4),
             height = "calc(100vh - 181px)",
             wgcna_plot_MTrelationships_ui(
               ns("moduleTrait"),
@@ -177,7 +176,7 @@ WgcnaUI <- function(id) {
               caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),           
+            ),
             wgcna_plot_eigengene_clustering_ui(
               ns("eigenClustering"),
               title = "(e) Eigengene dendrogram",
@@ -197,7 +196,6 @@ WgcnaUI <- function(id) {
           )
         )
       ),
-      
       shiny::tabPanel(
         "Modules",
         bslib::layout_columns(
@@ -205,7 +203,7 @@ WgcnaUI <- function(id) {
           height = "calc(100vh - 181px)",
           bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Circle network of top hub genes. </b> <b>(c)</b> Module membership (MM) with the module eigengene.  <b>(d)</b> Table of importance score to identify 'driver genes' of the module. <b>(e)</b> Plot of significance measures: module membership (MM), gene trait significance (GS), foldChange and network centrality.")),
           bslib::layout_columns(
-            col_widths = c(4,4,4,7,5),
+            col_widths = c(4, 4, 4, 7, 5),
             height = "calc(100vh - 181px)",
             wgcna_plot_module_significance_ui(
               ns("moduleSignificance"),
@@ -215,7 +213,6 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-
             wgcna_plot_correlation_network_ui(
               ns("corGraph"),
               label = "c",
@@ -228,7 +225,6 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-
             wgcna_plot_module_membership_ui(
               ns("modulemembership"),
               title = "(c) Module membership",
@@ -239,7 +235,6 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-
             wgcna_table_genes_ui(
               ns("geneTable"),
               title = "(d) Significance table",
@@ -248,7 +243,6 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-
             wgcna_plot_membership_v_trait_ui(
               ns("memberTrait"),
               title = "(e) Gene significance",
@@ -257,11 +251,9 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-                        
           )
         )
       ),
-
       shiny::tabPanel(
         "Enrichment",
         bslib::layout_columns(
@@ -271,7 +263,6 @@ WgcnaUI <- function(id) {
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",
-            
             wgcna_plot_geneset_heatmap_ui(
               ns("genesetHeatmap"),
               title = "(a) Geneset heatmap for module",
@@ -280,7 +271,6 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            
             wgcna_plot_gene_heatmap_ui(
               ns("geneHeatmap"),
               title = "(b) Gene heatmap",
@@ -288,8 +278,7 @@ WgcnaUI <- function(id) {
               caption = "",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),           
-            
+            ),
             wgcna_table_enrichment_ui(
               ns("enrichTable"),
               title = "(c) Enrichment scores",
@@ -298,7 +287,6 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            
             wgcna_plot_enrichment_ui(
               ns("enrichPlot"),
               title = "(d) Top enriched genesets",
@@ -307,10 +295,9 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-            
           ) ## end layout_columns (left column)
         ) ## end layout_columns (page)
-      )  ## end tabPanel
+      ) ## end tabPanel
     )
   )
 }

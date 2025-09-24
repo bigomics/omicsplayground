@@ -34,7 +34,6 @@ SNFUI <- function(id) {
     boardHeader(title = "Similarity Network Fusion", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
-
       shiny::tabPanel(
         "SNF Clustering",
         bslib::layout_columns(
@@ -44,7 +43,7 @@ SNFUI <- function(id) {
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
               xxxl = c(7, 5),
-              xl = c(7, 5),              
+              xl = c(7, 5),
               sm = c(12, 12)
             ),
             mofa_plot_snf_ui(
@@ -80,7 +79,6 @@ SNFUI <- function(id) {
           )
         )
       )
-
     )
   )
 }

@@ -68,7 +68,7 @@ SignatureBoard <- function(id, pgx,
         shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
       }
     })
-    
+
     shiny::observeEvent(input$example3, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
@@ -76,7 +76,7 @@ SignatureBoard <- function(id, pgx,
         shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
       }
     })
-    
+
     shiny::observeEvent(pgx$X, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
@@ -100,7 +100,7 @@ SignatureBoard <- function(id, pgx,
       if (is.null(type)) type <- "<custom>"
 
       if (type == "contrast") {
-        #contr <- names(pgx$gx.meta$meta)
+        # contr <- names(pgx$gx.meta$meta)
         contr <- playbase::pgx.getContrasts(pgx)
         contr <- sort(contr[!grepl("^IA:", contr)])
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
@@ -238,9 +238,9 @@ SignatureBoard <- function(id, pgx,
       F <- F[, which(!duplicated(colnames(F))), drop = FALSE]
 
       ## convert to symbol
-      fsymbol <- pgx$genes[rownames(F), "symbol"]   ## !!!!!
+      fsymbol <- pgx$genes[rownames(F), "symbol"] ## !!!!!
       fsymbol[is.na(fsymbol)] <- "_" ## fgsea does not like NA or empty
-      fsymbol[fsymbol==""] <- "_" ## fgsea does not like NA or empty      
+      fsymbol[fsymbol == ""] <- "_" ## fgsea does not like NA or empty
       F <- playbase::rowmean(F, fsymbol)
       F[is.na(F)] <- 0
 
@@ -256,7 +256,7 @@ SignatureBoard <- function(id, pgx,
       jj <- head(order(-abs(rho)), ntop)
       F <- F[, jj, drop = FALSE]
       F <- F + 1e-4 * matrix(rnorm(length(F)), nrow(F), ncol(F))
-      
+
       ## ------------- do fast GSEA
       gmt <- list("gset" = unique(genes))
       res <- NULL
@@ -447,6 +447,9 @@ SignatureBoard <- function(id, pgx,
       meta <- playbase::pgx.getMetaMatrix(pgx)
       fc <- meta$fc
       qv <- meta$qv
+
+      # Filter features
+      features <- features[features %in% rownames(fc)]
 
       # Get contrasts, FC, and gene info
       fc <- fc[features, contr]

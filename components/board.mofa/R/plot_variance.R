@@ -29,34 +29,33 @@ mofa_plot_variance_ui <- function(
 
 mofa_plot_variance_server <- function(id,
                                       mofa,
-                                      type = c("factorxview","factor","view")[1],
+                                      type = c("factorxview", "factor", "view")[1],
                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       res <- mofa()
       shiny::req(res$model)
-      if( type == "factorxview") {
+      if (type == "factorxview") {
         plt <- NULL
-        if( inherits(res$model, "MOFA")) {
-          plt <- MOFA2::plot_variance_explained(res$model, x="view", y="factor")
+        if (inherits(res$model, "MOFA")) {
+          plt <- MOFA2::plot_variance_explained(res$model, x = "view", y = "factor")
         } else {
-          par(mar=c(3,1,2,5))                  
-          purples <- RColorBrewer::brewer.pal(9,"Purples")
-          ##col <- colorRampPalette(c("grey98", purples))(64)
-          playbase::gx.imagemap(t(res$V), clust=FALSE, col=purples)
+          par(mar = c(3, 1, 2, 5))
+          purples <- RColorBrewer::brewer.pal(9, "Purples")
+          ## col <- colorRampPalette(c("grey98", purples))(64)
+          playbase::gx.imagemap(t(res$V), clust = FALSE, col = purples)
         }
         return(plt)
       }
-      if( type == "view") {
-        y <- rowSums( res$V )
-        par(mar=c(3,4,2,0))        
+      if (type == "view") {
+        y <- rowSums(res$V)
+        par(mar = c(3, 4, 2, 0))
         barplot(y, names.arg = names(y), ylab = "Var. (%)", las = 1)
       }
-      if( type == "factor") {
-        y <- colSums( res$V )
-        par(mar=c(3,4,2,0))
-        bp <- barplot(y, ylab="Var. (%)", xaxt = "n", las = 1)
+      if (type == "factor") {
+        y <- colSums(res$V)
+        par(mar = c(3, 4, 2, 0))
+        bp <- barplot(y, ylab = "Var. (%)", xaxt = "n", las = 1)
         text(bp, par("usr")[3] - 0.008, labels = names(y), srt = 45, adj = 1, xpd = TRUE)
       }
     }
@@ -68,7 +67,5 @@ mofa_plot_variance_server <- function(id,
       res = c(80, 110),
       add.watermark = watermark
     )
-
-    
   })
 }

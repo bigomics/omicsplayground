@@ -18,7 +18,7 @@ ExpressionInputs <- function(id) {
       placement = "top"
     ),
     bslib::layout_column_wrap(
-      width = 1/2,
+      width = 1 / 2,
       withTooltip(
         selectInput(ns("gx_fdr"),
           "FDR",

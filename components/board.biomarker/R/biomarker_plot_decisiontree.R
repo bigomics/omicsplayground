@@ -26,10 +26,11 @@ biomarker_plot_decisiontree_ui <- function(
 
   options <- tagList(
     shiny::selectInput(ns("plottype"), "Plot type:",
-      choices = c("simple","fancy","extended"),
-      selected = "fancy")
+      choices = c("simple", "fancy", "extended"),
+      selected = "fancy"
+    )
   )
-  
+
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
@@ -72,7 +73,8 @@ biomarker_plot_decisiontree_server <- function(id,
         shiny::req(imp)
         imp$rf$frame$var <- playbase::probe2symbol(imp$rf$frame$var, pgx$genes, "gene_name", fill_na = TRUE)
         playbase::plotDecisionTreeFromImportance(
-          imp=NULL, rf=imp$rf, type = input$plottype )
+          imp = NULL, rf = imp$rf, type = input$plottype
+        )
       }
 
       PlotModuleServer(

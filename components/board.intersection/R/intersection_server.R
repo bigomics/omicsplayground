@@ -7,8 +7,7 @@ IntersectionBoard <- function(
     id,
     pgx,
     selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
-    selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))
-    ) {
+    selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 800 # row height of panel
@@ -42,7 +41,9 @@ IntersectionBoard <- function(
 
     ## update choices upon change of data set
     shiny::observe({
-      if (is.null(pgx)) return(NULL)
+      if (is.null(pgx)) {
+        return(NULL)
+      }
       comparisons <- playbase::pgx.getContrasts(pgx)
       comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
       shiny::updateSelectInput(
@@ -91,7 +92,7 @@ IntersectionBoard <- function(
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
-    
+
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
