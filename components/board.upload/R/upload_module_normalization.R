@@ -221,7 +221,8 @@ upload_module_normalization_server <- function(
           value = 0.3,
           {
             res <- playbase::compare_batchcorrection_methods(
-              X1, samples,
+              X1,
+              samples,
               pheno = NULL,
               contrasts = contrasts,
               batch.pars = batch.pars,
@@ -256,12 +257,13 @@ upload_module_normalization_server <- function(
           ## standard dim reduction methods
           pos <- list()
           set.seed(1234)
-          pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
+          pca <- irlba::irlba(scaledX, nu = 2, nv = 0)
+          pos[["pca"]] <- pca$u
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
             colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
           }
-
+          pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
           out$pos <- pos
           out$corX <- corX
           out
@@ -559,34 +561,34 @@ upload_module_normalization_server <- function(
       }
 
       plot_all_methods <- function() {
-        res <- results_correction_methods()
         out.res <- results_outlier_methods()
+        res <- results_correction_methods()
         shiny::req(res)
         shiny::req(out.res)
         samples <- r_samples()
 
         methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
+
         pos.list <- res$pos
-        ## get same positions as after outlier detection
         pos0 <- out.res$pos[["pca"]]
+        
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
-        col1 <- factor(samples[, colorby_var]) ## as.numeric(col1)
+        col1 <- factor(samples[, colorby_var])
 
         pheno <- res$pheno
         xdim <- length(pheno)
-        ## col1 <- factor(pheno)
         cex1 <- cut(xdim,
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.5 * as.numeric(as.character(cex1))
-        par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
+        par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(1.7, 0.4, 0), tcl = -0.1)
         for (m in methods) {
           if (m %in% names(pos.list)) {
-            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20)
+            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20, las = 1) 
           } else {
             plot.new()
             text(0.45, 0.5, "method failed")
@@ -600,9 +602,9 @@ upload_module_normalization_server <- function(
         res <- results_correction_methods()
         samples <- r_samples()
 
-        ## get same positions as after outlier detection
-        ## pos0 <- res$pos[["normalized"]]
         pos0 <- out.res$pos[["pca"]]
+        pos0.varexp <- out.res$pos[["pca.varexp"]]
+        pos1.varexp <- res[["pca.varexp"]]
         method <- input$bec_method
 
         if (!method %in% names(res$pos)) {
@@ -618,12 +620,11 @@ upload_module_normalization_server <- function(
         }
 
         kk <- intersect(rownames(pos0), rownames(pos1))
-        pos0 <- pos0[kk, ]
-        pos1 <- pos1[kk, ]
+        pos0 <- pos0[kk, , drop = FALSE]
+        pos1 <- pos1[kk, , drop = FALSE]
 
         pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
         pheno <- pheno[rownames(pos0)]
-        # col1 <- factor(pheno)
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
         samples <- samples[rownames(pos0), , drop = FALSE]
@@ -633,14 +634,18 @@ upload_module_normalization_server <- function(
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.4, 0), tcl = -0.1)
         plot(pos0,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
-          main = "uncorrected", xlab = "PC1", ylab = "PC2"
+          col = col1, pch = 20, cex = cex1, las = 1,
+          main = "uncorrected",
+          xlab = paste0("PC1 (", round(pos0.varexp[1],2), "%)"),
+          ylab = paste0("PC2 (", round(pos0.varexp[2],2), "%)")
         )
         plot(pos1,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
-          main = method, xlab = "PC1", ylab = "PC2"
+          col = col1, pch = 20, cex = cex1, las = 1,
+          main = method,
+          xlab = paste0("PC1 (", round(pos1.varexp[[method]][1],2), "%)"),
+          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2],2), "%)")
         )
       }
 
