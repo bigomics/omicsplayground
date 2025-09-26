@@ -43,10 +43,11 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
                                                mwgcna
                                                ) {
   moduleServer(id, function(input, output, session) {
-
+    
     observeEvent( mwgcna(), {
       cons <- mwgcna()
-      trees <- c("Consensus"=0, names(cons$netList))
+      shiny::req(cons)
+      trees <- c("Consensus"=0, names(cons$layers))
       shiny::updateSelectInput(session, "clusterby", choices = trees)
     })
     
@@ -55,7 +56,7 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
       cons <- mwgcna()      
       shiny::req(cons)
 
-      mytrees <- c(0,names(cons$netList))
+      mytrees <- c(0,names(cons$layers))
       shiny::req(input$clusterby %in% mytrees)
       
       playbase::wgcna.plotDendroAndTraitCorrelation(

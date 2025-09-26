@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-consensusWGCNA_table_modulegenes_ui <- function(
+multiwgcna_table_modulegenes_ui <- function(
     id,
     label = "a",
     title = "Title",
@@ -15,17 +15,11 @@ consensusWGCNA_table_modulegenes_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(
-      inputId = ns("fulltable"),
-      label = "Show full table",
-      value = TRUE
-    ),
-    shiny::checkboxInput(
       inputId = ns("showallmodules"),
       label = "Show all modules",
       value = FALSE
     )
   )
-
   
   TableModuleUI(
     ns("table"),
@@ -39,71 +33,98 @@ consensusWGCNA_table_modulegenes_ui <- function(
   )
 }
 
-consensusWGCNA_table_modulegenes_server <- function(id,
-                                                    mwgcna,
-                                                    r_annot,
-                                                    r_trait = reactive(NULL),
-                                                    r_module = reactive(NULL)
-                                                    )
+multiwgcna_table_modulegenes_server <- function(id,
+                                                mwgcna,
+                                                r_annot,
+                                                r_phenotype = reactive(NULL),
+                                                r_module = reactive(NULL)
+                                                )
 {
   moduleServer(id, function(input, output, session) {
-
+    
     table_df <- function() {
 
-      cons <- mwgcna()
-      
-      trait <- r_trait()
+      wgcna <- mwgcna()
+
+      pheno <- r_phenotype()
       module <- r_module()
       annot <- r_annot()
-      
-      shiny::req(cons)
-      shiny::req(trait)
+
+      shiny::req(wgcna)
+      shiny::req(pheno)
       shiny::req(module)
       shiny::req(annot)      
-
+      
       if(input$showallmodules) module <- NULL
       
-      stats <- playbase::wgcna.getConsensusGeneStats(
-        cons,
-        stats = cons$stats,
-        trait = trait,
-        module = module
-      )
-      
-      which_table <- ifelse(input$fulltable, "full", "consensus")
-      df <- stats[[which_table]]
-      
-      if(!is.null(annot)) {
-        df$title <- playbase::probe2symbol(df$feature, annot, query="gene_title")
-        symbol <- playbase::probe2symbol(df$feature, annot, query="symbol")
-        if(mean(df$feature == symbol) < 0.2) df$symbol <- symbol        
+      df <- list()
+      for(dt in names(wgcna)) {
+        stats <- playbase::wgcna.getGeneStats(
+          wgcna = wgcna[[dt]],
+          trait = pheno,
+          plot = FALSE,
+          module = module,
+          col = NULL,
+          main = NULL)
+        
+        if(nrow(stats)>0) {
+          ## make feature first column
+          sel <- unique(c("feature",colnames(stats)))
+          sel <- intersect(sel, colnames(stats))
+          df[[dt]] <- stats[,sel]
+        }
       }
+      
+      cols <- Reduce(intersect, lapply(df,colnames))
+      df <- lapply(df, function(a) a[,cols] ) 
+      for(i in 1:length(df)) rownames(df[[i]]) <- paste0(names(df)[i],":",rownames(df[[i]]))
+      names(df) <- NULL
+      df <- do.call(rbind, df)
+
+      if(!is.null(annot)) {
+        ## if we have titles, add them
+        title2 <- playbase::probe2symbol(df$feature, annot, query="gene_title")
+        if(!all(title2 %in% c(NA,"","NA"))) df$title <- title2
+
+        ## if we have symbols (and they differ from features), add them
+        symbol <- playbase::probe2symbol(df$feature, annot, query="symbol")        
+        df$symbol <- NULL
+        nqq <- mean(symbol != df$feature & !is.na(symbol), na.rm=TRUE)
+        if( nqq > 0.5) df$symbol <- symbol        
+      }
+      
+      ## df <- df[df$module %in% module,]  ## select??
+      df <- df[order(-df$score),]
       
       return(df)
     }
     
     render_table <- function(full=TRUE) {
-
+      
       df <- table_df()      
       
       ## set correct types for filter
       df$module <- factor(df$module)
       
-      score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
       if(!full) {
-        cols <- c("module","feature","symbol","title")
-        cols <- c(cols, colnames(df)[which(score.cols)], "consensus")
-        cols <- intersect(cols, colnames(df))
-        df <- df[,cols]
+        sel <- c("module","feature","symbol","title","score","traitSignificance","moduleMembership")
+      } else {
+        sel <- c("module","feature","symbol","title","score")
+        sel <- unique(c(sel, colnames(df)))
       }
+      
+      sel <- intersect(sel, colnames(df))
+      if(!full) {
+        if(all(c("symbol","feature") %in% sel)) sel <- setdiff(sel, "feature")
+      }
+      df <- df[,sel]
       
       ## rename
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
       colnames(df) <- sub("traitSignificance","TS",colnames(df))
       
       numeric.cols <- which(sapply(df, class) == "numeric")
-      score.vals <- df[,score.cols,drop=FALSE]
-      
+
       DT::datatable(
         df,
         rownames = FALSE, #
@@ -123,20 +144,20 @@ consensusWGCNA_table_modulegenes_server <- function(id,
           columnDefs = list(
             list(
               targets = c(1), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 20, false )")
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 30, false )")
             ),
             list(
-              targets = c(2), ## without rownames column 2 is target 1
+              targets = c(2), ## without rownames column 3 is target 2
               render = DT::JS("$.fn.dataTable.render.ellipsis( 40, false )")
             )
           )                    
-        ) ## end of options
+        ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatStyle(
-          score.cols,
-          background = color_from_middle(score.vals, "lightblue", "#f5aeae"),
+          "score",
+          background = color_from_middle(df$score, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) 
@@ -154,6 +175,7 @@ consensusWGCNA_table_modulegenes_server <- function(id,
       "table",
       func = table.RENDER,
       func2 = table.RENDER2,
+      csvFunc = table_df,
       selector = "single"
     )
 

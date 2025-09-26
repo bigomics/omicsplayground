@@ -38,8 +38,8 @@ multiwgcna_plot_lasagna_ui <- function(
 multiwgcna_plot_lasagna_inputs <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
+    shiny::checkboxInput(ns("consensus"),"positive path",FALSE),              
     shiny::checkboxInput(ns("norm_edges"),"normalize edges",TRUE),
-    shiny::checkboxInput(ns("consensus"),"consensus",FALSE),              
     shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
     shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05)
   )

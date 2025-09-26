@@ -30,11 +30,6 @@ multiwgcna_plot_modulecorr_ui <- function(
       value = FALSE
     ),
     shiny::checkboxInput(
-      inputId = ns("showsig"),
-      label = "Show significance",
-      value = TRUE
-    ),
-    shiny::checkboxInput(
       inputId = ns("addtraits"),
       label = "Add traits",
       value = FALSE
@@ -42,11 +37,6 @@ multiwgcna_plot_modulecorr_ui <- function(
     shiny::checkboxInput(
       inputId = ns("condition"),
       label = "Condition on phenotype",
-      value = FALSE
-    ),
-    shiny::checkboxInput(
-      inputId = ns("fixcluster"),
-      label = "Fix heatmap",
       value = FALSE
     )
   )
@@ -99,11 +89,11 @@ multiwgcna_plot_modulecorr_server <- function(id,
           plotHeatmap = TRUE, 
           colorlabel = TRUE,
           text = input$showvalues,
-          pstar = input$showsig,
+          pstar = !input$showvalues,
           dendro.horiz = TRUE,
           dendro.width = 0.2,
           dendro.labels = FALSE,
-          fixclust = input$fixcluster,
+          fixclust = FALSE,
           mar1 = c(6.5, 5, 1.2, 0),
           mar2 = c(8, 12, 3, 2)
         )
@@ -117,8 +107,8 @@ multiwgcna_plot_modulecorr_server <- function(id,
           nmax = ifelse(input$showtop, 20, -1),
           main = NULL,
           showvalues = input$showvalues,
-          showsig = input$showsig,
-          fixcluster = input$fixcluster,
+          showsig = !input$showvalues,
+          fixcluster = TRUE,
           cex.text = 0.7,
           cex.lab = 0.8,
           setpar = TRUE
@@ -131,9 +121,9 @@ multiwgcna_plot_modulecorr_server <- function(id,
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      pdf.width = 8,
-      pdf.height = 12,
-      res = c(80, 100),
+      pdf.width = 12,
+      pdf.height = 8,
+      res = c(95, 100),
       add.watermark = FALSE
     )
 

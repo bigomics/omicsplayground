@@ -28,7 +28,7 @@ WgcnaInputs <- function(id) {
           # shiny::sliderInput(ns("cutheight"), "Merge cut height",0.05,0.8,0.15,0.05),
           shiny::sliderInput(ns("minkme"), "Minimum KME", 0, 0.9, 0.3, 0.1),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
-            choices = c(10, 20, 30, 50, 100), selected = 20
+            choices = c(5, 10, 20, 40, 100), selected = 20
           ),
           shiny::br(),
           shiny::actionButton(

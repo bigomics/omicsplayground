@@ -23,28 +23,33 @@ MultiWGCNA_Inputs <- function(id) {
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::selectInput(ns("clust"),"Cluster method:",c("average","complete")),
           shiny::selectInput(ns("power"),"Soft power:",
-            choices=c("<auto>",1,3,6,9,12,20), "<auto>"),
-          shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
-          shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
+            choices=c("<auto>",1,3,6,9,12,20), selected=12),
+          shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices = c(0:4), 2),
+          shiny::selectInput(ns("ngenes"),"Max. features:", choices = c(1000,2000,4000),
             2000),
+          shiny::selectInput(ns("minmodsize"), "Min. module size",
+            choices = c(5, 10, 20, 40, 100), selected = 10
+          ),
+          shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
           shiny::br(),
-          shiny::actionButton(ns("updateplots"), "Compute", size = "xs",
+          shiny::actionButton(ns("compute"), "Compute", size = "xs",
             icon=icon("refresh"))
         )
       )
     ),
     shiny::br(),
-    bslib::accordion(
-      id = ns("lasagna_options"),
-      open = FALSE,
-      bslib::accordion_panel(
-        "Lasagna options",
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("lasagna_options"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "Lasagna options",
         icon = icon("cog", lib = "glyphicon"),
         multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna")) 
+        )
       )
-    )    
+    )
   )
 }
 
@@ -59,7 +64,7 @@ MultiWGCNA_UI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   shiny::div(
-    boardHeader(title = "Multi-WGCNA", info_link = ns("info")),
+    boardHeader(title = "Multiomics WGCNA", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
 
@@ -70,7 +75,7 @@ MultiWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Multiomics WGCNA</b> is a generalization of WGCNA for integratiing multi-omics where WGCNA is performed for each layer separately. Integration is performed by computing the module correlation across layers using LASAGNA.")),
           bslib::layout_columns(
             col_widths = c(12),
             #height = "calc(100vh - 180px)",
@@ -108,7 +113,7 @@ MultiWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Module-trait heatmaps</b> show the correlation between eigengenes and traits (i.e. phenotype conditions). Heatmaps can be created for each datatype or merged. We look for modules that are highly correlated with traits.")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
@@ -132,7 +137,7 @@ MultiWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Module correlation heatmaps</b> show the pairwise correlation of module eigengenes across layers. Heatmaps can be shown per layer or merged for all layers.")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
@@ -181,7 +186,7 @@ MultiWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(5,7),
+            col_widths = c(6,6),
             height = "100vh",            
             bslib::layout_columns(
               col_widths = c(12),

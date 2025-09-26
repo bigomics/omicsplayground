@@ -70,51 +70,74 @@ MultiWGCNA_Board <- function(id, pgx) {
 
 
     r_multiwgcna <- shiny::eventReactive( {
-      list( input$updateplots, pgx$X ) 
+      list( input$compute, pgx$X, pgx$mofa ) 
+
     }, {
-      shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
-      shiny::validate( shiny::need( pgx$datatype=="multi-omics", "not multi-omics data"))
-      
       shiny::req(pgx$X)
-      shiny::req(pgx$mofa)
 
-      dataX = pgx$mofa$xx
-      samples = pgx$mofa$samples
-      names(dataX) <- substring(names(dataX),1,2)
-
-      ## add geneset matrix
-      dataX$gset <- pgx$gsetX
-
+      ##shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
+      shiny::validate( shiny::need( pgx$datatype == "multi-omics",
+        "ERROR: not multi-omics data"))
+      
       if(input$power == "<auto>") {
-        #power <- NULL
         power <- "iqr"
       } else {
         power <- as.numeric(input$power)
       }
+      dbg("[r_multiwgcna] power = ", power)
       
+      ## setup progress bars
       progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
       progress$set(message = paste("computing multi-omics WGCNA..."), value = 0.33)
       pgx.showSmallModal("computing multi-omics WGCNA...")
+
+      dataX <- playbase::mofa.split_data(pgx$X)
+      samples = pgx$samples
+      dataX <- lapply( dataX, function(x) playbase::rename_by2(x, pgx$genes))
+      dataX$gset <- pgx$gsetX
       
+      if(0) {
+
+        wgcna <- wgcna.compute_multiomics(
+          dataX = dataX,
+          samples = samples,
+          do.consensus = 1,
+          cutMethod = "hybrid",
+          deepsplit = 2,
+          power = power,
+          ngenes = 2000,
+          minmodsize = 10,
+          minKME = 0.3,
+          compute.enrichment = 0,
+          xtop = 100,
+          annot = pgx$genes,
+          #GMT = pgx$GMT,  ##??
+          #gsetX = pgx$gsetX,
+          progress = NULL
+        ) 
+
+      }
+
       wgcna <- playbase::wgcna.compute_multiomics(
         dataX = dataX,
         samples = samples,
-        clustMethod = input$clust,
+        do.consensus = input$consensus,
         cutMethod = "hybrid",
         deepsplit = as.integer(input$deepsplit),
         power = power,
         ngenes = as.integer(input$ngenes),
-        minmodsize = 3,
+        minmodsize = as.integer(input$minmodsize),
         minKME = 0.3,
         compute.enrichment = TRUE,
         xtop = 100,
         annot = pgx$genes,
-        GMT = pgx$GMT,  ##??
-        gsetX = pgx$gsetX,
+        #GMT = pgx$GMT,  ##  ??
+        #gsetX = pgx$gsetX,  ## ??
+        gset.methods = c("gsetcor","xcor"),        
         progress = progress
       ) 
-
+      
       shiny::removeModal()
 
       phenotypes <- colnames(wgcna[[1]]$datTraits)

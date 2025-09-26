@@ -9,8 +9,8 @@ ConsensusWGCNA_Inputs <- function(id) {
     shinyjs::hidden(shiny::selectInput(ns("splitpheno"), "Consensus by:", choices=NULL)),
     shinyjs::hidden(shiny::selectInput(ns("splitdata"), "Consensus by:", choices=NULL,
       multiple=TRUE)),              
-    shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE),
-    shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
+    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices=NULL, multiple=FALSE)),
+    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices=NULL)),
     shiny::br(),
     shiny::actionButton(ns("compute"), "Compute", size = "xs", icon=icon("refresh")),
     shiny::br(),
@@ -23,7 +23,7 @@ ConsensusWGCNA_Inputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(          
           shiny::selectInput(ns("power"),"Soft treshold:",
-            choices=c("<auto>",3,6,9,12,20), "<auto>"),
+            choices=c("<auto>",1,3,6,9,12,20), selected=12),
           shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
           shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
             2000),
@@ -58,7 +58,7 @@ ConsensusWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1, 0.7),
-          bs_alert(HTML("<b>Consensus-WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets.")),
+          bs_alert(HTML("<b>Consensus-WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets by clustering each dataset (or datatype) and computing the overlapping modules.")),
           bslib::layout_columns(
             col_widths = c(6,6),
             #height = "calc(100vh - 180px)",

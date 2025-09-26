@@ -85,9 +85,9 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       }
 
       if(input$transpose) {
-        par(mfrow=c(2,3), mar=c(10,8,2.5,1))
+        par(mfrow=c(2,3), mar=c(10,9,2.5,1))
       } else {
-        par(mfrow=c(2,3), mar=c(6.5,12,2.5,1))     
+        par(mfrow=c(2,3), mar=c(7,12,2.5,1))     
       }
       
       ## Individual Module-Trait
@@ -133,7 +133,7 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
         main = main
       )
       
-      ## Distinct Module-Trait
+      ## Discordant Module-Trait
       diffZ <- playbase::wgcna.computeDistinctMatrix(
         cons$zlist,
         ydim = cons$ydim,
@@ -143,7 +143,7 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       for(set in names(diffZ)) {
         mat <- diffZ[[set]][ii,jj,drop=FALSE]
         if(input$transpose) mat <- Matrix::t(mat)
-        main <- paste("distinct for",toupper(set))
+        main <- paste("discordant for",toupper(set))
         if(modtop20) main <- paste(main, "(top20)")
         
         playbase::wgcna.plotLabeledCorrelationHeatmap(

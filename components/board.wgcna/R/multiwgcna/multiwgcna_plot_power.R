@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-multiwgcna_plot_dendrograms_ui <- function(
+multiwgcna_plot_power_ui <- function(
     id,
     title = "",
     info.text = "",
@@ -14,10 +14,11 @@ multiwgcna_plot_dendrograms_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::checkboxInput(
-      inputId = ns("showtop"),
-      label = "Show top modules (max. 20)",
-      value = TRUE
+    shiny::selectInput(
+      inputId = ns("plottype"),
+      label = "Plot type:",
+      choices = c("sft.modelfit", "mean.k","dendro.IQR"),
+      selected = "sft.modelfit"
     )
   )
 
@@ -26,7 +27,7 @@ multiwgcna_plot_dendrograms_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-    #options = options,
+    options = options,
     caption = caption,
     height = height,
     width = width,
@@ -34,7 +35,7 @@ multiwgcna_plot_dendrograms_ui <- function(
   )
 }
 
-multiwgcna_plot_dendrograms_server <- function(id,
+multiwgcna_plot_power_server <- function(id,
                                                mwgcna,
                                                r_layers
                                                ) {
@@ -48,46 +49,30 @@ multiwgcna_plot_dendrograms_server <- function(id,
       wgcna <- wgcna[sel.layers]
       shiny::req(length(wgcna)>0)
 
-      nw = length(wgcna)
-      onerow=TRUE
-      if(onerow) {
-        nr=1;nc=nw
-      } else {
-        nc = ceiling(sqrt(nw))
-        nr = ceiling(nw / nc)            
-      }
-      
-      ## Need to set layout manually
-      layout.matrix <- matrix(
-        1:(2*nr*nc), nrow = nr*2, ncol = nc)
-      layout(mat = layout.matrix,
-        heights = rep(c(2.5,1),nr), # Heights of the two rows
-        widths  = rep(1, nc)
-      ) # Widths of the two columns
-      #layout.show(2*nw)
-      
+      nw <- length(wgcna)
+      par(mfrow=c(1,nw), mar=c(5,5,3,1))
       i=1
       for(i in 1:length(wgcna)) {
-        power <- wgcna[[i]]$net$power
-        playbase::wgcna.plotDendroAndColors(
-          wgcna = wgcna[[i]],
-          main = paste0("Dendrogram for ",names(wgcna)[i]," (p=",power,")"),
-          marAll = c(3, 5.5, 3, 1),
-          setLayout = FALSE
+        playbase::wgcna.plotPowerAnalysis(
+          wgcna[[i]]$datExpr,
+          maxpower = 20,
+          plots = input$plottype,
+          RsquaredCut = 0.85,
+          setPar = FALSE,
+          main = names(wgcna)[i]
         )
       }
-      
+
     }
     
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      pdf.width = 12,
-      pdf.height = 8,
-      res = c(100, 130),
+      pdf.width = 8,
+      pdf.height = 12,
+      res = c(90, 130),
       add.watermark = FALSE
     )
-
     
   })
 }

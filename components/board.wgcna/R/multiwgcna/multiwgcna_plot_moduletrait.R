@@ -30,11 +30,6 @@ multiwgcna_plot_moduletrait_ui <- function(
       value = FALSE
     ),
     shiny::checkboxInput(
-      inputId = ns("showsig"),
-      label = "Show p-values",
-      value = TRUE
-    ),
-    shiny::checkboxInput(
       inputId = ns("transpose"),
       label = "Transpose matrix",
       value = FALSE
@@ -86,11 +81,11 @@ multiwgcna_plot_moduletrait_server <- function(id,
           setpar = TRUE,
           cluster = TRUE,
           main = paste(names(wgcna),collapse=" + "),
-          transpose = input$transpose,
+          transpose = !input$transpose,
           colorlabel = TRUE,
           nmax = NMAX,
           text = input$showvalues,
-          pstar = input$showsig
+          pstar = !input$showvalues
         ) 
 
 
@@ -108,11 +103,11 @@ multiwgcna_plot_moduletrait_server <- function(id,
             setpar = TRUE,
             cluster = TRUE,
             main = names(wgcna)[i],          
-            transpose = input$transpose,
+            transpose = !input$transpose,
             colorlabel = TRUE,
             nmax = NMAX,
             text = input$showvalues,
-            pstar = input$showsig
+            pstar = !input$showvalues
           ) 
         }
 
@@ -124,7 +119,7 @@ multiwgcna_plot_moduletrait_server <- function(id,
       func = plot.RENDER,
       pdf.width = 8,
       pdf.height = 12,
-      res = c(80, 100),
+      res = c(95, 100),
       add.watermark = FALSE
     )
 

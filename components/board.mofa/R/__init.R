@@ -6,10 +6,10 @@ MODULE.multiomics <- list(
     c(
       snf = "SNF",
       lasagna = "LASAGNA",
-      mgsea = "MultiGSEA",
+      mgsea = "Multiomics GSEA",
       mofa = "MOFA",
       deepnet = "DeepLearning",
-      mwgcna = "MultiWGCNA"
+      mwgcna = "Multiomics WGCNA"
     )
   },
   module_ui = function() {

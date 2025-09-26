@@ -39,10 +39,10 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Dendrograms" = list(disable = c("phenotype","module")),
-      "Sample Clustering" = list(disable = c("phenotype","module")),
-      "Module-Trait" = list(disable = c("phenotype","module")),
-      "Preservation" = list(disable = c("phenotype","module")),      
+      "Dendrograms" = list(disable = c("trait","module")),
+      "Sample Clustering" = list(disable = c("trait","module")),
+      "Module-Trait" = list(disable = c("trait","module")),
+      "Preservation" = list(disable = c("trait","module")),      
       "Feature Table" = list(disable = c())
     )
 
@@ -78,9 +78,9 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       shiny::updateSelectizeInput(session, "splitdata", choices = dtypes,
         selected = sel.dtypes)
 
-      phenotypes <- colnames(pgx$samples)
-      shiny::updateSelectInput(session, "splitpheno", choices = phenotypes,
-        selected = phenotypes[1])
+      splitpheno <- colnames(pgx$samples)
+      shiny::updateSelectInput(session, "splitpheno", choices = splitpheno,
+        selected = splitpheno[1])
       
     })
     
@@ -99,15 +99,19 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       
       xx <- NULL
       if( pgx$datatype == "multi-omics" ) {        
-        if("mofa" %in% names(pgx)) {
-          xx <- pgx$mofa$xx
-        } else {
-          xx <- playbase::mofa.split_data(pgx$X)
-        }        
+        xx <- playbase::mofa.split_data(pgx$X)
         has.gxpx <- all(c("gx","px") %in% names(xx))
         has.gxpx
         shiny::validate(shiny::need(has.gxpx, "Your mulit-omics dataset is incompatible for Consensus WGCNA: You must have both transcriptomics (gx) and proteomics (px)"))
 
+        ## Rename all tables to symbol
+        ##xx <- xx[names(xx) %in% c("gx","px","me","mt","mi","mir")]
+        xx <- xx[names(xx) %in% c("gx","px")]      
+        xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table=pgx$genes))
+        gg <- Reduce(intersect, lapply(xx, rownames))
+        shiny::validate(shiny::need(length(gg)>0, "Your dataset is incompatible for consensus WGCNA: No overlapping features."))
+        xx <- lapply(xx, function(x) x[gg,])
+        
       } else if(!is.null(pgx$samples)) {
 
         pheno <- input$splitpheno
@@ -125,14 +129,11 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         ## should not come here???
         shiny::validate(shiny::need(has.gxpx, "Your dataset is incompatible for consensus WGCNA."))
       }
+
+      dbg("[r_consensusWGCNA] dim.xx1 = ", dim(xx[[1]]))
       
-      ## Rename all tables to symbol
-      xx <- lapply(xx, playbase::rename_by2, annot_table=pgx$genes)
-      gg <- Reduce(intersect, lapply(xx, rownames))
-      shiny::validate(shiny::need(length(gg)>0, "Your dataset is incompatible for consensus WGCNA: No overlapping features."))
-      xx <- lapply(xx, function(x) x[gg,])
-      ##names(xx) <- substring(names(xx),1,2)
-      names(xx) <- base::abbreviate(names(xx),2)
+      ## abbreviate??
+      #names(xx) <- base::abbreviate(names(xx),2)
       
       progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
@@ -145,36 +146,48 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       } else {
         power <- as.numeric(power)
       }
-
+      
       ## This runs consensus WGCNA on an expression list
+      #ngenes=2000;minModuleSize=20;deepSplit=2
+      ngenes = as.integer(input$ngenes)
+      minModuleSize = as.integer(input$minmodsize)
+      deepSplit = as.integer(input$deepsplit)
+      
+      dbg("[ConsensusWGCNA_Board] power = ", power)
+      dbg("[ConsensusWGCNA_Board] ngenes = ", ngenes)
+      dbg("[ConsensusWGCNA_Board] minModuleSize = ", minModuleSize)
+      dbg("[ConsensusWGCNA_Board] deepSplit = ", deepSplit)      
+      
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
         phenoData = pgx$samples,
         # GMT = pgx$GMT,
         annot = pgx$genes,
         power = power,
-        ngenes = as.integer(input$ngenes),
-        minModuleSize = as.integer(input$minmodsize),
+        ngenes = ngenes,
+        minModuleSize = minModuleSize,
         maxBlockSize = 9999,
         minKME = 0.3,
         mergeCutHeight = 0.15,
-        deepSplit = as.integer(input$deepsplit),
+        deepSplit = deepSplit,
         calcMethod = "fast",
         drop.ref = FALSE,
         addCombined = FALSE,
-        gsea.mingenes = 10
+        gsea.mingenes = 10,
+        verbose = 1
       ) 
       
       shiny::removeModal()
-      
-      phenotypes <- colnames(cons$datTraits)
-      updateSelectInput(session, "phenotype", choices = sort(phenotypes),
-        selected = phenotypes[1])
-      
+            
       all_modules <- rownames(cons$modTraits)
       module1 <- all_modules[[1]][1]
       updateSelectInput(session, "module", choices = sort(all_modules),
         selected = module1)
+
+      #traits <- colnames(cons$datTraits)
+      traits <- colnames(cons$stats[[1]][['moduleTraitCor']])
+      updateSelectInput(session, "trait", choices = sort(traits),
+        selected = traits[1])
       
       return(cons)
     }, ignoreNULL=FALSE)
@@ -213,7 +226,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       id = "consensusWGCNATable",
       mwgcna = r_consensusWGCNA,
       r_annot = reactive(pgx$genes),
-      r_phenotype = reactive(input$phenotype),
+      r_trait = reactive(input$trait),
       r_module = reactive(input$module)      
     )
 
