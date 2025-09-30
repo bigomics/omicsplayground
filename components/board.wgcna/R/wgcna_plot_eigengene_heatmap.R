@@ -15,7 +15,7 @@ wgcna_plot_eigengene_heatmap_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(ns("addtraits"), "Add traits", TRUE),
-    shiny::checkboxInput(ns("marginxl"), "Increase margins", TRUE)    
+    shiny::checkboxInput(ns("marginxl"), "Increase margins", FALSE)    
   )
 
   PlotModuleUI(
@@ -45,8 +45,8 @@ wgcna_plot_eigengene_heatmap_server <- function(id,
 
     plot.RENDER <- function() {
       res <- wgcna()
-      mar2 <- c(5, 6, 0.5, 0.5)        
-      if(input$marginxl) mar2 <- c(10, 13, 0.5, 0.5)        
+      mar2 <- c(7, 7, 0.5, 0.5)        
+      if(input$marginxl) mar2 <- c(12, 12, 0.5, 0.5)        
       playbase::wgcna.plotEigenGeneAdjacencyHeatmap(
         res,
         add_traits = input$addtraits,
