@@ -143,12 +143,9 @@ multiwgcna_table_modulegenes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
-              targets = c(1), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 30, false )")
-            ),
-            list(
-              targets = c(2), ## without rownames column 3 is target 2
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 40, false )")
+              #targets = c(1), ## without rownames column 2 is target 1
+              targets = c("feature"), ## without rownames column 2 is target 1
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 80, false )")
             )
           )                    
         ) ## end of options.list

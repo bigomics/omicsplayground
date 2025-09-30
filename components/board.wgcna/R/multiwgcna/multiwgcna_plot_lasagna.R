@@ -41,6 +41,7 @@ multiwgcna_plot_lasagna_inputs <- function(id) {
     shiny::checkboxInput(ns("consensus"),"positive path",FALSE),              
     shiny::checkboxInput(ns("norm_edges"),"normalize edges",TRUE),
     shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
+    shiny::checkboxInput(ns("prune"),"Prune nodes ",FALSE),
     shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05)
   )
 }
@@ -110,25 +111,25 @@ multiwgcna_plot_lasagna_server <- function(id,
         max_edges = 1000,
         value = "logFC",
         sp.weight = sp.weight,
-        prune = FALSE) 
-
+        prune = input$prune)
+      
       ## prune graph for plotting
-      subgraph <- playbase::lasagna.prune_graph(
-        graph,
-        ntop = 50,
-        layers = NULL,
-        normalize.edges = normalize.edges,
-        min.rho = min.rho,
-        edge.sign = "both",
-        edge.type = "both", ## inter or intra
-        prune = FALSE
-      )
-      subgraph
+      ## subgraph <- playbase::lasagna.prune_graph(
+      ##   graph,
+      ##   ntop = 50,
+      ##   layers = NULL,
+      ##   normalize.edges = normalize.edges,
+      ##   min.rho = min.rho,
+      ##   edge.sign = "both",
+      ##   edge.type = "both", ## inter or intra
+      ##   prune = FALSE
+      ## )
+      ## subgraph
       
       par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
       playbase::plotMultiPartiteGraph2(
-        subgraph,
-        min.rho = 0,
+        graph,
+        min.rho = min.rho,
         ntop = -50,
         xdist = 1.25,
         cex.label = 0.9,
@@ -138,9 +139,9 @@ multiwgcna_plot_lasagna_server <- function(id,
         edge.sign = ifelse(consensus, "consensus", "both"),
         edge.type = ifelse(input$showintra, "both2", "inter"),  
         yheight = 3.2,
-        normalize.edges = 1,
+        normalize.edges = normalize.edges,
         strip.prefix = TRUE,
-        prune = 0
+        prune = input$prune
       ) 
 
     }

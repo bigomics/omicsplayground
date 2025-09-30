@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-multiwgcna_plot_power_ui <- function(
+preservationWGCNA_plot_power_ui <- function(
     id,
     title = "",
     info.text = "",
@@ -14,11 +14,10 @@ multiwgcna_plot_power_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::selectInput(
-      inputId = ns("plottype"),
-      label = "Plot type:",
-      choices = c("sft.modelfit", "mean.k","dendro.IQR"),
-      selected = "sft.modelfit"
+    shiny::checkboxInput(
+      inputId = ns("showiqr"),
+      label = "Show IQR",
+      value = FALSE
     )
   )
 
@@ -27,7 +26,7 @@ multiwgcna_plot_power_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-    ##options = options,
+    options = options,
     caption = caption,
     height = height,
     width = width,
@@ -35,31 +34,34 @@ multiwgcna_plot_power_ui <- function(
   )
 }
 
-multiwgcna_plot_power_server <- function(id,
+preservationWGCNA_plot_power_server <- function(id,
                                                mwgcna,
                                                r_layers
                                                ) {
   moduleServer(id, function(input, output, session) {
     
     plot.RENDER <- function() {
-      wgcna <- mwgcna()
 
-      layers <- r_layers()
-      sel.layers <- intersect(layers, names(wgcna))
-      wgcna <- wgcna[sel.layers]
-      shiny::req(length(wgcna)>0)
+      cons <- mwgcna()
+      shiny::req(cons)
 
-      exprList <- lapply(wgcna, function(w) t(w$datExpr))
-      playbase::wgcna.plotPowerAnalysis_multi(
-        exprList,
-        maxpower = 20,
-        #plots = input$plottype,
-        nmax = 2000, cex=1,
-        RsquaredCut = 0.85,
-        setPar = TRUE,
-        cex.legend = 0.9,
-        main = names(wgcna)[i]
-      )
+      nw <- length(cons$datExpr)
+      plots <- c("sft.modelfit", "mean.k")
+      if(input$showiqr) plots <- c(plots,"dendro.IQR")
+
+      par(mfrow=c(nw, length(plots)))
+      par(mar=c(5,4,3,1), mgp=c(2.5,0.8,0))      
+      i=1
+      for(i in 1:length(cons$datExpr)) {
+        playbase::wgcna.plotPowerAnalysis(
+          cons$datExpr[[i]],
+          maxpower = 25,
+          plots = plots,
+          RsquaredCut = 0.85,
+          setPar = FALSE,
+          main = toupper(names(cons$datExpr)[i])
+        )
+      }
 
     }
     
@@ -68,7 +70,7 @@ multiwgcna_plot_power_server <- function(id,
       func = plot.RENDER,
       pdf.width = 8,
       pdf.height = 12,
-      res = c(105, 140),
+      res = c(90, 130),
       add.watermark = FALSE
     )
     

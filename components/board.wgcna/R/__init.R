@@ -11,7 +11,8 @@ MODULE.systems <- list(
       tcga = "TCGA analysis",
       cell = "Single cell",
       pcsf = "Protein networks",
-      consensus = "Consensus WGCNA"
+      consensus = "Consensus WGCNA",
+      preservation = "Preservation WGCNA"
     )
   },
   module_ui = function() {
@@ -45,6 +46,11 @@ MODULE.systems <- list(
         "consensus-tab",
         ConsensusWGCNA_Inputs("consensus"),
         create_loader("consensus-loader")
+      ),
+      bigdash::bigTabItem(
+        "preservation-tab",
+        PreservationWGCNA_Inputs("preservation"),
+        create_loader("preservation-loader")
       )
     )
   },
@@ -73,6 +79,10 @@ MODULE.systems <- list(
       list(
         "consensus-tab",
         ConsensusWGCNA_UI("consensus")
+      ),
+      list(
+        "preservation-tab",
+        PreservationWGCNA_UI("preservation")
       )
     )
   },
@@ -99,6 +109,11 @@ MODULE.systems <- list(
 
     ConsensusWGCNA_Board(
       id = "consensus",
+      pgx = PGX
+    )     
+
+    PreservationWGCNA_Board(
+      id = "preservation",
       pgx = PGX
     )     
     

@@ -17,8 +17,8 @@ MultiWGCNA_Inputs <- function(id) {
     shiny::br(),
     shiny::br(),
     bslib::accordion(
-      id = ns("mwgcna_options"),
-      open = FALSE,
+      id = ns("wgcna_options"),
+      open = TRUE,
       bslib::accordion_panel(
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
@@ -200,7 +200,7 @@ MultiWGCNA_UI <- function(id) {
               ),
               multiwgcna_table_crossgenes_ui(
                 ns("multiwgcnaCrossgene"),
-                title = "Correlated genes (gME)",
+                title = "Highly correlated genes",
                 caption = "...",
                 info.text = "...",
                 height = c("100%", TABLE_HEIGHT_MODAL),

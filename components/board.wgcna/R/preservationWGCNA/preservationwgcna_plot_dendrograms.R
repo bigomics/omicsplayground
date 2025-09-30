@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-consensusWGCNA_plot_dendrograms_ui <- function(
+preservationWGCNA_plot_dendrograms_ui <- function(
     id,
     title = "",
     info.text = "",
@@ -18,11 +18,6 @@ consensusWGCNA_plot_dendrograms_ui <- function(
       inputId = ns("showtraits"),
       label = "Show traits",
       value = TRUE
-    ),
-    shiny::selectInput(
-      inputId = ns("clusterby"),
-      label = "Cluster by",
-      choices = NULL
     )
   )
 
@@ -39,34 +34,23 @@ consensusWGCNA_plot_dendrograms_ui <- function(
   )
 }
 
-consensusWGCNA_plot_dendrograms_server <- function(id,
-                                               mwgcna
-                                               ) {
+preservationWGCNA_plot_dendrograms_server <- function(id,
+                                                      rwgcna
+                                                      ) {
   moduleServer(id, function(input, output, session) {
-    
-    observeEvent( mwgcna(), {
-      cons <- mwgcna()
-      shiny::req(cons)
-      trees <- c("Consensus"=0, names(cons$layers))
-      shiny::updateSelectInput(session, "clusterby", choices = trees)
-    })
-    
+        
     plot.RENDER <- function() {
 
-      cons <- mwgcna()      
-      shiny::req(cons)
-
-      mytrees <- c(0,names(cons$layers))
-      shiny::req(input$clusterby %in% mytrees)
+      res <- rwgcna()      
+      shiny::validate(shiny::need(!is.null(res), "Please compute"))
+      ##shiny::req(res)
       
-      playbase::wgcna.plotDendroAndTraitCorrelation(
-        cons,
-        main = "",
-        show.traits = input$showtraits,
-        marAll = c(1,7,1,0),
-        use.tree = input$clusterby,
+      playbase::wgcna.plotDendroAndTraitCorrelation_multi(
+        res$layers,
+        show.traits = 1,
+        marAll = c(1, 10, 3, 0.2),
         colorHeightMax = 0.75
-      )  
+      )
       
     }
     
@@ -75,7 +59,7 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
       func = plot.RENDER,
       pdf.width = 12,
       pdf.height = 8,
-      res = c(90, 110),
+      res = c(90, 100),
       add.watermark = FALSE
     )
 

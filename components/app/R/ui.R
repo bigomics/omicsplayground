@@ -146,7 +146,8 @@ app_ui <- function(x) {
           cell = "Cell profiling",
           pcsf = "PCSF",
           wgcna = "WGCNA",
-          consensus = "Consensus WGCNA",          
+          consensus = "Consensus WGCNA",
+          preservation = "Preservation WGCNA",          
           tcga = "TCGA survival (beta)"
         ),
         "MultiOmics" = MODULE.multiomics$module_menu()
@@ -522,6 +523,11 @@ app_ui <- function(x) {
             "consensus-tab",
             "Consensus WGCNA",
             tspan("Consensus analysis using the WGCNA framework")
+          ),
+          bigdash::sidebarTabHelp(
+            "preservation-tab",
+            "Preservation WGCNA",
+            tspan("Preservation analysis using the WGCNA framework")
           ),
           !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),

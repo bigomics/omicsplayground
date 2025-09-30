@@ -40,12 +40,12 @@ MultiWGCNA_Board <- function(id, pgx) {
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
         "Dendrograms" = list(disable = c("phenotype","module","lasagna_options")),
-        "Module-Trait" = list(disable = c("phenotype","module","mwgcna_options",
+        "Module-Trait" = list(disable = c("phenotype","module","wgcna_options",
           "lasagna_options")),
-        "Module correlation" = list(disable = c("module", "mwgcna_options",
+        "Module correlation" = list(disable = c("module", "wgcna_options",
           "lasagna_options")),
-        "WGCNA-Lasagna" = list(disable = c("module","mwgcna_options")),
-        "Feature Table" = list(disable = c("layers","mwgcna_options",
+        "WGCNA-Lasagna" = list(disable = c("module","wgcna_options")),
+        "Feature Table" = list(disable = c("layers","wgcna_options",
           "lasagna_options"))
     )
 
@@ -94,14 +94,14 @@ MultiWGCNA_Board <- function(id, pgx) {
 
       dataX <- playbase::mofa.split_data(pgx$X)
       samples = pgx$samples
-      dataX <- lapply( dataX, function(x) playbase::rename_by2(x, pgx$genes))
-      dataX$gset <- pgx$gsetX
       
       if(0) {
-
+        
         wgcna <- wgcna.compute_multiomics(
           dataX = dataX,
           samples = samples,
+          add.pheno = (ncol(samples) > 10),
+          add.gsets = TRUE,
           do.consensus = 1,
           cutMethod = "hybrid",
           deepsplit = 2,
@@ -123,6 +123,8 @@ MultiWGCNA_Board <- function(id, pgx) {
         dataX = dataX,
         samples = samples,
         do.consensus = input$consensus,
+        add.pheno = (ncol(samples) > 10),
+        add.gsets = TRUE,
         cutMethod = "hybrid",
         deepsplit = as.integer(input$deepsplit),
         power = power,

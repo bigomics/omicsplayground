@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-consensusWGCNA_table_modulegenes_ui <- function(
+preservationWGCNA_table_modulegenes_ui <- function(
     id,
     label = "a",
     title = "Title",
@@ -14,11 +14,6 @@ consensusWGCNA_table_modulegenes_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::checkboxInput(
-      inputId = ns("fulltable"),
-      label = "Show full table",
-      value = TRUE
-    ),
     shiny::checkboxInput(
       inputId = ns("showallmodules"),
       label = "Show all modules",
@@ -39,45 +34,49 @@ consensusWGCNA_table_modulegenes_ui <- function(
   )
 }
 
-consensusWGCNA_table_modulegenes_server <- function(id,
-                                                    mwgcna,
-                                                    r_annot,
-                                                    r_trait = reactive(NULL),
-                                                    r_module = reactive(NULL)
+preservationWGCNA_table_modulegenes_server <- function(id,
+                                                    rwgcna,
+                                                    rannot,
+                                                    rtrait = reactive(NULL),
+                                                    rmodule = reactive(NULL)
                                                     )
 {
   moduleServer(id, function(input, output, session) {
 
     table_df <- function() {
 
-      cons <- mwgcna()
+      pres <- rwgcna()
       
-      trait <- r_trait()
-      module <- r_module()
-      annot <- r_annot()
+      trait <- rtrait()
+      module <- rmodule()
+      annot <- rannot()
       
-      shiny::req(cons)
+      shiny::req(pres)
       shiny::req(trait)
       shiny::req(module)
       shiny::req(annot)      
-
+      
+      refname <- names(pres$layers)[1]
+      refname
+      
       if(input$showallmodules) module <- NULL
-      
-      stats <- playbase::wgcna.getConsensusGeneStats(
-        cons,
-        stats = cons$stats,
+      df <- playbase::wgcna.getGeneStats(
+        wgcna = NULL,
+        stats = pres$stats,
         trait = trait,
-        module = module
+        module = module,
+        labels = pres$colors[,refname],
+        plot = FALSE
       )
-      
-      which_table <- ifelse(input$fulltable, "full", "consensus")
-      df <- stats[[which_table]]
       
       if(!is.null(annot)) {
         df$title <- playbase::probe2symbol(df$feature, annot, query="gene_title")
         symbol <- playbase::probe2symbol(df$feature, annot, query="symbol")
-        if(mean(df$feature == symbol) < 0.2) df$symbol <- symbol        
+        if(mean(df$feature == symbol, na.rm=TRUE) < 0.2) df$symbol <- symbol        
       }
+
+      score.sign <- sign(mean(df$score, na.rm=TRUE))
+      df <- df[order(-df$score * score.sign), ]
       
       return(df)
     }
@@ -92,15 +91,18 @@ consensusWGCNA_table_modulegenes_server <- function(id,
       score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
       if(!full) {
         cols <- c("module","feature","symbol","title")
-        cols <- c(cols, colnames(df)[which(score.cols)], "consensus")
+        cols <- c(cols, colnames(df)[which(score.cols)])
         cols <- intersect(cols, colnames(df))
+        if("symbol" %in% cols) cols <- setdiff(cols, "title")
         df <- df[,cols]
       }
 
+      if(!input$showallmodules) df$module <- NULL
+      
       ## order name first
       cols <- unique(c("module","feature","symbol","title",colnames(df)))
       cols <- intersect(cols, colnames(df))
-      df <- df[,cols]      
+      df <- df[,cols]
       
       ## rename
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
@@ -109,6 +111,8 @@ consensusWGCNA_table_modulegenes_server <- function(id,
       numeric.cols <- which(sapply(df, class) == "numeric")
       score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
       score.vals <- df[,score.cols,drop=FALSE]
+      short80.cols <- intersect(c("title"), colnames(df))
+      short20.cols <- intersect(c("feature","symbol"), colnames(df))      
       
       DT::datatable(
         df,
@@ -128,12 +132,14 @@ consensusWGCNA_table_modulegenes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
-              targets = c(1), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 20, false )")
+              #targets = c(0,1), ## without rownames column 2 is target 1
+              targets = short80.cols, 
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 80, false )")
             ),
             list(
-              targets = c(2), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 40, false )")
+              #targets = c(0,1), ## without rownames column 2 is target 1
+              targets = short20.cols, 
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 20, false )")
             )
           )                    
         ) ## end of options

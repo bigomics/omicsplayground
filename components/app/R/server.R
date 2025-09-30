@@ -504,7 +504,7 @@ app_server <- function(input, output, session) {
       tab_control()
     }
     if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab",
-      "pcsf-tab", "consensus-tab") && loaded$systems == 0) {
+      "pcsf-tab", "consensus-tab", "preservation-tab") && loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -521,6 +521,8 @@ app_server <- function(input, output, session) {
       loaded$multiomics <- 1
       tab_control()
     }
+
+    
   })
 
 
@@ -719,6 +721,7 @@ app_server <- function(input, output, session) {
     info("[SERVER] disabling beta features")
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
+    bigdash.toggleTab(session, "preservation-tab", show.beta)
     bigdash.toggleTab(session, "mwgcna-tab", show.beta)        
 
     ## hide beta subtabs..
@@ -755,6 +758,7 @@ app_server <- function(input, output, session) {
       bigdash.hideTab(session, "wordcloud-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
+    
   }
 
   ## -------------------------------------------------------------

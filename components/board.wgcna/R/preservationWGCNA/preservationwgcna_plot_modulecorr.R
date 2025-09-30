@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-multiwgcna_plot_modulecorr_ui <- function(
+preservationWGCNA_plot_modulecorr_ui <- function(
     id,
     title = "",
     info.text = "",
@@ -30,13 +30,13 @@ multiwgcna_plot_modulecorr_ui <- function(
       value = FALSE
     ),
     shiny::checkboxInput(
-      inputId = ns("addtraits"),
-      label = "Add all traits",
-      value = FALSE
+      inputId = ns("showsig"),
+      label = "Show significance",
+      value = TRUE
     ),
     shiny::checkboxInput(
-      inputId = ns("condition"),
-      label = "Condition on phenotype",
+      inputId = ns("addtraits"),
+      label = "Add traits",
       value = FALSE
     )
   )
@@ -54,10 +54,9 @@ multiwgcna_plot_modulecorr_ui <- function(
   )
 }
 
-multiwgcna_plot_modulecorr_server <- function(id,
+preservationWGCNA_plot_modulecorr_server <- function(id,
                                               mwgcna,
-                                              r_layers,
-                                              r_phenotype
+                                              r_layers
                                               ) {
   moduleServer(id, function(input, output, session) {
 
@@ -66,55 +65,75 @@ multiwgcna_plot_modulecorr_server <- function(id,
 
       ## select layers
       layers <- r_layers()
-      phenotype <- r_phenotype()      
-      layers <- intersect(layers, names(wgcna))
-      wgcna <- wgcna[layers]
+      sel.layers <- intersect(layers, names(wgcna))
+      wgcna <- wgcna[sel.layers]
       shiny::req(length(wgcna)>0)
       
-      if(!input$condition) phenotype <- NULL
-
       if(input$mergemodules) {
         
         playbase::wgcna.plotEigenGeneAdjacencyHeatmap(
           wgcna,
           multi = TRUE,
-          phenotype = phenotype,
           add_traits = input$addtraits,
-          traits = NULL,
-          main = "Eigengene Clustering",
+          ##main = NULL,
+          method = 2,
           nmax = ifelse(input$showtop, 20, -1),
-          cex.lab = 0.8,
-          cex.text = 0.7,
           mask.intra = FALSE,
           plotDendro = TRUE,
           plotHeatmap = TRUE, 
           colorlabel = TRUE,
           text = input$showvalues,
-          pstar = !input$showvalues,
+          pstar = input$showsig,
           dendro.horiz = TRUE,
           dendro.width = 0.2,
           dendro.labels = FALSE,
-          fixclust = FALSE,
           mar1 = c(6.5, 5, 1.2, 0),
           mar2 = c(8, 12, 3, 2)
         )
 
       } else {
+
+        ## Show inter-correlation of modules
+        me <- lapply(wgcna, function(w) w$net$MEs)
+        comb <- combn(length(me),2)
+        ncomb <- ncol(comb)
+        ncomb
+        nsamples <- nrow(wgcna[[1]]$datExpr)
+        Y <- wgcna[[1]]$datTraits
         
-        playbase::wgcna.plotMultiEigengeneCorrelation(
-          wgcna,
-          addtraits = input$addtraits,
-          phenotype = phenotype,
-          nmax = ifelse(input$showtop, 20, -1),
-          main = NULL,
-          showvalues = input$showvalues,
-          showsig = !input$showvalues,
-          fixcluster = TRUE,
-          cex.text = 0.7,
-          cex.lab = 0.8,
-          setpar = TRUE
-        ) 
-    
+        nc <- ceiling(sqrt(ncomb))
+        nr <- ceiling(ncomb / nc)
+        par(mfrow=c(nr,nc), mar=c(8,10,3,1))
+        
+        for(k in 1:ncol(comb)) {
+          i <- comb[1,k]
+          j <- comb[2,k]
+          M1 <- me[[i]]
+          M2 <- me[[j]]
+          if(input$addtraits) {
+            M1 <- cbind(M1, Y)
+            M2 <- cbind(M2, Y)
+          }
+          R1 <- cor(M1, M2)
+          
+          if(input$showtop) {
+            NMAX = 20
+            ii <- head(order(-apply(abs(R1), 1, max)), NMAX)
+            jj <- head(order(-apply(abs(R1), 2, max)), NMAX)          
+            R1 <- R1[ii,jj]
+          }
+          
+          playbase::wgcna.plotLabeledCorrelationHeatmap(
+            R1,
+            nsamples,
+            text = input$showvalues,
+            pstar = input$showsig,
+            cluster = TRUE,
+            setpar = FALSE,
+            main = paste(names(me)[i],"vs.",names(me)[j])
+          )
+
+        }
       }
       
     }
@@ -122,9 +141,9 @@ multiwgcna_plot_modulecorr_server <- function(id,
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      pdf.width = 12,
-      pdf.height = 8,
-      res = c(95, 100),
+      pdf.width = 8,
+      pdf.height = 12,
+      res = c(80, 100),
       add.watermark = FALSE
     )
 

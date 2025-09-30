@@ -17,7 +17,7 @@ multiwgcna_plot_dendrograms_ui <- function(
     shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show trait correlation",
-      value = TRUE
+      value = FALSE
     )
   )
 
