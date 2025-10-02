@@ -30,7 +30,6 @@ mofa_plot_loadingheatmap_server <- function(id,
                                             input_factor = reactive(1),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       res <- mofa()
       shiny::req(res)
@@ -39,8 +38,10 @@ mofa_plot_loadingheatmap_server <- function(id,
       factors <- colnames(res$F)
       shiny::req(k %in% factors)
       playbase::mofa.plot_heatmap(
-        res, k=k, ntop=ntop, type="splitmap", annot = "scores",
-        mar = c(5,5,0,3), annot.ht = 3.5, cexRow=0.9 )
+        res,
+        k = k, ntop = ntop, type = "splitmap", annot = "scores",
+        mar = c(5, 5, 0, 3), annot.ht = 3.5, cexRow = 0.9
+      )
     }
 
     PlotModuleServer(
@@ -50,7 +51,5 @@ mofa_plot_loadingheatmap_server <- function(id,
       res = c(80, 100),
       add.watermark = watermark
     )
-
-    
   })
 }

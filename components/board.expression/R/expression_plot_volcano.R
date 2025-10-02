@@ -74,7 +74,6 @@ expression_plot_volcano_server <- function(id,
                                            watermark = FALSE,
                                            pval_cap,
                                            pgx) {
-
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(res())
@@ -110,11 +109,11 @@ expression_plot_volcano_server <- function(id,
         if (any(jj)) {
           counts <- pgx$counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
           nas <- apply(counts, 1, function(x) sum(is.na(x)))
-          na.features <- names(nas)[which(nas>0)]
+          na.features <- names(nas)[which(nas > 0)]
           shape[match(na.features, names(shape))] <- "cross"
         }
       }
-      
+
       return(list(
         x = x,
         y = y,
@@ -173,7 +172,7 @@ expression_plot_volcano_server <- function(id,
       shiny::req(pd)
 
       names <- pd$features
-      
+
       if (input$custom_labels) {
         label_features <- if (input$label_features == "") {
           NULL
@@ -230,7 +229,7 @@ expression_plot_volcano_server <- function(id,
           )
         )
       }
-      
+
       if (input$aspect_ratio_checkbox) {
         if (is.na(input$aspect_ratio)) {
           p <- p + ggplot2::theme(

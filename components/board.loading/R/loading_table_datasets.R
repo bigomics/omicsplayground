@@ -108,7 +108,7 @@ loading_table_datasets_server <- function(id,
       return(info)
     })
 
-    pgx_archive_dir <-shiny::reactive({
+    pgx_archive_dir <- shiny::reactive({
       shiny::req(auth$logged)
       file.path(auth$user_dir, "data_archive")
     })
@@ -229,7 +229,8 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    observeEvent(input$import_archive_pgx, {
+    observeEvent(input$import_archive_pgx,
+      {
         selected_row <- as.numeric(stringr::str_split(input$import_archive_pgx, "_row_")[[1]][2])
         pgx_name <- table_data()[selected_row, "dataset"]
 
@@ -247,9 +248,9 @@ loading_table_datasets_server <- function(id,
       },
       ignoreNULL = TRUE,
       ignoreInit = TRUE
-      )
+    )
 
-      observeEvent(input$import_archive_confirm, {
+    observeEvent(input$import_archive_confirm, {
       if (input$import_archive_confirm) {
         if (get_pgxs_in_folder(pgx_archive_dir()) >= 100) { # Check if archive is full
           shinyalert::shinyalert(
@@ -499,16 +500,18 @@ loading_table_datasets_server <- function(id,
       }
       if (!is.null(auth$options$MAX_SAMPLES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (
-          (df$datatype == "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES_SC) |
           (df$datatype != "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES)
         )
       }
       if (!is.null(cro_emails)) {
         datasets_exceed_limits[df$creator %in% cro_emails] <- FALSE
       }
+      if (!auth$options$ENABLE_MULTIOMICS) { # multi-omics disabled, grey them out
+        datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
+      }
 
-      selectable_rows <- which(seq_len(nrow(df)) <= df_cap & !datasets_exceed_limits)
-      if (length(selectable_rows) == 0) selectable_rows <- NULL
+      # Add the exceed limits flag to the dataframe
+      df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
 
       DT::datatable(
         df,
@@ -517,7 +520,6 @@ loading_table_datasets_server <- function(id,
         escape = FALSE,
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = if(length(selectable_rows) > 0) selectable_rows[1] else NULL, selectable = selectable_rows),
         fillContainer = TRUE,
         options = list(
           dom = "ft",
@@ -527,16 +529,25 @@ loading_table_datasets_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
-          rowCallback = DT::JS(
-            "function(row, data, displayNum, index) {",
-            "  var exceedLimits = ", jsonlite::toJSON(datasets_exceed_limits), ";",
-            "  if(index >= ", df_cap, " || exceedLimits[index]) {", # Grey out rows that exceed max datasets or size limits
-            "    $(row).css('opacity', '0.5');",
-            "    $('td:first-child', row).css('pointer-events', 'none');", # Disable clicks on menu buttons
-            "    $('td:first-child button', row).prop('disabled', true);", # Disable the buttons themselves
-            "  }",
-            "}"
-          ),
+          rowCallback = DT::JS(sprintf(
+            "function(row, data, displayNum, displayIndex) {
+              var colNames = %s;
+
+              // Find the exceeds_limits column index (add 1 for rownames column offset)
+              var exceedsLimitsIdx = colNames.indexOf('exceeds_limits');
+              if(exceedsLimitsIdx >= 0) exceedsLimitsIdx += 1;
+
+              // Check if this row exceeds limits
+              var exceedsLimits = (exceedsLimitsIdx >= 0) ? (data[exceedsLimitsIdx] === 'TRUE' || data[exceedsLimitsIdx] === true) : false;
+
+              if(exceedsLimits) {
+                $(row).css('opacity', '0.5');
+                $(row).css('pointer-events', 'none');
+                $('button', row).prop('disabled', true);
+              }
+            }",
+            jsonlite::toJSON(colnames(df))
+          )),
           columnDefs = list(
             list(width = "60px", targets = target1),
             ## list(width = "30vw", targets = target2),
@@ -549,7 +560,10 @@ loading_table_datasets_server <- function(id,
                 "}"
               )
             ),
-            list(sortable = FALSE, targets = ncol(df))
+            list(sortable = FALSE, targets = ncol(df)),
+            list(visible = FALSE, targets = c(
+              match("exceeds_limits", colnames(df))
+            )) # Hide helper columns
           )
         ) ## end of options.list
       )
@@ -716,8 +730,10 @@ loading_table_datasets_server <- function(id,
     observeEvent(input$changename_pgx, {
       shinyalert::shinyalert(
         title = "Change name",
-        text = paste0("Are you sure you want to change the name of your dataset '",
-          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset",], "'?"),
+        text = paste0(
+          "Are you sure you want to change the name of your dataset '",
+          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "'?"
+        ),
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
@@ -725,8 +741,10 @@ loading_table_datasets_server <- function(id,
           if (x) {
             shinyalert::shinyalert(
               title = "Enter new name",
-              text = paste0("Rename your dataset '",
-                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset",], "' as:"),
+              text = paste0(
+                "Rename your dataset '",
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "' as:"
+              ),
               type = "input",
               showCancelButton = TRUE,
               callbackR = function(new_name) {
@@ -756,8 +774,10 @@ loading_table_datasets_server <- function(id,
     observeEvent(input$changedesc_pgx, {
       shinyalert::shinyalert(
         title = "Change description",
-        text = paste0("Are you sure you want to change the description of your dataset '",
-          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset",], "'?"),
+        text = paste0(
+          "Are you sure you want to change the description of your dataset '",
+          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset", ], "'?"
+        ),
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
@@ -765,8 +785,10 @@ loading_table_datasets_server <- function(id,
           if (x) {
             shinyalert::shinyalert(
               title = "Enter new description",
-              text = paste0("Change the description of your dataset '",
-                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset",], "' to:"),
+              text = paste0(
+                "Change the description of your dataset '",
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset", ], "' to:"
+              ),
               type = "input",
               showCancelButton = TRUE,
               callbackR = function(new_desc) {

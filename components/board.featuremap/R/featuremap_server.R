@@ -277,8 +277,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       filtprobes <- c()
       if (is.null(pgx$version) || pgx$organism == "Human") {
         filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
-        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)        
-      } else if("<all>" %in% sel) {
+        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)
+      } else if ("<all>" %in% sel) {
         filtprobes <- rownames(pgx$genes)
       } else {
         filtgenes <- unlist(lapply(sel, function(s) {
@@ -286,13 +286,16 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
           return(x)
         }))
-        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)                
+        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)
       }
       if ("<custom>" %in% sel) {
         custum.genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+        if (length(custum.genes) == 0) {
+          custum.genes <- c()
+        }
         if (length(custum.genes) > 0) {
           custum.probes <- playbase::map_probes(pgx$genes, custum.genes)
-          filtprobes <- c(custom.probes, filtprobes)
+          filtprobes <- c(custum.probes, filtprobes)
         }
       }
       filtprobes

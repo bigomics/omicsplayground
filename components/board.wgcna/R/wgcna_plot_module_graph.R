@@ -29,12 +29,11 @@ wgcna_plot_module_graph_server <- function(id,
                                            wgcna,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     moduleGraph.RENDER <- function() {
       require(igraph)
       res <- wgcna()
-      par(mar=c(0,0,0,0))
-      playbase::wgcna.plotEigenGeneGraph(res, add_traits=TRUE, main=NULL) 
+      par(mar = c(0, 0, 0, 0))
+      playbase::wgcna.plotEigenGeneGraph(res, add_traits = TRUE, main = NULL)
     }
 
     PlotModuleServer(

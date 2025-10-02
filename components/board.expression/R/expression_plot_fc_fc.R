@@ -100,12 +100,12 @@ expression_plot_fc_fc_server <- function(id,
           "<extra></extra>"
         )
       ) %>%
-      plotly::layout(
-        xaxis = list(title = "baseline(log2FC)"),
-        yaxis = list(title = "custom (log2FC)"),
-        showlegend = FALSE
-      ) %>%
-      plotly::toWebGL()
+        plotly::layout(
+          xaxis = list(title = "baseline(log2FC)"),
+          yaxis = list(title = "custom (log2FC)"),
+          showlegend = FALSE
+        ) %>%
+        plotly::toWebGL()
     }
 
     plot_data_csv <- function() {

@@ -31,19 +31,18 @@ dataview_plot_boxplot_server <- function(id,
                                          r.samples = reactive(""),
                                          r.data_type,
                                          watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
       shiny::req(res)
       list(counts = res$log2counts, sample = colnames(res$log2counts))
-     })
+    })
 
     plot.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
-      
+
       par(mar = c(8, 4, 1, 2), mgp = c(2.2, 0.8, 0))
       ## ---- xlab ------ ###
       xaxt <- "l"

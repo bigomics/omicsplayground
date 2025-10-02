@@ -26,15 +26,16 @@ upload_module_normalization_server <- function(
     height = 720) {
   shiny::moduleServer(
     id,
-
     function(input, output, session) {
       ns <- session$ns
 
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
-        shiny::updateSelectizeInput(session, "ref_gene", choices = gg,
-          selected = character(0), server = TRUE)
+        shiny::updateSelectizeInput(session, "ref_gene",
+          choices = gg,
+          selected = character(0), server = TRUE
+        )
       })
 
       ## ------------------------------------------------------------------
@@ -43,11 +44,10 @@ upload_module_normalization_server <- function(
 
       ## ImputedX
       imputedX <- reactive({
-        
         shiny::req(dim(r_counts()))
         shiny::req(!is.null(input$zero_as_na))
         counts <- r_counts()
-        samples <- r_samples()        
+        samples <- r_samples()
         contrasts <- r_contrasts()
         shiny::req(dim(contrasts))
 
@@ -60,7 +60,7 @@ upload_module_normalization_server <- function(
           counts <- 2**counts
           shiny::updateCheckboxInput(session, "normalize", value = FALSE)
         }
-        
+
         if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
 
         if (input$zero_as_na) {
@@ -69,23 +69,23 @@ upload_module_normalization_server <- function(
         }
 
         is.multiomics <- playbase::is.multiomics(rownames(counts))
-        if(is.multiomics) {
+        if (is.multiomics) {
           ## Scaled log1p transform with autoscaling on non-zero quantile.
           ## Only applied to multi-omics. It also performs median scaling.
-          X <- playbase::mofa.log1s(counts, q=0.20)
+          X <- playbase::mofa.log1s(counts, q = 0.20)
           prior <- 0
         } else {
           prior0 <- 0
-          if(min(counts, na.rm = TRUE) == 0 || any(is.na(counts)) ) {
-            prior0 <- min(counts[counts > 0], na.rm = TRUE)  
+          if (min(counts, na.rm = TRUE) == 0 || any(is.na(counts))) {
+            prior0 <- min(counts[counts > 0], na.rm = TRUE)
           }
           m <- input$normalization_method
-          prior <- ifelse(grepl("CPM|TMM",m), 1, prior0)
+          prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
           X <- log2(counts + prior)
         }
 
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
-        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X))>0), " rows with NAs.")
+        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
 
 
         ## Filter probes for maximum missingness as required
@@ -93,35 +93,38 @@ upload_module_normalization_server <- function(
           f <- input$filterthreshold
           dbg(paste0("[normalization_server:imputedX] Threshold NA filter: ", f))
           sample.contrasts <- playbase::contrasts.convertToLabelMatrix(contrasts, samples)
-          grp <- apply(sample.contrasts, 1, paste, collapse = '_')
+          grp <- apply(sample.contrasts, 1, paste, collapse = "_")
           if (f >= 1) {
             grp.sum <- tapply(1:ncol(counts), grp, function(i) {
-              rx = counts[, i, drop = FALSE]; rowSums(!is.na(rx)) })
+              rx <- counts[, i, drop = FALSE]
+              rowSums(!is.na(rx))
+            })
             maxsum <- apply(do.call(cbind, grp.sum), 1, max, na.rm = TRUE)
             sel <- (maxsum >= 3)
           } else if (f < 0) {
             grp.avg <- tapply(1:ncol(counts), grp, function(i) {
-              rx = counts[, i, drop = FALSE]; rowMeans(!is.na(rx)) })
+              rx <- counts[, i, drop = FALSE]
+              rowMeans(!is.na(rx))
+            })
             maxavg <- apply(do.call(cbind, grp.avg), 1, max, na.rm = TRUE)
             sel <- (maxavg >= 0.5) # maxavg >= abs(f)
           } else {
             sel <- (rowMeans(is.na(X)) <= f)
           }
           dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", sum(!sel))
-          
+
           X <- X[which(sel), , drop = FALSE]
-          counts <- counts[which(sel), , drop = FALSE]          
+          counts <- counts[which(sel), , drop = FALSE]
         }
-        
+
         ## Impute if required
         if (any(is.na(X)) & input$impute) {
           X <- playbase::imputeMissing(X, method = input$impute_method)
         }
 
         return(list(counts = counts, X = X, prior = prior))
-
       })
-      
+
       ## Normalize
       normalizedX <- reactive({
         shiny::req(dim(imputedX()$X))
@@ -132,10 +135,10 @@ upload_module_normalization_server <- function(
           ref <- NULL
           if (m == "reference") {
             ref <- input$ref_gene
-            shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js=FALSE)))
+            shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js = FALSE)))
             shiny::req(ref)
           }
-          if(upload_datatype() == "multi-omics") {
+          if (upload_datatype() == "multi-omics") {
             dbg("[normalization_server:normalizedX] normalizing MultOmics data using ", m)
             X <- playbase::normalizeMultiOmics(X, method = m) ## unneeded: done in mofa.log1s.
           } else {
@@ -145,9 +148,8 @@ upload_module_normalization_server <- function(
         } else {
           dbg("[normalization_server:normalizedX] Skipping normalization")
         }
-        
-        return(X)
 
+        return(X)
       })
 
       ## Remove outliers
@@ -178,7 +180,7 @@ upload_module_normalization_server <- function(
         }
         return(cx)
       })
-        
+
       ## ------------------------------------------------------------------
       ## Compute reactive
       ## ------------------------------------------------------------------
@@ -195,7 +197,7 @@ upload_module_normalization_server <- function(
         if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = FALSE)
         dups <- sum(duplicated(rownames(X1)))
         if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
-        
+
         if (sum(is.na(X0)) > 0) X0 <- playbase::imputeMissing(X0, method = "SVD2")
         if (sum(is.na(X1)) > 0) X1 <- playbase::imputeMissing(X1, method = "SVD2")
 
@@ -219,7 +221,8 @@ upload_module_normalization_server <- function(
           value = 0.3,
           {
             res <- playbase::compare_batchcorrection_methods(
-              X1, samples,
+              X1,
+              samples,
               pheno = NULL,
               contrasts = contrasts,
               batch.pars = batch.pars,
@@ -233,7 +236,6 @@ upload_module_normalization_server <- function(
         )
 
         return(res)
-
       })
 
       ## Remove?
@@ -255,12 +257,13 @@ upload_module_normalization_server <- function(
           ## standard dim reduction methods
           pos <- list()
           set.seed(1234)
-          pos[["pca"]] <- irlba::irlba(scaledX, nu = 2, nv = 0)$u
+          pca <- irlba::irlba(scaledX, nu = 2, nv = 0)
+          pos[["pca"]] <- pca$u
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
             colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
           }
-
+          pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
           out$pos <- pos
           out$corX <- corX
           out
@@ -356,7 +359,7 @@ upload_module_normalization_server <- function(
 
       ## missing values
       plot_missingvalues <- function() {
-        #X0 <- r_counts()
+        # X0 <- r_counts()
         X0 <- cleanX()$counts
         X1 <- imputedX()$X
 
@@ -364,7 +367,7 @@ upload_module_normalization_server <- function(
         if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = TRUE)
         dups <- sum(duplicated(rownames(X1)))
         if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
-        
+
         X0 <- X0[rownames(X1), , drop = FALSE]
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
@@ -420,7 +423,6 @@ upload_module_normalization_server <- function(
 
           if (input$missing_plottype == "ratio plot") {
             if (any(X2 > 0)) {
-              ## NA ratio plot
               par(mar = c(3, 3, 2, 2), mgp = c(2.0, 0.75, 0))
               x.avg <- rowMeans(X1, na.rm = TRUE)
               x.nar <- rowMeans(is.na(X0))
@@ -429,14 +431,59 @@ upload_module_normalization_server <- function(
               aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
               barplot(rbind(x.nar2, 1 - x.nar2),
                 beside = FALSE, names.arg = aa, las = 1,
-                xlab = "average intensity (log2)", ylab = "missing value ratio"
-              )
+                xlab = "average intensity (log2)", ylab = "missing value ratio")
               title("missingness vs. average intensity")
             } else {
               plot.new()
               text(0.5, 0.5, "no missing values")
             }
           }
+
+          if (input$missing_plottype == "missingness per sample") {
+            if (any(X2 > 0)) {
+              par(mfrow = c(1,1), mar = c(5, 5, 2, 2), mgp = c(2.5, 0.75, 0))
+              X3 <- imputedX()$X
+              pct.na <- colMeans(is.na(X3))*100
+              bp <- barplot(pct.na, col = "grey", xaxt = "n",
+                ylab = "Missing %", ylim = c(0, max(pct.na)+10),
+                cex.lab = 1.5, las = 2)
+              cex <- max(0.7, min(1.5, 5 / ncol(X3)))
+              text(x = bp, y = par("usr")[3] - 0.02 * diff(par("usr")[3:4]),
+                labels = names(pct.na), srt = 45, adj = 1, xpd = TRUE, cex = cex)
+              title("missingness per sample"); grid()
+              rm(X3)
+            }
+            else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")
+            }
+          }
+
+          if (input$missing_plottype == "missingness across features") {
+            if (any(X2 > 0)) {
+              par(mfrow = c(1,1), mar = c(2, 3.5, 2, 2), mgp = c(2.5, 0.75, 0))
+              X3 <- imputedX()$X
+              pct.na <- round(rowMeans(is.na(X3))*100)
+              hh <- hist(pct.na, xlim = c(0, 100), col = "grey", main = "",
+                las = 1, tcl = -0.1, mgp = c(2.5, 0.5, 0), yaxs="i",
+                xlab = "Missingness across features (%)", ylab = "Number of features")
+              abline(v = mean(pct.na), col = "red")
+              abline(v = median(pct.na), col = "blue")
+              xpos <- 90
+              ypos <- max(hh$counts) * 0.95
+              lab1 <- paste0("Mean: ", round(mean(pct.na)), "%")
+              lab2 <- paste0("Median: ", round(median(pct.na)), "%")
+              text(xpos, ypos, labels = lab1, col = "red")
+              text(xpos, ypos-(ypos*8/100), labels = lab2, col = "blue")
+              title("Distribution of missing values across features"); grid()
+              rm(X3)
+            }
+            else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")
+            }
+          }
+
         }
       }
 
@@ -514,34 +561,34 @@ upload_module_normalization_server <- function(
       }
 
       plot_all_methods <- function() {
-        res <- results_correction_methods()
         out.res <- results_outlier_methods()
+        res <- results_correction_methods()
         shiny::req(res)
         shiny::req(out.res)
         samples <- r_samples()
 
         methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
+
         pos.list <- res$pos
-        ## get same positions as after outlier detection
         pos0 <- out.res$pos[["pca"]]
+        
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
-        col1 <- factor(samples[, colorby_var]) ## as.numeric(col1)
+        col1 <- factor(samples[, colorby_var])
 
         pheno <- res$pheno
         xdim <- length(pheno)
-        ## col1 <- factor(pheno)
         cex1 <- cut(xdim,
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.5 * as.numeric(as.character(cex1))
-        par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
+        par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(1.7, 0.4, 0), tcl = -0.1)
         for (m in methods) {
           if (m %in% names(pos.list)) {
-            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20)
+            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20, las = 1) 
           } else {
             plot.new()
             text(0.45, 0.5, "method failed")
@@ -555,9 +602,9 @@ upload_module_normalization_server <- function(
         res <- results_correction_methods()
         samples <- r_samples()
 
-        ## get same positions as after outlier detection
-        ## pos0 <- res$pos[["normalized"]]
         pos0 <- out.res$pos[["pca"]]
+        pos0.varexp <- out.res$pos[["pca.varexp"]]
+        pos1.varexp <- res[["pca.varexp"]]
         method <- input$bec_method
 
         if (!method %in% names(res$pos)) {
@@ -573,29 +620,32 @@ upload_module_normalization_server <- function(
         }
 
         kk <- intersect(rownames(pos0), rownames(pos1))
-        pos0 <- pos0[kk, ]
-        pos1 <- pos1[kk, ]
+        pos0 <- pos0[kk, , drop = FALSE]
+        pos1 <- pos1[kk, , drop = FALSE]
 
         pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
         pheno <- pheno[rownames(pos0)]
-        #col1 <- factor(pheno)
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
-        samples <- samples[rownames(pos0),  , drop = FALSE]
+        samples <- samples[rownames(pos0), , drop = FALSE]
         col1 <- factor(samples[, colorby_var])
         cex1 <- cut(nrow(pos1),
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
         )
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
+        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.4, 0), tcl = -0.1)
         plot(pos0,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
-          main = "uncorrected", xlab = "PC1", ylab = "PC2"
+          col = col1, pch = 20, cex = cex1, las = 1,
+          main = "uncorrected",
+          xlab = paste0("PC1 (", round(pos0.varexp[1],2), "%)"),
+          ylab = paste0("PC2 (", round(pos0.varexp[2],2), "%)")
         )
         plot(pos1,
-          col = col1, pch = 20, cex = 1.0 * cex1, las = 1,
-          main = method, xlab = "PC1", ylab = "PC2"
+          col = col1, pch = 20, cex = cex1, las = 1,
+          main = method,
+          xlab = paste0("PC1 (", round(pos1.varexp[[method]][1],2), "%)"),
+          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2],2), "%)")
         )
       }
 
@@ -612,7 +662,9 @@ upload_module_normalization_server <- function(
           X <- r_counts()
           samples <- r_samples()
           contrasts <- r_contrasts()
-          if (nrow(samples) < 3) return(NULL)
+          if (nrow(samples) < 3) {
+            return(NULL)
+          }
           pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
           all.pars <- setdiff(colnames(samples), pars$pheno.pars)
           all.pars <- union(all.pars, pars$batch.pars)
@@ -653,8 +705,11 @@ upload_module_normalization_server <- function(
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
         missing.options <- tagList(
-          shiny::radioButtons(ns("missing_plottype"), "Plot type:", c("heatmap", "ratio plot"),
-            selected = "heatmap", inline = TRUE
+          shiny::radioButtons(ns("missing_plottype"),
+            "Plot type:",
+            c("heatmap", "ratio plot", "missingness per sample", "missingness across features"),
+            selected = "heatmap",
+            inline = TRUE
           ),
         )
 
@@ -680,7 +735,7 @@ upload_module_normalization_server <- function(
             inline = FALSE
           )
         )
-        
+
         navmenu <- tagList(
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
@@ -698,17 +753,23 @@ upload_module_normalization_server <- function(
                 ),
                 shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
                 shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
-                shiny::conditionalPanel("input.filtermissing == true", ns = ns,
+                shiny::conditionalPanel("input.filtermissing == true",
+                  ns = ns,
                   shiny::selectInput(ns("filterthreshold"), NULL,
-                    choices = c(">10% NA"=0.1, ">20% NA"=0.2, ">50% NA"=0.5,
-                      "<=3 valid in any group"=3, "<=50% valid in any group"= -0.5),
-                    selected = 0.2)
+                    choices = c(
+                      ">10% NA" = 0.1, ">20% NA" = 0.2, ">50% NA" = 0.5,
+                      "<=3 valid in any group" = 3, "<=50% valid in any group" = -0.5
+                    ),
+                    selected = 0.2
+                  )
                 ),
                 shiny::checkboxInput(ns("impute"), label = "Impute NA", value = FALSE),
-                shiny::conditionalPanel("input.impute == true", ns = ns,
+                shiny::conditionalPanel("input.impute == true",
+                  ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
-                    selected = "SVD2")
+                    selected = "SVD2"
+                  )
                 ),
                 br()
               ),
@@ -727,16 +788,19 @@ upload_module_normalization_server <- function(
                   ns = ns,
                   shiny::selectInput(
                     ns("normalization_method"), NULL,
-                    choices = if(grepl("proteomics|metabolomics", upload_datatype(),
-                      ignore.case = TRUE)) {
-                        c("maxMedian", "maxSum", "quantile", "reference")
+                    choices = if (grepl("proteomics|metabolomics", upload_datatype(),
+                      ignore.case = TRUE
+                    )) {
+                      c("maxMedian", "maxSum", "quantile", "reference")
                     } else if (grepl("multi-omics", upload_datatype(),
-                      ignore.case = TRUE)) {
-                        c("multi-omics median" = "median"
-                          ## "multi-omics combat" = "combat"
-                        )
+                      ignore.case = TRUE
+                    )) {
+                      c(
+                        "multi-omics median" = "median"
+                        ## "multi-omics combat" = "combat"
+                      )
                     } else {
-                      c("CPM+quantile", "TMM", "quantile",
+                      c("CPM", "CPM+quantile", "TMM", "quantile",
                         "maxMedian", "maxSum", "reference")
                     },
                     selected = 1
@@ -760,7 +824,8 @@ upload_module_normalization_server <- function(
                 title = "3. Remove outliers",
                 shiny::p("Automatically detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
-                shiny::conditionalPanel("input.remove_outliers == true", ns = ns,
+                shiny::conditionalPanel("input.remove_outliers == true",
+                  ns = ns,
                   shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
                 ),
                 br()
@@ -838,6 +903,7 @@ upload_module_normalization_server <- function(
                 options = norm.options,
                 info.text = normalization.infotext,
                 height = c("auto", "100%"),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#normalization",
                 show.maximize = FALSE
               ),
               PlotModuleUI(
@@ -847,6 +913,7 @@ upload_module_normalization_server <- function(
                 caption = score.infotext,
                 options = outlier.options,
                 height = c("auto", "100%"),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#identification-of-outlier-samples",
                 show.maximize = FALSE
               ),
               PlotModuleUI(
@@ -855,6 +922,7 @@ upload_module_normalization_server <- function(
                 options = bec.options,
                 info.text = batcheff.infotext,
                 height = c("auto", "100%"),
+                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction",
                 show.maximize = FALSE
               )
             )
@@ -930,8 +998,9 @@ upload_module_normalization_server <- function(
 
       imputation_method <- reactive({
         ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
-        if (!input$impute)
+        if (!input$impute) {
           ll <- list(zero_as_na = input$zero_as_na, imputation = "no_imputation")
+        }
         return(ll)
       })
 
@@ -943,7 +1012,7 @@ upload_module_normalization_server <- function(
 
       remove_outliers <- reactive({
         ro <- input$outlier_threshold
-        if (input$remove_outliers == FALSE)  ro <- "no_outlier_removal"
+        if (input$remove_outliers == FALSE) ro <- "no_outlier_removal"
         return(ro)
       })
 

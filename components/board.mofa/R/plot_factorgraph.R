@@ -14,7 +14,7 @@ mofa_plot_factorgraph_ui <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("mst"),"Min. spanning tree (MST)", TRUE)
+    shiny::checkboxInput(ns("mst"), "Min. spanning tree (MST)", TRUE)
   )
 
   PlotModuleUI(
@@ -35,17 +35,18 @@ mofa_plot_factorgraph_server <- function(id,
                                          mofa,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       res <- mofa()
-      par(mar=c(0,0,0,0))
+      par(mar = c(0, 0, 0, 0))
       gr <- res$graphs$factors
-      igraph::add_shape('dot');
-      igraph::add_shape('star')
+      igraph::add_shape("dot")
+      igraph::add_shape("star")
       igraph::V(gr)$label <- igraph::V(gr)$name
       mst <- input$mst
       vis <- playbase::mofa.plot_module(
-        gr, mst=mst, cex=0.3, plotlib="visnet")
+        gr,
+        mst = mst, cex = 0.3, plotlib = "visnet"
+      )
       vis <- vis %>%
         visNetwork::visPhysics(
           barnesHut = list(
@@ -56,7 +57,7 @@ mofa_plot_factorgraph_server <- function(id,
         )
       vis
     }
-   
+
     PlotModuleServer(
       id = "module",
       plotlib = "visnetwork",
@@ -66,10 +67,5 @@ mofa_plot_factorgraph_server <- function(id,
       res = c(80, 100),
       add.watermark = watermark
     )
-
-    
   })
 }
-
-
-

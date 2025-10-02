@@ -7,23 +7,22 @@ mofa_plot_lasagna_network_ui <- function(
     id,
     title = "",
     info.text = "",
-    info.methods = "",    
+    info.methods = "",
     info.references = NULL,
-    info.extra_link = NULL,    
+    info.extra_link = NULL,
     caption = info.text,
     label = "",
     height = 400,
     width = 400) {
   ns <- shiny::NS(id)
-  
-  options = tagList(
-  )
-  
+
+  options <- tagList()
+
   PlotModuleUI(
     ns("plotmodule"),
     plotlib = "visnetwork",
     title = title,
-    #options = options,
+    # options = options,
     label = "",
     caption = caption,
     info.text = info.text,
@@ -34,37 +33,33 @@ mofa_plot_lasagna_network_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg")
   )
-  
 }
 
 
 mofa_plot_lasagna_network_server <- function(id,
                                              data,
-                                             pgx, 
+                                             pgx,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ## ------------------------------------------------------------------
+    ## ------------------------------------------------------------------
+    ## ------------------------------------------------------------------
 
-
-    ##------------------------------------------------------------------
-    ##------------------------------------------------------------------
-    ##------------------------------------------------------------------
-    
     plot.RENDER <- function() {
-
       res <- data()
       shiny::req(res)
-      
+
       graph <- res$graph
-      dbg("[mofa_plot_lasagna_network_server] layers=",graph$layers)
-      
-      min_rho = 0.0
-      prune = TRUE
-      
-      if(prune) {
+      dbg("[mofa_plot_lasagna_network_server] layers=", graph$layers)
+
+      min_rho <- 0.0
+      prune <- TRUE
+
+      if (prune) {
         ewt <- igraph::E(graph)$weight
-        graph <- igraph::subgraph_from_edges(graph, which(abs(ewt)>0))
+        graph <- igraph::subgraph_from_edges(graph, which(abs(ewt) > 0))
       }
-      
+
       vis <- playbase::lasagna.plot_visgraph(
         graph,
         layers = NULL,
@@ -72,7 +67,8 @@ mofa_plot_lasagna_network_server <- function(id,
         ecex = 1,
         vcex = 1,
         min_rho = min_rho,
-        mst = TRUE) 
+        mst = TRUE
+      )
 
       return(vis)
     }
@@ -80,12 +76,11 @@ mofa_plot_lasagna_network_server <- function(id,
     PlotModuleServer(
       "plotmodule",
       func = plot.RENDER,
-      #csvFunc = plot_data,
+      # csvFunc = plot_data,
       plotlib = "visnetwork",
       pdf.width = 12, pdf.height = 6,
       res = c(75, 90),
       add.watermark = watermark
     )
-    
   })
 }

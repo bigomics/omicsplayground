@@ -47,7 +47,6 @@ dataview_plot_averagerank_server <- function(id,
                                              labeltype,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y)
       shiny::req(r.gene())
@@ -63,7 +62,7 @@ dataview_plot_averagerank_server <- function(id,
       if (!gene %in% rownames(pgx$X)) {
         return(NULL)
       }
-      
+
       if (data_type %in% c("counts", "abundance")) {
         mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE),
           decreasing = TRUE
@@ -78,7 +77,7 @@ dataview_plot_averagerank_server <- function(id,
       ann <- pgx$genes[names(mean.fc), , drop = FALSE]
       sel <- which(names(mean.fc) == gene)
 
-      
+
       if (input$show_all_isoforms && labeltype() != "feature") {
         symbol <- playbase::probe2symbol(gene, ann, "symbol", fill_na = TRUE)
         sel2 <- which(ann$symbol == symbol) ## isoforms
@@ -112,7 +111,7 @@ dataview_plot_averagerank_server <- function(id,
       if (length(ii) > 200) {
         ii <- c(1:200, seq(201, length(mean.fc), 10))
       }
-      
+
       fig <- plotly::plot_ly(
         x = ii,
         y = mean.fc[ii],

@@ -44,7 +44,6 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ## prepare data
     geneinfo_data.OLD <- shiny::reactive({
       feature <- r.gene()
@@ -60,7 +59,7 @@ dataview_module_geneinfo_server <- function(id,
       ortholog <- pgx$genes$human_ortholog[jj]
 
       if (datatype == "metabolomics") {
-        dbg("[geneinfo_data] calling getMetaboliteInfo()")        
+        dbg("[geneinfo_data] calling getMetaboliteInfo()")
         info <- playbase::getMetaboliteInfo(
           organism = organism,
           id = symbol
@@ -123,12 +122,12 @@ dataview_module_geneinfo_server <- function(id,
       shiny::req(feature %in% rownames(pgx$genes))
 
       info <- playbase::pgx.getFeatureInfo(pgx, feature)
-      
+
       if (is.null(info)) {
         info <- tspan("(gene info not available)")
         return(info)
       }
-            
+
       names(info) <- tolower(names(info))
       names(info) <- sub("gene_symbol", "symbol", names(info))
       names(info) <- sub("gene_title", "title", names(info))
@@ -142,7 +141,7 @@ dataview_module_geneinfo_server <- function(id,
           "feature", "gene_symbol", "symbol",
           "name", "gene_name",
           "organism", "human_ortholog", "ortholog",
-          "datatype", "data_type", 
+          "datatype", "data_type",
           "uniprot", "protein",
           "map_location", "map", "genome location",
           "databases", "links"
@@ -156,8 +155,8 @@ dataview_module_geneinfo_server <- function(id,
         ),
         names(info)
       )
-      nn3 <- setdiff(names(info), c(nn1,nn2))
-      info <- info[c(nn1,nn2,nn3)]
+      nn3 <- setdiff(names(info), c(nn1, nn2))
+      info <- info[c(nn1, nn2, nn3)]
 
       # prepare info for display
       res <- c()
@@ -173,7 +172,7 @@ dataview_module_geneinfo_server <- function(id,
       )
       res
     })
-    
+
 
     info.RENDER <- function() {
       res <- geneinfo_data()

@@ -4,7 +4,7 @@
 ##
 
 
-WgcnaBoard <- function(id, pgx){
+WgcnaBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -39,8 +39,8 @@ WgcnaBoard <- function(id, pgx){
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WGCNA" = list(disable = c("selected_module","selected_trait")),
-      "Eigengenes" = list(disable = c("selected_module","selected_trait")),
+      "WGCNA" = list(disable = c("selected_module", "selected_trait")),
+      "Eigengenes" = list(disable = c("selected_module", "selected_trait")),
       "Modules" = list(disable = c(NULL)),
       "Enrichment" = list(disable = c("selected_trait"))
     )
@@ -53,63 +53,71 @@ WgcnaBoard <- function(id, pgx){
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
 
-    wgcna <- shiny::eventReactive(
-      {
-        list(input$compute, pgx$X)
-      },
-      {
-        require(WGCNA)
-        all.req <- all(c("stats","TOM") %in% names(pgx$wgcna))
-        
-        dbg("[wgcna] 0: input$compute =", input$compute)
-        dbg("[wgcna] 0: pgx$name =", pgx$name)
 
-        ## NEED RETHINK!!! if input$compute >0 !!!
-        if (input$compute == 0 && "wgcna" %in% names(pgx) && all.req) {
-          message("[wgcna] >>> using pre-computed WGCNA results...")
-          out <- pgx$wgcna
-          ## old style had these settings
-          if(is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
-          if(is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
-          if(is.null(pgx$wgcna$power)) out$power <- 6
+    compute_wgcna <- function() {
+      pgx.showSmallModal("Recalculating WGCNA with new parameters...")
+      progress <- shiny::Progress$new()
+      on.exit(progress$close())
+      progress$set(message = "Calculating WGCNA...", value = 0)
 
-        } else {
-          pgx.showSmallModal("Recalculating WGCNA with new parameters...")
-          progress <- shiny::Progress$new()
-          on.exit(progress$close())
-          progress$set(message = "Calculating WGCNA...", value = 0)
+      message("[wgcna] >>> Calculating WGCNA...")
+      out <- playbase::pgx.wgcna(
+        pgx = pgx,
+        ngenes = as.integer(input$ngenes),
+        gset.filter = NULL,
+        minmodsize = as.integer(input$minmodsize),
+        power = as.numeric(input$power),
+        minKME = as.numeric(input$minkme),
+        networktype = input$networktype,
+        numericlabels = FALSE
+      )
+      shiny::removeModal()
+      out
+    }
 
-          message("[wgcna] >>> Calculating WGCNA...")          
-          out <- playbase::pgx.wgcna(
-            pgx = pgx,
-            ngenes = as.integer(input$ngenes),
-            #gset.filter = "PATHWAY|HALLMARK|^GO|^C[1-9]",
-            gset.filter = NULL,
-            minmodsize = as.integer(input$minmodsize),
-            power = as.numeric(input$power),
-#           deepsplit = as.integer(input$deepsplit),
-#           cutheight = as.numeric(input$cutheight),
-            minKME = as.numeric(input$minkme),
-            networktype = input$networktype,
-            ## tomtype = input$tomtype,
-            numericlabels = FALSE
-          )
-          shiny::removeModal()
-        }
+    wgcna <- shiny::reactiveVal({
+      require(WGCNA)
+      all.req <- all(c("stats") %in% names(pgx$wgcna)) && any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
 
-        ## update Inputs
-        me <- sort(names(out$me.genes))
-        shiny::updateSelectInput(session, "selected_module", choices = me,
-                                 sel = me[1])
-        tt <- sort(colnames(out$datTraits))
-        shiny::updateSelectInput(session, "selected_trait", choices = tt,
-          selected = tt[1])
+      dbg("[wgcna] 0: input$compute =", input$compute)
+      dbg("[wgcna] 0: pgx$name =", pgx$name)
 
-        out
+      # Use pre-computed results only if they exist, conditions are met, AND we're not forcing recomputation
+      if ("wgcna" %in% names(pgx) && all.req) {
+        message("[wgcna] >>> using pre-computed WGCNA results...")
+        out <- pgx$wgcna
+        ## old style had these settings
+        if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
+        if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
+        if (is.null(pgx$wgcna$power)) out$power <- 6
+      } else {
+        out <- compute_wgcna()
       }
+      out
+    })
+
+    shiny::observeEvent(wgcna(), {
+      ## update Inputs
+      me <- sort(names(wgcna()$me.genes))
+      shiny::updateSelectInput(session, "selected_module",
+        choices = me,
+        sel = me[1]
+      )
+      tt <- sort(colnames(wgcna()$datTraits))
+      shiny::updateSelectInput(session, "selected_trait",
+        choices = tt,
+        selected = tt[1]
+      )
+    })
+
+    shiny::observeEvent(input$compute,
+      {
+        wgcna(compute_wgcna())
+      },
+      ignoreInit = TRUE
     )
 
-    
+
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
@@ -171,9 +179,9 @@ WgcnaBoard <- function(id, pgx){
       wgcna = wgcna,
       pgx = pgx,
       selected_module = shiny::reactive(input$selected_module),
-      selected_trait = shiny::reactive(input$selected_trait)      
+      selected_trait = shiny::reactive(input$selected_trait)
     )
-    
+
     # Eigengene clustering
     wgcna_plot_eigengene_clustering_server(
       "eigenClustering",
@@ -199,7 +207,7 @@ WgcnaBoard <- function(id, pgx){
       "modulemembership",
       wgcna = wgcna,
       pgx = pgx,
-      selected_module = shiny::reactive(input$selected_module),      
+      selected_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
 
@@ -215,14 +223,14 @@ WgcnaBoard <- function(id, pgx){
       "memberTrait",
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),
-      selected_trait = shiny::reactive(input$selected_trait),      
+      selected_trait = shiny::reactive(input$selected_trait),
       watermark = WATERMARK
     )
 
     wgcna_plot_module_significance_server(
       "moduleSignificance",
       wgcna.compute = wgcna,
-      selected_module = shiny::reactive(input$selected_module),      
+      selected_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
 
@@ -251,14 +259,16 @@ WgcnaBoard <- function(id, pgx){
       pgx = pgx,
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),
-      watermark = FALSE) 
+      watermark = FALSE
+    )
 
     wgcna_plot_gene_heatmap_server(
       "geneHeatmap",
       pgx = pgx,
       wgcna = wgcna,
       enrich_table = enrichTableModule,
-      watermark = FALSE) 
+      watermark = FALSE
+    )
 
     # Enrichment plot
     wgcna_plot_enrichment_server(
@@ -273,7 +283,7 @@ WgcnaBoard <- function(id, pgx){
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module)
     )
-    
+
     return(NULL)
   })
 } ## end of Board

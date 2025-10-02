@@ -124,7 +124,7 @@ biomarker_plot_heatmap_server <- function(id,
 
         playbase::gx.splitmap(X,
           split = NULL, splitx = splitx, main = "  ",
-          dist.method = "euclidean", col.dist.method = "euclidean", 
+          dist.method = "euclidean", col.dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
           key.offset = c(0.05, 0.98),

@@ -23,7 +23,7 @@ MGseaUI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "multiGSEA",
         bslib::layout_columns(
@@ -45,7 +45,7 @@ MGseaUI <- function(id) {
               caption = "Multi-omics gene set enrichment analysis.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
-            ),            
+            ),
             mofa_plot_mgsea_ui(
               ns("mgsea_plot"),
               title = "MultiGSEA plot",
@@ -79,12 +79,10 @@ MGseaUI <- function(id) {
               caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
-            )                        
+            )
           )
         )
       )
-
-      
     )
   )
 }

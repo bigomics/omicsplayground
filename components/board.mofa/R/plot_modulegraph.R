@@ -14,11 +14,11 @@ mofa_plot_modulegraph_ui <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::checkboxInput(ns("mst"),"Min. spanning tree (MST)", TRUE),
-    shiny::checkboxInput(ns("rm_singles"),"Remove singletons", TRUE),
-    shiny::checkboxInput(ns("top20"),"Top 20", FALSE)
+    shiny::checkboxInput(ns("mst"), "Min. spanning tree (MST)", TRUE),
+    shiny::checkboxInput(ns("rm_singles"), "Remove singletons", TRUE),
+    shiny::checkboxInput(ns("top20"), "Top 20", FALSE)
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -40,34 +40,37 @@ mofa_plot_modulegraph_server <- function(id,
                                          filter_types = reactive(NULL),
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    plot.RENDER <- function(springLength=25) {
+    plot.RENDER <- function(springLength = 25) {
       graphs <- mofa()$graphs
       k <- input_k()
       shiny::req(k %in% names(graphs$features))
       shiny::req(filter_types())
-      shiny::validate( shiny::need( length(filter_types())>0,
-        "Please select at least one datatype"))
+      shiny::validate(shiny::need(
+        length(filter_types()) > 0,
+        "Please select at least one datatype"
+      ))
 
-      par(mar=c(0,0,0,0))
+      par(mar = c(0, 0, 0, 0))
       gr <- graphs$features[[k]]
-      vtype <- sub(":.*","", igraph::V(gr)$name)
-      gr <- igraph::subgraph( gr, vids = vtype %in% filter_types())
-      if(input$top20) {
-        gr <- igraph::subgraph(gr, vids = head(order(-igraph::V(gr)$size),20))
+      vtype <- sub(":.*", "", igraph::V(gr)$name)
+      gr <- igraph::subgraph(gr, vids = vtype %in% filter_types())
+      if (input$top20) {
+        gr <- igraph::subgraph(gr, vids = head(order(-igraph::V(gr)$size), 20))
       }
-      
+
       ## set labels
-      vlabel <- pgx$genes[igraph::V(gr)$name,"gene_name"]
+      vlabel <- pgx$genes[igraph::V(gr)$name, "gene_name"]
       igraph::V(gr)$label <- vlabel
-      
+
       vis <- playbase::mofa.plot_module(
-        gr, mst = input$mst,
+        gr,
+        mst = input$mst,
         rm.single = input$rm_singles,
         nlabel = 999,
         cex = 0.5,
-        plotlib = "visnet")
-      
+        plotlib = "visnet"
+      )
+
       vis <- vis %>%
         visNetwork::visPhysics(
           barnesHut = list(
@@ -81,22 +84,17 @@ mofa_plot_modulegraph_server <- function(id,
     }
 
     plot.RENDER2 <- function() {
-      plot.RENDER(springLength=50) 
+      plot.RENDER(springLength = 50)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
+      func2 = plot.RENDER2,
       plotlib = "visnetwork",
       pdf.width = 8, pdf.height = 8,
       res = c(80, 100),
       add.watermark = watermark
     )
-
-    
   })
 }
-
-
-

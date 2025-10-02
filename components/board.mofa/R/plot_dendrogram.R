@@ -10,8 +10,7 @@ mofa_plot_dendrogram_ui <- function(
     caption = "",
     label = "",
     height = 400,
-    width  = 400) {
-
+    width = 400) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -21,7 +20,7 @@ mofa_plot_dendrogram_ui <- function(
       value = FALSE
     )
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -36,30 +35,31 @@ mofa_plot_dendrogram_ui <- function(
 }
 
 mofa_plot_dendrogram_server <- function(id,
-                                       mofa,
-                                       watermark = FALSE) {
+                                        mofa,
+                                        watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
       res <- mofa()
       shiny::req(res)
-      
-      TOM <- cor(t(res$X))
-      TOM[is.na(TOM) | is.infinite(TOM) ] <- 0
-      geneTree <- hclust(as.dist(1-TOM), method="complete")
-      datatype <- sub(":.*","",rownames(res$W))
-      datatypeColors <- rainbow(8)[factor(datatype)]      
 
-      if(input$show_cormatrix) {
-        par(mar=c(1,1,0,0))
-        WGCNA::TOMplot( TOM**1, geneTree, datatypeColors, main="")
+      TOM <- cor(t(res$X))
+      TOM[is.na(TOM) | is.infinite(TOM)] <- 0
+      geneTree <- hclust(as.dist(1 - TOM), method = "complete")
+      datatype <- sub(":.*", "", rownames(res$W))
+      datatypeColors <- rainbow(8)[factor(datatype)]
+
+      if (input$show_cormatrix) {
+        par(mar = c(1, 1, 0, 0))
+        WGCNA::TOMplot(TOM**1, geneTree, datatypeColors, main = "")
       } else {
-        par(mar=c(0,0,0,0))        
+        par(mar = c(0, 0, 0, 0))
         WGCNA::plotDendroAndColors(
-          geneTree, datatypeColors, dendroLabels=FALSE,
-          groupLabels="Datatype", main=NULL,
-          rowText = paste("",datatype),
-          rowTextAlignment="center")
+          geneTree, datatypeColors,
+          dendroLabels = FALSE,
+          groupLabels = "Datatype", main = NULL,
+          rowText = paste("", datatype),
+          rowTextAlignment = "center"
+        )
       }
     }
 

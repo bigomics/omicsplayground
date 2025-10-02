@@ -9,12 +9,11 @@ TimeSeriesBoard.parcoord_plot_ui <- function(
     title = "title",
     info.text = "Parallel line plot displaying the average expression per time point of features mapped within the selected gene module. ",
     info.methods = "The normalized and log2-transformed expression data are scaled and centered. Per each feature, the average expression across samples is calculated per each time point. The plot displays the average expression per time point of features mapped within the selected gene module.",
-    #info.references = list(),
+    # info.references = list(),
     info.extra_link = "extra.link",
     caption = "caption",
     height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
   parcoord_opts <- shiny::tagList(
@@ -35,7 +34,7 @@ TimeSeriesBoard.parcoord_plot_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     info.methods = info.methods,
-    #info.references = info.references,
+    # info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
     options = parcoord_opts,
@@ -52,8 +51,7 @@ TimeSeriesBoard.parcoord_table_ui <- function(
     info.text = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
     caption = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
     height = c("40%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")
-    ) {
+    width = c("auto", "100%")) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -81,13 +79,13 @@ TimeSeriesBoard.parcoord_server <- function(id,
       shiny::req(selmod)
 
       ii <- which(res$modules %in% selmod)
-      timeZ <- res$Z[ii,,drop=FALSE]
-      timeX <- res$X[ii,,drop=FALSE]      
+      timeZ <- res$Z[ii, , drop = FALSE]
+      timeX <- res$X[ii, , drop = FALSE]
       modules <- res$modules[ii]
 
       res <- list(
         timeX = timeX,
-        timeZ = timeZ,        
+        timeZ = timeZ,
         modules = modules
       )
     }
@@ -95,22 +93,22 @@ TimeSeriesBoard.parcoord_server <- function(id,
     plot.RENDER <- function() {
       res <- plot_data()
       timeZ <- res$timeZ
-      
+
       dimensions <- list()
-      for(i in 1:ncol(timeZ)) {
+      for (i in 1:ncol(timeZ)) {
         d <- list(
           range = range(timeZ),
           label = colnames(timeZ)[i],
-          values = timeZ[,i]
+          values = timeZ[, i]
         )
         dimensions[[i]] <- d
       }
-      
-      df <- data.frame(timeZ, check.names=FALSE)
+
+      df <- data.frame(timeZ, check.names = FALSE)
       int.modules <- as.integer(factor(res$modules))
 
       plt <- plotly::plot_ly(
-        df, 
+        df,
         source = "pcoords"
       ) %>%
         plotly::add_trace(
@@ -124,7 +122,6 @@ TimeSeriesBoard.parcoord_server <- function(id,
           dimensions = dimensions
         )
       plt
-
     }
 
     plot.RENDER_MODAL <- function() {
@@ -144,18 +141,17 @@ TimeSeriesBoard.parcoord_server <- function(id,
       add.watermark = watermark
     )
 
-    ##-----------------------------------------------------
-    ##------------------- gene table ----------------------
-    ##-----------------------------------------------------
+    ## -----------------------------------------------------
+    ## ------------------- gene table ----------------------
+    ## -----------------------------------------------------
     table.RENDER <- function() {
-
       res <- plot_data()
       shiny::req(res)
-      
+
       timeX <- res$timeX
-      feature1 <- gsub(";.*",";...",rownames(timeX)) ## shorten
+      feature1 <- gsub(";.*", ";...", rownames(timeX)) ## shorten
       sdx <- matrixStats::rowSds(timeX)
-      
+
       df <- data.frame(
         module = res$modules,
         feature = feature1,
@@ -163,18 +159,18 @@ TimeSeriesBoard.parcoord_server <- function(id,
         timeX,
         check.names = FALSE
       )
-      
-      symbol <- pgx$genes[rownames(timeX),"symbol"]
-      if(mean(symbol == rownames(timeX), na.rm=TRUE) < 0.2) {
+
+      symbol <- pgx$genes[rownames(timeX), "symbol"]
+      if (mean(symbol == rownames(timeX), na.rm = TRUE) < 0.2) {
         df$symbol <- symbol
       }
-      df <- df[order(-df$SD),]
-      
-      cols <- c("module","feature","symbol",colnames(df))
+      df <- df[order(-df$SD), ]
+
+      cols <- c("module", "feature", "symbol", colnames(df))
       cols <- intersect(cols, colnames(df))
-      df <- df[,cols]
-      
-      numeric.cols <- c("SD",colnames(timeX))
+      df <- df[, cols]
+
+      numeric.cols <- c("SD", colnames(timeX))
       DT::datatable(
         df,
         rownames = FALSE,

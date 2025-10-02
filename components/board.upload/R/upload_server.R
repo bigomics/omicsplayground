@@ -13,9 +13,7 @@ UploadBoard <- function(id,
                         ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
-
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns ## NAMESPACE
 
     # Some 'global' reactive variables used in this file
@@ -50,7 +48,7 @@ UploadBoard <- function(id,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
           annot.cols = annot.cols
         )
-        ##if (is.null(detected)) detected <- "error"
+        ## if (is.null(detected)) detected <- "error"
         detected
       })
     })
@@ -100,11 +98,30 @@ UploadBoard <- function(id,
     ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
-      common_name <- playbase::allSpecies(col = "display_name")      
-      names(all_species) <- paste0(all_species," (",common_name,")")
-      names(all_species)[all_species=="No organism"] <- "<custom organism>"
+      common_name <- playbase::allSpecies(col = "display_name")
+      names(all_species) <- paste0(all_species, " (", common_name, ")")
+      names(all_species)[all_species == "No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
+
+      if (opt$ENABLE_MULTIOMICS) {
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
+      } else {
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
+      }
+
+    output$proteomics_subtype_ui <- shiny::renderUI({
+      if (upload_datatype() == "proteomics") {
+        shiny::selectInput(
+          ns("proteomics_type"),
+          label = "Proteomics type:",
+          choices = c("MS", "Olink NPX"),
+          selected = "MS",
+          width = "150px"
+        )
+      } else {
+        NULL
+      }
     })
 
     is.olink <- shiny::reactive({
@@ -130,7 +147,7 @@ UploadBoard <- function(id,
         shinyalert::shinyalert(text = "Please enter a dataset ID", type = "error")
       }
     })
-    
+
     ## ============================================================================
     ## ================== NEW DATA UPLOAD =========================================
     ## ============================================================================
@@ -152,7 +169,7 @@ UploadBoard <- function(id,
       ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
       ## object again.  We should skip saving and pass the filename to
       ## pgxfile to be sure the filename is correct.
-      
+
       ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
       ## -------------- save PGX file/object ---------------
       # Old pgx does not have name slot, overwrite it with file name
@@ -189,7 +206,9 @@ UploadBoard <- function(id,
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
-        if (input$confirmload) { load_uploaded_data(pgxfile) }
+        if (input$confirmload) {
+          load_uploaded_data(pgxfile)
+        }
       }
 
       # reset new_upload to 0, so upload will not trigger when
@@ -280,109 +299,155 @@ UploadBoard <- function(id,
         } else {
           checked_for_log(TRUE)
         }
-      }
 
-      return(list(res = res, olink = olink))
-      
-    }
+        checked_for_log(FALSE)
+        res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+        write_check_output(res$checks, "COUNTS", raw_dir())
+
+        olink <- is.olink()
+        if (olink) {
+          shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
+          checked_for_log(TRUE)
+        } else {
+          if ("e29" %in% names(res$checks)) {
+            shinyalert::shinyalert(
+              title = paste("Log-scale detected"),
+              text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+              html = TRUE,
+              confirmButtonText = "Yes",
+              showCancelButton = TRUE,
+              cancelButtonText = "No",
+              inputId = "logCorrectCounts",
+              closeOnEsc = FALSE,
+              immediate = FALSE,
+              callbackR = function(x) checked_for_log(TRUE)
+            )
+          } else {
+            checked_for_log(TRUE)
+          }
+        }
+
+        return(list(res = res, olink = olink))
+      }
     )
 
     checked_counts <- shiny::eventReactive(
-    {
-      list(checked_for_log(), uploaded_counts()$res)
-    },
-    {
-      ## get uploaded counts
-      checked <- NULL
-      res <- uploaded_counts()$res
-      olink <- uploaded_counts()$olink
-      if (is.null(res)) { return(list(status = "Missing counts.csv", matrix = NULL)) }
-      
-      ## wait for dialog finished
-      shiny::req(checked_for_log())
-      
-      # If error 29 exists (log2 transform detected) and user
-      # confirms to convert to intensities in shinyalert do log2
-      # correction (un-doing log transform).      
-      log_prior <- 0
-      check.e29 <- FALSE
-      isConfirmed <- input$logCorrectCounts
-      if (is.null(isConfirmed)) isConfirmed = FALSE
-
-      if (olink) {
-        res$checks[["e29"]] <- NULL
-        check.e29 = TRUE
-      } else {
-        if ("e29" %in% names(res$checks) && isConfirmed) {
-          dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
-          res$df <- 2**res$df
-          min.count <- min(res$df, na.rm = TRUE)
-          if (min.count > 0) { ## put min to zero.
-            res$df <- res$df - min.count
-            log_prior <- min.count
-          }
-          res$checks[["e29"]] <- NULL
-          check.e29 = TRUE
-        }
-      }
-
-      # For data != Olink NPX, no further negative values allowed (in the linear space).
-      # Set any negatives to zero and inform the user. Store value.
-      # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
-      negs <- sum(res$df < 0, na.rm = TRUE)
-      if (negs > 0 && !olink) {
-        res$df <- pmax(res$df, 0)
-        ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
-        shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
-      }
-      
-      ## update checklist and status
-      checklist[["counts.csv"]]$checks <- res$checks
-      if (res$PASS) {
-        checked <- res$df
-        status <- "OK"
-      } else {
+      {
+        list(checked_for_log(), uploaded_counts()$res)
+      },
+      {
+        ## get uploaded counts
         checked <- NULL
-        status <- "ERROR: incorrect counts matrix"
-      }
-
-      ## --------------------------------------------------------
-      ## check files: maximum samples allowed
-      ## --------------------------------------------------------
-      MAXSAMPLES <- get_max_samples(auth, upload_datatype())
-      if (!is.null(checked)) {
-        if (ncol(checked) > MAXSAMPLES) {
-          status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
-          checked <- NULL
-          # remove only counts.csv from last_uploaded
-          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-          ## uploaded[["counts.csv"]] <- NULL
-          # pop up telling user max sample reached
-          shinyalert::shinyalert(
-            title = "Maximum samples reached",
-            text = paste(
-              "You have reached the maximum number of samples allowed. Please",
-              tspan("upload a new counts file with a maximum of", js = FALSE),
-              MAXSAMPLES, "samples."
-            ),
-            type = "error"
-          )
+        res <- uploaded_counts()$res
+        olink <- uploaded_counts()$olink
+        if (is.null(res)) {
+          return(list(status = "Missing counts.csv", matrix = NULL))
         }
-      }
-      if (is.null(checked)) {
-        uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-      }
 
-      if (check.e29) {
-        if (isConfirmed) isConfirmed = TRUE
-        if (is.null(isConfirmed)) isConfirmed = FALSE
-      } else {
-        isConfirmed = FALSE
-      }
+        ## wait for dialog finished
+        shiny::req(checked_for_log())
 
-      LL <- list(status = status, matrix = checked, isConfirmed = isConfirmed, log_prior = log_prior)
-      return(LL) 
-    }
+        # If error 29 exists (log2 transform detected) and user
+        # confirms to convert to intensities in shinyalert do log2
+        # correction (un-doing log transform).
+        log_prior <- 0
+        check.e29 <- FALSE
+        isConfirmed <- input$logCorrectCounts
+        if (is.null(isConfirmed)) isConfirmed <- FALSE
+
+        ## RESTORE AVERAGE RANK PLOT.
+        if (olink) {
+          res$checks[["e29"]] <- NULL
+          check.e29 <- TRUE
+        } else {
+          if ("e29" %in% names(res$checks) && isConfirmed) {
+            dbg("[UploadBoard::checked_counts] Converting log2-values to counts (linear scale)")
+            res$df <- 2**res$df
+            min.count <- min(res$df, na.rm = TRUE)
+            if (min.count > 0) { ## put min to zero.
+              res$df <- res$df - min.count
+              log_prior <- min.count
+            }
+            res$checks[["e29"]] <- NULL
+            check.e29 <- TRUE
+          }
+        }
+
+        # For data != Olink NPX, no further negative values allowed (in the linear space).
+        # Set any negatives to zero and inform the user. Store value.
+        # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
+        negs <- sum(res$df < 0, na.rm = TRUE)
+        if (negs > 0 && !olink) {
+          res$df <- pmax(res$df, 0)
+          ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
+          shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
+        }
+
+        ## update checklist and status
+        checklist[["counts.csv"]]$checks <- res$checks
+        if (res$PASS) {
+          checked <- res$df
+          status <- "OK"
+        } else {
+          checked <- NULL
+          status <- "ERROR: incorrect counts matrix"
+        }
+
+        ## --------------------------------------------------------
+        ## check files: maximum samples allowed
+        ## --------------------------------------------------------
+        MAXSAMPLES <- auth$options$MAX_SAMPLES
+        if (!is.null(checked)) {
+          if (ncol(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
+            status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
+            checked <- NULL
+            # remove only counts.csv from last_uploaded
+            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+            ## uploaded[["counts.csv"]] <- NULL
+            # pop up telling user max sample reached
+            shinyalert::shinyalert(
+              title = "Maximum samples reached",
+              text = paste(
+                "You have reached the maximum number of samples allowed. Please",
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                MAXSAMPLES, "samples."
+              ),
+              type = "error"
+            )
+          }
+          # Hard stop for scRNA-seq
+          if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+            checked <- NULL
+            # remove only counts.csv from last_uploaded
+            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+            ## uploaded[["counts.csv"]] <- NULL
+            # pop up telling user max sample reached
+            shinyalert::shinyalert(
+              title = "Maximum samples reached",
+              text = paste(
+                "You have reached the maximum number of cells allowed. Please",
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                "100.000 cells."
+              ),
+              type = "error"
+            )
+          }
+        }
+        if (is.null(checked)) {
+          uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+        }
+
+        if (check.e29) {
+          if (isConfirmed) isConfirmed <- TRUE
+          if (is.null(isConfirmed)) isConfirmed <- FALSE
+        } else {
+          isConfirmed <- FALSE
+        }
+
+        LL <- list(status = status, matrix = checked, isConfirmed = isConfirmed, log_prior = log_prior)
+        return(LL)
+      }
     )
 
     ## --------------------------------------------------------
@@ -395,8 +460,9 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$samples.csv
-
-        if (is.null(df0)) { return(list(status = "Missing samples.csv", matrix = NULL)) }
+        if (is.null(df0)) {
+          return(list(status = "Missing samples.csv", matrix = NULL))
+        }
 
         ## Single matrix counts check
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
@@ -412,9 +478,9 @@ UploadBoard <- function(id,
           status <- "ERROR: incorrect samples matrix"
         }
 
-        MAXSAMPLES <- get_max_samples(auth, upload_datatype())
+        MAXSAMPLES <- auth$options$MAX_SAMPLES
         if (!is.null(checked)) {
-          if (nrow(checked) > MAXSAMPLES) {
+          if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
             ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
@@ -422,6 +488,24 @@ UploadBoard <- function(id,
             shinyalert::shinyalert(
               title = "Maximum samples reached",
               text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
+              type = "error"
+            )
+          }
+          # Hard stop for scRNA-seq
+          if (nrow(checked) > 100000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+            checked <- NULL
+            # remove only counts.csv from last_uploaded
+            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+            ## uploaded[["counts.csv"]] <- NULL
+            # pop up telling user max sample reached
+            shinyalert::shinyalert(
+              title = "Maximum samples reached",
+              text = paste(
+                "You have reached the maximum number of cells allowed. Please",
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                "100.000 cells."
+              ),
               type = "error"
             )
           }
@@ -570,7 +654,7 @@ UploadBoard <- function(id,
           step_title = "Step 4: QC/BC",
           step_id = "step_qc",
           server = TRUE,
-          upload_module_normalizationSC_ui(ns("checkqc_sc"))  ## ns clash??
+          upload_module_normalizationSC_ui(ns("checkqc_sc")) ## ns clash??
         )
       } else {
         normalization_panel <- wizardR::wizard_step(
@@ -587,7 +671,7 @@ UploadBoard <- function(id,
         server = TRUE,
         upload_module_computepgx_ui(ns("compute"))
       )
-      
+
       wizard <- wizardR::wizard(
         id = ns("upload_wizard"),
         width = 90,
@@ -623,7 +707,7 @@ UploadBoard <- function(id,
       ##       finish = "Compute!"
       ##     )
       ##   )
-      ##}
+      ## }
       return(wizard)
     })
 
@@ -631,15 +715,15 @@ UploadBoard <- function(id,
     ## Check annotation matrix
     ## --------------------------------------------------------
     checked_annot <- shiny::eventReactive(
-    {
-      list(uploaded$annot.csv, uploaded$counts.csv)
-    },
-    {
-      status <- "OK"
-      checked <- uploaded$annot.csv
-      if (!is.null(checked)) {
-        dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
-      }
+      {
+        list(uploaded$annot.csv, uploaded$counts.csv)
+      },
+      {
+        status <- "OK"
+        checked <- uploaded$annot.csv
+        if (!is.null(checked)) {
+          dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
+        }
 
         list(status = status, matrix = checked)
       }
@@ -741,13 +825,16 @@ UploadBoard <- function(id,
       recompute_pgx(NULL) ## need to reset ???
     })
 
-    observeEvent(recompute_pgx(), {
-      req(!is.null(recompute_pgx()))
-      bigdash.selectTab(session, selected = "upload-tab")
-      shinyjs::delay(250, {
-        new_upload(new_upload() + 1)
-      })
-    }, ignoreNULL = TRUE)
+    observeEvent(recompute_pgx(),
+      {
+        req(!is.null(recompute_pgx()))
+        bigdash.selectTab(session, selected = "upload-tab")
+        shinyjs::delay(250, {
+          new_upload(new_upload() + 1)
+        })
+      },
+      ignoreNULL = TRUE
+    )
 
     observeEvent(input$start_upload, {
       ## check number of datasets
@@ -1067,7 +1154,7 @@ UploadBoard <- function(id,
         annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
 
-        if(0) {
+        if (0) {
           dbg("[*** testing check probes ***]")
 
           dbg("[UploadServer:uploaded.counts] head.probes = ", head(probes))
@@ -1076,9 +1163,9 @@ UploadBoard <- function(id,
           dbg("[UploadServer:uploaded.counts] dim.annot = ", dim(annot))
           dbg("[UploadServer:uploaded.counts] annot.cols = ", annot.cols)
           dbg("[UploadServer:uploaded.counts] probetype = ", probetype())
-          
-          organism = upload_organism()
-          datatype = upload_datatype()
+
+          organism <- upload_organism()
+          datatype <- upload_datatype()
           res <- playbase::check_species_probetype(
             probes = probes,
             datatype = datatype,
@@ -1086,10 +1173,9 @@ UploadBoard <- function(id,
             annot.cols = annot.cols
           )
           dbg("[*** testing check probes ***] names.res = ", names(res))
-          if(length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
-          
+          if (length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
         }
-        
+
         checkprobes_task$invoke(
           organism = upload_organism(),
           datatype = upload_datatype(),
@@ -1102,9 +1188,11 @@ UploadBoard <- function(id,
     observeEvent(
       checkprobes_task$status(),
       {
-        dbg("[UploadServer:observeEvent:checkprobes_task] task$status = ",
-          checkprobes_task$status() )
-        
+        dbg(
+          "[UploadServer:observeEvent:checkprobes_task] task$status = ",
+          checkprobes_task$status()
+        )
+
         if (checkprobes_task$status() == "error") {
           probetype("error")
           return(NULL)
@@ -1116,12 +1204,14 @@ UploadBoard <- function(id,
 
         ## inspect ExtendedTask results
         detected <- checkprobes_task$result()
-        dbg("[UploadServer:observeEvent:checkprobes_task] task$result: names(detected) = ",
-          names(detected))
+        dbg(
+          "[UploadServer:observeEvent:checkprobes_task] task$result: names(detected) = ",
+          names(detected)
+        )
 
         organism <- upload_organism()
         alt.text <- ""
-        
+
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
         e0 <- length(detected) == 0
@@ -1134,12 +1224,14 @@ UploadBoard <- function(id,
         if (task_failed) {
           # handle probetype mismatch failures: assign "error" to detected_probetype
           detected_probetype <- "error"
-          detected_species <- setdiff(names(detected),organism)
+          detected_species <- setdiff(names(detected), organism)
           alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
             # check if ANY organism matched the probes, if yes add a hint to the user
-            alt.text <- c(alt.text, paste0("Are these perhaps <b>",
-              alt.species, "</b>?"))
+            alt.text <- c(alt.text, paste0(
+              "Are these perhaps <b>",
+              alt.species, "</b>?"
+            ))
           }
           if (upload_datatype() == "metabolomics") {
             # overwrite alt.text for metabolomics
@@ -1196,7 +1288,7 @@ UploadBoard <- function(id,
       auth = auth,
       uploaded = uploaded,
       checked_matrix = shiny::reactive(checked_counts()$matrix),
-      is_logscale = shiny::reactive(checked_counts()$isConfirmed), 
+      is_logscale = shiny::reactive(checked_counts()$isConfirmed),
       checklist = checklist,
       scrollY = "calc(50vh - 140px)",
       width = c("auto", "100%"),
@@ -1244,7 +1336,7 @@ UploadBoard <- function(id,
       upload_wizard = shiny::reactive(input$upload_wizard),
       auth = auth
     )
-    
+
     normalized <- upload_module_normalization_server(
       id = "checkqc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1255,7 +1347,7 @@ UploadBoard <- function(id,
       is.count = TRUE,
       height = height
     )
-    
+
     sc_normalized <- upload_module_normalizationSC_server(
       id = "checkqc_sc",
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
@@ -1265,11 +1357,11 @@ UploadBoard <- function(id,
       is.count = TRUE,
       height = height
     )
-    
+
     ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
     sc_compute_settings <- reactiveValues()
-    
+
     observe({
       if (input$selected_datatype == "scRNA-seq") {
         compute_input$counts <- sc_normalized$counts()
@@ -1292,7 +1384,7 @@ UploadBoard <- function(id,
         compute_input$samples <- checked_samples_counts()$SAMPLES
       }
     })
-    
+
     computed_pgx <- upload_module_computepgx_server(
       id = "compute",
       countsRT = shiny::reactive(compute_input$counts),
@@ -1302,8 +1394,8 @@ UploadBoard <- function(id,
       #      imputation_method = shiny::reactive(compute_input$imputation_method),
       #      bc_method = shiny::reactive(compute_input$bc_method),
       #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
-      #samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
-      #samplesRT = shiny::reactive(compute_input$samples), scRNA-seq disabled at merging.
+      # samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
+      # samplesRT = shiny::reactive(compute_input$samples), scRNA-seq disabled at merging.
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),

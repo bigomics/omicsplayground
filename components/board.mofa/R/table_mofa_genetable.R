@@ -27,35 +27,32 @@ mofa_table_genetable_ui <- function(
 mofa_table_genetable_server <- function(id,
                                         mofa,
                                         selected_factor = reactive(NULL),
-                                        pgx
-                                        )
-{
+                                        pgx) {
   moduleServer(id, function(input, output, session) {
-
-    table.RENDER <- function(full=FALSE) {
+    table.RENDER <- function(full = FALSE) {
       mofa <- mofa()
-      validate(need(!is.null(mofa), "missing MOFA data."))            
-      k=1
-      k <- selected_factor()  ## which factor/phenotype
+      validate(need(!is.null(mofa), "missing MOFA data."))
+      k <- 1
+      k <- selected_factor() ## which factor/phenotype
       shiny::req(k)
 
-      wct <- playbase::mofa.plot_centrality(mofa, k, justdata=TRUE)
-      wct <- wct[order(-wct$weight),]
+      wct <- playbase::mofa.plot_centrality(mofa, k, justdata = TRUE)
+      wct <- wct[order(-wct$weight), ]
       annot <- pgx$genes
-      if(full) {
-        aa <- annot[wct$feature,c("feature","symbol","gene_title")]
+      if (full) {
+        aa <- annot[wct$feature, c("feature", "symbol", "gene_title")]
       } else {
-        aa <- annot[wct$feature,c("feature","symbol")]        
+        aa <- annot[wct$feature, c("feature", "symbol")]
       }
-      aa$feature <- sub(";.*",";[...]",aa$feature)
-      aa$symbol[is.na(aa$symbol) | aa$symbol==''] <- '---'
-      if(all(aa$feature == aa$symbol)) aa$symbol <- NULL      
+      aa$feature <- sub(";.*", ";[...]", aa$feature)
+      aa$symbol[is.na(aa$symbol) | aa$symbol == ""] <- "---"
+      if (all(aa$feature == aa$symbol)) aa$symbol <- NULL
       wct$feature <- NULL
 
-      df <- data.frame( factor=k, aa, wct )
+      df <- data.frame(factor = k, aa, wct)
 
-      numeric.cols <- grep("score|weight|centrality",colnames(df))
-      
+      numeric.cols <- grep("score|weight|centrality", colnames(df))
+
       DT::datatable(
         df,
         rownames = FALSE, #
@@ -88,13 +85,12 @@ mofa_table_genetable_server <- function(id,
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         )
-
     }
 
     table.RENDER2 <- function() {
-      table.RENDER(full=TRUE)
+      table.RENDER(full = TRUE)
     }
-    
+
     table <- TableModuleServer(
       "table",
       func = table.RENDER,

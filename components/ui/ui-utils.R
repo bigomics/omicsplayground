@@ -493,7 +493,7 @@ tspan.SAVE <- function(label) {
 }
 
 #' Create a loading spinner element
-#' 
+#'
 #' @param id The ID for the loader container
 #' @return A shiny div element containing the loader
 #' @export
@@ -505,4 +505,20 @@ create_loader <- function(id) {
       class = "spinner"
     )
   )
+}
+
+clean_custom_features <- function(features) {
+  # Remove quotes and clean up the features string
+  features <- gsub("['\"]", "", features)
+
+  # Split by common separators and clean each feature
+  feature_list <- strsplit(features, "[,;\n\t]+")[[1]]
+
+  # Trim whitespace and remove empty strings
+  feature_list <- trimws(feature_list)
+  feature_list <- feature_list[feature_list != ""]
+
+  # Rejoin with commas
+  features <- paste(feature_list, collapse = ", ")
+  return(features)
 }

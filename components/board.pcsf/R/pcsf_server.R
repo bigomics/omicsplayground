@@ -20,14 +20,14 @@ PcsfBoard <- function(id, pgx) {
     my_observers <- list()
 
     tab_elements <- list(
-      "Gene PCSF" = list(disable = c("gset_accordion")),      
+      "Gene PCSF" = list(disable = c("gset_accordion")),
       "Geneset PCSF" = list(disable = c("pcsf_accordion"))
     )
 
     my_observers[[1]] <- shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-        
+
     my_observers[[2]] <- observeEvent(input$pcsf_info, {
       showModal(
         modalDialog(
@@ -56,12 +56,12 @@ PcsfBoard <- function(id, pgx) {
     ## =========================================================================
     ## =========================== FUNCTIONS ===================================
     ## =========================================================================
-    
+
 
     ## =========================================================================
     ## =========================== PANELS ======================================
     ## =========================================================================
-    
+
     pcsf_genepanel_server(
       "genepanel",
       pgx,
@@ -75,6 +75,5 @@ PcsfBoard <- function(id, pgx) {
       r_contrast = shiny::reactive(input$contrast),
       watermark = WATERMARK
     )
-
   })
 }

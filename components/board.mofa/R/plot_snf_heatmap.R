@@ -18,7 +18,7 @@ mofa_plot_snf_heatmap_ui <- function(
   options <- tagList(
     shiny::checkboxInput(ns("split"), "Split by datatype", TRUE)
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -32,36 +32,34 @@ mofa_plot_snf_heatmap_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg")
   )
-  
 }
 
 mofa_plot_snf_heatmap_server <- function(id,
                                          mofa,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    plot.RENDER <- function(legend=FALSE) {
+    plot.RENDER <- function(legend = FALSE) {
       res <- mofa()
       snf <- res$snf
-      validate(need(!is.null(res), "missing MOFA data."))              
+      validate(need(!is.null(res), "missing MOFA data."))
       playbase::snf.heatmap(
-        snf, res$X, res$samples, nmax=60, legend=legend,
-        do.split = input$split)                 
+        snf, res$X, res$samples,
+        nmax = 60, legend = legend,
+        do.split = input$split
+      )
     }
 
     plot.RENDER2 <- function() {
       plot.RENDER(TRUE)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
-      func2 = plot.RENDER2,      
+      func2 = plot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 100),
       add.watermark = watermark
     )
-
-    
   })
 }

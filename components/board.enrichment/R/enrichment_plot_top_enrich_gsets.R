@@ -190,7 +190,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             ylab = "Rank metric",
             ticklen = 0.25,
             yth = ifelse(input$label_features, 0.1, 999), ## threshold for which points get label
-            yq = ifelse(input$full_yaxis, 0, 0.01),  ## limits for y-range
+            yq = ifelse(input$full_yaxis, 0, 0.01), ## limits for y-range
             cbar.width = 32,
             tooltips = NULL,
             cex.text = cex.text,

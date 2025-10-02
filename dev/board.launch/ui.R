@@ -109,6 +109,7 @@ app_ui <- function() {
             ),
             center = tags$div(
                 shiny::div(shiny::textOutput("current_dataset"), class = "current-dataset"),
+                shiny::div(shiny::textOutput("current_user"), class = "current-user")
         )
 
             

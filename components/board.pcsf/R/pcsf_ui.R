@@ -54,7 +54,7 @@ PcsfUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          ##--------- begin tab content ------------
+          ## --------- begin tab content ------------
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -83,18 +83,18 @@ PcsfUI <- function(id) {
               info.text = pcsf_graph_info,
               height = c("100%", "75vh"),
               width = c("auto", "100%")
-            )            
+            )
           )
-          ##--------- end tab content ------------            
+          ## --------- end tab content ------------
         )
-      ),  ## end tabpanel2
+      ), ## end tabpanel2
 
       shiny::tabPanel(
         "Geneset PCSF",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          ##--------- begin tab content ------------
+          ## --------- begin tab content ------------
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -124,12 +124,11 @@ PcsfUI <- function(id) {
               info.text = pcsf_graph_info,
               height = c("100%", "75vh"),
               width = c("auto", "100%")
-            )            
+            )
           )
-          ##--------- end tab content ------------            
+          ## --------- end tab content ------------
         )
       ) ## end tabpanel2
-
     ) ## end tabsetpanel
   )
 }

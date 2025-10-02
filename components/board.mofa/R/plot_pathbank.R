@@ -51,33 +51,33 @@ mofa_plot_pathbank_server <- function(id,
                                       watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-
       ## reactive or function? that's the question...
       plot_data <- shiny::reactive({
         res <- list()
         return(res)
       })
-      
-      getPathwayImage <- shiny::reactive({
 
+      getPathwayImage <- shiny::reactive({
         # Get pathway image using WPID and fc values
         wp.name <- sel_pathway()
-        if(length(wp.name)==0 || length(wp.name) > 1) return(NULL)
-        
-        ##wp.name = "TF_ARCHS4:NCOA3 human tf ARCHS4 coexpression [SMP0080852]"
-        wp <- stringr::str_match(wp.name, "SMP[0-9]+|WP[0-9]+|R-HSA-[0-9]+")[,1]
-        shiny::validate( shiny::need(!is.na(wp), "pathway diagram not available"))
+        if (length(wp.name) == 0 || length(wp.name) > 1) {
+          return(NULL)
+        }
 
-        if(length(wp)>1) wp <- wp[1]
+        ## wp.name = "TF_ARCHS4:NCOA3 human tf ARCHS4 coexpression [SMP0080852]"
+        wp <- stringr::str_match(wp.name, "SMP[0-9]+|WP[0-9]+|R-HSA-[0-9]+")[, 1]
+        shiny::validate(shiny::need(!is.na(wp), "pathway diagram not available"))
 
-        val = NULL ## temporary...
+        if (length(wp) > 1) wp <- wp[1]
+
+        val <- NULL ## temporary...
         k <- sel_contrast()
-        if(!is.null(k)) {
-          val <- playbase::pgx.getMetaMatrix(pgx)$fc[,k]
+        if (!is.null(k)) {
+          val <- playbase::pgx.getMetaMatrix(pgx)$fc[, k]
           val_names <- names(val)
           ids <- sapply(strsplit(val_names, ":"), function(x) x[2])
           id_mapping <- playdata::METABOLITE_ANNOTATION[, c("ID", "PATHBANK")]
-          id_mapping <- id_mapping[!is.na(id_mapping$PATHBANK),]
+          id_mapping <- id_mapping[!is.na(id_mapping$PATHBANK), ]
           id_mapping <- setNames(id_mapping$PATHBANK, id_mapping$ID)
           mapped_ids <- id_mapping[ids]
           mapped_ids <- mapped_ids[!is.na(mapped_ids)]
@@ -85,13 +85,15 @@ mofa_plot_pathbank_server <- function(id,
         }
 
         ## convert to UNIPROT and PATHBANK ID
-        ##newnames <- convert2pathbankid(names(val))
-        ##names(val) <- newnames
+        ## newnames <- convert2pathbankid(names(val))
+        ## names(val) <- newnames
         sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
         sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
-        ##wp = "SMP0080852"        
+        ## wp = "SMP0080852"
         img <- playbase::getPathwayImage(
-          wp, val=val, sbgn.dir=sbgn.dir, as.img=TRUE)
+          wp,
+          val = val, sbgn.dir = sbgn.dir, as.img = TRUE
+        )
         return(img)
       })
 

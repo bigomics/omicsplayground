@@ -9,8 +9,10 @@ ClusteringInputs <- function(id) {
   topmodes <- c("sd", "pca", "marker")
 
   settings_items1 <- tagList(
-    withTooltip(shiny::selectInput(ns("hm_level"), "Level:",
-      choices = c("gene", "geneset")),
+    withTooltip(
+      shiny::selectInput(ns("hm_level"), "Level:",
+        choices = c("gene", "geneset")
+      ),
       "Specify the level analysis: gene or geneset level."
     ),
     shiny::hr(),
@@ -36,8 +38,10 @@ ClusteringInputs <- function(id) {
     ),
     ## ----- level ----
     shiny::hr(),
-    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:",
-      choices = NULL, multiple = TRUE),
+    withTooltip(
+      shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:",
+        choices = NULL, multiple = TRUE
+      ),
       "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
@@ -74,12 +78,14 @@ ClusteringInputs <- function(id) {
             placement = "bottom"
           )
         ),
-        ## ----- extra filters ----        
-        withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
+        ## ----- extra filters ----
+        withTooltip(
+          shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
           "Exclude genes on X/Y chromosomes."
         ),
         withTooltip(
-          shiny::checkboxInput( ns("hm_filterMitoRibo"),
+          shiny::checkboxInput(
+            ns("hm_filterMitoRibo"),
             tspan("exclude mito/ribo genes"), FALSE
           ),
           "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes."
@@ -233,7 +239,7 @@ ClusteringUI <- function(id) {
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
               title = "Dimensionality reduction",
-              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions.",
+              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the percentage of variance explained by the first two principal components is reported in the x- and y-axis.",
               info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other.",
               info.references = list(
                 list(

@@ -29,42 +29,41 @@ table_deepnet_gradients_server <- function(id,
                                            pgx,
                                            phenoFC,
                                            conditions,
-                                           datatypes
-                                           )
-{
+                                           datatypes) {
   moduleServer(id, function(input, output, session) {
-
-    table.RENDER <- function(full=TRUE) {
+    table.RENDER <- function(full = TRUE) {
       net <- net()
       grad <- net$get_gradients()[[1]]
       all.fc <- phenoFC()
-      
+
       cond <- conditions()
       dtypes <- datatypes()
-      shiny::validate( shiny::need( length(cond)>0, "please select a condition"))
-      shiny::validate( shiny::need( length(dtypes)>0, "please select a datatype"))      
-      
+      shiny::validate(shiny::need(length(cond) > 0, "please select a condition"))
+      shiny::validate(shiny::need(length(dtypes) > 0, "please select a datatype"))
+
       ## check if we are too early after a change
       net <- net()
-      shiny::req( dtypes %in% names(net$X))
-      shiny::req( cond %in% net$labels[[1]])
+      shiny::req(dtypes %in% names(net$X))
+      shiny::req(cond %in% net$labels[[1]])
 
       grad <- grad[dtypes]
-      grad <- lapply(grad, function(g) g[,cond,drop=FALSE] )
-      
+      grad <- lapply(grad, function(g) g[, cond, drop = FALSE])
+
       df <- playbase::deep.plotGradientVSFoldchange(
-        grad, fc = all.fc, data=TRUE, par=FALSE)
-      
+        grad,
+        fc = all.fc, data = TRUE, par = FALSE
+      )
+
       numeric.cols <- colnames(df)
-      
+
       ## add gene title for readable names (e.g. for metabolomics)
-      feature <- stringr::str_trunc(rownames(df),40)
-      symbol  <- stringr::str_trunc(pgx$genes[feature,"symbol"],20)
-      title   <- stringr::str_trunc(pgx$genes[feature,"gene_title"],60)
-      if(full) {
-        df <- cbind( feature=feature, symbol=symbol, title=title, df)
+      feature <- stringr::str_trunc(rownames(df), 40)
+      symbol <- stringr::str_trunc(pgx$genes[feature, "symbol"], 20)
+      title <- stringr::str_trunc(pgx$genes[feature, "gene_title"], 60)
+      if (full) {
+        df <- cbind(feature = feature, symbol = symbol, title = title, df)
       } else {
-        df <- cbind( feature=feature, symbol=symbol, df)
+        df <- cbind(feature = feature, symbol = symbol, df)
       }
 
       trunc_column <- function(target, len) {
@@ -72,16 +71,16 @@ table_deepnet_gradients_server <- function(id,
           targets = target, ## with no rownames column 1 is column 2
           render = DT::JS(
             "function(data, type, row, meta) {",
-            paste0("return type === 'display' && data.length > ",len," ?"),
-            paste0("'<span title=\"' + data + '\">' + data.substr(0, ",len,") + '...</span>' : data;"),
+            paste0("return type === 'display' && data.length > ", len, " ?"),
+            paste0("'<span title=\"' + data + '\">' + data.substr(0, ", len, ") + '...</span>' : data;"),
             "}"
           )
         )
       }
-      
+
       DT::datatable(
         df,
-        rownames = FALSE, 
+        rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
@@ -95,7 +94,7 @@ table_deepnet_gradients_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           columnDefs = list(
-            trunc_column("feature",40)
+            trunc_column("feature", 40)
           )
         ) ## end of options.list
       ) %>%
@@ -104,13 +103,13 @@ table_deepnet_gradients_server <- function(id,
     }
 
     table.RENDER2 <- function() {
-      table.RENDER(full=TRUE)
+      table.RENDER(full = TRUE)
     }
-    
+
     table <- TableModuleServer(
       "table",
       func = table.RENDER,
-      func2 = table.RENDER2,      
+      func2 = table.RENDER2,
       selector = "single"
     )
 

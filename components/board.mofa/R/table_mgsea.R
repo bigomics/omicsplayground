@@ -25,36 +25,33 @@ mofa_table_mgsea_ui <- function(
 }
 
 mofa_table_mgsea_server <- function(id,
-                                   mgsea,
-                                   input_k = reactive(1),
-                                   top = 20
-                                   ) {
-
+                                    mgsea,
+                                    input_k = reactive(1),
+                                    top = 20) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       mgsea <- mgsea()
-      validate(need(!is.null(mgsea), "missing GSEA data."))            
-      k=1
-      k <- input_k()  ## which factor/phenotype
-      shiny::req(k,mgsea[[k]])
+      validate(need(!is.null(mgsea), "missing GSEA data."))
+      k <- 1
+      k <- input_k() ## which factor/phenotype
+      shiny::req(k, mgsea[[k]])
       df <- mgsea[[k]]
       df
     }
-    
-    table.RENDER <- function(full=FALSE) {
+
+    table.RENDER <- function(full = FALSE) {
       mgsea <- mgsea()
-      validate(need(!is.null(mgsea), "missing GSEA data."))            
-      k <- input_k()  ## which factor/phenotype
-      shiny::req(k,mgsea[[k]])
+      validate(need(!is.null(mgsea), "missing GSEA data."))
+      k <- input_k() ## which factor/phenotype
+      shiny::req(k, mgsea[[k]])
       df <- mgsea[[k]]
-      df <- cbind(pathway=rownames(df), df)
-      if(!full) {
-        num.cols <- grep("^num",colnames(df),value=TRUE)
-        df <- df[,c("pathway","multi.score","multi.q",num.cols)]
+      df <- cbind(pathway = rownames(df), df)
+      if (!full) {
+        num.cols <- grep("^num", colnames(df), value = TRUE)
+        df <- df[, c("pathway", "multi.score", "multi.q", num.cols)]
       }
-      numeric.cols <- grep("score|pval|p$|q$|rho",colnames(df))
-      
+      numeric.cols <- grep("score|pval|p$|q$|rho", colnames(df))
+
       DT::datatable(
         df,
         rownames = FALSE, #
@@ -81,17 +78,17 @@ mofa_table_mgsea_server <- function(id,
                 "}"
               )
             )
-          )                    
+          )
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
 
-    table.RENDER2 <- function(full=FALSE) {
-      table.RENDER(full=TRUE)
+    table.RENDER2 <- function(full = FALSE) {
+      table.RENDER(full = TRUE)
     }
-    
+
     table <- TableModuleServer(
       "table",
       func = table.RENDER,

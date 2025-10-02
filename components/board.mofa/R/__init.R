@@ -11,7 +11,6 @@ MODULE.multiomics <- list(
       deepnet = "DeepLearning"
     )
   },
-
   module_ui = function() {
     list(
       bigdash::bigTabItem("mofa-tab", MofaInputs("mofa"), create_loader("mofa-loader")),
@@ -30,14 +29,13 @@ MODULE.multiomics <- list(
       list("deepnet-tab", DeepNetUI("deepnet"))
     )
   },
-
   module_server = function(PGX) {
     info("[SERVER] calling MofaBoard module")
     MofaBoard("mofa", pgx = PGX)
 
     info("[SERVER] calling MGseaBoard module")
     MGseaBoard("mgsea", pgx = PGX)
-          
+
     info("[SERVER] calling SNFBoard module")
     SNFBoard("snf", pgx = PGX)
 
@@ -47,25 +45,29 @@ MODULE.multiomics <- list(
     info("[SERVER] calling DeepNetBoard module")
     DeepNetBoard("deepnet", pgx = PGX)
   },
-
   module_help = function() {
     list(
-      bigdash::sidebarTabHelp("mofa-tab", "MOFA",
+      bigdash::sidebarTabHelp(
+        "mofa-tab", "MOFA",
         tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
-                  integration method based on matrix factorization.")),
-
-      bigdash::sidebarTabHelp("mgsea-tab", "multiGSEA",
-        tspan("multiGSEA performs multi-omics integration on gene set level.")),
-
-      bigdash::sidebarTabHelp("snf-tab", "SNF",
-        tspan("SNF clustering")),
-
-      bigdash::sidebarTabHelp("lasagna-tab", "Lasagna",
-        tspan("LASAGNA is a stacked layer model for multi-omics integration where each layer corresponds to a datatype.")),
-      
-      bigdash::sidebarTabHelp("deepnet-tab", "DeepLearning",
-        tspan("Integration using DeepLearning"))
+                  integration method based on matrix factorization.")
+      ),
+      bigdash::sidebarTabHelp(
+        "mgsea-tab", "multiGSEA",
+        tspan("multiGSEA performs multi-omics integration on gene set level.")
+      ),
+      bigdash::sidebarTabHelp(
+        "snf-tab", "SNF",
+        tspan("SNF clustering")
+      ),
+      bigdash::sidebarTabHelp(
+        "lasagna-tab", "Lasagna",
+        tspan("LASAGNA is a stacked layer model for multi-omics integration where each layer corresponds to a datatype.")
+      ),
+      bigdash::sidebarTabHelp(
+        "deepnet-tab", "DeepLearning",
+        tspan("Integration using DeepLearning")
+      )
     )
-  }  
-  
+  }
 )
