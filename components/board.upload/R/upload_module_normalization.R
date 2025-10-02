@@ -487,6 +487,8 @@ upload_module_normalization_server <- function(
           if (input$missing_plottype == "PCA of imputed data") {
             if (any(X2 > 0)) {
               X3 <- imputedX()$X
+              if (input$impute) X3 <- log2(imputedX()$counts + imputedX()$prior)
+              dbg("--------------MNT1: sum(is.na(X3)) = ", sum(is.na(X3)))
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
               for(i in 1:length(mm)) imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
