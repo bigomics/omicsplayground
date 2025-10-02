@@ -483,7 +483,41 @@ upload_module_normalization_server <- function(
               text(0.5, 0.5, "no missing values")
             }
           }
-
+          
+          if (input$missing_plottype == "PCA of imputed data") {
+            if (any(X2 > 0)) {
+              X3 <- imputedX()$X
+              mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
+              imp <- list()
+              for(i in 1:length(mm)) imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
+              scaled.imp <- lapply(imp, function(x) playbase::double_center_scale_fast(x))
+              par(mfrow = c(2, 2), mar = c(4, 3, 2, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
+              cex1 <- cut(ncol(X3),
+                breaks = c(0, 40, 100, 250, 1000, 999999),
+                c(1, 0.85, 0.7, 0.55, 0.4))
+              cex1 <- 2.7 * as.numeric(as.character(cex1))
+              for(i in 1:length(scaled.imp)) {
+                set.seed(1234);
+                pca <- irlba::irlba(scaled.imp[[i]], nu = 2, nv = 0)
+                pca.pos <- pca$u
+                pca.var <- (pca$d^2 / sum(pca$d^2)) * 100
+                plot(pca.pos[,1], pca.pos[,2], col = "black", pch = 20,
+                  cex = cex1, cex.lab = 1, main = names(scaled.imp)[i],
+                  xlab = paste0("PC1 (", round(pca.var[1],2), "%)"),
+                  ylab = paste0("PC2 (", round(pca.var[2],2), "%)"),
+                  asp = 1
+                )
+                grid()
+                rm(pca, pca.pos, pca.var); gc()
+              }
+              rm(X3, imp, scaled.imp)
+            }
+            else {
+              plot.new()
+              text(0.5, 0.5, "no missing values")
+            }
+          }
+          
         }
       }
 
@@ -705,12 +739,10 @@ upload_module_normalization_server <- function(
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
         missing.options <- tagList(
-          shiny::radioButtons(ns("missing_plottype"),
-            "Plot type:",
-            c("heatmap", "ratio plot", "missingness per sample", "missingness across features"),
-            selected = "heatmap",
-            inline = TRUE
-          ),
+          shiny::radioButtons(ns("missing_plottype"), "Plot type:",
+            c("heatmap", "ratio plot", "missingness per sample",
+              "missingness across features", "PCA of imputed data"),
+            selected = "heatmap", inline = TRUE),
         )
 
         norm.options <- tagList(
