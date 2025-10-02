@@ -109,6 +109,7 @@ UploadBoard <- function(id,
       } else {
         shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
       }
+    })
 
     output$proteomics_subtype_ui <- shiny::renderUI({
       if (upload_datatype() == "proteomics") {
@@ -329,7 +330,7 @@ UploadBoard <- function(id,
 
         return(list(res = res, olink = olink))
       }
-    )
+    })
 
     checked_counts <- shiny::eventReactive(
       {
