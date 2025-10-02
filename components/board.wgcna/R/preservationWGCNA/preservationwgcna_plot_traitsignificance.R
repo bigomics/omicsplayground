@@ -14,10 +14,11 @@ preservationWGCNA_plot_traitsignificance_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(    
-    shiny::checkboxInput(
-      inputId = ns("top20"),
-      label = "Show top 20",
-      value = TRUE
+    shiny::selectInput(
+      inputId = ns("ntop"),
+      label = "Number of plots",
+      choices = c(1,4,6,9,12,16),
+      selected = 12
     )
   )
 
@@ -48,17 +49,17 @@ preservationWGCNA_plot_traitsignificance_server <- function(id,
       shiny::req(res)
       shiny::req(trait %in% colnames(res$datTraits))
 
-      playbase::wgcna.plotTopModules(
-        wgcna = res,
-        nmax = 16,
-        multi = TRUE,
+      playbase::wgcna.plotTopModules_multi(
+        res,
+        nmax = as.integer(input$ntop),
         trait = trait,
         setpar = format
-      ) 
+      )
+      
     }
 
-    plot1 <- function() { plot.RENDER(1)}
-    plot2 <- function() { plot.RENDER(2)}    
+    plot1 <- function() { plot.RENDER(format=1)}
+    plot2 <- function() { plot.RENDER(format=2)}    
     
     PlotModuleServer(
       "plot",

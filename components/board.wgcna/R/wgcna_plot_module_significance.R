@@ -59,7 +59,7 @@ wgcna_plot_module_significance_server <- function(id,
       "plot",
       func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(80, 120),
+      res = c(75, 110),
       add.watermark = watermark
     )
   })

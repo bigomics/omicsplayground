@@ -63,7 +63,7 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
         cons,
         main = "",
         show.traits = input$showtraits,
-        marAll = c(1,7,1,0),
+        marAll = c(1, 6, 1, 0),
         use.tree = input$clusterby,
         colorHeightMax = 0.75
       )  

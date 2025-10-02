@@ -211,6 +211,16 @@ WgcnaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
+    # Module membership (eigengene correlation)
+    wgcna_plot_module_heatmap_server(
+      "moduleheatmap",
+      wgcna = wgcna,
+      pgx = pgx,
+      selected_module = shiny::reactive(input$selected_module),
+      selected_trait = shiny::reactive(input$selected_trait),
+      watermark = WATERMARK
+    )
+
     # Membership-trait heatmap
     ## wgcna_plot_heatmap_membership_server(
     ##   "intraHeatmap",

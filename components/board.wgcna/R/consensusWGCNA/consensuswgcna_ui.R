@@ -47,7 +47,7 @@ ConsensusWGCNA_UI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   shiny::div(
-    boardHeader(title = "Consensus-WGCNA", info_link = ns("info")),
+    boardHeader(title = "Consensus WGCNA", info_link = ns("info")),
     shiny::tabsetPanel(
       id = ns("tabs"),
 
@@ -58,7 +58,7 @@ ConsensusWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1, 0.7),
-          bs_alert(HTML("<b>Consensus-WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets by clustering each dataset (or datatype) and computing the overlapping modules.")),
+          bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets by clustering each dataset (or datatype) and computing overlapping modules.")),
           bslib::layout_columns(
             col_widths = c(6,6),
             #height = "calc(100vh - 180px)",

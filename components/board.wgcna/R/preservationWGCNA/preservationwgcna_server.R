@@ -67,7 +67,11 @@ PreservationWGCNA_Board <- function(id, pgx) {
     }, {
 
       shiny::req(pgx$X)
-      shiny::req(input$splitpheno)      
+      shiny::req(input$splitpheno)
+
+      dbg("[PreservationWGCNA_Board] input.compute = ", input$compute)
+      dbg("[PreservationWGCNA_Board] input.tabs = ", input$tabs)
+      shiny::req(input$compute) ## refute first call     
       
       pheno="activated"
       phenoData <- pgx$samples
@@ -132,7 +136,7 @@ PreservationWGCNA_Board <- function(id, pgx) {
         selected = trait1)
       
       return(res)
-    }, ignoreNULL=FALSE)
+    }, ignoreNULL=TRUE )
 
 
     ## ==========================================================================

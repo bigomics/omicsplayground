@@ -52,15 +52,19 @@ wgcna_table_genes_server <- function(id,
         res, module = module, trait = trait, plot = FALSE
       )
 
-      df$symbol <- playbase::probe2symbol(df$feature, pgx$genes, "symbol")
       if (!input$showpvalues) {
         sel <- grep("pval", colnames(df), invert=TRUE, ignore.case=TRUE)
         df <- df[, sel, drop = FALSE]
       }
 
+      ## add symbol
+      df$symbol <- playbase::probe2symbol(df$feature, pgx$genes, "symbol")
+      
       ## hide columns
-      if(!input$showall) df$module <- NULL
-      if(mean(df$symbol == df$feature, na.rm=TRUE) > 0.8) df$symbol <- NULL
+      if(!input$showall) {
+        df$module <- NULL
+        if(mean(df$symbol == df$feature, na.rm=TRUE) > 0.9) df$symbol <- NULL
+      }
       
       ## reorder columns
       cols <- unique(c("module","feature","symbol","title",colnames(df)))

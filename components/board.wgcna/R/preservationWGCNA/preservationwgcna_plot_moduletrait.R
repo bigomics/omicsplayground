@@ -60,6 +60,7 @@ preservationWGCNA_plot_moduletrait_server <- function(id,
       shiny::req(res)
 
       par(mfrow=c(2,2), mar=c(10,9,3,2))
+      
       playbase::wgcna.plotPreservationModuleTraits(
         res,
         subplots = FALSE,
