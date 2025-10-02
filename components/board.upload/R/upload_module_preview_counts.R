@@ -141,92 +141,7 @@ upload_table_preview_counts_server <- function(
           cm <- intersect(colnames(GEO[["counts"]]), rownames(GEO[["samples"]]))
           GEO <- NULL
         }
-      div(
-        bslib::as_fill_carrier(),
-        style = "width: 100%; display: flex; ",
-        if (is.null(uploaded$counts.csv)) {
-          if (upload_datatype() == "proteomics") {
-            msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format."
-          } else {
-            msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
-          }
-          bslib::layout_columns(
-            col_widths = c(-3, 6, -3),
-            row_heights = list("auto", 8, 1, 2),
-            gap = "0.5rem",
-            bslib::as_fill_carrier(bs_alert(tspan(msg), closable = FALSE, translate_js = FALSE)),
-            bslib::card(
-              if (upload_datatype() == "multi-omics") {
-                shiny::radioButtons(
-                  ns("data_source"),
-                  label = "Select input files from:",
-                  choices = c("multi-csv", "pgx", "single-csv"),
-                  selected = "multi-csv",
-                  inline = TRUE
-                )
-              },
-              if (upload_datatype() == "multi-omics") {
-                shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'pgx'", ns("data_source")),
-                  div(
-                    div(
-                      style = "margin-bottom: 15px;",
-                      shiny::radioButtons(
-                        ns("data_processing"),
-                        label = "Select data processing level:",
-                        choices = c("Raw" = "raw", "Normalized (also batch corrected if selected on computation)" = "normalized"),
-                        selected = "raw",
-                        inline = TRUE
-                      )
-                    ),
-                    div(
-                      style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
-                      span("Selected:", style = "font-weight: bold;"),
-                      textOutput(ns("selected_rows_text")),
-                    ),
-                    div(
-                      style = "height: 350px; overflow-y: auto;",
-                      DT::DTOutput(ns("available_data_table"))
-                    ),
-                    style = "width: 100%; max-height: 400px; overflow-y: auto;"
-                  ),
-                  selection = "multiple",
-                  options = list(pageLength = 5, dom = "tp", scrollY = TRUE)
-                )
-              },
-              if (upload_datatype() == "multi-omics") {
-                shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'multi-csv'", ns("data_source")),
-                  shiny::uiOutput(ns("dynamic_file_inputs")) # ,
-                )
-              },
-              if (upload_datatype() == "multi-omics") {
-                shiny::conditionalPanel(
-                  condition = sprintf("input['%s'] == 'single-csv'", ns("data_source")),
-                  fileInputArea(
-                    ns("counts_csv"),
-                    shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                    multiple = FALSE,
-                    accept = c(".csv"),
-                    width = "100%"
-                  )
-                )
-              },
-              if (upload_datatype() != "multi-omics") {
-                fileInputArea(
-                  ns("counts_csv"),
-                  shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                  multiple = FALSE,
-                  accept = c(".csv"),
-                  width = "100%"
-                )
-              },
-              style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
-            ),
-            action_buttons,
-            br()
-          )
-        },
+        
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
             col_widths = 12,
@@ -255,7 +170,6 @@ upload_table_preview_counts_server <- function(
         }
 
       } else {
-
         div(
           bslib::as_fill_carrier(),
           style = "width: 100%; display: flex; ",
