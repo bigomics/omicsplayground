@@ -31,6 +31,7 @@ upload_table_preview_samples_server <- function(
     shiny::observe({
       if (is.null(orig_sample_matrix()) && !is.null(uploaded$samples.csv)) {
         orig_sample_matrix(uploaded$samples.csv)
+        loaded_samples(TRUE)
       }
     })
 
