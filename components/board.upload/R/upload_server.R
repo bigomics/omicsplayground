@@ -327,9 +327,8 @@ UploadBoard <- function(id,
             checked_for_log(TRUE)
           }
         }
-
-        return(list(res = res, olink = olink))
       }
+      return(list(res = res, olink = olink))
     })
 
     checked_counts <- shiny::eventReactive(
