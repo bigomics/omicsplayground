@@ -39,6 +39,7 @@ upload_module_computepgx_server <- function(
     process_counter,
     reset_upload_text_input,
     probetype) {
+
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -330,10 +331,8 @@ upload_module_computepgx_server <- function(
                   # disabled = c("methods to be greyed-out")
                 ),
 
-                ## div(id = "NA_intolerant_methods"), # Placeholder for the dynamic text
-                shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))), ## NEWAZ
-                shiny::div(shiny::uiOutput(ns("interaction_analysis_msg"))), ## NEWAZ
-                ## div(id = "interaction_analysis"), # Placeholder for the dynamic text
+                shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
+                shiny::div(shiny::uiOutput(ns("interaction_analysis_msg"))),
                 
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
@@ -441,21 +440,17 @@ upload_module_computepgx_server <- function(
         countsX()
       },
       {
-        dbg("--------------------------------------MNT1")
         Y <- samplesRT()
         Contrasts <- contrastsRT()
         colnames(Y) <- tolower(colnames(Y))
         Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
-        dbg("--------------------------------------MNT2")
 
         time.var <- playbase::get_timevars()
         sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
-        dbg("--------------------------------------MNT3")
 
         if (length(sel.time) && length(unique(Y[, sel.time[1]])) > 1) {
           timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
           ia.ctx <- ia.spline.ctx <- c()
-          dbg("--------------------------------------MNT4")
           i <- 1
           shiny::req(Contrasts)
           for (i in 1:ncol(Contrasts)) {
@@ -463,7 +458,6 @@ upload_module_computepgx_server <- function(
             if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next
             tt <- table(data.frame(ctx = Contrasts[, ctx], time = Y[, sel.time[1]]))
             zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
-            dbg("--------------------------------------MNT5: ", i)
             if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
               if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
             } else {
@@ -472,7 +466,7 @@ upload_module_computepgx_server <- function(
               }
             }
           }
-          dbg("--------------------------------------MNT6")
+
           if (length(ia.ctx) | length(ia.spline.ctx)) {
             choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
             sel <- c("trend.limma", "deseq2.lrt")
@@ -482,9 +476,8 @@ upload_module_computepgx_server <- function(
             shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
             ## insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
           }
-          dbg("--------------------------------------MNT7")
         }
-        dbg("--------------------------------------MNT8")
+
       })
 
       ## ------------------------------------------------------------------------
@@ -577,7 +570,6 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      ##----------------NEWAZ
       output$timeseries_checkbox <- renderUI({
         vars <- colnames(samplesRT())
         sel.time <- grep(playbase::get_timevars(), vars, ignore.case = TRUE)
@@ -595,7 +587,6 @@ upload_module_computepgx_server <- function(
           NULL
         }
       })
-      ##----------------NEWAZ
       
       # Input name and description. NEED CHECK!!! seems not to
       # work. 18.11.24IK.
@@ -808,8 +799,8 @@ upload_module_computepgx_server <- function(
 
         ## get selected methods from input
         gx.methods <- input$gene_methods
-        dotimeseries <- FALSE ## NEWAZ
-        if (input$dotimeseries) dotimeseries = TRUE ## NEWAZ
+        dotimeseries <- FALSE
+        if (isTRUE(input$dotimeseries)) dotimeseries = TRUE
         gset.methods <- input$gset_methods        
         extra.methods <- input$extra_methods
         if (input$do_extra == FALSE) extra.methods <- c()
@@ -914,7 +905,7 @@ upload_module_computepgx_server <- function(
           max.genes = max.genes,
           max.genesets = max.genesets,
           gx.methods = gx.methods,
-          dotimeseries = dotimeseries, ## NEWAZ
+          dotimeseries = dotimeseries,
           gset.methods = gset.methods,
           extra.methods = extra.methods,
           use.design = use.design,
