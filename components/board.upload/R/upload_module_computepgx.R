@@ -582,7 +582,7 @@ upload_module_computepgx_server <- function(
 
       output$interaction_analysis_msg <- renderUI({
         if (isTRUE(input$dotimeseries)) {
-          HTML("<p>Interaction with time will be tested for valid contrasts.</p>")
+          HTML("<p>Interaction with time will be tested for valid contrasts, if any.</p>")
         } else {
           NULL
         }
