@@ -449,6 +449,7 @@ upload_module_computepgx_server <- function(
         sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
 
         if (length(sel.time) && length(unique(Y[, sel.time[1]])) > 1) {
+
           timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
           ia.ctx <- ia.spline.ctx <- c()
           i <- 1
@@ -475,7 +476,10 @@ upload_module_computepgx_server <- function(
             if (c1 | c2) choices <- sel <- "trend.limma"
             shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
             ## insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
+          } else {
+            output$timeseries_checkbox <- renderUI({ NULL })
           }
+
         }
 
       })
