@@ -682,8 +682,10 @@ PasswordAuthenticationModule <- function(id,
     CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
     # Get persistent session cookie (if available)
     if (opt$ENABLE_COOKIE_LOGIN) {
+      dbg("[PasswordAuthenticationModule] ENABLE_COOKIE_LOGIN is TRUE")
       decrypted_cookie <- get_and_decrypt_cookie(session)
     } else {
+      dbg("[PasswordAuthenticationModule] ENABLE_COOKIE_LOGIN is FALSE")
       decrypted_cookie <- NULL
     }
 
@@ -938,8 +940,10 @@ LoginCodeAuthenticationModule <- function(id,
     ## Step 0: detect cookie and pass
     ## --------------------------------------
     if (opt$ENABLE_COOKIE_LOGIN) {
+      dbg("[LoginCodeAuthenticationModule] ENABLE_COOKIE_LOGIN is TRUE")
       decrypted_cookie <- get_and_decrypt_cookie(session)
     } else {
+      dbg("[LoginCodeAuthenticationModule] ENABLE_COOKIE_LOGIN is FALSE")
       decrypted_cookie <- NULL
     }
     query_email <- shiny::isolate(shiny::getQueryString()$email)
