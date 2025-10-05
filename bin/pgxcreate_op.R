@@ -30,6 +30,7 @@ pgx <- playbase::pgx.createPGX(
   samples = params$samples,
   contrasts = params$contrasts,
   azimuth_ref = params$azimuth_ref,
+  dotimeseries = params$dotimeseries,
   name = params$name,
   datatype = params$datatype,
   probe_type = params$probe_type,
