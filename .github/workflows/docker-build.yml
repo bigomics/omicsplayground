@@ -41,7 +41,7 @@ jobs:
   build:
 
     # runs-on: ubuntu-latest # free GH worker, not enough memory
-    runs-on: self-hosted # run on dev2-bigomics-frankfurt self-hosted
+    runs-on: dev-bigomics-frankfurt # run on dev-bigomics-frankfurt self-hosted runner
 
     steps:
       -
