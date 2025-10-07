@@ -950,7 +950,7 @@ LoginCodeAuthenticationModule <- function(id,
     if (!is.null(query_email) & !is.null(decrypted_cookie)) {
       if (opt$ENCRYPTED_EMAIL) {
         query_email_nonce <- shiny::isolate(shiny::getQueryString()$email_nonce)
-        query_email <- decrypt_cookie(query_email, query_email_nonce)
+        query_email <- decrypt_cookie(query_email, query_email_nonce, key_file = "cookie.txt")
         if (is.null(query_email)) {
           query_email <- ""
         }
@@ -1106,7 +1106,7 @@ LoginCodeAuthenticationModule <- function(id,
       query_email <- shiny::getQueryString()$email
       if (opt$ENCRYPTED_EMAIL) {
         query_email_nonce <- shiny::getQueryString()$email_nonce
-        query_email <- decrypt_cookie(query_email, query_email_nonce)
+        query_email <- decrypt_cookie(query_email, query_email_nonce, key_file = "cookie.txt")
       }
       query_email
     })
