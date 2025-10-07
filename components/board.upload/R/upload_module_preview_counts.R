@@ -12,8 +12,7 @@ upload_table_preview_counts_ui <- function(id) {
   uiOutput(ns("table_counts"), fill = TRUE)
 }
 
-upload_table_preview_counts_server <- function(
-                                               id,
+upload_table_preview_counts_server <- function(id,
                                                create_raw_dir,
                                                auth,
                                                uploaded,
@@ -28,10 +27,8 @@ upload_table_preview_counts_server <- function(
                                                caption,
                                                upload_datatype,
                                                is.olink,
-                                               public_dataset_id
-                                               ) {
+                                               public_dataset_id) {
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns
 
     GEO_alert_shown <- reactiveVal(FALSE)
@@ -83,7 +80,6 @@ upload_table_preview_counts_server <- function(
     }
 
     output$table_counts <- shiny::renderUI({
-
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin: 8px;",
         if (is.null(uploaded$counts.csv)) {
@@ -118,19 +114,29 @@ upload_table_preview_counts_server <- function(
       )
 
       if (public_dataset_id() != "") {
-
         ID <- public_dataset_id()
         msg <- paste0("Retrieving ", ID, " from GEO, ReCount, or ArrayExpress...<br>", "Please wait. Most datasets take 2-3 mins.")
-        
+
         showModal(modalDialog(
-          div(id = "custom-progress-modal", HTML(msg),
-            div(id = "custom-progress-container",
-              div(id = "custom-progress-bar"))),
-          footer = NULL, fade = FALSE))
-        GEO <- tryCatch({ playbase::pgx.getGEOseries(accession = ID, archs.h5 = NULL, get.info = FALSE)},
-          error = function(w) { NULL })
+          div(
+            id = "custom-progress-modal", HTML(msg),
+            div(
+              id = "custom-progress-container",
+              div(id = "custom-progress-bar")
+            )
+          ),
+          footer = NULL, fade = FALSE
+        ))
+        GEO <- tryCatch(
+          {
+            playbase::pgx.getGEOseries(accession = ID, archs.h5 = NULL, get.info = FALSE)
+          },
+          error = function(w) {
+            NULL
+          }
+        )
         removeModal()
-        
+
         if (!is.null(GEO)) {
           if (!GEO_alert_shown()) {
             msg <- paste0("Success! ", ID, " found in ", GEO[["source"]], ".\nWe're preparing it...")
@@ -141,7 +147,7 @@ upload_table_preview_counts_server <- function(
           cm <- intersect(colnames(GEO[["counts"]]), rownames(GEO[["samples"]]))
           GEO <- NULL
         }
-        
+
         if (!is.null(uploaded$counts.csv)) {
           bslib::layout_columns(
             col_widths = 12,
@@ -168,7 +174,6 @@ upload_table_preview_counts_server <- function(
         } else {
           div("No counts data available for this public dataset.")
         }
-
       } else {
         div(
           bslib::as_fill_carrier(),
@@ -212,7 +217,7 @@ upload_table_preview_counts_server <- function(
                         style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
                         span("Selected:", style = "font-weight: bold;"),
                         textOutput(ns("selected_rows_text")),
-                        ),
+                      ),
                       div(
                         style = "height: 350px; overflow-y: auto;",
                         DT::DTOutput(ns("available_data_table"))
@@ -223,14 +228,12 @@ upload_table_preview_counts_server <- function(
                     options = list(pageLength = 5, dom = "tp", scrollY = TRUE)
                   )
                 },
-
                 if (upload_datatype() == "multi-omics") {
                   shiny::conditionalPanel(
                     condition = sprintf("input['%s'] == 'multi-csv'", ns("data_source")),
-                    shiny::uiOutput(ns("dynamic_file_inputs"))#,
+                    shiny::uiOutput(ns("dynamic_file_inputs")) # ,
                   )
                 },
-
                 if (upload_datatype() == "multi-omics") {
                   shiny::conditionalPanel(
                     condition = sprintf("input['%s'] == 'single-csv'", ns("data_source")),
@@ -243,7 +246,6 @@ upload_table_preview_counts_server <- function(
                     )
                   )
                 },
-
                 if (upload_datatype() != "multi-omics") {
                   fileInputArea(
                     ns("counts_csv"),
@@ -253,7 +255,6 @@ upload_table_preview_counts_server <- function(
                     width = "100%"
                   )
                 },
-                
                 style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
               ),
               action_buttons,
@@ -286,7 +287,6 @@ upload_table_preview_counts_server <- function(
           } ## end of if-else
         ) ## end of div
       }
-      
     })
 
     output$selected_rows_text <- renderText({
@@ -550,7 +550,7 @@ upload_table_preview_counts_server <- function(
         shinyalert::shinyalert(title = "Warning", text = err.html, html = TRUE)
       }
     })
-      
+
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
@@ -755,4 +755,3 @@ upload_table_preview_counts_server <- function(
     )
   }) ## end of moduleServer
 } ## end of server
-                                                                                                        

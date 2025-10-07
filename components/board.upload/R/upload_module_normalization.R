@@ -465,12 +465,14 @@ upload_module_normalization_server <- function(
 
           if (input$missing_plottype == "missingness across features") {
             if (any(X2 > 0)) {
-              par(mfrow = c(1,1), mar = c(2, 3.5, 2, 2), mgp = c(2.5, 0.75, 0))
+              par(mfrow = c(1, 1), mar = c(2, 3.5, 2, 2), mgp = c(2.5, 0.75, 0))
               X3 <- imputedX()$X
-              pct.na <- round(rowMeans(is.na(X3))*100)
-              hh <- hist(pct.na, xlim = c(0, 100), col = "grey", main = "",
-                las = 1, tcl = -0.1, mgp = c(2.5, 0.5, 0), yaxs="i",
-                xlab = "Missingness across features (%)", ylab = "Number of features")
+              pct.na <- round(rowMeans(is.na(X3)) * 100)
+              hh <- hist(pct.na,
+                xlim = c(0, 100), col = "grey", main = "",
+                las = 1, tcl = -0.1, mgp = c(2.5, 0.5, 0), yaxs = "i",
+                xlab = "Missingness across features (%)", ylab = "Number of features"
+              )
               abline(v = mean(pct.na), col = "red")
               abline(v = median(pct.na), col = "blue")
               xpos <- 90
@@ -478,51 +480,52 @@ upload_module_normalization_server <- function(
               lab1 <- paste0("Mean: ", round(mean(pct.na)), "%")
               lab2 <- paste0("Median: ", round(median(pct.na)), "%")
               text(xpos, ypos, labels = lab1, col = "red")
-              text(xpos, ypos-(ypos*8/100), labels = lab2, col = "blue")
-              title("Distribution of missing values across features"); grid()
+              text(xpos, ypos - (ypos * 8 / 100), labels = lab2, col = "blue")
+              title("Distribution of missing values across features")
+              grid()
               rm(X3)
-            }
-            else {
+            } else {
               plot.new()
               text(0.5, 0.5, "no missing values")
             }
           }
-          
+
           if (input$missing_plottype == "PCA of imputed data") {
             if (any(X2 > 0)) {
               X3 <- imputedX()$X
               if (input$impute) X3 <- log2(imputedX()$counts + imputedX()$prior)
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
-              for(i in 1:length(mm)) imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
+              for (i in 1:length(mm)) imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
               scaled.imp <- lapply(imp, function(x) playbase::double_center_scale_fast(x))
               par(mfrow = c(2, 2), mar = c(4, 3, 2, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
               cex1 <- cut(ncol(X3),
                 breaks = c(0, 40, 100, 250, 1000, 999999),
-                c(1, 0.85, 0.7, 0.55, 0.4))
+                c(1, 0.85, 0.7, 0.55, 0.4)
+              )
               cex1 <- 2.7 * as.numeric(as.character(cex1))
-              for(i in 1:length(scaled.imp)) {
-                set.seed(1234);
+              for (i in 1:length(scaled.imp)) {
+                set.seed(1234)
                 pca <- irlba::irlba(scaled.imp[[i]], nu = 2, nv = 0)
                 pca.pos <- pca$u
                 pca.var <- (pca$d^2 / sum(pca$d^2)) * 100
-                plot(pca.pos[,1], pca.pos[,2], col = "black", pch = 20,
+                plot(pca.pos[, 1], pca.pos[, 2],
+                  col = "black", pch = 20,
                   cex = cex1, cex.lab = 1, main = names(scaled.imp)[i],
-                  xlab = paste0("PC1 (", round(pca.var[1],2), "%)"),
-                  ylab = paste0("PC2 (", round(pca.var[2],2), "%)"),
+                  xlab = paste0("PC1 (", round(pca.var[1], 2), "%)"),
+                  ylab = paste0("PC2 (", round(pca.var[2], 2), "%)"),
                   asp = 1
                 )
                 grid()
-                rm(pca, pca.pos, pca.var); gc()
+                rm(pca, pca.pos, pca.var)
+                gc()
               }
               rm(X3, imp, scaled.imp)
-            }
-            else {
+            } else {
               plot.new()
               text(0.5, 0.5, "no missing values")
             }
           }
-          
         }
       }
 
@@ -610,7 +613,7 @@ upload_module_normalization_server <- function(
 
         pos.list <- res$pos
         pos0 <- out.res$pos[["pca"]]
-        
+
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
         colorby_var <- input$colorby_var
@@ -627,7 +630,7 @@ upload_module_normalization_server <- function(
         par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(1.7, 0.4, 0), tcl = -0.1)
         for (m in methods) {
           if (m %in% names(pos.list)) {
-            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20, las = 1) 
+            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20, las = 1)
           } else {
             plot.new()
             text(0.45, 0.5, "method failed")
@@ -677,14 +680,14 @@ upload_module_normalization_server <- function(
         plot(pos0,
           col = col1, pch = 20, cex = cex1, las = 1,
           main = "uncorrected",
-          xlab = paste0("PC1 (", round(pos0.varexp[1],2), "%)"),
-          ylab = paste0("PC2 (", round(pos0.varexp[2],2), "%)")
+          xlab = paste0("PC1 (", round(pos0.varexp[1], 2), "%)"),
+          ylab = paste0("PC2 (", round(pos0.varexp[2], 2), "%)")
         )
         plot(pos1,
           col = col1, pch = 20, cex = cex1, las = 1,
           main = method,
-          xlab = paste0("PC1 (", round(pos1.varexp[[method]][1],2), "%)"),
-          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2],2), "%)")
+          xlab = paste0("PC1 (", round(pos1.varexp[[method]][1], 2), "%)"),
+          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2], 2), "%)")
         )
       }
 
@@ -745,9 +748,12 @@ upload_module_normalization_server <- function(
 
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"), "Plot type:",
-            c("heatmap", "ratio plot", "missingness per sample",
-              "missingness across features", "PCA of imputed data"),
-            selected = "heatmap", inline = TRUE),
+            c(
+              "heatmap", "ratio plot", "missingness per sample",
+              "missingness across features", "PCA of imputed data"
+            ),
+            selected = "heatmap", inline = TRUE
+          ),
         )
 
         norm.options <- tagList(

@@ -63,7 +63,7 @@ UploadUI <- function(id) {
               br()
             )
           ),
-          
+
           # Retrieve public datasets tab
           tabPanel(
             "Retrieve public datasets",

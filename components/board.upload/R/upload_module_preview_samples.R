@@ -22,9 +22,7 @@ upload_table_preview_samples_server <- function(
     info.text,
     caption,
     upload_datatype,
-    public_dataset_id
-    ) {
-
+    public_dataset_id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -67,7 +65,7 @@ upload_table_preview_samples_server <- function(
         vars_selected(input$vars_selected)
       }
     })
-   
+
     shiny::observe({
       cols <- colnames(orig_sample_matrix())
       current_selected <- vars_selected()

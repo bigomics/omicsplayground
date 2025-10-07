@@ -158,10 +158,10 @@ UploadBoard <- function(id,
     uploaded_method <- NA
 
     shiny::observeEvent(input$upload_files_btn,
-    {
-      shinyjs::click(id = "upload_files")
-    },
-    ignoreNULL = TRUE
+      {
+        shinyjs::click(id = "upload_files")
+      },
+      ignoreNULL = TRUE
     )
 
     shiny::observeEvent(uploaded_pgx(), {
@@ -265,40 +265,16 @@ UploadBoard <- function(id,
     organism_checked <- reactiveVal(FALSE)
 
     uploaded_counts <- shiny::eventReactive(
-    {
-      list(uploaded$counts.csv)
-    },
-    {
-      ## --------------------------------------------------------
-      ## Single matrix counts check
-      ## --------------------------------------------------------
-      df0 <- uploaded$counts.csv
-      if (is.null(df0)) return(NULL)
-
-      checked_for_log(FALSE)
-      res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-      write_check_output(res$checks, "COUNTS", raw_dir())
-      
-      olink <- is.olink()
-      if (olink) {
-        shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info") 
-        checked_for_log(TRUE)
-      } else {
-        if ("e29" %in% names(res$checks)) {
-          shinyalert::shinyalert(
-            title = paste("Log-scale detected"),
-            text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-            html = TRUE,
-            confirmButtonText = "Yes",
-            showCancelButton = TRUE,
-            cancelButtonText = "No",
-            inputId = "logCorrectCounts",
-            closeOnEsc = FALSE,
-            immediate = FALSE,
-            callbackR = function(x) checked_for_log(TRUE)
-          )
-        } else {
-          checked_for_log(TRUE)
+      {
+        list(uploaded$counts.csv)
+      },
+      {
+        ## --------------------------------------------------------
+        ## Single matrix counts check
+        ## --------------------------------------------------------
+        df0 <- uploaded$counts.csv
+        if (is.null(df0)) {
+          return(NULL)
         }
 
         checked_for_log(FALSE)
@@ -326,10 +302,37 @@ UploadBoard <- function(id,
           } else {
             checked_for_log(TRUE)
           }
+
+          checked_for_log(FALSE)
+          res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+          write_check_output(res$checks, "COUNTS", raw_dir())
+
+          olink <- is.olink()
+          if (olink) {
+            shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
+            checked_for_log(TRUE)
+          } else {
+            if ("e29" %in% names(res$checks)) {
+              shinyalert::shinyalert(
+                title = paste("Log-scale detected"),
+                text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+                html = TRUE,
+                confirmButtonText = "Yes",
+                showCancelButton = TRUE,
+                cancelButtonText = "No",
+                inputId = "logCorrectCounts",
+                closeOnEsc = FALSE,
+                immediate = FALSE,
+                callbackR = function(x) checked_for_log(TRUE)
+              )
+            } else {
+              checked_for_log(TRUE)
+            }
+          }
         }
+        return(list(res = res, olink = olink))
       }
-      return(list(res = res, olink = olink))
-    })
+    )
 
     checked_counts <- shiny::eventReactive(
       {
@@ -554,7 +557,9 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$contrasts.csv
-        if (is.null(df0)) return(list(status = "Missing contrasts.csv", matrix = NULL))
+        if (is.null(df0)) {
+          return(list(status = "Missing contrasts.csv", matrix = NULL))
+        }
 
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
@@ -621,7 +626,6 @@ UploadBoard <- function(id,
 
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
-
       counts_ui <- wizardR::wizard_step(
         step_title = tspan("Step 1: Upload counts", js = FALSE),
         step_id = "step_counts",
@@ -639,7 +643,7 @@ UploadBoard <- function(id,
           ns("samples_preview")
         )
       )
-      
+
       contrasts_ui <- wizardR::wizard_step(
         step_title = "Step 3: Create comparisons",
         step_id = "step_comparisons",

@@ -120,7 +120,7 @@ clustering_plot_clustpca_server <- function(id,
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
       clrs.length <- length(unique(colvar))
       clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(clrs.length / 8))[1:clrs.length]
-      
+
       if (do3d) {
         plt <- plotly::plot_ly(df, mode = "markers") %>%
           plotly::add_markers(
@@ -162,7 +162,6 @@ clustering_plot_clustpca_server <- function(id,
             plotly::layout(showlegend = FALSE)
         }
       } else {
-
         plt <- plotly::plot_ly(
           df,
           mode = "markers",
