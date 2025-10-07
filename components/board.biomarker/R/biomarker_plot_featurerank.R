@@ -67,7 +67,7 @@ biomarker_plot_featurerank_server <- function(id,
       } else {
         features <- pgx$families
         X <- pgx$X
-        if (any(is.na(X))) X <- pgx$impX
+        if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
       }
 
       ## ------------ intersect features, set minimum set size

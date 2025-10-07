@@ -25,7 +25,6 @@ pgx <- playbase::pgx.createPGX(
   organism = params$organism,
   counts = params$counts,
   X = params$countsX,
-  impX = params$impX,
   norm_method = params$norm_method,
   samples = params$samples,
   contrasts = params$contrasts,
