@@ -37,7 +37,7 @@ jobs:
             # Set as environment variable for next steps
             echo "NEW_VERSION=$BUILD" >> $GITHUB_ENV
 
-      - name: Commit and push version changes + changelog
+      - name: Commit and push version changes
         run: |
             git config --local user.name "$GITHUB_ACTOR"
             git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
