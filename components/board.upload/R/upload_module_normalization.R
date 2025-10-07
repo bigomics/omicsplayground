@@ -244,7 +244,7 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          if (sum(is.na(X)) > 0) X <- playbase::imputeMissing(X, method = "SVD2")
+          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
