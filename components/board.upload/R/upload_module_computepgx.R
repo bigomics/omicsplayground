@@ -466,14 +466,10 @@ upload_module_computepgx_server <- function(
             }
 
             if (length(ia.ctx) | length(ia.spline.ctx)) {
-              shinyalert::shinyalert(
-                title = "Interaction analysis",
-                text = paste0(
-                  "'", colnames(Y)[sel.time[1]], "' found in samples.csv.\n",
-                  "Interaction with time will be tested for valid contrasts."
-                ),
-                type = "info"
-              )
+              # shinyalert::shinyalert(title = "Interaction analysis",
+              #   text = paste0("'", colnames(Y)[sel.time[1]], "' found in samples.csv.\n",
+              #     "Interaction with time will be tested for valid contrasts."),
+              #   type = "info")
 
               if (length(ia.ctx)) {
                 ia.ctx <- gsub(":.*", "", ia.ctx)

@@ -239,7 +239,7 @@ ClusteringUI <- function(id) {
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
               title = "Dimensionality reduction",
-              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions.",
+              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the percentage of variance explained by the first two principal components is reported in the x- and y-axis.",
               info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other.",
               info.references = list(
                 list(

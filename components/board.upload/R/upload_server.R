@@ -28,6 +28,7 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
+    public_dataset_id <- reactiveVal(NULL)
     upload_gset_methods <- reactiveVal(NULL)
     upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
@@ -101,6 +102,7 @@ UploadBoard <- function(id,
       names(all_species) <- paste0(all_species, " (", common_name, ")")
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+      shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
         shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
@@ -132,6 +134,21 @@ UploadBoard <- function(id,
       }
     })
 
+    observeEvent(input$start_search, {
+      ID <- public_dataset_id()
+      if (ID != "") {
+        valid.ID <- playbase::is.GEO.id.valid(ID)
+        if (!valid.ID) {
+          msg <- paste0(ID, " seems not valid. Please use a valid dataset ID.")
+          shinyalert::shinyalert(text = msg, type = "error")
+        } else {
+          new_upload(new_upload() + 1)
+        }
+      } else {
+        shinyalert::shinyalert(text = "Please enter a dataset ID", type = "error")
+      }
+    })
+
     ## ============================================================================
     ## ================== NEW DATA UPLOAD =========================================
     ## ============================================================================
@@ -141,10 +158,10 @@ UploadBoard <- function(id,
     uploaded_method <- NA
 
     shiny::observeEvent(input$upload_files_btn,
-      {
-        shinyjs::click(id = "upload_files")
-      },
-      ignoreNULL = TRUE
+    {
+      shinyjs::click(id = "upload_files")
+    },
+    ignoreNULL = TRUE
     )
 
     shiny::observeEvent(uploaded_pgx(), {
@@ -248,16 +265,40 @@ UploadBoard <- function(id,
     organism_checked <- reactiveVal(FALSE)
 
     uploaded_counts <- shiny::eventReactive(
-      {
-        list(uploaded$counts.csv)
-      },
-      {
-        ## --------------------------------------------------------
-        ## Single matrix counts check
-        ## --------------------------------------------------------
-        df0 <- uploaded$counts.csv
-        if (is.null(df0)) {
-          return(NULL)
+    {
+      list(uploaded$counts.csv)
+    },
+    {
+      ## --------------------------------------------------------
+      ## Single matrix counts check
+      ## --------------------------------------------------------
+      df0 <- uploaded$counts.csv
+      if (is.null(df0)) return(NULL)
+
+      checked_for_log(FALSE)
+      res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+      write_check_output(res$checks, "COUNTS", raw_dir())
+      
+      olink <- is.olink()
+      if (olink) {
+        shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info") 
+        checked_for_log(TRUE)
+      } else {
+        if ("e29" %in% names(res$checks)) {
+          shinyalert::shinyalert(
+            title = paste("Log-scale detected"),
+            text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+            html = TRUE,
+            confirmButtonText = "Yes",
+            showCancelButton = TRUE,
+            cancelButtonText = "No",
+            inputId = "logCorrectCounts",
+            closeOnEsc = FALSE,
+            immediate = FALSE,
+            callbackR = function(x) checked_for_log(TRUE)
+          )
+        } else {
+          checked_for_log(TRUE)
         }
 
         checked_for_log(FALSE)
@@ -286,10 +327,9 @@ UploadBoard <- function(id,
             checked_for_log(TRUE)
           }
         }
-
-        return(list(res = res, olink = olink))
       }
-    )
+      return(list(res = res, olink = olink))
+    })
 
     checked_counts <- shiny::eventReactive(
       {
@@ -499,10 +539,10 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
-        list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
+        LL <- list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
+        return(LL)
       }
     )
-
 
     ## --------------------------------------------------------
     ## Check contrast matrix
@@ -514,9 +554,7 @@ UploadBoard <- function(id,
       {
         ## get uploaded counts
         df0 <- uploaded$contrasts.csv
-        if (is.null(df0)) {
-          return(list(status = "Missing contrasts.csv", matrix = NULL))
-        }
+        if (is.null(df0)) return(list(status = "Missing contrasts.csv", matrix = NULL))
 
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
@@ -583,6 +621,7 @@ UploadBoard <- function(id,
 
     ## Dynamic render of appropriate wizard
     output$upload_wizard <- shiny::renderUI({
+
       counts_ui <- wizardR::wizard_step(
         step_title = tspan("Step 1: Upload counts", js = FALSE),
         step_id = "step_counts",
@@ -600,7 +639,7 @@ UploadBoard <- function(id,
           ns("samples_preview")
         )
       )
-
+      
       contrasts_ui <- wizardR::wizard_step(
         step_title = "Step 3: Create comparisons",
         step_id = "step_comparisons",
@@ -766,6 +805,20 @@ UploadBoard <- function(id,
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+    })
+
+    observeEvent(input$selected_datatype_public, {
+      upload_datatype(input$selected_datatype_public)
+      updateSelectInput(session, "selected_datatype", selected = input$selected_datatype_public)
+    })
+
+    observeEvent(input$selected_organism_public, {
+      upload_organism(input$selected_organism_public)
+      updateSelectInput(session, "selected_organism", selected = input$selected_organism_public)
+    })
+
+    observeEvent(input$dataset_identifier, {
+      public_dataset_id(input$dataset_identifier)
     })
 
     observeEvent(input$start_upload, {
@@ -1225,7 +1278,6 @@ UploadBoard <- function(id,
       }
     )
 
-
     ## =====================================================================
     ## ======================== MODULES SERVERS ============================
     ## =====================================================================
@@ -1245,7 +1297,8 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded counts data.",
       caption = "This is the uploaded counts data.",
       upload_datatype = upload_datatype,
-      is.olink = is.olink
+      is.olink = is.olink,
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     upload_table_preview_samples_server(
@@ -1261,7 +1314,8 @@ UploadBoard <- function(id,
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
-      upload_datatype = upload_datatype
+      upload_datatype = upload_datatype,
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
@@ -1367,8 +1421,6 @@ UploadBoard <- function(id,
       reset_upload_text_input = reset_upload_text_input,
       probetype = probetype
     )
-
-
 
     ## ------------------------------------------------
     ## Board return object
