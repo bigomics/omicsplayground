@@ -587,6 +587,9 @@ upload_module_computepgx_server <- function(
       })
 
       output$timeseries_msg <- renderUI({
+        vars <- colnames(samplesRT())
+        sel.time <- grep(playbase::get_timevars(), vars, ignore.case = TRUE)
+        sel.time <- vars[sel.time[1]]
         ia.ctx <- interaction_vars$ia_ctx
         ia.spline.ctx <- interaction_vars$ia_spline_ctx
         if (isTRUE(input$dotimeseries)) {
@@ -595,9 +598,9 @@ upload_module_computepgx_server <- function(
           if (c1 | c2) {
             int_vars <- unique(c(ia.ctx, ia.spline.ctx))
             msg <- paste0(
-              "<br><br><p style='color: gray;'>Interaction with time will be tested<br>",
-              "for the following valid variables:<br>", paste0(gsub(":.*", "", int_vars),
-                collapse = "<br>"),".</p>"
+              "<br><br><p style='color: gray;'>The variable ", sel.time,
+              " will be used for time series. Interaction with ", sel.time, " will be tested<br>",
+              "for the following valid variables:<br>", paste0(int_vars, collapse = "<br>"),".</p>"
             )
             HTML(msg)
           }
