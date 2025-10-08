@@ -333,7 +333,6 @@ upload_module_computepgx_server <- function(
 
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
-                shiny::div(id = "interaction_analysis"), # Placeholder for the dynamic text
 
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
