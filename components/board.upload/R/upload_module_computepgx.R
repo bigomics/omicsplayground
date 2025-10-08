@@ -332,8 +332,9 @@ upload_module_computepgx_server <- function(
                 ),
 
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
-                shiny::div(shiny::uiOutput(ns("interaction_analysis_msg"))),
-                
+                shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
+                shiny::div(id = "interaction_analysis"), # Placeholder for the dynamic text
+
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -433,7 +434,7 @@ upload_module_computepgx_server <- function(
 
       
       ## Checks specific for time series
-      # shiny::observeEvent(samplesRT(), {
+      interaction_vars <- reactiveValues(ia_ctx = NULL, ia_spline_ctx = NULL)
       shiny::observeEvent(
       {
         samplesRT()
@@ -468,6 +469,9 @@ upload_module_computepgx_server <- function(
             }
           }
 
+          interaction_vars$ia_ctx <- ia.ctx
+          interaction_vars$ia_spline_ctx <- ia.spline.ctx
+          
           if (length(ia.ctx) | length(ia.spline.ctx)) {
             choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
             sel <- c("trend.limma", "deseq2.lrt")
@@ -475,7 +479,6 @@ upload_module_computepgx_server <- function(
             c2 <- (upload_datatype() != "RNA-seq")
             if (c1 | c2) choices <- sel <- "trend.limma"
             shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
-            ## insertUI(selector = "#interaction_analysis", where = "afterEnd", ui = HTML(msg))
           } else {
             output$timeseries_checkbox <- renderUI({ NULL })
           }
@@ -584,14 +587,27 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      output$interaction_analysis_msg <- renderUI({
+      output$timeseries_msg <- renderUI({
+        ia.ctx <- interaction_vars$ia_ctx
+        ia.spline.ctx <- interaction_vars$ia_spline_ctx
         if (isTRUE(input$dotimeseries)) {
-          HTML("<p>Interaction with time will be tested for valid contrasts, if any.</p>")
-        } else {
+          c1 <- (!is.null(ia.ctx) && length(ia.ctx) > 0)
+          c2 <- (!is.null(ia.spline.ctx) && length(ia.spline.ctx) > 0)
+          if (c1 | c2) {
+            int_vars <- unique(c(ia.ctx, ia.spline.ctx))
+            msg <- paste0(
+              "<br><br><p style='color: gray;'>Interaction with time will be tested<br>",
+              "for the following valid variables:<br>", paste0(gsub(":.*", "", int_vars),
+                collapse = "<br>"),".</p>"
+            )
+            HTML(msg)
+          }
+        }
+        else {
           NULL
         }
       })
-      
+
       # Input name and description. NEED CHECK!!! seems not to
       # work. 18.11.24IK.
       shiny::observeEvent(list(metaRT(), compute_settings), {
