@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+        with:
+          ref: devel
 
       - name: Update version from master
         run: |
@@ -42,5 +44,5 @@ jobs:
             git add VERSION
             git commit -m "Update version to $NEW_VERSION"
             git pull --ff-only
-            git push origin
+            git push origin devel
 
