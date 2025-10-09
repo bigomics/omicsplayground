@@ -597,10 +597,29 @@ upload_module_computepgx_server <- function(
           c2 <- (!is.null(ia.spline.ctx) && length(ia.spline.ctx) > 0)
           if (c1 | c2) {
             int_vars <- unique(c(ia.ctx, ia.spline.ctx))
+            max_visible <- 3
+            if (length(int_vars) > max_visible) {
+              visible_vars <- int_vars[1:max_visible]
+              hidden_vars <- int_vars[(max_visible + 1):length(int_vars)]
+              vars_html <- paste0(
+                paste0(visible_vars, collapse = "<br>"),
+                "<br>",
+                "<span id='hidden-vars-", session$token, "' style='display:none;'>",
+                paste0(hidden_vars, collapse = "<br>"),
+                "<br></span>",
+                "<a href='#' onclick='",
+                "var el = document.getElementById(\"hidden-vars-", session$token, "\"); ",
+                "if(el.style.display === \"none\") { el.style.display = \"inline\"; this.innerHTML = \"show less\"; } ",
+                "else { el.style.display = \"none\"; this.innerHTML = \"more...\"; } ",
+                "return false;' style='color: #428bca; text-decoration: none;'>more...</a>"
+              )
+            } else {
+              vars_html <- paste0(int_vars, collapse = "<br>")
+            }
             msg <- paste0(
-              "<br><br><p style='color: gray;'>The variable ", sel.time,
-              " will be used for time series. Interaction with ", sel.time, " will be tested<br>",
-              "for the following valid variables:<br>", paste0(int_vars, collapse = "<br>"),".</p>"
+              "<p style='color: gray; margin-bottom: 0;'>The variable [", sel.time,
+              "] will be used for time series. Interaction with [", sel.time, "] will be tested",
+              " for the following valid contrasts:<br>", vars_html, "</p>"
             )
             HTML(msg)
           }
