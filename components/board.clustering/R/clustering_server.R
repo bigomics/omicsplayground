@@ -280,20 +280,21 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           if (length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
         }
 
-        if (is.null(pgx$impX)) {
-          zx <- pgx$X[pp, , drop = FALSE]
+        if (any(is.na(pgx$X))) {
+          zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          zx <- zx[pp, , drop = FALSE]
         } else {
-          zx <- pgx$impX[pp, , drop = FALSE]
+          zx <- pgx$X[pp, , drop = FALSE]
         }
+
         if (!is.null(idx)) {
           idx <- idx[pp]
           names(idx) <- pp
         }
+
       }
 
-      if (nrow(zx) == 0) {
-        return(NULL)
-      }
+      if (nrow(zx) == 0) return(NULL)
 
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]

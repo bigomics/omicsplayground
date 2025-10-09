@@ -174,10 +174,6 @@ upload_module_normalization_server <- function(
         shiny::req(dim(cleanX()$X))
         X <- cleanX()$X
         cx <- list(X = X)
-        if (any(is.na(X))) {
-          impX <- playbase::imputeMissing(X, method = "SVD2")
-          cx <- list(X = X, impX1 = impX)
-        }
         return(cx)
       })
 
@@ -248,7 +244,7 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          if (sum(is.na(X)) > 0) X <- playbase::imputeMissing(X, method = "SVD2")
+          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
@@ -1034,13 +1030,6 @@ upload_module_normalization_server <- function(
         return(cX)
       })
 
-      impX <- reactive({
-        shiny::req(dim(correctedX()$X))
-        impX <- NULL
-        if (length(correctedX()) == 2) impX <- correctedX()$impX1
-        return(impX)
-      })
-
       imputation_method <- reactive({
         ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
         if (!input$impute) {
@@ -1071,7 +1060,6 @@ upload_module_normalization_server <- function(
         list(
           counts = counts,
           X = cX,
-          impX = impX,
           norm_method = norm_method,
           imputation_method = imputation_method,
           bc_method = bc_method,

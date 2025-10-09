@@ -12,7 +12,6 @@ upload_module_computepgx_server <- function(
     id,
     countsRT,
     countsX,
-    impX,
     norm_method,
     samplesRT,
     azimuth_ref,
@@ -825,7 +824,6 @@ upload_module_computepgx_server <- function(
         ## -----------------------------------------------------------
         counts <- countsRT()
         countsX <- countsX()
-        impX <- impX()
 
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
@@ -911,7 +909,6 @@ upload_module_computepgx_server <- function(
           samples = samples,
           counts = counts,
           countsX = countsX,
-          impX = impX,
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
