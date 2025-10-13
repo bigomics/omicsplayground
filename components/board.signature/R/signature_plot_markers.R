@@ -173,7 +173,8 @@ signature_plot_markers_server <- function(id,
         gc()
       }
 
-      if (is.null(X)) X <- if (is.null(pgx$impX)) pgx$X else pgx$impX
+      X <- pgx$X
+      if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
       xsymbol <- pgx$genes[rownames(X), "symbol"]
       X <- playbase::rowmean(X, xsymbol)
       y <- 1 * (rownames(X) %in% this.gset)
