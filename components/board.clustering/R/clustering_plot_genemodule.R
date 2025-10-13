@@ -14,16 +14,17 @@
 #'
 #' @export
 clustering_plot_genemodule_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(ns("pltmod"),

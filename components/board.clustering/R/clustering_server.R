@@ -291,10 +291,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           idx <- idx[pp]
           names(idx) <- pp
         }
-
       }
 
-      if (nrow(zx) == 0) return(NULL)
+      if (nrow(zx) == 0) {
+        return(NULL)
+      }
 
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]

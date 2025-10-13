@@ -4,7 +4,6 @@
 ##
 
 
-
 show_upgrade_modal <- function(timeout.min = 40) {
   require(shiny)
   msg <- HTML(paste0("<center><h4><b>Ditch the ", timeout.min, "-minute limit</h4>

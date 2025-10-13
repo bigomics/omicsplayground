@@ -4,13 +4,14 @@
 ##
 
 dataview_plot_totalcounts_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    info.text,
-    caption,
-    title) {
+  id,
+  label = "",
+  height,
+  width,
+  info.text,
+  caption,
+  title
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(

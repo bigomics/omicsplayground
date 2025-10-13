@@ -12,12 +12,13 @@
 #'
 #' @export
 expression_table_gsettable_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    width,
-    height) {
+  id,
+  title,
+  caption,
+  info.text,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

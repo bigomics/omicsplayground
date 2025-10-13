@@ -14,14 +14,15 @@
 #'
 #' @export
 singlecell_plot_crosstabPlot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width,
-    parent) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent
+) {
   ns <- shiny::NS(id)
 
   crosstab.opts <- shiny::tagList(
@@ -203,10 +204,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
 
       ## select phenotype variable
       head(pgx$samples)
-
-
-
-
 
 
       if (is.null(pheno)) {

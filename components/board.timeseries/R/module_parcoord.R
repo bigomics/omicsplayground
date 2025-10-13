@@ -4,16 +4,17 @@
 ##
 
 TimeSeriesBoard.parcoord_plot_ui <- function(
-    id,
-    label = "label",
-    title = "title",
-    info.text = "Parallel line plot displaying the average expression per time point of features mapped within the selected gene module. ",
-    info.methods = "The normalized and log2-transformed expression data are scaled and centered. Per each feature, the average expression across samples is calculated per each time point. The plot displays the average expression per time point of features mapped within the selected gene module.",
-    # info.references = list(),
-    info.extra_link = "extra.link",
-    caption = "caption",
-    height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")) {
+  id,
+  label = "label",
+  title = "title",
+  info.text = "Parallel line plot displaying the average expression per time point of features mapped within the selected gene module. ",
+  info.methods = "The normalized and log2-transformed expression data are scaled and centered. Per each feature, the average expression across samples is calculated per each time point. The plot displays the average expression per time point of features mapped within the selected gene module.",
+  # info.references = list(),
+  info.extra_link = "extra.link",
+  caption = "caption",
+  height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
+  width = c("auto", "100%")
+) {
   ns <- shiny::NS(id)
 
   parcoord_opts <- shiny::tagList(
@@ -45,13 +46,14 @@ TimeSeriesBoard.parcoord_plot_ui <- function(
 }
 
 TimeSeriesBoard.parcoord_table_ui <- function(
-    id,
-    label = "label",
-    title = "title",
-    info.text = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
-    caption = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
-    height = c("40%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")) {
+  id,
+  label = "label",
+  title = "title",
+  info.text = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
+  caption = "Table reporting the features mapped within the selected time series clustering module. Table includes the average feature expression (log2-scale) across samples per each variable, and standard deviation of these average values.",
+  height = c("40%", TABLE_HEIGHT_MODAL),
+  width = c("auto", "100%")
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

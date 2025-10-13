@@ -15,9 +15,10 @@ DatasetReportUI <- function(id) {
 }
 
 DatasetReportServer <- function(
-    id,
-    auth,
-    pgxtable) {
+  id,
+  auth,
+  pgxtable
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 

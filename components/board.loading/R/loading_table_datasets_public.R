@@ -4,13 +4,14 @@
 ##
 
 loading_table_datasets_public_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    height,
-    width,
-    delete_button = FALSE) {
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width,
+  delete_button = FALSE
+) {
   ns <- shiny::NS(id)
 
   tagList(
@@ -249,7 +250,6 @@ loading_table_datasets_public_server <- function(id,
 
 
     pgxtable_public <- TableModuleServer(
-
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,

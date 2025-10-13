@@ -4,16 +4,17 @@
 ##
 
 mofa_plot_lasagna_network_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    info.methods = "",
-    info.references = NULL,
-    info.extra_link = NULL,
-    caption = info.text,
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  info.methods = "",
+  info.references = NULL,
+  info.extra_link = NULL,
+  caption = info.text,
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- tagList()

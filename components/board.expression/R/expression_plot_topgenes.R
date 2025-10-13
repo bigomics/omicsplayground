@@ -14,13 +14,14 @@
 #'
 #' @export
 expression_plot_topgenes_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   topgenes_opts <- shiny::tagList(

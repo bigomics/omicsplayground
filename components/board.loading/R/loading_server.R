@@ -22,7 +22,6 @@ LoadingBoard <- function(id,
     ns <- session$ns ## NAMESPACE
 
 
-
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
     is_data_loaded <- reactiveVal(NULL)

@@ -290,9 +290,10 @@ isValidFileName <- function(name) {
 }
 
 write_check_output <- function(
-    checks_list,
-    file_type = c("SAMPLES", "COUNTS", "CONTRASTS", "SAMPLES_COUNTS", "SAMPLES_CONTRASTS"),
-    raw_dir = raw_dir()) {
+  checks_list,
+  file_type = c("SAMPLES", "COUNTS", "CONTRASTS", "SAMPLES_COUNTS", "SAMPLES_CONTRASTS"),
+  raw_dir = raw_dir()
+) {
   file_type <- match.arg(file_type)
   # write date and hour and no error in cross_check samples counts
   date_hour <- paste0(Sys.time())

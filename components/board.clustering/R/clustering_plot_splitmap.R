@@ -14,16 +14,17 @@
 #'
 #' @export
 clustering_plot_splitmap_ui <- function(
-    id,
-    label = "",
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   splitmap_opts <- shiny::tagList(

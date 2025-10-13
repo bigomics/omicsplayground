@@ -13,7 +13,6 @@ UploadBoard <- function(id,
                         ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
-
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 

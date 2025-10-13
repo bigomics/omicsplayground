@@ -4,13 +4,14 @@
 ##
 
 wgcna_plot_MTrelationships_ui <- function(
-    id,
-    title = "",
-    label = "",
-    info.text = "",
-    caption = "",
-    height,
-    width) {
+  id,
+  title = "",
+  label = "",
+  info.text = "",
+  caption = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(

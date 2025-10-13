@@ -4,13 +4,14 @@
 ##
 
 dataview_plot_genetypes_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    caption) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  caption
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

@@ -5,15 +5,16 @@
 
 
 dataview_plot_tissue_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.references) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.references
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

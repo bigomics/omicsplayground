@@ -60,12 +60,13 @@ pcsf_genepanel_networkplot_ui <- function(id, caption, info.text, height, width)
 #'
 #' @export
 pcsf_genepanel_table_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -79,12 +80,13 @@ pcsf_genepanel_table_ui <- function(
 }
 
 pcsf_genepanel_seriesplot_ui <- function(
-    id,
-    title,
-    info.text = "",
-    caption = "",
-    width = 400,
-    height = 400) {
+  id,
+  title,
+  info.text = "",
+  caption = "",
+  width = 400,
+  height = 400
+) {
   ns <- shiny::NS(id)
   options <- tagList(
     withTooltip(

@@ -13,13 +13,14 @@
 #'
 #' @export
 drugconnectivity_plot_cmap_enplot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(ns("plot"),

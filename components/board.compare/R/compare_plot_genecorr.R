@@ -4,11 +4,12 @@
 ##
 
 compare_plot_genecorr_ui <- function(
-    id,
-    title,
-    info.text,
-    label = "",
-    height = c(600, 800)) {
+  id,
+  title,
+  info.text,
+  label = "",
+  height = c(600, 800)
+) {
   ns <- shiny::NS(id)
 
   genecorr.opts <- shiny::tagList(

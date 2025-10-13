@@ -4,13 +4,14 @@
 ##
 
 foldchange_heatmap_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   FoldchangeHeatmap.opts <- shiny::tagList(

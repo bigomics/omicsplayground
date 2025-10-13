@@ -4,16 +4,17 @@
 ##
 
 clustering_plot_clusterannot_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   clustannot_plots.opts <- shiny::tagList(

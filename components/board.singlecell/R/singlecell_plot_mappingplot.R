@@ -14,14 +14,15 @@
 #'
 #' @export
 singlecell_plot_mappingplot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width,
-    parent) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent
+) {
   ns <- shiny::NS(id)
 
   VIEWTYPES2 <- c("dotmap" = "dotmap", "heatmap (by method)" = "heatmap")

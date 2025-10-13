@@ -13,14 +13,15 @@
 #'
 #' @export
 signature_plot_markers_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height
+) {
   ns <- shiny::NS(id)
 
   markers.opts <- shiny::tagList(

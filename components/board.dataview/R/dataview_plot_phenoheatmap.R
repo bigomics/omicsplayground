@@ -4,14 +4,15 @@
 ##
 
 dataview_plot_phenoheatmap_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    info.methods,
-    caption) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  info.methods,
+  caption
+) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(

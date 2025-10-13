@@ -10,22 +10,23 @@ upload_table_preview_contrasts_ui <- function(id) {
 }
 
 upload_table_preview_contrasts_server <- function(
-    id,
-    uploaded,
-    checklist,
-    scrollY,
-    width,
-    height,
-    title,
-    info.text,
-    caption,
-    checked_counts,
-    checked_samples,
-    checked_contrasts,
-    show_comparison_builder,
-    selected_contrast_input,
-    upload_wizard,
-    auth) {
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption,
+  checked_counts,
+  checked_samples,
+  checked_contrasts,
+  show_comparison_builder,
+  selected_contrast_input,
+  upload_wizard,
+  auth
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

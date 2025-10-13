@@ -4,15 +4,16 @@
 ##
 
 dataview_plot_correlation_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.extra_link) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.extra_link
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

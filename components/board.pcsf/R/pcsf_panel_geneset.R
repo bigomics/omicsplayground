@@ -60,12 +60,13 @@ pcsf_gsetpanel_networkplot_ui <- function(id, caption, info.text, height, width)
 #'
 #' @export
 pcsf_gsetpanel_table_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   table_opts <- shiny::tagList()
@@ -82,12 +83,13 @@ pcsf_gsetpanel_table_ui <- function(
 }
 
 pcsf_gsetpanel_seriesplot_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    width = 400,
-    height = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  width = 400,
+  height = 400
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(

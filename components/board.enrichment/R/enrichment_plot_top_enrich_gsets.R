@@ -18,15 +18,16 @@
 #'
 #' @return Shiny UI for top enriched plots.
 enrichment_plot_top_enrich_gsets_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
