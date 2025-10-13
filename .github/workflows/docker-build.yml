@@ -24,18 +24,24 @@ on:
         required: true
         type: boolean
         default: true
-  workflow_run:
-    workflows: ["update OPG version"]
-    types:
-      - completed
+  push:
     branches:
       - master
+    paths:
+      - VERSION
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - VERSION
 
 jobs:
 
   build:
 
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest # free GH worker, not enough memory
+    runs-on: self-hosted # run on dev-bigomics-frankfurt self-hosted runner
 
     steps:
       -
@@ -67,10 +73,10 @@ jobs:
           push: true          
           no-cache: true
           build-args: |
-            BRANCH=${{ github.event.inputs.branch }}
-            update_playdata=${{ github.event.inputs.update_playdata }}
-            update_bigdash=${{ github.event.inputs.update_bigdash }}
-            update_playbase=${{ github.event.inputs.update_playbase }}
+            BRANCH=${{ github.event.inputs.branch || github.ref_name }}
+            update_playdata=${{ github.event.inputs.update_playdata || 'false' }}
+            update_bigdash=${{ github.event.inputs.update_bigdash || 'true' }}
+            update_playbase=${{ github.event.inputs.update_playbase || 'true' }}
           tags: |
-            ${{ github.event.inputs.branch == 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
-            ${{ github.event.inputs.branch != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, github.event.inputs.branch) || '' }}
+            ${{ (github.event.inputs.branch || github.ref_name) == 'master' && format('{0}/omicsplayground:{1}, {0}/omicsplayground:latest', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
+            ${{ (github.event.inputs.branch || github.ref_name) != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, github.event.inputs.branch || github.ref_name) || '' }}

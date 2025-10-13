@@ -13,6 +13,7 @@ UploadBoard <- function(id,
                         ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
+
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -28,6 +29,7 @@ UploadBoard <- function(id,
     upload_name <- reactiveVal(NULL)
     upload_description <- reactiveVal(NULL)
     upload_datatype <- reactiveVal(NULL)
+    public_dataset_id <- reactiveVal(NULL)
     upload_gset_methods <- reactiveVal(NULL)
     upload_gx_methods <- reactiveVal(NULL)
     process_counter <- reactiveVal(0)
@@ -101,6 +103,7 @@ UploadBoard <- function(id,
       names(all_species) <- paste0(all_species, " (", common_name, ")")
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+      shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
         shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
@@ -129,6 +132,21 @@ UploadBoard <- function(id,
         return(input$proteomics_type == "Olink NPX")
       } else {
         return(FALSE)
+      }
+    })
+
+    observeEvent(input$start_search, {
+      ID <- public_dataset_id()
+      if (ID != "") {
+        valid.ID <- playbase::is.GEO.id.valid(ID)
+        if (!valid.ID) {
+          msg <- paste0(ID, " seems not valid. Please use a valid dataset ID.")
+          shinyalert::shinyalert(text = msg, type = "error")
+        } else {
+          new_upload(new_upload() + 1)
+        }
+      } else {
+        shinyalert::shinyalert(text = "Please enter a dataset ID", type = "error")
       }
     })
 
@@ -285,8 +303,34 @@ UploadBoard <- function(id,
           } else {
             checked_for_log(TRUE)
           }
-        }
 
+          checked_for_log(FALSE)
+          res <- playbase::pgx.checkINPUT(df0, "COUNTS")
+          write_check_output(res$checks, "COUNTS", raw_dir())
+
+          olink <- is.olink()
+          if (olink) {
+            shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
+            checked_for_log(TRUE)
+          } else {
+            if ("e29" %in% names(res$checks)) {
+              shinyalert::shinyalert(
+                title = paste("Log-scale detected"),
+                text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+                html = TRUE,
+                confirmButtonText = "Yes",
+                showCancelButton = TRUE,
+                cancelButtonText = "No",
+                inputId = "logCorrectCounts",
+                closeOnEsc = FALSE,
+                immediate = FALSE,
+                callbackR = function(x) checked_for_log(TRUE)
+              )
+            } else {
+              checked_for_log(TRUE)
+            }
+          }
+        }
         return(list(res = res, olink = olink))
       }
     )
@@ -499,10 +543,10 @@ UploadBoard <- function(id,
           uploaded[["contrasts.csv"]] <<- NULL
         }
 
-        list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
+        LL <- list(status = status, SAMPLES = res_samples, COUNTS = res_counts)
+        return(LL)
       }
     )
-
 
     ## --------------------------------------------------------
     ## Check contrast matrix
@@ -766,6 +810,20 @@ UploadBoard <- function(id,
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+    })
+
+    observeEvent(input$selected_datatype_public, {
+      upload_datatype(input$selected_datatype_public)
+      updateSelectInput(session, "selected_datatype", selected = input$selected_datatype_public)
+    })
+
+    observeEvent(input$selected_organism_public, {
+      upload_organism(input$selected_organism_public)
+      updateSelectInput(session, "selected_organism", selected = input$selected_organism_public)
+    })
+
+    observeEvent(input$dataset_identifier, {
+      public_dataset_id(input$dataset_identifier)
     })
 
     observeEvent(input$start_upload, {
@@ -1225,7 +1283,6 @@ UploadBoard <- function(id,
       }
     )
 
-
     ## =====================================================================
     ## ======================== MODULES SERVERS ============================
     ## =====================================================================
@@ -1245,7 +1302,8 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded counts data.",
       caption = "This is the uploaded counts data.",
       upload_datatype = upload_datatype,
-      is.olink = is.olink
+      is.olink = is.olink,
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     upload_table_preview_samples_server(
@@ -1261,7 +1319,8 @@ UploadBoard <- function(id,
       title = "Uploaded Samples",
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
-      upload_datatype = upload_datatype
+      upload_datatype = upload_datatype,
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
@@ -1312,7 +1371,6 @@ UploadBoard <- function(id,
       if (input$selected_datatype == "scRNA-seq") {
         compute_input$counts <- sc_normalized$counts()
         compute_input$X <- sc_normalized$X()
-        compute_input$impX <- NULL
         compute_input$norm_method <- sc_normalized$norm_method()
         compute_input$samples <- sc_normalized$samples()
         compute_input$azimuth_ref <- sc_normalized$azimuth_ref()
@@ -1322,7 +1380,6 @@ UploadBoard <- function(id,
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
-        compute_input$impX <- normalized$impX()
         compute_input$norm_method <- normalized$norm_method()
         compute_settings$imputation_method <- normalized$imputation_method()
         compute_settings$bc_method <- normalized$bc_method()
@@ -1335,7 +1392,6 @@ UploadBoard <- function(id,
       id = "compute",
       countsRT = shiny::reactive(compute_input$counts),
       countsX = shiny::reactive(compute_input$X),
-      impX = shiny::reactive(compute_input$impX),
       norm_method = shiny::reactive(compute_input$norm_method),
       #      imputation_method = shiny::reactive(compute_input$imputation_method),
       #      bc_method = shiny::reactive(compute_input$bc_method),
@@ -1367,8 +1423,6 @@ UploadBoard <- function(id,
       reset_upload_text_input = reset_upload_text_input,
       probetype = probetype
     )
-
-
 
     ## ------------------------------------------------
     ## Board return object
