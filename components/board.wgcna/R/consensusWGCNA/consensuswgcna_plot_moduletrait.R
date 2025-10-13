@@ -37,7 +37,7 @@ consensusWGCNA_plot_moduletrait_ui <- function(
   )
 
   PlotModuleUI(
-    ns("plot"),
+    ns("heatmap"),
     title = title,
     label = label,
     info.text = info.text,
@@ -49,13 +49,49 @@ consensusWGCNA_plot_moduletrait_ui <- function(
   )
 }
 
+consensusWGCNA_plot_moduletrait_scatter_ui <- function(
+    id,
+    title = "",
+    info.text = "",
+    caption = "",
+    label = "",
+    height = 400,
+    width = 400) {
+  ns <- shiny::NS(id)
+
+  options <- shiny::tagList(    
+    shiny::checkboxInput(
+      inputId = ns("top20"),
+      label = "Show top 20",
+      value = TRUE
+    )
+  )
+
+  PlotModuleUI(
+    ns("scatter"),
+    title = title,
+    label = label,
+    info.text = info.text,
+    # options = options,
+    caption = caption,
+    height = height,
+    width = width,
+    download.fmt = c("png", "pdf", "svg")
+  )
+}
+
+
 consensusWGCNA_plot_moduletrait_server <- function(id,
                                                mwgcna,
                                                r_layers
                                                ) {
   moduleServer(id, function(input, output, session) {
+
+    ##---------------------------------------------------
+    ## heatmap 
+    ##---------------------------------------------------    
     
-    plot.RENDER <- function() {
+    heatmap.RENDER <- function() {
 
       cons <- mwgcna()
       shiny::req(cons)
@@ -89,6 +125,9 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       } else {
         par(mfrow=c(2,3), mar=c(7,12,2.5,1))     
       }
+
+      zmax <- max(sapply(cons$zlist, function(z) max(abs(z),na.rm=TRUE)))
+      zlim <- c(-zmax, zmax)
       
       ## Individual Module-Trait
       for(i in 1:length(cons$zlist)) {
@@ -105,7 +144,8 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
           text = input$showvalues,
           pstar = input$showsig,
           cluster=FALSE, setpar=FALSE,
-          main = main
+          main = main,
+          zlim = zlim
         )
       }
       
@@ -130,7 +170,8 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
         pstar = input$showsig,
         cluster = FALSE,
         cex.lab = 1.2,
-        main = main
+        main = main,
+        zlim = zlim        
       )
       
       ## Discordant Module-Trait
@@ -154,22 +195,82 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
           pstar = 1,
           cluster = FALSE,
           cex.lab = 1.2,
-          main = main
+          main = main,
+          zlim = zlim          
         )
       }
+
+      ## Effective consensus
+      z0 <- consZ
+      z0[is.na(z0)] <- 0
+      z1 <- diffZ
+      for(i in 1:length(z1)) z1[[i]][is.na(z1[[i]])] <- 0
+      effZ <- abs(z0) - Reduce('+', lapply(z1,abs))
+      playbase::wgcna.plotLabeledCorrelationHeatmap(
+        effZ[ii,jj],
+        nsamples,
+        setpar=FALSE,
+        colorpal = playbase::purpleGreyYellow,
+        text=FALSE,
+        pstar=1,
+        cluster=FALSE,
+        cex.lab=1.2,
+        main = "consensus score"
+      )
       
       
     }
     
     PlotModuleServer(
-      "plot",
-      func = plot.RENDER,
+      "heatmap",
+      func = heatmap.RENDER,
       pdf.width = 8,
       pdf.height = 12,
       res = c(90, 105),
       add.watermark = FALSE
     )
 
+    ##---------------------------------------------------
+    ## scatterplot
+    ##---------------------------------------------------    
+
+    scatter.RENDER <- function() {
+      
+      cons <- mwgcna()
+      shiny::req(cons)
+
+      names(cons$layers)
+      F1 <- cor( cons$layers[[1]]$datExpr, cons$layers[[1]]$datTraits, use="pairwise")
+      F2 <- cor( cons$layers[[2]]$datExpr, cons$layers[[2]]$datTraits, use="pairwise")
+      gg <- names(which(cons$net$colors != "grey"))
+      colx <- cons$net$colors
+      head(F2)
+      
+      setname <- names(cons$layers)
+      par(mfrow=c(2,3), mar=c(5,5,3,1))
+      if(ncol(F2)>6) {
+        par(mfrow=c(3,4), mar=c(4,5,3,1))
+      }
+      for(i in 1:ncol(F2)) {
+        tt <- colnames(F2)[i] 
+        plot( F1[,i], F2[,i], col=colx, main=tt,
+          xlab = paste0("trait correlation (",setname[1],")"),
+          ylab = paste0("trait correlation (",setname[2],")")
+        )
+        abline(v=0, h=0, lty=2, lwd=0.6)
+      }
+      
+    }
+    
+    PlotModuleServer(
+      "scatter",
+      func = scatter.RENDER,
+      pdf.width = 12,
+      pdf.height = 8,
+      res = c(110, 130),
+      add.watermark = FALSE
+    )
+    
     
   })
 }

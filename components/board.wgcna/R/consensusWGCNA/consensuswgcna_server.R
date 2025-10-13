@@ -173,7 +173,8 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         calcMethod = "fast",
         drop.ref = FALSE,
         addCombined = FALSE,
-        gsea.mingenes = 10,
+        gsea.mingenes = 5,
+        gsea.ntop = 1000,
         verbose = 1
       ) 
       

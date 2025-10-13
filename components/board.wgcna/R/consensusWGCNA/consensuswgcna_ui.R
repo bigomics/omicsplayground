@@ -109,7 +109,6 @@ ConsensusWGCNA_UI <- function(id) {
 
       ##----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
@@ -128,7 +127,20 @@ ConsensusWGCNA_UI <- function(id) {
               width = c("auto", "100%")
             )
           )
+        ),
+        bslib::layout_columns(
+          col_widths = c(12),
+          height = "calc(100vh - 180px)",
+          consensusWGCNA_plot_moduletrait_scatter_ui(
+            ns("consensusWGCNATrait"),
+            title = "Module-Trait Scatterplots",
+            caption = "...",
+            info.text = "...",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
         )
+        
       ),
       
       ##----------------------------------------------------------------

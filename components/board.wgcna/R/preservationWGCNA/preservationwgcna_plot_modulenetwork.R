@@ -77,11 +77,13 @@ preservationWGCNA_plot_modulenetwork_server <- function(id,
       net <- res$layers[[1]]
       shiny::req(module %in% names(net$me.genes))
       genes <- net$me.genes[[module]]
-      mm <- net$stats[['moduleMembership']][genes,module]
-      genes <- genes[order(-mm)]
-      ##genes <- sample(genes, 35)
-      genes <- head(genes, as.integer(input$numgenes))
-      genes
+
+      numgenes <- as.integer(input$numgenes)
+      if(length(genes) > numgenes) {
+        ##mm <- net$stats[['moduleMembership']][genes,module]
+        mm <- matrixStats::colSds(net$datExpr[,genes])
+        genes <- head(genes[order(-mm)], numgenes)
+      }
       
       if(input$plotgraph) {
         par(mar=c(0,0,3,0))
@@ -92,7 +94,7 @@ preservationWGCNA_plot_modulenetwork_server <- function(id,
             sort(genes),
             rgamma = 1,
             min.rho = as.numeric(input$rhograph),
-            edge.alpha=0.3
+            edge.alpha = 0.3
           )
           title( names(res$layers)[k], line=1, cex.main=1.3)
           title( paste(module,"module"), line=0, cex.main=1, font.main=1)  
@@ -114,6 +116,7 @@ preservationWGCNA_plot_modulenetwork_server <- function(id,
             cex = 0.85,
             rgamma = as.numeric(input$rgamma),
             min.rho = as.numeric(input$rhoheatmap),
+            type = "correlation",
             cluster = FALSE,
             main = ""
           )
