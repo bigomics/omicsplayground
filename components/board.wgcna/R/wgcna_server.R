@@ -61,6 +61,7 @@ WgcnaBoard <- function(id, pgx) {
       progress$set(message = "Calculating WGCNA...", value = 0)
 
       message("[wgcna] >>> Calculating WGCNA...")
+      ##out <- playbase::pgx.wgcna(pgx, ai_summary = TRUE)
       out <- playbase::pgx.wgcna(
         pgx = pgx,
         ngenes = as.integer(input$ngenes),
@@ -70,6 +71,9 @@ WgcnaBoard <- function(id, pgx) {
         minKME = as.numeric(input$minkme),
         networktype = input$networktype,
         numericlabels = FALSE,
+        ai_summary = FALSE,
+        ##ai_model = DEFAULT_LLM,
+        ai_model = "llama3.2:1b",
         progress = progress
       )
       shiny::removeModal()
@@ -275,6 +279,7 @@ WgcnaBoard <- function(id, pgx) {
       "geneHeatmap",
       pgx = pgx,
       wgcna = wgcna,
+      selected_module = shiny::reactive(input$selected_module),
       enrich_table = enrichTableModule,
       watermark = FALSE
     )
@@ -291,6 +296,14 @@ WgcnaBoard <- function(id, pgx) {
       "enrichTable",
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module)
+    )
+
+    # Enrichment plot
+    wgcna_html_module_summary_server(
+      "moduleSummary",
+      wgcna = wgcna,
+      selected_module = shiny::reactive(input$selected_module),      
+      watermark = WATERMARK
     )
 
     return(NULL)

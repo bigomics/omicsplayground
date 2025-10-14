@@ -35,6 +35,7 @@ wgcna_table_enrichment_server <- function(id,
                                           ## enrich_table
 ) {
   moduleServer(id, function(input, output, session) {
+
     table_data <- function() {
       gse <- wgcna()$gse
       k <- selected_module()
