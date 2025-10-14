@@ -69,7 +69,8 @@ WgcnaBoard <- function(id, pgx) {
         power = as.numeric(input$power),
         minKME = as.numeric(input$minkme),
         networktype = input$networktype,
-        numericlabels = FALSE
+        numericlabels = FALSE,
+        progress = progress
       )
       shiny::removeModal()
       out
@@ -79,10 +80,8 @@ WgcnaBoard <- function(id, pgx) {
       require(WGCNA)
       all.req <- all(c("stats") %in% names(pgx$wgcna)) && any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
 
-      dbg("[wgcna] 0: input$compute =", input$compute)
-      dbg("[wgcna] 0: pgx$name =", pgx$name)
-
-      # Use pre-computed results only if they exist, conditions are met, AND we're not forcing recomputation
+      # Use pre-computed results only if they exist, conditions are
+      # met, AND we're not forcing recomputation
       if ("wgcna" %in% names(pgx) && all.req) {
         message("[wgcna] >>> using pre-computed WGCNA results...")
         out <- pgx$wgcna

@@ -163,7 +163,7 @@ PreservationWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           #bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(7,5),
             height = "100vh",            
             bslib::layout_columns(
               col_widths = c(12),
