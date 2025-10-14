@@ -555,7 +555,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           w.null <- sapply(f, is.null)
           if (any(w.null)) f[which(w.null)] <- NA
           unlist(f)
-        })
+        }, simplify = FALSE)
         grp.annot <- data.frame(do.call(rbind, grp.annot))
         grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
         grp <- colnames(grp.zx)
