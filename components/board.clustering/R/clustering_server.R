@@ -747,6 +747,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
+      hm_average_group = shiny::reactive(input$hm_average_group),
       watermark = WATERMARK,
       labeltype = labeltype
     )
