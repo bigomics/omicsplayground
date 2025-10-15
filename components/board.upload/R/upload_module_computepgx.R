@@ -1110,7 +1110,8 @@ upload_module_computepgx_server <- function(
                   message = "Would you like to get support from our customer service?",
                   error   = shiny::HTML(errors),
                   btn_id  = "send_data_to_support__",
-                  onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})')
+                  onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})'),
+                  show_consent = TRUE
                 )
                 # send error message to user
                 gmail_creds <- file.path(ETC, "gmail_creds")
