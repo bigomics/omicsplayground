@@ -39,10 +39,8 @@ upload_table_preview_samples_server <- function(
     })
 
     observeEvent(input$update_vars_selected, {
-      dt_cols <- colnames(orig_sample_matrix())
-      sel <- vars_selected_pending()
-      sel <- intersect(sel, dt_cols)
-      if (length(sel) > 0) { vars_selected(sel) }
+      sel <- intersect(vars_selected_pending(), colnames(orig_sample_matrix()))
+      if (length(sel) > 0) vars_selected(sel)
     })
 
     table_data <- shiny::reactive({
