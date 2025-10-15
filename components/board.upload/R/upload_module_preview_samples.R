@@ -33,6 +33,18 @@ upload_table_preview_samples_server <- function(
       }
     })
 
+    vars_selected_pending <- reactiveVal(NULL)
+    observeEvent(input$vars_selected_pending, {
+      vars_selected_pending(input$vars_selected_pending)
+    })
+
+    observeEvent(input$update_vars_selected, {
+      dt_cols <- colnames(orig_sample_matrix())
+      sel <- vars_selected_pending()
+      sel <- intersect(sel, dt_cols)
+      if (length(sel) > 0) { vars_selected(sel) }
+    })
+
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
@@ -59,13 +71,6 @@ upload_table_preview_samples_server <- function(
       return(dt)
     })
 
-    shiny::observeEvent(input$vars_selected, {
-      dt_cols <- colnames(orig_sample_matrix())
-      if (all(input$vars_selected %in% dt_cols)) {
-        vars_selected(input$vars_selected)
-      }
-    })
-
     shiny::observe({
       cols <- colnames(orig_sample_matrix())
       current_selected <- vars_selected()
@@ -76,12 +81,20 @@ upload_table_preview_samples_server <- function(
 
     output$col_sel <- renderUI({
       choices <- colnames(orig_sample_matrix())
-      shiny::checkboxGroupInput(
-        ns("vars_selected"),
-        label = "Retain variable:",
-        choices = choices,
-        selected = vars_selected(),
-        inline = TRUE
+      tagList(
+        checkboxGroupInput(
+          ns("vars_selected_pending"),
+          label = "Retain variable:",
+          choices = choices,
+          selected = vars_selected(),
+          inline = TRUE
+        ),
+        actionButton(
+          ns("update_vars_selected"),
+          "Update",
+          icon = icon("refresh"),
+          class = "btn-sm btn-success"
+        )
       )
     })
 
