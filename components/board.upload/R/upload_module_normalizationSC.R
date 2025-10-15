@@ -218,6 +218,16 @@ upload_module_normalizationSC_server <- function(id,
             dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
           })
 
+          if (is.null(azm)) {
+            message_text <- paste(
+              "Please select the Azimuth reference atlas that fits your data.",
+              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
+            )
+            shiny::validate(
+              shiny::need(FALSE, message_text)
+            )
+          }
+
           if (class(azm) %in% c("matrix", "data.frame")) {
             kk <- grep("^predicted.*l*2$", colnames(azm))
             if (any(kk)) {
