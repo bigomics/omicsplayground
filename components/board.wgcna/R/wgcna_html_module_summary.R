@@ -13,16 +13,13 @@ wgcna_html_module_summary_ui <- function(
     width) {
   ns <- shiny::NS(id)
 
-  opts <- shiny::tagList(
-  )
-
   PlotModuleUI(
     ns("text"),
     outputFunc = htmlOutput,
     title = title,
     label = label,
     info.text = info.text,
-    #options = opts,
+    #options = options,
     caption = caption,
     height = height,
     width = width,
@@ -32,7 +29,6 @@ wgcna_html_module_summary_ui <- function(
 
 wgcna_html_module_summary_server <- function(id,
                                              wgcna,
-                                             pgx,
                                              multi = FALSE,
                                              r_module,
                                              watermark = FALSE) {
@@ -42,35 +38,15 @@ wgcna_html_module_summary_server <- function(id,
     info_text <- function() {
       wgcna <- wgcna()
       module <- r_module()
-      ##pgx <- pgx()
-      shiny::req(wgcna)
-      
-      shiny::validate(shiny::need("gsea" %in% names(wgcna),
-        "Error: object has not enrichment results (gsea)")
-      )
-
-      shiny::req(pgx)
-      annot <- pgx$genes
-      
-      if(multi) {
-        top <- playbase::wgcna.getConsensusTopGenesAndSets(
-          wgcna, annot=annot, module=module, ntop=25)
-      } else {
-        top <- playbase::wgcna.getTopGenesAndSets(
-          wgcna, annot=annot, module=module, ntop=25)
-      }
-      topgenes <- paste(top$genes[[module]], collapse=";")
-      res1 <- paste("<b>Key genes:</b>", topgenes)      
-      res2 <- "<b>Summary:</b> not available"
+      shiny::req(wgcna)      
+      res <- "Summary not available"
       if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
-        res2 <- wgcna$summary[[module]]
-        res2 <- gsub("\n","<p>",res2)
-        res2 <- gsub(" [*]{2}","<b>",res2)
-        res2 <- gsub("[*]{2} ","</b>",res2)
-        res2 <- paste("<b>Summary:</b>", res2)
+        res <- wgcna$summary[[module]]
+        res <- gsub("\n","<p>",res)
+        res <- gsub(" [*]{2}","<b>",res)
+        res <- gsub("[*]{2} ","</b>",res)
+        res <- paste0("<b>",module,":</b> ", res)
       }
-      
-      res <- paste(res1, res2, sep="<br><br><p>")
       return(res)
     }
 
@@ -96,5 +72,7 @@ wgcna_html_module_summary_server <- function(id,
       res = c(75, 100),
       add.watermark = watermark
     )
+
+
   })
 }

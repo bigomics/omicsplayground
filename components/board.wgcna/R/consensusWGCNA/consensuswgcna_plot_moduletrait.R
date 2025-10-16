@@ -121,9 +121,9 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       }
 
       if(input$transpose) {
-        par(mfrow=c(2,3), mar=c(10,9,2.5,1))
+        par(mfrow=c(2,2), mar=c(10,9,2.5,1))
       } else {
-        par(mfrow=c(2,3), mar=c(7,12,2.5,1))     
+        par(mfrow=c(2,2), mar=c(7,12,2.5,1))     
       }
 
       zmax <- max(sapply(cons$zlist, function(z) max(abs(z),na.rm=TRUE)))
@@ -174,31 +174,31 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
         zlim = zlim        
       )
       
-      ## Discordant Module-Trait
+      ## ## Discordant Module-Trait
       diffZ <- playbase::wgcna.computeDistinctMatrix(
         cons$zlist,
         ydim = cons$ydim,
         psig = 0.05,
         min.diff = 0.1
       ) 
-      for(set in names(diffZ)) {
-        mat <- diffZ[[set]][ii,jj,drop=FALSE]
-        if(input$transpose) mat <- Matrix::t(mat)
-        main <- paste("discordant for",toupper(set))
-        if(modtop20) main <- paste(main, "(top20)")
+      ## for(set in names(diffZ)) {
+      ##   mat <- diffZ[[set]][ii,jj,drop=FALSE]
+      ##   if(input$transpose) mat <- Matrix::t(mat)
+      ##   main <- paste("discordant for",toupper(set))
+      ##   if(modtop20) main <- paste(main, "(top20)")
         
-        playbase::wgcna.plotLabeledCorrelationHeatmap(
-          mat,
-          nsamples,
-          setpar = FALSE,
-          text = FALSE,
-          pstar = 1,
-          cluster = FALSE,
-          cex.lab = 1.2,
-          main = main,
-          zlim = zlim          
-        )
-      }
+      ##   playbase::wgcna.plotLabeledCorrelationHeatmap(
+      ##     mat,
+      ##     nsamples,
+      ##     setpar = FALSE,
+      ##     text = FALSE,
+      ##     pstar = 1,
+      ##     cluster = FALSE,
+      ##     cex.lab = 1.2,
+      ##     main = main,
+      ##     zlim = zlim          
+      ##   )
+      ## }
 
       ## Effective consensus
       z0 <- consZ
@@ -267,7 +267,7 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       func = scatter.RENDER,
       pdf.width = 12,
       pdf.height = 8,
-      res = c(110, 130),
+      res = c(90, 110),
       add.watermark = FALSE
     )
     

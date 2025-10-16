@@ -117,11 +117,19 @@ ConsensusWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(12),
+            col_widths = c(6,6),
             height = "100vh",
             consensusWGCNA_plot_moduletrait_ui(
               ns("consensusWGCNATrait"),
               title = "Module-Trait Heatmaps",
+              caption = "...",
+              info.text = "...",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            consensusWGCNA_plot_traitsignificance_ui(
+              ns("consensusWGCNATraitSignificance"),
+              title = "Trait Significance",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -157,7 +165,7 @@ ConsensusWGCNA_UI <- function(id) {
             height = "100vh",            
             wgcna_html_module_summary_ui(
               id = ns("consensusWGCNAmoduleSummary"),
-              title = "Insight",
+              title = "AI Summary",
               info.text = "",
               caption = "Information about the Module.",
               height = c("100%", TABLE_HEIGHT_MODAL),

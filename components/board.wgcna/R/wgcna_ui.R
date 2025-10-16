@@ -5,6 +5,7 @@
 
 WgcnaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
+
   bigdash::tabSettings(
     ## data set parameters
     shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
@@ -22,8 +23,7 @@ WgcnaInputs <- function(id) {
             selected = 2000
           ),
           shiny::selectInput(ns("power"),"Soft treshold:",
-            choices=c("<auto>",1,3,6,9,12,20), selected=12),
-          #shiny::sliderInput(ns("minkme"), "Minimum KME", 0, 0.9, 0.3, 0.1),
+            choices=c("<auto>",1,3,6,9,12,20), selected = 12),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 20
           ),
@@ -205,7 +205,7 @@ WgcnaUI <- function(id) {
             col_widths = c(2, 10),
             wgcna_html_module_summary_ui(
               id = ns("moduleSummary"),
-              title = "(a) Insight",
+              title = "(a) AI Summary",
               info.text = "",
               caption = "Information about the Module.",
               height = c("100%", TABLE_HEIGHT_MODAL),

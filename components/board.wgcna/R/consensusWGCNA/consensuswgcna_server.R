@@ -62,7 +62,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
     ## ============================================================================
    
     shiny::observe({
-      cons <- r_consensusWGCNA()
+      cons <- r_wgcna()
       shiny::validate(shiny::need(!is.null(cons), "Please compute"))
     })
 
@@ -90,7 +90,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
     })
     
     
-    r_consensusWGCNA <- shiny::eventReactive( {
+    r_wgcna <- shiny::eventReactive( {
       list( input$compute, pgx$X ) 
     }, {
 
@@ -199,27 +199,27 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         
     consensusWGCNA_plot_dendrograms_server(
       id = "consensusWGCNADendro",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_plot_power_server(
       id = "consensusWGCNAPower",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_plot_moduletrait_server(
       "consensusWGCNATrait",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_plot_sampletree_server(
       "consensusWGCNASampleTree",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_table_modulegenes_server(
       id = "consensusWGCNATable",
-      mwgcna = r_consensusWGCNA,
+      mwgcna = r_wgcna,
       r_annot = reactive(pgx$genes),
       r_trait = reactive(input$trait),
       r_module = reactive(input$module)      
@@ -227,23 +227,28 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
     consensusWGCNA_table_enrichment_server(
       id = "consensusWGCNAEnrichment",
-      mwgcna = r_consensusWGCNA,      
+      mwgcna = r_wgcna,      
       r_module = reactive(input$module)
     )
 
     consensusWGCNA_plot_preservation_server(
       id = "consensusWGCNAPreservation",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
     
     # Enrichment plot
     wgcna_html_module_summary_server(
       "consensusWGCNAmoduleSummary",
-      wgcna = r_consensusWGCNA,
+      wgcna = r_wgcna,
       multi = TRUE,
-      pgx = pgx,
       r_module = shiny::reactive(input$module),      
       watermark = WATERMARK
+    )
+
+    consensusWGCNA_plot_traitsignificance_server(
+      id = "consensusWGCNATraitSignificance",
+      rwgcna = r_wgcna,
+      rtrait = reactive(input$trait)
     )
 
     return(NULL)
