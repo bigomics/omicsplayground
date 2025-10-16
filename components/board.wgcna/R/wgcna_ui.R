@@ -21,15 +21,13 @@ WgcnaInputs <- function(id) {
             choices = c(1000, 2000, 4000),
             selected = 2000
           ),
-          shiny::selectInput(ns("networktype"), "Network type",
-            choices = c("unsigned", "signed", "signed hybrid"), selected = "signed"
-          ),
-          shiny::sliderInput(ns("power"), "Power", 1, 20, 12),
-          # shiny::sliderInput(ns("cutheight"), "Merge cut height",0.05,0.8,0.15,0.05),
-          shiny::sliderInput(ns("minkme"), "Minimum KME", 0, 0.9, 0.3, 0.1),
+          shiny::selectInput(ns("power"),"Soft treshold:",
+            choices=c("<auto>",1,3,6,9,12,20), selected=12),
+          #shiny::sliderInput(ns("minkme"), "Minimum KME", 0, 0.9, 0.3, 0.1),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 20
           ),
+          shiny::checkboxInput(ns("useLLM"), "Use AI summary", FALSE),
           shiny::br(),
           shiny::actionButton(
             ns("compute"), "Recompute!",
@@ -201,24 +199,24 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Circle network of top hub genes. </b> <b>(c)</b> Module heatmap.  <b>(d)</b> Table of importance score to identify 'driver genes' of the module. <b>(e)</b> Module membership (MM) with the module eigengene. <b>(f)</b> Plot of gene significance paramters.")),
+          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Summary of module. <b>(b)</b> Correlation of module eigengene with traits. <b>(c)</b> Circle network of top hub genes. </b> <b>(d)</b> Module heatmap.  <b>(e)</b> Table of importance score to identify 'driver genes' of the module. <b>(f)</b> Plot of gene significance paramters.")),
           bslib::layout_columns(
             height = "100%",
             col_widths = c(2, 10),
             wgcna_html_module_summary_ui(
               id = ns("moduleSummary"),
-              title = "AI Summary",
+              title = "(a) Insight",
               info.text = "",
               caption = "Information about the Module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             bslib::layout_columns(
-              col_widths = c(4, 4, 4, 4, 4 ,4 ),
+              col_widths = c(4, 4, 4, 7, 5),
               height = "calc(100vh - 181px)",
               wgcna_plot_module_significance_ui(
                 ns("moduleSignificance"),
-                title = "(a) Trait correlation",
+                title = "(b) Trait correlation",
                 info.text = "For each module, we also define a trait correlation.",
                 caption = "",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -227,7 +225,7 @@ WgcnaUI <- function(id) {
               wgcna_plot_correlation_network_ui(
                 ns("corGraph"),
                 label = "c",
-                title = "(b) Circle network of hub genes",
+                title = "(c) Circle network of hub genes",
                 caption = "Circle network of hub genes",
                 info.text = "The circle plot visualizes the connection strengths between top hub genes in the module. Thickness of lines reflect the absolute correlation. Sizes of circles indicate the connectivity of the gene as quantified by its module membership. Higher connected genes are represented by larger circles.",
                 info.methods = "The Pearson correlation was computed from the log expression matrix across samples. Module membership was computed using the WGCNA R package as part of the full WGCNA analysis. Plotting was performed using the igraph R package.",
@@ -238,7 +236,7 @@ WgcnaUI <- function(id) {
               ),
               wgcna_plot_module_heatmap_ui(
                 ns("moduleheatmap"),
-                title = "(c) Module heatmap",
+                title = "(d) Module heatmap",
                 info.text = "Heatmap of genes, or top genes, in the selected module.",
                 caption = "Heatmap of genes, or top genes, in the selected module.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -246,22 +244,22 @@ WgcnaUI <- function(id) {
               ),
               wgcna_table_genes_ui(
                 ns("geneTable"),
-                title = "(d) Significance table",
+                title = "(e) Significance table",
                 info.text = "Genes in the selected WGCNA module.",
                 caption = "Table of genes in the selected module.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              wgcna_plot_module_membership_ui(
-                ns("modulemembership"),
-                title = "(e) Module membership",
-                info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
-                caption = "For each module, we also define
-                a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene
-                expression profile. This allows us to quantify the similarity of all genes to every module.",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
+              ## wgcna_plot_module_membership_ui(
+              ##   ns("modulemembership"),
+              ##   title = "(e) Module membership",
+              ##   info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
+              ##   caption = "For each module, we also define
+              ##   a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene
+              ##   expression profile. This allows us to quantify the similarity of all genes to every module.",
+              ##   height = c("100%", TABLE_HEIGHT_MODAL),
+              ##   width = c("auto", "100%")
+              ## ),
               wgcna_plot_membership_v_trait_ui(
                 ns("memberTrait"),
                 title = "(f) Gene significance",

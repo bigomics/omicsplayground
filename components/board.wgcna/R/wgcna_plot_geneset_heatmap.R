@@ -27,36 +27,32 @@ wgcna_plot_geneset_heatmap_ui <- function(
 
 wgcna_plot_geneset_heatmap_server <- function(id,
                                               pgx,
-                                              wgcna,
                                               selected_module,
+                                              enrichTable,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
     plot_heatmap <- function(n=20, maxlen=120) {
-      wgcna <- wgcna()
       mod <- selected_module()
 
-      dbg("[wgcna_plot_geneset_heatmap_server] 1: mod = ", mod)
-      dbg("[wgcna_plot_geneset_heatmap_server] 1: names(wgcna$gse) = ", names(wgcna$gse))      
+      df <- enrichTable$data()
+      if (is.null(df) || nrow(df) == 0) {
+        return(NULL)
+      }
+      ii <- enrichTable$rows_all()
+      shiny::req(ii)
+      sel <- head(df$geneset[ii], n)
 
-      df <- wgcna$gse[[mod]]
-      sel <- head(df$geneset, n)
-
-      dbg("[wgcna_plot_geneset_heatmap_server] 1: len.sel = ", length(sel))      
-            
       sel1 <- intersect(sel, rownames(pgx$gsetX))
       if(length(sel1)) {
         gsetX <- pgx$gsetX[sel1, , drop = FALSE]
       } else {
         sel1 <- intersect(sel, rownames(playdata::GSETxGENE))
-        dbg("[wgcna_plot_geneset_heatmap_server] 2: len.sel = ", length(sel1))
         X <- playbase::rename_by( pgx$X, pgx$genes, "human_ortholog")
         G <- Matrix::t( playdata::GSETxGENE[sel1,] )
         gsetX <- plaid::plaid(X, G)
       }
 
-      dbg("[wgcna_plot_geneset_heatmap_server] 2: dim(gsetX) = ", dim(gsetX))      
-      
       playbase::gx.splitmap(
         gsetX,
         nmax = 50,
@@ -66,7 +62,7 @@ wgcna_plot_geneset_heatmap_server <- function(id,
         show_legend = FALSE,
         show_colnames = FALSE,
         split = 1,
-        main = paste("Module", mod),
+        main = mod,
         verbose = 2
       )
 

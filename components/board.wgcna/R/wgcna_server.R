@@ -48,6 +48,13 @@ WgcnaBoard <- function(id, pgx) {
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
+    
+    shiny::observeEvent( input$useLLM, {
+      if(input$useLLM) {
+        shinyalert::shinyalert("",
+          "Warning. Using LLM might expose some of your data to external LLM servers.")
+      }
+    })
 
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
@@ -62,18 +69,16 @@ WgcnaBoard <- function(id, pgx) {
 
       message("[wgcna] >>> Calculating WGCNA...")
       ##out <- playbase::pgx.wgcna(pgx, ai_summary = TRUE)
+
       out <- playbase::pgx.wgcna(
         pgx = pgx,
         ngenes = as.integer(input$ngenes),
         gset.filter = NULL,
         minmodsize = as.integer(input$minmodsize),
         power = as.numeric(input$power),
-        minKME = as.numeric(input$minkme),
-        networktype = input$networktype,
         numericlabels = FALSE,
-        ai_summary = FALSE,
-        ##ai_model = DEFAULT_LLM,
-        ai_model = "llama3.2:1b",
+        ai_summary = input$useLLM,
+        ai_model = opt$LLM_MODEL,
         progress = progress
       )
       shiny::removeModal()
@@ -270,8 +275,8 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_geneset_heatmap_server(
       "genesetHeatmap",
       pgx = pgx,
-      wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),
+      enrichTable = enrichTableModule,
       watermark = FALSE
     )
 
@@ -280,14 +285,14 @@ WgcnaBoard <- function(id, pgx) {
       pgx = pgx,
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),
-      enrich_table = enrichTableModule,
+      enrichTable = enrichTableModule,
       watermark = FALSE
     )
 
     # Enrichment plot
     wgcna_plot_enrichment_server(
       "enrichPlot",
-      enrichTable_module = enrichTableModule,
+      enrichTable = enrichTableModule,
       watermark = WATERMARK
     )
 
@@ -297,12 +302,14 @@ WgcnaBoard <- function(id, pgx) {
       wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module)
     )
-
+    
     # Enrichment plot
     wgcna_html_module_summary_server(
       "moduleSummary",
       wgcna = wgcna,
-      selected_module = shiny::reactive(input$selected_module),      
+      multi = FALSE,
+      pgx = pgx,
+      r_module = shiny::reactive(input$selected_module),      
       watermark = WATERMARK
     )
 

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2025 BigOmics Analytics SA. All rights reserved.
 ##
 
 wgcna_html_module_summary_ui <- function(
@@ -14,7 +14,6 @@ wgcna_html_module_summary_ui <- function(
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
-    shiny::checkboxInput(ns("show_cov"), "covariance", FALSE)
   )
 
   PlotModuleUI(
@@ -33,42 +32,56 @@ wgcna_html_module_summary_ui <- function(
 
 wgcna_html_module_summary_server <- function(id,
                                              wgcna,
-                                             selected_module,
+                                             pgx,
+                                             multi = FALSE,
+                                             r_module,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
 
     info_text <- function() {
       wgcna <- wgcna()
-      module <- selected_module()
-      ## trait <- selected_trait()      
+      module <- r_module()
+      ##pgx <- pgx()
+      shiny::req(wgcna)
       
-      top <- playbase::wgcna.getTopGenesAndSets(wgcna, module=module)      
-      topgenes <- paste( top$genes[[module]], collapse=";")
-      res1 <- paste("<b>Key genes:</b>", topgenes)
+      shiny::validate(shiny::need("gsea" %in% names(wgcna),
+        "Error: object has not enrichment results (gsea)")
+      )
 
-      res2 <- "Sorry. Description not available."
-      if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
-        res2 <- paste("<b>Summary:</b>", wgcna$summary[[module]])
+      shiny::req(pgx)
+      annot <- pgx$genes
+      
+      if(multi) {
+        top <- playbase::wgcna.getConsensusTopGenesAndSets(
+          wgcna, annot=annot, module=module, ntop=25)
+      } else {
+        top <- playbase::wgcna.getTopGenesAndSets(
+          wgcna, annot=annot, module=module, ntop=25)
       }
-      res2 <- gsub("\n","<p>",res2)
-      res2 <- gsub(" [*]{2}","<b>",res2)
-      res2 <- gsub("[*]{2} ","</b>",res2)
-
-      res3 <- "<i>[AI generated]</i>"
+      topgenes <- paste(top$genes[[module]], collapse=";")
+      res1 <- paste("<b>Key genes:</b>", topgenes)      
+      res2 <- "<b>Summary:</b> not available"
+      if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
+        res2 <- wgcna$summary[[module]]
+        res2 <- gsub("\n","<p>",res2)
+        res2 <- gsub(" [*]{2}","<b>",res2)
+        res2 <- gsub("[*]{2} ","</b>",res2)
+        res2 <- paste("<b>Summary:</b>", res2)
+      }
       
-      res <- paste(res1, res2, res3, sep="<br><br><p>")
+      res <- paste(res1, res2, sep="<br><br><p>")
       return(res)
     }
 
     info.RENDER <- function() {
       res <- info_text()
-      div(class = "gene-info", shiny::HTML(res))
+      shiny::div(class="gene-info", shiny::HTML(res))
     }
 
     info.RENDER2 <- function() {
       res <- info_text()
-      div(shiny::HTML(res))
+      shiny::div( shiny::HTML(res), style="font-size:22px;" )
     }
     
     PlotModuleServer(

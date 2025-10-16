@@ -41,7 +41,7 @@ consensusWGCNA_table_enrichment_server <- function(id,
       return(df)
     }
     
-    render_table <- function(full=TRUE) {
+    render_table <- function(full=TRUE, ellipsis.len=80) {
       df <- table_df()
       shiny::req(df)
       ##df$module <- factor(df$module)
@@ -55,6 +55,7 @@ consensusWGCNA_table_enrichment_server <- function(id,
       
       ## set correct types for filter
       numeric.cols <- which(sapply(df, class) == "numeric")
+      js.ellipsis <- paste0("$.fn.dataTable.render.ellipsis( ",ellipsis.len,", false )")
       
       dt <- DT::datatable(
         df,
@@ -75,7 +76,7 @@ consensusWGCNA_table_enrichment_server <- function(id,
           autoWidth = TRUE,          
           columnDefs = list(list(
             targets = c(0), ## without rownames column 1 is target 0
-            render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
+            render = DT::JS(js.ellipsis)
           ))          
         ) ## end of options.list
       ) %>%
@@ -96,11 +97,11 @@ consensusWGCNA_table_enrichment_server <- function(id,
     }
 
     table.RENDER <- function() {
-      render_table(full=FALSE)
+      render_table(full=FALSE, ellipsis.len=50)
     }
 
     table.RENDER2 <- function() {
-      render_table(full=TRUE)
+      render_table(full=TRUE, ellipsis.len=100)
     }    
     
     table <- TableModuleServer(

@@ -29,7 +29,7 @@ wgcna_plot_gene_heatmap_server <- function(id,
                                            pgx,
                                            wgcna,
                                            selected_module,
-                                           enrich_table,
+                                           enrichTable,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -37,9 +37,9 @@ wgcna_plot_gene_heatmap_server <- function(id,
                             show_colnames) {
       wgcna <- wgcna()
       
-      sel <- enrich_table$rows_selected()
+      sel <- enrichTable$rows_selected()
       if(length(sel) > 0) {
-        data <- enrich_table$data()
+        data <- enrichTable$data()
         maintxt <- data$geneset[sel]
         maintxt <- sub(".*:","",maintxt)
         gg <- strsplit(data$genes[sel], split = "\\|")[[1]]
@@ -71,7 +71,7 @@ wgcna_plot_gene_heatmap_server <- function(id,
 
     plot.RENDER <- function() {
       render_plot(
-        nmax = 40, maxlen = 40, show_legend = FALSE,
+        nmax = 30, maxlen = 40, show_legend = FALSE,
         show_colnames = FALSE
       )
     }

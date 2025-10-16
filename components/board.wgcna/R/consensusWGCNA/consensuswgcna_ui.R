@@ -27,8 +27,9 @@ ConsensusWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
           shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
             2000),
-          shiny::selectInput(ns("minmodsize"),"Min. module size:", choices=c(5,10,20,40,100),
-            10)
+          shiny::selectInput(ns("minmodsize"),"Min. module size:",
+            choices=c(5,10,20,40,100), 10),
+          shiny::checkboxInput(ns("useLLM"),"AI summary:", FALSE)
         )
       )
     )
@@ -152,8 +153,16 @@ ConsensusWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(3,4,5),
             height = "100vh",            
+            wgcna_html_module_summary_ui(
+              id = ns("consensusWGCNAmoduleSummary"),
+              title = "Insight",
+              info.text = "",
+              caption = "Information about the Module.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             consensusWGCNA_table_modulegenes_ui(
               ns("consensusWGCNATable"),
               title = "Module Features",
@@ -172,39 +181,8 @@ ConsensusWGCNA_UI <- function(id) {
             )
           )
         )
-      ),
-
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        "Preservation",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          bs_alert(HTML("<b>Preservation analysis</b> is an application of WGCNA to assess whether the same modules are preserved across different datasets.")),
-          bslib::layout_columns(
-            col_widths = c(5,7),
-            height = "100vh",            
-            consensusWGCNA_plot_preservationDendro_ui(
-              ns("consensusWGCNAPreservation"),
-              title = "Eigengene Dendro",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            consensusWGCNA_plot_preservationHeatmap_ui(
-              ns("consensusWGCNAPreservation"),
-              title = "Preservation Heatmap",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          )
-        )
       )
-            
+
       
     ) ## end tabsetPanel
   )  ## end div 

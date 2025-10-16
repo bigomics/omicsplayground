@@ -97,6 +97,8 @@ consensusWGCNA_table_modulegenes_server <- function(id,
         df <- df[,cols]
       }
 
+      if(!input$showallmodules) df$module <- NULL
+      
       ## order name first
       cols <- unique(c("module","feature","symbol","title",colnames(df)))
       cols <- intersect(cols, colnames(df))
