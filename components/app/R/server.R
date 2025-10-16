@@ -172,7 +172,11 @@ app_server <- function(input, output, session) {
     enable_beta = shiny::reactive(input$enable_beta),
     enable_info = shiny::reactive(input$enable_info)
   )
-
+  
+  ## observe and set global User options
+  setUserOption(session,'hello', 'world!')
+  observeEvent(input$llm_model,setUserOption(session,'llm_model', input$llm_model))
+  
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
   shinyjs::runjs("sidebarClose()")
