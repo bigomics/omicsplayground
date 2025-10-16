@@ -79,7 +79,7 @@ preview_module_legend <- shiny::div(
   span("= error and data will not be uploaded.")
 )
 
-error_popup <- function(title, header, message, error, btn_id, onclick) {
+error_popup <- function(title, header, message, error, btn_id, onclick, show_consent = FALSE) {
   showModal(
     shiny::tagList(
       tags$div(
@@ -130,6 +130,12 @@ error_popup <- function(title, header, message, error, btn_id, onclick) {
           # add grey style to tag p, and corner edges
           tags$p(error, style = "font-size:12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; padding: 10px; overflow: auto;"),
           shiny::p(message, style = "font-size:15px;"),
+          if (show_consent) {
+            tags$p(
+              style = "font-size:13px; font-style: italic; color: #5E81AC; background-color: rgba(94, 129, 172, 0.1); border-left: 3px solid #5E81AC; padding: 10px; margin: 10px 0;",
+              HTML("<strong>Note:</strong> By clicking \"Send data to customer support\", you authorize BigOmics to access your data solely for the purpose of fixing computation errors, if any.")
+            )
+          },
           div(
             tags$button(
               id = btn_id,
