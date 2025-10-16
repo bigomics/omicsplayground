@@ -91,7 +91,7 @@ upload_table_preview_samples_server <- function(
           ns("update_vars_selected"),
           "Update",
           icon = icon("refresh"),
-          class = "btn-sm btn-success"
+          class = "btn-sm btn-outline-primary"
         )
       )
     })
