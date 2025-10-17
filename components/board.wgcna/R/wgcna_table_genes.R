@@ -36,7 +36,8 @@ wgcna_table_genes_server <- function(id,
                                      selected_module,
                                      selected_trait) {
   moduleServer(id, function(input, output, session) {
-    RENDER <- function(full = FALSE) {
+
+    RENDER <- function(full = FALSE, ellipsis.len=40) {
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
@@ -57,8 +58,9 @@ wgcna_table_genes_server <- function(id,
         df <- df[, sel, drop = FALSE]
       }
 
-      ## add symbol
+      ## add symbol+title
       df$symbol <- playbase::probe2symbol(df$feature, pgx$genes, "symbol")
+      df$title  <- playbase::probe2symbol(df$feature, pgx$genes, "gene_title")      
       
       ## hide columns
       if(!input$showall) {
@@ -71,7 +73,7 @@ wgcna_table_genes_server <- function(id,
       cols <- intersect(cols, colnames(df))
       df <- df[,cols]
       
-      numeric.cols <- grep("^module$|symbol|feature", colnames(df), invert=TRUE)
+      numeric.cols <- grep("^module$|symbol|feature|title", colnames(df), invert=TRUE)
       colnames(df) <- sub("moduleMembership","MM",colnames(df))
       colnames(df) <- sub("traitSignificance","TS",colnames(df))
       colnames(df) <- sub("foldChange","logFC",colnames(df))
@@ -83,12 +85,14 @@ wgcna_table_genes_server <- function(id,
         colnames(df) <- sub("logFC", "rho", colnames(df))
       }
 
+      js.ellipsis <- paste0("$.fn.dataTable.render.ellipsis( ",ellipsis.len,", false )")
+      
       DT::datatable(
         df,
         rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
         selection = list(mode = "single", target = "row", selected = NULL),
-        plugins = "scrollResize",
+        plugins = c("scrollResize","ellipsis"),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
         options = list(
@@ -97,7 +101,13 @@ wgcna_table_genes_server <- function(id,
           scrollY = "70vh",
           scrollResize = TRUE,
           scroller = TRUE,
-          deferRender = TRUE
+          deferRender = TRUE,
+          columnDefs = list(
+            list(
+              targets = c("title"), 
+              render = DT::JS(js.ellipsis)
+            )
+          )          
         )
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
@@ -113,7 +123,7 @@ wgcna_table_genes_server <- function(id,
     }
 
     RENDER_modal <- function() {
-      dt <- RENDER()
+      dt <- RENDER( ellipsis.len=200 )
       dt$x$options$scrollY <- SCROLLY_MODAL
       dt
     }

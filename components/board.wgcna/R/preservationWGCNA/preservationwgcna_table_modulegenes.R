@@ -111,7 +111,7 @@ preservationWGCNA_table_modulegenes_server <- function(id,
       numeric.cols <- which(sapply(df, class) == "numeric")
       score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
       score.vals <- df[,score.cols,drop=FALSE]
-      short80.cols <- intersect(c("title"), colnames(df))
+      short60.cols <- intersect(c("title"), colnames(df))
       short20.cols <- intersect(c("feature","symbol"), colnames(df))      
       
       DT::datatable(
@@ -133,8 +133,8 @@ preservationWGCNA_table_modulegenes_server <- function(id,
           columnDefs = list(
             list(
               #targets = c(0,1), ## without rownames column 2 is target 1
-              targets = short80.cols, 
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 80, false )")
+              targets = short60.cols, 
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
             ),
             list(
               #targets = c(0,1), ## without rownames column 2 is target 1

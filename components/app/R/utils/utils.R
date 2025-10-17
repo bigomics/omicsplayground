@@ -9,6 +9,14 @@
 ##                                                                     ##
 #########################################################################
 
+setUserOption <- function(session, var, value) {
+  session$userData[[var]] <- value
+}
+
+getUserOption <- function(session, var, value) {
+  return(session$userData[[var]])
+}
+
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
 
 getAppVersion <- function(add.auth = FALSE) {

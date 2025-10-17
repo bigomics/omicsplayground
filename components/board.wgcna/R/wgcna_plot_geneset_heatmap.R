@@ -27,52 +27,54 @@ wgcna_plot_geneset_heatmap_ui <- function(
 
 wgcna_plot_geneset_heatmap_server <- function(id,
                                               pgx,
-                                              wgcna,
                                               selected_module,
+                                              enrichTable,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plot.RENDER <- function() {
-      wgcna <- wgcna()
-      mod <- selected_module()
-      df <- wgcna$gse[[mod]]
-      ## sel <- head(rownames(df),20)
-      sel <- head(df$geneset, 20)
-      shiny::req(mod, length(sel) > 0)
 
-      gsetX <- pgx$gsetX[sel, , drop = FALSE]
+    plot_heatmap <- function(n=20, maxlen=120) {
+      mod <- selected_module()
+
+      df <- enrichTable$data()
+      if (is.null(df) || nrow(df) == 0) {
+        return(NULL)
+      }
+      ii <- enrichTable$rows_all()
+      shiny::req(ii)
+      sel <- head(df$geneset[ii], n)
+
+      sel1 <- intersect(sel, rownames(pgx$gsetX))
+      if(length(sel1)) {
+        gsetX <- pgx$gsetX[sel1, , drop = FALSE]
+      } else {
+        sel1 <- intersect(sel, rownames(playdata::GSETxGENE))
+        X <- playbase::rename_by( pgx$X, pgx$genes, "human_ortholog")
+        G <- Matrix::t( playdata::GSETxGENE[sel1,] )
+        gsetX <- plaid::plaid(X, G)
+      }
+
       playbase::gx.splitmap(
         gsetX,
         nmax = 50,
         col.annot = pgx$samples,
         ## cexCol = 0.01, cexRow = 0.01,
-        rowlab.maxlen = 120,
+        rowlab.maxlen = maxlen,
         show_legend = FALSE,
         show_colnames = FALSE,
         split = 1,
-        main = paste("Module", mod),
+        main = mod,
         verbose = 2
       )
+
     }
 
+    plot.RENDER <- function() {
+      plot_heatmap(n=20, maxlen=80)
+    }
     plot.RENDER2 <- function() {
-      wgcna <- wgcna()
-      mod <- selected_module()
-      df <- wgcna$gse[[mod]]
-      sel <- head(rownames(df), 40)
-
-      playbase::gx.splitmap(
-        pgx$gsetX[sel, ],
-        nmax = 50,
-        ## mar = c(1,1), # keysize=1,
-        col.annot = pgx$samples,
-        ## cexCol = 0.01, cexRow = 0.01,
-        rowlab.maxlen = 200,
-        show_legend = TRUE,
-        split = 1,
-        main = paste("Module", mod)
-      )
+      plot_heatmap(n=40, maxlen=240)
     }
-
+    
     PlotModuleServer(
       "plot",
       func = plot.RENDER,

@@ -14,14 +14,14 @@ wgcna_plot_membership_v_trait_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("showallmodules"), "Show all modules", FALSE)
+    shiny::checkboxInput(ns("showlogFC"), "logFC and centrality", FALSE)
   )
 
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
-    options = options,
+    # options = options,
     info.text = info.text,
     height = height,
     caption = caption,
@@ -36,21 +36,20 @@ wgcna_plot_membership_v_trait_server <- function(id,
                                                  selected_trait,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     csvFunc <- function() {
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
-      shiny::req(!is.null(input$showallmodules))
       shiny::req(res)
       shiny::req(!is.null(module) && module != "")
       shiny::req(!is.null(trait) && trait != "")
-
-      module <- ifelse( input$showallmodules, NULL, module)
       
       df <- playbase::wgcna.getGeneStats(
         res,
         module = module,
         trait = trait,
+        showlogFC = TRUE,
         plot = FALSE
       ) 
       df
@@ -60,21 +59,18 @@ wgcna_plot_membership_v_trait_server <- function(id,
       res <- wgcna()
       module <- selected_module()
       trait <- selected_trait()
-      shiny::req(!is.null(input$showallmodules))
-      col <- "black"
-      if (input$showallmodules) col <- NULL
       shiny::req(res)
       shiny::req(!is.null(module) && module != "")
       shiny::req(!is.null(trait) && trait != "")
-
-      module <- ifelse( input$showallmodules, NULL, module)
       
       par(mar=c(0,0,0,0))
       df <- playbase::wgcna.getGeneStats(
         res,
         module = module,
         trait = trait,
-        col = col,
+        #showlogFC = input$showlogFC,
+        showlogFC = TRUE,
+        col = 'black',
         main = "",
         plot = TRUE
       ) 

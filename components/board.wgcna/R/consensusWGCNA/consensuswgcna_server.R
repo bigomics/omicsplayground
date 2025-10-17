@@ -41,8 +41,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
     tab_elements <- list(
       "Dendrograms" = list(disable = c("trait","module")),
       "Sample Clustering" = list(disable = c("trait","module")),
-      "Module-Trait" = list(disable = c("trait","module")),
-      "Preservation" = list(disable = c("trait","module")),      
+      "Module-Trait" = list(disable = c("module")),
       "Feature Table" = list(disable = c())
     )
 
@@ -50,14 +49,19 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
+    shiny::observeEvent( input$useLLM, {
+      if(input$useLLM) {
+        shinyalert::shinyalert("",
+          "Warning. Using LLM might expose some of your data to external LLM servers.")
+      }
+    })
+
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
    
     shiny::observe({
-      cons <- r_consensusWGCNA()
-      dbg("[ConsensusWGCNA_Board] isnull.cons=", is.null(cons))
-      dbg("[ConsensusWGCNA_Board] len.cons=", length(cons))      
+      cons <- r_wgcna()
       shiny::validate(shiny::need(!is.null(cons), "Please compute"))
     })
 
@@ -85,17 +89,12 @@ ConsensusWGCNA_Board <- function(id, pgx) {
     })
     
     
-    r_consensusWGCNA <- shiny::eventReactive( {
+    r_wgcna <- shiny::eventReactive( {
       list( input$compute, pgx$X ) 
     }, {
 
       shiny::req(pgx$X)
       shiny::req(input$splitpheno)      
-
-      dbg("[r_consensusWGCNA] dimX = ", dim(pgx$X))
-      dbg("[r_consensusWGCNA] input.splitpheno = ", input$splitpheno)
-      dbg("[r_consensusWGCNA] dimSamples = ", dim(pgx$samples))
-      dbg("[r_consensusWGCNA] colnamesSamples = ", colnames(pgx$samples))
       
       xx <- NULL
       if( pgx$datatype == "multi-omics" ) {        
@@ -105,7 +104,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         shiny::validate(shiny::need(has.gxpx, "Your mulit-omics dataset is incompatible for Consensus WGCNA: You must have both transcriptomics (gx) and proteomics (px)"))
 
         ## Rename all tables to symbol
-        ##xx <- xx[names(xx) %in% c("gx","px","me","mt","mi","mir")]
         xx <- xx[names(xx) %in% c("gx","px")]      
         xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table=pgx$genes))
         gg <- Reduce(intersect, lapply(xx, rownames))
@@ -129,11 +127,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         ## should not come here???
         shiny::validate(shiny::need(has.gxpx, "Your dataset is incompatible for consensus WGCNA."))
       }
-
-      dbg("[r_consensusWGCNA] dim.xx1 = ", dim(xx[[1]]))
-      
-      ## abbreviate??
-      #names(xx) <- base::abbreviate(names(xx),2)
       
       progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
@@ -148,15 +141,12 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       }
       
       ## This runs consensus WGCNA on an expression list
-      #ngenes=2000;minModuleSize=20;deepSplit=2
       ngenes = as.integer(input$ngenes)
       minModuleSize = as.integer(input$minmodsize)
       deepSplit = as.integer(input$deepsplit)
-      
-      dbg("[ConsensusWGCNA_Board] power = ", power)
-      dbg("[ConsensusWGCNA_Board] ngenes = ", ngenes)
-      dbg("[ConsensusWGCNA_Board] minModuleSize = ", minModuleSize)
-      dbg("[ConsensusWGCNA_Board] deepSplit = ", deepSplit)      
+
+      ai_model <- getUserOption(session,'llm_model')
+      message("[ConsensusWGCNA:compute_wgcna] ai_model = ", ai_model)
       
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
@@ -173,6 +163,11 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         calcMethod = "fast",
         drop.ref = FALSE,
         addCombined = FALSE,
+        compute.stats = TRUE,
+        compute.enrichment = TRUE,
+        ai_summary = input$useLLM,
+        ai_model = ai_model,
+        ai_experiment = pgx$description,
         gsea.mingenes = 5,
         gsea.ntop = 1000,
         verbose = 1
@@ -205,27 +200,27 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         
     consensusWGCNA_plot_dendrograms_server(
       id = "consensusWGCNADendro",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_plot_power_server(
       id = "consensusWGCNAPower",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_plot_moduletrait_server(
       "consensusWGCNATrait",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_plot_sampletree_server(
       "consensusWGCNASampleTree",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
 
     consensusWGCNA_table_modulegenes_server(
       id = "consensusWGCNATable",
-      mwgcna = r_consensusWGCNA,
+      mwgcna = r_wgcna,
       r_annot = reactive(pgx$genes),
       r_trait = reactive(input$trait),
       r_module = reactive(input$module)      
@@ -233,15 +228,30 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
     consensusWGCNA_table_enrichment_server(
       id = "consensusWGCNAEnrichment",
-      mwgcna = r_consensusWGCNA,      
+      mwgcna = r_wgcna,      
       r_module = reactive(input$module)
     )
 
     consensusWGCNA_plot_preservation_server(
       id = "consensusWGCNAPreservation",
-      mwgcna = r_consensusWGCNA
+      mwgcna = r_wgcna
     )
     
+    # Enrichment plot
+    wgcna_html_module_summary_server(
+      "consensusWGCNAmoduleSummary",
+      wgcna = r_wgcna,
+      multi = TRUE,
+      r_module = shiny::reactive(input$module),      
+      watermark = WATERMARK
+    )
+
+    consensusWGCNA_plot_traitsignificance_server(
+      id = "consensusWGCNATraitSignificance",
+      rwgcna = r_wgcna,
+      rtrait = reactive(input$trait)
+    )
+
     return(NULL)
   })
 } ## end of Board

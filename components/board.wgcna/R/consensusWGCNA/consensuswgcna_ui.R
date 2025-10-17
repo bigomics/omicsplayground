@@ -27,8 +27,9 @@ ConsensusWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
           shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
             2000),
-          shiny::selectInput(ns("minmodsize"),"Min. module size:", choices=c(5,10,20,40,100),
-            10)
+          shiny::selectInput(ns("minmodsize"),"Min. module size:",
+            choices=c(5,10,20,40,100), 10),
+          shiny::checkboxInput(ns("useLLM"),"AI summary:", FALSE)
         )
       )
     )
@@ -114,13 +115,21 @@ ConsensusWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Consensus Module-Trait</b> analysis identifies modules that have high correlation with your phenotypes. Module are concordant if the trait correlation have same sign in the consensus groups, i.e. always up (or down) regulated in all groups.")),
           bslib::layout_columns(
-            col_widths = c(12),
+            col_widths = c(7,5),
             height = "100vh",
             consensusWGCNA_plot_moduletrait_ui(
               ns("consensusWGCNATrait"),
               title = "Module-Trait Heatmaps",
+              caption = "...",
+              info.text = "...",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            consensusWGCNA_plot_traitsignificance_ui(
+              ns("consensusWGCNATraitSignificance"),
+              title = "Trait Significance",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -152,8 +161,16 @@ ConsensusWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(3,4,5),
             height = "100vh",            
+            wgcna_html_module_summary_ui(
+              id = ns("consensusWGCNAmoduleSummary"),
+              title = "AI Summary",
+              info.text = "",
+              caption = "Information about the Module.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             consensusWGCNA_table_modulegenes_ui(
               ns("consensusWGCNATable"),
               title = "Module Features",
@@ -172,39 +189,8 @@ ConsensusWGCNA_UI <- function(id) {
             )
           )
         )
-      ),
-
-      ##----------------------------------------------------------------
-      shiny::tabPanel(
-        "Preservation",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          bs_alert(HTML("<b>Preservation analysis</b> is an application of WGCNA to assess whether the same modules are preserved across different datasets.")),
-          bslib::layout_columns(
-            col_widths = c(5,7),
-            height = "100vh",            
-            consensusWGCNA_plot_preservationDendro_ui(
-              ns("consensusWGCNAPreservation"),
-              title = "Eigengene Dendro",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            consensusWGCNA_plot_preservationHeatmap_ui(
-              ns("consensusWGCNAPreservation"),
-              title = "Preservation Heatmap",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          )
-        )
       )
-            
+
       
     ) ## end tabsetPanel
   )  ## end div 
