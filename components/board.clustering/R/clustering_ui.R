@@ -36,6 +36,14 @@ ClusteringInputs <- function(id) {
         "Average expression values by group."
       ),
     ),
+    shiny::conditionalPanel(
+      "input.hm_splitby == 'contrast'",
+      ns = ns,
+      withTooltip(
+        shiny::checkboxInput(ns("hm_show_others"), "show other samples", FALSE),
+        "Include all other samples in the heatmap."
+      ),
+    ),
     ## ----- level ----
     shiny::hr(),
     withTooltip(
