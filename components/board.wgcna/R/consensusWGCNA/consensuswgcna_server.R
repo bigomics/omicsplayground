@@ -41,8 +41,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
     tab_elements <- list(
       "Dendrograms" = list(disable = c("trait","module")),
       "Sample Clustering" = list(disable = c("trait","module")),
-      "Module-Trait" = list(disable = c("trait","module")),
-      "Preservation" = list(disable = c("trait","module")),      
+      "Module-Trait" = list(disable = c("module")),
       "Feature Table" = list(disable = c())
     )
 
@@ -142,10 +141,12 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       }
       
       ## This runs consensus WGCNA on an expression list
-      #ngenes=2000;minModuleSize=20;deepSplit=2
       ngenes = as.integer(input$ngenes)
       minModuleSize = as.integer(input$minmodsize)
       deepSplit = as.integer(input$deepsplit)
+
+      ai_model <- getUserOption(session,'llm_model')
+      message("[ConsensusWGCNA:compute_wgcna] ai_model = ", ai_model)
       
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
@@ -165,7 +166,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         compute.stats = TRUE,
         compute.enrichment = TRUE,
         ai_summary = input$useLLM,
-        ai_model = opt$LLM_MODEL,
+        ai_model = ai_model,
         ai_experiment = pgx$description,
         gsea.mingenes = 5,
         gsea.ntop = 1000,

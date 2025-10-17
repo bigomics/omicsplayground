@@ -66,11 +66,11 @@ WgcnaBoard <- function(id, pgx) {
       on.exit(progress$close())
       progress$set(message = "Calculating WGCNA...", value = 0)
 
-      message("[compute_wgcna] >>> Calculating WGCNA...")
+      message("[WGCNA:compute_wgcna] >>> Calculating WGCNA...")
 
       #ai_model = opt$LLM_MODEL
       ai_model <- getUserOption(session,'llm_model')
-      message("[compute_wgcna] ai_model = ", ai_model)
+      message("[WGCNA:compute_wgcna] ai_model = ", ai_model)
       
       out <- playbase::pgx.wgcna(
         pgx = pgx,

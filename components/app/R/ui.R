@@ -361,9 +361,8 @@ app_ui <- function(x) {
                   shiny::selectInput(
                     inputId = "llm_model",
                     label = "LLM model:",
-                    choices = c("granite4:micro", "granite3.1-moe:1b", "llama3.2:1b",
-                      "gpt-5-nano"),
-                    selected = "granite3.1-moe:1b",
+                    choices = c("granite4:micro", "llama3.2:1b", "gpt-5-nano"),
+                    selected = "granite4:micro",
                     width = "100%"
                   ),
                   "Choose a label type to be displayed in the plots",
