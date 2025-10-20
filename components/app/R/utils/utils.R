@@ -9,6 +9,14 @@
 ##                                                                     ##
 #########################################################################
 
+setUserOption <- function(session, var, value) {
+  session$userData[[var]] <- value
+}
+
+getUserOption <- function(session, var, value) {
+  return(session$userData[[var]])
+}
+
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
 
 getAppVersion <- function(add.auth = FALSE) {
@@ -119,7 +127,8 @@ tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
 tabRequireTS <- function(pgx, session, tabname, enable = TRUE) {
   time.vars <- playbase::get_timevars()
   found.time.var <- grep(time.vars, colnames(pgx$samples), ignore.case = TRUE)
-  if (length(found.time.var) > 0 && enable) {
+  valid.contrasts <- any(grepl("IA:*", colnames(pgx$contrasts)))
+  if (length(found.time.var) > 0 && enable && valid.contrasts) {
     bigdash.showTab(session, tabname)
   } else {
     bigdash.hideTab(session, tabname)

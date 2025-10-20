@@ -280,20 +280,21 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           if (length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
         }
 
-        if (is.null(pgx$impX)) {
-          zx <- pgx$X[pp, , drop = FALSE]
+        if (any(is.na(pgx$X))) {
+          zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          zx <- zx[pp, , drop = FALSE]
         } else {
-          zx <- pgx$impX[pp, , drop = FALSE]
+          zx <- pgx$X[pp, , drop = FALSE]
         }
+
         if (!is.null(idx)) {
           idx <- idx[pp]
           names(idx) <- pp
         }
+
       }
 
-      if (nrow(zx) == 0) {
-        return(NULL)
-      }
+      if (nrow(zx) == 0) return(NULL)
 
       kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
       zx <- zx[, kk, drop = FALSE]
@@ -554,7 +555,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           w.null <- sapply(f, is.null)
           if (any(w.null)) f[which(w.null)] <- NA
           unlist(f)
-        })
+        }, simplify = FALSE)
         grp.annot <- data.frame(do.call(rbind, grp.annot))
         grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
         grp <- colnames(grp.zx)
@@ -615,7 +616,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         w.null <- sapply(f, is.null)
         if (any(w.null)) f[which(w.null)] <- NA
         unlist(f)
-      })
+      }, simplify = FALSE)
       grp.annot <- data.frame(do.call(rbind, grp.annot))
       grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
       grp <- colnames(grp.zx)
@@ -746,6 +747,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
+      hm_average_group = shiny::reactive(input$hm_average_group),
       watermark = WATERMARK,
       labeltype = labeltype
     )

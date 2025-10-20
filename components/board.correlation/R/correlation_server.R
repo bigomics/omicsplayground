@@ -135,8 +135,9 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     })
 
     getFilteredImpExpression <- shiny::reactive({
-      shiny::req(pgx$impX, input$gene)
-      X <- pgx$impX
+      shiny::req(pgx$X, input$gene)
+      X <- pgx$X
+      if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
       gene <- input$gene
       filterExpression(X, gene)
     })
@@ -149,11 +150,8 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       ## filter gene expression matrix
       X <- getFilteredExpression()
-      nmissing <- sum(is.na(X))
-      if (nmissing > 0) {
-        X <- getFilteredImpExpression()
-      }
-
+      if (any(is.na(X)))  X <- getFilteredImpExpression()
+      
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
       res <- playbase::pgx.computeGlassoAroundGene(

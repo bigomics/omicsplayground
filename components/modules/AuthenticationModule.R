@@ -681,7 +681,13 @@ PasswordAuthenticationModule <- function(id,
 
     CREDENTIALS <- read.csv(credentials_file, colClasses = "character")
     # Get persistent session cookie (if available)
-    decrypted_cookie <- get_and_decrypt_cookie(session)
+    if (opt$ENABLE_COOKIE_LOGIN) {
+      dbg("[PasswordAuthenticationModule] ENABLE_COOKIE_LOGIN is TRUE")
+      decrypted_cookie <- get_and_decrypt_cookie(session)
+    } else {
+      dbg("[PasswordAuthenticationModule] ENABLE_COOKIE_LOGIN is FALSE")
+      decrypted_cookie <- NULL
+    }
 
     if (!is.null(decrypted_cookie)) {
       message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
@@ -933,12 +939,18 @@ LoginCodeAuthenticationModule <- function(id,
     ## --------------------------------------
     ## Step 0: detect cookie and pass
     ## --------------------------------------
-    decrypted_cookie <- get_and_decrypt_cookie(session)
+    if (opt$ENABLE_COOKIE_LOGIN) {
+      dbg("[LoginCodeAuthenticationModule] ENABLE_COOKIE_LOGIN is TRUE")
+      decrypted_cookie <- get_and_decrypt_cookie(session)
+    } else {
+      dbg("[LoginCodeAuthenticationModule] ENABLE_COOKIE_LOGIN is FALSE")
+      decrypted_cookie <- NULL
+    }
     query_email <- shiny::isolate(shiny::getQueryString()$email)
     if (!is.null(query_email) & !is.null(decrypted_cookie)) {
       if (opt$ENCRYPTED_EMAIL) {
         query_email_nonce <- shiny::isolate(shiny::getQueryString()$email_nonce)
-        query_email <- decrypt_cookie(query_email, query_email_nonce)
+        query_email <- decrypt_cookie(query_email, query_email_nonce, key_file = "cookie.txt")
         if (is.null(query_email)) {
           query_email <- ""
         }
@@ -1094,7 +1106,7 @@ LoginCodeAuthenticationModule <- function(id,
       query_email <- shiny::getQueryString()$email
       if (opt$ENCRYPTED_EMAIL) {
         query_email_nonce <- shiny::getQueryString()$email_nonce
-        query_email <- decrypt_cookie(query_email, query_email_nonce)
+        query_email <- decrypt_cookie(query_email, query_email_nonce, key_file = "cookie.txt")
       }
       query_email
     })

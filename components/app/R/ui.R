@@ -355,6 +355,19 @@ app_ui <- function(x) {
                   "Choose a label type to be displayed in the plots",
                   placement = "right", options = list(container = "body")
                 )
+              ),
+              bigdash::navbarDropdownItem(
+                withTooltip(
+                  shiny::selectInput(
+                    inputId = "llm_model",
+                    label = "LLM model:",
+                    choices = c("granite4:micro", "llama3.2:1b", "gpt-5-nano"),
+                    selected = "granite4:micro",
+                    width = "100%"
+                  ),
+                  "Choose a label type to be displayed in the plots",
+                  placement = "right", options = list(container = "body")
+                )
               )
             )
           ),
@@ -375,9 +388,9 @@ app_ui <- function(x) {
             "welcome-tab",
             "BigOmics Playground",
             "is your self-service bioinformatics platform for interactive analysis,
-                    visualization and interpretation of transcriptomics and proteomics data.
-                    Perform complex data analysis and visualization easily without coding,
-                    and significantly reduce the time-to-discovery."
+             visualization and interpretation of transcriptomics and proteomics data.
+             Perform complex data analysis and visualization easily without coding,
+             and significantly reduce the time-to-discovery."
           ),
           bigdash::sidebarTabHelp(
             "load-tab",

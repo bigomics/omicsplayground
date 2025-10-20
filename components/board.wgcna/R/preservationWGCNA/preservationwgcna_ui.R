@@ -82,8 +82,7 @@ PreservationWGCNA_UI <- function(id) {
 
       ##----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
-        "Sample Clustering",
+        "Module Overlap",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
@@ -94,7 +93,7 @@ PreservationWGCNA_UI <- function(id) {
             height = "100vh",
             preservationWGCNA_plot_overlap_ui(
               ns("preservationWGCNAOverlap"),
-              title = "Sample Tree and Traits",
+              title = "Module Overlap",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -102,7 +101,7 @@ PreservationWGCNA_UI <- function(id) {
             ),
             preservationWGCNA_plot_eigenNetwork_ui(
               ns("preservationWGCNAEigenNetwork"),
-              title = "Sample Tree and Traits",
+              title = "Module Correlation and Preservation",
               caption = "...",
               info.text = "...",
               height = c("100%", TABLE_HEIGHT_MODAL),
@@ -124,13 +123,24 @@ PreservationWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(6,6),
             height = "100vh",
-            preservationWGCNA_plot_moduletrait_ui(
-              ns("preservationWGCNAModuleTrait"),
-              title = "Preservation and Module-Trait",
-              caption = "...",
-              info.text = "...",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            bslib::layout_columns(
+              col_widths = c(12),
+              preservationWGCNA_plot_moduletrait_ui(
+                ns("preservationWGCNAModuleTrait"),
+                title = "Preservation and Consensus",
+                caption = "...",
+                info.text = "...",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              preservationWGCNA_plot_moduletrait_barplot_ui(
+                ns("preservationWGCNAModuleTrait"),
+                title = "Module-Trait barplots",
+                caption = "...",
+                info.text = "...",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
             ),
             preservationWGCNA_plot_traitsignificance_ui(
               ns("preservationWGCNATraitSignificance"),
@@ -146,14 +156,14 @@ PreservationWGCNA_UI <- function(id) {
       
       ##----------------------------------------------------------------
       shiny::tabPanel(
-        "Module Table",
+        "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
           #bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(7,5),
             height = "100vh",            
             bslib::layout_columns(
               col_widths = c(12),

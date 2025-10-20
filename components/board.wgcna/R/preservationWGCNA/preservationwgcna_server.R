@@ -40,9 +40,9 @@ PreservationWGCNA_Board <- function(id, pgx) {
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Dendrograms" = list(disable = c("module","trait")),
-      "Sample Clustering" = list(disable = c("module","trait")),
+      "Module Overlap" = list(disable = c("module","trait")),
       "Module-Trait" = list(disable = c("module")),
-      "Module Table" = list(disable = c(), enable = c("module","trait"))
+      "Feature Table" = list(disable = c(), enable = c("module","trait"))
     )
 
     shiny::observeEvent( input$tabs, {
@@ -107,11 +107,6 @@ PreservationWGCNA_Board <- function(id, pgx) {
       minModuleSize = as.integer(input$minmodsize)
       deepSplit = as.integer(input$deepsplit)
       
-      dbg("[PreservationWGCNA_Board] power = ", power)
-      dbg("[PreservationWGCNA_Board] ngenes = ", ngenes)
-      dbg("[PreservationWGCNA_Board] minModuleSize = ", minModuleSize)
-      dbg("[PreservationWGCNA_Board] deepSplit = ", deepSplit)      
-
       res <- playbase::wgcna.runPreservationWGCNA(
         exprList,
         phenoData,
@@ -129,8 +124,8 @@ PreservationWGCNA_Board <- function(id, pgx) {
       updateSelectInput(session, "module", choices = sort(all_modules),
         selected = module1)
 
-      ##all_traits <- colnames(res$modTraits[[1]])
-      all_traits <- colnames(res$zlist[[1]])
+      ##all_traits <- colnames(res$zlist[[1]])
+      all_traits <- colnames(res$modTraits[[1]])
       trait1 <- all_traits[1]
       updateSelectInput(session, "trait", choices = sort(all_traits),
         selected = trait1)
@@ -170,7 +165,8 @@ PreservationWGCNA_Board <- function(id, pgx) {
     
     preservationWGCNA_plot_moduletrait_server(
       "preservationWGCNAModuleTrait",
-      rwgcna = r_wgcna
+      rwgcna = r_wgcna,
+      rtrait = reactive(input$trait)
     )
 
     preservationWGCNA_plot_modulenetwork_server(

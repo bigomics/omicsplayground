@@ -95,30 +95,6 @@ MultiWGCNA_Board <- function(id, pgx) {
       dataX <- playbase::mofa.split_data(pgx$X)
       samples = pgx$samples
       
-      if(0) {
-        
-        wgcna <- wgcna.compute_multiomics(
-          dataX = dataX,
-          samples = samples,
-          add.pheno = (ncol(samples) > 10),
-          add.gsets = TRUE,
-          do.consensus = 1,
-          cutMethod = "hybrid",
-          deepsplit = 2,
-          power = power,
-          ngenes = 2000,
-          minmodsize = 10,
-          minKME = 0.3,
-          compute.enrichment = 0,
-          xtop = 100,
-          annot = pgx$genes,
-          #GMT = pgx$GMT,  ##??
-          #gsetX = pgx$gsetX,
-          progress = NULL
-        ) 
-
-      }
-
       wgcna <- playbase::wgcna.compute_multiomics(
         dataX = dataX,
         samples = samples,

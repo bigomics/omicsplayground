@@ -28,22 +28,35 @@ wgcna_plot_gene_heatmap_ui <- function(
 wgcna_plot_gene_heatmap_server <- function(id,
                                            pgx,
                                            wgcna,
-                                           enrich_table,
+                                           selected_module,
+                                           enrichTable,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     render_plot <- function(nmax, maxlen, show_legend,
                             show_colnames) {
       wgcna <- wgcna()
-      sel <- enrich_table$rows_selected()
-      shiny::validate(shiny::need(length(sel) > 0, "Please select a geneset"))
-      data <- enrich_table$data()
-      gset <- data$geneset[sel]
-      gg <- strsplit(data$genes[sel], split = "\\|")[[1]]
-      pp <- playbase::map_probes(pgx$genes, gg)
-      pp <- intersect(pp, rownames(pgx$X))
+      
+      sel <- enrichTable$rows_selected()
+      if(length(sel) > 0) {
+        data <- enrichTable$data()
+        maintxt <- data$geneset[sel]
+        maintxt <- sub(".*:","",maintxt)
+        gg <- strsplit(data$genes[sel], split = "\\|")[[1]]
+        pp <- playbase::map_probes(pgx$genes, gg)
+        pp <- intersect(pp, rownames(pgx$X))
+      } else {
+        mod <- selected_module()
+        gg <- wgcna$me.genes[[mod]]
+        pp <- playbase::map_probes(pgx$genes, gg)
+        pp <- intersect(pp, rownames(pgx$X))
+        maintxt <- mod
+      }
+      
       df <- pgx$X[pp, , drop = FALSE]
       shiny::validate(shiny::need(nrow(df) > 1, "Geneset should contain at least two genes to plot a heatmap."))
       rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+
       playbase::gx.splitmap(
         df,
         nmax = nmax,
@@ -52,13 +65,13 @@ wgcna_plot_gene_heatmap_server <- function(id,
         show_legend = show_legend,
         show_colnames = show_colnames,
         split = 1,
-        main = gset
+        main = maintxt
       )
     }
 
     plot.RENDER <- function() {
       render_plot(
-        nmax = 40, maxlen = 40, show_legend = FALSE,
+        nmax = 30, maxlen = 40, show_legend = FALSE,
         show_colnames = FALSE
       )
     }

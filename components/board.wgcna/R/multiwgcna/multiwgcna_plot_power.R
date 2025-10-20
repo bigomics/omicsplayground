@@ -58,7 +58,7 @@ multiwgcna_plot_power_server <- function(id,
         RsquaredCut = 0.85,
         setPar = TRUE,
         cex.legend = 0.9,
-        main = names(wgcna)[i]
+        main = ""
       )
 
     }

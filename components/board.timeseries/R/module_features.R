@@ -112,7 +112,9 @@ TimeSeriesBoard.features_server <- function(id,
       genes <- table_module$rownames_all()
       genes <- head(genes, 16)
 
-      expr <- if (is.null(pgx$impX)) pgx$X[genes, , drop = FALSE] else pgx$impX[genes, , drop = FALSE]
+      expr <- pgx$X
+      if (any(is.na(expr))) expr <- playbase::imputeMissing(expr, method = "SVD2")
+      expr <- expr[genes, , drop = FALSE]
       time <- pgx$samples[, sel.timevar]
 
       ct <- contrast()
