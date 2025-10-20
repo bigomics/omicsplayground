@@ -391,7 +391,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (do.split && splitvar %in% colnames(pgx$contrasts)) {
         grp <- pgx$contrasts[colnames(zx), splitvar]
       }
-
+      
       shiny::validate(
         shiny::need(is.null(grp) || any(!is.na(grp)), "Selected grouping and filter combination is not valid (no samples left).")
       )
@@ -482,7 +482,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         sv.top1 <- unlist(sv.top)
         zx <- zx[gg.top, , drop = FALSE]
-        dim(zx)
         idx <- sub(":.*", "", sv.top1)
         table(idx)
       } else if (topmode == "marker" && splitby != "none") {
@@ -514,7 +513,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         gg <- addsplitgene(gg)
         zx <- zx[gg, , drop = FALSE] ## order
       }
-
+      
       ## ------------- cluster the genes???
       if (!is.null(flt$idx)) {
         idx <- flt$idx[rownames(zx)] ## override
@@ -536,6 +535,21 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       annot <- annot[, kk, drop = FALSE] ## no group??
       samples <- colnames(zx) ## original sample list
 
+      if (do.split && splitvar %in% colnames(pgx$contrasts) && input$hm_show_others) {
+        jj <- which(!rownames(pgx$samples) %in% names(grp))
+        if (any(jj)) {
+          grp <- c(grp, rep("others", length(jj)))
+          names(grp)[which(grp == "others")] <- rownames(pgx$samples)[jj]
+          annot <- pgx$samples[names(grp), , drop = FALSE]
+          if (input$hm_level == "gene") { 
+            zx <- cbind(zx, pgx$X[rownames(zx), jj])
+          } else if (input$hm_level == "geneset") {
+            zx <- cbind(zx, pgx$gsetX[rownames(zx), jj])
+          }
+          samples <- colnames(zx)
+        }
+      }
+      
       ## ----------------------------------------------------
       ## ------------ calculate group summarized ------------
       ## ----------------------------------------------------
@@ -564,7 +578,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         grp.zx <- zx
         grp.annot <- annot
       }
-
+      
       ## input$top_terms
       filt <- list(
         mat = grp.zx,
