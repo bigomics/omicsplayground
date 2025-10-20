@@ -15,13 +15,18 @@ consensusWGCNA_plot_sampletree_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(
-      inputId = ns("top20"),
-      label = "Show top 20",
-      value = FALSE
+      inputId = ns("showtraits"),
+      label = "Show traits",
+      value = TRUE
     ),
     shiny::checkboxInput(
       inputId = ns("showmodules"),
       label = "Show modules",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("split"),
+      label = "Split dataset",
       value = TRUE
     )
   )
@@ -31,7 +36,7 @@ consensusWGCNA_plot_sampletree_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-    #options = options,
+    options = options,
     caption = caption,
     height = height,
     width = width,
