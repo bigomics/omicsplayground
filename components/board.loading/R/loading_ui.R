@@ -121,6 +121,7 @@ LoadingUI <- function(id) {
 
   archive_tabpanel <- shiny::tabPanel(
     "Data archive",
+    value = "archive_tab",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 181px)",
