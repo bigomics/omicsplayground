@@ -81,22 +81,30 @@ LoadingUI <- function(id) {
   )
 
   public_tabpanel <- shiny::tabPanel(
-    "Public Datasets",
+    opt$PUBLIC_DATASETS_LABEL,
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 181px)",
-      bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.", translate = FALSE, html = TRUE),
+      bs_alert(
+        if (opt$ENABLE_PUBLIC_LOAD) {
+          paste0("This panel shows all <b>", tolower(opt$PUBLIC_DATASETS_LABEL), "</b>. You can select a public dataset and click <b>Load selected</b> to load it directly for analysis (without importing), or click <b>Import Dataset</b> to copy it to your library. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")
+        } else {
+          paste0("This panel shows all <b>", tolower(opt$PUBLIC_DATASETS_LABEL), "</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")
+        },
+        translate = FALSE, html = TRUE
+      ),
       bslib::layout_columns(
         col_widths = c(8, 4),
         height = "calc(100vh - 181px)",
         loading_table_datasets_public_ui(
           ns("pgxtable_public"),
-          title = "Public datasets",
-          info.text = "This table shows available public datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
-          caption = "Table with public datasets available in the platform.",
+          title = opt$PUBLIC_DATASETS_LABEL,
+          info.text = paste0("This table shows available ", tolower(opt$PUBLIC_DATASETS_LABEL), " within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."),
+          caption = paste0("Table with ", tolower(opt$PUBLIC_DATASETS_LABEL), " available in the platform."),
           ## height = c("calc(100vh - 330px)", 700),
           height = c("100%", 700),
-          width = c("100%", "100%")
+          width = c("100%", "100%"),
+          load_button = opt$ENABLE_PUBLIC_LOAD
         ),
         loading_tsne_ui(
           ns("tsne_public"),
@@ -124,7 +132,14 @@ LoadingUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 181px)",
-      bs_alert("This panel shows all <b>Archived datasets</b>. You can select a archived dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.", translate = FALSE, html = TRUE),
+      bs_alert(
+        if (opt$ENABLE_PUBLIC_LOAD) {
+          "This panel shows all <b>Archived datasets</b>. You can select an archived dataset and click <b>Load selected</b> to load it directly for analysis (without importing), or click <b>Import Dataset</b> to copy it to your library. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."
+        } else {
+          "This panel shows all <b>Archived datasets</b>. You can select an archived dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."
+        },
+        translate = FALSE, html = TRUE
+      ),
       bslib::layout_columns(
         col_widths = c(8, 4),
         height = "calc(100vh - 181px)",
@@ -136,7 +151,8 @@ LoadingUI <- function(id) {
           ## height = c("calc(100vh - 330px)", 700),
           height = c("100%", 700),
           width = c("100%", "100%"),
-          delete_button = TRUE
+          delete_button = TRUE,
+          load_button = opt$ENABLE_PUBLIC_LOAD
         ),
         loading_tsne_ui(
           ns("tsne_archive"),
