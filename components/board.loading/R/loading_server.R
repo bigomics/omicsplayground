@@ -203,7 +203,9 @@ LoadingBoard <- function(id,
       pgx_archive_dir <- file.path(auth$user_dir, "data_archive")
       enable_archive_tabpanel <- dir.exists(pgx_archive_dir)
 
+      ## Show/hide archive tab based on whether directory exists
       if (enable_archive_tabpanel) {
+        shiny::showTab(inputId = "tabs", target = "archive_tab", session = session)
         pgxtable_archive <- loading_table_datasets_public_server(
           id = "pgxtable_archive",
           pgx_public_dir = pgx_archive_dir,
@@ -219,6 +221,8 @@ LoadingBoard <- function(id,
           r_selected = reactive(pgxtable_archive$rows_all()),
           watermark = WATERMARK
         )
+      } else {
+        shiny::hideTab(inputId = "tabs", target = "archive_tab", session = session)
       }
     })
 
