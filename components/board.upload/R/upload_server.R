@@ -833,6 +833,16 @@ UploadBoard <- function(id,
     observeEvent(recompute_pgx(),
       {
         req(!is.null(recompute_pgx()))
+        numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
+        if (!auth$options$ENABLE_DELETE) {
+          ## count also deleted files...
+          numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$|*.pgx_$"))
+        }
+        max.datasets <- as.integer(auth$options$MAX_DATASETS)
+        if (numpgx >= max.datasets) {
+          shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+          return(NULL)
+        }
         bigdash.selectTab(session, selected = "upload-tab")
         shinyjs::delay(250, {
           new_upload(new_upload() + 1)
