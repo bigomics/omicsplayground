@@ -40,13 +40,24 @@ wgcna_html_module_summary_server <- function(id,
       module <- r_module()
       shiny::req(wgcna)      
       res <- "Summary not available"
-      if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
-        res <- wgcna$summary[[module]]
-        res <- gsub("\n","<p>",res)
-        res <- gsub(" [*]{2}","<b>",res)
-        res <- gsub("[*]{2} ","</b>",res)
-        res <- paste0("<b>",module,":</b> ", res)
+
+      if(multi) {
+        summaries <- lapply(wgcna,function(w) names(w$summary))
+        has.summary <- any(sapply(summaries, function(s) module %in% s))
+        if(has.summary) {
+          k <- which(sapply(summaries, function(s) module %in% s))
+          res <- wgcna[[k]]$summary[[module]]
+        }
+      } else {
+        if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
+          res <- wgcna$summary[[module]]
+        }
       }
+
+      res <- gsub("\n","<p>",res)
+      res <- gsub(" [*]{2}","<b>",res)
+      res <- gsub("[*]{2} ","</b>",res)
+      res <- paste0("<b>",module,":</b> ", res)
       return(res)
     }
 

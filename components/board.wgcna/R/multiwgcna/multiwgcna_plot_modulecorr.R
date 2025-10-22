@@ -17,7 +17,7 @@ multiwgcna_plot_modulecorr_ui <- function(
     shiny::checkboxInput(
       inputId = ns("mergemodules"),
       label = "Merge modules",
-      value = FALSE
+      value = TRUE
     ),
     shiny::checkboxInput(
       inputId = ns("showtop"),
@@ -32,7 +32,7 @@ multiwgcna_plot_modulecorr_ui <- function(
     shiny::checkboxInput(
       inputId = ns("addtraits"),
       label = "Add all traits",
-      value = FALSE
+      value = TRUE
     ),
     shiny::checkboxInput(
       inputId = ns("condition"),

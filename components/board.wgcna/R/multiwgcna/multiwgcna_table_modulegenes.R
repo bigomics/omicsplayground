@@ -107,7 +107,7 @@ multiwgcna_table_modulegenes_server <- function(id,
       df$module <- factor(df$module)
       
       if(!full) {
-        sel <- c("module","feature","symbol","title","score","traitSignificance","moduleMembership")
+        sel <- c("module","feature","symbol","score")
       } else {
         sel <- c("module","feature","symbol","title","score")
         sel <- unique(c(sel, colnames(df)))

@@ -170,6 +170,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         ai_experiment = pgx$description,
         gsea.mingenes = 5,
         gsea.ntop = 1000,
+        progress = progress,
         verbose = 1
       ) 
       
@@ -186,7 +187,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         selected = traits[1])
       
       return(cons)
-    }, ignoreNULL=FALSE)
+    }, ignoreNULL = FALSE)
 
 
     ## ==========================================================================
@@ -241,7 +242,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
     wgcna_html_module_summary_server(
       "consensusWGCNAmoduleSummary",
       wgcna = r_wgcna,
-      multi = TRUE,
+      multi = FALSE,
       r_module = shiny::reactive(input$module),      
       watermark = WATERMARK
     )

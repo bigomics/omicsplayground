@@ -84,14 +84,17 @@ multiwgcna_table_crossgenes_server <- function(id,
       df$module <- factor(df$module)
 
       if(!full) {
-        sel <- c("module","gene","symbol","title","rho")
-        sel <- intersect(sel, colnames(df))
-        if(all(c("symbol","gene") %in% sel)) sel <- setdiff(sel, "gene")
-        df <- df[,sel]
+        sel <- c("module","gene","symbol","rho")
+      } else {
+        sel <- c("module","gene","symbol","rho","title")
       }
+      sel <- intersect(sel, colnames(df))
+      if(all(c("symbol","gene") %in% sel)) sel <- setdiff(sel, "gene")
+      df <- df[,sel]
       
       numeric.cols <- which(sapply(df, class) == "numeric")
-      
+      ellipsis.cols <- intersect( c("gene","symbol","title"), colnames(df))
+        
       dt <- DT::datatable(
         df,
         rownames = FALSE, #
@@ -110,7 +113,7 @@ multiwgcna_table_crossgenes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
-              targets = c("title"), ## without rownames column 3 is target 2
+              targets = c(ellipsis.cols), 
               render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
             )
           )                    

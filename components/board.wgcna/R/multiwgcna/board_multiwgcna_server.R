@@ -57,25 +57,22 @@ MultiWGCNA_Board <- function(id, pgx) {
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
-    shiny::observeEvent( pgx$mofa, {
+    shiny::observeEvent( pgx$X, {
       
-      shiny::validate( shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
-      
-      datatypes <- setdiff( names(pgx$mofa$xx), c("gset"))
-      datatypes2 <- unique(c(datatypes,"gset"))
-      updateSelectInput(session, "layers", choices = datatypes2,
-        selected = datatypes)
+      dataX <- playbase::mofa.split_data(pgx$X)      
+      datatypes <- c(names(dataX), "gset")
+      sel.datatypes <- datatypes
+      updateSelectInput(session, "layers", choices = datatypes,
+        selected = sel.datatypes)
       
     }, ignoreNULL=FALSE)
 
 
     r_multiwgcna <- shiny::eventReactive( {
-      list( input$compute, pgx$X, pgx$mofa ) 
+      list( input$compute, pgx$X ) 
 
     }, {
       shiny::req(pgx$X)
-
-      ##shiny::validate( shiny::need( !is.null(pgx$mofa), "missing MOFA slot"))
       shiny::validate( shiny::need( pgx$datatype == "multi-omics",
         "ERROR: not multi-omics data"))
       
@@ -84,7 +81,6 @@ MultiWGCNA_Board <- function(id, pgx) {
       } else {
         power <- as.numeric(input$power)
       }
-      dbg("[r_multiwgcna] power = ", power)
       
       ## setup progress bars
       progress <- shiny::Progress$new(session, min=0, max=1)
@@ -94,6 +90,9 @@ MultiWGCNA_Board <- function(id, pgx) {
 
       dataX <- playbase::mofa.split_data(pgx$X)
       samples = pgx$samples
+
+      ai_model <- getUserOption(session,'llm_model')
+      message("[multiWGCNA:compute_multiomics] ai_model = ", ai_model)
       
       wgcna <- playbase::wgcna.compute_multiomics(
         dataX = dataX,
@@ -108,11 +107,15 @@ MultiWGCNA_Board <- function(id, pgx) {
         minmodsize = as.integer(input$minmodsize),
         minKME = 0.3,
         compute.enrichment = TRUE,
-        xtop = 100,
+        gset.xtop = 100,
+        gset.ntop = 1000,        
+        gset.methods = c("gsetcor","xcor","fisher"),        
         annot = pgx$genes,
-        #GMT = pgx$GMT,  ##  ??
-        #gsetX = pgx$gsetX,  ## ??
-        gset.methods = c("gsetcor","xcor"),        
+        ##GMT = pgx$GMT,  ##  ??
+        ##gsetX = pgx$gsetX,  ## ??
+        ai_summary = input$useLLM,
+        ai_model = ai_model,
+        ai_experiment = pgx$description,
         progress = progress
       ) 
       
@@ -134,7 +137,7 @@ MultiWGCNA_Board <- function(id, pgx) {
         selected = module1)
       
       return(wgcna)
-    }, ignoreNULL=FALSE)
+    }, ignoreNULL = FALSE)
 
 
     ## ==========================================================================
@@ -199,6 +202,14 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)      
     )
 
+    # Enrichment plot
+    wgcna_html_module_summary_server(
+      "multiwgcnaSummary",
+      wgcna = r_multiwgcna,
+      multi = TRUE,
+      r_module = shiny::reactive(input$module),      
+      watermark = WATERMARK
+    )
     
     return(NULL)
   })

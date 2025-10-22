@@ -58,8 +58,13 @@ consensusWGCNA_plot_traitsignificance_server <- function(id,
       
     }
 
-    plot1 <- function() { plot.RENDER(format=1)}
-    plot2 <- function() { plot.RENDER(format=2)}    
+    plot1 <- function() {
+        plot.RENDER(format=1)
+    }
+
+    plot2 <- function() {
+        plot.RENDER(format=2)
+    }    
     
     PlotModuleServer(
       "plot",

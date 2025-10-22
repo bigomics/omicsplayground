@@ -32,6 +32,7 @@ MultiWGCNA_Inputs <- function(id) {
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
           shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
+          shiny::checkboxInput(ns("useLLM"),"AI summary", FALSE),
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute", size = "xs",
             icon=icon("refresh"))
@@ -186,8 +187,16 @@ MultiWGCNA_UI <- function(id) {
           row_heights = c("auto",1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(3,4,5),
             height = "100vh",            
+            wgcna_html_module_summary_ui(
+              id = ns("multiwgcnaSummary"),
+              title = "AI Summary",
+              info.text = "",
+              caption = "Information about the Module.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),                      
             bslib::layout_columns(
               col_widths = c(12),
               multiwgcna_table_modulegenes_ui(
