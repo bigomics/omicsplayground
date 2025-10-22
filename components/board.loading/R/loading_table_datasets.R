@@ -138,7 +138,7 @@ loading_table_datasets_server <- function(id,
 
       kk <- unique(c(
         "dataset", "description", "organism", "datatype", "nsamples",
-        "ngenes", "nsets", "conditions", "date",
+        "nfeatures", "nsets", "conditions", "date",
         "creator"
       ))
       kk <- intersect(kk, colnames(df))
@@ -496,7 +496,7 @@ loading_table_datasets_server <- function(id,
       cro_emails <- get_cro_emails()
 
       if (!is.null(auth$options$MAX_GENES)) {
-        datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
+        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > auth$options$MAX_GENES)
       }
       if (!is.null(auth$options$MAX_SAMPLES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (
