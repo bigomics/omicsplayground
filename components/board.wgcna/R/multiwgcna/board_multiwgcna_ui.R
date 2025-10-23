@@ -7,6 +7,7 @@ MultiWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
+    shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL),
     shiny::selectInput(ns("layers"), "Layers:", choices = NULL, multiple = TRUE),
     shiny::conditionalPanel(
       "input.layers && input.layers.indexOf('gset') > -1",

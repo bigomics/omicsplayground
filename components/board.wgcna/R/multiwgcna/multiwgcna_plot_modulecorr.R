@@ -33,11 +33,6 @@ multiwgcna_plot_modulecorr_ui <- function(
       inputId = ns("addtraits"),
       label = "Add all traits",
       value = TRUE
-    ),
-    shiny::checkboxInput(
-      inputId = ns("condition"),
-      label = "Condition on phenotype",
-      value = FALSE
     )
   )
 
@@ -57,7 +52,7 @@ multiwgcna_plot_modulecorr_ui <- function(
 multiwgcna_plot_modulecorr_server <- function(id,
                                               mwgcna,
                                               r_layers,
-                                              r_phenotype
+                                              r_condition
                                               ) {
   moduleServer(id, function(input, output, session) {
 
@@ -65,15 +60,16 @@ multiwgcna_plot_modulecorr_server <- function(id,
       wgcna <- mwgcna()
 
       layers <- r_layers()
-      phenotype <- r_phenotype()      
+      condition <- r_condition()
       layers <- intersect(layers, names(wgcna))
       wgcna <- wgcna[layers]
       shiny::req(length(wgcna)>0)
 
+      phenotype = NULL;
+      if (condition != "None") phenotype <- condition
+
       nmax = 20
-      if (input$showall) nmax = -1
-      
-      if(!input$condition) phenotype <- NULL
+      if (input$showall) nmax = -1      
 
       if(input$mergemodules) {
         

@@ -39,14 +39,11 @@ MultiWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-        "Dendrograms" = list(disable = c("phenotype","module","lasagna_options")),
-        "Module-Trait" = list(disable = c("phenotype","module","wgcna_options",
-          "lasagna_options")),
-        "Module correlation" = list(disable = c("module", "wgcna_options",
-          "lasagna_options")),
-        "WGCNA-Lasagna" = list(disable = c("module","wgcna_options")),
-        "Feature Table" = list(disable = c("layers","wgcna_options",
-          "lasagna_options"))
+        "Dendrograms" = list(disable = c("phenotype", "module", "condition", "lasagna_options")),
+        "Module-Trait" = list(disable = c("phenotype", "module", "condition", "wgcna_options", "lasagna_options")),
+        "Module correlation" = list(disable = c("phenotype", "module", "wgcna_options", "lasagna_options")),
+        "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options")),
+        "Feature Table" = list(disable = c("layers", "condition", "wgcna_options", "lasagna_options"))
     )
 
     shiny::observeEvent( input$tabs, {
@@ -124,7 +121,10 @@ MultiWGCNA_Board <- function(id, pgx) {
       phenotypes <- colnames(wgcna[[1]]$datTraits)
       updateSelectInput(session, "phenotype", choices = phenotypes,
         selected = phenotypes[1])
-      
+
+      updateSelectInput(session, "condition", choices = c("None", phenotypes),
+        selected = "None")
+
       layers <- names(wgcna)
       sel.layers <- setdiff(layers, c("gset","gs","pheno","ph"))
       updateSelectInput(session, "layers", choices = layers,
@@ -166,7 +166,7 @@ MultiWGCNA_Board <- function(id, pgx) {
       "multiwgcnaCorr",
       mwgcna = r_multiwgcna,
       r_layers = reactive(input$layers),
-      r_phenotype = reactive(input$phenotype)
+      r_condition = reactive(input$condition)
     )
 
     multiwgcna_plot_lasagna_server(
