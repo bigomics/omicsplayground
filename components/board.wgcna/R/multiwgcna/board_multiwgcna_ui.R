@@ -98,8 +98,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_plot_power_ui(
               ns("multiwgcnaPower"),
               title = "Scale and connectivity plots",
-              caption = "...",
-              info.text = "...",
+              caption = "Scale and connectivity plots.",
+              info.text = "The SFT model fit scatter plot shows the soft threshold power vs the signed scale-free topology fit index, for each data type. Specifically, for each datatype, the slope of the log-log connectivity plot vs. frequency is extracted and its opposite sign is computed. This value is then multiplied by the scale-free topology fit index (R^2), with higher values indicating good scale-free structure. The resulting value is plotted against the SFT power value. In WGCNA, features are connected to one another based on how similar (correlated) their expression patterns are across samples. This is precisely defined in the adjacency matrix. Thus, the mean connectivity is a measure of the overall density of the network, i.e., how connected the features are, on average. The mean connectivity plot (scatter plot in the middle), plots the soft threshold power vs the mean connectivity value, for each data type. It shows the average number (or strenght) of connection per each feature, at any given value of power. A decreasing trend is an expected behavior: the mean connectivity decreases as the power increases, suggesting that the network becomes less dense (and therefore the adjacency matrix becomes sparser). On the right, a scatter plot of dendrogram height IQR values vs. soft threshold power is shown.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
