@@ -12,6 +12,7 @@ ENABLE_CHIRP         = TRUE
 ENABLE_DELETE        = TRUE
 ENABLE_PGX_DOWNLOAD  = TRUE
 ENABLE_PUBLIC_SHARE  = TRUE
+ENABLE_PUBLIC_LOAD   = TRUE
 ENABLE_UPLOAD        = TRUE
 ENABLE_USERDIR       = TRUE
 ENABLE_USER_SHARE    = TRUE
@@ -31,6 +32,7 @@ WATERMARK            = TRUE
 APACHE_COOKIE_PATH   = /app/omicsplayground/
 DEVMODE              = TRUE
 HUBSPOT_CHECK        = TRUE
+PUBLIC_DATASETS_LABEL = Team Datasets
 
 #BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
 #BOARDS_ENABLED = welcome;load;upload;cmap
