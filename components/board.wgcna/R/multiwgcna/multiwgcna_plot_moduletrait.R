@@ -20,8 +20,8 @@ multiwgcna_plot_moduletrait_ui <- function(
       value = FALSE
     ),
     shiny::checkboxInput(
-      inputId = ns("showtop"),
-      label = "Show top modules (max. 20)",
+      inputId = ns("showall"),
+      label = "Show all modules",
       value = FALSE
     ),
     shiny::checkboxInput(
@@ -63,7 +63,8 @@ multiwgcna_plot_moduletrait_server <- function(id,
       wgcna <- wgcna[sel.layers]
       shiny::req(length(wgcna)>0)
       
-      tmax = nmax = ifelse( input$showtop, 20, 999)
+      nmax = 20 ## top 20 modules displayed by default.
+      if (input$showall) nmax = 999
       plottype = input$plottype
       
       merge_modules = input$mergemodules
@@ -84,10 +85,10 @@ multiwgcna_plot_moduletrait_server <- function(id,
           transpose = !input$transpose,
           colorlabel = TRUE,
           nmax = nmax,
-          tmax = nmax,          
+          tmax = nmax,
           text = input$showvalues,
           pstar = !input$showvalues
-        ) 
+        )
 
       } else {
 
