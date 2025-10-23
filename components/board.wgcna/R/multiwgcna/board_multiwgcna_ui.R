@@ -85,8 +85,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_plot_dendrograms_ui(
               ns("multiwgcnaDendro"),
               title = "Dendrograms and module colors",
-              caption = "...",
-              info.text = "...",
+              caption = "Dendrogram of hierarchical clustering of feature co-expression patterns and modules assignment.",
+              info.text = "The gene dendrogram is a highly used visualization in WGCNA. It provides a combined visual summary of the features' hierarchical clustering dendrogram and the module color assignments. It shows that co-expressed features are grouped into common biologically meaningful modules. The tree of the dendrogram reflects the co-expression similarity of the features. Each leaf (end point) of the tree corresponds to a single feature. The branching pattern shows the correlation structure: features that are highly co-expressed (strongly correlated across samples) are clustered together and connected up until lower branch points. Features that are less correlated are joined higher up in the tree. The dendrogram is typically built using hierarchical clustering on the Topological Overlap Matrix (TOM), which captures both direct and indirect co-expression relationships. The title of the dendrogram denotes the data type (eg., gx for gene expression; px for proteomics) and the power value (set in the available WGCNA options on the right). Other key WGCNA parameters can be modified and WGCNA can be recomputed by clicking at the 'Compute' button.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
