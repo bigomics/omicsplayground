@@ -20,8 +20,8 @@ multiwgcna_plot_modulecorr_ui <- function(
       value = TRUE
     ),
     shiny::checkboxInput(
-      inputId = ns("showtop"),
-      label = "Show top modules (max. 20)",
+      inputId = ns("showall"),
+      label = "Show all modules",
       value = FALSE
     ),
     shiny::checkboxInput(
@@ -64,12 +64,14 @@ multiwgcna_plot_modulecorr_server <- function(id,
     plot.RENDER <- function() {
       wgcna <- mwgcna()
 
-      ## select layers
       layers <- r_layers()
       phenotype <- r_phenotype()      
       layers <- intersect(layers, names(wgcna))
       wgcna <- wgcna[layers]
       shiny::req(length(wgcna)>0)
+
+      nmax = 20
+      if (input$showall) nmax = -1
       
       if(!input$condition) phenotype <- NULL
 
@@ -82,7 +84,7 @@ multiwgcna_plot_modulecorr_server <- function(id,
           add_traits = input$addtraits,
           traits = NULL,
           main = "Eigengene Clustering",
-          nmax = ifelse(input$showtop, 20, -1),
+          nmax = nmax,
           cex.lab = 0.8,
           cex.text = 0.7,
           mask.intra = FALSE,
@@ -105,7 +107,7 @@ multiwgcna_plot_modulecorr_server <- function(id,
           wgcna,
           addtraits = input$addtraits,
           phenotype = phenotype,
-          nmax = ifelse(input$showtop, 20, -1),
+          nmax = nmax,
           main = NULL,
           showvalues = input$showvalues,
           showsig = !input$showvalues,
