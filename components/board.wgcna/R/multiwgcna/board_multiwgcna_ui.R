@@ -123,7 +123,7 @@ MultiWGCNA_UI <- function(id) {
               ns("multiwgcnaTrait"),
               title = "Module-trait heatmaps",
               caption = "Module-trait heatmaps",
-              info.text = "The multiomics WGCNA module-trait module provides information on the correlation between traits (e.g., phenotypes) and feature modules, for each data type. This is critical in multi-omics data analysis to assess the importance of distinct molecular omics in modulating the phenotype of interest. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). Under plot options, you can 'Merge modules' for a combined view of all data types and modules, 'show correlation values' to add correlation coefficients, 'transpose matrix' to flip the plot. Importantly, only the top 20 most correlated WGCNA modules are displayed by default (or all if less than 20 modules are available). All other modules can be shown by clicking at the option 'show all modules'.",
+              info.text = "The multiomics WGCNA 'module-trait' module provides information on the correlation between traits (e.g., phenotypes) and feature modules, for each data type. This is critical in multi-omics data analysis to assess the importance of distinct molecular omics in modulating the phenotype of interest. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). Under plot options, you can 'Merge modules' for a combined view of all data types and modules, 'show correlation values' to add correlation coefficients, 'transpose matrix' to flip the plot. Importantly, only the top 20 most correlated WGCNA modules are displayed by default (or all if less than 20 modules are available). All other modules can be shown by clicking at the option 'show all modules'.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -146,8 +146,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_plot_modulecorr_ui(
               ns("multiwgcnaCorr"),
               title = "Module-module correlation heatmaps",
-              caption = "...",
-              info.text = "...",
+              caption = "Module-module correlation heatmaps",
+              info.text = "The multiomics WGCNA 'Module-module correlation' module provides information on the correlation between modules across layers. All possible pairwise correlations are shown. Modules are first inferred for each data type. In multi-omics data analysis, correlation between modules of distinct data types allow to assess functional convergence between data types. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). Critically, the correlation heatmaps can be conditioned on a phenotype of interest. Conditioning involves scaling to better highlight the modules most heavily associated with the selected phenotypes. Under plot options, you can 'Merge modules' for a combined view of all data types and modules, 'show correlation values' to add correlation coefficients. Importantly, only the top 20 most correlated WGCNA modules are displayed by default (or all if less than 20 modules are available). All other modules can be shown by clicking at the option 'show all modules'.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
