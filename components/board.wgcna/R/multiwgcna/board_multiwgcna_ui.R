@@ -169,9 +169,9 @@ MultiWGCNA_UI <- function(id) {
             height = "100vh",
             multiwgcna_plot_lasagna_ui(
               ns("multiwgcnaLasagna"),
-              title = "Module-module correlation heatmaps",
-              caption = "...",
-              info.text = "...",
+              title = "Multipartite MultiWGCNA LASAGNA",
+              caption = "Multipartite MultiWGCNA LASAGNA graph.",
+              info.text = "Multipartite MultiWGCNA LASAGNA graph. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association) is a stacked layer model for multi-omics where each layer corresponds to a data type. Each layer (vertical bar), corresponds to a data type. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). WGCNA modules, inferred for each data type, are shown as nodes within each layer. The sizes of the node represent the page-rank centrality of the module. The log2FC is indicated for the chosen comparison. The color of the edges correspond to positive (purple) and negative (yellow) correlation between WGCNA feature modules. Thicker edges mean higher correlation. Correlation coefficients can be set under 'Lasagna option' to filter out lowly correlated modules.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
