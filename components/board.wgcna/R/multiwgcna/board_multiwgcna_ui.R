@@ -163,7 +163,7 @@ MultiWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Multi-WGCNA LASAGNA</b>. MultiWGCNA is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association)")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
@@ -192,9 +192,9 @@ MultiWGCNA_UI <- function(id) {
             height = "100vh",            
             wgcna_html_module_summary_ui(
               id = ns("multiwgcnaSummary"),
-              title = "AI Summary",
-              info.text = "",
-              caption = "Information about the Module.",
+              title = "AI-powered Summary",
+              info.text = "AI-powered Summary. LLM-generated description about selected WGCNA module. The data type and its WGCNA modules can be selected under 'Module' in the drop-down menu on the right. Available LLM models are 'llmama3.2:1b', 'granite4:micro', 'gpt5-nano', 'grok-4.' The R package 'ellmer' is used to orchestrate the LLM implementation.",
+              caption = "LLM-generated information about the seleted WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),                      
@@ -203,16 +203,16 @@ MultiWGCNA_UI <- function(id) {
               multiwgcna_table_modulegenes_ui(
                 ns("multiwgcnaTable"),
                 title = "Module members",
-                caption = "...",
-                info.text = "...",
+                caption = "Table of features mapped in the selected module.",
+                info.text = "Table of features mapped in the selected module. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
               multiwgcna_table_crossgenes_ui(
                 ns("multiwgcnaCrossgene"),
                 title = "Highly correlated genes",
-                caption = "...",
-                info.text = "...",
+                caption = "Table of features mapped in the selected module and their correlation coefficients.",
+                info.text = "Table of features mapped in the selected module and their correlation coefficient. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
@@ -220,8 +220,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_table_enrichment_ui(
               ns("multiwgcnaEnrichment"),
               title = "Module enrichment",
-              caption = "...",
-              info.text = "...",
+              caption = "Table of gene sets constructed from features mapped in the selected module. Gene set enrichment score, q value, and feature overlap are reported.",
+              info.text = "Table of gene sets constructed from features mapped in the selected module. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right. Gene set enrichment score, q value, and feature overlap are reported.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
