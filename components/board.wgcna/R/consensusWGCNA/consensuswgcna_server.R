@@ -101,13 +101,13 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         xx <- playbase::mofa.split_data(pgx$X)
         has.gxpx <- all(c("gx","px") %in% names(xx))
         has.gxpx
-        shiny::validate(shiny::need(has.gxpx, "Your multi-omics dataset is incompatible for Consensus WGCNA: You must have both transcriptomics (gx) and proteomics (px)"))
+        shiny::validate(shiny::need(has.gxpx, "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics nd proteomics data are needed."))
 
         ## Rename all tables to symbol
         xx <- xx[names(xx) %in% c("gx","px")]      
         xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table=pgx$genes))
         gg <- Reduce(intersect, lapply(xx, rownames))
-        shiny::validate(shiny::need(length(gg)>0, "Your dataset is incompatible for consensus WGCNA: No overlapping features."))
+        shiny::validate(shiny::need(length(gg)>0, "Your dataset is incompatible for consensus WGCNA: no shared features."))
         xx <- lapply(xx, function(x) x[gg,])
         
       } else if(!is.null(pgx$samples)) {
