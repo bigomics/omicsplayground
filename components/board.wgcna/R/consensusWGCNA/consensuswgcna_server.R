@@ -101,7 +101,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         xx <- playbase::mofa.split_data(pgx$X)
         has.gxpx <- all(c("gx","px") %in% names(xx))
         has.gxpx
-        shiny::validate(shiny::need(has.gxpx, "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics nd proteomics data are needed."))
+        shiny::validate(shiny::need(has.gxpx, "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics & proteomics data are needed."))
 
         ## Rename all tables to symbol
         xx <- xx[names(xx) %in% c("gx","px")]      
