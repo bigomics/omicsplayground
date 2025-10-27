@@ -97,11 +97,11 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       shiny::req(input$splitpheno)      
       
       xx <- NULL
-      if( pgx$datatype == "multi-omics" ) {        
+      if (pgx$datatype == "multi-omics") {        
         xx <- playbase::mofa.split_data(pgx$X)
         has.gxpx <- all(c("gx","px") %in% names(xx))
         has.gxpx
-        shiny::validate(shiny::need(has.gxpx, "Your mulit-omics dataset is incompatible for Consensus WGCNA: You must have both transcriptomics (gx) and proteomics (px)"))
+        shiny::validate(shiny::need(has.gxpx, "Your multi-omics dataset is incompatible for Consensus WGCNA: You must have both transcriptomics (gx) and proteomics (px)"))
 
         ## Rename all tables to symbol
         xx <- xx[names(xx) %in% c("gx","px")]      
@@ -113,18 +113,17 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       } else if(!is.null(pgx$samples)) {
 
         pheno <- input$splitpheno
-        if( is.null(pheno) || pheno == '') {
+        if (is.null(pheno) || pheno == '') {
           pheno <- colnames(pgx$samples)[1]
         }
         shiny::req(pheno %in% colnames(pgx$samples))
         group <- pgx$samples[,pheno]
-        if(is.numeric(group) && length(unique(group)) > 3) {
+        if (is.numeric(group) && length(unique(group)) > 3) {
           group <- c("LO", "HI")[1 + (group >= median(group,na.rm=TRUE))]
         }
         group <- base::abbreviate(toupper(group),2L)
         xx <- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[,ii,drop=FALSE])
       } else {
-        ## should not come here???
         shiny::validate(shiny::need(has.gxpx, "Your dataset is incompatible for consensus WGCNA."))
       }
       
