@@ -64,7 +64,10 @@ intersection_scatterplot_pairs_server <- function(id,
       }
       jj <- unique(jj)
       df <- data.frame(df[jj, ])
-      qv <- data.frame(res$qv.full[rownames(df), ])
+      qv <- data.frame(res$qv.full)
+      cm <- intersect(rownames(df), rownames(qv))
+      df <- df[cm, , drop = FALSE]
+      qv <- qv[cm, , drop = FALSE]
       list(df, qv, sel.genes)      
     })
 
@@ -216,7 +219,7 @@ intersection_scatterplot_pairs_server <- function(id,
           jj2 <- abs(df1[, 2])>=1 & qv1[, 2]<=0.05
           jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
           if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
-          
+
           annot.rho <- list(
             text = rho.text,
             font = list(size = 13 * scale_factor),
