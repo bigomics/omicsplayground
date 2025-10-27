@@ -259,10 +259,10 @@ intersection_scatterplot_pairs_server <- function(id,
               annotations = annot.rho,
               hovermode = "closest", dragmode = "select",
               xaxis = list(title = list(text = paste(colnames(df1)[1], " (log2FC)"),
-                font = list(size = 12 * scale_factor)),
+                font = list(size = 14 * scale_factor)),
                 showline = TRUE, ticklen = 4),
               yaxis = list(title = list(text = paste(colnames(df1)[2], " (log2FC)"),
-                font = list(size = 12 * scale_factor)),
+                font = list(size = 14 * scale_factor)),
                 showline = TRUE, ticklen = 4),
               showlegend = FALSE
             ) %>%
