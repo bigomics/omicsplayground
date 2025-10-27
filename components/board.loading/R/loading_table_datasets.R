@@ -191,6 +191,25 @@ loading_table_datasets_server <- function(id,
         pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
         new_pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
 
+        ## Check if public directory is at capacity
+        if (!is.null(auth$options$MAX_PUBLIC_DATASETS)) {
+          pgxfiles <- dir(pgx_public_dir, pattern = "*.pgx$")
+          numpgx_public <- length(pgxfiles)
+          maxpgx_public <- as.integer(auth$options$MAX_PUBLIC_DATASETS)
+          if (numpgx_public >= maxpgx_public) {
+            shinyalert::shinyalert(
+              title = paste(auth$options$PUBLIC_DATASETS_LABEL, "storage full"),
+              text = paste(
+                "The", tolower(auth$options$PUBLIC_DATASETS_LABEL), "directory has reached its capacity with",
+                numpgx_public, "datasets (limit:", maxpgx_public, ").",
+                "Please contact your administrator to increase the limit or remove old datasets."
+              ),
+              type = "error"
+            )
+            return()
+          }
+        }
+
         ## abort if file exists
         if (file.exists(new_pgx_file)) {
           shinyalert::shinyalert(
