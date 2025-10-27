@@ -183,6 +183,7 @@ intersection_scatterplot_pairs_server <- function(id,
           
           c1 <- strsplit(ctx.comp[i], "--VS--")[[1]][1]
           c2 <- strsplit(ctx.comp[i], "--VS--")[[1]][2]
+          if (c1 == c2) next
           cc <- unique(c(paste0(c1, "--VS--", c2), paste0(c2, "--VS--", c1)))
           if (any(cc %in% names(plot_list))) next
           
