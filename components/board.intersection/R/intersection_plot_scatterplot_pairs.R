@@ -4,13 +4,14 @@
 ##
 
 intersection_scatterplot_pairs_ui <- function(
-    id,
-    title,
-    label = "",
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  label = "",
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   scatterplot_pairs.opts <- shiny::tagList(
@@ -246,7 +247,6 @@ intersection_scatterplot_pairs_server <- function(id,
 
       p
     }
-
 
 
     PlotModuleServer(

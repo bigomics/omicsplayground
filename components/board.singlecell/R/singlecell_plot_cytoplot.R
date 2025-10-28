@@ -14,14 +14,15 @@
 #'
 #' @export
 singlecell_plot_cytoplot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width,
-    parent) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent
+) {
   ns <- shiny::NS(id)
 
   cyto.opts <- shiny::tagList(
@@ -71,8 +72,7 @@ singlecell_plot_cytoplot_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    plot_data <- shiny::reactive({
-    })
+    plot_data <- shiny::reactive({})
 
     ##    cyto.plotFUNC <- shiny::reactive({
     cyto.plotFUNC <- function() {

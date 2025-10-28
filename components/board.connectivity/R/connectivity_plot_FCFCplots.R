@@ -13,13 +13,14 @@
 #'
 #' @export
 connectivity_plot_FCFCplots_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    height,
-    width,
-    label = "") {
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width,
+  label = ""
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(

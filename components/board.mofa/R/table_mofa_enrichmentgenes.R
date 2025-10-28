@@ -4,13 +4,14 @@
 ##
 
 mofa_table_enrichmentgenes_ui <- function(
-    id,
-    label = "a",
-    title = "Title",
-    info.text = "Info",
-    caption = "Caption",
-    height = 400,
-    width = 400) {
+  id,
+  label = "a",
+  title = "Title",
+  info.text = "Info",
+  caption = "Caption",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

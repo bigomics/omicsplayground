@@ -16,7 +16,6 @@ message("\n\n\n")
 shiny::addResourcePath("custom", "www")
 
 
-
 message("[GLOBAL] reading global.R ...")
 
 if (Sys.info()["sysname"] != "Windows") {

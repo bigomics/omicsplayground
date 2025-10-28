@@ -4,15 +4,16 @@
 ##
 
 featuremap_plot_gset_sig_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   info_text <- "<b>Geneset signature maps.</b> UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance."

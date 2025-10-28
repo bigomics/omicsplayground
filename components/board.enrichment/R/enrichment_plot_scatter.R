@@ -20,14 +20,15 @@
 #' @return
 #' A Shiny Module UI definition
 enrichment_plot_scatter_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

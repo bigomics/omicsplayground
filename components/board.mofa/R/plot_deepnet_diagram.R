@@ -4,15 +4,16 @@
 ##
 
 plot_deepnet_diagram_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    info.methods,
-    info.references,
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  info.methods,
+  info.references,
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

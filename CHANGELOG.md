@@ -1,3 +1,24 @@
+### v4.0.5+master251013 (2025-10-13)
+
+-  make timeseries optional [view](https://github.com/bigomics/omicsplayground/commit/cf02243231750260484bb908da0d5f4c8e2c12ec)
+-  fix and polishing [view](https://github.com/bigomics/omicsplayground/commit/930d17752bad4f6051fd11d88f1db2a6b0f9d43c)
+-  improve msg [view](https://github.com/bigomics/omicsplayground/commit/0be5e1fb154852775f928c178a05b547eda1e0ff)
+-  trigger and show timeseries tab optionally [view](https://github.com/bigomics/omicsplayground/commit/3ea00f4c3e75d62527c807529ba1d380a8b6df84)
+-  docs: update changelog [view](https://github.com/bigomics/omicsplayground/commit/8e60c026dbeab7243fc23f312b41d2803ef73a65)
+-  remove impX [view](https://github.com/bigomics/omicsplayground/commit/1599cca40e6104706e9160ae6bac485bc590662d)
+-  improve [view](https://github.com/bigomics/omicsplayground/commit/7f4570fe75147b58bf80f616fb101a9bf03c9653)
+-  display timeseries variables [view](https://github.com/bigomics/omicsplayground/commit/bf497d36d9e10b430c3a8eae0cfb7f65de747037)
+-  clean [view](https://github.com/bigomics/omicsplayground/commit/a9a1060da9952776e2b27a64690c5c3139d6ab8e)
+-  inform user about time variables and name full contrasts for clarity and transparency [view](https://github.com/bigomics/omicsplayground/commit/94651101f8f74e69820e324dca00ae954f731005)
+-  feat: remove vert space + hide if too many int_vars [view](https://github.com/bigomics/omicsplayground/commit/84081b832f0fefaaace1d76fc98e08c6fa728b7b)
+-  ci: version-devel [view](https://github.com/bigomics/omicsplayground/commit/8afd1af7e744a91fba4275dcfceeb31dd392e870)
+-  ci: version-devel [view](https://github.com/bigomics/omicsplayground/commit/0229290674247763fb0ebde6a3f1110e917c0bf6)
+-  ci: force devel branch [view](https://github.com/bigomics/omicsplayground/commit/a431e113b274342bff6d82df94c95afa9fd41024)
+-  ci: force devel branch [view](https://github.com/bigomics/omicsplayground/commit/14b4dab0319bd6ef775ef3cb1f7c73eab47d0cd4)
+-  Update version to v4.0.4+devel251009 [view](https://github.com/bigomics/omicsplayground/commit/564a5142c477c825568707aac4ff7a26f0eec8a1)
+-  Update version to v4.0.5+master251013 [view](https://github.com/bigomics/omicsplayground/commit/e6d8a4ac2948558d77d85ddeb4533666ddc52d3a)
+
+
 ### v4.0.4+master251007 (2025-10-07)
 
 -  wip [view](https://github.com/bigomics/omicsplayground/commit/c002ffa235cb990050ebd2cea25d6fef388f188b)
@@ -46,24 +67,5 @@
 -  Update update_version.yaml [view](https://github.com/bigomics/omicsplayground/commit/77d4c85a1aab847d40bdbaa453dc471663b277d4)
 -  trigger [view](https://github.com/bigomics/omicsplayground/commit/46670c46c0200176d3e7754eef4343799687d6b5)
 -  Update version to v4.0.4+master251007 [view](https://github.com/bigomics/omicsplayground/commit/2c5b31db6a52b05dbd300abfa0a57873efd3c860)
-
-
-### v4.0.3+master250922 (2025-09-22)
-
--  changelog [view](https://github.com/bigomics/omicsplayground/commit/68007f7523e49dda1b373a7b373c7e8fbb7b8ba0)
--  Update docker-build.yml [view](https://github.com/bigomics/omicsplayground/commit/1ce0f922ca8cdc72fed751579bf212a4acd81f18)
--  fix: filter features to avoid subset error [view](https://github.com/bigomics/omicsplayground/commit/e867c59d783c618ca94125c0b999a978c56dc75d)
--  fix: only allow variables with 2 or more levels to be selected on TS analysis [view](https://github.com/bigomics/omicsplayground/commit/faa8615ea4cde74407b6520c45665caedda8c99b)
--  fix: update wgcna inputs at recompute [view](https://github.com/bigomics/omicsplayground/commit/9d7d09aa331a309ac6da2bfc3b7cb043e87858f8)
--  fix: clean custom features input stream [view](https://github.com/bigomics/omicsplayground/commit/7649e3ef7651691f00e0f427ee7340a3b16c5f2e)
--  feat: make sure custom features exist [view](https://github.com/bigomics/omicsplayground/commit/1e784cf01c991d7eabc91f681fbe20d7b3c1ebed)
--  feat: validate grouping and filter combo is valid [view](https://github.com/bigomics/omicsplayground/commit/5691445fd07841df736c2bf4d4e03a790cc4294a)
--  fix: typo on feature custom features + added safety check [view](https://github.com/bigomics/omicsplayground/commit/dcf460f553cf73440446824158e5a058b39d829c)
--  add-percent-missingness-per-sample [view](https://github.com/bigomics/omicsplayground/commit/e11e7275900747c696487cb6ea4ba2cf4d8d161e)
--  style: same capitalization as other options [view](https://github.com/bigomics/omicsplayground/commit/a5ffd8de33864db014ae558d19fa1a97ea38ca02)
--  fix: wgcna heatmap for small genesets [view](https://github.com/bigomics/omicsplayground/commit/6a5cff76e191840beca1389daabe41119a37a942)
--  feat: make sure subsetting is right [view](https://github.com/bigomics/omicsplayground/commit/829642243946141efe88e75b4fbbb6fa23f9bcda)
--  fix: save un-cut samples [view](https://github.com/bigomics/omicsplayground/commit/3740397d609d30b5efd33e93d1c7619c6ef7a108)
--  Update version to v4.0.3+master250922 [view](https://github.com/bigomics/omicsplayground/commit/cf96d0f0bf4c97e3e2f134d79b7386417cf82b90)
 
 

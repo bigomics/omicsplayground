@@ -9,36 +9,36 @@ upload_module_computepgx_ui <- function(id) {
 }
 
 upload_module_computepgx_server <- function(
-    id,
-    countsRT,
-    countsX,
-    norm_method,
-    samplesRT,
-    azimuth_ref,
-    contrastsRT,
-    annotRT = reactive(NULL),
-    raw_dir,
-    metaRT,
-    lib.dir,
-    auth,
-    create_raw_dir,
-    alertready = TRUE,
-    height = 720,
-    compute_settings,
-    sc_compute_settings,
-    recompute_info,
-    inactivityCounter,
-    upload_wizard,
-    upload_name,
-    upload_description,
-    upload_datatype,
-    upload_organism,
-    upload_gx_methods,
-    upload_gset_methods,
-    process_counter,
-    reset_upload_text_input,
-    probetype) {
-
+  id,
+  countsRT,
+  countsX,
+  norm_method,
+  samplesRT,
+  azimuth_ref,
+  contrastsRT,
+  annotRT = reactive(NULL),
+  raw_dir,
+  metaRT,
+  lib.dir,
+  auth,
+  create_raw_dir,
+  alertready = TRUE,
+  height = 720,
+  compute_settings,
+  sc_compute_settings,
+  recompute_info,
+  inactivityCounter,
+  upload_wizard,
+  upload_name,
+  upload_description,
+  upload_datatype,
+  upload_organism,
+  upload_gx_methods,
+  upload_gset_methods,
+  process_counter,
+  reset_upload_text_input,
+  probetype
+) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -232,7 +232,7 @@ upload_module_computepgx_server <- function(
                 style = "color: red;"
               )
             )
-          },          
+          },
           shiny::div(
             shiny::uiOutput(ns("probetype_result"))
           ),
@@ -329,10 +329,8 @@ upload_module_computepgx_server <- function(
                   selected = GENETEST.SELECTED()
                   # disabled = c("methods to be greyed-out")
                 ),
-
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
-
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -357,7 +355,7 @@ upload_module_computepgx_server <- function(
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
-                ),
+              ),
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
                 div(
@@ -379,7 +377,7 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-                ),
+              ),
               bslib::card(
                 fileInput2(
                   ns("upload_gmt"),
@@ -430,60 +428,60 @@ upload_module_computepgx_server <- function(
         return(ui)
       })
 
-      
+
       ## Checks specific for time series
       interaction_vars <- reactiveValues(ia_ctx = NULL, ia_spline_ctx = NULL)
       shiny::observeEvent(
-      {
-        samplesRT()
-        countsX()
-      },
-      {
-        Y <- samplesRT()
-        Contrasts <- contrastsRT()
-        colnames(Y) <- tolower(colnames(Y))
-        Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
+        {
+          samplesRT()
+          countsX()
+        },
+        {
+          Y <- samplesRT()
+          Contrasts <- contrastsRT()
+          colnames(Y) <- tolower(colnames(Y))
+          Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
 
-        time.var <- playbase::get_timevars()
-        sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
+          time.var <- playbase::get_timevars()
+          sel.time <- grep(time.var, colnames(Y), ignore.case = TRUE)
 
-        if (length(sel.time) && length(unique(Y[, sel.time[1]])) > 1) {
-
-          timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
-          ia.ctx <- ia.spline.ctx <- c()
-          i <- 1
-          shiny::req(Contrasts)
-          for (i in 1:ncol(Contrasts)) {
-            ctx <- colnames(Contrasts)[i]
-            if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next
-            tt <- table(data.frame(ctx = Contrasts[, ctx], time = Y[, sel.time[1]]))
-            zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
-            if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
-              if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
-            } else {
-              if (!any(zeros.obs >= (ncol(tt) - 1))) {
-                ia.spline.ctx <- c(ia.spline.ctx, ctx)
+          if (length(sel.time) && length(unique(Y[, sel.time[1]])) > 1) {
+            timeseries <- gsub("\\D", "", unname(as.character(Y[, sel.time[1]])))
+            ia.ctx <- ia.spline.ctx <- c()
+            i <- 1
+            shiny::req(Contrasts)
+            for (i in 1:ncol(Contrasts)) {
+              ctx <- colnames(Contrasts)[i]
+              if (strsplit(tolower(ctx), ":")[[1]][1] %in% time.var) next
+              tt <- table(data.frame(ctx = Contrasts[, ctx], time = Y[, sel.time[1]]))
+              zeros.obs <- apply(tt, 1, function(x) sum(x == 0))
+              if (length(unique(timeseries)) == 1 && unique(timeseries)[1] == "") {
+                if (!any(zeros.obs)) ia.ctx <- c(ia.ctx, ctx)
+              } else {
+                if (!any(zeros.obs >= (ncol(tt) - 1))) {
+                  ia.spline.ctx <- c(ia.spline.ctx, ctx)
+                }
               }
             }
-          }
 
-          interaction_vars$ia_ctx <- ia.ctx
-          interaction_vars$ia_spline_ctx <- ia.spline.ctx
-          
-          if (length(ia.ctx) | length(ia.spline.ctx)) {
-            choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
-            sel <- c("trend.limma", "deseq2.lrt")
-            c1 <- (sum(is.na(countsX())) > 0)
-            c2 <- (upload_datatype() != "RNA-seq")
-            if (c1 | c2) choices <- sel <- "trend.limma"
-            shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
-          } else {
-            output$timeseries_checkbox <- renderUI({ NULL })
-          }
+            interaction_vars$ia_ctx <- ia.ctx
+            interaction_vars$ia_spline_ctx <- ia.spline.ctx
 
+            if (length(ia.ctx) | length(ia.spline.ctx)) {
+              choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
+              sel <- c("trend.limma", "deseq2.lrt")
+              c1 <- (sum(is.na(countsX())) > 0)
+              c2 <- (upload_datatype() != "RNA-seq")
+              if (c1 | c2) choices <- sel <- "trend.limma"
+              shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
+            } else {
+              output$timeseries_checkbox <- renderUI({
+                NULL
+              })
+            }
+          }
         }
-
-      })
+      )
 
       ## ------------------------------------------------------------------------
       ## If NA in X (no imputation performed), remove NA-intolerant methods.
@@ -622,8 +620,7 @@ upload_module_computepgx_server <- function(
             )
             HTML(msg)
           }
-        }
-        else {
+        } else {
           NULL
         }
       })
@@ -839,8 +836,8 @@ upload_module_computepgx_server <- function(
         ## get selected methods from input
         gx.methods <- input$gene_methods
         dotimeseries <- FALSE
-        if (isTRUE(input$dotimeseries)) dotimeseries = TRUE
-        gset.methods <- input$gset_methods        
+        if (isTRUE(input$dotimeseries)) dotimeseries <- TRUE
+        gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
         if (input$do_extra == FALSE) extra.methods <- c()
         ## at least do meta.go, infer
@@ -960,7 +957,7 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-        
+
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 

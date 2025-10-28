@@ -4,13 +4,14 @@
 ##
 
 wgcna_plot_sampledendrogram_ui <- function(
-    id,
-    title = "",
-    label = "",
-    info.text = "",
-    caption = "",
-    height,
-    width) {
+  id,
+  title = "",
+  label = "",
+  info.text = "",
+  caption = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

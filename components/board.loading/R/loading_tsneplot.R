@@ -4,16 +4,17 @@
 ##
 
 loading_tsne_ui <- function(
-    id,
-    title,
-    info.text,
-    info.references = NULL,
-    info.methods = NULL,
-    info.extra_link = NULL,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.references = NULL,
+  info.methods = NULL,
+  info.extra_link = NULL,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

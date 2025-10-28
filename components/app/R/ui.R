@@ -185,8 +185,7 @@ app_ui <- function(x) {
           tab.names <- names(menu_tree[[i]])
           tab.titles <- menu_tree[[i]]
           menu.id <- names(menu_tree)[i]
-          if (length(tab.names) == 0) {
-          } else if (length(tab.names) == 1) {
+          if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
             menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
           } else {
             menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)

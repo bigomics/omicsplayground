@@ -4,12 +4,13 @@
 ##
 
 loading_table_datasets_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   ## not sure if this should be here or in settings (IK)
@@ -842,7 +843,6 @@ loading_table_datasets_server <- function(id,
     )
 
     output$download_pgx_btn <- shiny::downloadHandler(
-
       ## filename = "userdata.pgx",
       filename = function() {
         sel <- row_idx <- as.numeric(stringr::str_split(input$download_pgx, "_row_")[[1]][2])
@@ -1152,8 +1152,6 @@ loading_table_datasets_server <- function(id,
 
       share_pgx(NULL)
     })
-
-
 
 
     ## please refer to TableModule for return values

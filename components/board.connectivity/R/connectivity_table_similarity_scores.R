@@ -4,13 +4,14 @@
 ##
 
 connectivity_table_similarity_scores_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height,
-    label = "") {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height,
+  label = ""
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

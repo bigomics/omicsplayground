@@ -13,14 +13,15 @@
 #'
 #' @export
 correlation_plot_scattercorr_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   cor_scatter.opts <- shiny::tagList(

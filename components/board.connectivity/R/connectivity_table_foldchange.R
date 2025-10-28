@@ -4,13 +4,14 @@
 ##
 
 connectivity_table_foldchange_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height,
-    label = "") {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height,
+  label = ""
+) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(

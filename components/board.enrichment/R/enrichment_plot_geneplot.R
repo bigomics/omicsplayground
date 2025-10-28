@@ -15,12 +15,13 @@
 #'
 #' @return Shiny UI for gene plot enrichment visualization
 enrichment_plot_geneplot_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(

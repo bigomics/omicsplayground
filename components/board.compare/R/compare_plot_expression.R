@@ -4,11 +4,12 @@
 ##
 
 compare_plot_expression_ui <- function(
-    id,
-    label = "",
-    height = c(600, 800),
-    title,
-    info.text) {
+  id,
+  label = "",
+  height = c(600, 800),
+  title,
+  info.text
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
