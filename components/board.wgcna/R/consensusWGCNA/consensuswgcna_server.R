@@ -123,6 +123,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         }
         group <- base::abbreviate(toupper(group),2L)
         xx <- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[,ii,drop=FALSE])
+
       } else {
         shiny::validate(shiny::need(has.gxpx, "Your dataset is incompatible for consensus WGCNA."))
       }
@@ -146,6 +147,14 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
       ai_model <- getUserOption(session,'llm_model')
       message("[ConsensusWGCNA:compute_wgcna] ai_model = ", ai_model)
+
+      ## random noise: avoids ME with NaNs
+      for(i in 1:length(xx)) {
+        mat <- xx[[i]]
+        sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
+        sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
+        xx[[i]] <- mat + 0.25 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
+      }
       
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
