@@ -139,7 +139,7 @@ loading_table_datasets_server <- function(id,
 
       kk <- unique(c(
         "dataset", "description", "organism", "datatype", "nsamples",
-        "ngenes", "nsets", "conditions", "date",
+        "nfeatures", "nsets", "conditions", "date",
         "creator"
       ))
       kk <- intersect(kk, colnames(df))
@@ -171,7 +171,7 @@ loading_table_datasets_server <- function(id,
           title = paste("Share this dataset?"),
           paste(
             "Your dataset", pgx_name, "will be copied",
-            "to the public folder. Other users will be able import and explore",
+            "to the", tolower(auth$options$PUBLIC_DATASETS_LABEL), "folder. Other users will be able import and explore",
             "this dataset. Are you sure?"
           ),
           html = TRUE,
@@ -192,13 +192,32 @@ loading_table_datasets_server <- function(id,
         pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
         new_pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
 
+        ## Check if public directory is at capacity
+        if (!is.null(auth$options$MAX_PUBLIC_DATASETS)) {
+          pgxfiles <- dir(pgx_public_dir, pattern = "*.pgx$")
+          numpgx_public <- length(pgxfiles)
+          maxpgx_public <- as.integer(auth$options$MAX_PUBLIC_DATASETS)
+          if (numpgx_public >= maxpgx_public) {
+            shinyalert::shinyalert(
+              title = paste(auth$options$PUBLIC_DATASETS_LABEL, "storage full"),
+              text = paste(
+                "The", tolower(auth$options$PUBLIC_DATASETS_LABEL), "directory has reached its capacity with",
+                numpgx_public, "datasets (limit:", maxpgx_public, ").",
+                "Please contact your administrator to increase the limit or remove old datasets."
+              ),
+              type = "error"
+            )
+            return()
+          }
+        }
+
         ## abort if file exists
         if (file.exists(new_pgx_file)) {
           shinyalert::shinyalert(
             title = "Oops! File exists...",
             paste(
               "There is already a dataset called", pgx_name,
-              "in the Public folder. Sorry about that! Please rename your file",
+              "in the", auth$options$PUBLIC_DATASETS_LABEL, "folder. Sorry about that! Please rename your file",
               "if you still want to share it."
             )
           )
@@ -206,7 +225,7 @@ loading_table_datasets_server <- function(id,
         }
 
         ## file.copy(from = pgx_file, to = new_pgx_file)
-        shiny::withProgress(message = "Copying file to public folder...", value = 0.33, {
+        shiny::withProgress(message = paste("Copying file to", tolower(auth$options$PUBLIC_DATASETS_LABEL), "folder..."), value = 0.33, {
           pgx0 <- playbase::pgx.load(pgx_file)
           unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
           if ("creator" %in% names(pgx0) && !unknown.creator) {
@@ -224,7 +243,7 @@ loading_table_datasets_server <- function(id,
           title = "Successfully shared!",
           paste(
             "Your dataset", pgx_name, "has now been successfully",
-            "been publicly shared. Thank you!"
+            "shared to", tolower(auth$options$PUBLIC_DATASETS_LABEL), ". Thank you!"
           )
         )
       }
@@ -340,7 +359,7 @@ loading_table_datasets_server <- function(id,
           title = "Empty?",
           text = paste(
             "Your dataset library seems empty. Please upload new data or import",
-            "a dataset from the public datasets folder."
+            "a dataset from the", tolower(auth$options$PUBLIC_DATASETS_LABEL), "folder."
           )
         )
       }
@@ -375,7 +394,7 @@ loading_table_datasets_server <- function(id,
         if (auth$options$ENABLE_PUBLIC_SHARE && dir.exists(pgx_public_dir)) {
           share_public_menuitem <- shiny::actionButton(
             ns(paste0("share_public_row_", i)),
-            label = "Share public",
+            label = paste("Share to", tolower(auth$options$PUBLIC_DATASETS_LABEL)),
             icon = shiny::icon("share-nodes"),
             class = "btn btn-outline-info",
             style = "border: none;",
@@ -497,7 +516,7 @@ loading_table_datasets_server <- function(id,
       cro_emails <- get_cro_emails()
 
       if (!is.null(auth$options$MAX_GENES)) {
-        datasets_exceed_limits <- datasets_exceed_limits | (df$ngenes > auth$options$MAX_GENES)
+        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > auth$options$MAX_GENES)
       }
       if (!is.null(auth$options$MAX_SAMPLES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (

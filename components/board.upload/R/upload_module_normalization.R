@@ -864,7 +864,7 @@ upload_module_normalization_server <- function(
               ),
               bslib::accordion_panel(
                 title = "3. Remove outliers",
-                shiny::p("Automatically detect and remove outlier samples."),
+                shiny::p("Detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
                 shiny::conditionalPanel("input.remove_outliers == true",
                   ns = ns,
@@ -876,7 +876,7 @@ upload_module_normalization_server <- function(
                 title = "4. Batch-effect correction",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("Automatically remove unwanted variation from your data."),
+                  shiny::p("Remove unwanted variation from your data."),
                   shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")

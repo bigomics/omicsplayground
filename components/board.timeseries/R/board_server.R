@@ -106,7 +106,7 @@ TimeSeriesBoard <- function(id,
 
       knn <- as.integer(input$knn)
       modules <- clust[, paste0("kmeans.", knn)]
-      modules <- paste0("T", modules)
+      modules <- paste0("M", modules)
       names(modules) <- rownames(clust)
 
       ## compute geneset enrichment

@@ -107,6 +107,7 @@ clustering_plot_splitmap_server <- function(id,
                                             hm_ntop,
                                             hm_topmode,
                                             hm_clustk,
+                                            hm_average_group,
                                             watermark = FALSE,
                                             labeltype) {
   moduleServer(id, function(input, output, session) {
@@ -152,14 +153,15 @@ clustering_plot_splitmap_server <- function(id,
       sample_cor <- FALSE
       if (input$plot_type == "sample correlation") {
         sample_cor <- TRUE
-        X <- pgx$X
+        X <- zx
         if (input$hm_scale == "row.center") X <- X - rowMeans(X, na.rm = TRUE)
         if (input$hm_scale == "row") X <- t(scale(t(X)))
         zx <- cor(X, method = "pearson", use = "pairwise.complete.obs")
         D <- as.dist(1 - zx)
         D[which(is.nan(D) | is.na(D))] <- 1
         hc <- fastcluster::hclust(D, method = "ward.D2")
-        zx.idx <- paste0("S", cutree(hc, hm_clustk()))
+        zx.idx <- try(paste0("S", cutree(hc, hm_clustk())), silent = TRUE)
+        if (inherits(zx.idx, "try-error")) zx.idx <- paste0("S", cutree(hc, 1))
       }
 
       return(list(zx = zx, annot = annot, zx.idx = zx.idx, filt = filt, sample_cor = sample_cor))
@@ -359,6 +361,10 @@ clustering_plot_splitmap_server <- function(id,
 
       if (sample_cor) {
         idx <- splitx
+        if (hm_average_group()) {
+          idx <- NULL
+          splitx <- NULL
+        }
         scale.mode <- "none"
         zlim <- c(min(X, na.rm = TRUE), max(X, na.rm = TRUE))
         symm <- TRUE

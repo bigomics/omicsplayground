@@ -145,7 +145,7 @@ BiomarkerBoard <- function(id, pgx) {
       }
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
       return(gg)
-    }) %>% shiny::debounce(1000)
+    })
 
     ## get selected samples after sample filtering
     selected_samples <- shiny::eventReactive(
