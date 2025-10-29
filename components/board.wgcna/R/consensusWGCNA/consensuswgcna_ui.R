@@ -92,7 +92,7 @@ ConsensusWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
+          bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets (or datatypes, phenotypes) by clustering each dataset (or datatype, phenotype) and computing overlapping modules.<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
@@ -115,7 +115,7 @@ ConsensusWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Consensus Module-Trait</b> analysis identifies modules that have high correlation with your phenotypes. Module are concordant if the trait correlation have same sign in the consensus groups, i.e. always up (or down) regulated in all groups.")),
+          bs_alert(HTML("<b>Consensus Module-Trait</b> analysis identifies modules that have high correlation with your phenotypes. Modules are concordant if the trait correlation have same sign in the consensus groups, i.e. always up (or down) regulated in all groups.")),
           bslib::layout_columns(
             col_widths = c(7,5),
             height = "100vh",
@@ -159,31 +159,31 @@ ConsensusWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets (or datatypes, phenotypes) by clustering each dataset (or datatype, phenotype) and computing overlapping modules.")),
           bslib::layout_columns(
             col_widths = c(3,4,5),
             height = "100vh",            
             wgcna_html_module_summary_ui(
               id = ns("consensusWGCNAmoduleSummary"),
-              title = "AI Summary",
-              info.text = "",
-              caption = "Information about the Module.",
+              title = "AI-powered Summary",
+              info.text = "AI-powered Summary. LLM-generated description of the selected WGCNA module. The WGCNA module and phenotype/trait of interest can both be selected in the drop-down menu on the right. Available LLM models are 'llmama3.2:1b', 'granite4:micro', 'gpt5-nano', 'grok-4.' The R package 'ellmer' is used to orchestrate the LLM implementation.",
+              caption = "LLM-generated information about the seleted WGCNA module and phenotype/trait of interest.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             consensusWGCNA_table_modulegenes_ui(
               ns("consensusWGCNATable"),
               title = "Module Features",
-              caption = "...",
-              info.text = "...",
+              caption = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. The table reports title, trait-specific score, and consensus status for each feature.",
+              info.text = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. For each feature, title, trait-specific score, and consensus status are displayed.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             consensusWGCNA_table_enrichment_ui(
               ns("consensusWGCNAEnrichment"),
               title = "Module Enrichment",
-              caption = "...",
-              info.text = "...",
+              caption = "Table reporting the gene sets calculated from enrichment analysis of the features mapped within the selected WGCNA module. The table reports score, enrichment q value and overlap for each gene set.",
+              info.text = "Table reporting the gene sets calculated from enrichment analysis of the features mapped within the selected WGCNA module. For each gene set, score, enrichment q value and overlap are displayed.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
