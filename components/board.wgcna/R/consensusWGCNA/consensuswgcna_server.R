@@ -104,13 +104,12 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         shiny::validate(shiny::need(has.gxpx,
           "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics & proteomics data are needed."))
 
-        ## Rename all tables to symbol
         xx <- xx[names(xx) %in% c("gx","px")]      
         xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table=pgx$genes))
         gg <- Reduce(intersect, lapply(xx, rownames))
         shiny::validate(shiny::need(length(gg)>0,
           "Your dataset is incompatible for consensus WGCNA: no shared features."))
-        xx <- lapply(xx, function(x) x[gg,])
+        xx <- lapply(xx, function(x) x[gg, , drop = FALSE])
         
       } else if(!is.null(pgx$samples)) {
 
@@ -129,7 +128,23 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       } else {
         shiny::validate(shiny::need(has.gxpx, "Your dataset is incompatible for consensus WGCNA."))
       }
+
+      ## exclude sample matrices with less than 4 samples.
+      ## WGCNA::blockwiseConsensusModules fails when nsamples<4
+      xx <- xx[sapply(xx, function(x) ncol(x)>=4)]
+      shiny::validate(shiny::need(length(xx)>1,
+        "Your selected phenotype is incompatible for consensus WGCNA: less than 4 samples available for any given phenotype level. Please select another trait from the 'Consensus by' menu."))
+      samples <- unique(unlist(lapply(xx, colnames)))
+      phenoData <- pgx$samples[samples, , drop = FALSE]
       
+      ## random noise: avoids ME with NaNs; increase robustness
+      for(i in 1:length(xx)) {
+        mat <- xx[[i]]
+        sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
+        sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
+        xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
+      }
+
       progress <- shiny::Progress$new(session, min=0, max=1)
       on.exit(progress$close())
       progress$set(message = paste("computing consensus WGCNA..."), value = 0.33)
@@ -149,20 +164,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
       ai_model <- getUserOption(session,'llm_model')
       message("[ConsensusWGCNA:compute_wgcna] ai_model = ", ai_model)
-
-      ## exclude 1-sample matrices
-      xx <- xx[sapply(xx, function(x) ncol(x)>1)]
-      samples <- unique(unlist(lapply(xx, colnames)))
-      phenoData <- pgx$samples[samples, , drop = FALSE]
-
-      ## random noise: avoids ME with NaNs; increase robustness
-      for(i in 1:length(xx)) {
-        mat <- xx[[i]]
-        sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
-        sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
-        xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
-      }
-
+      
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
         phenoData = phenoData,
