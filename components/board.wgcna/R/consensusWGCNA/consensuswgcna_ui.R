@@ -99,8 +99,8 @@ ConsensusWGCNA_UI <- function(id) {
             consensusWGCNA_plot_sampletree_ui(
               ns("consensusWGCNASampleTree"),
               title = "Sample Tree and Traits",
-              caption = "...",
-              info.text = "...",
+              caption = "Dendrogram and heatmap of samples and WGCNA modules for a specific dataset, datatype, or trait.",
+              info.text = "The structure of the dendrogram reflects the similarity of the features. The title of each plot denotes the dataset, datatype, or phenotype for which consensus is being assessed. Each leaf (end point) of the tree correspond to a sample. The structure of the tree, including clusters and branching pattern are indicative of the degree of dissimilarity between samples with respect to WGCNA modules. Samples that cluster together have similar WGCNA modules, i.e. similar eigengene/trait patterns. Large separations, i.e. long branches or distinct clusters, indicate samples whose expression patterns differ more strongly. On the ows of the heatmap, the WGCNA module eigengenes as inferred for a specific trait, are shown. Blue color indicates an overall lower expression of the module for a sample. Red color indicates an overall higher expression of the module for a sample. Similar correlation structures between modules and samples across phenotypes may appear for WGCNA modules exhibiting consensus between phenotypes.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
