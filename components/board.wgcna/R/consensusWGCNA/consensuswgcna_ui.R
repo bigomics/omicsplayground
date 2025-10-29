@@ -67,16 +67,16 @@ ConsensusWGCNA_UI <- function(id) {
             consensusWGCNA_plot_dendrograms_ui(
               ns("consensusWGCNADendro"),
               title = "Dendrograms and Module Colors",
-              caption = "...",
-              info.text = "...",
+              caption = "Dendrogram of hierarchical clustering of feature co-expression patterns and WGCNA module for consensus analysis.",
+              info.text = "The gene dendrogram is a highly used visualization in WGCNA. It provides a combined visual summary of the features' hierarchical clustering dendrogram and the module color assignments. It shows that co-expressed features are grouped into common biologically meaningful modules. The tree of the dendrogram reflects the co-expression similarity of the features. Each leaf (end point) of the tree corresponds to a single feature. The branching pattern shows the correlation structure: features that are highly co-expressed (strongly correlated across samples) are clustered together and connected up until lower branch points. Features that are less correlated are joined higher up in the tree. For consensus WGCNA, it displays evidence of modules' consensus between datasets/datatypes/phenotypes. Modules that are 'in consensus' indicate shared feature correlation structure, and therefore shared regulatory networks and functional effects. Optionally, all levels for any selected phenotypes can be displayed. Annotation by each available trait can also be optionally displayed. Key consensus WGCNA algorithm parameters can be modified and WGCNA can be recomputed by clicking at the 'Compute' button.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             consensusWGCNA_plot_power_ui(
               ns("consensusWGCNAPower"),
               title = "Scale and Connectivity Plots",
-              caption = "...",
-              info.text = "...",
+              caption = "Scale and connectivity plots. Scatter plots of WGCNA power values.",
+              info.text = "The SFT model fit scatter plot shows the soft threshold power vs the signed scale-free topology fit index. For each dataset, datatype or phenotype, the slope of the log-log connectivity plot vs. frequency is extracted and its opposite sign is computed and This value is then multiplied by the scale-free topology fit index (R^2), with higher values indicating good scale-free structure. The resulting value is plotted against the SFT power value. In WGCNA, features are connected based on their correlation across samples. The mean connectivity is a measure of overall network density, i.e., how connected the features are, on average.<br><br>The mean connectivity graph plots soft threshold power vs. mean connectivity value, for each dataset, datatype, or phentoype shows the average number (or strenght) of connection per each feature, at any given value of power. A decreasing trend is an expected behavior: the mean connectivity decreases as the power increases, suggesting that the network becomes less dense (and therefore the adjacency matrix becomes sparser).<br><br>The soft threshold power for network sparsity can be changed under 'WGCNA option' and clicking at the 'Compute' button. Optionally, our in-house IQR method can be selected in the plot options to calculate the WGCNA power. IQR maximizes variation of heights of the dendrogram, promoting seperability between groups. It tests a range of power values. For each power: (i) computes signed adjacency matrix; (ii) converts it to TOM similarity; (iii) clusters it to get a dendrogram; (iv) it computes the 25th, 50th, and 75th percentiles of dendrogram heights and their interquartile range (IQR). The power value with the largest IQR is picked. When clusters are well-separated, dendrogram heights are more variable and thus have higher IQR.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )            
