@@ -150,21 +150,22 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       ai_model <- getUserOption(session,'llm_model')
       message("[ConsensusWGCNA:compute_wgcna] ai_model = ", ai_model)
 
-      ## random noise: avoids ME with NaNs
+      ## exclude 1-sample matrices
+      xx <- xx[sapply(xx, function(x) ncol(x)>1)]
+      samples <- unique(unlist(lapply(xx, colnames)))
+      phenoData <- pgx$samples[samples, , drop = FALSE]
+
+      ## random noise: avoids ME with NaNs; increase robustness
       for(i in 1:length(xx)) {
         mat <- xx[[i]]
-        if (ncol(mat) > 1) {
-          sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
-        } else {
-          sdx0 <- rep(sd(mat, na.rm = TRUE), nrow(mat))
-        }
+        sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
         sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
         xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
       }
 
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
-        phenoData = pgx$samples,
+        phenoData = phenoData,
         # GMT = pgx$GMT,
         annot = pgx$genes,
         power = power,
