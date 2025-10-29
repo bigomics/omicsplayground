@@ -101,13 +101,15 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         xx <- playbase::mofa.split_data(pgx$X)
         has.gxpx <- all(c("gx","px") %in% names(xx))
         has.gxpx
-        shiny::validate(shiny::need(has.gxpx, "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics & proteomics data are needed."))
+        shiny::validate(shiny::need(has.gxpx,
+          "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics & proteomics data are needed."))
 
         ## Rename all tables to symbol
         xx <- xx[names(xx) %in% c("gx","px")]      
         xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table=pgx$genes))
         gg <- Reduce(intersect, lapply(xx, rownames))
-        shiny::validate(shiny::need(length(gg)>0, "Your dataset is incompatible for consensus WGCNA: no shared features."))
+        shiny::validate(shiny::need(length(gg)>0,
+          "Your dataset is incompatible for consensus WGCNA: no shared features."))
         xx <- lapply(xx, function(x) x[gg,])
         
       } else if(!is.null(pgx$samples)) {
@@ -151,11 +153,15 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       ## random noise: avoids ME with NaNs
       for(i in 1:length(xx)) {
         mat <- xx[[i]]
-        sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
+        if (ncol(mat) > 1) {
+          sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
+        } else {
+          sdx0 <- rep(sd(mat, na.rm = TRUE), nrow(mat))
+        }
         sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
-        xx[[i]] <- mat + 0.25 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
+        xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
       }
-      
+
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
         phenoData = pgx$samples,
