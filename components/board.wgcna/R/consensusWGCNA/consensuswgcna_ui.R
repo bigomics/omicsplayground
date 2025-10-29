@@ -174,8 +174,8 @@ ConsensusWGCNA_UI <- function(id) {
             consensusWGCNA_table_modulegenes_ui(
               ns("consensusWGCNATable"),
               title = "Module Features",
-              caption = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. The table reports title, trait-specific score, and consensus status for each feature.",
-              info.text = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. For each feature, title, trait-specific score, and consensus status are displayed.",
+              caption = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. The table reports title, trait-specific score, score p value, and consensus status for each feature.",
+              info.text = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. For each feature, title, trait-specific score, score p value, and consensus status are displayed.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
