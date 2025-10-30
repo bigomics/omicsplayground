@@ -13,11 +13,19 @@ preservationWGCNA_plot_overlap_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
+  ## options <- shiny::tagList(
+  ##   shiny::selectInput(
+  ##     inputId = ns("layer"),
+  ##     label = "Layer",
+  ##     choices = NULL
+  ##   )
+  ##)
+
   options <- shiny::tagList(
-    shiny::selectInput(
-      inputId = ns("layer"),
-      label = "Layer",
-      choices = NULL
+    shiny::checkboxInput(
+      inputId = ns("showdendro"),
+      label = "Show dendrogram",
+      value = TRUE
     )
   )
 
@@ -45,12 +53,12 @@ preservationWGCNA_plot_overlap_server <- function(id,
 
       res <- rwgcna()
       ##layer <- r_layer()
-      
+
       par(mar=c(10,15,5,2))
       playbase::wgcna.plotConsensusOverlapHeatmap(
         res$net, res$layer[[2]]$net,
         ##setLabels = names(pres$layers)[1:2],
-        plotDendro = TRUE,
+        plotDendro = input$showdendro,
         lab.line = c(8,12),
         setpar = FALSE
       )
