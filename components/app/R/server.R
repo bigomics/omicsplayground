@@ -240,6 +240,7 @@ app_server <- function(input, output, session) {
       bigdash.hideMenuElement(session, "Compare")
       bigdash.hideMenuElement(session, "SystemsBio")
       bigdash.hideMenuElement(session, "MultiOmics")
+      bigdash.hideMenuElement(session, "WGCNA")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -291,6 +292,13 @@ app_server <- function(input, output, session) {
         })
         bigdash.hideMenuElement(session, "MultiOmics")
         loaded$multiomics <- 0
+      }
+      if (x == "WGCNA") {
+        lapply(names(MODULE.wgcna$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "WGCNA")
+        loaded$wgcna <- 0
       }
     })
 
@@ -406,6 +414,16 @@ app_server <- function(input, output, session) {
             })
           }
 
+          if (MODULES_TO_LOAD["WGCNA"] && exists("MODULE.wgcna")) {
+            info("[SERVER] initializing WGCNA module")
+            mod <- MODULE.wgcna
+            insertBigTabUI(mod$module_ui())
+            bigdash.showMenuElement(session, "WGCNA")
+            lapply(names(MODULE.wgcna$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
+          }
+
           MODULES_LOADED <<- MODULES_ACTIVE
 
           if (env$load$is_data_loaded() > 0) {
@@ -472,18 +490,24 @@ app_server <- function(input, output, session) {
     enrichment = 0,
     compare = 0,
     systems = 0,
-    multiomics = 0
+    multiomics = 0,
+    wgcna = 0
   )
   observeEvent(input$nav, {
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
-      info("[UI:SERVER] reacted: calling Clustering module")
+
+    dbg("[SERVER] input$nav =" ,input$nav)
+    
+    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") &&
+          loaded$clustering == 0) {
+      info("[SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, labeltype = labeltype)
       loaded$clustering <- 1
       tab_control()
     }
-    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") && loaded$expression == 0) {
+    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") &&
+          loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Expression module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -491,7 +515,8 @@ app_server <- function(input, output, session) {
       loaded$expression <- 1
       tab_control()
     }
-    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
+    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") &&
+          loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -507,8 +532,8 @@ app_server <- function(input, output, session) {
       loaded$compare <- 1
       tab_control()
     }
-    if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab",
-      "pcsf-tab", "consensus-tab", "preservation-tab") && loaded$systems == 0) {
+    if (input$nav %in% c("drug-tab", "tcga-tab", "cell-tab", "pcsf-tab") &&
+          loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -517,12 +542,21 @@ app_server <- function(input, output, session) {
       tab_control()
     }
     if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
-      "deepnet-tab", "mwgcna-tab") && loaded$multiomics == 0) {
+      "deepnet-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX)
       loaded$multiomics <- 1
+      tab_control()
+    }
+    if (input$nav %in% c("wgcna-tab","mwgcna-tab","consensus-tab",
+      "preservation-tab") && loaded$wgcna == 0) {
+      info("[UI:SERVER] reacted: calling WGCNA module")
+      mod <- MODULE.wgcna
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
+      mod$module_server(PGX)
+      loaded$wgcna <- 1
       tab_control()
     }
 

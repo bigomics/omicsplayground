@@ -8,8 +8,7 @@ MODULE.multiomics <- list(
       lasagna = "LASAGNA",
       mgsea = "Multiomics GSEA",
       mofa = "MOFA",
-      deepnet = "DeepLearning",
-      mwgcna = "Multiomics WGCNA"
+      deepnet = "DeepLearning"
     )
   },
   module_ui = function() {
@@ -18,8 +17,7 @@ MODULE.multiomics <- list(
       bigdash::bigTabItem("mgsea-tab", MGseaInputs("mgsea"), create_loader("mgsea-loader")),
       bigdash::bigTabItem("snf-tab", SNFInputs("snf"), create_loader("snf-loader")),
       bigdash::bigTabItem("lasagna-tab", LasagnaInputs("lasagna"), create_loader("lasagna-loader")),
-      bigdash::bigTabItem("deepnet-tab", DeepNetInputs("deepnet"), create_loader("deepnet-loader")),
-      bigdash::bigTabItem("mwgcna-tab", MultiWGCNA_Inputs("mwgcna"), create_loader("mwgcna-loader"))
+      bigdash::bigTabItem("deepnet-tab", DeepNetInputs("deepnet"), create_loader("deepnet-loader"))
     )
   },
   module_ui2 = function() {
@@ -28,8 +26,7 @@ MODULE.multiomics <- list(
       list("mgsea-tab", MGseaUI("mgsea")),
       list("snf-tab", SNFUI("snf")),
       list("lasagna-tab", LasagnaUI("lasagna")),
-      list("deepnet-tab", DeepNetUI("deepnet")),
-      list("mwgcna-tab", MultiWGCNA_UI("mwgcna"))
+      list("deepnet-tab", DeepNetUI("deepnet"))
     )
   },
   module_server = function(PGX) {
@@ -47,9 +44,6 @@ MODULE.multiomics <- list(
 
     info("[SERVER] calling DeepNetBoard module")
     DeepNetBoard("deepnet", pgx = PGX)
-
-    info("[SERVER] calling MultiWGCNABoard module")
-    MultiWGCNA_Board("mwgcna", pgx = PGX)
 
   },
   module_help = function() {
@@ -69,11 +63,8 @@ MODULE.multiomics <- list(
         tspan("LASAGNA is a stacked layer model for multi-omics integration where each layer corresponds to a datatype.")),
       
       bigdash::sidebarTabHelp("deepnet-tab", "DeepLearning",
-        tspan("Integration using DeepLearning")),
-      
-      bigdash::sidebarTabHelp("mwgcna-tab", "MultiOmics WGCNA",
-        tspan("WGCNA for multi-omics"))
-      
+        tspan("Integration using DeepLearning"))
+            
     )
   }
 )

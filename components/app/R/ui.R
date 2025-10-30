@@ -145,12 +145,10 @@ app_ui <- function(x) {
           drug = "Drug connectivity",
           cell = "Cell profiling",
           pcsf = "PCSF",
-          wgcna = "WGCNA",
-          consensus = "Consensus WGCNA",
-          preservation = "Preservation WGCNA",          
           tcga = "TCGA survival (beta)"
         ),
-        "MultiOmics" = MODULE.multiomics$module_menu()
+        "MultiOmics" = MODULE.multiomics$module_menu(),
+        "WGCNA" = MODULE.wgcna$module_menu()
       )
 
       ## filter disabled modules

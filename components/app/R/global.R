@@ -254,7 +254,7 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics","WGCNA"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES

@@ -14,7 +14,9 @@ wgcna_plot_MTrelationships_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("cluster"), "Cluster heatmap", TRUE)
+    shiny::checkboxInput(ns("showpval"), "Show pvalues", FALSE),
+    shiny::checkboxInput(ns("showtop"), "Show top ME", TRUE),    
+    shiny::checkboxInput(ns("cluster"), "Cluster heatmap", TRUE)    
   )
 
   PlotModuleUI(
@@ -49,7 +51,12 @@ wgcna_plot_MTrelationships_server <- function(id,
       par(mar = c(6, 8, 1, 0.4))
       playbase::wgcna.plotModuleTraitHeatmap(
         res,
-        setpar = FALSE, cluster = input$cluster, main = ""
+        setpar = FALSE,
+        cluster = input$cluster,
+        nmax = ifelse( input$showtop, 20, -1),
+        text = input$showpval,
+        pstar = !input$showpval,
+        main = ""
       )
     }
 
