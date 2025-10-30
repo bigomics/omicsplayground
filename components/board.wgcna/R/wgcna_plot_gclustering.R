@@ -14,10 +14,17 @@ wgcna_plot_gclustering_ui <- function(
     ...) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    shiny::radioButtons(ns("method"), "Method:", choices=c("umap","mds"),
+      selected="umap", inline = TRUE),
+    shiny::checkboxInput(ns("showhub"), "Show hubgenes", TRUE)    
+  )
+
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     caption = caption,
     height = height,
@@ -25,6 +32,7 @@ wgcna_plot_gclustering_ui <- function(
     download.fmt = c("png", "pdf", "svg"),
     ...
   )
+
 }
 
 wgcna_plot_gclustering_server <- function(id,
@@ -33,9 +41,18 @@ wgcna_plot_gclustering_server <- function(id,
   moduleServer(id, function(input, output, session) {
     RENDER <- function() {
       res <- wgcna()
-      par(mar=c(5,5,1,1))
-      ##playbase::wgcna.plotMDS(res, main="", scale=FALSE)
-      playbase::wgcna.plotFeatureUMAP(res, nhub=3, main="", method="clust")
+      par(mar=c(3.2,3.2,0.8,0.5), mgp=c(2.2,0.8,0))
+      if(input$method == "mds") {
+        playbase::wgcna.plotMDS(res, main="", scale=FALSE)
+      } else {
+        playbase::wgcna.plotFeatureUMAP(
+          res,
+          nhub = ifelse(input$showhub, 3, 0),
+          main = "",
+          method = "clust"
+          #set.par = FALSE
+        )
+      }
     }
 
     PlotModuleServer(

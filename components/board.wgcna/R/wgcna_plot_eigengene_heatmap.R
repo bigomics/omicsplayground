@@ -16,7 +16,7 @@ wgcna_plot_eigengene_heatmap_ui <- function(
   options <- shiny::tagList(
     shiny::checkboxInput(ns("showtop"), "Show top modules", TRUE),
     shiny::checkboxInput(ns("addtraits"), "Add traits", FALSE),
-    shiny::checkboxInput(ns("showpval"), "Show p-values", FALSE),    
+    shiny::checkboxInput(ns("showval"), "Show correlation values", FALSE),    
     shiny::checkboxInput(ns("marginxl"), "Increase margins", FALSE)    
   )
 
@@ -55,8 +55,8 @@ wgcna_plot_eigengene_heatmap_server <- function(id,
         plotDendro = FALSE,
         plotHeatmap = TRUE,
         nmax = ifelse(input$showtop, 20, -1),
-        text = input$showpval,
-        pstar = !input$showpval,        
+        text = input$showval,
+        pstar = !input$showval,        
         mar2 = mar2,
         main = "",
         marx = 0.7

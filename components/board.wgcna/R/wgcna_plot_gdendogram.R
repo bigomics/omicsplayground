@@ -13,9 +13,16 @@ wgcna_plot_gdendogram_ui <- function(
     width = 400,
     ...) {
   ns <- shiny::NS(id)
+
+
+  options <- shiny::tagList(
+    shiny::checkboxInput(ns("showtrait"), "Show trait correlation", FALSE)
+  )
+
   PlotModuleUI(
     ns("plot"),
     title = title,
+    options = options,
     label = label,
     caption = caption,
     info.text = info.text,
@@ -32,7 +39,11 @@ wgcna_plot_gdendogram_server <- function(id,
   moduleServer(id, function(input, output, session) {
     RENDER <- function() {
       res <- wgcna.compute()
-      playbase::wgcna.plotDendroAndColors(res, main = "")
+      playbase::wgcna.plotDendroAndColors(
+        res,
+        show.traits = input$showtrait,
+        marAll = c(0.4, 5, 1, 0.2),
+        main = "")
     }
 
     PlotModuleServer(
