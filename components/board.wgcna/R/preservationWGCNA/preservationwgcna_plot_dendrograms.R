@@ -43,11 +43,10 @@ preservationWGCNA_plot_dendrograms_server <- function(id,
 
       res <- rwgcna()      
       shiny::validate(shiny::need(!is.null(res), "Please compute"))
-      ##shiny::req(res)
       
       playbase::wgcna.plotDendroAndTraitCorrelation_multi(
         res$layers,
-        show.traits = 1,
+        show.traits = input$showtraits,
         marAll = c(1, 10, 3, 0.2),
         colorHeightMax = 0.75
       )

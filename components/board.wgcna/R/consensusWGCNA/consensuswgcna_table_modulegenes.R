@@ -15,18 +15,12 @@ consensusWGCNA_table_modulegenes_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(
-      inputId = ns("fulltable"),
-      label = "Show full table",
-      value = TRUE
-    ),
-    shiny::checkboxInput(
       inputId = ns("showallmodules"),
       label = "Show all modules",
       value = FALSE
     )
   )
 
-  
   TableModuleUI(
     ns("table"),
     info.text = info.text,
@@ -51,7 +45,6 @@ consensusWGCNA_table_modulegenes_server <- function(id,
     table_df <- function() {
 
       cons <- mwgcna()
-      
       trait <- r_trait()
       module <- r_module()
       annot <- r_annot()
@@ -60,18 +53,19 @@ consensusWGCNA_table_modulegenes_server <- function(id,
       shiny::req(trait)
       shiny::req(module)
       shiny::req(annot)      
-
-      if(input$showallmodules) module <- NULL
       
-      stats <- playbase::wgcna.getConsensusGeneStats(
-        cons,
-        stats = cons$stats,
-        trait = trait,
-        module = module
-      )
+      if (input$showallmodules) module <- NULL
       
-      which_table <- ifelse(input$fulltable, "full", "consensus")
-      df <- stats[[which_table]]
+      stats <- playbase::wgcna.getConsensusGeneStats(cons, stats = cons$stats,
+        trait = trait, module = module)
+      
+      cm <- Reduce(intersect, lapply(stats, rownames))
+      kk <- c(grep("score\\.", colnames(stats[["full"]]), value=TRUE), "consensus")
+      if (input$showallmodules) kk <- c("module", kk)
+      d1 <- stats[["full"]][cm, c("feature", kk)]
+      d2 <- stats[["consensus"]][cm, c("score", "scorePvalue")]
+      df <- cbind(d1, d2)
+      rm(d1, d2)
       
       if(!is.null(annot)) {
         df$title <- playbase::probe2symbol(df$feature, annot, query="gene_title")
@@ -79,38 +73,21 @@ consensusWGCNA_table_modulegenes_server <- function(id,
         if(mean(df$feature == symbol) < 0.2) df$symbol <- symbol        
       }
       
+      kk <- grep("score\\.", colnames(df), value=TRUE)
+      kk <- c("module", "feature", "symbol", "title", kk, "score", "scorePvalue", "consensus")
+      df <- df[, c(intersect(kk, colnames(df))), drop = FALSE]
+
       return(df)
+
     }
     
     render_table <- function(full=TRUE) {
 
-      df <- table_df()      
-      
-      ## set correct types for filter
-      df$module <- factor(df$module)
-      
-      score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
-      if(!full) {
-        cols <- c("module","feature","symbol","title")
-        cols <- c(cols, colnames(df)[which(score.cols)], "consensus")
-        cols <- intersect(cols, colnames(df))
-        df <- df[,cols]
-      }
-
-      if(!input$showallmodules) df$module <- NULL
-      
-      ## order name first
-      cols <- unique(c("module","feature","symbol","title",colnames(df)))
-      cols <- intersect(cols, colnames(df))
-      df <- df[,cols]      
-      
-      ## rename
-      colnames(df) <- sub("moduleMembership","MM",colnames(df))
-      colnames(df) <- sub("traitSignificance","TS",colnames(df))
-      
+      df <- table_df()
+      if ("module" %in% colnames(df)) df$module <- factor(df$module)
       numeric.cols <- which(sapply(df, class) == "numeric")
       score.cols <- grepl("^score", colnames(df)) & !grepl("Pvalue", colnames(df))
-      score.vals <- df[,score.cols,drop=FALSE]
+      score.vals <- df[, score.cols, drop=FALSE]
       
       DT::datatable(
         df,

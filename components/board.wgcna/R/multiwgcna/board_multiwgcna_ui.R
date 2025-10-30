@@ -99,7 +99,7 @@ MultiWGCNA_UI <- function(id) {
               ns("multiwgcnaPower"),
               title = "Scale and connectivity plots",
               caption = "Scale and connectivity plots.",
-              info.text = "The SFT model fit scatter plot shows the soft threshold power vs the signed scale-free topology fit index, for each data type. Specifically, for each datatype, the slope of the log-log connectivity plot vs. frequency is extracted and its opposite sign is computed. This value is then multiplied by the scale-free topology fit index (R^2), with higher values indicating good scale-free structure. The resulting value is plotted against the SFT power value. In WGCNA, features are connected to one another based on how similar (correlated) their expression patterns are across samples. This is precisely defined in the adjacency matrix. Thus, the mean connectivity is a measure of the overall density of the network, i.e., how connected the features are, on average. The mean connectivity plot (scatter plot in the middle), plots the soft threshold power vs the mean connectivity value, for each data type. It shows the average number (or strenght) of connection per each feature, at any given value of power. A decreasing trend is an expected behavior: the mean connectivity decreases as the power increases, suggesting that the network becomes less dense (and therefore the adjacency matrix becomes sparser). On the right, a scatter plot of dendrogram height IQR values vs. soft threshold power is shown.",
+              info.text = "The SFT model fit scatter plot shows the soft threshold power vs the signed scale-free topology fit index. For each datatype, the slope of the log-log connectivity plot vs. frequency is extracted and its opposite sign is computed. This value is then multiplied by the scale-free topology fit index (R^2), with higher values indicating good scale-free structure. The resulting value is plotted against the SFT power value. In WGCNA, features are connected based on their correlation across samples. Thus, the mean connectivity is a measure of overall network density, i.e., how connected the features are, on average.<br><br>The mean connectivity graph plots soft threshold power vs. mean connectivity value, for each data type. It shows the average number (or strenght) of connection per each feature, at any given value of power. A decreasing trend is an expected behavior: the mean connectivity decreases as the power increases, suggesting that the network becomes less dense (and therefore the adjacency matrix becomes sparser).<br><br>The soft threshold power for network sparsity can be changed under 'WGCNA option' and clicking at the 'Compute' button. When 'auto', our in-house IQR method is used. IQR maximizes variation of heights of the dendrogram, promoting seperability between groups. It tests a range of power values. For each power: (i) computes signed adjacency matrix; (ii) converts it to TOM similarity; (iii) clusters it to get a dendrogram; (iv) it computes the 25th, 50th, and 75th percentiles of dendrogram heights and their interquartile range (IQR). The power value with the largest IQR is picked. When clusters are well-separated, dendrogram heights are more variable and thus have higher IQR.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -122,8 +122,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_plot_moduletrait_ui(
               ns("multiwgcnaTrait"),
               title = "Module-trait heatmaps",
-              caption = "...",
-              info.text = "...",
+              caption = "Module-trait heatmaps",
+              info.text = "The multiomics WGCNA 'module-trait' module provides information on the correlation between traits (e.g., phenotypes) and feature modules, for each data type. This is critical in multi-omics data analysis to assess the importance of distinct molecular omics in modulating the phenotype of interest. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). Under plot options, you can 'Merge modules' for a combined view of all data types and modules, 'show correlation values' to add correlation coefficients, 'transpose matrix' to flip the plot. Importantly, only the top 20 most correlated WGCNA modules are displayed by default (or all if less than 20 modules are available). All other modules can be shown by clicking at the option 'show all modules'.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -146,8 +146,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_plot_modulecorr_ui(
               ns("multiwgcnaCorr"),
               title = "Module-module correlation heatmaps",
-              caption = "...",
-              info.text = "...",
+              caption = "Module-module correlation heatmaps",
+              info.text = "The multiomics WGCNA 'Module-module correlation' module provides information on the correlation between modules across layers. All possible pairwise correlations are shown. Modules are first inferred for each data type. In multi-omics data analysis, correlation between modules of distinct data types allow to assess functional convergence between data types. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). Critically, the correlation heatmaps can be conditioned on a phenotype of interest. Conditioning involves scaling to better highlight the modules most heavily associated with the selected phenotypes. Under plot options, you can 'Merge modules' for a combined view of all data types and modules, 'show correlation values' to add correlation coefficients. Importantly, only the top 20 most correlated WGCNA modules are displayed by default (or all if less than 20 modules are available). All other modules can be shown by clicking at the option 'show all modules'.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -163,15 +163,15 @@ MultiWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          bs_alert(HTML("<b>Multi-WGCNA LASAGNA</b>. MultiWGCNA is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association)")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
             multiwgcna_plot_lasagna_ui(
               ns("multiwgcnaLasagna"),
-              title = "Module-module correlation heatmaps",
-              caption = "...",
-              info.text = "...",
+              title = "Multipartite MultiWGCNA LASAGNA",
+              caption = "Multipartite MultiWGCNA LASAGNA graph.",
+              info.text = "Multipartite MultiWGCNA LASAGNA graph. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association) is a stacked layer model for multi-omics where each layer corresponds to a data type. Each layer (vertical bar), corresponds to a data type. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). WGCNA modules, inferred for each data type, are shown as nodes within each layer. The sizes of the node represent the page-rank centrality of the module. The log2FC is indicated for the chosen comparison. The color of the edges correspond to positive (purple) and negative (yellow) correlation between WGCNA feature modules. Thicker edges mean higher correlation. Correlation coefficients can be set under 'Lasagna option' to filter out lowly correlated modules.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
@@ -192,9 +192,9 @@ MultiWGCNA_UI <- function(id) {
             height = "100vh",            
             wgcna_html_module_summary_ui(
               id = ns("multiwgcnaSummary"),
-              title = "AI Summary",
-              info.text = "",
-              caption = "Information about the Module.",
+              title = "AI-powered Summary",
+              info.text = "AI-powered Summary. LLM-generated description about selected WGCNA module. The data type and its WGCNA modules can be selected under 'Module' in the drop-down menu on the right. Available LLM models are 'llmama3.2:1b', 'granite4:micro', 'gpt5-nano', 'grok-4.' The R package 'ellmer' is used to orchestrate the LLM implementation.",
+              caption = "LLM-generated information about the seleted WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),                      
@@ -203,16 +203,16 @@ MultiWGCNA_UI <- function(id) {
               multiwgcna_table_modulegenes_ui(
                 ns("multiwgcnaTable"),
                 title = "Module members",
-                caption = "...",
-                info.text = "...",
+                caption = "Table of features mapped in the selected module.",
+                info.text = "Table of features mapped in the selected module. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
               multiwgcna_table_crossgenes_ui(
                 ns("multiwgcnaCrossgene"),
                 title = "Highly correlated genes",
-                caption = "...",
-                info.text = "...",
+                caption = "Table of features mapped in the selected module and their correlation coefficients.",
+                info.text = "Table of features mapped in the selected module and their correlation coefficient. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
@@ -220,8 +220,8 @@ MultiWGCNA_UI <- function(id) {
             multiwgcna_table_enrichment_ui(
               ns("multiwgcnaEnrichment"),
               title = "Module enrichment",
-              caption = "...",
-              info.text = "...",
+              caption = "Table of gene sets constructed from features mapped in the selected module. Gene set enrichment score, q value, and feature overlap are reported.",
+              info.text = "Table of gene sets constructed from features mapped in the selected module. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right. Gene set enrichment score, q value, and feature overlap are reported.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )

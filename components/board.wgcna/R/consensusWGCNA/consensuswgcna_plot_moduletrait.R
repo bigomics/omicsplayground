@@ -15,9 +15,9 @@ consensusWGCNA_plot_moduletrait_ui <- function(
 
   options <- shiny::tagList(    
     shiny::checkboxInput(
-      inputId = ns("topME"),
-      label = "Show top ME",
-      value = TRUE
+      inputId = ns("show_all_modules"),
+      label = "Show all modules",
+      value = FALSE
     ),
     shiny::checkboxInput(
       inputId = ns("showvalues"),
@@ -82,15 +82,11 @@ consensusWGCNA_plot_moduletrait_scatter_ui <- function(
 
 
 consensusWGCNA_plot_moduletrait_server <- function(id,
-                                               mwgcna,
-                                               r_layers
-                                               ) {
+                                                   mwgcna,
+                                                   r_layers
+                                                   ) {
   moduleServer(id, function(input, output, session) {
 
-    ##---------------------------------------------------
-    ## heatmap 
-    ##---------------------------------------------------    
-    
     heatmap.RENDER <- function() {
 
       cons <- mwgcna()
@@ -105,27 +101,20 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       ii <- 1:n0
       jj <- 1:n1      
 
-      if(n0>2) ii <- hclust(Z)$order
-      if(n1>2) jj <- hclust(tZ)$order
+      if(n0 > 2) ii <- hclust(Z)$order
+      if(n1 > 2) jj <- hclust(tZ)$order
 
-      ntop = 15
-      topME <- input$topME && length(ii) > ntop 
-      if(topME) {
-        zm <- rowMeans(sapply( cons$zlist, function(z) rowMeans(z**2)))
-        sel <- head(order(-zm), ntop)
-        ii <- ii[which(ii %in% sel)]
-      }
-      if(input$topME && length(jj) > ntop) {
-        zm <- rowMeans(sapply( cons$zlist, function(z) colMeans(z**2)))
-        sel <- head(order(-zm),ntop)
-        jj <- jj[which(jj %in% sel)]
-      }
-
-      if(input$transpose) {
-        par(mfrow=c(2,2), mar=c(10,9,2.5,1))
-      } else {
-        par(mfrow=c(2,2), mar=c(7,12,2.5,1))     
-      }
+      ## display top 20 modules (or all if <20 available) by default.
+      ntop <- if (input$show_all_modules) 10000 else 20
+      zm <- rowMeans(sapply(cons$zlist, function(z) rowMeans(z**2)))
+      sel <- head(order(-zm), ntop)
+      ii <- ii[which(ii %in% sel)]
+      zm <- rowMeans(sapply(cons$zlist, function(z) colMeans(z**2)))
+      sel <- head(order(-zm),ntop)
+      jj <- jj[which(jj %in% sel)]
+      
+      par(mfrow=c(2,2), mar=c(7,12,2.5,1))
+      if(input$transpose) par(mfrow=c(2,2), mar=c(10,9,2.5,1))
 
       zmax <- max(sapply(cons$zlist, function(z) max(abs(z),na.rm=TRUE)))
       zlim <- c(-zmax, zmax)
@@ -136,7 +125,7 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
         mat <- cons$zlist[[i]][ii,jj,drop=FALSE]
         if(input$transpose) mat <- Matrix::t(mat)
         main <- paste("module-trait for",toupper(k))
-        if(topME) main <- paste(main, "(top ME)")
+        if(!input$show_all_modules) main <- paste(main, "(top ME)")
         
         playbase::wgcna.plotLabeledCorrelationHeatmap(
           mat,
@@ -161,7 +150,7 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       if(input$transpose) mat <- Matrix::t(mat)      
       tt <- paste(toupper(names(cons$zlist)), collapse="+")
       main <- paste("consensus for",tt)
-      if(topME) main <- paste(main, "(top ME)")
+      if(!input$show_all_modules) main <- paste(main, "(top ME)")
       
       playbase::wgcna.plotLabeledCorrelationHeatmap(
         mat,
@@ -213,9 +202,6 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       add.watermark = FALSE
     )
 
-    ##---------------------------------------------------
-    ## scatterplot
-    ##---------------------------------------------------    
 
     scatter.RENDER <- function() {
       
