@@ -17,13 +17,8 @@ consensusWGCNA_plot_sampletree_ui <- function(
     shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show traits",
-      value = TRUE
-    ),
-    shiny::checkboxInput(
-      inputId = ns("showmodules"),
-      label = "Show modules",
-      value = TRUE
-    ),
+      value = FALSE
+    )
   )
 
   PlotModuleUI(
@@ -52,13 +47,14 @@ consensusWGCNA_plot_sampletree_server <- function(id,
       nsets <- length(cons$datExpr)
       layout.matrix <- matrix(1:(2*nsets), nrow = 2, ncol = nsets)
       layout(layout.matrix, heights=c(1,2), widths=rep(1,nsets))
+      what <- if (input$showtraits) "both" else "me"
       
       for(i in 1:nsets) {
-        dt <- toupper(names(cons$datExpr)[i])
         playbase::wgcna.plotConsensusSampleDendroAndColors(
-          cons, i,
-          main = toupper(dt),          
-          what = "both",
+          cons,
+          i,
+          main = toupper(names(cons$datExpr)[i]),
+          what = what,
           marAll = c(1.2, 10, 2, 0.3),
           clust.expr = TRUE,
           setLayout = FALSE
