@@ -13,20 +13,11 @@ preservationWGCNA_plot_summaries_ui <- function(
     width = 400) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(
-    shiny::checkboxInput(
-      inputId = ns("showiqr"),
-      label = "Show IQR",
-      value = FALSE
-    )
-  )
-
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
     info.text = info.text,
-    options = options,
     caption = caption,
     height = height,
     width = width,
@@ -47,8 +38,7 @@ preservationWGCNA_plot_summaries_server <- function(id,
       nsets <- ncol(res$Zsummary)
       nr <- ceiling(sqrt(nsets*3))
       par(mfrow=c(nr,nr), mar=c(5,5,4,1)) 
-      playbase::wgcna.plotPreservationSummaries(
-        res, setpar=FALSE)
+      playbase::wgcna.plotPreservationSummaries(res, setpar=FALSE)
 
     }
     
