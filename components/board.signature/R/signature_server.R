@@ -180,6 +180,8 @@ SignatureBoard <- function(id, pgx,
           genes <- union(genes, rx.genes)
         }
         genes <- intersect(toupper(genes), symbols)
+        shiny::validate(shiny::need(length(genes) > 0,
+          "Custom feature selection not found in the data. Please check your custom feature list."))
         ## map to probes
         features1 <- playbase::map_probes(pgx$genes, genes,
           column = "human_ortholog", ignore.case = TRUE
