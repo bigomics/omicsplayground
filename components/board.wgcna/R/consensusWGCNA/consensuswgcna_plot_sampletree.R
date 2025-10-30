@@ -24,11 +24,6 @@ consensusWGCNA_plot_sampletree_ui <- function(
       label = "Show modules",
       value = TRUE
     ),
-    shiny::checkboxInput(
-      inputId = ns("split"),
-      label = "Split dataset",
-      value = TRUE
-    )
   )
 
   PlotModuleUI(
@@ -53,11 +48,9 @@ consensusWGCNA_plot_sampletree_server <- function(id,
 
       cons <- mwgcna()
       shiny::req(cons)
-
-      ##if(input$top20) {}
       
       nsets <- length(cons$datExpr)
-      layout.matrix <- matrix( 1:(2*nsets), nrow = 2, ncol = nsets)
+      layout.matrix <- matrix(1:(2*nsets), nrow = 2, ncol = nsets)
       layout(layout.matrix, heights=c(1,2), widths=rep(1,nsets))
       
       for(i in 1:nsets) {
