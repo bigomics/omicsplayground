@@ -122,16 +122,16 @@ ConsensusWGCNA_UI <- function(id) {
             consensusWGCNA_plot_moduletrait_ui(
               ns("consensusWGCNATrait"),
               title = "Module-Trait Heatmaps",
-              caption = "...",
-              info.text = "...",
+              caption = "Heatmaps of correlation values between modules and traits.",
+              info.text = "Heatmaps of correlation values between modules and traits. Heatmaps are displayed for each available groups within the selected pheonotype as well as for the consensus between groups. Correlation coefficient values can be optionally added into the heatmap. Statistical significance of the correlation coefficient values can also be optionally added into the heatmap, displayed as stars.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
             consensusWGCNA_plot_traitsignificance_ui(
               ns("consensusWGCNATraitSignificance"),
               title = "Trait Significance",
-              caption = "...",
-              info.text = "...",
+              caption = "Visualize the patterns of the module scores across all available groups within the selected phenotype.",
+              info.text = "Scatter plots (for a continuous trait) or boxplots (for a categorical trait) of the scores for the selected module across all available groups within the selected phenotype. Modules that are concordant between phenotypes show similar patterns in score values. Modules that are discordant are expected to display opposite patterns across phenotypes. The number of plots displayed can be set using in the options.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
