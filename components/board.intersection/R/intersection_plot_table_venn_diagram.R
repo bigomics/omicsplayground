@@ -158,7 +158,8 @@ intersection_plot_venn_diagram_server <- function(id,
           p <- ggVennDiagram::ggVennDiagram(
             x,
             label = "both",
-            edge_size = 0.4
+            edge_size = 0.4,
+            label_alpha = 0
           ) +
             ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
             ggplot2::theme(
@@ -172,7 +173,8 @@ intersection_plot_venn_diagram_server <- function(id,
           p <- ggVennDiagram::ggVennDiagram(
             x,
             label = "count",
-            edge_size = 0.4
+            edge_size = 0.4,
+            label_alpha = 0
           ) +
             ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
             ggplot2::theme(
