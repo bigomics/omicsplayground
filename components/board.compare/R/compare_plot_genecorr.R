@@ -233,7 +233,7 @@ compare_plot_genecorr_server <- function(id,
       # Assemble all subplot in to grid
       plt <- plotly::subplot(
         sub_plots,
-        nrows = 4,
+        nrows = min(4, length(sub_plots)),
         margin = 0.03,
         titleX = TRUE,
         titleY = TRUE
