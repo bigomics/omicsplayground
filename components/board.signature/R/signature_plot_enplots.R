@@ -13,15 +13,16 @@
 #'
 #' @export
 signature_plot_enplots_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
   info_text <- "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
@@ -196,7 +197,6 @@ signature_plot_enplots_server <- function(id,
 
       return(fig)
     }
-
 
 
     PlotModuleServer(

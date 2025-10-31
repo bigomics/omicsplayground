@@ -10,7 +10,8 @@ loading_table_datasets_public_ui <- function(
     caption,
     height,
     width,
-    delete_button = FALSE) {
+    delete_button = FALSE,
+    load_button = FALSE) {
   ns <- shiny::NS(id)
 
   tagList(
@@ -23,6 +24,14 @@ loading_table_datasets_public_ui <- function(
       title = title
     ),
     div(
+      if (load_button) {
+        shiny::actionButton(
+          ns("loadbutton"),
+          label = "Load selected",
+          icon = icon("file-import"),
+          class = "btn btn-primary"
+        )
+      },
       shiny::actionButton(
         ns("importbutton"),
         label = "Import dataset",
@@ -45,7 +54,8 @@ loading_table_datasets_public_server <- function(id,
                                                  pgx_public_dir,
                                                  reload_pgxdir_public,
                                                  auth,
-                                                 reload_pgxdir) {
+                                                 reload_pgxdir,
+                                                 loadAndActivatePGX = NULL) {
   moduleServer(id, function(input, output, session) {
     getPGXINFO_PUBLIC <- shiny::reactive({
       shiny::req(auth$logged)
@@ -127,15 +137,31 @@ loading_table_datasets_public_server <- function(id,
     observeEvent(pgxtable_public$rows_selected(),
       {
         if (is.null(pgxtable_public$rows_selected())) {
+          shinyjs::disable(id = "loadbutton")
           shinyjs::disable(id = "importbutton")
           shinyjs::disable(id = "deletebutton")
         } else {
+          shinyjs::enable(id = "loadbutton")
           shinyjs::enable(id = "importbutton")
           shinyjs::enable(id = "deletebutton")
         }
       },
       ignoreNULL = FALSE
     )
+
+    observeEvent(input$loadbutton, {
+      ## Load button: loads the dataset directly from public directory without importing
+      if (is.null(loadAndActivatePGX)) {
+        warning("[loading_table_datasets_public] loadAndActivatePGX function not provided")
+        return(NULL)
+      }
+
+      selected_row <- pgxtable_public$rows_selected()
+      pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
+      
+      ## Load directly from the public directory without copying
+      loadAndActivatePGX(pgx_name, pgxdir = pgx_public_dir)
+    })
 
     observeEvent(input$importbutton, {
       selected_row <- pgxtable_public$rows_selected()
@@ -173,7 +199,7 @@ loading_table_datasets_public_server <- function(id,
       shinyalert::shinyalert(
         "Dataset imported",
         paste(
-          "The public dataset", pgx_name, "has now been successfully imported",
+          "The dataset", pgx_name, "from", tolower(auth$options$PUBLIC_DATASETS_LABEL), "has now been successfully imported",
           "to your library. Feel free to load it as usual!"
         )
       )
@@ -194,7 +220,7 @@ loading_table_datasets_public_server <- function(id,
       ## shiny::req(df)
 
       # need this, otherwise there is an error on user logout
-      validate(need(nrow(df) > 0, "No public datasets!"))
+      validate(need(nrow(df) > 0, paste("No", tolower(auth$options$PUBLIC_DATASETS_LABEL), "!")))
 
       df$creator <- sub("@.*", "", df$creator) ## hide full email
 
@@ -249,7 +275,6 @@ loading_table_datasets_public_server <- function(id,
 
 
     pgxtable_public <- TableModuleServer(
-
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,

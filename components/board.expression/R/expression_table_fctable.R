@@ -12,12 +12,13 @@
 #'
 #' @export
 expression_table_fctable_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   table_opts <- shiny::tagList(

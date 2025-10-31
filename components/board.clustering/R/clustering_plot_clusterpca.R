@@ -4,17 +4,18 @@
 ##
 
 clustering_plot_clustpca_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    parent) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  parent
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(

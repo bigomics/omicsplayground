@@ -13,14 +13,15 @@
 #'
 #' @export
 functional_plot_enrichmap_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    info.width,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  info.width,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

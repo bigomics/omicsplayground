@@ -4,14 +4,15 @@
 ##
 
 mofa_plot_lasagna3D_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    info.references = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  info.references = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(

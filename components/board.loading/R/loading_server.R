@@ -22,7 +22,6 @@ LoadingBoard <- function(id,
     ns <- session$ns ## NAMESPACE
 
 
-
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
     is_data_loaded <- reactiveVal(NULL)
@@ -187,7 +186,8 @@ LoadingBoard <- function(id,
         pgx_public_dir = pgx_public_dir,
         reload_pgxdir_public = reload_pgxdir_public,
         auth = auth,
-        reload_pgxdir = reload_pgxdir
+        reload_pgxdir = reload_pgxdir,
+        loadAndActivatePGX = loadAndActivatePGX
       )
 
       loading_tsne_server(
@@ -211,7 +211,8 @@ LoadingBoard <- function(id,
           pgx_public_dir = pgx_archive_dir,
           reload_pgxdir_public = reload_pgxdir_public,
           auth = auth,
-          reload_pgxdir = reload_pgxdir
+          reload_pgxdir = reload_pgxdir,
+          loadAndActivatePGX = loadAndActivatePGX
         )
 
         loading_tsne_server(
@@ -285,20 +286,25 @@ LoadingBoard <- function(id,
       ignoreNULL = FALSE
     )
 
-    loadPGX <- function(pgxfile) {
+    loadPGX <- function(pgxfile, pgxdir = NULL) {
       req(auth$logged)
       if (!auth$logged) {
         return(NULL)
       }
 
+      ## Use provided directory or default to user directory
+      if (is.null(pgxdir)) {
+        pgxdir <- auth$user_dir
+      }
+
       pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-      pgxfile1 <- file.path(auth$user_dir, pgxfile)
+      pgxfile1 <- file.path(pgxdir, pgxfile)
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
         pgx <- playbase::pgx.load(pgxfile1)
       } else {
-        warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile)
+        warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile1)
         return(NULL)
       }
       if (!is.null(pgx)) {
@@ -327,11 +333,11 @@ LoadingBoard <- function(id,
       return(NULL)
     }
 
-    loadAndActivatePGX <- function(pgxfile) {
+    loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
       ## During loading show loading pop-up modal
       pgx.showCartoonModal()
 
-      loaded_pgx <- loadPGX(pgxfile)
+      loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
         warning("[LoadingBoard@load_react] ERROR loading PGX file ", pgxfile, "\n")
         beepr::beep(10)
@@ -354,9 +360,10 @@ LoadingBoard <- function(id,
         loaded_pgx$name <- sub("[.]pgx$", "", pgxfile) ## always use filename
 
         ## if PGX object has been updated with pgx.initialize, we save
-        ## the updated object.
+        ## the updated object (but only if loading from user directory)
         slots1 <- names(loaded_pgx)
-        if (length(slots1) != length(slots0)) {
+        is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
+        if (length(slots1) != length(slots0) && is_user_dir) {
           info("[loading_server.R] saving updated PGX")
           new_slots <- setdiff(slots1, slots0)
           savePGX(loaded_pgx, file = pgxfile)

@@ -13,14 +13,15 @@
 #'
 #' @export
 signature_plot_overlap_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   overlapScorePlot.opts <- shiny::tagList(

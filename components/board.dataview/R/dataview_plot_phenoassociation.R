@@ -4,15 +4,16 @@
 ##
 
 dataview_plot_phenoassociation_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption
+) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(

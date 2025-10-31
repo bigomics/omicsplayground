@@ -4,13 +4,14 @@
 ##
 
 wgcna_plot_eigengene_heatmap_ui <- function(
-    id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label,
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(

@@ -4,8 +4,9 @@
 ##
 
 mofa_plot_snfgraph_ui <- function(
-    id,
-    ...) {
+  id,
+  ...
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(

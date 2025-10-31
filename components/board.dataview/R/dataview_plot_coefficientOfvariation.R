@@ -4,15 +4,16 @@
 ##
 
 dataview_plot_variationcoefficient_ui <- function(
-    id,
-    height,
-    width,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption) {
+  id,
+  height,
+  width,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption
+) {
   ns <- shiny::NS(id)
 
   menu_grouped <- "<code>grouped</code>"

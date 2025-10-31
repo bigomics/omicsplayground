@@ -4,12 +4,13 @@
 ##
 
 enrichment_table_gset_enrich_all_contrasts_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   fctable_opts <- shiny::tagList(

@@ -504,7 +504,6 @@ viz.Expression <- function(pgx, pheno, contrast, genes = NULL,
   }
 
 
-
   p2 <- p2 + ggplot2::theme(plot.margin = ggplot2::margin(5, 5, 5, 25))
   row1 <- cowplot::plot_grid(p1, p2, nrow = 1, rel_widths = c(1, 4), labels = c("a", "b"))
   row2 <- cowplot::plot_grid(plotlist = gene_plots, nrow = nrow) +

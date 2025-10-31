@@ -4,14 +4,15 @@
 ##
 
 mofa_plot_pathwayheatmap_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    info.methods = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  info.methods = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(

@@ -4,16 +4,17 @@
 ##
 
 dataview_plot_tsne_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

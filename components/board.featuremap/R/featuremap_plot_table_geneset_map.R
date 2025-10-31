@@ -4,16 +4,17 @@
 ##
 
 featuremap_plot_geneset_map_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot.opts <- shiny::tagList(
@@ -49,13 +50,14 @@ featuremap_plot_geneset_map_ui <- function(
 }
 
 featuremap_table_geneset_map_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

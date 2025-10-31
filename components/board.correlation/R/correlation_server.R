@@ -150,8 +150,8 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       ## filter gene expression matrix
       X <- getFilteredExpression()
-      if (any(is.na(X)))  X <- getFilteredImpExpression()
-      
+      if (any(is.na(X))) X <- getFilteredImpExpression()
+
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
       res <- playbase::pgx.computeGlassoAroundGene(

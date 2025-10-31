@@ -4,14 +4,15 @@
 ##
 
 wgcna_plot_s_independence_ui <- function(
-    id,
-    label = "",
-    title = "",
-    info.text = "",
-    caption = info.text,
-    height,
-    width,
-    ...) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = info.text,
+  height,
+  width,
+  ...
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

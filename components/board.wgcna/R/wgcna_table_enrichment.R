@@ -4,13 +4,14 @@
 ##
 
 wgcna_table_enrichment_ui <- function(
-    id,
-    label = "",
-    title = "",
-    info.text = "",
-    caption = "",
-    width,
-    height) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(

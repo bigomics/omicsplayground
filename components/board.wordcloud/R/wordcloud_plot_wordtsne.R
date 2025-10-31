@@ -4,14 +4,15 @@
 ##
 
 wordcloud_plot_wordtsne_ui <- function(
-    id,
-    height,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption) {
+  id,
+  height,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption
+) {
   ns <- shiny::NS(id)
 
   wordtsne_options <- shiny::tagList(

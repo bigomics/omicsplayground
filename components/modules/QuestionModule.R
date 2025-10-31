@@ -12,8 +12,7 @@ QUESTIONS.ANSWERS <- list(
   c("Are you a student?", "yes|no")
 )
 
-QuestionModuleUI <- function(id) {
-}
+QuestionModuleUI <- function(id) {}
 
 QuestionModule <- function(input, output, session, lapse = 5) {
   ns <- session$ns ## NAMESPACE
