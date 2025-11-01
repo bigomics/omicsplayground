@@ -161,6 +161,7 @@ upload_module_normalization_server <- function(
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
+          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
           res <- playbase::detectOutlierSamples(X, plot = FALSE)
           is.outlier <- (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
