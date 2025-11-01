@@ -199,10 +199,10 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Summary of module. <b>(b)</b> Correlation of module eigengene with traits. <b>(c)</b> Circle network of top hub genes. </b> <b>(d)</b> Module heatmap.  <b>(e)</b> Table of importance score to identify 'driver genes' of the module. <b>(f)</b> Plot of gene significance paramters.")),
+          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Summary of module. <b>(b)</b> Correlation of module eigengene with traits. <b>(c)</b> Circle network of top hub genes. </b>  <b>(d)</b> Table of importance score to identify 'driver genes' of the module. <b>(e)</b> Plot of gene significance paramters.")),
           bslib::layout_columns(
             height = "100%",
-            col_widths = c(2, 10),
+            col_widths = c(3, 9),
             wgcna_html_module_summary_ui(
               id = ns("moduleSummary"),
               title = "(a) AI Summary",
@@ -212,7 +212,7 @@ WgcnaUI <- function(id) {
               width = c("auto", "100%")
             ),
             bslib::layout_columns(
-              col_widths = c(4, 4, 4, 7, 5),
+              col_widths = c(7, 5, 7, 5),
               height = "calc(100vh - 181px)",
               wgcna_plot_module_significance_ui(
                 ns("moduleSignificance"),
@@ -234,17 +234,17 @@ WgcnaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              wgcna_plot_module_heatmap_ui(
-                ns("moduleheatmap"),
-                title = "(d) Module heatmap",
-                info.text = "Heatmap of genes, or top genes, in the selected module.",
-                caption = "Heatmap of genes, or top genes, in the selected module.",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
+              ## wgcna_plot_module_heatmap_ui(
+              ##   ns("moduleheatmap"),
+              ##   title = "(d) Module heatmap",
+              ##   info.text = "Heatmap of genes, or top genes, in the selected module.",
+              ##   caption = "Heatmap of genes, or top genes, in the selected module.",
+              ##   height = c("100%", TABLE_HEIGHT_MODAL),
+              ##   width = c("auto", "100%")
+              ## ),
               wgcna_table_genes_ui(
                 ns("geneTable"),
-                title = "(e) Significance table",
+                title = "(d) Significance table",
                 info.text = "Genes in the selected WGCNA module.",
                 caption = "Table of genes in the selected module.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
@@ -262,7 +262,7 @@ WgcnaUI <- function(id) {
               ## ),
               wgcna_plot_membership_v_trait_ui(
                 ns("memberTrait"),
-                title = "(f) Gene significance",
+                title = "(e) Gene significance",
                 info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
                 caption = "We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
