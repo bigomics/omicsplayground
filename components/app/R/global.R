@@ -213,6 +213,9 @@ if (file.exists(defaults.file)) {
         ),
         proteomics = list()
       )
+    ),
+    qc = list(
+      impute = TRUE
     )
   )
 }

@@ -803,7 +803,7 @@ upload_module_normalization_server <- function(
                     selected = 0.2
                   )
                 ),
-                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = FALSE),
+                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = DEFAULTS$qc$impute),
                 shiny::conditionalPanel("input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
