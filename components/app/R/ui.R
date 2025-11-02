@@ -245,25 +245,29 @@ app_ui <- function(x) {
             shiny::div(shiny::uiOutput("current_dataset"), class = "current-dataset")
           ),
           left = tags$div(
-            style = "padding: 0 0 0 20px;",
-            div(
-              style = "display: inline-block; ",
-              bigdash::navbarDropdown(
-                "Datasets",
-                style = "border: 1px; padding: 2px 6px;",
-                bigdash::navbarDropdownTab(
-                  "Upload new",
-                  "upload-tab"
-                ),
-                bigdash::navbarDropdownTab(
-                  "Load from library",
-                  "load-tab"
-                ),
-                bigdash::navbarDropdownTab(
-                  "Shared datasets",
-                  "sharing-tab"
-                )
+            style = "padding: 0 0 0 20px; display: inline-flex;",
+            bigdash::navbarDropdown(
+              "Datasets",
+              style = "border: 1px; padding: 2px 6px;",
+              bigdash::navbarDropdownTab(
+                "Upload new",
+                "upload-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Load from library",
+                "load-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Shared datasets",
+                "sharing-tab"
               )
+            ),
+            bigdash::navbarDropdown(
+              "Applets",
+              #style = "border: 1px; padding: 2px 6px;",
+              tags$li(actionLink("applet_batcheffect", "Analyze Batch Effects")),
+              tags$li(actionLink("applet_lipidannot", "Lipid Annotator")),
+              tags$li(actionLink("applet_enricher", "Enricher"))              
             )
           ),
           div.upgradebutton,

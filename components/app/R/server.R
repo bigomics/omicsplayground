@@ -955,9 +955,17 @@ app_server <- function(input, output, session) {
   }
 
   ## -------------------------------------------------------------
-  ## About
+  ## Applets
   ## -------------------------------------------------------------
 
+  observeEvent(input$applet_batcheffect, {
+    runApplet(applet_batchcorrect, pgx=PGX, as="modal", size="xl")
+  })
+
+  ## -------------------------------------------------------------
+  ## About
+  ## -------------------------------------------------------------
+  
   observeEvent(input$navbar_about, {
     authors <- c(
       "Ana Nufer, Antonino Zito, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Griffin Seidel, Ivo Kwee, John Coene, Jonathan Manson-Hennig, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
