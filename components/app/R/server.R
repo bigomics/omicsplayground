@@ -522,7 +522,6 @@ app_server <- function(input, output, session) {
   })
 
 
-
   ## --------------------------------------------------------------------------
   ## Current navigation
   ## --------------------------------------------------------------------------
@@ -1259,17 +1258,22 @@ app_server <- function(input, output, session) {
     if (auth$logged) {
       shinyjs::delay(500, {
         ## read startup messages
-        msg <- readLines(file.path(ETC, "MESSAGES"))
-        msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
-        msg <- c(msg[[1]], sample(msg, 4))
-        STARTUP_MESSAGES <- msg
-        shiny::showModal(
-          ui.startupModal(
-            id = "startup_modal",
-            messages = STARTUP_MESSAGES,
-            title = "BigOmics Highlights"
-          )
-        )
+        msg_file <- file.path(ETC, "MESSAGES")
+        if (file.exists(msg_file)) {
+          msg <- readLines(msg_file)
+          msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+          if (length(msg) > 0) {
+            msg <- c(msg[[1]], sample(msg, min(4, length(msg))))
+            STARTUP_MESSAGES <- msg
+            shiny::showModal(
+              ui.startupModal(
+                id = "startup_modal",
+                messages = STARTUP_MESSAGES,
+                title = "BigOmics Highlights"
+              )
+            )
+          }
+        }
       })
     }
   })

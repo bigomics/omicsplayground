@@ -4,12 +4,13 @@
 ##
 
 dataview_plot_expression_ui <- function(
-    id,
-    label = "",
-    height,
-    title,
-    caption,
-    info.text) {
+  id,
+  label = "",
+  height,
+  title,
+  caption,
+  info.text
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(

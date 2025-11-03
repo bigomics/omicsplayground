@@ -13,15 +13,16 @@
 #'
 #' @export
 correlation_plot_cor_graph_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   cor_graph.opts <- shiny::tagList(
@@ -58,10 +59,11 @@ correlation_plot_cor_graph_ui <- function(
 #' @return
 #' @export
 correlation_plot_cor_graph_server <- function(
-    id,
-    gene,
-    getPartialCorrelationMatrix,
-    watermark = FALSE) {
+  id,
+  gene,
+  getPartialCorrelationMatrix,
+  watermark = FALSE
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

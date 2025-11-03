@@ -4,19 +4,23 @@
 ##
 
 intersection_scatterplot_pairs_ui <- function(
-    id,
-    title,
-    label = "",
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  label = "",
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   scatterplot_pairs.opts <- shiny::tagList(
     withTooltip(
-      shiny::checkboxInput(ns("splom_highlight"), tspan("Highlight genes"), TRUE),
-      "Enable highlighting genes on the plots. Users can highlight points by selecting them with the mouse, using the box selection or the lasso selection tool."
+      shiny::checkboxInput(ns("annotate"),
+        tspan("Annotate top features"),
+        TRUE
+      ),
+      "Annotate top 50 features"
     )
   )
 
@@ -80,8 +84,8 @@ intersection_scatterplot_pairs_server <- function(id,
 
       is.sel <- (rownames(df) %in% sel.genes)
       df.color <- rep(omics_colors("grey"), nrow(df))
-      if (input$splom_highlight)
-        df.color <- c("#CCCCCC22", omics_colors("grey"))[1 + is.sel]  
+      ## if (input$splom_highlight)
+      ##  df.color <- c("#CCCCCC22", omics_colors("grey"))[1 + is.sel]  
 
       ## Labels for top 50
       label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
@@ -154,20 +158,24 @@ intersection_scatterplot_pairs_server <- function(id,
               color = "rgb(0,0,0)"
             )
           )
-        ) %>%
-          plotly::add_annotations(
-            x = df[sel1, 1],
-            y = df[sel1, 2],
-            text = as.character(label.text),
-            xanchor = "center",
-            yanchor = "top",
-            font = list(size = 14),
-            xref = "x",
-            yref = "y",
-            showarrow = FALSE,
-            ax = 20,
-            ay = -40
-          ) %>%
+        );
+        if (input$annotate) {
+          p <- p %>%
+            plotly::add_annotations(
+              x = df[sel1, 1],
+              y = df[sel1, 2],
+              text = as.character(label.text),
+              xanchor = "center",
+              yanchor = "top",
+              font = list(size = 14),
+              xref = "x",
+              yref = "y",
+              showarrow = FALSE,
+              ax = 20,
+              ay = -40
+            )
+        };
+        p <- p %>%
           plotly::layout(
             annotations = annot.rho,
             hovermode = "closest",
@@ -241,20 +249,24 @@ intersection_scatterplot_pairs_server <- function(id,
               line = list(width = 0.3, color = "rgb(0,0,0)")),
             text = hovertext, hoverinfo = "text",
             hovertemplate = "%{text}<extra></extra>"
-          ) %>%
-            plotly::add_annotations(
-              x = df1[1:ntop, 1],
-              y = df1[1:ntop, 2],
-              text = rownames(df1)[1:ntop],
-              xanchor = "center",
-              yanchor = "top",
-              font = list(size = 14 * scale_factor),
-              xref = "x",
-              yref = "y",
-              showarrow = FALSE,
-              ax = 20,
-              ay = -40
-            ) %>%
+          );
+          if (input$annotate) {
+            p <- p %>%
+              plotly::add_annotations(
+                x = df1[1:ntop, 1],
+                y = df1[1:ntop, 2],
+                text = rownames(df1)[1:ntop],
+                xanchor = "center",
+                yanchor = "top",
+                font = list(size = 14 * scale_factor),
+                xref = "x",
+                yref = "y",
+                showarrow = FALSE,
+                ax = 20,
+                ay = -40
+              )
+          };
+          p <- p %>%
             plotly::layout(
               annotations = annot.rho,
               hovermode = "closest", dragmode = "select",

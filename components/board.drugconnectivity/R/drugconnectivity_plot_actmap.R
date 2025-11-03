@@ -13,13 +13,14 @@
 #'
 #' @export
 drugconnectivity_plot_actmap_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(

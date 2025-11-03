@@ -16,7 +16,6 @@ message("\n\n\n")
 shiny::addResourcePath("custom", "www")
 
 
-
 message("[GLOBAL] reading global.R ...")
 
 if (Sys.info()["sysname"] != "Windows") {
@@ -174,6 +173,7 @@ opt.default <- list(
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
+  MAX_PUBLIC_DATASETS = NULL,
   MAX_SAMPLES = 1000,
   MAX_COMPARISONS = 20,
   MAX_GENES = 20000,
@@ -199,8 +199,26 @@ message("************* SETTING DEFAULTS ***************")
 message("************************************************")
 
 defaults.file <- file.path(ETC, "DEFAULTS.yml")
-if (!file.exists(defaults.file)) stop("FATAL ERROR: cannot find DEFAULTS.yml file")
-DEFAULTS <<- yaml::read_yaml(defaults.file)
+if (file.exists(defaults.file)) {
+  DEFAULTS <<- yaml::read_yaml(defaults.file)
+} else {
+  message("[GLOBAL] DEFAULTS.yml not found, using default configuration")
+  DEFAULTS <<- list(
+    computation_options = list(
+      probe_filtering = list(
+        default = c(
+          "remove.notexpressed",
+          "remove.unknown",
+          "only.proteincoding"
+        ),
+        proteomics = list()
+      )
+    ),
+    qc = list(
+      impute = TRUE
+    )
+  )
+}
 
 ## Check and set authentication method
 if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {

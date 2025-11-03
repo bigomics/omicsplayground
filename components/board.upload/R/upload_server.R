@@ -13,7 +13,6 @@ UploadBoard <- function(id,
                         ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
-
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -1348,6 +1347,7 @@ UploadBoard <- function(id,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,
+      upload_datatype = upload_datatype,
       upload_wizard = shiny::reactive(input$upload_wizard),
       auth = auth
     )

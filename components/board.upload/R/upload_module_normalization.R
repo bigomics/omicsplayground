@@ -16,14 +16,15 @@ upload_module_normalization_ui <- function(id, height = "100%") {
 
 
 upload_module_normalization_server <- function(
-    id,
-    r_counts,
-    r_samples,
-    r_contrasts,
-    upload_datatype,
-    is.olink,
-    is.count = FALSE,
-    height = 720) {
+  id,
+  r_counts,
+  r_samples,
+  r_contrasts,
+  upload_datatype,
+  is.olink,
+  is.count = FALSE,
+  height = 720
+) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -802,7 +803,7 @@ upload_module_normalization_server <- function(
                     selected = 0.2
                   )
                 ),
-                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = FALSE),
+                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = DEFAULTS$qc$impute),
                 shiny::conditionalPanel("input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,

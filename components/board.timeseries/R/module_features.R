@@ -14,18 +14,19 @@
 #'
 #' @export
 TimeSeriesBoard.features_plot <- function(
-    id,
-    label = "label",
-    title = "title",
-    caption = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
-    info.text = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
-    info.methods = "A spline interpolation (smooth curve) of median expression data across time points is performed using the stats::spline R function with default parameters.",
-    info.references = list(
-      list("splinefun:", "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/splinefun.html")
-    ),
-    info.extra_link = "extra.link",
-    height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")) {
+  id,
+  label = "label",
+  title = "title",
+  caption = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
+  info.text = "Boxplot of feature expression across time points. Within each boxplot, each dot is a sample. The colors distinguish the groups in the selected contrast. A spline interpolation (smooth curve) of expression across time points is performed and added within each group.",
+  info.methods = "A spline interpolation (smooth curve) of median expression data across time points is performed using the stats::spline R function with default parameters.",
+  info.references = list(
+    list("splinefun:", "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/splinefun.html")
+  ),
+  info.extra_link = "extra.link",
+  height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
+  width = c("auto", "100%")
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(
@@ -53,13 +54,14 @@ TimeSeriesBoard.features_plot <- function(
 }
 
 TimeSeriesBoard.features_table <- function(
-    id,
-    label = "label",
-    title = "title",
-    info.text = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
-    caption = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value correspond to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
-    height = c("40%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")) {
+  id,
+  label = "label",
+  title = "title",
+  info.text = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value columns show the meta p and meta q value, respectively, corresponding to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
+  caption = "Table reporting results of differential gene expression testing for the main effect and, if available, the interaction with time. P-value and q-value correspond to max p and max q among selected methods. Avg0 and Avg1 columns report the average feature expression in each group. Interaction with time is tested using a design formula containing natural cubic spline of the 'time' variable detected in the metadata (i.e. ~ phenotype * spline(time)).",
+  height = c("40%", TABLE_HEIGHT_MODAL),
+  width = c("auto", "100%")
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(

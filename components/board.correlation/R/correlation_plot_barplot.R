@@ -13,16 +13,17 @@
 #'
 #' @export
 correlation_plot_barplot_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(

@@ -275,7 +275,6 @@ loading_table_datasets_public_server <- function(id,
 
 
     pgxtable_public <- TableModuleServer(
-
       "datasets",
       func = pgxTable.RENDER,
       func2 = pgxTable_modal.RENDER,

@@ -4,14 +4,15 @@
 ##
 
 wgcna_plot_TOMheatmap_ui <- function(
-    id,
-    label = "",
-    title = "",
-    info.text = "",
-    caption = "",
-    height = 400,
-    width = 400,
-    ...) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  height = 400,
+  width = 400,
+  ...
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

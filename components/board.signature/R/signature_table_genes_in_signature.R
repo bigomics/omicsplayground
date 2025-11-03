@@ -4,12 +4,13 @@
 ##
 
 signature_table_genes_in_signature_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

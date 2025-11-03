@@ -13,12 +13,13 @@
 #'
 #' @export
 functional_plot_wikipathway_actmap_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    label = "",
-    height) {
+  id,
+  title,
+  caption,
+  info.text,
+  label = "",
+  height
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(

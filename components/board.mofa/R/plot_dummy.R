@@ -4,13 +4,14 @@
 ##
 
 mofa_plot_dummy_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = c("100%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = c("100%", TABLE_HEIGHT_MODAL),
+  width = c("auto", "100%")
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

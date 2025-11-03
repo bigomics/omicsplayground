@@ -4,14 +4,15 @@
 ##
 
 wgcna_plot_gdendogram_ui <- function(
-    id,
-    title = "",
-    label = "",
-    info.text = "",
-    caption = "",
-    height = 400,
-    width = 400,
-    ...) {
+  id,
+  title = "",
+  label = "",
+  info.text = "",
+  caption = "",
+  height = 400,
+  width = 400,
+  ...
+) {
   ns <- shiny::NS(id)
   PlotModuleUI(
     ns("plot"),

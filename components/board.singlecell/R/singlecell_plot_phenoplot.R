@@ -14,13 +14,14 @@
 #'
 #' @export
 singlecell_plot_phenoplot_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   phenoplot.opts <- shiny::tagList(

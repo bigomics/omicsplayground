@@ -281,7 +281,6 @@ plot_enrichmentmap <- function(res, contrast = NULL, qsig = 0.05,
       #      title = list(
 
 
-
       #      ),
       paper_bgcolor = paper_bgcolor,
       plot_bgcolor = plot_bgcolor,

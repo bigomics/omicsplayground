@@ -4,10 +4,11 @@
 ##
 
 IntersectionBoard <- function(
-    id,
-    pgx,
-    selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
-    selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
+  id,
+  pgx,
+  selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
+  selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 800 # row height of panel
@@ -290,7 +291,6 @@ IntersectionBoard <- function(
       }
       df
     })
-
 
 
     ## ================================================================================

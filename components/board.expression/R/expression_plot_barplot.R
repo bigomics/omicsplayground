@@ -14,13 +14,14 @@
 #'
 #' @export
 expression_plot_barplot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plots_barplot_opts <- shiny::tagList(

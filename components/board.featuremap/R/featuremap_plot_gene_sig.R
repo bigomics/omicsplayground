@@ -4,15 +4,16 @@
 ##
 
 featuremap_plot_gene_sig_ui <- function(
-    id,
-    label = "",
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.extra_link,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.extra_link,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

@@ -9,20 +9,21 @@ upload_table_preview_samples_ui <- function(id) {
 }
 
 upload_table_preview_samples_server <- function(
-    id,
-    orig_sample_matrix,
-    loaded_samples,
-    vars_selected,
-    uploaded,
-    checklist,
-    scrollY,
-    width,
-    height,
-    title,
-    info.text,
-    caption,
-    upload_datatype,
-    public_dataset_id) {
+  id,
+  orig_sample_matrix,
+  loaded_samples,
+  vars_selected,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption,
+  upload_datatype,
+  public_dataset_id
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -395,6 +396,7 @@ upload_table_preview_samples_server <- function(
     observeEvent(input$load_example, {
       df <- playbase::SAMPLES
       if (upload_datatype() == "multi-omics") df <- playbase::SAMPLES_MO
+      if (upload_datatype() == "scRNA-seq") df <- playbase::SAMPLES_scRNAseq
       uploaded$samples.csv <- df
       loaded_samples(TRUE)
       orig_sample_matrix(df)

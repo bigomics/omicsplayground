@@ -4,15 +4,16 @@
 ##
 
 plot_deepnet_gradients_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    info.methods,
-    info.references,
-    caption = "",
-    label = "",
-    height = c("100%", TABLE_HEIGHT_MODAL),
-    width = c("auto", "100%")) {
+  id,
+  title = "",
+  info.text = "",
+  info.methods,
+  info.references,
+  caption = "",
+  label = "",
+  height = c("100%", TABLE_HEIGHT_MODAL),
+  width = c("auto", "100%")
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(

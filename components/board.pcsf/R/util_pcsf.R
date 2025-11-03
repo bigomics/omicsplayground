@@ -4,18 +4,18 @@
 ##
 
 
-
 #' @param x
 #'
 #' @return
 #' @export
 visplot.PCSF <- function(
-    x, style = 0, edge_width = 5, node_size = 40, node_label_cex = 30,
-    Steiner_node_color = "lightblue", Terminal_node_color = "lightgreen",
-    Terminal_node_legend = "Terminal", Steiner_node_legend = "Steiner",
-    layout = "layout_with_fr", physics = TRUE, layoutMatrix = NULL,
-    width = 800, height = 800, invert.weight = FALSE,
-    extra_node_colors = list(), ...) {
+  x, style = 0, edge_width = 5, node_size = 40, node_label_cex = 30,
+  Steiner_node_color = "lightblue", Terminal_node_color = "lightgreen",
+  Terminal_node_legend = "Terminal", Steiner_node_legend = "Steiner",
+  layout = "layout_with_fr", physics = TRUE, layoutMatrix = NULL,
+  width = 800, height = 800, invert.weight = FALSE,
+  extra_node_colors = list(), ...
+) {
   subnet <- x
   if (missing(subnet)) {
     stop("Need to specify the subnetwork obtained from the PCSF algorithm.")

@@ -93,16 +93,15 @@ inlineSelectInput <- function(inputId, label, value = "") {
 }
 
 
-
-
 # Copied code from shiny::fileInput but changed the class of the button
 # it creates to btn-outline-primary.
 # Maybe on future versions of that function they will add
 # a `class` argument so we can submit our own class to that button.
 fileInput2 <- function(
-    inputId, label, multiple = FALSE, accept = NULL, width = NULL,
-    buttonLabel = "Browse...", placeholder = "No file selected",
-    capture = NULL, buttonClass = "btn-outline-primary") {
+  inputId, label, multiple = FALSE, accept = NULL, width = NULL,
+  buttonLabel = "Browse...", placeholder = "No file selected",
+  capture = NULL, buttonClass = "btn-outline-primary"
+) {
   restoredValue <- restoreInput(id = inputId, default = NULL)
   if (!is.null(restoredValue) && !is.data.frame(restoredValue)) {
     warning("Restored value for ", inputId, " has incorrect format.")
@@ -150,9 +149,10 @@ fileInput2 <- function(
 }
 
 selector_switch <- function(
-    class = NULL,
-    label = "Text to appear in Switch",
-    is.checked) {
+  class = NULL,
+  label = "Text to appear in Switch",
+  is.checked
+) {
   tags$div(
     class = "form-check form-switch",
     tags$input(

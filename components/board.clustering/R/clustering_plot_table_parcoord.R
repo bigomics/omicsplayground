@@ -4,20 +4,20 @@
 ##
 
 
-
 ## Annotate clusters ############
 
 clustering_plot_parcoord_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   parcoord_opts <- shiny::tagList(
@@ -49,13 +49,14 @@ clustering_plot_parcoord_ui <- function(
 }
 
 clustering_table_parcoord_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

@@ -10,22 +10,24 @@ upload_table_preview_contrasts_ui <- function(id) {
 }
 
 upload_table_preview_contrasts_server <- function(
-    id,
-    uploaded,
-    checklist,
-    scrollY,
-    width,
-    height,
-    title,
-    info.text,
-    caption,
-    checked_counts,
-    checked_samples,
-    checked_contrasts,
-    show_comparison_builder,
-    selected_contrast_input,
-    upload_wizard,
-    auth) {
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption,
+  checked_counts,
+  checked_samples,
+  checked_contrasts,
+  show_comparison_builder,
+  selected_contrast_input,
+  upload_datatype,
+  upload_wizard,
+  auth
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -368,7 +370,12 @@ upload_table_preview_contrasts_server <- function(
     })
 
     observeEvent(input$load_example, {
-      uploaded$contrasts.csv <- playbase::CONTRASTS
+      if (upload_datatype() == "scRNA-seq") {
+        ctx <- playbase::CONTRASTS_scRNAseq
+      } else {
+        ctx <- playbase::CONTRASTS
+      }
+      uploaded$contrasts.csv <- ctx
     })
 
     modified_ct <- upload_module_makecontrast_server(

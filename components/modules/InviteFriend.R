@@ -12,9 +12,10 @@ InviteFriendUI <- function(id) {
 }
 
 InviteFriendModule <- function(
-    id,
-    auth,
-    callbackR = NULL) {
+  id,
+  auth,
+  callbackR = NULL
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 

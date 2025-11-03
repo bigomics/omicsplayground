@@ -1,3 +1,24 @@
+### v4.0.5+master251013 (2025-10-13)
+
+-  make timeseries optional [view](https://github.com/bigomics/omicsplayground/commit/cf02243231750260484bb908da0d5f4c8e2c12ec)
+-  fix and polishing [view](https://github.com/bigomics/omicsplayground/commit/930d17752bad4f6051fd11d88f1db2a6b0f9d43c)
+-  improve msg [view](https://github.com/bigomics/omicsplayground/commit/0be5e1fb154852775f928c178a05b547eda1e0ff)
+-  trigger and show timeseries tab optionally [view](https://github.com/bigomics/omicsplayground/commit/3ea00f4c3e75d62527c807529ba1d380a8b6df84)
+-  docs: update changelog [view](https://github.com/bigomics/omicsplayground/commit/8e60c026dbeab7243fc23f312b41d2803ef73a65)
+-  remove impX [view](https://github.com/bigomics/omicsplayground/commit/1599cca40e6104706e9160ae6bac485bc590662d)
+-  improve [view](https://github.com/bigomics/omicsplayground/commit/7f4570fe75147b58bf80f616fb101a9bf03c9653)
+-  display timeseries variables [view](https://github.com/bigomics/omicsplayground/commit/bf497d36d9e10b430c3a8eae0cfb7f65de747037)
+-  clean [view](https://github.com/bigomics/omicsplayground/commit/a9a1060da9952776e2b27a64690c5c3139d6ab8e)
+-  inform user about time variables and name full contrasts for clarity and transparency [view](https://github.com/bigomics/omicsplayground/commit/94651101f8f74e69820e324dca00ae954f731005)
+-  feat: remove vert space + hide if too many int_vars [view](https://github.com/bigomics/omicsplayground/commit/84081b832f0fefaaace1d76fc98e08c6fa728b7b)
+-  ci: version-devel [view](https://github.com/bigomics/omicsplayground/commit/8afd1af7e744a91fba4275dcfceeb31dd392e870)
+-  ci: version-devel [view](https://github.com/bigomics/omicsplayground/commit/0229290674247763fb0ebde6a3f1110e917c0bf6)
+-  ci: force devel branch [view](https://github.com/bigomics/omicsplayground/commit/a431e113b274342bff6d82df94c95afa9fd41024)
+-  ci: force devel branch [view](https://github.com/bigomics/omicsplayground/commit/14b4dab0319bd6ef775ef3cb1f7c73eab47d0cd4)
+-  Update version to v4.0.4+devel251009 [view](https://github.com/bigomics/omicsplayground/commit/564a5142c477c825568707aac4ff7a26f0eec8a1)
+-  Update version to v4.0.5+master251013 [view](https://github.com/bigomics/omicsplayground/commit/e6d8a4ac2948558d77d85ddeb4533666ddc52d3a)
+
+
 ### v4.0.4+master251007 (2025-10-07)
 
 -  wip [view](https://github.com/bigomics/omicsplayground/commit/c002ffa235cb990050ebd2cea25d6fef388f188b)

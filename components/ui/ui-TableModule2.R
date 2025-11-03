@@ -301,8 +301,6 @@ TableModuleServer <- function(id,
 }
 
 
-
-
 CardUI <- function(...,
                    height = "100%",
                    width = "auto",

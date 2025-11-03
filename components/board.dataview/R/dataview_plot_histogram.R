@@ -4,13 +4,14 @@
 ##
 
 dataview_plot_histogram_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    caption,
-    info.text) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  caption,
+  info.text
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(

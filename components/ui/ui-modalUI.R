@@ -40,10 +40,11 @@ pgx.showSmallModal2 <- function(msg = "Please wait...", easyClose = TRUE,
 }
 
 modalTrigger <- function(
-    id,
-    target,
-    ...,
-    class = "") {
+  id,
+  target,
+  ...,
+  class = ""
+) {
   class <- sprintf(
     "btn %s",
     class
@@ -59,20 +60,21 @@ modalTrigger <- function(
 }
 
 modalUI <- function(
-    id,
-    title,
-    ...,
-    size = c("default", "sm", "lg", "xl", "fullscreen"),
-    track_open = FALSE,
-    footer = tags$div(
-      class = "modal-footer",
-      tags$button(
-        type = "button",
-        class = "btn btn-secondary",
-        `data-bs-dismiss` = "modal",
-        "Close"
-      )
-    )) {
+  id,
+  title,
+  ...,
+  size = c("default", "sm", "lg", "xl", "fullscreen"),
+  track_open = FALSE,
+  footer = tags$div(
+    class = "modal-footer",
+    tags$button(
+      type = "button",
+      class = "btn btn-secondary",
+      `data-bs-dismiss` = "modal",
+      "Close"
+    )
+  )
+) {
   size <- match.arg(size)
 
   size_cl <- switch(size,
@@ -134,8 +136,9 @@ modalUI <- function(
 }
 
 modalDialog2 <- function(
-    ..., header = NULL, footer = modalButton("Dismiss"),
-    size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE) {
+  ..., header = NULL, footer = modalButton("Dismiss"),
+  size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE
+) {
   size <- match.arg(size)
   backdrop <- if (!easyClose) {
     "static"
