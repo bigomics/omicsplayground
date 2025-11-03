@@ -71,8 +71,8 @@ PreservationWGCNA_UI <- function(id) {
             preservationWGCNA_plot_summaries_ui(
               ns("preservationWGCNASummaries"),
               title = "Preservation scores",
-              caption = "...",
-              info.text = "...",
+              caption = "Scatter plots of preservation WGCNA metrics. The following scatter plots are displayed: Zsummary vs. module size, medianRank vs. module size, MedianRank vs. Zsummary. In each scatter plot, each dot represents a module. Each dot is colored with the respective module color.",
+              info.text = "Preservation WGCNA analysis relies on specific module preservation statistics, including Z-summary and medianRank. The Z-summary value combines multiple preservation metrics (density and connectivity preservation) into a single composite score that reflects how similar the module structure in the test dataset is to that in the reference dataset. A high Z-summary (e.g., >10) indicates strong preservation. A low Z-summary indicate a lowly/weakly preserved network. Notably, caution is advised when intepreting the Z-summary as it is sensitive to module size: larger modules tend to have higher Z-scores compared to small modules.<br><br>The MedianRank is a rank-based measure of module preservation, derived by ranking all modules based on the preservation measures connectivity and density. It is a composite measure that takes the average of two median rank scores: one for the module's connectivity and one for its density. Different to the Z-summary, the MedianRank is significantly more robust to variation in module size. It ranks the observed connectivity and density of a module against the distribution of all other modules in a reference network. A lower medianRank indicates a higher degree of preservation. Altogether, Z-summary and medianRank summarize how well each module’s structure and connectivity patterns are maintained between the reference and the test dataset. ",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )            
