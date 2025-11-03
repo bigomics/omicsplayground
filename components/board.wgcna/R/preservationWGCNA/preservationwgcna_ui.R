@@ -127,17 +127,17 @@ PreservationWGCNA_UI <- function(id) {
               col_widths = c(12),
               preservationWGCNA_plot_moduletrait_ui(
                 ns("preservationWGCNAModuleTrait"),
-                title = "Preservation and Consensus",
-                caption = "...",
-                info.text = "...",
+                title = "Module Preservation and Module-Trait Consensus",
+                caption = "Heatmap of WGCNA module preservation Zsummary values and WGCNA consensus Module-Trait correlation values.",
+                info.text = "Heatmap of WGCNA module preservation Zsummary values. The Z-summary value combines multiple preservation metrics (density and connectivity preservation) into a single composite score that reflects how similar the module structure in the test dataset is to that in the reference dataset. A high Z-summary (e.g., >10) indicates strong preservation. A low Z-summary indicate a lowly/weakly preserved network. Caution is advised when intepreting the Z-summary as it is sensitive to module size: larger modules tend to have higher Z-scores compared to small modules. Zsummary Modules can optionally ordered by decreasing Zsummary values, hierarchical clustering order, or name.<br><br>Heatmap of WGCNA consensus Module-Trait correlation values.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
               preservationWGCNA_plot_moduletrait_barplot_ui(
                 ns("preservationWGCNAModuleTrait"),
                 title = "Module-Trait barplots",
-                caption = "...",
-                info.text = "...",
+                caption = "Bar plots displaying correlation coefficients (y-axis) of each WGCNA module (x-axis) with the selected trait.",
+                info.text = "Module-trait bar plots. Bar plots displaying correlation coefficients (y-axis) of each WGCNA module (x-axis) with the selected trait. The trait can be selected in the drop-down menu on the right. Optionally, WGCNA modules can be colored.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
@@ -161,7 +161,6 @@ PreservationWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto",1),
-          #bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
             col_widths = c(7,5),
             height = "100vh",            
@@ -170,16 +169,16 @@ PreservationWGCNA_UI <- function(id) {
               preservationWGCNA_table_modulegenes_ui(
                 ns("preservationWGCNATable"),
                 title = "Module Features",
-                caption = "...",
-                info.text = "...",
+                caption = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. WGCNA metrics are also reported for each feature.",
+                info.text = "Table reporting the features mapped within the selected WGCNA module and associated with the selected phenotype/trait of interest. For each feature, the following fields are reported: title, trait-specific score, module membership, module membership p value, log2 fold-change log2 fold-change p-value are displayed. Features are sorted by increasing score value.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
               preservationWGCNA_table_enrichment_ui(
                 ns("preservationWGCNAEnrichment"),
                 title = "Module Enrichment",
-                caption = "...",
-                info.text = "...",
+                caption = "Table reporting the gene sets calculated from enrichment analysis of the features mapped within the selected WGCNA module. For each gene set, the following fields are reported: gene set enrichment score, enrichment meta p value (the highest p value among the single gene set enrichment methods' p values), enrichment q value, p value from each gene set enrichment method, number of featues mapped within the gene set, and features mapped within the gene set.",
+                info.text = "Table reporting the gene sets calculated from enrichment analysis of the features mapped within the selected WGCNA module. For each gene set, the following fields are reported: gene set enrichment score, enrichment meta p value (the highest p value among the single gene set enrichment methods' p values), enrichment q value, p value from each gene set enrichment method, number of featues mapped within the gene set, and features mapped within the gene set.",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
