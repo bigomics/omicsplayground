@@ -63,8 +63,8 @@ PreservationWGCNA_UI <- function(id) {
             preservationWGCNA_plot_dendrograms_ui(
               ns("preservationWGCNADendro"),
               title = "Dendrograms and Module Colors",
-              caption = "...",
-              info.text = "...",
+              caption = "Dendrogram of hierarchical clustering of feature co-expression patterns and WGCNA modules for preservation analysis.",
+              info.text = "The gene dendrogram is a highly used visualization in WGCNA. It provides a combined visual summary of the features' hierarchical clustering dendrogram and the module color assignments. It shows that co-expressed features are grouped into common biologically meaningful modules. The tree of the dendrogram reflects the co-expression similarity of the features. Each leaf (end point) of the tree corresponds to a single feature. The branching pattern shows the correlation structure: features that are highly co-expressed (strongly correlated across samples) are clustered together and connected up until lower branch points. Features that are less correlated are joined higher up in the tree. For preservation WGCNA, it displays evidence of preservation of modules across datasets/datatypes/phenotypes. Modules that are 'preserved' are modules sharing feature correlation structure, possibly indicating conserved regulatory pathways and networks. Therefore, preservation WGCNA is an excellent complement to consensus WGCNA. Optionally, all levels for any selected phenotypes can be displayed. Annotation by each available trait can also be optionally displayed. Key preservation WGCNA algorithm parameters can be modified and WGCNA can be recomputed by clicking at the 'Compute' button.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
