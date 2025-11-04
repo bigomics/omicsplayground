@@ -263,8 +263,7 @@ app_ui <- function(x) {
               )
             ),
             bigdash::navbarDropdown(
-              "Applets",
-              #style = "border: 1px; padding: 2px 6px;",
+              "Tools",
               tags$li(actionLink("applet_batcheffect", "Analyze Batch Effects")),
               tags$li(actionLink("applet_lipidannot", "Lipid Annotator")),
               tags$li(actionLink("applet_enricher", "Enricher"))              

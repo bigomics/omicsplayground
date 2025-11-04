@@ -26,7 +26,7 @@ applet_batchcorrect_inputs <- function(id) {
   
 }
 
-applet_batchcorrect_ui <- function(id, as.taglist=FALSE) {
+applet_batchcorrect_ui <- function(id, as="ui") {
   ns <- shiny::NS(id)
 
   clust.infotext <-
@@ -68,8 +68,16 @@ applet_batchcorrect_ui <- function(id, as.taglist=FALSE) {
     )
   )
 
-  if(as.taglist) return(modules)
-  
+  modules_info <- list(
+    "plot1" = clust.infotext,
+    "plot2" = pcc.info,
+    "plot3" = covariate.info,
+    "plot4" = ""
+  )
+
+  if(as=="taglist") return(modules)
+  if(as=="info") return(modules_info)
+
   bslib::layout_columns(
     col_widths = 6,
     height = "calc(100vh - 200px)",
