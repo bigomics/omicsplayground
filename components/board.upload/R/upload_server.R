@@ -832,6 +832,9 @@ UploadBoard <- function(id,
     observeEvent(recompute_pgx(),
       {
         req(!is.null(recompute_pgx()))
+        if (!is.null(recompute_pgx()$datatype) && recompute_pgx()$datatype != "") {
+          upload_datatype(recompute_pgx()$datatype)
+        }
         numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) {
           ## count also deleted files...
