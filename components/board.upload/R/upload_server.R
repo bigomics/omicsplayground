@@ -280,12 +280,11 @@ UploadBoard <- function(id,
         if (!is.null(df0)) {
           barcodes <- colnames(df0)[stringr::str_detect(colnames(df0), "^[ATCG]+_[0-9]+$")]
           cc1 <- (length(barcodes) / ncol(df0)) > 0.9
-          cc2 <- (upload_datatype() == "RNA-seq")
+          cc2 <- (upload_datatype() != "scRNA-seq")
           if (cc1 & cc2) {
-            shinyalert::shinyalert(title = "Your data appears to be single-cell RNA-seq, but you selected bulk RNA-seq. If correct, proceed; otherwise, update your selection.", type = "info")
+            shinyalert::shinyalert(title = "Is your dataset single-cell RNA-seq? If so, please correct the selected datatype.", type = "info")
           }
         }
-
         
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
