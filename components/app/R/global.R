@@ -322,5 +322,10 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
+## Filter LLM models with available models, add all local models(?)
+opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
+LOCAL_MODELS <- playbase::ai.get_ollama_models()
+#opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
