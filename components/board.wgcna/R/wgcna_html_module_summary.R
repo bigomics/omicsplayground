@@ -34,7 +34,6 @@ wgcna_html_module_summary_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
-
     info_text <- function() {
       wgcna <- wgcna()
       module <- r_module()
@@ -57,7 +56,7 @@ wgcna_html_module_summary_server <- function(id,
       res <- gsub("\n","<p>",res)
       res <- gsub(" [*]{2}","<b>",res)
       res <- gsub("[*]{2} ","</b>",res)
-      res <- paste0("<b>",module,":</b> ", res)
+      res <- paste0("<b>",module,":</b><p>", res)
       return(res)
     }
 

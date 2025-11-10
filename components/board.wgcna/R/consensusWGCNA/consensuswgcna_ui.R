@@ -165,8 +165,8 @@ ConsensusWGCNA_UI <- function(id) {
             height = "100vh",            
             wgcna_html_module_summary_ui(
               id = ns("consensusWGCNAmoduleSummary"),
-              title = "AI-powered Summary",
-              info.text = "AI-powered Summary. LLM-generated description of the selected WGCNA module. The WGCNA module and phenotype/trait of interest can both be selected in the drop-down menu on the right. Available LLM models are 'llmama3.2:1b', 'granite4:micro', 'gpt5-nano', 'grok-4.' The R package 'ellmer' is used to orchestrate the LLM implementation.",
+              title = "Summary",
+              info.text = "Summary. Description of the selected WGCNA module. The WGCNA module and phenotype/trait of interest can both be selected in the drop-down menu on the right.",
               caption = "LLM-generated information about the seleted WGCNA module and phenotype/trait of interest.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

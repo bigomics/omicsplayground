@@ -110,8 +110,8 @@ MultiWGCNA_Board <- function(id, pgx) {
         annot = pgx$genes,
         ##GMT = pgx$GMT,  ##  ??
         ##gsetX = pgx$gsetX,  ## ??
-        ai_summary = input$useLLM,
-        ai_model = ai_model,
+        summary = TRUE,
+        ai_model = ifelse(input$useLLM, ai_model, ""),
         ai_experiment = pgx$description,
         progress = progress
       ) 

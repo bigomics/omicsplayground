@@ -192,9 +192,9 @@ MultiWGCNA_UI <- function(id) {
             height = "100vh",            
             wgcna_html_module_summary_ui(
               id = ns("multiwgcnaSummary"),
-              title = "AI-powered Summary",
-              info.text = "AI-powered Summary. LLM-generated description about selected WGCNA module. The data type and its WGCNA modules can be selected under 'Module' in the drop-down menu on the right. Available LLM models are 'llmama3.2:1b', 'granite4:micro', 'gpt5-nano', 'grok-4.' The R package 'ellmer' is used to orchestrate the LLM implementation.",
-              caption = "LLM-generated information about the seleted WGCNA module.",
+              title = "Summary",
+              info.text = "Summary. Description about selected WGCNA module. The data type and its WGCNA modules can be selected under 'Module' in the drop-down menu on the right.",
+              caption = "Information about the selected WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),                      

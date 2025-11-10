@@ -50,10 +50,16 @@ WgcnaBoard <- function(id, pgx) {
     })
     
     shiny::observeEvent( input$useLLM, {
+
+      model <- getUserOption(session,'llm_model')
+
+      dbg("[WgcnaBoard] input$useLLM => model = ", model)
+      
       if(input$useLLM) {
         shinyalert::shinyalert("",
           "Warning. Using LLM might expose some of your data to external LLM servers.")
       }
+      
     })
 
     ## ================================================================================
@@ -79,8 +85,8 @@ WgcnaBoard <- function(id, pgx) {
         minmodsize = as.integer(input$minmodsize),
         power = as.numeric(input$power),
         numericlabels = FALSE,
-        ai_summary = input$useLLM,
-        ai_model = ai_model,
+        summary = TRUE,
+        ai_model = ifelse(input$useLLM, ai_model, ""),
         progress = progress
       )
       shiny::removeModal()

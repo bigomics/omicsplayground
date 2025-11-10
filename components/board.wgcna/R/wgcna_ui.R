@@ -27,7 +27,7 @@ WgcnaInputs <- function(id) {
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 20
           ),
-          shiny::checkboxInput(ns("useLLM"), "Use AI summary", FALSE),
+          shiny::checkboxInput(ns("useLLM"), "AI summary", FALSE),
           shiny::br(),
           shiny::actionButton(
             ns("compute"), "Recompute!",
@@ -205,7 +205,7 @@ WgcnaUI <- function(id) {
             col_widths = c(3, 9),
             wgcna_html_module_summary_ui(
               id = ns("moduleSummary"),
-              title = "(a) AI Summary",
+              title = "(a) Summary",
               info.text = "",
               caption = "Information about the Module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
