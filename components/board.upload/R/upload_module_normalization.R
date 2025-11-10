@@ -211,7 +211,12 @@ upload_module_normalization_server <- function(
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
+        if (ncol(X0) > 100)  methods <- methods[methods != "NPM"]
+        shiny::updateSelectInput(
+          session,
+          "bec_method",
+          choices = methods
+        )
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
         shiny::withProgress(
