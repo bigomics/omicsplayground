@@ -71,26 +71,16 @@ upload_module_normalization_server <- function(
 
         is.multiomics <- playbase::is.multiomics(rownames(counts))
         if (is.multiomics) {
-          ## Scaled log1p transform with autoscaling on non-zero quantile.
-          ## Only applied to multi-omics. It also performs median scaling.
-          ## X <- playbase::mofa.log1s(counts, q = 0.20)
-          ## prior <- 0
           X <- counts
-          ii <- grep("^gx:", rownames(counts))
-          jj <- grep("^gx:", rownames(counts), invert = TRUE)
-          if (any(ii)) X[ii, ] <- log2(counts[ii, ] + 1)
-          if (any(jj)) {
-            prior <- 0
-            if (min(counts[jj, ], na.rm = TRUE) == 0 || any(is.na(counts[jj, ]))) {
-              prior <- min(counts[jj, ][counts[jj, ] > 0], na.rm = TRUE)
-            }
-            X[jj, ] <- log2(counts[jj, ] + prior)
+          dtypes <- unique(unlist(lapply(rownames(counts), function(x) strsplit(x, ":")[[1]][1])))
+          for(i in 1:length(dtypes)) {
+            ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
+            prior <- 1
+            if (dtypes[i] != "gx") prior <- playbase::getPrior(counts[ii, ])
+            X[ii, ] <- log2(counts[ii, ] + prior)
           }
         } else {
-          prior0 <- 0
-          if (min(counts, na.rm = TRUE) == 0 || any(is.na(counts))) {
-            prior0 <- min(counts[counts > 0], na.rm = TRUE)
-          }
+          prior0 <- playbase::getPrior(counts)
           m <- input$normalization_method
           prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
           X <- log2(counts + prior)
@@ -139,7 +129,6 @@ upload_module_normalization_server <- function(
       ## Normalize
       normalizedX <- reactive({
         shiny::req(dim(imputedX()$X))
-        counts <- imputedX()$counts
         X <- imputedX()$X ## can be imputed or not. log2. Can have negatives.
         prior <- imputedX()$prior
         if (input$normalize) {
@@ -151,21 +140,7 @@ upload_module_normalization_server <- function(
             shiny::req(ref)
           }
           if (upload_datatype() == "multi-omics") {
-            ## X <- playbase::normalizeMultiOmics(X, method = m) ## unneeded: done in mofa.log1s.
-            ii <- grep("^gx:", rownames(X))
-            jj <- grep("^gx:", rownames(X), invert = TRUE)
-            if (any(ii)) {
-              dbg("[normalization_server:normalizedX] multiomics: normalizing gx data using logCPM")
-              X[ii, ] <- playbase::normalizeExpression(X[ii, ], method = "CPM", ref = ref, prior = 1)
-            }
-            if (any(jj)) {
-              dbg("[normalization_server:normalizedX] multiomics: normalizing non-gx data using maxMedian")
-              prior <- 0
-              if (min(counts[jj, ], na.rm = TRUE) == 0 || any(is.na(counts[jj, ]))) {
-                prior <- min(counts[jj, ][counts[jj, ] > 0], na.rm = TRUE)
-              }
-              X[jj, ] <- playbase::normalizeExpression(X[jj, ], method = "maxMedian", ref = ref, prior = prior)
-            }
+            X <- playbase::normalizeMultiOmics(X)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
