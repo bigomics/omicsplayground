@@ -15,12 +15,13 @@ enrichment_table_enrichment_analysis_ui <- function(
 
   gseatable_opts <- shiny::tagList(
     withTooltip(shiny::checkboxInput(ns("gs_showqvalues"), "Show individual q-values", FALSE),
-      "Show q-values of each statistical method in the table.",
-      placement = "top", options = list(container = "body")
+      "Show q-values of each statistical method in the table."
     ),
     withTooltip(shiny::checkboxInput(ns("show_scores"), "Show method-specific score", FALSE),
-      "Show enrichment score of each statistical method in the table.",
-      placement = "top", options = list(container = "body")
+      "Show enrichment score of each statistical method in the table."
+    ),
+    withTooltip(shiny::checkboxInput(ns("rowgroup"), "Group by database", FALSE),
+      "Groups genesets by database."
     )
   )
 
@@ -60,7 +61,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         return(NULL)
       }
 
-      if ("GS" %in% colnames(rpt)) rpt$GS <- playbase::shortstring(rpt$GS, 72)
+      if ("GS" %in% colnames(rpt)) rpt$GS <- playbase::shortstring(rpt$GS, 60)
       if ("size" %in% colnames(rpt)) rpt$size <- as.integer(rpt$size)
 
       fx <- NULL
@@ -91,17 +92,27 @@ enrichment_table_enrichment_analysis_server <- function(id,
       rpt$GS <- paste(rpt$GS, "&nbsp;", GS_link)
       colnames(rpt) <- sub("GS", "geneset", colnames(rpt))
 
+      if(input$rowgroup) {
+        db <- sub(":.*","",rownames(rpt))
+        rpt <- cbind( DB = db, rpt )
+        rpt <- rpt[order(rpt$DB, rpt$meta.q, -abs(rpt$logFC)), ]
+      }
+      
       is.numcol <- sapply(rpt, function(col) is.numeric(col) && !is.integer(col))
       numcols <- which(is.numcol & !colnames(rpt) %in% c("size"))
       numcols <- colnames(rpt)[numcols]
+      escapecols <- -1 * (match(c("geneset"), colnames(rpt)) + 0)
 
-
+      rowgroup.opt <- NULL
+      if(input$rowgroup) rowgroup.opt <- list(dataSrc = 0)
+      
       DT::datatable(rpt,
         class = "compact cell-border stripe hover",
         rownames = FALSE,
-        escape = c(-1, -2),
-        extensions = c("Scroller"),
-        plugins = "scrollResize",
+        #escape = c(-1, -2),
+        escape = escapecols,
+        extensions = c("Scroller","RowGroup"),
+        plugins = c("scrollResize","ellipsis"),
         fillContainer = TRUE,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
@@ -113,10 +124,15 @@ enrichment_table_enrichment_analysis_server <- function(id,
           scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
+          rowGroup = rowgroup.opt,
           search = list(
             regex = TRUE,
             caseInsensitive = TRUE
-          )
+          ),
+          columnDefs = list(list(
+            targets = c("geneset"),
+            render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
+          ))          
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numcols, 4) %>%

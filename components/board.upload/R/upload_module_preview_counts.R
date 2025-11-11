@@ -744,7 +744,7 @@ upload_table_preview_counts_server <- function(id,
           text = "Olink NPX example data not yet available. Please upload yours or change data type."
         )
       } else if (upload_datatype() == "scRNA-seq") {
-        uploaded$counts.csv <- playbase::COUNTS_scRNAseq
+        uploaded$counts.csv <- playdata::GSE243639_scRNAseq_counts
       } else {
         uploaded$counts.csv <- playbase::COUNTS
       }

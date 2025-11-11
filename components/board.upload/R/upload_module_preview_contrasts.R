@@ -371,7 +371,7 @@ upload_table_preview_contrasts_server <- function(
 
     observeEvent(input$load_example, {
       if (upload_datatype() == "scRNA-seq") {
-        ctx <- playbase::CONTRASTS_scRNAseq
+        ctx <- playdata::GSE243639_scRNAseq_contrasts
       } else {
         ctx <- playbase::CONTRASTS
       }

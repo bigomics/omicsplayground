@@ -277,6 +277,15 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
+        if (!is.null(df0)) {
+          barcodes <- colnames(df0)[stringr::str_detect(colnames(df0), "^[ATCG]+_[0-9]+$")]
+          cc1 <- (length(barcodes) / ncol(df0)) > 0.9
+          cc2 <- (upload_datatype() != "scRNA-seq")
+          if (cc1 & cc2) {
+            shinyalert::shinyalert(title = "Is your dataset single-cell RNA-seq? If so, please correct the selected datatype.", type = "info")
+          }
+        }
+        
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
