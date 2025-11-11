@@ -96,12 +96,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
 
       ## selected
-      sel <- as.integer(gseatable$rows_selected())
-      sel.gs <- NULL
-      if (!is.null(sel) && length(sel) > 0) sel.gs <- rownames(rpt)[sel]
-
-      ii <- gseatable$rows_selected()
-      jj <- gseatable$rows_current()
+      ii <- gseatable$rownames_selected()
+      jj <- gseatable$rownames_current()
       shiny::req(jj)
 
       if (nrow(rpt) == 0) {
