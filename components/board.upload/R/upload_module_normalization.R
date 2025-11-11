@@ -72,7 +72,7 @@ upload_module_normalization_server <- function(
         is.multiomics <- playbase::is.multiomics(rownames(counts))
         if (is.multiomics) {
           X <- counts
-          dtypes <- unique(unlist(lapply(rownames(counts), function(x) strsplit(x, ":")[[1]][1])))
+          dtypes <- unique(sub(":.*", "", rownames(X)))
           for(i in 1:length(dtypes)) {
             ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
             prior <- 1
