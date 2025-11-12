@@ -367,7 +367,6 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        ## RESTORE AVERAGE RANK PLOT.
         if (olink) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
@@ -503,24 +502,7 @@ UploadBoard <- function(id,
               type = "error"
             )
           }
-          # Hard stop for scRNA-seq
-          if (nrow(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
-            checked <- NULL
-            # remove only counts.csv from last_uploaded
-            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-            ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of cells allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
-              ),
-              type = "error"
-            )
-          }
+
         }
 
         ## -------------- cross-check with counts ------------------
@@ -1179,28 +1161,6 @@ UploadBoard <- function(id,
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
-
-        if (0) {
-          dbg("[*** testing check probes ***]")
-
-          dbg("[UploadServer:uploaded.counts] head.probes = ", head(probes))
-          dbg("[UploadServer:uploaded.counts] upload.organism = ", upload_organism())
-          dbg("[UploadServer:uploaded.counts] upload.datatype = ", upload_datatype())
-          dbg("[UploadServer:uploaded.counts] dim.annot = ", dim(annot))
-          dbg("[UploadServer:uploaded.counts] annot.cols = ", annot.cols)
-          dbg("[UploadServer:uploaded.counts] probetype = ", probetype())
-
-          organism <- upload_organism()
-          datatype <- upload_datatype()
-          res <- playbase::check_species_probetype(
-            probes = probes,
-            datatype = datatype,
-            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
-            annot.cols = annot.cols
-          )
-          dbg("[*** testing check probes ***] names.res = ", names(res))
-          if (length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
-        }
 
         checkprobes_task$invoke(
           organism = upload_organism(),
