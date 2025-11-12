@@ -191,12 +191,12 @@ app_ui <- function(x) {
           icon = "code-compare"
         ),
         "SystemsBio" = list(
-          items = c(
-            drug = "Drug connectivity",
-            cell = "Cell profiling",
-            pcsf = "PCSF",
-            wgcna = "WGCNA",
-            tcga = "TCGA survival (beta)"
+          items = list(
+            list(id = "drug", title = "Drug connectivity"),
+            list(id = "cell", title = "Cell profiling"),
+            list(id = "pcsf", title = "PCSF"),
+            list(id = "wgcna", title = "WGCNA"),
+            list(id = "tcga", title = "TCGA survival", badge = "beta", badge_color = "warning")
           ),
           icon = "diagram-project"
         ),
