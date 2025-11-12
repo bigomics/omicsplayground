@@ -4,14 +4,15 @@
 ##
 
 loading_table_datasets_public_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    height,
-    width,
-    delete_button = FALSE,
-    load_button = FALSE) {
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width,
+  delete_button = FALSE,
+  load_button = FALSE
+) {
   ns <- shiny::NS(id)
 
   tagList(
@@ -158,7 +159,7 @@ loading_table_datasets_public_server <- function(id,
 
       selected_row <- pgxtable_public$rows_selected()
       pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
-      
+
       ## Load directly from the public directory without copying
       loadAndActivatePGX(pgx_name, pgxdir = pgx_public_dir)
     })
