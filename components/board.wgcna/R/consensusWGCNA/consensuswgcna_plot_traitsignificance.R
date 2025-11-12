@@ -18,7 +18,7 @@ consensusWGCNA_plot_traitsignificance_ui <- function(
       inputId = ns("ntop"),
       label = "Number of plots",
       choices = c(1,4,6,9,12,16),
-      selected = 9
+      selected = 12
     )
   )
 

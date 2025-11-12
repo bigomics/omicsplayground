@@ -50,6 +50,19 @@ MultiWGCNA_Board <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
+    shiny::observeEvent( input$useLLM, {
+      if(input$useLLM) {
+        model <- getUserOption(session,'llm_model')
+        if(is.null(model) || model=="") {
+          shinyalert::shinyalert("ERROR",
+            "Error. No LLM server available. Please check your settings.")
+          return(NULL)
+        }
+        shinyalert::shinyalert("WARNING",
+          "Using LLM might expose some of your data to external LLM servers.")
+      }
+    })
+
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================

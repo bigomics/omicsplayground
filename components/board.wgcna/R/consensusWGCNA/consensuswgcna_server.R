@@ -51,8 +51,14 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
     shiny::observeEvent( input$useLLM, {
       if(input$useLLM) {
-        shinyalert::shinyalert("",
-          "Warning. Using LLM might expose some of your data to external LLM servers.")
+        model <- getUserOption(session,'llm_model')
+        if(is.null(model) || model=="") {
+          shinyalert::shinyalert("Error",
+            "No LLM server available. Please check your settings.")
+          return(NULL)
+        }
+        shinyalert::shinyalert("Warning",
+          "Using LLM might expose some of your data to external LLM servers.")
       }
     })
 

@@ -50,16 +50,17 @@ WgcnaBoard <- function(id, pgx) {
     })
     
     shiny::observeEvent( input$useLLM, {
-
-      model <- getUserOption(session,'llm_model')
-
-      dbg("[WgcnaBoard] input$useLLM => model = ", model)
-      
       if(input$useLLM) {
-        shinyalert::shinyalert("",
-          "Warning. Using LLM might expose some of your data to external LLM servers.")
+        model <- getUserOption(session,'llm_model')
+        dbg("[WgcnaBoard] input$useLLM => model = ", model)
+        if(is.null(model) || model=="") {
+          shinyalert::shinyalert("ERROR",
+            "No LLM server available. Please check your settings.")
+          return(NULL)
+        }
+        shinyalert::shinyalert("WARNING",
+          "Using LLM might expose some of your data to external LLM servers.")
       }
-      
     })
 
     ## ================================================================================

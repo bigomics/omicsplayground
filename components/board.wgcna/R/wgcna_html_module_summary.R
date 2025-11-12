@@ -56,7 +56,7 @@ wgcna_html_module_summary_server <- function(id,
       res <- gsub("\n","<p>",res)
       res <- gsub(" [*]{2}","<b>",res)
       res <- gsub("[*]{2} ","</b>",res)
-      res <- paste0("<b>",module,":</b><p>", res)
+      res <- paste0("<b>",module," module</b><br><br>", res)
       return(res)
     }
 

@@ -208,12 +208,21 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       cons <- mwgcna()
       shiny::req(cons)
 
-      names(cons$layers)
       F1 <- cor( cons$layers[[1]]$datExpr, cons$layers[[1]]$datTraits, use="pairwise")
       F2 <- cor( cons$layers[[2]]$datExpr, cons$layers[[2]]$datTraits, use="pairwise")
       gg <- names(which(cons$net$colors != "grey"))
       colx <- cons$net$colors
       head(F2)
+
+      kk <- intersect(colnames(F1),colnames(F2))
+      if(length(kk)==0) return(NULL)
+
+      kk <- sort(kk)
+      F1 <- F1[,kk,drop=FALSE]
+      F2 <- F2[,kk,drop=FALSE]      
+
+      F1[is.na(F1)] <- 0
+      F2[is.na(F2)] <- 0
       
       setname <- names(cons$layers)
       par(mfrow=c(2,3), mar=c(5,5,3,1))
