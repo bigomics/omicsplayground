@@ -235,7 +235,7 @@ app_ui <- function(x) {
         }
         sidebar_menu_with_items <- function(items, title, menu_icon) {
           ee <- list()
-          
+
           ## Check if items is a list of lists (with badges) or named vector
           if (is.list(items) && length(items) > 0 && is.list(items[[1]])) {
             ## List structure: list(list(id, title, badge, badge_color), ...)
@@ -255,14 +255,14 @@ app_ui <- function(x) {
               ee[[i]] <- sidebar_menu_item(tab.title, tab.name, NULL, NULL, "success")
             }
           }
-          
+
           ## Add icon to the main menu title if provided
           menu_title <- if (!is.null(menu_icon)) {
             shiny::tagList(shiny::icon(menu_icon), " ", title)
           } else {
             title
           }
-          
+
           bigdash::sidebarMenu(menu_title, !!!ee)
         }
 
@@ -271,12 +271,12 @@ app_ui <- function(x) {
         for (i in seq_along(menu_tree)) {
           menu.id <- names(menu_tree)[i]
           menu.item <- menu_tree[[i]]
-          
+
           ## Handle new structure with icon field
           if (is.list(menu.item) && "items" %in% names(menu.item)) {
             items <- menu.item$items
             tab.icon <- menu.item$icon
-            
+
             ## Extract tab names for length check
             if (is.list(items) && length(items) > 0 && is.list(items[[1]])) {
               tab.names <- sapply(items, function(x) x$id)
@@ -289,7 +289,7 @@ app_ui <- function(x) {
             tab.names <- names(menu.item)
             tab.icon <- NULL
           }
-          
+
           if (length(tab.names) == 0) {
             ## Empty menu
           } else if (length(tab.names) == 1) {
