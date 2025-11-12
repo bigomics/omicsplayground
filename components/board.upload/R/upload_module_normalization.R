@@ -73,7 +73,7 @@ upload_module_normalization_server <- function(
         if (is.multiomics) {
           X <- counts
           dtypes <- unique(sub(":.*", "", rownames(X)))
-          for(i in 1:length(dtypes)) {
+          for (i in 1:length(dtypes)) {
             ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
             prior <- 1
             if (dtypes[i] != "gx") prior <- playbase::getPrior(counts[ii, ])
@@ -210,7 +210,7 @@ upload_module_normalization_server <- function(
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        if (ncol(X0) > 100)  methods <- methods[methods != "NPM"]
+        if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
         shiny::updateSelectInput(
           session,
           "bec_method",

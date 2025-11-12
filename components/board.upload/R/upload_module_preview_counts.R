@@ -475,10 +475,10 @@ upload_table_preview_counts_server <- function(id,
         df <- data_cache[[i]]
         dt <- tolower(datatypes[i])
         prefix <- "gx"
-        if(grepl("proteomics",dt)) prefix <- "px"
-        if(grepl("metabolomics|lipidomics",dt)) prefix <- "mx"
-        if(grepl("microarray|micro.array|rna|rnatranscriptomics",dt)) prefix <- "gx"
-        if(grepl("mirna|mi.rna",dt))  prefix <- "mi"          
+        if (grepl("proteomics", dt)) prefix <- "px"
+        if (grepl("metabolomics|lipidomics", dt)) prefix <- "mx"
+        if (grepl("microarray|micro.array|rna|rnatranscriptomics", dt)) prefix <- "gx"
+        if (grepl("mirna|mi.rna", dt)) prefix <- "mi"
         rownames(df) <- paste0(prefix, ":", rownames(df))
         df <- df[, common_cols, drop = FALSE]
         combined_df <- rbind(combined_df, df)

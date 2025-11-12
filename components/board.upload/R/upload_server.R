@@ -285,7 +285,7 @@ UploadBoard <- function(id,
             shinyalert::shinyalert(title = "Is your dataset single-cell RNA-seq? If so, please correct the selected datatype.", type = "info")
           }
         }
-        
+
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
