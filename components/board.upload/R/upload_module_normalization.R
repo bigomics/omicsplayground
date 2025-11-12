@@ -71,15 +71,16 @@ upload_module_normalization_server <- function(
 
         is.multiomics <- playbase::is.multiomics(rownames(counts))
         if (is.multiomics) {
-          ## Scaled log1p transform with autoscaling on non-zero quantile.
-          ## Only applied to multi-omics. It also performs median scaling.
-          X <- playbase::mofa.log1s(counts, q = 0.20)
-          prior <- 0
-        } else {
-          prior0 <- 0
-          if (min(counts, na.rm = TRUE) == 0 || any(is.na(counts))) {
-            prior0 <- min(counts[counts > 0], na.rm = TRUE)
+          X <- counts
+          dtypes <- unique(sub(":.*", "", rownames(X)))
+          for(i in 1:length(dtypes)) {
+            ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
+            prior <- 1
+            if (dtypes[i] != "gx") prior <- playbase::getPrior(counts[ii, ])
+            X[ii, ] <- log2(counts[ii, ] + prior)
           }
+        } else {
+          prior0 <- playbase::getPrior(counts)
           m <- input$normalization_method
           prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
           X <- log2(counts + prior)
@@ -87,7 +88,6 @@ upload_module_normalization_server <- function(
 
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
         dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
-
 
         ## Filter probes for maximum missingness as required
         if (sum(is.na(X)) > 0 && input$filtermissing) {
@@ -140,8 +140,7 @@ upload_module_normalization_server <- function(
             shiny::req(ref)
           }
           if (upload_datatype() == "multi-omics") {
-            dbg("[normalization_server:normalizedX] normalizing MultOmics data using ", m)
-            X <- playbase::normalizeMultiOmics(X, method = m) ## unneeded: done in mofa.log1s.
+            X <- playbase::normalizeMultiOmics(X)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
