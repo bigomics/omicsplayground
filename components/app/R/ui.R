@@ -110,43 +110,95 @@ app_ui <- function(x) {
         )
       }
 
+      ## ============================================================================
+      ## MENU TREE CONFIGURATION
+      ## ============================================================================
+      ##
+      ## Each menu has two parts:
+      ##   • items: The tabs/pages in that menu section
+      ##   • icon:  FontAwesome icon shown next to the menu title
+      ##
+      ## BASIC FORMAT (for simple menus):
+      ##   "Menu Name" = list(
+      ##     items = c(tab_id = "Display Name"),
+      ##     icon = "icon-name"
+      ##   )
+      ##
+      ## SINGLE-ITEM MENU WITH BADGE (badge shows on main menu item):
+      ##   "Menu Name" = list(
+      ##     items = list(
+      ##       list(id = "tab_id", title = "Display Name", badge = "new", badge_color = "success")
+      ##     ),
+      ##     icon = "icon-name"
+      ##   )
+      ##
+      ## MULTI-ITEM MENU WITH BADGES (badges show on sub-items only):
+      ##   "Menu Name" = list(
+      ##     items = list(
+      ##       list(id = "tab1", title = "Tab 1"),
+      ##       list(id = "tab2", title = "Tab 2", badge = "new", badge_color = "success")
+      ##     ),
+      ##     icon = "icon-name"
+      ##   )
+      ##
+      ## Badge colors: "success" (green), "warning" (orange), "danger" (red), "info" (blue)
+      ## Icons: Search FontAwesome 6 for icon names (use without "fa-" prefix)
+      ## ============================================================================
       menu_tree <- list(
-        "Welcome" = c(
-          welcome = "Welcome"
+        "Welcome" = list(
+          items = c(welcome = "Welcome"),
+          icon = "house"
         ),
-        "Datasets" = c(
-          load = "Home"
+        "Datasets" = list(
+          items = c(load = "Home"),
+          icon = "database"
         ),
-        "DataView" = c(
-          dataview = "DataView"
+        "DataView" = list(
+          items = c(dataview = "DataView"),
+          icon = "table"
         ),
-        "Clustering" = c(
-          clustersamples = "Samples",
-          clusterfeatures = "Features"
+        "Clustering" = list(
+          items = c(
+            clustersamples = "Samples",
+            clusterfeatures = "Features"
+          ),
+          icon = "circle-nodes"
         ),
-        "Expression" = c(
-          diffexpr = "Differential expression",
-          timeseries = "TimeSeries", ## here???
-          corr = "Correlation analysis",
-          bio = "Find biomarkers"
+        "Expression" = list(
+          items = list(
+            list(id = "diffexpr", title = "Differential expression"),
+            list(id = "timeseries", title = "TimeSeries", badge = "new", badge_color = "success"),
+            list(id = "corr", title = "Correlation analysis"),
+            list(id = "bio", title = "Find biomarkers")
+          ),
+          icon = "dna"
         ),
-        "GeneSets" = c(
-          enrich = "Geneset Enrichment",
-          sig = "Test geneset",
-          pathway = "Pathway analysis",
-          wordcloud = "Word cloud"
+        "GeneSets" = list(
+          items = c(
+            enrich = "Geneset Enrichment",
+            sig = "Test geneset",
+            pathway = "Pathway analysis",
+            wordcloud = "Word cloud"
+          ),
+          icon = "layer-group"
         ),
-        "Compare" = c(
-          isect = "Compare signatures",
-          comp = "Compare datasets",
-          cmap = "Similar experiments"
+        "Compare" = list(
+          items = c(
+            isect = "Compare signatures",
+            comp = "Compare datasets",
+            cmap = "Similar experiments"
+          ),
+          icon = "code-compare"
         ),
-        "SystemsBio" = c(
-          drug = "Drug connectivity",
-          cell = "Cell profiling",
-          pcsf = "PCSF",
-          wgcna = "WGCNA",
-          tcga = "TCGA survival (beta)"
+        "SystemsBio" = list(
+          items = c(
+            drug = "Drug connectivity",
+            cell = "Cell profiling",
+            pcsf = "PCSF",
+            wgcna = "WGCNA",
+            tcga = "TCGA survival (beta)"
+          ),
+          icon = "diagram-project"
         ),
         "MultiOmics (beta)" = MODULE.multiomics$module_menu()
       )
@@ -159,36 +211,103 @@ app_ui <- function(x) {
       dbg("names.ENABLED = ", names(ENABLED))
       menu_tree <- menu_tree[MODULES_ENABLED]
       ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
-      ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
+      ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) {
+        if (is.list(m) && "items" %in% names(m)) {
+          items <- m$items
+          ## Handle per-item icon structure (list of lists)
+          if (is.list(items) && length(items) > 0 && is.list(items[[1]])) {
+            sapply(items, function(x) x$id)
+          } else {
+            names(items)
+          }
+        } else {
+          ## Fallback for old structure
+          names(m)
+        }
+      }), dimnames = list(BOARDS))
 
       populateSidebar <- function(menu_tree) {
-        sidebar_item <- function(title, name) {
-          div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        sidebar_item <- function(title, name, icon, badge = NULL, badge_color = "success") {
+          div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab"), icon = icon, badge = badge, badge_color = badge_color))
         }
-        sidebar_menu_item <- function(title, name) {
-          bigdash::sidebarMenuItem(title, paste0(name, "-tab"))
+        sidebar_menu_item <- function(title, name, icon, badge = NULL, badge_color = "success") {
+          bigdash::sidebarMenuItem(title, paste0(name, "-tab"), icon, badge = badge, badge_color = badge_color)
         }
-        sidebar_menu_with_items <- function(tabs, title) {
+        sidebar_menu_with_items <- function(items, title, menu_icon) {
           ee <- list()
-          for (i in 1:length(tabs)) {
-            tab.name <- names(tabs)[i]
-            tab.title <- tabs[i]
-            ee[[i]] <- sidebar_menu_item(tab.title, tab.name)
+          
+          ## Check if items is a list of lists (with badges) or named vector
+          if (is.list(items) && length(items) > 0 && is.list(items[[1]])) {
+            ## List structure: list(list(id, title, badge, badge_color), ...)
+            for (i in seq_along(items)) {
+              item <- items[[i]]
+              tab.name <- item$id
+              tab.title <- item$title
+              tab.badge <- item$badge
+              tab.badge_color <- if (!is.null(item$badge_color)) item$badge_color else "success"
+              ee[[i]] <- sidebar_menu_item(tab.title, tab.name, NULL, tab.badge, tab.badge_color)
+            }
+          } else {
+            ## Simple named vector: no icons or badges for sub-items
+            for (i in seq_along(items)) {
+              tab.name <- names(items)[i]
+              tab.title <- items[i]
+              ee[[i]] <- sidebar_menu_item(tab.title, tab.name, NULL, NULL, "success")
+            }
           }
-          bigdash::sidebarMenu(title, !!!ee)
+          
+          ## Add icon to the main menu title if provided
+          menu_title <- if (!is.null(menu_icon)) {
+            shiny::tagList(shiny::icon(menu_icon), " ", title)
+          } else {
+            title
+          }
+          
+          bigdash::sidebarMenu(menu_title, !!!ee)
         }
 
         ## This creates the menu from a menu_tree
         menu <- list()
-        i <- 3
-        for (i in 1:length(menu_tree)) {
-          tab.names <- names(menu_tree[[i]])
-          tab.titles <- menu_tree[[i]]
+        for (i in seq_along(menu_tree)) {
           menu.id <- names(menu_tree)[i]
-          if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
-            menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
+          menu.item <- menu_tree[[i]]
+          
+          ## Handle new structure with icon field
+          if (is.list(menu.item) && "items" %in% names(menu.item)) {
+            items <- menu.item$items
+            tab.icon <- menu.item$icon
+            
+            ## Extract tab names for length check
+            if (is.list(items) && length(items) > 0 && is.list(items[[1]])) {
+              tab.names <- sapply(items, function(x) x$id)
+            } else {
+              tab.names <- names(items)
+            }
           } else {
-            menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
+            ## Fallback for old structure (e.g., MODULE.multiomics)
+            items <- menu.item
+            tab.names <- names(menu.item)
+            tab.icon <- NULL
+          }
+          
+          if (length(tab.names) == 0) {
+            ## Empty menu
+          } else if (length(tab.names) == 1) {
+            ## Single item - extract title, icon, badge properly
+            if (is.list(items) && !is.null(items[[1]]$title)) {
+              tab.title <- items[[1]]$title
+              tab.icon <- if (!is.null(items[[1]]$icon)) items[[1]]$icon else tab.icon
+              tab.badge <- items[[1]]$badge
+              tab.badge_color <- if (!is.null(items[[1]]$badge_color)) items[[1]]$badge_color else "success"
+            } else {
+              tab.title <- items[1]
+              tab.badge <- NULL
+              tab.badge_color <- "success"
+            }
+            menu[[menu.id]] <- sidebar_item(tab.title, tab.names, tab.icon, tab.badge, tab.badge_color)
+          } else {
+            ## Multiple items
+            menu[[menu.id]] <- sidebar_menu_with_items(items, menu.id, tab.icon)
           }
         }
         return(menu)
@@ -558,3 +677,4 @@ app_ui <- function(x) {
     return(ui)
   }
 }
+
