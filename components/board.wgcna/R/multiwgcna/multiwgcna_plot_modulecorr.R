@@ -20,9 +20,9 @@ multiwgcna_plot_modulecorr_ui <- function(
       value = TRUE
     ),
     shiny::checkboxInput(
-      inputId = ns("showall"),
-      label = "Show all modules",
-      value = FALSE
+      inputId = ns("showtop"),
+      label = "Show top 20 modules",
+      value = TRUE
     ),
     shiny::checkboxInput(
       inputId = ns("showvalues"),
@@ -69,7 +69,7 @@ multiwgcna_plot_modulecorr_server <- function(id,
       if (condition != "None") phenotype <- condition
 
       nmax = 20
-      if (input$showall) nmax = -1      
+      if (!input$showtop) nmax = -1      
 
       if(input$mergemodules) {
         
