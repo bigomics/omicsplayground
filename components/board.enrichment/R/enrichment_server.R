@@ -368,13 +368,21 @@ EnrichmentBoard <- function(id, pgx,
     ## Enrichment table
     ## ================================================================================
 
-    gset_selected <- shiny::reactive({
+    gset_selected.SAVE <- shiny::reactive({
       i <- as.integer(gseatable$rows_selected())
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
       rpt <- getFilteredGeneSetTable()
       gs <- rownames(rpt)[i]
+      return(gs)
+    })
+
+    gset_selected <- shiny::reactive({
+      gs <- gseatable$rownames_selected()
+      if (is.null(gs) || length(gs) == 0) {
+        return(NULL)
+      }
       return(gs)
     })
 

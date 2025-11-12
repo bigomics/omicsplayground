@@ -71,15 +71,16 @@ upload_module_normalization_server <- function(
 
         is.multiomics <- playbase::is.multiomics(rownames(counts))
         if (is.multiomics) {
-          ## Scaled log1p transform with autoscaling on non-zero quantile.
-          ## Only applied to multi-omics. It also performs median scaling.
-          X <- playbase::mofa.log1s(counts, q = 0.20)
-          prior <- 0
-        } else {
-          prior0 <- 0
-          if (min(counts, na.rm = TRUE) == 0 || any(is.na(counts))) {
-            prior0 <- min(counts[counts > 0], na.rm = TRUE)
+          X <- counts
+          dtypes <- unique(sub(":.*", "", rownames(X)))
+          for(i in 1:length(dtypes)) {
+            ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
+            prior <- 1
+            if (dtypes[i] != "gx") prior <- playbase::getPrior(counts[ii, ])
+            X[ii, ] <- log2(counts[ii, ] + prior)
           }
+        } else {
+          prior0 <- playbase::getPrior(counts)
           m <- input$normalization_method
           prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
           X <- log2(counts + prior)
@@ -87,7 +88,6 @@ upload_module_normalization_server <- function(
 
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
         dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
-
 
         ## Filter probes for maximum missingness as required
         if (sum(is.na(X)) > 0 && input$filtermissing) {
@@ -140,8 +140,7 @@ upload_module_normalization_server <- function(
             shiny::req(ref)
           }
           if (upload_datatype() == "multi-omics") {
-            dbg("[normalization_server:normalizedX] normalizing MultOmics data using ", m)
-            X <- playbase::normalizeMultiOmics(X, method = m) ## unneeded: done in mofa.log1s.
+            X <- playbase::normalizeMultiOmics(X)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using ", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
@@ -161,6 +160,7 @@ upload_module_normalization_server <- function(
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
+          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
           res <- playbase::detectOutlierSamples(X, plot = FALSE)
           is.outlier <- (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
@@ -210,7 +210,12 @@ upload_module_normalization_server <- function(
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
+        if (ncol(X0) > 100)  methods <- methods[methods != "NPM"]
+        shiny::updateSelectInput(
+          session,
+          "bec_method",
+          choices = methods
+        )
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
         shiny::withProgress(
@@ -803,7 +808,7 @@ upload_module_normalization_server <- function(
                     selected = 0.2
                   )
                 ),
-                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = FALSE),
+                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = DEFAULTS$qc$impute),
                 shiny::conditionalPanel("input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,

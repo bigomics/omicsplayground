@@ -396,6 +396,7 @@ upload_table_preview_samples_server <- function(
     observeEvent(input$load_example, {
       df <- playbase::SAMPLES
       if (upload_datatype() == "multi-omics") df <- playbase::SAMPLES_MO
+      if (upload_datatype() == "scRNA-seq") df <- playdata::GSE243639_scRNAseq_samples
       uploaded$samples.csv <- df
       loaded_samples(TRUE)
       orig_sample_matrix(df)

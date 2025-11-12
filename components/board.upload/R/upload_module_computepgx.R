@@ -989,6 +989,15 @@ upload_module_computepgx_server <- function(
         dbg("[compute PGX process] : process tmpdir = ", tmpdir)
         dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
 
+        ## write compute transaction to log file, similar to share log
+        log.file <- file.path(ETC, "PGXCOMPUTE.log")
+        log.entry <- data.frame(date = format(Sys.time(), tz = "CET"), user = auth$email, tmpdir = tmpdir)
+        if (file.exists(log.file)) {
+          write.table(log.entry, file = log.file, col.names = FALSE, row.names = FALSE, sep = ",", append = TRUE)
+        } else {
+          write.table(log.entry, file = log.file, col.names = TRUE, row.names = FALSE, sep = ",")
+        }
+
         new.job <- list(
           process = processx::process$new(
             "Rscript",

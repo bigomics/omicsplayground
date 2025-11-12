@@ -61,6 +61,9 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## genes <- sort(pgx$genes[genes, ]$gene_name)
       sel <- genes[1] ## most var gene
       ## sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
+
+      names(genes) <- playbase::probe2symbol(genes, pgx$genes, labeltype(), fill_na = TRUE)
+
       shiny::updateSelectizeInput(
         session, "gene",
         choices = genes, selected = sel, server = TRUE

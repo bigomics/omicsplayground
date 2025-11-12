@@ -277,6 +277,15 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
+        if (!is.null(df0)) {
+          barcodes <- colnames(df0)[stringr::str_detect(colnames(df0), "^[ATCG]+_[0-9]+$")]
+          cc1 <- (length(barcodes) / ncol(df0)) > 0.9
+          cc2 <- (upload_datatype() != "scRNA-seq")
+          if (cc1 & cc2) {
+            shinyalert::shinyalert(title = "Is your dataset single-cell RNA-seq? If so, please correct the selected datatype.", type = "info")
+          }
+        }
+        
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -832,6 +841,9 @@ UploadBoard <- function(id,
     observeEvent(recompute_pgx(),
       {
         req(!is.null(recompute_pgx()))
+        if (!is.null(recompute_pgx()$datatype) && recompute_pgx()$datatype != "") {
+          upload_datatype(recompute_pgx()$datatype)
+        }
         numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) {
           ## count also deleted files...
@@ -1347,6 +1359,7 @@ UploadBoard <- function(id,
       checked_contrasts = checked_contrasts,
       show_comparison_builder = show_comparison_builder,
       selected_contrast_input = selected_contrast_input,
+      upload_datatype = upload_datatype,
       upload_wizard = shiny::reactive(input$upload_wizard),
       auth = auth
     )

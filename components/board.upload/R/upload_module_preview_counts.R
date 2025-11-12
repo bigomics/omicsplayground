@@ -385,6 +385,7 @@ upload_table_preview_counts_server <- function(id,
       }
 
       # Load data once and cache both data frames and column names
+      samples_cache <- list()
       data_cache <- list()
       col_lists <- list()
       file_names <- character()
@@ -403,6 +404,7 @@ upload_table_preview_counts_server <- function(id,
           } else {
             df <- pgx_data$counts
           }
+          samples_cache[[i]] <- pgx_data$samples
           data_cache[[i]] <- df
           col_lists[[i]] <- colnames(df)
           file_names[i] <- dataset
@@ -471,16 +473,26 @@ upload_table_preview_counts_server <- function(id,
       combined_df <- NULL
       for (i in 1:length(data_cache)) {
         df <- data_cache[[i]]
-        prefix <- switch(datatypes[i],
-          "RNA-seq" = "gx",
-          "Proteomics" = "px",
-          "Metabolomics" = "mx",
-          "mx" # default fallback
-        )
+        dt <- tolower(datatypes[i])
+        prefix <- "gx"
+        if(grepl("proteomics",dt)) prefix <- "px"
+        if(grepl("metabolomics|lipidomics",dt)) prefix <- "mx"
+        if(grepl("microarray|micro.array|rna|rnatranscriptomics",dt)) prefix <- "gx"
+        if(grepl("mirna|mi.rna",dt))  prefix <- "mi"          
         rownames(df) <- paste0(prefix, ":", rownames(df))
         df <- df[, common_cols, drop = FALSE]
         combined_df <- rbind(combined_df, df)
       }
+
+      # Combine samples_cache by intersecting rownames (only for pgx multi-omics upload)
+      if (length(samples_cache) > 0) {
+        # Find common rownames in all sample files (no prefixing!)
+        rownames_list <- lapply(samples_cache, rownames)
+        common_rows <- Reduce(intersect, rownames_list)
+        combined_samples <- samples_cache[[1]][common_rows, , drop = FALSE]
+        uploaded$samples.csv <- combined_samples
+      }
+
       uploaded$counts.csv <- combined_df
     })
 
@@ -743,6 +755,8 @@ upload_table_preview_counts_server <- function(id,
           title = "Error",
           text = "Olink NPX example data not yet available. Please upload yours or change data type."
         )
+      } else if (upload_datatype() == "scRNA-seq") {
+        uploaded$counts.csv <- playdata::GSE243639_scRNAseq_counts
       } else {
         uploaded$counts.csv <- playbase::COUNTS
       }
