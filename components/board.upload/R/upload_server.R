@@ -41,13 +41,8 @@ UploadBoard <- function(id,
 
     # add task to detect probetype using annothub
 
-    observeEvent( upload_organism(), {
-      dbg("------------------MNT0.upload_server: upload_organism = ", upload_organism())
-    })
-    
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes, annot.cols) {
       future_promise({
-        dbg("------------------MNT1.upload_server: organism = ", organism)
         detected <- playbase::check_species_probetype(
           probes = probes,
           datatype = datatype,
@@ -808,7 +803,6 @@ UploadBoard <- function(id,
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
-      dbg("------------------MNT2.upload_server: upload_organism=",upload_organism())
     })
 
     observeEvent(input$selected_datatype_public, {
@@ -894,17 +888,11 @@ UploadBoard <- function(id,
 
         if (summary_check_content > 0) {
           # check which checks have error results
-          find_content <- !sapply(
-            summary_checks,
-            function(x) is.null(x) || length(x) == 0
-          )
-
+          find_content <- !sapply(summary_checks, function(x) is.null(x) || length(x) == 0)
           summary_checks <- summary_checks[find_content]
-
 
           # get the names of each list within summary checks
           get_all_codes <- sapply(summary_checks, function(x) names(x))
-
 
           # check if any any code is error code
           error_list <- playbase::PGX_CHECKS
@@ -1073,9 +1061,6 @@ UploadBoard <- function(id,
         }
       }
     )
-
-
-    observeEvent( upload_organism(), { dbg("---------------------MNT6.upload_server") })
 
     # observe show_modal and start modal
     shiny::observeEvent(

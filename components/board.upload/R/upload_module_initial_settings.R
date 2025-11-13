@@ -25,7 +25,6 @@ upload_module_initial_settings_ui <- function(id) {
             inputId = ns("selected_organism"),
             label = NULL,
             choices = playbase::SPECIES_TABLE$species_name,
-            ## selected = 1,
             multiple = TRUE
           )
         ),
@@ -81,13 +80,10 @@ upload_module_initial_settings_server <- function(
         upload_annot_ui
       })
 
-      # change upload_datatype to selected_datatype
-
       observeEvent(input$selected_datatype, {
         upload_datatype(input$selected_datatype)
       })
 
-      # change upload_organism to selected_organism
       observeEvent(input$selected_organism, {
         upload_organism(input$selected_organism)
       })

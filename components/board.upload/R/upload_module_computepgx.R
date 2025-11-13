@@ -815,7 +815,7 @@ upload_module_computepgx_server <- function(
 
         ## bail out if probetype task is not finished or has error
         p <- probetype()
-        dbg("-------------------------------MNT.KK1: probetype=",probetype)
+        dbg("-------------------------------MNT.KK1: probetype=",probetype())
         if (is.null(p) || grepl("error", tolower(p)) || all(p == "")) {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
           shinyalert::shinyalert("ERROR", "probetype detection failed", type = "error")
@@ -967,7 +967,6 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
-        dbg("---------------------------MNT.KKK")
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
