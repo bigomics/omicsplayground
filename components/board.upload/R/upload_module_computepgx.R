@@ -962,13 +962,9 @@ upload_module_computepgx_server <- function(
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
-        saveRDS(params, "~/Desktop/params1.RDS")
-
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
-
-        saveRDS(params, "~/Desktop/params2.RDS")
 
         # Remove global variables
         try(rm(annot_table), silent = TRUE)
