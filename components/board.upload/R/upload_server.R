@@ -1041,7 +1041,6 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
 
-        dbg("-------------------MNT3.upload_server: probetype=", probetype())
         probetype.finished <- all(!(probetype() %in% c("error", "running")))
         ## probetype.finished <- any(!(probetype() %in% c("error", "running"))) ? ## AZ
         
@@ -1053,10 +1052,8 @@ UploadBoard <- function(id,
           is.null(upload_gset_methods()) ||
           !probetype.finished
         ) {
-          dbg("-------------------MNT4.upload_server: LOCK_WIZARD")
           wizardR::lock("upload_wizard")
         } else {
-          dbg("-------------------MNT5.upload_server: UNLOCK_WIZARD")
           wizardR::unlock("upload_wizard")
         }
       }
