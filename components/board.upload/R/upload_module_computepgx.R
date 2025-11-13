@@ -164,11 +164,6 @@ upload_module_computepgx_server <- function(
           )
         )
       }
-
-      shiny::observeEvent( upload_organism(),  {
-        dbg("MNT1.upload_module_computepgx:upload_organism = ", upload_organism())
-        dbg("MNT1.upload_module_computepgx:probetype() =  ", probetype())
-      })
       
       inline_info_button <- function(info.text) {
         shiny::span(
@@ -815,15 +810,12 @@ upload_module_computepgx_server <- function(
 
         ## bail out if probetype task is not finished or has error
         p <- probetype()
-        dbg("-------------------------------MNT.KK1: probetype=",probetype())
-        if (is.null(p) || grepl("error", tolower(p)) || all(p == "")) {
+        if (is.null(p) || any(grepl("error", tolower(p))) || all(p == "")) {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
           shinyalert::shinyalert("ERROR", "probetype detection failed", type = "error")
           return(NULL)
         }
-        dbg("-------------------------------MNT.KK2")
         shiny::req(!(all(p %in% c("error", "running", "")))) ## wait for process??
-        dbg("-------------------------------MNT.KK3")
         
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
