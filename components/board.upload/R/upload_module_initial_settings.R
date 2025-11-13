@@ -26,7 +26,7 @@ upload_module_initial_settings_ui <- function(id) {
             label = NULL,
             choices = playbase::SPECIES_TABLE$species_name,
             ## selected = 1,
-            multiple = FALSE
+            multiple = TRUE
           )
         ),
         div(

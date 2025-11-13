@@ -40,8 +40,14 @@ UploadBoard <- function(id,
     compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
+
+    observeEvent( upload_organism(), {
+      dbg("------------------MNT0.upload_server: upload_organism = ", upload_organism())
+    })
+    
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes, annot.cols) {
       future_promise({
+        dbg("------------------MNT1.upload_server: organism = ", organism)
         detected <- playbase::check_species_probetype(
           probes = probes,
           datatype = datatype,
@@ -50,7 +56,7 @@ UploadBoard <- function(id,
         )
         ## if (is.null(detected)) detected <- "error"
         detected
-      })
+      }, seed = NULL) ## seed=NULL avoids useless warning messages.
     })
 
     output$navheader <- shiny::renderUI({
@@ -367,7 +373,6 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        ## RESTORE AVERAGE RANK PLOT.
         if (olink) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
@@ -427,6 +432,7 @@ UploadBoard <- function(id,
               type = "error"
             )
           }
+
           # Hard stop for scRNA-seq
           if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
             status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
@@ -445,6 +451,7 @@ UploadBoard <- function(id,
               type = "error"
             )
           }
+
         }
         if (is.null(checked)) {
           uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
@@ -702,26 +709,9 @@ UploadBoard <- function(id,
           finish = "Compute!"
         )
       )
-      ## } else {
-      ##   wizard <- wizardR::wizard(
-      ##     id = ns("upload_wizard"),
-      ##     width = 90,
-      ##     height = 75,
-      ##     modal = TRUE,
-      ##     style = "dots",
-      ##     lock_start = FALSE,
-      ##     counts_ui,
-      ##     samples_ui,
-      ##     contrasts_ui,
-      ##     normalization_panel,
-      ##     compute_panel,
-      ##     options = list(
-      ##       navigation = "buttons",
-      ##       finish = "Compute!"
-      ##     )
-      ##   )
-      ## }
+
       return(wizard)
+
     })
 
     ## --------------------------------------------------------
@@ -818,6 +808,7 @@ UploadBoard <- function(id,
     # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
+      dbg("------------------MNT2.upload_server: upload_organism=",upload_organism())
     })
 
     observeEvent(input$selected_datatype_public, {
@@ -1020,7 +1011,6 @@ UploadBoard <- function(id,
         upload_name(),
         upload_datatype(),
         upload_description(),
-        ## upload_organism(),
         upload_gset_methods(),
         upload_gx_methods(),
         probetype()
@@ -1063,8 +1053,10 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
 
-        probetype.finished <- !(probetype() %in% c("error", "running"))
-
+        dbg("-------------------MNT3.upload_server: probetype=", probetype())
+        probetype.finished <- all(!(probetype() %in% c("error", "running")))
+        ## probetype.finished <- any(!(probetype() %in% c("error", "running"))) ? ## AZ
+        
         if (is.null(upload_name()) ||
           upload_name() == "" ||
           upload_description() == "" ||
@@ -1073,13 +1065,17 @@ UploadBoard <- function(id,
           is.null(upload_gset_methods()) ||
           !probetype.finished
         ) {
+          dbg("-------------------MNT4.upload_server: LOCK_WIZARD")
           wizardR::lock("upload_wizard")
         } else {
+          dbg("-------------------MNT5.upload_server: UNLOCK_WIZARD")
           wizardR::unlock("upload_wizard")
         }
       }
     )
 
+
+    observeEvent( upload_organism(), { dbg("---------------------MNT6.upload_server") })
 
     # observe show_modal and start modal
     shiny::observeEvent(
@@ -1100,8 +1096,6 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          # upload_datatype(NULL)  ## not good! crash on new upload
-          # upload_organism(NULL)
           upload_name(NULL)
           upload_description(NULL)
           show_comparison_builder(TRUE)
@@ -1119,7 +1113,7 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
-        if (input$selected_organism == "No organism") {
+        if (any(input$selected_organism == "No organism")) {
           shinyalert::shinyalert(
             title = "Custom organism",
             text = "You have selected 'custom organism'. Please include a custom feature annotation table and upload a custom genesets GMT file. Otherwise many analysis modules will not work properly.",
@@ -1139,8 +1133,6 @@ UploadBoard <- function(id,
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
-
-              ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
             }
@@ -1179,28 +1171,6 @@ UploadBoard <- function(id,
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
-
-        if (0) {
-          dbg("[*** testing check probes ***]")
-
-          dbg("[UploadServer:uploaded.counts] head.probes = ", head(probes))
-          dbg("[UploadServer:uploaded.counts] upload.organism = ", upload_organism())
-          dbg("[UploadServer:uploaded.counts] upload.datatype = ", upload_datatype())
-          dbg("[UploadServer:uploaded.counts] dim.annot = ", dim(annot))
-          dbg("[UploadServer:uploaded.counts] annot.cols = ", annot.cols)
-          dbg("[UploadServer:uploaded.counts] probetype = ", probetype())
-
-          organism <- upload_organism()
-          datatype <- upload_datatype()
-          res <- playbase::check_species_probetype(
-            probes = probes,
-            datatype = datatype,
-            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
-            annot.cols = annot.cols
-          )
-          dbg("[*** testing check probes ***] names.res = ", names(res))
-          if (length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
-        }
 
         checkprobes_task$invoke(
           organism = upload_organism(),
@@ -1241,9 +1211,20 @@ UploadBoard <- function(id,
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
         e0 <- length(detected) == 0
-        e1 <- is.null(detected[[organism]])
-        e2 <- all(is.na(detected[[organism]]))
-        e3 <- !(organism %in% names(detected))
+        if (length(organism) == 1) { 
+          e1 <- is.null(detected[[organism]])
+          e2 <- all(is.na(detected[[organism]]))
+          e3 <- !(organism %in% names(detected))
+        } else {
+          e1 <- all(sapply(organism, function(x) is.null(detected[[x]])))
+          e2 <- all(sapply(organism, function(x) all(is.na(detected[[x]]))))
+          e3 <- all(!organism %in% names(detected))
+        }
+
+        dbg("----------------------MNT7.upload_server:class(detected)=",class(detected))
+        dbg("----------------------MNT7.upload_server:names(detected)=",names(detected))
+        dbg("----------------------MNT7.upload_server:organism=",organism)
+
         task_failed <- (e0 || e1 || e2 || e3)
         alt.text <- ""
         detected_probetype <- NULL
@@ -1254,10 +1235,7 @@ UploadBoard <- function(id,
           alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
             # check if ANY organism matched the probes, if yes add a hint to the user
-            alt.text <- c(alt.text, paste0(
-              "Are these perhaps <b>",
-              alt.species, "</b>?"
-            ))
+            alt.text <- c(alt.text, paste0("Are these perhaps <b>", alt.species, "</b>?"))
           }
           if (upload_datatype() == "metabolomics") {
             # overwrite alt.text for metabolomics
@@ -1265,20 +1243,30 @@ UploadBoard <- function(id,
           }
         } else {
           # handle success: assign detected probetype to detected_probetype
-          detected_probetype <- paste(detected[[organism]], collapse = "+")
+          if (length(organism) == 1) {
+            dbg("----------------------MNT7.5;detected_probetype=",detected_probetype)
+            detected_probetype <- paste(detected[[organism]], collapse = "+")
+            dbg("----------------------MNT7.6;detected_probetype=",detected_probetype)
+          } else {
+            dbg("----------------------MNT7.7;detected_probetype=",detected_probetype)
+            detected_probetype <- sapply(organism, function(x) paste(detected[[x]], collapse="+"))
+            dbg("----------------------MNT7.8;detected_probetype=",detected_probetype)
+          }
         }
+
+        dbg("----------------------MNT8.upload_server:checkprobes_task=",checkprobes_task$status())
 
         probetype(detected_probetype) ## set RV
         info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
 
-        if (detected_probetype == "error") {
+        if (all(detected_probetype == "error")) {
           info("[UploadBoard] ExtendedTask result has ERROR")
           shinyalert::shinyalert(
             title = "Probes not recognized!",
             text = paste0(
               "Error. Your probes do not match any probe type for <b>",
               organism, "</b>. Please check your probe names and select ",
-              "another organism. ", paste(alt.text, collapse = " ")
+              "the correct organism. ", paste(alt.text, collapse = " ")
             ),
             type = "error",
             size = "s",
@@ -1286,8 +1274,10 @@ UploadBoard <- function(id,
           )
         }
 
+        dbg("----------------------MNT9")
+        
         ## wrong datatype. just give warning. or should we change datatype?
-        if (detected_probetype != "error" &&
+        if (any(detected_probetype != "error") &&
           any(grepl("PROT", detected_probetype)) &&
           !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
           shinyalert::shinyalert(
@@ -1301,7 +1291,11 @@ UploadBoard <- function(id,
             html = TRUE
           )
         }
+
+        dbg("----------------------MNT10")
+
       }
+
     )
 
     ## =====================================================================

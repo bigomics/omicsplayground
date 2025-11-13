@@ -49,7 +49,7 @@ upload_module_computepgx_server <- function(
 
       GENETEST.METHODS <- function() {
         countsX <- countsX()
-        nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
+        nmissing.countsX <- sum(is.na(countsX))
         dt <- upload_datatype()
         if (dt == "RNA-seq") {
           mm <- c(
@@ -165,6 +165,11 @@ upload_module_computepgx_server <- function(
         )
       }
 
+      shiny::observeEvent( upload_organism(),  {
+        dbg("MNT1.upload_module_computepgx:upload_organism = ", upload_organism())
+        dbg("MNT1.upload_module_computepgx:probetype() =  ", probetype())
+      })
+      
       inline_info_button <- function(info.text) {
         shiny::span(
           style = "margin-left:15px;",
@@ -224,13 +229,11 @@ upload_module_computepgx_server <- function(
             )
           ), ## end layout_col
 
-          if (!is.null(probetype()) && probetype() == "running") {
+          if (!is.null(probetype()) && any(probetype() == "running")) {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
-              shiny::tags$h4(
-                "Probe type detection still running, please wait...",
-                style = "color: red;"
-              )
+              shiny::tags$h4("Probe type detection still running, please wait...",
+                style = "color: red;")
             )
           },
           shiny::div(
@@ -553,19 +556,24 @@ upload_module_computepgx_server <- function(
       )
 
       output$input_recap2 <- renderUI({
-        tagList(
-          shiny::HTML("<b>Data type:</b>", upload_datatype()),
-          shiny::HTML("<br><b>Organism:</b>", upload_organism()),
-          shiny::HTML("<br><b>Probe type:</b>", probetype())
-          ## shiny::HTML("<b>Name:</b><br>", upload_name()),
-          ## shiny::HTML("<b>Description:</b><br>", upload_description())
-        )
+        dtype <- paste0("<b>Data type:</b>", upload_datatype())
+        org <- paste0("<br><b>Organism:</b>&nbsp;", paste0(upload_organism(), collapse=""))
+        pt <- paste0("<br><b>Probe type:</b>&nbsp;", paste0(probetype(), collapse=""))
+        if (length(upload_organism()) > 1) {
+          org <- paste0("<br><b>Probe type:</b>&nbsp;", paste0(upload_organism(), collapse=", "))
+        }
+        if (length(probetype()) > 1) {
+          pt <- paste0(paste(names(probetype()), probetype(), sep=":"), collapse=", ")
+          pt <- paste0("<br><b>Probe type:</b>&nbsp;", pt)
+        }
+        tagList(shiny::HTML(dtype), shiny::HTML(org), shiny::HTML(pt))
       })
 
       # handle ah task result
       output$probetype_result <- shiny::renderUI({
         p <- probetype()
-        if (is.null(p) || p == "error") {
+        dbg("-----------------p=", p)
+        if (is.null(p) || all(p == "error")) {
           shiny::div(
             style = "display: flex; justify-content: center; align-items: center; color: red;",
             shiny::tags$p("Probes not recognized, please check organism or your probe names.")
@@ -807,15 +815,16 @@ upload_module_computepgx_server <- function(
 
         ## bail out if probetype task is not finished or has error
         p <- probetype()
-        if (is.null(p) || grepl("error", tolower(p)) || p == "") {
+        dbg("-------------------------------MNT.KK1: probetype=",probetype)
+        if (is.null(p) || grepl("error", tolower(p)) || all(p == "")) {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
-          shinyalert::shinyalert("ERROR", "probetype detection failed",
-            type = "error"
-          )
+          shinyalert::shinyalert("ERROR", "probetype detection failed", type = "error")
           return(NULL)
         }
-        shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
-
+        dbg("-------------------------------MNT.KK2")
+        shiny::req(!(all(p %in% c("error", "running", "")))) ## wait for process??
+        dbg("-------------------------------MNT.KK3")
+        
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
@@ -958,16 +967,21 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
+        dbg("---------------------------MNT.KKK")
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
+
+        saveRDS(params, "~/Desktop/params1.RDS")
 
         # Normalize paths
         script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
         tmpdir <- normalizePath(raw_dir())
 
+        saveRDS(params, "~/Desktop/params2.RDS")
+
         # Remove global variables
-        try(rm(annot_table))
-        try(rm(custom_geneset))
+        try(rm(annot_table), silent = TRUE)
+        try(rm(custom_geneset), silent = TRUE)
 
         # Start the process and store it in the reactive value
         shinyalert::shinyalert(
