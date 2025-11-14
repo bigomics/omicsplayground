@@ -55,29 +55,18 @@ runApplet <- function(applet, pgx, as="gadget", layout=FALSE, size='m', ...) {
 
   if(as == "modal") {
 
-    sizestyle <- switch( tolower(size),
-      "m" = "height: calc(65vh - 180px); width: 50vw;",
-      "l" = "height: calc(85vh - 180px); width: 75vw;",     
-      "xl" = "height: calc(100vh - 180px); width: 95vw;",
-      "fullscreen" = "height: 100vh; width: 100vw;"      
-    )
-
     ## run server
     applet$server(id=id, pgx=r_pgx, ... )
    
     ## Show applet as modal
-    showModal( modalDialog(
+    shiny::showModal(modalUI(
       title = applet$title,
-      style = sizestyle,
-      #size = size,
-      easyClose = TRUE,
-      app_ui,
-      tags$style(
-        type = 'text/css',
-        '.modal-dialog { width: fit-content !important; }'
-        ##'.modal-content { width: 100vw; }'
-      )            
+      size = size,
+      footer = NULL,
+      id = "shiny-modal",
+      app_ui
     ))
+    shinyjs::runjs("$('#shiny-modal').modal('show')")
   }
   
 }

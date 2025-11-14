@@ -959,7 +959,7 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   observeEvent(input$applet_batcheffect, {
-    runApplet(applet_batchcorrect, pgx=PGX, as="modal", size="xl")
+    runApplet(applet_batchcorrect, pgx=PGX, as="modal", size="fullscreen")
   })
 
   ## -------------------------------------------------------------
