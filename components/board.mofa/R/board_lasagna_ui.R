@@ -37,10 +37,10 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          ## shiny::checkboxInput(ns("top50"),"top 50",TRUE),
-          shiny::checkboxInput(ns("pos_edges"), "positive edges", FALSE),
-          shiny::checkboxInput(ns("sp_weight"), "SP weighting", FALSE),
-          shiny::sliderInput(ns("minrho"), "Edge threshold:", 0, 0.95, 0.5, 0.05),
+          ##shiny::checkboxInput(ns("top50"),"top 50",TRUE),
+          shiny::checkboxInput(ns("consensus"),"consensus",FALSE),          
+          shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
+          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
           shiny::hr(),
           shiny::radioButtons(ns("node_value"), "Node value:",
             choices = c("logFC", "rho"), selected = "logFC", inline = TRUE
