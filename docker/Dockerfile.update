@@ -58,6 +58,7 @@ RUN R -e "devtools::install_github('seandavi/GEOquery')" # Need newer GEOquery v
 RUN R -e "remotes::install_github('lifs-tools/rgoslin')"
 RUN R -e "remotes::install_github('ncats/RAMP-DB')"
 RUN R -e "install.packages('plotly')" # Force latest plotly, test!
+RUN R -e "remotes::install_github('bigomics/plaid')"
     
 #------------------------------------------------------------
 # Add supporting R libraries
