@@ -102,7 +102,7 @@ UploadBoard <- function(id,
       common_name <- playbase::allSpecies(col = "display_name")
       names(all_species) <- paste0(all_species, " (", common_name, ")")
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
-      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, selected = "Human", server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
@@ -1144,7 +1144,6 @@ UploadBoard <- function(id,
     ## check probetypes we have counts and every time upload_species changes
     observeEvent(
       {
-        ## list(uploaded$counts.csv, upload_organism())
         list(uploaded$counts.csv)
       },
       {
@@ -1152,7 +1151,23 @@ UploadBoard <- function(id,
         probes <- rownames(uploaded$counts.csv)
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
-        dbg("---------------------annot.cols=",annot.cols)
+
+        if (!is.null(annot)) {
+          if (any(c("species","organism") %in% annot.cols)) {
+            kk <- intersect(c("species","organism"), annot.cols)[1]
+            species <- unique(annot[,kk])
+            c1 <- identical(sort(species), sort(upload_organism()))
+            if (!c1) {
+              shinyalert::shinyalert(
+                title = "Mismatch in selected organism!",
+                text = "The selected organism(s) do not match those reported in your counts.csv. If you proceed without fixing it, the organism(s) reported in your counts.csv will be used.",
+                type = "error"
+              )
+              upload_organism(species)
+            }
+          }
+        }
+      
         probetype("running")
 
         checkprobes_task$invoke(
@@ -1163,7 +1178,7 @@ UploadBoard <- function(id,
         )
       }
     )
-
+    
     observeEvent(
       checkprobes_task$status(),
       {
@@ -1176,6 +1191,7 @@ UploadBoard <- function(id,
           probetype("error")
           return(NULL)
         }
+
         if (checkprobes_task$status() != "success") {
           probetype("running")
           return(NULL)
@@ -1204,10 +1220,6 @@ UploadBoard <- function(id,
           e3 <- all(!organism %in% names(detected))
         }
 
-        dbg("----------------------MNT1.upload_server:class(detected)=",class(detected))
-        dbg("----------------------MNT1.upload_server:names(detected)=",names(detected))
-        dbg("----------------------MNT1.upload_server:organism=",organism)
-
         task_failed <- (e0 || e1 || e2 || e3)
         alt.text <- ""
         detected_probetype <- NULL
@@ -1228,10 +1240,8 @@ UploadBoard <- function(id,
           # handle success: assign detected probetype to detected_probetype
           if (length(organism) == 1) {
             detected_probetype <- paste(detected[[organism]], collapse = "+")
-            dbg("----------------------MNT2.upload_server:detected_probetype=",detected_probetype)
           } else {
             detected_probetype <- sapply(organism, function(x) paste(detected[[x]], collapse="+"))
-            dbg("----------------------MNT3.upload_server:detected_probetype=",detected_probetype)
           }
         }
 
@@ -1253,8 +1263,6 @@ UploadBoard <- function(id,
           )
         }
 
-        dbg("----------------------MNT4")
-        
         ## wrong datatype. just give warning. or should we change datatype?
         if (any(detected_probetype != "error") &&
           any(grepl("PROT", detected_probetype)) &&
@@ -1270,8 +1278,6 @@ UploadBoard <- function(id,
             html = TRUE
           )
         }
-
-        dbg("----------------------MNT5")
 
       }
 
