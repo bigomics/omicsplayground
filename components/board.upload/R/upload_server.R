@@ -1152,6 +1152,7 @@ UploadBoard <- function(id,
         probes <- rownames(uploaded$counts.csv)
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
+        dbg("---------------------annot.cols=",annot.cols)
         probetype("running")
 
         checkprobes_task$invoke(
@@ -1203,9 +1204,9 @@ UploadBoard <- function(id,
           e3 <- all(!organism %in% names(detected))
         }
 
-        dbg("----------------------MNT7.upload_server:class(detected)=",class(detected))
-        dbg("----------------------MNT7.upload_server:names(detected)=",names(detected))
-        dbg("----------------------MNT7.upload_server:organism=",organism)
+        dbg("----------------------MNT1.upload_server:class(detected)=",class(detected))
+        dbg("----------------------MNT1.upload_server:names(detected)=",names(detected))
+        dbg("----------------------MNT1.upload_server:organism=",organism)
 
         task_failed <- (e0 || e1 || e2 || e3)
         alt.text <- ""
@@ -1226,17 +1227,13 @@ UploadBoard <- function(id,
         } else {
           # handle success: assign detected probetype to detected_probetype
           if (length(organism) == 1) {
-            dbg("----------------------MNT7.5;detected_probetype=",detected_probetype)
             detected_probetype <- paste(detected[[organism]], collapse = "+")
-            dbg("----------------------MNT7.6;detected_probetype=",detected_probetype)
+            dbg("----------------------MNT2.upload_server:detected_probetype=",detected_probetype)
           } else {
-            dbg("----------------------MNT7.7;detected_probetype=",detected_probetype)
             detected_probetype <- sapply(organism, function(x) paste(detected[[x]], collapse="+"))
-            dbg("----------------------MNT7.8;detected_probetype=",detected_probetype)
+            dbg("----------------------MNT3.upload_server:detected_probetype=",detected_probetype)
           }
         }
-
-        dbg("----------------------MNT8.upload_server:checkprobes_task=",checkprobes_task$status())
 
         probetype(detected_probetype) ## set RV
         info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
@@ -1256,7 +1253,7 @@ UploadBoard <- function(id,
           )
         }
 
-        dbg("----------------------MNT9")
+        dbg("----------------------MNT4")
         
         ## wrong datatype. just give warning. or should we change datatype?
         if (any(detected_probetype != "error") &&
@@ -1274,7 +1271,7 @@ UploadBoard <- function(id,
           )
         }
 
-        dbg("----------------------MNT10")
+        dbg("----------------------MNT5")
 
       }
 
@@ -1427,4 +1424,5 @@ UploadBoard <- function(id,
     ## ------------------------------------------------
     return(upload_datatype)
   })
+
 }
