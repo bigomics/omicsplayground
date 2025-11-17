@@ -555,7 +555,7 @@ upload_module_computepgx_server <- function(
         org <- paste0("<br><b>Organism:</b>&nbsp;", paste0(upload_organism(), collapse=""))
         pt <- paste0("<br><b>Probe type:</b>&nbsp;", paste0(probetype(), collapse=""))
         if (length(upload_organism()) > 1) {
-          org <- paste0("<br><b>Probe type:</b>&nbsp;", paste0(upload_organism(), collapse=", "))
+          org <- paste0("<br><b>Organism:</b>&nbsp;", paste0(upload_organism(), collapse=", "))
         }
         if (length(probetype()) > 1) {
           pt <- paste0(paste(names(probetype()), probetype(), sep=":"), collapse=", ")
