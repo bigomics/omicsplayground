@@ -275,7 +275,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::validate(need(input$filter_genes, tspan("Please input at least one value in Annotate genes!", js = FALSE)))
       sel <- input$filter_genes
       filtprobes <- c()
-      if (is.null(pgx$version) || pgx$organism == "Human") {
+      if (is.null(pgx$version) || any(pgx$organism == "Human")) {
         filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
         filtprobes <- playbase::map_probes(pgx$genes, filtgenes)
       } else if ("<all>" %in% sel) {
