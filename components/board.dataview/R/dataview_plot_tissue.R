@@ -48,7 +48,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       ortho <- sum(pgx$genes$human_ortholog != "")
 
       homologue_ratio <- ortho / n
-      if (pgx$organism %in% c("Human", "human")) {
+      if (any(pgx$organism %in% c("Human", "human"))) {
         hgnc.gene <- pgx$genes[gene, "symbol"]
       } else if (homologue_ratio > .5) {
         hgnc.gene <- pgx$genes[gene, "human_ortholog"]
@@ -103,7 +103,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
 
       df <- pdat$df
       ylab <- stringr::str_to_sentence(pdat$ylab)
-      if (pgx$organism %in% c("Human", "human")) {
+      if (any(pgx$organism %in% c("Human", "human"))) {
         title <- FALSE
       } else {
         title <- "Expression in human tissue"
