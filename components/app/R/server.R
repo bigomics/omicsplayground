@@ -172,7 +172,11 @@ app_server <- function(input, output, session) {
     enable_beta = shiny::reactive(input$enable_beta),
     enable_info = shiny::reactive(input$enable_info)
   )
-
+  
+  ## observe and set global User options
+  setUserOption(session,'hello', 'world!')
+  observeEvent(input$llm_model,setUserOption(session,'llm_model', input$llm_model))
+  
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
   shinyjs::runjs("sidebarClose()")
@@ -235,7 +239,8 @@ app_server <- function(input, output, session) {
       bigdash.hideMenuElement(session, "GeneSets")
       bigdash.hideMenuElement(session, "Compare")
       bigdash.hideMenuElement(session, "SystemsBio")
-      bigdash.hideMenuElement(session, "MultiOmics (beta)")
+      bigdash.hideMenuElement(session, "MultiOmics")
+      bigdash.hideMenuElement(session, "WGCNA")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -285,8 +290,15 @@ app_server <- function(input, output, session) {
         lapply(names(MODULE.multiomics$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
-        bigdash.hideMenuElement(session, "MultiOmics (beta)")
+        bigdash.hideMenuElement(session, "MultiOmics")
         loaded$multiomics <- 0
+      }
+      if (x == "WGCNA") {
+        lapply(names(MODULE.wgcna$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "WGCNA")
+        loaded$wgcna <- 0
       }
     })
 
@@ -396,8 +408,18 @@ app_server <- function(input, output, session) {
             info("[SERVER] initializing MultiOmics module")
             mod <- MODULE.multiomics
             insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "MultiOmics (beta)")
+            bigdash.showMenuElement(session, "MultiOmics")
             lapply(names(MODULE.multiomics$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
+          }
+
+          if (MODULES_TO_LOAD["WGCNA"] && exists("MODULE.wgcna")) {
+            info("[SERVER] initializing WGCNA module")
+            mod <- MODULE.wgcna
+            insertBigTabUI(mod$module_ui())
+            bigdash.showMenuElement(session, "WGCNA")
+            lapply(names(MODULE.wgcna$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
           }
@@ -468,18 +490,24 @@ app_server <- function(input, output, session) {
     enrichment = 0,
     compare = 0,
     systems = 0,
-    multiomics = 0
+    multiomics = 0,
+    wgcna = 0
   )
   observeEvent(input$nav, {
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
-      info("[UI:SERVER] reacted: calling Clustering module")
+
+    dbg("[SERVER] input$nav =" ,input$nav)
+    
+    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") &&
+          loaded$clustering == 0) {
+      info("[SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, labeltype = labeltype)
       loaded$clustering <- 1
       tab_control()
     }
-    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") && loaded$expression == 0) {
+    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") &&
+          loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Expression module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -487,7 +515,8 @@ app_server <- function(input, output, session) {
       loaded$expression <- 1
       tab_control()
     }
-    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
+    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") &&
+          loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -503,7 +532,8 @@ app_server <- function(input, output, session) {
       loaded$compare <- 1
       tab_control()
     }
-    if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
+    if (input$nav %in% c("drug-tab", "tcga-tab", "cell-tab", "pcsf-tab") &&
+          loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -511,7 +541,8 @@ app_server <- function(input, output, session) {
       loaded$systems <- 1
       tab_control()
     }
-    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
+    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
+      "deepnet-tab") && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -519,6 +550,17 @@ app_server <- function(input, output, session) {
       loaded$multiomics <- 1
       tab_control()
     }
+    if (input$nav %in% c("wgcna-tab","mwgcna-tab","consensus-tab",
+      "preservation-tab") && loaded$wgcna == 0) {
+      info("[UI:SERVER] reacted: calling WGCNA module")
+      mod <- MODULE.wgcna
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
+      mod$module_server(PGX)
+      loaded$wgcna <- 1
+      tab_control()
+    }
+
+    
   })
 
 
@@ -712,12 +754,17 @@ app_server <- function(input, output, session) {
 
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
-    ## Beta features
+    ## Hide beta main tabs
     info("[SERVER] disabling beta features")
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
+    bigdash.toggleTab(session, "consensus-tab", show.beta)
+    bigdash.toggleTab(session, "preservation-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta)        
+
+    ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-
+    
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
 
@@ -736,8 +783,8 @@ app_server <- function(input, output, session) {
 
     ## Hide PCSF and WGCNA for metabolomics.
     # WGCNA will be available upon gmt refactoring
-    if (DATATYPEPGX == "metabolomics") {
-      info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+    if (PGX$datatype == "metabolomics") {
+      info("[SERVER] disabling modules for metabolomics data")
       bigdash.hideTab(session, "cmap-tab")
     }
 
@@ -748,6 +795,7 @@ app_server <- function(input, output, session) {
       bigdash.hideTab(session, "wordcloud-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
+    
   }
 
   ## -------------------------------------------------------------

@@ -197,7 +197,7 @@ LasagnaBoard <- function(id, pgx) {
         gsfilter <- list(gset = input$gsfilter)
       }
 
-      edge.sign <- ifelse(input$pos_edges, "pos", "both")
+      edge.sign <- ifelse(input$consensus, "consensus", "both")
 
       ## prune graph for plotting
       pruned <- playbase::lasagna.prune_graph(

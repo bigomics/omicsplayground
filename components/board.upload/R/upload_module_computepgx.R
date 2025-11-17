@@ -1112,11 +1112,11 @@ upload_module_computepgx_server <- function(
                 )
               } else {
                 error_popup(
-                  title   = "Error:",
-                  header  = title,
+                  title = "Error:",
+                  header = title,
                   message = "Would you like to get support from our customer service?",
-                  error   = shiny::HTML(errors),
-                  btn_id  = "send_data_to_support__",
+                  error = shiny::HTML(errors),
+                  btn_id = "send_data_to_support__",
                   onclick = paste0('Shiny.onInputChange(\"', ns("send_data_to_support"), '\", this.id, {priority: "event"})'),
                   show_consent = TRUE
                 )

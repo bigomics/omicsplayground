@@ -48,11 +48,24 @@ WgcnaBoard <- function(id, pgx) {
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
+    
+    shiny::observeEvent( input$useLLM, {
+      if(input$useLLM) {
+        model <- getUserOption(session,'llm_model')
+        dbg("[WgcnaBoard] input$useLLM => model = ", model)
+        if(is.null(model) || model=="") {
+          shinyalert::shinyalert("ERROR",
+            "No LLM server available. Please check your settings.")
+          return(NULL)
+        }
+        shinyalert::shinyalert("WARNING",
+          "Using LLM might expose some of your data to external LLM servers.")
+      }
+    })
 
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
-
 
     compute_wgcna <- function() {
       pgx.showSmallModal("Recalculating WGCNA with new parameters...")
@@ -60,16 +73,22 @@ WgcnaBoard <- function(id, pgx) {
       on.exit(progress$close())
       progress$set(message = "Calculating WGCNA...", value = 0)
 
-      message("[wgcna] >>> Calculating WGCNA...")
+      message("[WGCNA:compute_wgcna] >>> Calculating WGCNA...")
+
+      #ai_model = opt$LLM_MODEL
+      ai_model <- getUserOption(session,'llm_model')
+      message("[WGCNA:compute_wgcna] ai_model = ", ai_model)
+      
       out <- playbase::pgx.wgcna(
         pgx = pgx,
         ngenes = as.integer(input$ngenes),
         gset.filter = NULL,
         minmodsize = as.integer(input$minmodsize),
         power = as.numeric(input$power),
-        minKME = as.numeric(input$minkme),
-        networktype = input$networktype,
-        numericlabels = FALSE
+        numericlabels = FALSE,
+        summary = TRUE,
+        ai_model = ifelse(input$useLLM, ai_model, ""),
+        progress = progress
       )
       shiny::removeModal()
       out
@@ -78,11 +97,8 @@ WgcnaBoard <- function(id, pgx) {
     wgcna <- shiny::reactiveVal({
       require(WGCNA)
       all.req <- all(c("stats") %in% names(pgx$wgcna)) && any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
-
-      dbg("[wgcna] 0: input$compute =", input$compute)
-      dbg("[wgcna] 0: pgx$name =", pgx$name)
-
-      # Use pre-computed results only if they exist, conditions are met, AND we're not forcing recomputation
+      # Use pre-computed results only if they exist, conditions are
+      # met, AND we're not forcing recomputation
       if ("wgcna" %in% names(pgx) && all.req) {
         message("[wgcna] >>> using pre-computed WGCNA results...")
         out <- pgx$wgcna
@@ -91,12 +107,19 @@ WgcnaBoard <- function(id, pgx) {
         if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
         if (is.null(pgx$wgcna$power)) out$power <- 6
       } else {
+        message("[wgcna] >>> COMPUTE1")
         out <- compute_wgcna()
       }
       out
     })
 
-    shiny::observeEvent(wgcna(), {
+    shiny::observeEvent( input$compute, {
+      message("[wgcna] >>> COMPUTE2")
+      wgcna( compute_wgcna() )
+    },
+    ignoreInit = TRUE)
+    
+    shiny::observeEvent( wgcna(), {
       ## update Inputs
       me <- sort(names(wgcna()$me.genes))
       shiny::updateSelectInput(session, "selected_module",
@@ -109,13 +132,6 @@ WgcnaBoard <- function(id, pgx) {
         selected = tt[1]
       )
     })
-
-    shiny::observeEvent(input$compute,
-      {
-        wgcna(compute_wgcna())
-      },
-      ignoreInit = TRUE
-    )
 
 
     ## ================================================================================
@@ -211,6 +227,16 @@ WgcnaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
+    # Module membership (eigengene correlation)
+    wgcna_plot_module_heatmap_server(
+      "moduleheatmap",
+      wgcna = wgcna,
+      pgx = pgx,
+      selected_module = shiny::reactive(input$selected_module),
+      selected_trait = shiny::reactive(input$selected_trait),
+      watermark = WATERMARK
+    )
+
     # Membership-trait heatmap
     ## wgcna_plot_heatmap_membership_server(
     ##   "intraHeatmap",
@@ -257,8 +283,8 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_geneset_heatmap_server(
       "genesetHeatmap",
       pgx = pgx,
-      wgcna = wgcna,
       selected_module = shiny::reactive(input$selected_module),
+      enrichTable = enrichTableModule,
       watermark = FALSE
     )
 
@@ -266,17 +292,18 @@ WgcnaBoard <- function(id, pgx) {
       "geneHeatmap",
       pgx = pgx,
       wgcna = wgcna,
-      enrich_table = enrichTableModule,
+      selected_module = shiny::reactive(input$selected_module),
+      enrichTable = enrichTableModule,
       watermark = FALSE
     )
 
     # Enrichment plot
     wgcna_plot_enrichment_server(
       "enrichPlot",
-      enrichTable_module = enrichTableModule,
+      enrichTable = enrichTableModule,
       watermark = WATERMARK
     )
-
+    
     # Module enrichment
     enrichTableModule <- wgcna_table_enrichment_server(
       "enrichTable",
@@ -284,6 +311,15 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module)
     )
 
+    # Enrichment plot
+    wgcna_html_module_summary_server(
+      "moduleSummary",
+      wgcna = wgcna,
+      multi = FALSE,
+      r_module = shiny::reactive(input$selected_module),      
+      watermark = WATERMARK
+    )
+    
     return(NULL)
   })
 } ## end of Board
