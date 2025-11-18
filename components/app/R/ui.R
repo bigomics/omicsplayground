@@ -48,9 +48,165 @@ app_ui <- function(x) {
       .where = "declarations"
     )
     iconstyle = "font-size: 20px;"
+
+    header <- shiny::tagList(
+      shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
+      ##    gtag2, ## Google Tag Manager???
+      shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
+      shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
+      shiny::tags$script(src = "custom/close-message.js"),
+      shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
+      shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
+      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
+      visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
+      shinyjs::useShinyjs(),
+      waiter::use_waiter(),
+      sever::useSever(),
+      bigLoaders::addBigLoaderDeps(),
+      firebase::useFirebase(firestore = TRUE, analytics = TRUE),
+      shinybrowser::detect(),
+      shinybusy::busy_start_up(
+        text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
+        background = "#2780e3", color = "#ffffff",
+        loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
+      )
+    )
     
 
-    app_ui <- bslib::page(
+    app_ui <- bigdash::bigPage(
+      header,
+      navbar = bigdash::navbar(
+        # title = tags$img(
+        #   id = "logo-bigomics",
+        #   ## src = "assets/img/bigomics.png",
+        #   src = "static/bigomics-logo.png",
+        #   height = "30"
+        #   # width = "110",
+        # ),
+        # center = tags$div(
+        #  # shiny::div(shiny::uiOutput("current_dataset"), class = "current-dataset")
+        # ),
+        title = "Omics Playground",
+        left = tags$div(
+          style = "padding: 0 0 0 20px;",
+          div(
+            style = "display: inline-block; ",
+            bigdash::navbarDropdown(
+              "Datasets",
+              style = "border: 1px; padding: 2px 6px;",
+              bigdash::navbarDropdownTab(
+                "Upload new",
+                "upload-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Load from library",
+                "load-tab"
+              ),
+              bigdash::navbarDropdownTab(
+                "Shared datasets",
+                "sharing-tab"
+              )
+            )
+          )
+        )#,
+        # div.upgradebutton,
+        # div.invitebutton,
+        # div.chirpbutton,
+        # div(
+        #   id = "mainmenu_help",
+        #   bigdash::navbarDropdown(
+        #     "Help",
+        #     bigdash::navbarDropdownItem(
+        #       "Documentation",
+        #       link = "https://omicsplayground.readthedocs.io",
+        #       target = "_blank"
+        #     ),
+        #     bigdash::navbarDropdownItem(
+        #       "Video tutorials",
+        #       link = "https://bigomics.ch/tutorials/",
+        #       target = "_blank"
+        #     ),
+        #     bigdash::navbarDropdownItem(
+        #       "Google forum",
+        #       link = "https://groups.google.com/d/forum/omicsplayground",
+        #       target = "_blank"
+        #     ),
+        #     bigdash::navbarDropdownItem(
+        #       "Submit a support ticket",
+        #       link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
+        #       target = "_blank"
+        #     ),
+        #     bigdash::navbarDropdownItem(
+        #       "Github issues",
+        #       link = "https://github.com/bigomics/omicsplayground/issues",
+        #       target = "_blank"
+        #     ),
+        #     bigdash::navbarDropdownItem(
+        #       "Case studies",
+        #       link = "https://bigomics.ch/case-studies/",
+        #       target = "_blank"
+        #     )
+        #   )
+        # ),
+        # div(
+        #   id = "mainmenu_user",
+        #   bigdash::navbarDropdown(
+        #     ## "User",
+        #    # shiny::textOutput("current_user", inline = TRUE),
+        #     bigdash::navbarDropdownTab(
+        #       "User profile",
+        #       "userprofile-tab"
+        #     ),
+        #     bigdash::navbarDropdownTab(
+        #       "App settings",
+        #       "usersettings-tab"
+        #     ),
+        #     # upgrade.tab,
+        #     tags$li(
+        #       actionLink("navbar_about", "About")
+        #     )#,
+        #     # logout.tab
+        #   )
+        # ),
+        # div(
+        #   id = "mainmenu_appsettings",
+        #   bigdash::navbarDropdown(
+        #     auto_close = "outside",
+        #     shiny::icon("cog"),
+        #     div(
+        #       class = "dropdown-items",
+        #       bslib::input_switch("enable_beta", "Enable beta features"),
+        #       bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
+        #       selector_switch(
+        #         class = "card-footer-checked",
+        #         label = "show captions",
+        #         is.checked = FALSE
+        #       )
+        #     ),
+        #     bigdash::navbarDropdownItem(
+        #       withTooltip(
+        #         shiny::selectInput(
+        #           inputId = "selected_labeltype",
+        #           label = "Label type:",
+        #           choices = c("feature", "symbol", "name"),
+        #           selected = "feature",
+        #           width = "100%"
+        #         ),
+        #         "Choose a label type to be displayed in the plots",
+        #         placement = "right", options = list(container = "body")
+        #       )
+        #     )
+        #   )
+        # ),
+        # ## THIS IS SO WEIRD. if we remove/comment out the
+        # ## prettySwitch, the header of all plotModules f*ck
+        # ## up... (IK). HELP!!! we do not need this button...
+        # div(
+        #   style = "visibility: hidden; display: none;",
+        #   shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
+        # )
+      ),
       bslib::navset_pill_list(
         widths = c(1,11),
         selected = "OmicsPlayground",
@@ -89,12 +245,6 @@ opg_ui <- function() {
     )
   }
 
-  gtag2 <- NULL
-  if (Sys.getenv("OMICS_GOOGLE_TAG") != "") {
-    ## Add Google Tag manager body code
-    gtag2 <- htmltools::includeHTML("www/google-tags-noscript.html")
-    gtag2 <- sub("GTM-0000000", Sys.getenv("OMICS_GOOGLE_TAG"), gtag2)
-  }
 
   createUI <- function() {
     message("\n======================================================")
@@ -103,29 +253,7 @@ opg_ui <- function() {
 
     version <- scan(file.path(OPG, "VERSION"), character())[1]
     id <- "maintabs"
-    header <- shiny::tagList(
-      shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
-      ##    gtag2, ## Google Tag Manager???
-      shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
-      shiny::tags$script(src = "custom/close-message.js"),
-      shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
-      shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
-      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
-      shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
-      visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
-      shinyjs::useShinyjs(),
-      waiter::use_waiter(),
-      sever::useSever(),
-      bigLoaders::addBigLoaderDeps(),
-      firebase::useFirebase(firestore = TRUE, analytics = TRUE),
-      shinybrowser::detect(),
-      shinybusy::busy_start_up(
-        text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
-        background = "#2780e3", color = "#ffffff",
-        loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
-      )
-    )
+    
 
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
@@ -267,7 +395,7 @@ opg_ui <- function() {
 
     bigdash::bigPage(
       shiny.i18n::usei18n(i18n),
-      header,
+      # header,
       title = "Omics Playground 4",
       theme = big_theme2,
       sidebar = sidebar,
