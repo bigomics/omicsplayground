@@ -311,33 +311,6 @@ UploadBoard <- function(id,
           } else {
             checked_for_log(TRUE)
           }
-
-          checked_for_log(FALSE)
-          res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-          write_check_output(res$checks, "COUNTS", raw_dir())
-
-          olink <- is.olink()
-          if (olink) {
-            shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
-            checked_for_log(TRUE)
-          } else {
-            if ("e29" %in% names(res$checks)) {
-              shinyalert::shinyalert(
-                title = paste("Log-scale detected"),
-                text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-                html = TRUE,
-                confirmButtonText = "Yes",
-                showCancelButton = TRUE,
-                cancelButtonText = "No",
-                inputId = "logCorrectCounts",
-                closeOnEsc = FALSE,
-                immediate = FALSE,
-                callbackR = function(x) checked_for_log(TRUE)
-              )
-            } else {
-              checked_for_log(TRUE)
-            }
-          }
         }
         return(list(res = res, olink = olink))
       }
