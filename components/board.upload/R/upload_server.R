@@ -1141,9 +1141,75 @@ UploadBoard <- function(id,
     ## =========================== EXTENDED TASK =====================================
     ## ===============================================================================
 
+    ## Checks for multi-species data
+    observeEvent(
+    {
+      list(uploaded$counts.csv)
+    },
+    {
+      shiny::req(uploaded$counts.csv, upload_organism())
+      orgs <- upload_organism()
+      annot <- uploaded$annot.csv
+      c1 <- (length(orgs) > 1)
+      c2 <- (any(c("species","organism") %in% colnames(annot)))
+      species <- NULL
+
+      if (c2) {
+        kk <- intersect(c("species","organism"), colnames(annot))[1]
+        species <- unique(as.character(annot[, kk]))
+        hh <- grep("custom", tolower(species))
+        if (any(hh)) {
+          jj <- which(as.character(annot[, kk]) == species[hh[1]])
+          annot[jj, kk] <- "No organism"
+          species <- unique(as.character(annot[, kk]))
+          uploaded$annot.csv <- annot
+        }
+      }
+
+      if (c1 & !c2) {
+        shinyalert::shinyalert(
+          title = "Multi-species analysis!",
+          text = paste0("Multiple selected organisms (", paste0(orgs, collapse="; "), ") but neither 'species' nor 'organism' info found in the uploaded counts/abundance csv file.\n\nMulti-species analysis requires a 'species' or 'organism' column in the counts/abundance csv file reporting the official organism identifier for each feature. If you proceed without fixing your counts/abundance csv file, only the first selected organism (", orgs[1], ") will be used for a single-specie analysis."),
+          type = "error"
+        )
+        upload_organism(orgs[1])
+      }
+
+
+      if (c1 & c2) {
+        if (length(species) == 1) {
+          tt <- paste0("Column ", kk, " found in the uploaded counts/abundance.csv file.\n\nThis info is required only for multi-species analysis. However, only 1 species (", species, ") is detected in the ", kk , " column. If you proceed without fixing it, a single-species analysis will be performed.")
+          shinyalert::shinyalert(title = "", text = tt, type = "warning")
+          if (ncol(annot) == 1 | all(colnames(annot) %in% c("row.names",kk))) {
+            uploaded$annot.csv <- NULL
+            c2 <- FALSE
+          }
+        } else {
+          if (!identical(sort(species), sort(orgs))) {
+            shinyalert::shinyalert(
+              title = "Multi-species analysis!",
+              text = paste0("Mismatch between organism selection box (", paste0(orgs, collapse="; "), ") and species reported in the uploaded counts/abundance csv file (", paste0(species, collapse="; "), "). \n\n Please make sure to indicate the same set of organisms and use official species' identifiers in the counts/abundance.csv file. If you proceed without fixing it, the organism(s) reported in your counts/abundance csv file will be used."),
+              type = "error"
+            )
+            upload_organism(species)
+          }
+        }
+      }
+
+      if (!c1 & c2 & !is.null(species) & length(species)>1) {
+        shinyalert::shinyalert(
+          title = "Multi-species analysis!",
+          text = paste0("None or only a single organism selected (", paste0(orgs, collapse="; "), "). For a multi-species analysis please select multiple organisms. If you proceed without fixing it, the organism(s) reported in your counts/abundance csv file will be used."),
+          type = "error"
+        )
+        upload_organism(species)
+      }
+    }
+    )
+    
     ## check probetypes we have counts and every time upload_species changes
     observeEvent(
-      {
+    {
         list(uploaded$counts.csv)
       },
       {
@@ -1151,23 +1217,6 @@ UploadBoard <- function(id,
         probes <- rownames(uploaded$counts.csv)
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
-
-        if (!is.null(annot)) {
-          if (any(c("species","organism") %in% annot.cols)) {
-            kk <- intersect(c("species","organism"), annot.cols)[1]
-            species <- unique(annot[,kk])
-            c1 <- identical(sort(species), sort(upload_organism()))
-            if (!c1) {
-              shinyalert::shinyalert(
-                title = "Mismatch in selected organism!",
-                text = "The selected organism(s) do not match those reported in your counts.csv. If you proceed without fixing it, the organism(s) reported in your counts.csv will be used.",
-                type = "error"
-              )
-              upload_organism(species)
-            }
-          }
-        }
-      
         probetype("running")
 
         checkprobes_task$invoke(
