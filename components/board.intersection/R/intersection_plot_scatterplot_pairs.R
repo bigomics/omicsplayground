@@ -96,6 +96,7 @@ intersection_scatterplot_pairs_server <- function(id,
       ## reorder so the selected genes don't get overlapped
       jj <- order(is.sel)
       df <- df[jj, ]
+      qv <- qv[jj, ]
       df.color <- df.color[jj]
       sel1 <- match(label.text0, rownames(df)) ## index for labeled
 
@@ -129,6 +130,13 @@ intersection_scatterplot_pairs_server <- function(id,
         jj2 <- abs(df[,2])>=1 & qv[,2]<=0.05
         jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
         if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
+
+        ## make non-selected genes transparent
+        opacity <- rep(1, nrow(df))
+        if (sum(is.sel) > 0) {
+          no.sel <- !rownames(df) %in% sel.genes
+          opacity[no.sel] <- 0.1
+        }
         
         annot.rho <- list(
           text = rho.text,
@@ -153,6 +161,7 @@ intersection_scatterplot_pairs_server <- function(id,
           marker = list(
             color = df.color1,
             size = 8,
+            opacity = opacity,
             line = list(
               width = 0.3,
               color = "rgb(0,0,0)"
@@ -201,7 +210,6 @@ intersection_scatterplot_pairs_server <- function(id,
           df1 <- df[, c(c1, c2), drop = FALSE]
           qv1 <- qv[, c(c1, c2), drop = FALSE]
           
-          df1 <- df1[order(-rowMeans(abs(df1**2), na.rm = TRUE)), ]
           qv1 <- qv1[rownames(df1), , drop = FALSE]
           ff <- rownames(df1)
           ff <- paste0("<b>", ff, "</b> ", pgx$genes[ff, "gene_title"])
@@ -228,6 +236,13 @@ intersection_scatterplot_pairs_server <- function(id,
           jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
           if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
 
+          ## make non-selected genes transparent
+          opacity <- rep(1, nrow(df))
+          if (sum(is.sel) > 0) {
+            no.sel <- !rownames(df) %in% sel.genes
+            opacity[no.sel] <- 0.1
+          }
+
           annot.rho <- list(
             text = rho.text,
             font = list(size = 13 * scale_factor),
@@ -241,11 +256,10 @@ intersection_scatterplot_pairs_server <- function(id,
             yanchor = "top"
           )
 
-          ntop=50
           p <- plotly::plot_ly(
             data = df1, x = df1[, c1], y = df1[, c2],
             type = "scattergl", mode = "markers",
-            marker = list(color = df.color1, size = 8 * scale_factor,
+            marker = list(color = df.color1, size = 8 * scale_factor, opacity = opacity,
               line = list(width = 0.3, color = "rgb(0,0,0)")),
             text = hovertext, hoverinfo = "text",
             hovertemplate = "%{text}<extra></extra>"
@@ -253,9 +267,9 @@ intersection_scatterplot_pairs_server <- function(id,
           if (input$annotate) {
             p <- p %>%
               plotly::add_annotations(
-                x = df1[1:ntop, 1],
-                y = df1[1:ntop, 2],
-                text = rownames(df1)[1:ntop],
+                x = df1[sel1, 1],
+                y = df1[sel1, 2],
+                text = as.character(label.text),
                 xanchor = "center",
                 yanchor = "top",
                 font = list(size = 14 * scale_factor),
