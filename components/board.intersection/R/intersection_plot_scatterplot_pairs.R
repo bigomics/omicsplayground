@@ -210,7 +210,6 @@ intersection_scatterplot_pairs_server <- function(id,
           df1 <- df[, c(c1, c2), drop = FALSE]
           qv1 <- qv[, c(c1, c2), drop = FALSE]
           
-          # df1 <- df1[order(-rowMeans(abs(df1**2), na.rm = TRUE)), ]
           qv1 <- qv1[rownames(df1), , drop = FALSE]
           ff <- rownames(df1)
           ff <- paste0("<b>", ff, "</b> ", pgx$genes[ff, "gene_title"])
