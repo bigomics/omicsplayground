@@ -1263,6 +1263,15 @@ upload_module_computepgx_server <- function(
         }
       )
 
+      session$onSessionEnded(
+      function() {
+        # Clean up raw_dir if it exists
+        if (dir.exists(shiny::isolate(raw_dir()))) {
+          message("Cleaning up raw_dir: ", shiny::isolate(raw_dir()))
+          unlink(shiny::isolate(raw_dir()), recursive = TRUE)
+        }
+      })
+
       return(computedPGX)
     } ## end-of-server
   )
