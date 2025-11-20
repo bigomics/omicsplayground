@@ -40,6 +40,7 @@ UploadBoard <- function(id,
     compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
+
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes, annot.cols) {
       future_promise({
         detected <- playbase::check_species_probetype(
@@ -50,7 +51,7 @@ UploadBoard <- function(id,
         )
         ## if (is.null(detected)) detected <- "error"
         detected
-      })
+      }, seed = NULL) ## seed=NULL avoids useless warning messages.
     })
 
     output$navheader <- shiny::renderUI({
@@ -101,7 +102,7 @@ UploadBoard <- function(id,
       common_name <- playbase::allSpecies(col = "display_name")
       names(all_species) <- paste0(all_species, " (", common_name, ")")
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
-      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, selected = "Human", server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
@@ -399,6 +400,7 @@ UploadBoard <- function(id,
               type = "error"
             )
           }
+
           # Hard stop for scRNA-seq
           if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
             status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
@@ -417,6 +419,7 @@ UploadBoard <- function(id,
               type = "error"
             )
           }
+
         }
         if (is.null(checked)) {
           uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
@@ -657,26 +660,9 @@ UploadBoard <- function(id,
           finish = "Compute!"
         )
       )
-      ## } else {
-      ##   wizard <- wizardR::wizard(
-      ##     id = ns("upload_wizard"),
-      ##     width = 90,
-      ##     height = 75,
-      ##     modal = TRUE,
-      ##     style = "dots",
-      ##     lock_start = FALSE,
-      ##     counts_ui,
-      ##     samples_ui,
-      ##     contrasts_ui,
-      ##     normalization_panel,
-      ##     compute_panel,
-      ##     options = list(
-      ##       navigation = "buttons",
-      ##       finish = "Compute!"
-      ##     )
-      ##   )
-      ## }
+
       return(wizard)
+
     })
 
     ## --------------------------------------------------------
@@ -858,17 +844,11 @@ UploadBoard <- function(id,
 
         if (summary_check_content > 0) {
           # check which checks have error results
-          find_content <- !sapply(
-            summary_checks,
-            function(x) is.null(x) || length(x) == 0
-          )
-
+          find_content <- !sapply(summary_checks, function(x) is.null(x) || length(x) == 0)
           summary_checks <- summary_checks[find_content]
-
 
           # get the names of each list within summary checks
           get_all_codes <- sapply(summary_checks, function(x) names(x))
-
 
           # check if any any code is error code
           error_list <- playbase::PGX_CHECKS
@@ -975,7 +955,6 @@ UploadBoard <- function(id,
         upload_name(),
         upload_datatype(),
         upload_description(),
-        ## upload_organism(),
         upload_gset_methods(),
         upload_gx_methods(),
         probetype()
@@ -1018,8 +997,9 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
 
-        probetype.finished <- !(probetype() %in% c("error", "running"))
-
+        probetype.finished <- all(!(probetype() %in% c("error", "running")))
+        ## probetype.finished <- any(!(probetype() %in% c("error", "running"))) ? ## AZ
+        
         if (is.null(upload_name()) ||
           upload_name() == "" ||
           upload_description() == "" ||
@@ -1034,7 +1014,6 @@ UploadBoard <- function(id,
         }
       }
     )
-
 
     # observe show_modal and start modal
     shiny::observeEvent(
@@ -1055,8 +1034,6 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          # upload_datatype(NULL)  ## not good! crash on new upload
-          # upload_organism(NULL)
           upload_name(NULL)
           upload_description(NULL)
           show_comparison_builder(TRUE)
@@ -1074,7 +1051,7 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
-        if (input$selected_organism == "No organism") {
+        if (any(input$selected_organism == "No organism")) {
           shinyalert::shinyalert(
             title = "Custom organism",
             text = "You have selected 'custom organism'. Please include a custom feature annotation table and upload a custom genesets GMT file. Otherwise many analysis modules will not work properly.",
@@ -1094,8 +1071,6 @@ UploadBoard <- function(id,
               uploaded$samples.csv <- pgx$samples
               uploaded$contrasts.csv <- pgx$contrast
               uploaded$counts.csv <- pgx$counts
-
-              ## compute_info(list( "name" = pgx$name,"description" = pgx$description))
               compute_settings$name <- pgx$name
               compute_settings$description <- pgx$description
             }
@@ -1122,10 +1097,75 @@ UploadBoard <- function(id,
     ## =========================== EXTENDED TASK =====================================
     ## ===============================================================================
 
+    ## Checks for multi-species data
+    observeEvent(
+    {
+      list(uploaded$counts.csv)
+    },
+    {
+      shiny::req(uploaded$counts.csv, upload_organism())
+      orgs <- upload_organism()
+      annot <- uploaded$annot.csv
+      c1 <- (length(orgs) > 1)
+      c2 <- (any(c("species","organism") %in% colnames(annot)))
+      species <- NULL
+
+      if (c2) {
+        kk <- intersect(c("species","organism"), colnames(annot))[1]
+        species <- unique(as.character(annot[, kk]))
+        hh <- grep("custom", tolower(species))
+        if (any(hh)) {
+          jj <- which(as.character(annot[, kk]) == species[hh[1]])
+          annot[jj, kk] <- "No organism"
+          species <- unique(as.character(annot[, kk]))
+          uploaded$annot.csv <- annot
+        }
+      }
+
+      if (c1 & !c2) {
+        shinyalert::shinyalert(
+          title = "Multi-species analysis!",
+          text = paste0("Multiple selected organisms (", paste0(orgs, collapse="; "), ") but neither 'species' nor 'organism' info found in the uploaded counts/abundance csv file.\n\nMulti-species analysis requires a 'species' or 'organism' column in the counts/abundance csv file reporting the official organism identifier for each feature. If you proceed without fixing your counts/abundance csv file, only the first selected organism (", orgs[1], ") will be used for a single-specie analysis."),
+          type = "error"
+        )
+        upload_organism(orgs[1])
+      }
+
+
+      if (c1 & c2) {
+        if (length(species) == 1) {
+          tt <- paste0("Column ", kk, " found in the uploaded counts/abundance.csv file.\n\nThis info is required only for multi-species analysis. However, only 1 species (", species, ") is detected in the ", kk , " column. If you proceed without fixing it, a single-species analysis will be performed.")
+          shinyalert::shinyalert(title = "", text = tt, type = "warning")
+          if (ncol(annot) == 1 | all(colnames(annot) %in% c("row.names",kk))) {
+            uploaded$annot.csv <- NULL
+            c2 <- FALSE
+          }
+        } else {
+          if (!identical(sort(species), sort(orgs))) {
+            shinyalert::shinyalert(
+              title = "Multi-species analysis!",
+              text = paste0("Mismatch between organism selection box (", paste0(orgs, collapse="; "), ") and species reported in the uploaded counts/abundance csv file (", paste0(species, collapse="; "), "). \n\n Please make sure to indicate the same set of organisms and use official species' identifiers in the counts/abundance.csv file. If you proceed without fixing it, the organism(s) reported in your counts/abundance csv file will be used."),
+              type = "error"
+            )
+            upload_organism(species)
+          }
+        }
+      }
+
+      if (!c1 & c2 & !is.null(species) & length(species)>1) {
+        shinyalert::shinyalert(
+          title = "Multi-species analysis!",
+          text = paste0("None or only a single organism selected (", paste0(orgs, collapse="; "), "). For a multi-species analysis please select multiple organisms. If you proceed without fixing it, the organism(s) reported in your counts/abundance csv file will be used."),
+          type = "error"
+        )
+        upload_organism(species)
+      }
+    }
+    )
+    
     ## check probetypes we have counts and every time upload_species changes
     observeEvent(
-      {
-        ## list(uploaded$counts.csv, upload_organism())
+    {
         list(uploaded$counts.csv)
       },
       {
@@ -1143,7 +1183,7 @@ UploadBoard <- function(id,
         )
       }
     )
-
+    
     observeEvent(
       checkprobes_task$status(),
       {
@@ -1156,6 +1196,7 @@ UploadBoard <- function(id,
           probetype("error")
           return(NULL)
         }
+
         if (checkprobes_task$status() != "success") {
           probetype("running")
           return(NULL)
@@ -1174,9 +1215,16 @@ UploadBoard <- function(id,
         # detect_probetypes return NULL if no probetype is found
         # across a given organism if NULL, probetype matching failed
         e0 <- length(detected) == 0
-        e1 <- is.null(detected[[organism]])
-        e2 <- all(is.na(detected[[organism]]))
-        e3 <- !(organism %in% names(detected))
+        if (length(organism) == 1) { 
+          e1 <- is.null(detected[[organism]])
+          e2 <- all(is.na(detected[[organism]]))
+          e3 <- !(organism %in% names(detected))
+        } else {
+          e1 <- all(sapply(organism, function(x) is.null(detected[[x]])))
+          e2 <- all(sapply(organism, function(x) all(is.na(detected[[x]]))))
+          e3 <- all(!organism %in% names(detected))
+        }
+
         task_failed <- (e0 || e1 || e2 || e3)
         alt.text <- ""
         detected_probetype <- NULL
@@ -1187,10 +1235,7 @@ UploadBoard <- function(id,
           alt.species <- paste(detected_species, collapse = " or ")
           if (length(alt.species)) {
             # check if ANY organism matched the probes, if yes add a hint to the user
-            alt.text <- c(alt.text, paste0(
-              "Are these perhaps <b>",
-              alt.species, "</b>?"
-            ))
+            alt.text <- c(alt.text, paste0("Are these perhaps <b>", alt.species, "</b>?"))
           }
           if (upload_datatype() == "metabolomics") {
             # overwrite alt.text for metabolomics
@@ -1198,20 +1243,24 @@ UploadBoard <- function(id,
           }
         } else {
           # handle success: assign detected probetype to detected_probetype
-          detected_probetype <- paste(detected[[organism]], collapse = "+")
+          if (length(organism) == 1) {
+            detected_probetype <- paste(detected[[organism]], collapse = "+")
+          } else {
+            detected_probetype <- sapply(organism, function(x) paste(detected[[x]], collapse="+"))
+          }
         }
 
         probetype(detected_probetype) ## set RV
         info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
 
-        if (detected_probetype == "error") {
+        if (all(detected_probetype == "error")) {
           info("[UploadBoard] ExtendedTask result has ERROR")
           shinyalert::shinyalert(
             title = "Probes not recognized!",
             text = paste0(
               "Error. Your probes do not match any probe type for <b>",
               organism, "</b>. Please check your probe names and select ",
-              "another organism. ", paste(alt.text, collapse = " ")
+              "the correct organism. ", paste(alt.text, collapse = " ")
             ),
             type = "error",
             size = "s",
@@ -1220,7 +1269,7 @@ UploadBoard <- function(id,
         }
 
         ## wrong datatype. just give warning. or should we change datatype?
-        if (detected_probetype != "error" &&
+        if (any(detected_probetype != "error") &&
           any(grepl("PROT", detected_probetype)) &&
           !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
           shinyalert::shinyalert(
@@ -1234,7 +1283,9 @@ UploadBoard <- function(id,
             html = TRUE
           )
         }
+
       }
+
     )
 
     ## =====================================================================
@@ -1384,4 +1435,5 @@ UploadBoard <- function(id,
     ## ------------------------------------------------
     return(upload_datatype)
   })
+
 }
