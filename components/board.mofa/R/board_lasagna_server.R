@@ -42,7 +42,9 @@ LasagnaBoard <- function(id, pgx) {
     tab_elements <- list(
       "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter")),
       "Multi-partite graph" = list(disable = c("clust_options")),
-      "Multi-type network" = list(disable = c("clust_options"))
+      #"Multi-type network" = list(disable = c("clust_options"))
+      "Multi-partite graph data" = list(disable = c("layers", "mpartite_options",
+        "updateplots", "clust_options"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -240,7 +242,7 @@ LasagnaBoard <- function(id, pgx) {
       input_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
-
+    
     mofa_plot_lasagna_partite_server(
       "lasagnaPartite",
       data = pruned_data,
@@ -249,13 +251,34 @@ LasagnaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    mofa_plot_lasagna_network_server(
-      "lasagnaNetwork",
+    ## mofa_plot_lasagna_network_server(
+    ##   "lasagnaNetwork",
+    ##   data = pruned_data,
+    ##   pgx = pgx,
+    ##   watermark = WATERMARK
+    ## )
+
+    multipartite_data_table <- lasagna_multipartite_data_table_server(
+      "multipartite_table_data",
       data = pruned_data,
-      pgx = pgx,
-      watermark = WATERMARK
+      scrollY = "calc(100vh - (240px + 140px))"
     )
 
+    multipartite_graph_table <- lasagna_multipartite_graph_table_server(
+      "multipartite_table_graph",
+      data = pruned_data,
+      scrollY = "calc(100vh - (240px + 140px))"
+    )
+
+    multipartite_pheno_table <- lasagna_multipartite_pheno_table_server(
+      "multipartite_table_pheno",
+      data = pruned_data,
+      input_contrast = reactive(input$contrast),
+      scrollY = "calc(100vh - (240px + 140px))"
+    )
+    
     return(NULL)
+
   })
+
 } ## end of Board

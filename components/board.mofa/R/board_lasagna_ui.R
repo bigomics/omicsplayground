@@ -140,29 +140,52 @@ LasagnaUI <- function(id) {
           )
         )
       ),
-      ## end tabPanel
-      ## ##----------------------------------------------------------------
+
       shiny::tabPanel(
-        "Multi-type network",
+        "Multi-partite graph data",
         bslib::layout_columns(
-          col_widths = 12,
           height = "calc(100vh - 181px)",
-          row_heights = c("auto", 1),
-          bs_alert(HTML(NETWORK_INFO)),
+          col_widths = 12,
+          row_heights = list("auto", 1),
+          bs_alert("Data underlying the LASAGNA multi-partite graph. View and download the multi-omics data table, multi-omics phenotype table, and multi-omics multipartite graph data."),
           bslib::layout_columns(
-            col_widths = c(12),
-            height = "calc(100vh - 180px)",
-            mofa_plot_lasagna_network_ui(
-              ns("lasagnaNetwork"),
-              title = "Multi-type network",
-              info.text = NETWORK_INFO,
-              info.references = NULL,
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            col_widths = 12,
+            row_heights = list(1.33, 1),
+            bslib::layout_columns(
+              width = 6,
+              lasagna_multipartite_data_table_ui(
+                ns("multipartite_table_data"),
+                title = "LASAGNA multipartite data",
+                info.text = "LASAGNA multipartite (multi-omics) data table. This table reports the multi-omics profiles within each sample.",
+                caption = "LASAGNA multipartite (multi-omics) data table. This table reports the multi-omics profiles within each sample.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              lasagna_multipartite_graph_table_ui(
+                ns("multipartite_table_graph"),
+                title = "LASAGNA multipartite graph data",
+                info.text = "LASAGNA multipartite (multi-omics) graph table. This table reports the multi-omics data used to construct the multipartite graph. The table includes features, direction of connection, weights, and feature correlation across samples.",
+                caption = "LASAGNA multipartite (multi-omics) graph table. This table reports the multi-omics data used to construct the multipartite graph.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            ),
+            bslib::layout_columns(
+              col_widths = 12,
+              lasagna_multipartite_pheno_table_ui(
+                ns("multipartite_table_pheno"),
+                title = "LASAGNA multipartite phenotypes table.",
+                info.text = "LASAGNA multipartite phenotypes table. This table reports the phenotype of each sample (+1 if assigned; -1 if not assigned). The phenotype correspond to the contrast selected for the multipartite graph and can be changed in the 'Select comparison' drop-down menu. Optionally, assignment of each sample to each available contrast can be displayed.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
             )
           )
         )
       ) ## end tabPanel
+
     ) ## end tabsetPanel
+
   ) ## end div
+
 }
