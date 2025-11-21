@@ -1,4 +1,4 @@
-lasagna_multipartite_data_table_ui <- function(id,
+lasagna_multipartite_nodes_table_ui <- function(id,
                                                label = "",
                                                title = "",
                                                info.text = "",
@@ -8,37 +8,65 @@ lasagna_multipartite_data_table_ui <- function(id,
 
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    shiny::radioButtons(ns("labeltype"), "Label type:",
+      c("feature", "symbol", "title"), selected = "feature", inline = TRUE)
+  )
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
     width = width,    
     height = height,
     title = title,
+    options = options,
     caption = caption,
     label = label
   )
 
 }
 
-lasagna_multipartite_data_table_server <- function(id, data, scrollY = "auto") {
+lasagna_multipartite_nodes_table_server <- function(id,
+                                                    data,
+                                                    pgx,
+                                                    scrollY = "auto") {
 
   moduleServer(id, function(input, output, session) {
 
-    table_data <- shiny::reactive({
+    table_data <- shiny::reactive({      
+
       res <- data()
       shiny::req(res)
-      X <- as.data.frame(res[["X"]])
-      Y <- as.data.frame(res[["Y"]])
-      kk <- intersect(colnames(X), rownames(Y))
-      X <- round(X[, kk, drop = FALSE], digits = 2)      
-      hh <- grep("PHENO:|SINK|SOURCE", rownames(X))
-      if (any(hh)) X <- X[-hh, , drop = FALSE]
-      cc <- (!is.null(X) & !is.null(Y) & length(kk) == ncol(X))
-      shiny::validate(
-        shiny::need(cc, "Missing data from LASAGNA multipartite graph!")
+      G <- visNetwork::toVisNetworkData(res$graph)
+      shiny::validate(shiny::need("nodes" %in% names(G),
+        "Missing nodes from LASAGNA multipartite data!"))
+
+      N <- G$nodes
+      phenos <- NULL
+      hh <- grep("PHENO:", rownames(N))
+      if (any(hh)) phenos <- N[N$layer == "PHENO", , drop = FALSE]
+      
+      N$value <- round(N$value, 2)
+      layers <- unique(as.character(N$layer))
+      layers <- layers[which(layers != "PHENO")]
+      N <- do.call(rbind,
+        lapply(layers, function(l) { N0=N[N$layer==l, ];
+          N0=N0[order(N0$value, decreasing = TRUE), ]
+        })
       )
-      rm(Y)
-      return(X)
+      N <- rbind(N, phenos)
+
+      if (all(c("id", "label") %in% colnames(N))) {
+        kk <- c("label", setdiff(colnames(N),"label"))
+        N <- N[, kk]
+        if (isTRUE(all.equal(N$id, N$label)))         
+          N <- N[, colnames(N) != "id", drop = FALSE]
+      }
+
+      rm(res, G, layers, LL); gc()
+
+      return(N)
+
     })
     
     table.RENDER <- function(full = TRUE) {
@@ -46,9 +74,28 @@ lasagna_multipartite_data_table_server <- function(id, data, scrollY = "auto") {
       dt <- table_data()
       shiny::req(dt)
 
+      ff0 <- rownames(dt)
+      phenos <- NULL
+      hh <- grep("PHENO:", ff0)
+      if (length(hh) > 0) {
+        phenos <- ff0[hh]
+        ff0 <- ff0[-hh]
+      }
+
+      if (input$labeltype == "feature") ff <- c(ff0, phenos)
+      jj <- match(ff0, pgx$genes$feature)
+      if (input$labeltype == "symbol") {
+        ff <- c(pgx$genes$symbol[jj], phenos)
+      } else if (input$labeltype == "title") {
+        ff <- c(pgx$genes$gene_title[jj], phenos)
+      }      
+      nas <- which(is.na(ff))
+      if (any(nas)) ff[nas] <- rownames(dt)[nas]
+      dt$label <- ff
+      
       DTable <- DT::datatable(
         dt,
-        rownames = TRUE,
+        rownames = FALSE,
         fillContainer = TRUE,
         class = "compact hover",
         extensions = c("Buttons", "Scroller"),

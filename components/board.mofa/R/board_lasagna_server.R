@@ -251,21 +251,15 @@ LasagnaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    ## mofa_plot_lasagna_network_server(
-    ##   "lasagnaNetwork",
-    ##   data = pruned_data,
-    ##   pgx = pgx,
-    ##   watermark = WATERMARK
-    ## )
-
-    multipartite_data_table <- lasagna_multipartite_data_table_server(
-      "multipartite_table_data",
+    multipartite_nodes_table <- lasagna_multipartite_nodes_table_server(
+      "multipartite_nodes_table",
       data = pruned_data,
+      pgx = pgx,
       scrollY = "calc(100vh - (240px + 140px))"
     )
 
-    multipartite_graph_table <- lasagna_multipartite_graph_table_server(
-      "multipartite_table_graph",
+    multipartite_edges_table <- lasagna_multipartite_edges_table_server(
+      "multipartite_edges_table",
       data = pruned_data,
       scrollY = "calc(100vh - (240px + 140px))"
     )

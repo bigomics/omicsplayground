@@ -41,17 +41,17 @@ lasagna_multipartite_pheno_table_server <- function(id,
       ctx <- input_contrast()
       shiny::req(res, ctx)
       Y=NULL
+      
       cc <- (!is.null(res[["Y"]]) & !is.null(res[["X"]]))
       if (cc) { 
-        Y <- as.data.frame(res[["Y"]])
-        kk <- intersect(colnames(res[["X"]]), Y)
-        if (any(kk)) Y <- Y[kk, , drop = FALSE]
+        kk <- intersect(colnames(res[["X"]]), rownames(res[["Y"]]))
+        if (length(kk) > 0) Y <- res[["Y"]][kk, , drop = FALSE]
       }
       msg <- "Missing data from LASAGNA multipartite graph!"
       shiny::validate(shiny::need(!is.null(Y), msg))
-      return(list(Y = Y, ctx = ctx))
+      return(list(Y = as.data.frame(Y), ctx = ctx))
     })
-    
+
     table.RENDER <- function(full = TRUE) {
 
       dt <- table_data()
