@@ -50,15 +50,15 @@ lasagna_multipartite_nodes_table_server <- function(id,
       layers <- unique(as.character(N$layer))
       layers <- layers[which(layers != "PHENO")]
       N <- do.call(rbind,
-        lapply(layers, function(l) { N0=N[N$layer==l, ];
-          N0=N0[order(N0$value, decreasing = TRUE), ]
+        lapply(layers, function(l) { N0=N[N$layer==l, , drop = FALSE];
+          N0=N0[order(N0$value, decreasing = TRUE), , drop = FALSE]
         })
       )
       N <- rbind(N, phenos)
 
       if (all(c("id", "label") %in% colnames(N))) {
         kk <- c("label", setdiff(colnames(N),"label"))
-        N <- N[, kk]
+        N <- N[, kk, drop = FALSE]
         if (isTRUE(all.equal(N$id, N$label)))         
           N <- N[, colnames(N) != "id", drop = FALSE]
       }
