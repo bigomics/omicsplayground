@@ -116,16 +116,18 @@ LasagnaUI <- function(id) {
         )
       ),
 
-      ## ##----------------------------------------------------------------
+      ##----------------------------------------------------------------
       shiny::tabPanel(
         "Multi-partite graph",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
+          gap = 0,
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
             col_widths = 12,
             height = "calc(100vh - 180px)",
+            gap = 0,
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
               title = "Multi-partite graph",
@@ -133,7 +135,7 @@ LasagnaUI <- function(id) {
               info.text = MPARTITE_INFO,
               info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+              width = "100%"
             )
           ),
           bslib::layout_columns(
@@ -141,8 +143,8 @@ LasagnaUI <- function(id) {
             lasagna_multipartite_nodes_table_ui(
               ns("multipartite_nodes_table"),
               title = "Multipartite nodes",
-              info.text = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metric (correlation coefficient or log2FC) adopted to construct the LASAGNA multipartite graph. Optionally, nodes' identifiers can be reported as official feature symbol (if known) or full feature title (if known).",
-              caption = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metric (correlation coefficient or log2FC) adopted to construct the LASAGNA multipartite graph.",
+              info.text = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph. Optionally, nodes' identifiers can be reported as official feature symbol (if known) or full feature title (if known).",
+              caption = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph.",
               height = c("50%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),

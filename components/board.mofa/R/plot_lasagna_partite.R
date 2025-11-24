@@ -21,7 +21,7 @@ mofa_plot_lasagna_partite_ui <- function(
     shiny::checkboxInput(ns("showintra"), "show intra-correlation"),
     shiny::checkboxInput(ns("prune"), "prune nodes"),
     shiny::hr(),
-    shiny::sliderInput(ns("xdist"), "Layer spacing:", 0.2, 2, 1, 0.1),
+    shiny::sliderInput(ns("xdist"), "Layer spacing:", 0.2, 2, 2, 0.1),
     shiny::hr(),
     shiny::radioButtons(ns("labeltype"), "Label type:",
       c("feature", "symbol", "title"),
