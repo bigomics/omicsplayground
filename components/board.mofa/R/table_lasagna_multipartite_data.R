@@ -62,13 +62,15 @@ lasagna_multipartite_nodes_table_server <- function(id,
       N$fc <- round(N$fc, 2)
       colnames(N)[which(colnames(N) == "fc")] <- "log2FC"
 
+      N <- N[, colnames(N) != "value", drop = FALSE]
       if (all(c("id", "label") %in% colnames(N))) {
-        kk <- c("label", setdiff(colnames(N), c("value","label")))
-        N <- N[, kk, drop = FALSE]
         if (isTRUE(all.equal(N$id, N$label)))         
           N <- N[, colnames(N) != "id", drop = FALSE]
       }
-
+      kk <- c("label", "layer", "log2FC", "rho")
+      kk <- intersect(kk, colnames(N))
+      N <- N[, kk, drop = FALSE]
+      
       rm(res, G, layers, LL); gc()
 
       return(N)
