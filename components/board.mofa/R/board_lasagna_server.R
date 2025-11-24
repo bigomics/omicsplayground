@@ -41,10 +41,8 @@ LasagnaBoard <- function(id, pgx) {
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter")),
-      "Multi-partite graph" = list(disable = c("clust_options")),
+      "Multi-partite graph" = list(disable = c("clust_options"))
       #"Multi-type network" = list(disable = c("clust_options"))
-      "Multi-partite graph data" = list(disable = c("layers", "mpartite_options",
-        "updateplots", "clust_options"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -261,13 +259,6 @@ LasagnaBoard <- function(id, pgx) {
     multipartite_edges_table <- lasagna_multipartite_edges_table_server(
       "multipartite_edges_table",
       data = pruned_data,
-      scrollY = "calc(100vh - (240px + 140px))"
-    )
-
-    multipartite_pheno_table <- lasagna_multipartite_pheno_table_server(
-      "multipartite_table_pheno",
-      data = pruned_data,
-      input_contrast = reactive(input$contrast),
       scrollY = "calc(100vh - (240px + 140px))"
     )
     

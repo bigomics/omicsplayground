@@ -122,11 +122,9 @@ LasagnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          row_heights = c("auto", 1),
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
-            # col_widths = c(8,4),
-            col_widths = c(12),
+            col_widths = 12,
             height = "calc(100vh - 180px)",
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
@@ -137,17 +135,7 @@ LasagnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
-          )
-        )
-      ),
-
-      shiny::tabPanel(
-        "Multi-partite graph data",
-        bs_alert("Data underlying the LASAGNA multi-partite graph. View and download the multi-omics data table, multi-omics phenotype table, and multi-omics multipartite graph data."),
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 181px)",
-          row_heights = list(1.33, 1),
+          ),
           bslib::layout_columns(
             width = 6,
             lasagna_multipartite_nodes_table_ui(
@@ -165,17 +153,10 @@ LasagnaUI <- function(id) {
               caption = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
               height = c("50%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),
-            lasagna_multipartite_pheno_table_ui(
-              ns("multipartite_table_pheno"),
-              title = "Multipartite phenotypes",
-              info.text = "LASAGNA multipartite phenotypes data. This table reports the phenotype of each sample (+1 if assigned; -1 if not assigned). The phenotype correspond to the contrast selected for the multipartite graph and can be changed in the 'Select comparison' drop-down menu. Optionally, assignment of each sample to each available contrast can be displayed.",
-              height = c("50%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
             )
           )
         )
-      ) ## end tabPanel
+      )
 
     ) ## end tabsetPanel
 
