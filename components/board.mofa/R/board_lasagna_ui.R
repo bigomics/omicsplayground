@@ -152,7 +152,7 @@ LasagnaUI <- function(id) {
             width = 6,
             lasagna_multipartite_nodes_table_ui(
               ns("multipartite_nodes_table"),
-              title = "LASAGNA multipartite nodes data",
+              title = "Multipartite nodes data",
               info.text = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metric (correlation coefficient or log2FC) adopted to construct the LASAGNA multipartite graph. Optionally, nodes' identifiers can be reported as official feature symbol (if known) or full feature title (if known).",
               caption = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metric (correlation coefficient or log2FC) adopted to construct the LASAGNA multipartite graph.",
               height = c("50%", TABLE_HEIGHT_MODAL),
@@ -160,7 +160,7 @@ LasagnaUI <- function(id) {
             ),
             lasagna_multipartite_edges_table_ui(
               ns("multipartite_edges_table"),
-              title = "LASAGNA multipartite edges data",
+              title = "Multipartite edges data",
               info.text = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
               caption = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
               height = c("50%", TABLE_HEIGHT_MODAL),
@@ -168,7 +168,7 @@ LasagnaUI <- function(id) {
             ),
             lasagna_multipartite_pheno_table_ui(
               ns("multipartite_table_pheno"),
-              title = "LASAGNA multipartite phenotypes data",
+              title = "Multipartite phenotypes data",
               info.text = "LASAGNA multipartite phenotypes data. This table reports the phenotype of each sample (+1 if assigned; -1 if not assigned). The phenotype correspond to the contrast selected for the multipartite graph and can be changed in the 'Select comparison' drop-down menu. Optionally, assignment of each sample to each available contrast can be displayed.",
               height = c("50%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
