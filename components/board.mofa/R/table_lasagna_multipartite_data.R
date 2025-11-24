@@ -34,30 +34,36 @@ lasagna_multipartite_nodes_table_server <- function(id,
   moduleServer(id, function(input, output, session) {
 
     table_data <- shiny::reactive({      
-
+      
       res <- data()
       shiny::req(res)
       G <- visNetwork::toVisNetworkData(res$graph)
+      
       shiny::validate(shiny::need("nodes" %in% names(G),
         "Missing nodes from LASAGNA multipartite data!"))
-
+      
       N <- G$nodes
       phenos <- NULL
       hh <- grep("PHENO:", rownames(N))
-      if (any(hh)) phenos <- N[N$layer == "PHENO", , drop = FALSE]
-      
-      N$value <- round(N$value, 2)
+      if (length(hh) > 0) {
+        phenos <- N[N$layer == "PHENO", , drop = FALSE]
+      }
+
       layers <- unique(as.character(N$layer))
       layers <- layers[which(layers != "PHENO")]
       N <- do.call(rbind,
         lapply(layers, function(l) { N0=N[N$layer==l, , drop = FALSE];
-          N0=N0[order(N0$value, decreasing = TRUE), , drop = FALSE]
+          N0=N0[order(N0$fc, decreasing = TRUE), , drop = FALSE]
         })
       )
       N <- rbind(N, phenos)
 
+      N$rho <- round(N$rho, 2)
+      N$fc <- round(N$fc, 2)
+      colnames(N)[which(colnames(N) == "fc")] <- "log2FC"
+
       if (all(c("id", "label") %in% colnames(N))) {
-        kk <- c("label", setdiff(colnames(N),"label"))
+        kk <- c("label", setdiff(colnames(N), c("value","label")))
         N <- N[, kk, drop = FALSE]
         if (isTRUE(all.equal(N$id, N$label)))         
           N <- N[, colnames(N) != "id", drop = FALSE]
