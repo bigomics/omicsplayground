@@ -8,12 +8,21 @@ lasagna_multipartite_edges_table_ui <- function(id,
 
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(ns("show_intracor"),
+        "Show intra-layer correlations", FALSE),
+      "Show intra-layer edges"
+    )
+  )
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
     width = width,    
     height = height,
     title = title,
+    options = options,
     caption = caption,
     label = label
   )
@@ -42,8 +51,14 @@ lasagna_multipartite_edges_table_server <- function(id, data, scrollY = "auto") 
       dt <- table_data()
       shiny::req(dt)
 
+      jj <- grep("->", as.character(dt$connection_type))
+      if (length(jj) > 0) dt1 <- dt[jj , , drop = FALSE]
+      if (input$show_intracor & length(jj) > 0) {
+        dt1 <- dt
+      }
+      
       DTable <- DT::datatable(
-        dt,
+        dt1,
         rownames = FALSE,
         fillContainer = TRUE,
         class = "compact hover",
