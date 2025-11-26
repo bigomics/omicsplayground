@@ -121,7 +121,7 @@ MultiWGCNA_Board <- function(id, pgx) {
         gset.ntop = 1000,        
         gset.methods = c("gsetcor","xcor","fisher"),        
         annot = pgx$genes,
-        ##GMT = pgx$GMT,  ##  ??
+        GMT = pgx$GMT,  
         ##gsetX = pgx$gsetX,  ## ??
         summary = TRUE,
         ai_model = ifelse(input$useLLM, ai_model, ""),

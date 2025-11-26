@@ -174,7 +174,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
         phenoData = phenoData,
-        # GMT = pgx$GMT,
+        GMT = pgx$GMT,
         annot = pgx$genes,
         power = power,
         ngenes = ngenes,
