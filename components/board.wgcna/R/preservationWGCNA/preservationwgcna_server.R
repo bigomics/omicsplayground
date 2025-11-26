@@ -110,6 +110,7 @@ PreservationWGCNA_Board <- function(id, pgx) {
       res <- playbase::wgcna.runPreservationWGCNA(
         exprList,
         phenoData,
+        GMT = pgx$GMT,
         annot = pgx$genes,
         reference = 1,
         add.merged = FALSE,
