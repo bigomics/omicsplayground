@@ -913,7 +913,8 @@ upload_module_normalization_server <- function(
                     shiny::br()
                   )
                 ),
-                br()
+                br(),
+                shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
               )
             ),
             br()
