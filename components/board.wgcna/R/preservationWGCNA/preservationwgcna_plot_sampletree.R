@@ -4,13 +4,14 @@
 ##
 
 preservationWGCNA_plot_sampletree_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -31,7 +32,7 @@ preservationWGCNA_plot_sampletree_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-    #options = options,
+    # options = options,
     caption = caption,
     height = height,
     width = width,
@@ -40,35 +41,31 @@ preservationWGCNA_plot_sampletree_ui <- function(
 }
 
 preservationWGCNA_plot_sampletree_server <- function(id,
-                                                  mwgcna
-                                                  ) {
+                                                     mwgcna) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
-
       cons <- mwgcna()
       shiny::req(cons)
 
-      ##if(input$top20) {}
-      
+      ## if(input$top20) {}
+
       nsets <- length(cons$datExpr)
-      layout.matrix <- matrix( 1:(2*nsets), nrow = 2, ncol = nsets)
-      layout(layout.matrix, heights=c(1,2), widths=rep(1,nsets))
-      
-      for(i in 1:nsets) {
+      layout.matrix <- matrix(1:(2 * nsets), nrow = 2, ncol = nsets)
+      layout(layout.matrix, heights = c(1, 2), widths = rep(1, nsets))
+
+      for (i in 1:nsets) {
         dt <- toupper(names(cons$datExpr)[i])
         playbase::wgcna.plotPreservationSampleDendroAndColors(
           cons, i,
-          main = toupper(dt),          
+          main = toupper(dt),
           what = "both",
           marAll = c(1.2, 10, 2, 0.3),
           clust.expr = TRUE,
           setLayout = FALSE
-        ) 
+        )
       }
-      
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -77,10 +74,5 @@ preservationWGCNA_plot_sampletree_server <- function(id,
       res = c(95, 110),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

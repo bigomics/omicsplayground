@@ -6,32 +6,36 @@
 PreservationWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("splitpheno"), "Split dataset by:", choices=NULL),
-    #shiny::selectInput(ns("reference"), "Reference:", choices=NULL),    
-    shiny::selectInput(ns("module"), "Module:", choices=NULL, multiple=FALSE),
-    shiny::selectInput(ns("trait"), "Trait:", choices=NULL, multiple=FALSE),
+    shiny::selectInput(ns("splitpheno"), "Split dataset by:", choices = NULL),
+    # shiny::selectInput(ns("reference"), "Reference:", choices=NULL),
+    shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE),
+    shiny::selectInput(ns("trait"), "Trait:", choices = NULL, multiple = FALSE),
     shiny::br(),
-    shiny::actionButton(ns("compute"), "Compute", size = "xs", icon=icon("refresh")),
+    shiny::actionButton(ns("compute"), "Compute", size = "xs", icon = icon("refresh")),
     shiny::br(),
     shiny::br(),
     bslib::accordion(
       id = ns("mwgcna_options"),
-      #open = NULL,
+      # open = NULL,
       bslib::accordion_panel(
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
-        shiny::tagList(          
-          shiny::selectInput(ns("power"),"Soft treshold:",
-            choices=c("<auto>",1,3,6,9,12,20), selected=12),
-          shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
-          shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
-            2000),
-          shiny::selectInput(ns("minmodsize"),"Min. module size:", choices=c(5,10,20,40,100),
-            10)
+        shiny::tagList(
+          shiny::selectInput(ns("power"), "Soft treshold:",
+            choices = c("<auto>", 1, 3, 6, 9, 12, 20), selected = 12
+          ),
+          shiny::selectInput(ns("deepsplit"), "Deepsplit:", choices = 0:4, 2),
+          shiny::selectInput(ns("ngenes"), "Max. features:",
+            choices = c(1000, 2000, 4000),
+            2000
+          ),
+          shiny::selectInput(ns("minmodsize"), "Min. module size:",
+            choices = c(5, 10, 20, 40, 100),
+            10
+          )
         )
       )
     )
-
   )
 }
 
@@ -48,7 +52,7 @@ PreservationWGCNA_UI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Dendrograms",
         bslib::layout_columns(
@@ -57,8 +61,8 @@ PreservationWGCNA_UI <- function(id) {
           row_heights = c("auto", 1, 0.7),
           bs_alert(HTML("<b>Preservation WGCNA</b> is an application of WGCNA to test whether modules of a reference data set are preserved in others (test) datasets. A module is said to be preserved if the intramodule connectivity and density is maintained.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
-            #height = "calc(100vh - 180px)",
+            col_widths = c(6, 6),
+            # height = "calc(100vh - 180px)",
             height = "100vh",
             preservationWGCNA_plot_dendrograms_ui(
               ns("preservationWGCNADendro"),
@@ -75,21 +79,21 @@ PreservationWGCNA_UI <- function(id) {
               info.text = "Preservation WGCNA analysis relies on specific module preservation statistics, including Z-summary and medianRank. The Z-summary value combines multiple preservation metrics (density and connectivity preservation) into a single composite score that reflects how similar the module structure in the test dataset is to that in the reference dataset. A high Z-summary (e.g., >10) indicates strong preservation. A low Z-summary indicate a lowly/weakly preserved network. Notably, caution is advised when intepreting the Z-summary as it is sensitive to module size: larger modules tend to have higher Z-scores compared to small modules.<br><br>The MedianRank is a rank-based measure of module preservation, derived by ranking all modules based on the preservation measures connectivity and density. It is a composite measure that takes the average of two median rank scores: one for the module's connectivity and one for its density. Different to the Z-summary, the MedianRank is significantly more robust to variation in module size. It ranks the observed connectivity and density of a module against the distribution of all other modules in a reference network. A lower medianRank indicates a higher degree of preservation. Altogether, Z-summary and medianRank summarize how well each module’s structure and connectivity patterns are maintained between the reference and the test dataset. ",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )            
+            )
           )
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Module Overlap",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          #bs_alert(HTML("<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
+          row_heights = c("auto", 1),
+          # bs_alert(HTML("<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(6, 6),
             height = "100vh",
             preservationWGCNA_plot_overlap_ui(
               ns("preservationWGCNAOverlap"),
@@ -111,17 +115,17 @@ PreservationWGCNA_UI <- function(id) {
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
+        ## bslib::nav_panel(
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          #bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
+          row_heights = c("auto", 1),
+          # bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
+            col_widths = c(6, 6),
             height = "100vh",
             bslib::layout_columns(
               col_widths = c(12),
@@ -153,17 +157,17 @@ PreservationWGCNA_UI <- function(id) {
           )
         )
       ),
-      
-      ##----------------------------------------------------------------
+
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bslib::layout_columns(
-            col_widths = c(7,5),
-            height = "100vh",            
+            col_widths = c(7, 5),
+            height = "100vh",
             bslib::layout_columns(
               col_widths = c(12),
               preservationWGCNA_table_modulegenes_ui(
@@ -194,7 +198,6 @@ PreservationWGCNA_UI <- function(id) {
           )
         )
       )
-      
     ) ## end tabsetPanel
-  )  ## end div 
+  ) ## end div
 }

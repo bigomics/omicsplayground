@@ -139,7 +139,7 @@ intersection_scatterplot_pairs_server <- function(id,
           no.sel <- !rownames(df) %in% sel.genes
           opacity[no.sel] <- 0.1
         }
-        
+
         annot.rho <- list(
           text = rho.text,
           font = list(size = 14),
@@ -209,7 +209,7 @@ intersection_scatterplot_pairs_server <- function(id,
 
           df1 <- df[, c(c1, c2), drop = FALSE]
           qv1 <- qv[, c(c1, c2), drop = FALSE]
-          
+
           qv1 <- qv1[rownames(df1), , drop = FALSE]
           ff <- rownames(df1)
           ff <- paste0("<b>", ff, "</b> ", pgx$genes[ff, "gene_title"])
@@ -260,8 +260,10 @@ intersection_scatterplot_pairs_server <- function(id,
           p <- plotly::plot_ly(
             data = df1, x = df1[, c1], y = df1[, c2],
             type = "scattergl", mode = "markers",
-            marker = list(color = df.color1, size = 8 * scale_factor, opacity = opacity,
-              line = list(width = 0.3, color = "rgb(0,0,0)")),
+            marker = list(
+              color = df.color1, size = 8 * scale_factor, opacity = opacity,
+              line = list(width = 0.3, color = "rgb(0,0,0)")
+            ),
             text = hovertext, hoverinfo = "text",
             hovertemplate = "%{text}<extra></extra>"
           )

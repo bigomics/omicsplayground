@@ -4,13 +4,14 @@
 ##
 
 wgcna_html_module_summary_ui <- function(
-    id,
-    label = "",
-    title = "",
-    info.text = "",
-    caption = "",
-    height,
-    width) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -19,7 +20,7 @@ wgcna_html_module_summary_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-    #options = options,
+    # options = options,
     caption = caption,
     height = height,
     width = width,
@@ -33,43 +34,42 @@ wgcna_html_module_summary_server <- function(id,
                                              r_module,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     info_text <- function() {
       wgcna <- wgcna()
       module <- r_module()
-      shiny::req(wgcna)      
+      shiny::req(wgcna)
       res <- "Summary not available"
 
-      if(multi) {
-        summaries <- lapply(wgcna,function(w) names(w$summary))
+      if (multi) {
+        summaries <- lapply(wgcna, function(w) names(w$summary))
         has.summary <- any(sapply(summaries, function(s) module %in% s))
-        if(has.summary) {
+        if (has.summary) {
           k <- which(sapply(summaries, function(s) module %in% s))
           res <- wgcna[[k]]$summary[[module]]
         }
       } else {
-        if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
+        if ("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
           res <- wgcna$summary[[module]]
         }
       }
 
-      res <- gsub("\n","<p>",res)
-      res <- gsub(" [*]{2}","<b>",res)
-      res <- gsub("[*]{2} ","</b>",res)
-      res <- paste0("<b>",module," module</b><br><br>", res)
+      res <- gsub("\n", "<p>", res)
+      res <- gsub(" [*]{2}", "<b>", res)
+      res <- gsub("[*]{2} ", "</b>", res)
+      res <- paste0("<b>", module, " module</b><br><br>", res)
       return(res)
     }
 
     info.RENDER <- function() {
       res <- info_text()
-      shiny::div(class="gene-info", shiny::HTML(res))
+      shiny::div(class = "gene-info", shiny::HTML(res))
     }
 
     info.RENDER2 <- function() {
       res <- info_text()
-      shiny::div( shiny::HTML(res), style="font-size:22px;" )
+      shiny::div(shiny::HTML(res), style = "font-size:22px;")
     }
-    
+
     PlotModuleServer(
       "text",
       plotlib = "generic",
@@ -82,7 +82,5 @@ wgcna_html_module_summary_server <- function(id,
       res = c(75, 100),
       add.watermark = watermark
     )
-
-
   })
 }

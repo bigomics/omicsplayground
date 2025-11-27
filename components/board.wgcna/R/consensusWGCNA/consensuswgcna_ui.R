@@ -6,39 +6,44 @@
 ConsensusWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shinyjs::hidden(shiny::selectInput(ns("splitpheno"), "Consensus by:", choices=NULL)),
-    shinyjs::hidden(shiny::selectInput(ns("splitdata"), "Consensus by:", choices=NULL,
-      multiple=TRUE)),              
-    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices=NULL, multiple=FALSE)),
-    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices=NULL)),
+    shinyjs::hidden(shiny::selectInput(ns("splitpheno"), "Consensus by:", choices = NULL)),
+    shinyjs::hidden(shiny::selectInput(ns("splitdata"), "Consensus by:",
+      choices = NULL,
+      multiple = TRUE
+    )),
+    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)),
+    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices = NULL)),
     shiny::br(),
-    shiny::actionButton(ns("compute"), "Compute", size = "xs", icon=icon("refresh")),
+    shiny::actionButton(ns("compute"), "Compute", size = "xs", icon = icon("refresh")),
     shiny::br(),
     shiny::br(),
     bslib::accordion(
       id = ns("mwgcna_options"),
-      #open = NULL,
+      # open = NULL,
       bslib::accordion_panel(
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
-        shiny::tagList(          
-          shiny::selectInput(ns("power"),"Soft treshold:",
-            choices=c("<auto>",1,3,6,9,12,20), selected=12),
-          shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
-          shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
-            2000),
-          shiny::selectInput(ns("minmodsize"),"Min. module size:",
-            choices=c(5,10,20,40,100), 10),
-          shiny::checkboxInput(ns("useLLM"),"AI summary", FALSE)
+        shiny::tagList(
+          shiny::selectInput(ns("power"), "Soft treshold:",
+            choices = c("<auto>", 1, 3, 6, 9, 12, 20), selected = 12
+          ),
+          shiny::selectInput(ns("deepsplit"), "Deepsplit:", choices = 0:4, 2),
+          shiny::selectInput(ns("ngenes"), "Max. features:",
+            choices = c(1000, 2000, 4000),
+            2000
+          ),
+          shiny::selectInput(ns("minmodsize"), "Min. module size:",
+            choices = c(5, 10, 20, 40, 100), 10
+          ),
+          shiny::checkboxInput(ns("useLLM"), "AI summary", FALSE)
         )
       )
     )
-
   )
 }
 
 
-CONSENSUSWGCNA_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
+CONSENSUSWGCNA_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
 ConsensusWGCNA_UI <- function(id) {
   ns <- shiny::NS(id) ## namespace
@@ -52,7 +57,7 @@ ConsensusWGCNA_UI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Dendrograms",
         bslib::layout_columns(
@@ -61,8 +66,8 @@ ConsensusWGCNA_UI <- function(id) {
           row_heights = c("auto", 1, 0.7),
           bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets by computing overlapping modules.")),
           bslib::layout_columns(
-            col_widths = c(6,6),
-            #height = "calc(100vh - 180px)",
+            col_widths = c(6, 6),
+            # height = "calc(100vh - 180px)",
             height = "100vh",
             consensusWGCNA_plot_dendrograms_ui(
               ns("consensusWGCNADendro"),
@@ -79,19 +84,19 @@ ConsensusWGCNA_UI <- function(id) {
               info.text = "The SFT model fit scatter plot shows the soft threshold power vs the signed scale-free topology fit index. For each dataset, datatype or phenotype, the slope of the log-log connectivity plot vs. frequency is extracted and its opposite sign is computed and This value is then multiplied by the scale-free topology fit index (R^2), with higher values indicating good scale-free structure. The resulting value is plotted against the SFT power value. In WGCNA, features are connected based on their correlation across samples. The mean connectivity is a measure of overall network density, i.e., how connected the features are, on average.<br><br>The mean connectivity graph plots soft threshold power vs. mean connectivity value, for each dataset, datatype, or phentoype shows the average number (or strenght) of connection per each feature, at any given value of power. A decreasing trend is an expected behavior: the mean connectivity decreases as the power increases, suggesting that the network becomes less dense (and therefore the adjacency matrix becomes sparser).<br><br>The soft threshold power for network sparsity can be changed under 'WGCNA option' and clicking at the 'Compute' button. Optionally, our in-house IQR method can be selected in the plot options to calculate the WGCNA power. IQR maximizes variation of heights of the dendrogram, promoting seperability between groups. It tests a range of power values. For each power: (i) computes signed adjacency matrix; (ii) converts it to TOM similarity; (iii) clusters it to get a dendrogram; (iv) it computes the 25th, 50th, and 75th percentiles of dendrogram heights and their interquartile range (IQR). The power value with the largest IQR is picked. When clusters are well-separated, dendrogram heights are more variable and thus have higher IQR.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )            
+            )
           )
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
+        ## bslib::nav_panel(
         "Sample Clustering",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets (or datatypes, phenotypes) by clustering each dataset (or datatype, phenotype) and computing overlapping modules.<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -108,16 +113,16 @@ ConsensusWGCNA_UI <- function(id) {
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Consensus Module-Trait</b> analysis identifies modules that have high correlation with your phenotypes. Modules are concordant if the trait correlation have same sign in the consensus groups, i.e. always up (or down) regulated in all groups.")),
           bslib::layout_columns(
-            col_widths = c(7,5),
+            col_widths = c(7, 5),
             height = "100vh",
             consensusWGCNA_plot_moduletrait_ui(
               ns("consensusWGCNATrait"),
@@ -149,20 +154,19 @@ ConsensusWGCNA_UI <- function(id) {
             width = c("auto", "100%")
           )
         )
-        
       ),
-      
-      ##----------------------------------------------------------------
+
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets (or datatypes, phenotypes) by clustering each dataset (or datatype, phenotype) and computing overlapping modules.")),
           bslib::layout_columns(
-            col_widths = c(3,4,5),
-            height = "100vh",            
+            col_widths = c(3, 4, 5),
+            height = "100vh",
             wgcna_html_module_summary_ui(
               id = ns("consensusWGCNAmoduleSummary"),
               title = "Summary",
@@ -190,8 +194,6 @@ ConsensusWGCNA_UI <- function(id) {
           )
         )
       )
-
-      
     ) ## end tabsetPanel
-  )  ## end div 
+  ) ## end div
 }

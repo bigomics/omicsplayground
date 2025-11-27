@@ -12,7 +12,6 @@ MODULE.wgcna <- list(
       mwgcna = "Multiomics WGCNA"
     )
   },
-  
   module_ui = function() {
     list(
       bigdash::bigTabItem(
@@ -37,7 +36,6 @@ MODULE.wgcna <- list(
       )
     )
   },
-  
   module_ui2 = function() {
     list(
       list(
@@ -58,9 +56,7 @@ MODULE.wgcna <- list(
       )
     )
   },
-  
   module_server = function(PGX) {
-
     WgcnaBoard("wgcna",
       pgx = PGX
     )
@@ -68,24 +64,24 @@ MODULE.wgcna <- list(
     ConsensusWGCNA_Board(
       id = "consensus",
       pgx = PGX
-    )     
+    )
 
     PreservationWGCNA_Board(
       id = "preservation",
       pgx = PGX
-    )     
+    )
 
     MultiWGCNA_Board(
       "mwgcna",
       pgx = PGX
     )
   },
-
   module_help = function() {
     list(
-      bigdash::sidebarTabHelp("mwgcna-tab", "MultiOmics WGCNA",
-        tspan("WGCNA for multi-omics"))
+      bigdash::sidebarTabHelp(
+        "mwgcna-tab", "MultiOmics WGCNA",
+        tspan("WGCNA for multi-omics")
+      )
     )
   }
-  
 )

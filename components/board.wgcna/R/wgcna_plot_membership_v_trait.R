@@ -37,7 +37,6 @@ wgcna_plot_membership_v_trait_server <- function(id,
                                                  selected_trait,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       res <- wgcna()
       module <- selected_module()
@@ -45,14 +44,14 @@ wgcna_plot_membership_v_trait_server <- function(id,
       shiny::req(res)
       shiny::req(!is.null(module) && module != "")
       shiny::req(!is.null(trait) && trait != "")
-      
+
       df <- playbase::wgcna.getGeneStats(
         res,
         module = module,
         trait = trait,
         showlogFC = TRUE,
         plot = FALSE
-      ) 
+      )
       df
     }
 
@@ -63,18 +62,18 @@ wgcna_plot_membership_v_trait_server <- function(id,
       shiny::req(res)
       shiny::req(!is.null(module) && module != "")
       shiny::req(!is.null(trait) && trait != "")
-      
-      par(mar=c(0,0,0,0))
+
+      par(mar = c(0, 0, 0, 0))
       df <- playbase::wgcna.getGeneStats(
         res,
         module = module,
         trait = trait,
-        #showlogFC = input$showlogFC,
+        # showlogFC = input$showlogFC,
         showlogFC = TRUE,
-        col = 'black',
+        col = "black",
         main = "",
         plot = TRUE
-      ) 
+      )
     }
 
     PlotModuleServer(

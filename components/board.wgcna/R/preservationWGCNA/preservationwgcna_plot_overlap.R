@@ -4,13 +4,14 @@
 ##
 
 preservationWGCNA_plot_overlap_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   ## options <- shiny::tagList(
@@ -19,7 +20,7 @@ preservationWGCNA_plot_overlap_ui <- function(
   ##     label = "Layer",
   ##     choices = NULL
   ##   )
-  ##)
+  ## )
 
   options <- shiny::tagList(
     shiny::checkboxInput(
@@ -44,27 +45,22 @@ preservationWGCNA_plot_overlap_ui <- function(
 
 
 preservationWGCNA_plot_overlap_server <- function(id,
-                                                  rwgcna
-                                                  )
-{
+                                                  rwgcna) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
-
       res <- rwgcna()
-      ##layer <- r_layer()
+      ## layer <- r_layer()
 
-      par(mar=c(10,15,5,2))
+      par(mar = c(10, 15, 5, 2))
       playbase::wgcna.plotConsensusOverlapHeatmap(
         res$net, res$layer[[2]]$net,
-        ##setLabels = names(pres$layers)[1:2],
+        ## setLabels = names(pres$layers)[1:2],
         plotDendro = input$showdendro,
-        lab.line = c(8,12),
+        lab.line = c(8, 12),
         setpar = FALSE
       )
-      
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -73,10 +69,5 @@ preservationWGCNA_plot_overlap_server <- function(id,
       res = c(90, 110),
       add.watermark = FALSE
     )
-    
-    
-  }) 
+  })
 }
-
-
-

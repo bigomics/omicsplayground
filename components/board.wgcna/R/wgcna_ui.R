@@ -22,8 +22,9 @@ WgcnaInputs <- function(id) {
             choices = c(1000, 2000, 4000),
             selected = 2000
           ),
-          shiny::selectInput(ns("power"),"Soft treshold:",
-            choices=c("<auto>",1,3,6,9,12,20), selected = 12),
+          shiny::selectInput(ns("power"), "Soft treshold:",
+            choices = c("<auto>", 1, 3, 6, 9, 12, 20), selected = 12
+          ),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 20
           ),
@@ -277,7 +278,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),          
+          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",

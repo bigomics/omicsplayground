@@ -475,7 +475,6 @@ UploadBoard <- function(id,
               type = "error"
             )
           }
-
         }
 
         ## -------------- cross-check with counts ------------------

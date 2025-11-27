@@ -44,7 +44,8 @@ wgcna_plot_gdendogram_server <- function(id,
         res,
         show.traits = input$showtrait,
         marAll = c(0.4, 5, 1, 0.2),
-        main = "")
+        main = ""
+      )
     }
 
     PlotModuleServer(
