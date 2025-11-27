@@ -62,7 +62,17 @@ IntersectionUI <- function(id) {
         intersection_scatterplot_pairs_ui(
           id = ns("scatterplot"),
           title = "Scatterplot pairs",
-          info.text = "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. This module provides an interactive pairwise scatterplots for the differential expression profiles between the selected contrasts. All the possible comparisons between the selected contrasts are displayed. Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in all selected contrasts are colored in green. Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in only one of the two compared profiles are colored in orange. All other features are colored in grey.",
+          info.text = paste0(
+            "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. ",
+            "The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. ",
+            "This module provides an interactive pairwise scatterplots for the differential expression profiles between the selected contrasts. ",
+            "All the possible comparisons between the selected contrasts are displayed.",
+            "<ul>",
+            "<li><span style='display:inline-block; width:12px; height:12px; background-color:#5B9B5B; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in the two compared contrasts.</li>",
+            "<li><span style='display:inline-block; width:12px; height:12px; background-color:#e3a45a; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in only one of the two compared contrasts.</li>",
+            "<li><span style='display:inline-block; width:12px; height:12px; background-color:#eeeeee; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value above 0.05 in both compared contrasts.</li>",
+            "</ul>"
+          ),
           caption = "Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")

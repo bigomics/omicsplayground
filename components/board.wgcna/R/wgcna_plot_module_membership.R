@@ -91,7 +91,7 @@ wgcna_plot_module_membership_server <- function(id,
       func = RENDER,
       func2 = RENDER2,
       pdf.width = 8, pdf.height = 5,
-      res = c(80, 120),
+      res = c(75, 100),
       add.watermark = watermark
     )
   })

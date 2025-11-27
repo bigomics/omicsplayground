@@ -14,9 +14,15 @@ wgcna_plot_geneset_heatmap_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    shiny::checkboxGroupInput(ns("pheno"), "Show phenotype:",
+      choices=NULL, inline=TRUE)    
+  )
+
   PlotModuleUI(
     ns("plot"),
     title = title,
+    options = options,
     label = label,
     info.text = info.text,
     height = height,
@@ -28,57 +34,79 @@ wgcna_plot_geneset_heatmap_ui <- function(
 
 wgcna_plot_geneset_heatmap_server <- function(id,
                                               pgx,
-                                              wgcna,
                                               selected_module,
+                                              enrichTable,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plot.RENDER <- function() {
-      wgcna <- wgcna()
-      mod <- selected_module()
-      df <- wgcna$gse[[mod]]
-      ## sel <- head(rownames(df),20)
-      sel <- head(df$geneset, 20)
-      shiny::req(mod, length(sel) > 0)
 
-      gsetX <- pgx$gsetX[sel, , drop = FALSE]
+    observeEvent( pgx$samples, {
+      shiny::updateCheckboxGroupInput(session, "pheno",
+        choices = colnames(pgx$samples),
+        selected = head(colnames(pgx$samples),8)
+      )
+    })
+
+    get_data <- function() {
+      
+      df <- enrichTable$data()
+      if (is.null(df) || nrow(df) == 0) {
+        return(NULL)
+      }
+      ii <- enrichTable$rows_all()
+      shiny::req(ii)
+      sel <- df$geneset[ii]
+      sel1 <- intersect(sel, rownames(pgx$gsetX))
+      if(length(sel1)) {
+        gsetX <- pgx$gsetX[sel1, , drop = FALSE]
+      } else {
+        sel1 <- intersect(sel, rownames(playdata::GSETxGENE))
+        X <- playbase::rename_by( pgx$X, pgx$genes, "human_ortholog")
+        G <- Matrix::t( playdata::GSETxGENE[sel1,] )
+        gsetX <- plaid::plaid(X, G)
+      }
+      list( gsetX = gsetX )
+    }
+
+    plot_heatmap <- function(n=20, maxlen=120) {
+
+      res <- get_data()
+      gsetX <- res$gsetX
+      mod <- selected_module()
+
+      annot <- pgx$samples
+      sel <- input$pheno
+      shiny::req(sel)
+      sel <- intersect(sel, colnames(annot))
+      annot <- annot[,sel,drop=FALSE]
+      
       playbase::gx.splitmap(
         gsetX,
-        nmax = 50,
-        col.annot = pgx$samples,
-        ## cexCol = 0.01, cexRow = 0.01,
-        rowlab.maxlen = 120,
+        nmax = n,
+        col.annot = annot,
+        ## cexCol = 0.01,
+        ## cexRow = 0.01,
+        rowlab.maxlen = maxlen,
         show_legend = FALSE,
         show_colnames = FALSE,
         split = 1,
-        main = paste("Module", mod),
+        main = mod,
         verbose = 2
       )
+
     }
 
+    plot.RENDER <- function() {
+      plot_heatmap(n=20, maxlen=80)
+    }
     plot.RENDER2 <- function() {
-      wgcna <- wgcna()
-      mod <- selected_module()
-      df <- wgcna$gse[[mod]]
-      sel <- head(rownames(df), 40)
-
-      playbase::gx.splitmap(
-        pgx$gsetX[sel, ],
-        nmax = 50,
-        ## mar = c(1,1), # keysize=1,
-        col.annot = pgx$samples,
-        ## cexCol = 0.01, cexRow = 0.01,
-        rowlab.maxlen = 200,
-        show_legend = TRUE,
-        split = 1,
-        main = paste("Module", mod)
-      )
+      plot_heatmap(n=40, maxlen=240)
     }
-
+    
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
       func2 = plot.RENDER2,
-      ## csvFunc = csvFunc,
+      csvFunc = get_data,
       pdf.width = 8, pdf.height = 6,
       res = c(80, 100),
       add.watermark = watermark

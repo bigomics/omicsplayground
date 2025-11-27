@@ -145,10 +145,10 @@ app_ui <- function(x) {
           drug = "Drug connectivity",
           cell = "Cell profiling",
           pcsf = "PCSF",
-          wgcna = "WGCNA",
           tcga = "TCGA survival (beta)"
         ),
-        "MultiOmics (beta)" = MODULE.multiomics$module_menu()
+        "MultiOmics" = MODULE.multiomics$module_menu(),
+        "WGCNA" = MODULE.wgcna$module_menu()
       )
 
       ## filter disabled modules
@@ -352,6 +352,19 @@ app_ui <- function(x) {
                   "Choose a label type to be displayed in the plots",
                   placement = "right", options = list(container = "body")
                 )
+              ),
+              bigdash::navbarDropdownItem(
+                withTooltip(
+                  shiny::selectInput(
+                    inputId = "llm_model",
+                    label = "LLM model:",
+                    choices = opt$LLM_MODELS,
+                    selected = 1,
+                    width = "100%"
+                  ),
+                  "Choose a label type to be displayed in the plots",
+                  placement = "right", options = list(container = "body")
+                )
               )
             )
           ),
@@ -372,9 +385,9 @@ app_ui <- function(x) {
             "welcome-tab",
             "BigOmics Playground",
             "is your self-service bioinformatics platform for interactive analysis,
-                    visualization and interpretation of transcriptomics and proteomics data.
-                    Perform complex data analysis and visualization easily without coding,
-                    and significantly reduce the time-to-discovery."
+             visualization and interpretation of transcriptomics and proteomics data.
+             Perform complex data analysis and visualization easily without coding,
+             and significantly reduce the time-to-discovery."
           ),
           bigdash::sidebarTabHelp(
             "load-tab",
@@ -515,6 +528,16 @@ app_ui <- function(x) {
             "Single-Cell Profiling",
             tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
+          ),
+          bigdash::sidebarTabHelp(
+            "consensus-tab",
+            "Consensus WGCNA",
+            tspan("Consensus analysis using the WGCNA framework")
+          ),
+          bigdash::sidebarTabHelp(
+            "preservation-tab",
+            "Preservation WGCNA",
+            tspan("Preservation analysis using the WGCNA framework")
           ),
           !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),
