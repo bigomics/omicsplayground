@@ -1057,7 +1057,13 @@ upload_module_normalization_server <- function(
       })
 
       bc_method <- reactive({
-        ll <- list(method = input$bec_method, param = input$bec_param)
+        param <- input$bec_param
+        ## Remove <autodetect> if other params are selected
+        if ("<autodetect>" %in% param && length(param) > 1) {
+          param <- setdiff(param, "<autodetect>")
+          shiny::updateSelectizeInput(session, "bec_param", selected = param)
+        }
+        ll <- list(method = input$bec_method, param = param)
         if (input$batchcorrect == FALSE) ll <- "no_batch_correct"
         return(ll)
       })
