@@ -338,6 +338,17 @@ app_ui <- function(x) {
                   class = "card-footer-checked",
                   label = "show captions",
                   is.checked = FALSE
+                ),
+                bslib::input_switch("enable_llm", "Enable AI"),
+                shiny::conditionalPanel(
+                  "input.enable_llm",
+                  shiny::selectInput(
+                    inputId = "llm_model",
+                    label = NULL,
+                    choices = opt$LLM_MODELS,
+                    selected = 1,
+                    width = "100%"
+                  )
                 )
               ),
               bigdash::navbarDropdownItem(
@@ -347,19 +358,6 @@ app_ui <- function(x) {
                     label = "Label type:",
                     choices = c("feature", "symbol", "name"),
                     selected = "feature",
-                    width = "100%"
-                  ),
-                  "Choose a label type to be displayed in the plots",
-                  placement = "right", options = list(container = "body")
-                )
-              ),
-              bigdash::navbarDropdownItem(
-                withTooltip(
-                  shiny::selectInput(
-                    inputId = "llm_model",
-                    label = "LLM model:",
-                    choices = opt$LLM_MODELS,
-                    selected = 1,
                     width = "100%"
                   ),
                   "Choose a label type to be displayed in the plots",
