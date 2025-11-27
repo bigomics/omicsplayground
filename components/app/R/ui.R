@@ -362,7 +362,7 @@ app_ui <- function(x) {
                     selected = 1,
                     width = "100%"
                   ),
-                  "Choose a label type to be displayed in the plots",
+                  "Choose the LLM model to be used for AI-powered analysis",
                   placement = "right", options = list(container = "body")
                 )
               )
