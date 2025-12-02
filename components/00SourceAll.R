@@ -315,6 +315,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.wgcna/R/wgcna_plot_s_independence.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_plot_sampledendrogram.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_plot_TOMheatmap.R',encoding='UTF-8')
+  source('board.wgcna/R/wgcna_plot_topgenes.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_server.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_table_enrichment.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_table_genes.R',encoding='UTF-8')

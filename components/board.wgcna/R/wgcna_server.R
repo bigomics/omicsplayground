@@ -281,8 +281,8 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Enrichment plot
-    wgcna_plot_enrichment_server(
-      "enrichPlot",
+    wgcna_plot_topgenes_server(
+      "topgenesPlot",
       enrichTable = enrichTableModule,
       watermark = WATERMARK
     )
