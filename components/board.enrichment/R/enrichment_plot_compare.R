@@ -54,6 +54,7 @@ enrichment_plot_compare_server <- function(id,
         return()
       }
       gset <- gset[1]
+      shiny::req(gset)
 
       score <- sapply(pgx$gset.meta$meta, function(x) x[gset, "meta.fx"])
 
