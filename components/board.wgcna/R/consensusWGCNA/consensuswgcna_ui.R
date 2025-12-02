@@ -6,9 +6,7 @@
 ConsensusWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shinyjs::hidden(shiny::selectInput(ns("splitpheno"), "Consensus by:", choices=NULL)),
-    shinyjs::hidden(shiny::selectInput(ns("splitdata"), "Consensus by:", choices=NULL,
-      multiple=TRUE)),              
+    shiny::selectInput(ns("splitby"), "Consensus by:", choices=NULL),
     shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices=NULL, multiple=FALSE)),
     shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices=NULL)),
     shiny::br(),
