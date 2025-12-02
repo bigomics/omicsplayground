@@ -247,13 +247,23 @@ upload_table_preview_counts_server <- function(id,
                   )
                 },
                 if (upload_datatype() != "multi-omics") {
-                  fileInputArea(
-                    ns("counts_csv"),
-                    shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                    multiple = FALSE,
-                    accept = c(".csv"),
-                    width = "100%"
-                  )
+                  if (upload_datatype() == "scRNA-seq") {
+                    fileInputArea(
+                      ns("counts_csv"),
+                      shiny::h4(tspan("Upload counts.csv/.h5", js = FALSE), class = "mb-0"),
+                      multiple = FALSE,
+                      accept = c(".csv", ".h5"),
+                      width = "100%"
+                    )
+                  } else {
+                    fileInputArea(
+                      ns("counts_csv"),
+                      shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
+                      multiple = FALSE,
+                      accept = c(".csv"),
+                      width = "100%"
+                    )
+                  }
                 },
                 style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
               ),
