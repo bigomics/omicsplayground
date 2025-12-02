@@ -567,10 +567,10 @@ upload_table_preview_counts_server <- function(id,
     observeEvent(input$counts_csv, {
       # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
-      if (!all(ext %in% c("csv", "RData"))) {
+      if (!all(ext %in% c("csv", "RData", "h5"))) {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please make sure the file is a CSV file.",
+          text = "Please make sure the file is a CSV file. For scRNA-seq, h5 format is also allowed.",
           type = "error"
         )
         return()
@@ -605,101 +605,84 @@ upload_table_preview_counts_server <- function(id,
       }
 
       ## ---counts---##
-
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
+
         datafile <- input$counts_csv$datapath[sel[1]]
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
-        df.samples <- NULL
-        if (upload_datatype() == "proteomics" && is.olink()) {
-          df <- tryCatch(
+        if (upload_datatype() == "scRNA-seq" && file.ext == "h5") {
+          df <- tryCatch({ playbase::read_h5_counts(datafile) }, error = function(w) { NULL } )
+          if (is.null(df)) {
+            shinyalert::shinyalert(
+              title = "Error",
+              text = "Error: there may be an issue with the uploaded h5 format. Please fix it & re-upload.",
+              type = "error"
+            )
+          }
+        } else {
+          df.samples <- NULL
+          if (upload_datatype() == "proteomics" && is.olink()) {
+            df <- tryCatch(
             {
               playbase::read_Olink_NPX(datafile)
             },
             error = function(w) {
               NULL
             }
-          )
-          if (is.null(df)) {
-            shinyalert::shinyalert(
-              title = "Error",
-              text = "You data are not in Official Olink NPX format. Please correct the data."
             )
-          }
-          if (!is.null(df)) {
-            df.samples <- tryCatch(
+            if (is.null(df)) {
+              shinyalert::shinyalert(
+                title = "Error",
+                text = "You data are not in Official Olink NPX format. Please correct the data."
+              )
+            }
+            if (!is.null(df)) {
+              df.samples <- tryCatch(
               {
                 playbase::read_Olink_samples(datafile)
               },
               error = function(w) {
                 NULL
               }
-            )
-          }
-        } else {
-          df <- tryCatch(
+              )
+            }
+          } else {
+            df <- tryCatch(
             {
               playbase::read_counts(datafile)
             },
             error = function(w) {
               NULL
             }
-          )
+            )
+          }
         }
       } else {
         df <- tryCatch(
-          {
-            playbase::read_counts(datafile)
-          },
-          error = function(w) {
-            NULL
-          }
+        {
+          playbase::read_counts(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
         )
       }
 
-      if (is.null(df)) {
+      file.ext <- tools::file_ext(input$counts_csv$name)
+      if (is.null(df) &  file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
         uploaded$counts.csv <- df
-        af <- playbase::read_annot(datafile) # counts filecontains annotation
+        af <- NULL
+        if (file.ext != "h5") af <- playbase::read_annot(datafile)
         uploaded$annot.csv <- af
       }
 
       if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {
         uploaded$samples.csv <- df.samples
       }
-
-      ## ##---samples---##
-      ## sel <- grep("samples", tolower(input$counts_csv$name))
-      ## if (length(sel)) {
-      ##   datafile <- input$counts_csv$datapath[sel[1]]
-      ##   datafile.name <- input$counts_csv$name
-      ##   df <- tryCatch( { playbase::read_samples(datafile) },
-      ##     error = function(w) { NULL }
-      ##   )
-      ##   if (is.null(df)) {
-      ##     data_error_modal(path = datafile, data_type = "samples")
-      ##   } else {
-      ##     uploaded$samples.csv <- df
-      ##   }
-      ## }
-
-      ## ##---contrasts---##
-      ## sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
-      ## if (length(sel)) {
-      ##   datafile <- input$counts_csv$datapath[sel[1]]
-      ##   datafile.name <- input$counts_csv$name
-      ##   df <- tryCatch( { playbase::read_contrasts(datafile) },
-      ##     error = function(w) { NULL }
-      ##   )
-      ##   if (is.null(df)) {
-      ##     data_error_modal(path = datafile, data_type = "contrasts")
-      ##   } else {
-      ##     uploaded$contrasts.csv <- df
-      ##   }
-      ## }
 
       sel <- grep("params.RData", input$counts_csv$name)
       if (length(sel)) {
