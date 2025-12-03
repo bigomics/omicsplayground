@@ -73,7 +73,7 @@ upload_module_normalization_server <- function(
         if (is.multiomics) {
           X <- counts
           dtypes <- unique(sub(":.*", "", rownames(X)))
-          for(i in 1:length(dtypes)) {
+          for (i in 1:length(dtypes)) {
             ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
             prior <- 1
             if (dtypes[i] != "gx") prior <- playbase::getPrior(counts[ii, ])
@@ -210,7 +210,7 @@ upload_module_normalization_server <- function(
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        if (ncol(X0) > 100)  methods <- methods[methods != "NPM"]
+        if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
         shiny::updateSelectInput(
           session,
           "bec_method",
@@ -913,7 +913,8 @@ upload_module_normalization_server <- function(
                     shiny::br()
                   )
                 ),
-                br()
+                br(),
+                shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
               )
             ),
             br()
@@ -1057,7 +1058,13 @@ upload_module_normalization_server <- function(
       })
 
       bc_method <- reactive({
-        ll <- list(method = input$bec_method, param = input$bec_param)
+        param <- input$bec_param
+        ## Remove <autodetect> if other params are selected
+        if ("<autodetect>" %in% param && length(param) > 1) {
+          param <- setdiff(param, "<autodetect>")
+          shiny::updateSelectizeInput(session, "bec_param", selected = param)
+        }
+        ll <- list(method = input$bec_method, param = param)
         if (input$batchcorrect == FALSE) ll <- "no_batch_correct"
         return(ll)
       })
