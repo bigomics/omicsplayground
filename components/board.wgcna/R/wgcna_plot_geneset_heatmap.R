@@ -46,7 +46,7 @@ wgcna_plot_geneset_heatmap_server <- function(id,
       )
     })
 
-    get_data <- function() {
+    get_data <- function(n=20) {
       
       df <- enrichTable$data()
       if (is.null(df) || nrow(df) == 0) {
@@ -56,20 +56,15 @@ wgcna_plot_geneset_heatmap_server <- function(id,
       shiny::req(ii)
       sel <- df$geneset[ii]
       sel1 <- intersect(sel, rownames(pgx$gsetX))
-      if(length(sel1)) {
-        gsetX <- pgx$gsetX[sel1, , drop = FALSE]
-      } else {
-        sel1 <- intersect(sel, rownames(playdata::GSETxGENE))
-        X <- playbase::rename_by( pgx$X, pgx$genes, "human_ortholog")
-        G <- Matrix::t( playdata::GSETxGENE[sel1,] )
-        gsetX <- plaid::plaid(X, G)
-      }
+      sel1 <- head(sel1, n)      
+      shiny::validate(shiny::need(length(sel1), "Error getting data"))
+      gsetX <- pgx$gsetX[sel1, , drop = FALSE]
       list( gsetX = gsetX )
     }
 
     plot_heatmap <- function(n=20, maxlen=120) {
 
-      res <- get_data()
+      res <- get_data(n=n)
       gsetX <- res$gsetX
       mod <- selected_module()
 
@@ -81,10 +76,8 @@ wgcna_plot_geneset_heatmap_server <- function(id,
       
       playbase::gx.splitmap(
         gsetX,
-        nmax = n,
+        nmax = 9999,
         col.annot = annot,
-        ## cexCol = 0.01,
-        ## cexRow = 0.01,
         rowlab.maxlen = maxlen,
         show_legend = FALSE,
         show_colnames = FALSE,
