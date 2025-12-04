@@ -115,7 +115,16 @@ TimeSeriesBoard.features_server <- function(id,
       genes <- head(genes, 16)
 
       expr <- pgx$X
-      if (any(is.na(expr))) expr <- playbase::imputeMissing(expr, method = "SVD2")
+      is.mox <- playbase::is.multiomics(rownames(expr))
+      if (sum(is.na(expr)) > 0) {
+        if (is.mox) {
+          expr <- playbase::imputeMissing.mox(expr, method = "SVD2")
+        } else {
+          expr <- playbase::imputeMissing(expr, method = "SVD2")
+        }
+      }
+
+
       expr <- expr[genes, , drop = FALSE]
       time <- pgx$samples[, sel.timevar]
 

@@ -13,7 +13,7 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
 
   score.infotext <-
-    "The outlier z-score is calculated as the average of z-score from correlation, euclidean distance and avarage feature z-score."
+    "The outlier z-score is calculated as the average of z-score from correlation, euclidean distance and average feature z-score."
 
   missing.infotext <-
     "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
@@ -32,7 +32,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
   )
 
   outlier.options <- tagList(
-    ##    shiny::radioButtons( ns('outlier_plottype'), "Plot type:", c("pca","heatmap"), inline = TRUE),
     shiny::checkboxInput(ns("outlier_shownames"), "show sample names", FALSE)
   )
 
@@ -55,7 +54,6 @@ upload_module_outliers_ui <- function(id, height = "100%") {
           title = "1. Missing values",
           shiny::p("Replace missing values using an imputation method:\n"),
           shiny::selectInput(ns("impute_method"), NULL,
-            ##  choices = c("bpca","LLS","MinDet","MinProb","NMF","RF","SVD2","zero"),
             choices = c("MinDet", "MinProb", "NMF", "SVDimpute" = "SVD2", "zero"),
             selected = "SVD2"
           ),
@@ -200,23 +198,23 @@ upload_module_outliers_server <- function(id, r_X, r_samples, r_contrasts,
       ## Object reactive chain
       ## ------------------------------------------------------------------
 
-      ## IMPUTE FIRST OR NORMALIZE????
       imputedX <- reactive({
         shiny::req(r_X())
         counts <- r_X()
         X <- log2(1 + counts)
-        X[playbase::is.xxl(X, z = 10)] <- NA ## outlier XXL values
+        X[playbase::is.xxl(X, z = 10)] <- NA
         if (input$zero_as_na) X[which(X == 0)] <- NA
-        ## which.missing <- which( is.na(X) )
-        X <- playbase::imputeMissing(X, method = input$impute_method)
-
+        is.mox <- playbase::is.multiomics(rownames(X))
+        if (sum(is.na(X)) > 0) {
+          if (is.mox) {
+            X <- playbase::imputeMissing.mox(X, method = input$impute_method)
+          } else {
+            X <- playbase::imputeMissing(X, method = input$impute_method)
+          }
+        }
         ## sum up duplicates (in linear intensity scale)
         X <- log2(rowsum(2**X, rownames(X)))
-        X <- pmax(X, 0) ## really?
-
-        dbg("[outliers_server] dim.counts = ", dim(counts))
-        dbg("[outliers_server] dim.imputedX = ", dim(X))
-
+        X <- pmax(X, 0)
         X
       })
 

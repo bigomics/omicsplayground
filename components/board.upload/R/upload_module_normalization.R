@@ -69,8 +69,8 @@ upload_module_normalization_server <- function(
           counts[which(counts == 0)] <- NA
         }
 
-        is.multiomics <- playbase::is.multiomics(rownames(counts))
-        if (is.multiomics) {
+        is.mox <- playbase::is.multiomics(rownames(counts))
+        if (is.mox) {
           X <- counts
           dtypes <- unique(sub(":.*", "", rownames(X)))
           for (i in 1:length(dtypes)) {
@@ -120,10 +120,15 @@ upload_module_normalization_server <- function(
 
         ## Impute if required
         if (any(is.na(X)) & input$impute) {
-          X <- playbase::imputeMissing(X, method = input$impute_method)
+          if (is.mox) {
+            X <- playbase::imputeMissing.mox(X , method = input$impute_method)
+          } else {
+            X <- playbase::imputeMissing(X , method = input$impute_method)
+          }
         }
-
+        
         return(list(counts = counts, X = X, prior = prior))
+        
       })
 
       ## Normalize
@@ -157,10 +162,17 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
+        is.mox <- playbase::is.multiomics(rownames(counts))
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+          if (sum(is.na(X)) > 0) {
+            if (is.mox) {
+              X <- playbase::imputeMissing.mox(X, method = "SVD2")
+            } else {
+              X <- playbase::imputeMissing(X, method = "SVD2")
+            }
+          }
           res <- playbase::detectOutlierSamples(X, plot = FALSE)
           is.outlier <- (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
@@ -188,15 +200,30 @@ upload_module_normalization_server <- function(
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
-
+        
         ## Average (if any dups) for BC overview
         dups <- sum(duplicated(rownames(X0)))
         if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = FALSE)
         dups <- sum(duplicated(rownames(X1)))
         if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
 
-        if (sum(is.na(X0)) > 0) X0 <- playbase::imputeMissing(X0, method = "SVD2")
-        if (sum(is.na(X1)) > 0) X1 <- playbase::imputeMissing(X1, method = "SVD2")
+        is.mox <- playbase::is.multiomics(rownames(X0))
+
+        if (sum(is.na(X0)) > 0) {
+          if (is.mox) {
+            X0 <- playbase::imputeMissing.mox(X0, method = "SVD2")
+          } else {
+            X0 <- playbase::imputeMissing(X0, method = "SVD2")
+          }
+        }        
+
+        if (sum(is.na(X1)) > 0) {
+          if (is.mox) {
+            X1 <- playbase::imputeMissing.mox(X1, method = "SVD2")
+          } else {
+            X1 <- playbase::imputeMissing(X1, method = "SVD2")
+          }
+        }
 
         kk <- intersect(colnames(X1), colnames(X0))
         kk <- intersect(kk, rownames(samples))
@@ -250,7 +277,16 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+          is.mox <- playbase::is.multiomics(rownames(X))
+
+          if (sum(is.na(X)) > 0) {
+            if (is.mox) {
+              X <- playbase::imputeMissing.mox(X, method = "SVD2")
+            } else {
+              X <- playbase::imputeMissing(X, method = "SVD2")
+            }
+          }
+
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
@@ -498,7 +534,14 @@ upload_module_normalization_server <- function(
               if (input$impute) X3 <- log2(imputedX()$counts + imputedX()$prior)
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
-              for (i in 1:length(mm)) imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
+              is.mox <- playbase::is.multiomics(rownames(X3))
+              for (i in 1:length(mm)) {
+                if (is.mox) {
+                  imp[[mm[i]]] <- playbase::imputeMissing.mox(X3, mm[i])
+                } else {
+                  imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
+                }
+              }
               scaled.imp <- lapply(imp, function(x) playbase::double_center_scale_fast(x))
               par(mfrow = c(2, 2), mar = c(4, 3, 2, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
               cex1 <- cut(ncol(X3),
