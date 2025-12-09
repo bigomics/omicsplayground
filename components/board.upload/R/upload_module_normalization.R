@@ -23,7 +23,8 @@ upload_module_normalization_server <- function(
   upload_datatype,
   is.olink,
   is.count = FALSE,
-  height = 720
+  height = 720,
+  recompute_pgx = NULL
 ) {
   shiny::moduleServer(
     id,
@@ -736,6 +737,65 @@ upload_module_normalization_server <- function(
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
 
+        ## -----------------------------------------------------------------
+        ## Get default values from recompute_pgx if available
+        ## -----------------------------------------------------------------
+        pgx <- recompute_pgx()
+        pgx_settings <- if (!is.null(pgx)) pgx$settings else NULL
+
+        ## Imputation defaults
+        default_zero_as_na <- FALSE
+        default_impute <- DEFAULTS$qc$impute
+        default_impute_method <- "SVD2"
+        if (!is.null(pgx_settings$imputation_method) && is.list(pgx_settings$imputation_method)) {
+          imp <- pgx_settings$imputation_method
+          if (!is.null(imp$zero_as_na)) default_zero_as_na <- imp$zero_as_na
+          if (!is.null(imp$imputation)) {
+            default_impute <- (imp$imputation != "no_imputation")
+            if (default_impute) default_impute_method <- imp$imputation
+          }
+        }
+
+        ## Normalization defaults
+        default_normalize <- TRUE
+        default_norm_method <- 1
+        if (!is.null(pgx_settings$norm_method)) {
+          if (pgx_settings$norm_method == "skip_normalization") {
+            default_normalize <- FALSE
+          } else {
+            default_normalize <- TRUE
+            default_norm_method <- pgx_settings$norm_method
+          }
+        }
+
+        ## Outlier removal defaults
+        default_remove_outliers <- FALSE
+        default_outlier_threshold <- 6
+        if (!is.null(pgx_settings$remove_outliers)) {
+          ro <- pgx_settings$remove_outliers
+          if (is.character(ro) && ro == "no_outlier_removal") {
+            default_remove_outliers <- FALSE
+          } else if (is.numeric(ro)) {
+            default_remove_outliers <- TRUE
+            default_outlier_threshold <- ro
+          }
+        }
+
+        ## Batch correction defaults
+        default_batchcorrect <- FALSE
+        default_bec_method <- "SVA"
+        default_bec_param <- batch_params[1]
+        if (!is.null(pgx_settings$bc_method)) {
+          bc <- pgx_settings$bc_method
+          if (is.character(bc) && bc == "no_batch_correct") {
+            default_batchcorrect <- FALSE
+          } else if (is.list(bc)) {
+            default_batchcorrect <- TRUE
+            if (!is.null(bc$method)) default_bec_method <- bc$method
+            if (!is.null(bc$param)) default_bec_param <- bc$param
+          }
+        }
+
         score.infotext <-
           "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
 
@@ -796,7 +856,7 @@ upload_module_normalization_server <- function(
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
-                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na),
                 shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
                 shiny::conditionalPanel("input.filtermissing == true",
                   ns = ns,
@@ -808,12 +868,12 @@ upload_module_normalization_server <- function(
                     selected = 0.2
                   )
                 ),
-                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = DEFAULTS$qc$impute),
+                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = default_impute),
                 shiny::conditionalPanel("input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
-                    selected = "SVD2"
+                    selected = default_impute_method
                   )
                 ),
                 br()
@@ -827,7 +887,7 @@ upload_module_normalization_server <- function(
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
-                shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = TRUE),
+                shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = default_normalize),
                 shiny::conditionalPanel(
                   "input.normalize == true",
                   ns = ns,
@@ -850,7 +910,7 @@ upload_module_normalization_server <- function(
                         "maxMedian", "maxSum", "reference"
                       )
                     },
-                    selected = 1
+                    selected = default_norm_method
                   ),
                   shiny::conditionalPanel(
                     "input.normalization_method == 'reference'",
@@ -870,10 +930,10 @@ upload_module_normalization_server <- function(
               bslib::accordion_panel(
                 title = "3. Remove outliers",
                 shiny::p("Detect and remove outlier samples."),
-                shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
+                shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = default_remove_outliers),
                 shiny::conditionalPanel("input.remove_outliers == true",
                   ns = ns,
-                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
+                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, default_outlier_threshold, 1)
                 ),
                 br()
               ),
@@ -888,7 +948,7 @@ upload_module_normalization_server <- function(
                 ),
                 shiny::checkboxInput(ns("batchcorrect"),
                   label = "Remove batch effects",
-                  value = FALSE
+                  value = default_batchcorrect
                 ),
                 shiny::conditionalPanel(
                   "input.batchcorrect == true",
@@ -897,7 +957,7 @@ upload_module_normalization_server <- function(
                     ns("bec_method"),
                     label = "Select method:",
                     choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
-                    selected = "SVA"
+                    selected = default_bec_method
                   ),
                   shiny::conditionalPanel(
                     "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
@@ -906,7 +966,7 @@ upload_module_normalization_server <- function(
                       ns("bec_param"),
                       label = "Batch parameter:",
                       choices = batch_params, ## reactive
-                      selected = batch_params[1],
+                      selected = default_bec_param,
                       multiple = TRUE,
                       options = list(placeholder = "Select...")
                     ),
