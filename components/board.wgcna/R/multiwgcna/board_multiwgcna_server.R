@@ -50,19 +50,6 @@ MultiWGCNA_Board <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    shiny::observeEvent( input$useLLM, {
-      if(input$useLLM) {
-        model <- getUserOption(session,'llm_model')
-        if(is.null(model) || model=="") {
-          shinyalert::shinyalert("ERROR",
-            "Error. No LLM server available. Please check your settings.")
-          return(NULL)
-        }
-        shinyalert::shinyalert("WARNING",
-          "Using LLM might expose some of your data to external LLM servers.")
-      }
-    })
-
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
@@ -100,9 +87,6 @@ MultiWGCNA_Board <- function(id, pgx) {
 
       dataX <- playbase::mofa.split_data(pgx$X)
       samples = pgx$samples
-
-      ai_model <- getUserOption(session,'llm_model')
-      message("[multiWGCNA:compute_multiomics] ai_model = ", ai_model)
       
       wgcna <- playbase::wgcna.compute_multiomics(
         dataX = dataX,
@@ -124,7 +108,7 @@ MultiWGCNA_Board <- function(id, pgx) {
         GMT = pgx$GMT,  
         ##gsetX = pgx$gsetX,  ## ??
         summary = TRUE,
-        ai_model = ifelse(input$useLLM, ai_model, ""),
+        ai_model = NULL,
         ai_experiment = pgx$description,
         progress = progress
       ) 

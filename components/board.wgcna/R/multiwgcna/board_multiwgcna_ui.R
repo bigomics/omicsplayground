@@ -33,7 +33,6 @@ MultiWGCNA_Inputs <- function(id) {
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
           shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
-          shiny::checkboxInput(ns("useLLM"),"AI summary", FALSE),
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute", size = "xs",
             icon=icon("refresh"))

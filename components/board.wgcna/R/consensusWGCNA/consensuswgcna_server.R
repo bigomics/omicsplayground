@@ -49,19 +49,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    shiny::observeEvent( input$useLLM, {
-      if(input$useLLM) {
-        model <- getUserOption(session,'llm_model')
-        if(is.null(model) || model=="") {
-          shinyalert::shinyalert("Error",
-            "No LLM server available. Please check your settings.")
-          return(NULL)
-        }
-        shinyalert::shinyalert("Warning",
-          "Using LLM might expose some of your data to external LLM servers.")
-      }
-    })
-
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
@@ -167,9 +154,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       ngenes = as.integer(input$ngenes)
       minModuleSize = as.integer(input$minmodsize)
       deepSplit = as.integer(input$deepsplit)
-
-      ai_model <- getUserOption(session,'llm_model')
-      message("[ConsensusWGCNA:compute_wgcna] ai_model = ", ai_model)
       
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
@@ -189,7 +173,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         compute.stats = TRUE,
         compute.enrichment = TRUE,
         summary = TRUE,
-        ai_model = ifelse(input$useLLM, ai_model, ""),
+        ai_model = NULL,
         ai_experiment = pgx$description,
         gsea.mingenes = 5,
         gsea.ntop = 1000,
