@@ -15,7 +15,7 @@ wgcna_html_module_summary_ui <- function(
 
   options <- tagList(
     shiny::radioButtons(
-      ns("docstyle"), "Length:", c("short","long"), inline=TRUE
+      ns("docstyle"), "Ai summary:", c("short","long"), inline=TRUE
     ),
     shiny::checkboxInput(
       ns("show_prompt"), "Show prompt", FALSE      
@@ -103,6 +103,7 @@ wgcna_html_module_summary_server <- function(id,
           wgcna,
           modules = module,
           model = ai_model,
+          multi = multi,
           annot = wgcna$annot,
           docstyle = docstyle,
           numpar = 2,

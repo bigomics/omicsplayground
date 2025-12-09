@@ -28,8 +28,7 @@ ConsensusWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
             2000),
           shiny::selectInput(ns("minmodsize"),"Min. module size:",
-            choices=c(5,10,20,40,100), 10),
-          shiny::checkboxInput(ns("useLLM"),"AI summary", FALSE)
+            choices=c(5,10,20,40,100), 10)
         )
       )
     )
