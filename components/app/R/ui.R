@@ -262,6 +262,10 @@ app_ui <- function(x) {
                 bigdash::navbarDropdownTab(
                   "Shared datasets",
                   "sharing-tab"
+                ),
+                bigdash::navbarDropdownTab(
+                  "Across datasets",
+                  "across-tab"
                 )
               )
             )
@@ -519,6 +523,12 @@ app_ui <- function(x) {
                     from similar experiments or from different datatypes, e.g. transcriptomics and proteomics."
           ),
           bigdash::sidebarTabHelp(
+            "across-tab",
+            "Across Datasets",
+            "Query gene expression across all datasets stored in a TileDB database.
+                    Compare expression levels of specific genes across multiple experiments."
+          ),
+          bigdash::sidebarTabHelp(
             "tcga-tab",
             "TCGA Analysis",
             "Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
@@ -568,6 +578,11 @@ app_ui <- function(x) {
           bigdash::bigTabItem(
             "sharing-tab",
             SharedDatasetsUI("load")
+          ),
+          bigdash::bigTabItem(
+            "across-tab",
+            AcrossInputs("across"),
+            AcrossUI("across")
           )
         )
         ## UploadUI("upload")
