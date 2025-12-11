@@ -190,6 +190,25 @@ expression_plot_volcano_server <- function(id,
         pd[["sel.genes"]]
       }
 
+      # Determine colors: use prism palette or custom colors
+      if (isTRUE(input$use_ggprism) && isTRUE(input$ggprism_colors)) {
+        palette <- if (is.null(input$ggprism_palette)) "black_and_white" else input$ggprism_palette
+        prism_cols <- ggprism::prism_colour_pal(palette = palette)(4)
+        plot_colors <- c(
+          up = prism_cols[1],
+          down = prism_cols[2],
+          notsig = prism_cols[3],
+          notsel = paste0(prism_cols[4], "88")
+        )
+      } else {
+        plot_colors <- c(
+          up = input$color_up,
+          notsig = "#707070AA",
+          notsel = "#cccccc88",
+          down = input$color_down
+        )
+      }
+
       p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -206,12 +225,7 @@ expression_plot_volcano_server <- function(id,
         showlegend = FALSE,
         title = NULL,
         axis.text.size = input$axis_text_size,
-        colors = c(
-          up = input$color_up,
-          notsig = "#707070AA",
-          notsel = "#cccccc88",
-          down = input$color_down
-        )
+        colors = plot_colors
       )
 
       if (input$margin_checkbox) {
@@ -239,6 +253,73 @@ expression_plot_volcano_server <- function(id,
           p <- p + ggplot2::theme(
             aspect.ratio = input$aspect_ratio
           )
+        }
+      }
+
+      # Apply ggprism theme if enabled
+      if (isTRUE(input$use_ggprism)) {
+        palette <- if (is.null(input$ggprism_palette)) "black_and_white" else input$ggprism_palette
+        base_size <- if (is.null(input$axis_text_size)) 14 else input$axis_text_size
+        use_border <- isTRUE(input$ggprism_border)
+        axis_guide <- if (is.null(input$ggprism_axis_guide)) "default" else input$ggprism_axis_guide
+
+        p <- p +
+          ggprism::theme_prism(
+            palette = palette,
+            base_size = base_size,
+            border = use_border
+          )
+
+        # Apply axis guides
+        if (axis_guide == "prism_minor") {
+          p <- p + ggplot2::guides(
+            x = ggprism::guide_prism_minor(),
+            y = ggprism::guide_prism_minor()
+          )
+        } else if (axis_guide == "prism_offset") {
+          p <- p + ggplot2::guides(
+            x = ggprism::guide_prism_offset(),
+            y = ggprism::guide_prism_offset()
+          )
+        } else if (axis_guide == "prism_offset_minor") {
+          p <- p + ggplot2::guides(
+            x = ggprism::guide_prism_offset_minor(),
+            y = ggprism::guide_prism_offset_minor()
+          )
+        }
+
+        # Legend positioning
+        show_legend <- isTRUE(input$ggprism_show_legend)
+
+        if (show_legend) {
+          legend_x <- if (is.null(input$ggprism_legend_x) || is.na(input$ggprism_legend_x)) 0.95 else input$ggprism_legend_x
+          legend_y <- if (is.null(input$ggprism_legend_y) || is.na(input$ggprism_legend_y)) 0.95 else input$ggprism_legend_y
+          legend_border <- isTRUE(input$ggprism_legend_border)
+
+          # Calculate justification based on position (corners anchor properly)
+          just_x <- if (legend_x > 0.5) 1 else 0
+          just_y <- if (legend_y > 0.5) 1 else 0
+
+          # Legend background with optional border
+          legend_bg <- if (legend_border) {
+            ggplot2::element_rect(fill = "white", colour = "black", linewidth = 0.5)
+          } else {
+            ggplot2::element_rect(fill = "white", colour = NA)
+          }
+
+          p <- p + ggplot2::theme(
+            legend.position = "inside",
+            legend.position.inside = c(legend_x, legend_y),
+            legend.justification = c(just_x, just_y),
+            legend.title = ggplot2::element_blank(),
+            legend.background = legend_bg
+          )
+        } else {
+          p <- p + ggplot2::theme(legend.position = "none")
+        }
+
+        if (use_border) {
+          p <- p + ggplot2::coord_cartesian(clip = "off")
         }
       }
 
