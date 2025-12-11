@@ -50,8 +50,7 @@ MODULE.compare <- list(
     IntersectionBoard("isect",
       pgx = PGX,
       selected_gxmethods = env$diffexpr$selected_gxmethods,
-      selected_gsetmethods = env$enrich$selected_gsetmethods,
-      labeltype = labeltype
+      selected_gsetmethods = env$enrich$selected_gsetmethods
     )
 
     CompareBoard(

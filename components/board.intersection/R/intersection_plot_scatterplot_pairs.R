@@ -44,7 +44,6 @@ intersection_scatterplot_pairs_server <- function(id,
                                                   getActiveFoldChangeMatrix,
                                                   level,
                                                   pgx,
-                                                  labeltype,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
@@ -94,7 +93,7 @@ intersection_scatterplot_pairs_server <- function(id,
       ## Labels for top 50
       label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
       label.text <- sub(".*[:]", "", label.text)
-      label.text <- playbase::probe2symbol(label.text, pgx$genes, labeltype(), fill_na = TRUE)
+      label.text <- playbase::probe2symbol(label.text, pgx$genes, "gene_name", fill_na = TRUE)
       label.text <- playbase::shortstring(label.text, 30)
       if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
