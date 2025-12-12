@@ -178,6 +178,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
+        genes <- playbase::probe2symbol(genes, pgx$genes, "gene_name", fill_na = TRUE)
+        names(rnk0) <- playbase::probe2symbol(names(rnk0), pgx$genes, "gene_name", fill_na = TRUE)
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,

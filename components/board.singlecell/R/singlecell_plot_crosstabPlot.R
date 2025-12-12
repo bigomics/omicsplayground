@@ -123,6 +123,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
             gx <- colMeans(gx, na.rm = TRUE)
           }
           gx.highTH <- mean(gx, na.rm = TRUE)
+          pheno <- playbase::probe2symbol(pheno, pgx$genes, "gene_name", fill_na = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
         } else if (pheno %in% colnames(pgx$samples)) {

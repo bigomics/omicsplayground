@@ -71,6 +71,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          getProfiles,
                                                          getConnectivityScores,
                                                          getCurrentContrast,
+                                                         pgx,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -99,6 +100,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           F <- abs(F)
         }
         F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
+        rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
 
         list(
           F = F,

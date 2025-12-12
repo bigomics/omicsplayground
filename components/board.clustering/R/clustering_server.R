@@ -783,6 +783,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     clustering_plot_table_parcoord_server(
       id = "parcoord",
       getTopMatrix = getTopMatrixGrouped,
+      pgx = pgx,
       watermark = WATERMARK
     )
 

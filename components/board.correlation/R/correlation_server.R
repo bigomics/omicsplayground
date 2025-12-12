@@ -291,6 +291,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "cor_graph",
       gene = reactive(input$gene),
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
+      pgx = pgx,
       watermark = WATERMARK
     )
   })

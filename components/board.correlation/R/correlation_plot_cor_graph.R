@@ -62,6 +62,7 @@ correlation_plot_cor_graph_server <- function(
   id,
   gene,
   getPartialCorrelationMatrix,
+  pgx,
   watermark = FALSE
 ) {
   moduleServer(id, function(input, output, session) {
@@ -119,6 +120,7 @@ correlation_plot_cor_graph_server <- function(
         )
       }
 
+      visdata$nodes$label <- playbase::probe2symbol(visdata$nodes$id, pgx$genes, "gene_name", fill_na = TRUE)
       graph <- visNetwork::visNetwork(
         nodes = visdata$nodes,
         edges = visdata$edges

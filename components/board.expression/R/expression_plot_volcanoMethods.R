@@ -84,14 +84,8 @@ expression_plot_volcanoMethods_server <- function(id,
       mx <- pgx$gx.meta$meta[[comp]]
       mx.features <- rownames(mx)
       mx.symbols <- pgx$genes[mx.features, "symbol"]
-
-      if (labeltype() == "symbol") {
-        names <- mx.features
-        label.names <- mx.symbols
-      } else {
-        names <- mx.symbols
-        label.names <- mx.features
-      }
+      mx.names <- pgx$genes[mx.features, "gene_title"]
+      label.names <- playbase::probe2symbol(mx.features, pgx$genes, labeltype(), fill_na = TRUE)
 
       pd <- list(
         mx = mx,
@@ -101,7 +95,9 @@ expression_plot_volcanoMethods_server <- function(id,
         comp = comp,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
-        names = names,
+        names = mx.names,
+        symbols = mx.symbols,
+        features = mx.features,
         label.names = label.names
       )
 
@@ -132,13 +128,8 @@ expression_plot_volcanoMethods_server <- function(id,
       }
 
       mx.features <- rownames(mx)
-      mx.symbols <- pgx$genes[mx.features, "symbol"]
-      mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]),
-        mx.features,
-        pgx$genes[mx.features, "gene_title"]
-      )
-
-      label.names <- playbase::probe2symbol(rownames(mx), pgx$genes, labeltype(), fill_na = TRUE)
+      mx.symbols <- pd[["symbols"]]
+      mx.names <- pd[["names"]]
 
       pval_cap <- pval_cap()
 
@@ -193,6 +184,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
       sel.genes <- pd[["sel.genes"]]
       lab.genes <- pd[["lab.genes"]]
+      sel.genes <- playbase::probe2symbol(sel.genes, pgx$genes, labeltype(), fill_na = TRUE)
+      lab.genes <- playbase::probe2symbol(lab.genes, pgx$genes, labeltype(), fill_na = TRUE)
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       names <- pd[["names"]]
