@@ -110,7 +110,6 @@ WgcnaBoard <- function(id, pgx) {
         message("[wgcna] >>> COMPUTE1")
         out <- compute_wgcna()
       }
-      out
     })
 
     shiny::observeEvent( input$compute, {
@@ -163,6 +162,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_gclustering_server(
       "umap",
       wgcna = wgcna,
+      pgx = pgx,
       watermark = WATERMARK
     )
 
@@ -301,6 +301,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_enrichment_server(
       "enrichPlot",
       enrichTable = enrichTableModule,
+      pgx = pgx,
       watermark = WATERMARK
     )
     
