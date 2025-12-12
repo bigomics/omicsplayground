@@ -439,7 +439,8 @@ ConnectivityBoard <- function(
       ## getTopProfiles,
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
-      getCurrentContrast = getCurrentContrast
+      getCurrentContrast = getCurrentContrast,
+      pgx = pgx
     )
 
     ## ================================================================================
@@ -530,6 +531,7 @@ ConnectivityBoard <- function(
     ## =============================================================================
     connectivity_plot_connectivityHeatmap_server(
       "connectivityHeatmap",
+      pgx = pgx,
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast

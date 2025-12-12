@@ -72,6 +72,7 @@ clustering_table_parcoord_ui <- function(
 
 clustering_plot_table_parcoord_server <- function(id,
                                                   getTopMatrix,
+                                                  pgx,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -226,6 +227,7 @@ clustering_plot_table_parcoord_server <- function(id,
       mat <- parcoord$mat
       clust <- parcoord$clust
       df <- data.frame(gene.module = clust, mat, check.names = FALSE)
+      row.names(df) <- playbase::probe2symbol(row.names(df), pgx$genes, "gene_name", fill_na = TRUE)
       numeric.cols <- 2:ncol(df)
       DT::datatable(
         df,
