@@ -38,6 +38,7 @@ wgcna_plot_enrichment_ui <- function(
 
 wgcna_plot_enrichment_server <- function(id,
                                          enrichTable,
+                                         pgx,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -54,6 +55,7 @@ wgcna_plot_enrichment_server <- function(id,
       if(input$plottype == "gene frequency") {
         genes <- unlist(strsplit(df$genes,split="\\|"))
         gtable <- sort(table(genes),decreasing=TRUE)
+        names(gtable) <- playbase::probe2symbol(names(gtable), pgx$genes, "gene_name", fill_na = TRUE)
         par(mar = c(8,4,2,0))
         barplot(
           head(gtable,35),
