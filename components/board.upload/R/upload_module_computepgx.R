@@ -37,7 +37,8 @@ upload_module_computepgx_server <- function(
   upload_gset_methods,
   process_counter,
   reset_upload_text_input,
-  probetype
+  probetype,
+  recompute_pgx = NULL
 ) {
   shiny::moduleServer(
     id,
@@ -67,6 +68,16 @@ upload_module_computepgx_server <- function(
       }
 
       GENETEST.SELECTED <- function() {
+        ## Check if recomputing from existing PGX - use its methods
+        pgx <- recompute_pgx()
+        if (!is.null(pgx) && !is.null(pgx$gx.meta) && !is.null(pgx$gx.meta$meta[[1]]$fc)) {
+          gx_methods <- colnames(pgx$gx.meta$meta[[1]]$fc)
+          available_methods <- GENETEST.METHODS()
+          mm <- intersect(gx_methods, available_methods)
+          if (length(mm) > 0) return(mm)
+        }
+
+        ## Default selection based on datatype
         countsX <- countsX()
         nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
         dt <- upload_datatype()
@@ -96,6 +107,17 @@ upload_module_computepgx_server <- function(
       }
 
       GENESET.SELECTED <- function() {
+        ## Check if recomputing from existing PGX - use its methods
+        pgx <- recompute_pgx()
+        if (!is.null(pgx) && !is.null(pgx$gset.meta) && !is.null(pgx$gset.meta$meta[[1]]$fc)) {
+          gset_methods <- colnames(pgx$gset.meta$meta[[1]]$fc)
+          available_methods <- GENESET.METHODS()
+          method_values <- unname(available_methods)
+          mm <- intersect(gset_methods, method_values)
+          if (length(mm) > 0) return(mm)
+        }
+
+        ## Default selection based on datatype
         if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("fisher", "fgsea", "spearman")
         } else {
@@ -122,6 +144,22 @@ upload_module_computepgx_server <- function(
       }
 
       EXTRA.SELECTED <- function() {
+        ## Check if recomputing from existing PGX - use its methods
+        pgx <- recompute_pgx()
+        if (!is.null(pgx)) {
+          extra_method_names <- c("wgcna", "mofa", "deconv", "drugs", "wordcloud", "connectivity")
+          present_extra <- extra_method_names[extra_method_names %in% names(pgx)]
+          if (length(present_extra) > 0) {
+            available_methods <- EXTRA.METHODS()
+            method_values <- unname(available_methods)
+            mm <- intersect(present_extra, method_values)
+            if (length(mm) > 0) return(mm)
+          } else {
+            return(character(0))
+          }
+        }
+
+        ## Default selection based on datatype
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
         } else {
@@ -137,7 +175,30 @@ upload_module_computepgx_server <- function(
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
 
       ## Probe filtering defaults
-      PROBE_FILTER_SELECTED <- DEFAULTS$computation_options$probe_filtering
+      PROBE_FILTER_SELECTED <- function() {
+        ## Check if recomputing from existing PGX - use its settings
+        pgx <- recompute_pgx()
+        if (!is.null(pgx) && !is.null(pgx$settings)) {
+          selected_filters <- c()
+          if (isTRUE(pgx$settings$convert.hugo)) {
+            selected_filters <- c(selected_filters, "append.symbol")
+          }
+          if (isTRUE(pgx$settings$filter.genes)) {
+            selected_filters <- c(selected_filters, "remove.notexpressed")
+          }
+          if (isTRUE(pgx$settings$only.known)) {
+            selected_filters <- c(selected_filters, "remove.unknown")
+          }
+          ## Return if we found any settings
+          if (!is.null(pgx$settings$filter.genes) ||
+              !is.null(pgx$settings$only.known) ||
+              !is.null(pgx$settings$convert.hugo)) {
+            return(selected_filters)
+          }
+        }
+        ## Default from DEFAULTS
+        return(DEFAULTS$computation_options$probe_filtering)
+      }
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
 
@@ -265,7 +326,7 @@ upload_module_computepgx_server <- function(
                       "Exclude features without symbol",
                       "Average duplicated features"
                     ),
-                  selected = PROBE_FILTER_SELECTED
+                  selected = PROBE_FILTER_SELECTED()
                 ),
                 div(
                   style = "margin-top:-22px;",
