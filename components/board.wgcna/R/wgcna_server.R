@@ -146,6 +146,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_gclustering_server(
       "umap",
       wgcna = wgcna,
+      pgx = pgx,
       watermark = WATERMARK
     )
 
@@ -284,6 +285,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_topgenes_server(
       "topgenesPlot",
       enrichTable = enrichTableModule,
+      pgx = pgx,
       watermark = WATERMARK
     )
     

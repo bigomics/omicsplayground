@@ -175,7 +175,15 @@ signature_plot_markers_server <- function(id,
       }
 
       X <- pgx$X
-      if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+      is.mox <- playbase::is.multiomics(rownames(X))
+      if (sum(is.na(X)) > 0) {
+        if (is.mox) {
+          X <- playbase::imputeMissing.mox(X, method = "SVD2")
+        } else {
+          X <- playbase::imputeMissing(X, method = "SVD2")
+        }
+      }
+
       xsymbol <- pgx$genes[rownames(X), "symbol"]
       X <- playbase::rowmean(X, xsymbol)
       y <- 1 * (rownames(X) %in% this.gset)
@@ -272,6 +280,7 @@ signature_plot_markers_server <- function(id,
           colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar, na.rm = TRUE) + 0.3 * max(top.gx, na.rm = TRUE))))
           klr1 <- klrpal[colvar]
           gene <- substring(sub(".*:", "", rownames(top.gx)[i]), 1, 80)
+          gene <- playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE)
           tt <- playbase::breakstring(gene, n = 20, force = TRUE)
           jj <- order(abs(top.gx[i, ]))
         }
