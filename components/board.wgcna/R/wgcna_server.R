@@ -110,6 +110,7 @@ WgcnaBoard <- function(id, pgx) {
         message("[wgcna] >>> COMPUTE1")
         out <- compute_wgcna()
       }
+      out
     })
 
     shiny::observeEvent( input$compute, {
