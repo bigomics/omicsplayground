@@ -46,8 +46,7 @@ wgcna_plot_geneset_heatmap_server <- function(id,
       )
     })
 
-    get_data <- function(n=20) {
-      
+    get_data <- function(n = 20) {
       df <- enrichTable$data()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
@@ -56,15 +55,14 @@ wgcna_plot_geneset_heatmap_server <- function(id,
       shiny::req(ii)
       sel <- df$geneset[ii]
       sel1 <- intersect(sel, rownames(pgx$gsetX))
-      sel1 <- head(sel1, n)      
+      sel1 <- head(sel1, n)
       shiny::validate(shiny::need(length(sel1), "Error getting data"))
       gsetX <- pgx$gsetX[sel1, , drop = FALSE]
-      list( gsetX = gsetX )
+      list(gsetX = gsetX)
     }
 
-    plot_heatmap <- function(n=20, maxlen=120) {
-
-      res <- get_data(n=n)
+    plot_heatmap <- function(n = 20, maxlen = 120) {
+      res <- get_data(n = n)
       gsetX <- res$gsetX
       mod <- selected_module()
 

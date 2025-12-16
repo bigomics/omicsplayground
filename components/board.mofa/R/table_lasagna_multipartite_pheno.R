@@ -5,7 +5,6 @@ lasagna_multipartite_pheno_table_ui <- function(id,
                                                 caption = "",
                                                 height,
                                                 width) {
-
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -18,14 +17,13 @@ lasagna_multipartite_pheno_table_ui <- function(id,
   TableModuleUI(
     ns("table"),
     info.text = info.text,
-    width = width,    
+    width = width,
     height = height,
     title = title,
     options = options,
     caption = caption,
     label = label
   )
-
 }
 
 lasagna_multipartite_pheno_table_server <- function(id,
@@ -33,17 +31,15 @@ lasagna_multipartite_pheno_table_server <- function(id,
                                                     pgx,
                                                     input_contrast,
                                                     scrollY = "auto") {
-
   moduleServer(id, function(input, output, session) {
-
     table_data <- shiny::reactive({
       res <- data()
       ctx <- input_contrast()
       shiny::req(res, ctx)
-      Y=NULL
-      
+      Y <- NULL
+
       cc <- (!is.null(res[["Y"]]) & !is.null(res[["X"]]))
-      if (cc) { 
+      if (cc) {
         kk <- intersect(colnames(res[["X"]]), rownames(res[["Y"]]))
         if (length(kk) > 0) Y <- res[["Y"]][kk, , drop = FALSE]
       }
@@ -53,9 +49,8 @@ lasagna_multipartite_pheno_table_server <- function(id,
     })
 
     table.RENDER <- function(full = TRUE) {
-
       dt <- table_data()
-      Y <- dt[["Y"]]      
+      Y <- dt[["Y"]]
       ctx <- dt[["ctx"]]
       shiny::req(Y, ctx)
 
@@ -83,21 +78,20 @@ lasagna_multipartite_pheno_table_server <- function(id,
         )
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-      
+
       return(DTable)
-
     }
-    
 
-    table.RENDER2 <- shiny::reactive({ return(table.RENDER()) })
-    
+
+    table.RENDER2 <- shiny::reactive({
+      return(table.RENDER())
+    })
+
     TableModuleServer(
       "table",
       func = table.RENDER,
       func2 = table.RENDER2,
       selector = "none"
     )
-
   })
-
 }

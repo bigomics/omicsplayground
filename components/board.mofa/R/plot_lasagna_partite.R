@@ -47,10 +47,6 @@ mofa_plot_lasagna_partite_ui <- function(
 }
 
 
-
-
-
-
 mofa_plot_lasagna_partite_server <- function(id,
                                              data,
                                              pgx,
@@ -68,7 +64,7 @@ mofa_plot_lasagna_partite_server <- function(id,
     plot_render <- function() {
       res <- data()
       shiny::req(res)
-      
+
       labtype <- input$labeltype
       if (labtype == "title") {
         labels <- paste0(

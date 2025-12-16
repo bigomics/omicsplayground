@@ -116,7 +116,7 @@ LasagnaUI <- function(id) {
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Multi-partite graph",
         bslib::layout_columns(
@@ -157,9 +157,6 @@ LasagnaUI <- function(id) {
           )
         )
       )
-
     ) ## end tabsetPanel
-
   ) ## end div
-
 }

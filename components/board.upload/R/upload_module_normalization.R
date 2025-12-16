@@ -122,14 +122,13 @@ upload_module_normalization_server <- function(
         ## Impute if required
         if (any(is.na(X)) & input$impute) {
           if (is.mox) {
-            X <- playbase::imputeMissing.mox(X , method = input$impute_method)
+            X <- playbase::imputeMissing.mox(X, method = input$impute_method)
           } else {
-            X <- playbase::imputeMissing(X , method = input$impute_method)
+            X <- playbase::imputeMissing(X, method = input$impute_method)
           }
         }
-        
+
         return(list(counts = counts, X = X, prior = prior))
-        
       })
 
       ## Normalize
@@ -201,7 +200,7 @@ upload_module_normalization_server <- function(
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
-        
+
         ## Average (if any dups) for BC overview
         dups <- sum(duplicated(rownames(X0)))
         if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = FALSE)
@@ -216,7 +215,7 @@ upload_module_normalization_server <- function(
           } else {
             X0 <- playbase::imputeMissing(X0, method = "SVD2")
           }
-        }        
+        }
 
         if (sum(is.na(X1)) > 0) {
           if (is.mox) {
@@ -649,7 +648,6 @@ upload_module_normalization_server <- function(
       }
 
       plot_all_methods <- function() {
-
         out.res <- results_outlier_methods()
         res <- results_correction_methods()
         shiny::req(res)
@@ -674,13 +672,14 @@ upload_module_normalization_server <- function(
         cex1 <- cut(xdim, breaks, labs)
         cex1 <- 2.5 * as.numeric(as.character(cex1))
 
-        cols=NULL; ncol=length(col1)
+        cols <- NULL
+        ncol <- length(col1)
         col1a <- as.character(unname(col1))
-        c1 <- all(!is.na(as.numeric(col1a))) 
+        c1 <- all(!is.na(as.numeric(col1a)))
         c2 <- all(grepl("[0-9]", col1a))
         is.num <- (c1 & c2)
         if (is.num) {
-          col1 <- as.numeric(col1a[!is.na(col1a)]);
+          col1 <- as.numeric(col1a[!is.na(col1a)])
           pal <- colorRampPalette(c("gray", "black"))(ncol)
           cols <- pal[cut(col1, breaks = ncol, include.lowest = TRUE)]
         }
@@ -688,15 +687,19 @@ upload_module_normalization_server <- function(
 
         if (is.num) {
           par(mfrow = c(2, 4), mar = c(3, 3, 2, 1), mgp = c(2, 0.4, 0), tcl = -0.1)
-        } else {        
+        } else {
           par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(2, 0.4, 0), tcl = -0.1)
-          cex.axis = 1; cex.lab = 1; cex.main = 1.2
+          cex.axis <- 1
+          cex.lab <- 1
+          cex.main <- 1.2
         }
 
         for (m in methods) {
           if (m %in% names(pos.list)) {
-            plot(pos.list[[m]], col = color, cex = cex1,
-              pch = 20, las = 1, xlab = "PCA_1", ylab = "PCA_2")
+            plot(pos.list[[m]],
+              col = color, cex = cex1,
+              pch = 20, las = 1, xlab = "PCA_1", ylab = "PCA_2"
+            )
           } else {
             plot.new()
             text(0.45, 0.5, "method failed")
@@ -706,14 +709,14 @@ upload_module_normalization_server <- function(
 
         if (is.num) {
           plot.new()
-          fields::image.plot(legend.only = TRUE, col = pal, zlim = range(col1),
-            legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1))
+          fields::image.plot(
+            legend.only = TRUE, col = pal, zlim = range(col1),
+            legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1)
+          )
         }
-
       }
 
       plot_before_after <- function() {
-
         out.res <- results_outlier_methods()
         res <- results_correction_methods()
         samples <- r_samples()
@@ -728,10 +731,10 @@ upload_module_normalization_server <- function(
           text(0.45, 0.5, "method failed")
           return(NULL)
         }
-        
+
         pos1 <- res$pos[[method]]
         if (!input$batchcorrect) pos1 <- pos0
-        
+
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, , drop = FALSE]
         pos1 <- pos1[kk, , drop = FALSE]
@@ -746,59 +749,70 @@ upload_module_normalization_server <- function(
         labs <- c(1, 0.85, 0.7, 0.55, 0.4)
         cex1 <- cut(nrow(pos1), breaks, labs)
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-        
-        cols=NULL; ncol=length(col1)
+
+        cols <- NULL
+        ncol <- length(col1)
         col1a <- as.character(unname(col1))
-        c1 <- all(!is.na(as.numeric(col1a))) 
+        c1 <- all(!is.na(as.numeric(col1a)))
         c2 <- all(grepl("[0-9]", col1a))
         is.num <- (c1 & c2)
         if (is.num) {
-          col1 <- as.numeric(col1a[!is.na(col1a)]);
+          col1 <- as.numeric(col1a[!is.na(col1a)])
           pal <- colorRampPalette(c("gray", "black"))(ncol)
           cols <- pal[cut(col1, breaks = ncol, include.lowest = TRUE)]
         }
         color <- if (all(!is.null(cols))) cols else col1
-        
+
         if (is.num) {
           layout(matrix(c(1, 2, 3), ncol = 3), widths = c(4, 4, 2))
-          cex.axis = 1.4; cex.lab = 1.2; cex.main = 1.7
-        } else {        
+          cex.axis <- 1.4
+          cex.lab <- 1.2
+          cex.main <- 1.7
+        } else {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.4, 0), tcl = -0.1)
-          cex.axis = 1; cex.lab = 1; cex.main = 1.2
+          cex.axis <- 1
+          cex.lab <- 1
+          cex.main <- 1.2
         }
 
-        if (is.num)
-          par(mar = c(3.4, 3.5, 2, 0.1), mgp = c(2.3, 0.4, 0), tcl = -0.1)        
+        if (is.num) {
+          par(mar = c(3.4, 3.5, 2, 0.1), mgp = c(2.3, 0.4, 0), tcl = -0.1)
+        }
         plot(pos0,
           col = color, pch = 20, cex = cex1, las = 1,
           cex.axis = cex.axis, cex.lab = cex.lab,
           main = "uncorrected", cex.main = cex.main,
           xlab = paste0("PC1 (", round(pos0.varexp[1], 2), "%)"),
-          ylab = paste0("PC2 (", round(pos0.varexp[2], 2), "%)"))
+          ylab = paste0("PC2 (", round(pos0.varexp[2], 2), "%)")
+        )
 
-        if (is.num)
+        if (is.num) {
           par(mar = c(3.4, 4.5, 2, 0.1), mgp = c(2.4, 0.4, 0), tcl = -0.1)
+        }
         plot(pos1,
           col = color, pch = 20, cex = cex1, las = 1,
           cex.axis = cex.axis, cex.lab = cex.lab,
           main = method, cex.main = cex.main,
           xlab = paste0("PC1 (", round(pos1.varexp[[method]][1], 2), "%)"),
-          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2], 2), "%)"))
+          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2], 2), "%)")
+        )
 
         if (is.num) {
-          plot.new(); par(mar=c(3,3,3,4.8))  
-          fields::image.plot(legend.only = TRUE, col = pal, zlim = range(col1),
-            legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1))
+          plot.new()
+          par(mar = c(3, 3, 3, 4.8))
+          fields::image.plot(
+            legend.only = TRUE, col = pal, zlim = range(col1),
+            legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1)
+          )
         }
-
       }
 
       ## ------------------------------------------------------------------
       ## Plot UI
       ## ------------------------------------------------------------------
-      
+
       getBatchParams <- eventReactive(
-      {
+        {
           list(r_counts(), r_samples(), r_contrasts())
         },
         {

@@ -617,13 +617,19 @@ upload_table_preview_counts_server <- function(id,
       ## ---counts---##
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
-
         datafile <- input$counts_csv$datapath[sel[1]]
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
         if (upload_datatype() == "scRNA-seq" && file.ext == "h5") {
-          df <- tryCatch({ playbase::read_h5_counts(datafile) }, error = function(w) { NULL } )
+          df <- tryCatch(
+            {
+              playbase::read_h5_counts(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
           if (is.null(df)) {
             shinyalert::shinyalert(
               title = "Error",
@@ -635,12 +641,12 @@ upload_table_preview_counts_server <- function(id,
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
             df <- tryCatch(
-            {
-              playbase::read_Olink_NPX(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_Olink_NPX(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
             if (is.null(df)) {
               shinyalert::shinyalert(
@@ -650,38 +656,38 @@ upload_table_preview_counts_server <- function(id,
             }
             if (!is.null(df)) {
               df.samples <- tryCatch(
-              {
-                playbase::read_Olink_samples(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
+                {
+                  playbase::read_Olink_samples(datafile)
+                },
+                error = function(w) {
+                  NULL
+                }
               )
             }
           } else {
             df <- tryCatch(
-            {
-              playbase::read_counts(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_counts(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
           }
         }
       } else {
         df <- tryCatch(
-        {
-          playbase::read_counts(datafile)
-        },
-        error = function(w) {
-          NULL
-        }
+          {
+            playbase::read_counts(datafile)
+          },
+          error = function(w) {
+            NULL
+          }
         )
       }
 
       file.ext <- tools::file_ext(input$counts_csv$name)
-      if (is.null(df) &  file.ext != "h5") {
+      if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
         uploaded$counts.csv <- df
