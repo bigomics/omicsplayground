@@ -209,6 +209,11 @@ expression_plot_volcano_server <- function(id,
         )
       }
 
+      box_padding <- if (is.null(input$box_padding) || is.na(input$box_padding)) 0.1 else input$box_padding
+      min_segment_length <- if (is.null(input$min_segment_length) || is.na(input$min_segment_length)) 0 else input$min_segment_length
+      label_box <- if (is.null(input$label_box)) TRUE else input$label_box
+      segment_linetype <- if (is.null(input$segment_linetype)) 1 else as.integer(input$segment_linetype)
+
       p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -225,7 +230,11 @@ expression_plot_volcano_server <- function(id,
         showlegend = FALSE,
         title = NULL,
         axis.text.size = input$axis_text_size,
-        colors = plot_colors
+        colors = plot_colors,
+        box.padding = box_padding,
+        min.segment.length = min_segment_length,
+        label.box = label_box,
+        segment.linetype = segment_linetype
       )
 
       if (input$margin_checkbox) {
@@ -331,6 +340,10 @@ expression_plot_volcano_server <- function(id,
       shiny::req(pd)
 
       names <- pd$features
+      box_padding <- if (is.null(input$box_padding) || is.na(input$box_padding)) 0.1 else input$box_padding
+      min_segment_length <- if (is.null(input$min_segment_length) || is.na(input$min_segment_length)) 0 else input$min_segment_length
+      label_box <- if (is.null(input$label_box)) TRUE else input$label_box
+      segment_linetype <- if (is.null(input$segment_linetype)) 1 else as.integer(input$segment_linetype)
 
       playbase::ggVolcano(
         x = pd[["x"]],
@@ -347,7 +360,11 @@ expression_plot_volcano_server <- function(id,
         ylab = pd[["ylab"]],
         marker.size = 1.8,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        box.padding = box_padding,
+        min.segment.length = min_segment_length,
+        label.box = label_box,
+        segment.linetype = segment_linetype
       )
     }
 
