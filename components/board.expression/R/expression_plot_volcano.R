@@ -189,6 +189,9 @@ expression_plot_volcano_server <- function(id,
       } else {
         pd[["sel.genes"]]
       }
+      if (input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
 
       # Determine colors: use prism palette or custom colors
       if (isTRUE(input$use_ggprism) && isTRUE(input$ggprism_colors)) {
@@ -213,6 +216,9 @@ expression_plot_volcano_server <- function(id,
       min_segment_length <- if (is.null(input$min_segment_length) || is.na(input$min_segment_length)) 0 else input$min_segment_length
       label_box <- if (is.null(input$label_box)) TRUE else input$label_box
       segment_linetype <- if (is.null(input$segment_linetype)) 1 else as.integer(input$segment_linetype)
+      ## Hyperbolic cutoff settings
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+      hyperbola_k <- if (!is.null(input$hyperbola_k)) input$hyperbola_k else 1
 
       p <- playbase::ggVolcano(
         x = pd[["x"]],
@@ -234,7 +240,9 @@ expression_plot_volcano_server <- function(id,
         box.padding = box_padding,
         min.segment.length = min_segment_length,
         label.box = label_box,
-        segment.linetype = segment_linetype
+        segment.linetype = segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = hyperbola_k
       )
 
       if (input$margin_checkbox) {

@@ -141,6 +141,32 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
               )
             )
+          ),
+
+          # Hyperbolic Cutoff
+          bslib::accordion_panel(
+            "Significance Cutoff",
+            shiny::radioButtons(
+              ns_parent("cutoff_type"),
+              "Cutoff type:",
+              choices = c(
+                "Rectangular (traditional)" = "rectangular",
+                "Hyperbolic" = "hyperbolic"
+              ),
+              selected = "rectangular"
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['", ns_parent("cutoff_type"), "'] == 'hyperbolic'"),
+              shiny::numericInput(
+                ns_parent("hyperbola_k"),
+                "Curvature (k):",
+                value = 1,
+                min = 0.1,
+                max = 10,
+                step = 0.1
+              ),
+              shiny::helpText("Smaller k = tighter curve (more stringent)")
+            )
           )
         ),
         shiny::div(
