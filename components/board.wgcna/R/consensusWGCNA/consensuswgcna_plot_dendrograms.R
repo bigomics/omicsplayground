@@ -19,6 +19,11 @@ consensusWGCNA_plot_dendrograms_ui <- function(
       label = "Show traits",
       value = TRUE
     ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
+      value = TRUE
+    ),
     shiny::selectInput(
       inputId = ns("clusterby"),
       label = "Cluster by",
@@ -63,6 +68,7 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
         cons,
         main = "",
         show.traits = input$showtraits,
+        show.contrasts = input$showcontrasts,
         marAll = c(1, 6, 1, 0),
         use.tree = input$clusterby,
         colorHeightMax = 0.75

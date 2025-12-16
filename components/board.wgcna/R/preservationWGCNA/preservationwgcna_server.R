@@ -74,15 +74,16 @@ PreservationWGCNA_Board <- function(id, pgx) {
       shiny::req(input$compute) ## refute first call     
       
       pheno="activated"
-      phenoData <- pgx$samples
-
+      samples <- pgx$samples
+      contrasts <- pgx$contrasts
+      
       pheno <- input$splitpheno
       if( is.null(pheno) || pheno == '') {
-        pheno <- colnames(phenoData)[1]
+        pheno <- colnames(samples)[1]
       }
-      shiny::req(pheno %in% colnames(phenoData))
+      shiny::req(pheno %in% colnames(samples))
 
-      group <- phenoData[,pheno]
+      group <- samples[,pheno]
       if(is.numeric(group) && length(unique(group)) > 3) {
         group <- c("LO", "HI")[1 + (group >= median(group,na.rm=TRUE))]
       }
@@ -109,7 +110,8 @@ PreservationWGCNA_Board <- function(id, pgx) {
       
       res <- playbase::wgcna.runPreservationWGCNA(
         exprList,
-        phenoData,
+        samples,
+        contrasts = contrasts,
         GMT = pgx$GMT,
         annot = pgx$genes,
         reference = 1,

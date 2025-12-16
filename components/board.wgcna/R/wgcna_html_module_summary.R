@@ -44,6 +44,7 @@ wgcna_html_module_summary_ui <- function(
 wgcna_html_module_summary_server <- function(id,
                                              wgcna,
                                              multi = FALSE,
+                                             r_annot = reactive(NULL),
                                              r_module,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -99,12 +100,17 @@ wgcna_html_module_summary_server <- function(id,
           "long" = "long detailed scientific discussion"          
         )
 
+        annot <- r_annot()
+        if(is.null(annot) && !is.null(wgcna$annot)) {
+          annot <- wgcna$annot
+        }
+        
         res <- playbase::wgcna.describeModules(
           wgcna,
           modules = module,
           model = ai_model,
           multi = multi,
-          annot = wgcna$annot,
+          annot = annot,
           docstyle = docstyle,
           numpar = 2,
           experiment = wgcna$experiment,

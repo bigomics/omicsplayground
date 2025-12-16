@@ -86,11 +86,13 @@ MultiWGCNA_Board <- function(id, pgx) {
       pgx.showSmallModal("computing multi-omics WGCNA...")
 
       dataX <- playbase::mofa.split_data(pgx$X)
-      samples = pgx$samples
+      samples <- pgx$samples
+      contrasts <- pgx$contrasts
       
       wgcna <- playbase::wgcna.compute_multiomics(
         dataX = dataX,
         samples = samples,
+        contrasts = contrasts,
         do.consensus = input$consensus,
         add.pheno = (ncol(samples) > 10),
         add.gsets = TRUE,
@@ -199,6 +201,7 @@ MultiWGCNA_Board <- function(id, pgx) {
       "multiwgcnaSummary",
       wgcna = r_multiwgcna,
       multi = TRUE,
+      r_annot = reactive(pgx$genes),      
       r_module = shiny::reactive(input$module),      
       watermark = WATERMARK
     )

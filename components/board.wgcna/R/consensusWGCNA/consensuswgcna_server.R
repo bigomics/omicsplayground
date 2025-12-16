@@ -123,6 +123,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         "Your selected phenotype is incompatible for consensus WGCNA: less than 4 samples available for any given phenotype level. Please select another trait from the 'Consensus by' menu."))
       samples <- unique(unlist(lapply(xx, colnames)))
       phenoData <- pgx$samples[samples, , drop = FALSE]
+      contrasts <- pgx$contrasts[samples, , drop = FALSE]
       
       ## random noise: avoids ME with NaNs; increase robustness
       for(i in 1:length(xx)) {
@@ -152,6 +153,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       cons <- playbase::wgcna.runConsensusWGCNA(
         exprList = xx,
         phenoData = phenoData,
+        contrasts = contrasts,
         GMT = pgx$GMT,
         annot = pgx$genes,
         power = power,
