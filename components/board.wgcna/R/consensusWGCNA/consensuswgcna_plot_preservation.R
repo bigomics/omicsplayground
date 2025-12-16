@@ -4,13 +4,14 @@
 ##
 
 consensusWGCNA_plot_preservationDendro_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -26,13 +27,14 @@ consensusWGCNA_plot_preservationDendro_ui <- function(
 }
 
 consensusWGCNA_plot_preservationHeatmap_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -48,17 +50,15 @@ consensusWGCNA_plot_preservationHeatmap_ui <- function(
 }
 
 consensusWGCNA_plot_preservation_server <- function(id,
-                                               mwgcna
-                                               ) {
+                                                    mwgcna) {
   moduleServer(id, function(input, output, session) {
-    
     renderDendro <- function() {
       cons <- mwgcna()
       shiny::req(cons)
-      
-      par(mfrow=c(2,1), mar=c(10,3,2,0.5))
+
+      par(mfrow = c(2, 1), mar = c(10, 3, 2, 0.5))
       multiMEs <- cons$net$multiMEs
-      for(k in names(multiMEs)) {
+      for (k in names(multiMEs)) {
         ME <- multiMEs[[k]]$data
         playbase::wgcna.plotEigenGeneClusterDendrogram(
           wgcna = NULL,
@@ -67,7 +67,7 @@ consensusWGCNA_plot_preservation_server <- function(id,
           setMargins = FALSE,
           method = "hclust"
         )
-      }      
+      }
     }
 
     renderHeatmap <- function() {
@@ -75,20 +75,19 @@ consensusWGCNA_plot_preservation_server <- function(id,
       shiny::req(cons)
 
       multiMEs <- cons$net$multiMEs
-      
+
       par(cex = 0.9)
       WGCNA::plotEigengeneNetworks(
         multiMEs,
         setLabels = names(multiMEs),
         plotDendrograms = FALSE,
-        marDendro = c(0,2,2,1)*1.1,
-        marHeatmap = c(3,3,2,1)*1.1,
-        #zlimPreservation = c(0.5, 1),
+        marDendro = c(0, 2, 2, 1) * 1.1,
+        marHeatmap = c(3, 3, 2, 1) * 1.1,
+        # zlimPreservation = c(0.5, 1),
         xLabelsAngle = 90
       )
-      
     }
-    
+
     PlotModuleServer(
       "dendro",
       func = renderDendro,
@@ -106,10 +105,5 @@ consensusWGCNA_plot_preservation_server <- function(id,
       res = c(80, 110),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

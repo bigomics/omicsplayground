@@ -4,13 +4,14 @@
 ##
 
 preservationWGCNA_plot_eigenNetwork_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -26,7 +27,7 @@ preservationWGCNA_plot_eigenNetwork_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-    #options = options,
+    # options = options,
     caption = caption,
     height = height,
     width = width,
@@ -35,24 +36,20 @@ preservationWGCNA_plot_eigenNetwork_ui <- function(
 }
 
 preservationWGCNA_plot_eigenNetwork_server <- function(id,
-                                                       rwgcna
-                                                       ) {
+                                                       rwgcna) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
-
       res <- rwgcna()
       shiny::req(res)
 
-      par(mar=c(0,3,3,1))
+      par(mar = c(0, 3, 3, 1))
       WGCNA::plotEigengeneNetworks(
         res$net$multiMEs,
         setLabels = names(res$net$multiMEs),
-        marHeatmap = c(1,3,3,1)
+        marHeatmap = c(1, 3, 3, 1)
       )
-      
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -61,10 +58,5 @@ preservationWGCNA_plot_eigenNetwork_server <- function(id,
       res = c(65, 90),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

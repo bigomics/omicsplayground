@@ -4,13 +4,14 @@
 ##
 
 multiwgcna_plot_modulecorr_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -52,10 +53,8 @@ multiwgcna_plot_modulecorr_ui <- function(
 multiwgcna_plot_modulecorr_server <- function(id,
                                               mwgcna,
                                               r_layers,
-                                              r_condition
-                                              ) {
+                                              r_condition) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       wgcna <- mwgcna()
 
@@ -63,16 +62,15 @@ multiwgcna_plot_modulecorr_server <- function(id,
       condition <- r_condition()
       layers <- intersect(layers, names(wgcna))
       wgcna <- wgcna[layers]
-      shiny::req(length(wgcna)>0)
+      shiny::req(length(wgcna) > 0)
 
-      phenotype = NULL;
+      phenotype <- NULL
       if (condition != "None") phenotype <- condition
 
-      nmax = 20
-      if (!input$showtop) nmax = -1      
+      nmax <- 20
+      if (!input$showtop) nmax <- -1
 
-      if(input$mergemodules) {
-        
+      if (input$mergemodules) {
         playbase::wgcna.plotEigenGeneAdjacencyHeatmap(
           wgcna,
           multi = TRUE,
@@ -85,7 +83,7 @@ multiwgcna_plot_modulecorr_server <- function(id,
           cex.text = 0.7,
           mask.intra = FALSE,
           plotDendro = TRUE,
-          plotHeatmap = TRUE, 
+          plotHeatmap = TRUE,
           colorlabel = TRUE,
           text = input$showvalues,
           pstar = !input$showvalues,
@@ -96,9 +94,7 @@ multiwgcna_plot_modulecorr_server <- function(id,
           mar1 = c(6.5, 5, 1.2, 0),
           mar2 = c(8, 12, 3, 2)
         )
-
       } else {
-        
         playbase::wgcna.plotMultiEigengeneCorrelation(
           wgcna,
           addtraits = input$addtraits,
@@ -111,12 +107,10 @@ multiwgcna_plot_modulecorr_server <- function(id,
           cex.text = 0.7,
           cex.lab = 0.8,
           setpar = TRUE
-        ) 
-    
+        )
       }
-      
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -125,10 +119,5 @@ multiwgcna_plot_modulecorr_server <- function(id,
       res = c(95, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

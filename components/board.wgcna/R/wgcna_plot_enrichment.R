@@ -15,14 +15,13 @@ wgcna_plot_enrichment_ui <- function(
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::selectInput( ns("plottype"), "Plot type:",
-      choices = c("geneset score","gene frequency"),
+    shiny::selectInput(ns("plottype"), "Plot type:",
+      choices = c("geneset score", "gene frequency"),
       selected = "gene frequency"
     )
-
   )
 
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -41,7 +40,6 @@ wgcna_plot_enrichment_server <- function(id,
                                          pgx,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     enrichPlot.RENDER <- function() {
       df <- enrichTable$data()
       if (is.null(df) || nrow(df) == 0) {
@@ -58,7 +56,7 @@ wgcna_plot_enrichment_server <- function(id,
         names(gtable) <- playbase::probe2symbol(names(gtable), pgx$genes, "gene_name", fill_na = TRUE)
         par(mar = c(8,4,2,0))
         barplot(
-          head(gtable,35),
+          head(gtable, 35),
           las = 3,
           cex.names = 0.9,
           xlab = "",
@@ -66,7 +64,7 @@ wgcna_plot_enrichment_server <- function(id,
         )
       }
 
-      if(input$plottype == "geneset score") {
+      if (input$plottype == "geneset score") {
         gs.top <- df$geneset
         xlim0 <- c(0, max(df$score))
         col1 <- c("grey90", "#f5bfbf")[1 + 1 * (df$q.value < 0.05)]
@@ -77,7 +75,6 @@ wgcna_plot_enrichment_server <- function(id,
         )
         text(0, (nrow(df):1) - 0.48, gs.top, adj = 0, pos = 4, cex = 0.8)
       }
-      
     }
 
 

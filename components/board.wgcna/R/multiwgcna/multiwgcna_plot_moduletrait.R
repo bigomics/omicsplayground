@@ -4,16 +4,17 @@
 ##
 
 multiwgcna_plot_moduletrait_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(    
+  options <- shiny::tagList(
     shiny::checkboxInput(
       inputId = ns("mergemodules"),
       label = "Merge modules",
@@ -51,29 +52,27 @@ multiwgcna_plot_moduletrait_ui <- function(
 
 multiwgcna_plot_moduletrait_server <- function(id,
                                                mwgcna,
-                                               r_layers
-                                               ) {
+                                               r_layers) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
       wgcna <- mwgcna()
 
       layers <- r_layers()
       sel.layers <- intersect(layers, names(wgcna))
       wgcna <- wgcna[sel.layers]
-      shiny::req(length(wgcna)>0)
-      
-      nmax = 20 ## top 20 modules displayed by default.
-      if (input$showall) nmax = 999
-      plottype = input$plottype
-      
-      merge_modules = input$mergemodules
-      if(merge_modules) {
-        par(mfrow=c(1,1))
-        if(input$transpose) {
-          par(mar=c(14,8,2.5,1))
+      shiny::req(length(wgcna) > 0)
+
+      nmax <- 20 ## top 20 modules displayed by default.
+      if (input$showall) nmax <- 999
+      plottype <- input$plottype
+
+      merge_modules <- input$mergemodules
+      if (merge_modules) {
+        par(mfrow = c(1, 1))
+        if (input$transpose) {
+          par(mar = c(14, 8, 2.5, 1))
         } else {
-          par(mar=c(8,20,2.5,1))
+          par(mar = c(8, 20, 2.5, 1))
         }
 
         playbase::wgcna.plotModuleTraitHeatmap(
@@ -81,7 +80,7 @@ multiwgcna_plot_moduletrait_server <- function(id,
           multi = TRUE,
           setpar = FALSE,
           cluster = TRUE,
-          main = paste(names(wgcna),collapse=" + "),
+          main = paste(names(wgcna), collapse = " + "),
           transpose = !input$transpose,
           colorlabel = TRUE,
           nmax = nmax,
@@ -89,38 +88,34 @@ multiwgcna_plot_moduletrait_server <- function(id,
           text = input$showvalues,
           pstar = !input$showvalues
         )
-
       } else {
-
         nc <- ceiling(sqrt(length(wgcna)))
         nr <- ceiling(length(wgcna) / nc)
-        par(mfrow=c(nr,nc))
-        if(input$transpose) {
-          par(mar=c(14,8,2.5,1))
+        par(mfrow = c(nr, nc))
+        if (input$transpose) {
+          par(mar = c(14, 8, 2.5, 1))
         } else {
-          par(mar=c(8,14,2.5,1))
+          par(mar = c(8, 14, 2.5, 1))
         }
-        i=1
-        for(i in 1:length(wgcna)) {
-          
+        i <- 1
+        for (i in 1:length(wgcna)) {
           playbase::wgcna.plotModuleTraitHeatmap(
             wgcna[[i]],
             multi = FALSE,
             setpar = FALSE,
             cluster = TRUE,
-            main = names(wgcna)[i],          
+            main = names(wgcna)[i],
             transpose = !input$transpose,
             colorlabel = TRUE,
             nmax = nmax,
-            tmax = nmax,            
+            tmax = nmax,
             text = input$showvalues,
             pstar = !input$showvalues
-          ) 
+          )
         }
-
       }
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -129,10 +124,5 @@ multiwgcna_plot_moduletrait_server <- function(id,
       res = c(95, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-
