@@ -101,6 +101,7 @@ SingleCellBoard <- function(id, pgx) {
       genes1 <- c("<none>", genes)
       shiny::updateSelectInput(session, "crosstabvar", choices = pheno1)
       shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])
+      names(genes1) <- playbase::probe2symbol(genes1, pgx$genes, "gene_name", fill_na = TRUE)
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
     })
 

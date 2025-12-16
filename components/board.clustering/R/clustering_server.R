@@ -281,7 +281,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
 
         if (any(is.na(pgx$X))) {
-          zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          is.mox <- playbase::is.multiomics(rownames(pgx$X))
+          if (is.mox) {
+            zx <- playbase::imputeMissing.mox(pgx$X, method = "SVD2")
+          } else {
+            zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          }
           zx <- zx[pp, , drop = FALSE]
         } else {
           zx <- pgx$X[pp, , drop = FALSE]
@@ -778,6 +783,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     clustering_plot_table_parcoord_server(
       id = "parcoord",
       getTopMatrix = getTopMatrixGrouped,
+      pgx = pgx,
       watermark = WATERMARK
     )
 

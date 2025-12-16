@@ -206,15 +206,6 @@ app_ui <- function(x) {
         .where = "declarations"
       )
 
-      ## offcanvas chatbox
-      div.chirpbutton <- NULL
-      if (opt$ENABLE_CHIRP) {
-        div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-          width = "auto", class = "quick-button",
-          onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
-        )
-      }
-
       div.invitebutton <- InviteFriendUI("invite")
       div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
         UpgradeModuleUI("upgrade")
@@ -268,7 +259,6 @@ app_ui <- function(x) {
           ),
           div.upgradebutton,
           div.invitebutton,
-          div.chirpbutton,
           div(
             id = "mainmenu_help",
             bigdash::navbarDropdown(
@@ -362,7 +352,7 @@ app_ui <- function(x) {
                     selected = 1,
                     width = "100%"
                   ),
-                  "Choose a label type to be displayed in the plots",
+                  "Choose the LLM model to be used for AI-powered analysis",
                   placement = "right", options = list(container = "body")
                 )
               )

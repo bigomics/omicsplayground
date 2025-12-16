@@ -116,14 +116,14 @@ singlecell_plot_crosstabPlot_server <- function(id,
       getProportionsTable <- function(pheno, is.gene = FALSE) {
         y <- NULL
         if (is.gene) {
-          X <- playbase::rename_by(pgx$X, pgx$genes, "symbol")
-          pheno <- pgx$genes[pheno, ]$symbol
+          X <- pgx$X
           gx <- X[which(rownames(X) == pheno), kk, drop = FALSE]
           # Handle case where multiple genes have same symbol, happens easily on weird species
           if (nrow(gx) > 1) {
             gx <- colMeans(gx, na.rm = TRUE)
           }
           gx.highTH <- mean(gx, na.rm = TRUE)
+          pheno <- playbase::probe2symbol(pheno, pgx$genes, "gene_name", fill_na = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
         } else if (pheno %in% colnames(pgx$samples)) {

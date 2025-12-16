@@ -39,6 +39,7 @@ wgcna_plot_gclustering_ui <- function(
 
 wgcna_plot_gclustering_server <- function(id,
                                           wgcna,
+                                          pgx,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     RENDER <- function() {
@@ -51,8 +52,9 @@ wgcna_plot_gclustering_server <- function(id,
           res,
           nhub = ifelse(input$showhub, 3, 0),
           main = "",
-          method = "clust"
-          # set.par = FALSE
+          method = "clust",
+          annot = pgx$genes
+          #set.par = FALSE
         )
       }
     }

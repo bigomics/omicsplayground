@@ -140,7 +140,14 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     getFilteredImpExpression <- shiny::reactive({
       shiny::req(pgx$X, input$gene)
       X <- pgx$X
-      if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+      is.mox <- playbase::is.multiomics(rownames(X))
+      if (sum(is.na(X)) > 0) {
+        if (is.mox) {
+          X <- playbase::imputeMissing.mox(X, method = "SVD2")
+        } else {
+          X <- playbase::imputeMissing(X, method = "SVD2")
+        }
+      }
       gene <- input$gene
       filterExpression(X, gene)
     })
@@ -284,6 +291,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "cor_graph",
       gene = reactive(input$gene),
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
+      pgx = pgx,
       watermark = WATERMARK
     )
   })

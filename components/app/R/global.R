@@ -157,7 +157,6 @@ opt.default <- list(
   USE_CREDENTIALS = FALSE,
   DOMAIN = NULL,
   BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
-  ## ENABLE_CHIRP         = TRUE,
   ENABLE_DELETE = TRUE,
   ENABLE_PGX_DOWNLOAD = TRUE,
   ENABLE_PUBLIC_SHARE = TRUE,

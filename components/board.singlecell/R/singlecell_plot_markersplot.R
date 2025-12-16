@@ -217,8 +217,8 @@ singlecell_plot_markersplot_server <- function(id,
           label <- tolower(label)
         }
 
-        p
         tt <- rownames(top.gx)[i]
+        tt <- playbase::probe2symbol(tt, pgx$genes, "gene_name", fill_na = TRUE)
 
         ## ------- start plot ----------
         p <- playbase::pgx.scatterPlotXY.GGPLOT(

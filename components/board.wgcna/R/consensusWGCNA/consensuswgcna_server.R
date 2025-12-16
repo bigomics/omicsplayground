@@ -75,96 +75,63 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       shiny::validate(shiny::need(!is.null(cons), "Please compute"))
     })
 
-    shiny::observeEvent(pgx$X, {
+    shiny::observeEvent( list(pgx$X, pgx$samples), {
+
+      splitby <- colnames(pgx$samples)
       if (pgx$datatype == "multi-omics") {
-        shinyjs::hide("splitpheno")
-        shinyjs::show("splitdata")
-      } else {
-        shinyjs::hide("splitdata")
-        shinyjs::show("splitpheno")
+        dtypes <- names(playbase::mofa.split_data(pgx$X))
+        has.pxgx <- all(c("gx","px") %in% dtypes)
+        if(has.pxgx) {
+          splitby <- c("<multi-omics>", splitby)
+        }
       }
+
+      shiny::updateSelectInput(session, "splitby", choices = splitby,
+        selected = splitby[1])
+      
     })
+    
+    
+    r_wgcna <- shiny::eventReactive( {
+      list( input$compute, pgx$X ) 
+    }, {
 
-    shiny::observeEvent(list(pgx$X, pgx$samples), {
-      dtypes <- names(playbase::mofa.split_data(pgx$X))
-      sel.dtypes <- intersect(c("gx", "px", "me"), dtypes)
-      shiny::updateSelectizeInput(session, "splitdata",
-        choices = dtypes,
-        selected = sel.dtypes
-      )
+      shiny::req(pgx$X)
+      shiny::req(input$splitby)      
+      
+      xx <- NULL
+      splitby <- input$splitby      
+      if (pgx$datatype == "multi-omics" && splitby == "<multi-omics>") {        
+        xx <- playbase::mofa.split_data(pgx$X)
+        has.gxpx <- all(c("gx","px") %in% names(xx))
+        has.gxpx
+        shiny::validate(shiny::need(has.gxpx,
+          "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics & proteomics data are needed."))
 
-      splitpheno <- colnames(pgx$samples)
-      shiny::updateSelectInput(session, "splitpheno",
-        choices = splitpheno,
-        selected = splitpheno[1]
-      )
-    })
+        xx <- xx[names(xx) %in% c("gx","px")]      
+        xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table=pgx$genes))
+        gg <- Reduce(intersect, lapply(xx, rownames))
+        shiny::validate(shiny::need(length(gg)>0,
+          "Your dataset is incompatible for consensus WGCNA: no shared features."))
+        xx <- lapply(xx, function(x) x[gg, , drop = FALSE])
+      } else if(!is.null(pgx$samples)) {
 
-
-    r_wgcna <- shiny::eventReactive(
-      {
-        list(input$compute, pgx$X)
-      },
-      {
-        shiny::req(pgx$X)
-        shiny::req(input$splitpheno)
-
-        xx <- NULL
-        if (pgx$datatype == "multi-omics") {
-          xx <- playbase::mofa.split_data(pgx$X)
-          has.gxpx <- all(c("gx", "px") %in% names(xx))
-          has.gxpx
-          shiny::validate(shiny::need(
-            has.gxpx,
-            "Your multi-omics dataset is incompatible for consensus WGCNA: both transcriptomics & proteomics data are needed."
-          ))
-
-          xx <- xx[names(xx) %in% c("gx", "px")]
-          xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table = pgx$genes))
-          gg <- Reduce(intersect, lapply(xx, rownames))
-          shiny::validate(shiny::need(
-            length(gg) > 0,
-            "Your dataset is incompatible for consensus WGCNA: no shared features."
-          ))
-          xx <- lapply(xx, function(x) x[gg, , drop = FALSE])
-        } else if (!is.null(pgx$samples)) {
-          pheno <- input$splitpheno
-          if (is.null(pheno) || pheno == "") {
-            pheno <- colnames(pgx$samples)[1]
-          }
-          shiny::req(pheno %in% colnames(pgx$samples))
-          group <- pgx$samples[, pheno]
-          if (is.numeric(group) && length(unique(group)) > 3) {
-            group <- c("LO", "HI")[1 + (group >= median(group, na.rm = TRUE))]
-          }
-          group <- base::abbreviate(toupper(group), 2L)
-          xx <- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[, ii, drop = FALSE])
-        } else {
-          shiny::validate(shiny::need(has.gxpx, "Your dataset is incompatible for consensus WGCNA."))
+        splitby <- input$splitby
+        if (is.null(splitby) || splitby == '') {
+          splitby <- colnames(pgx$samples)[1]
         }
-
-        ## exclude sample matrices with less than 4 samples.
-        ## WGCNA::blockwiseConsensusModules fails when nsamples<4
-        xx <- xx[sapply(xx, function(x) ncol(x) >= 4)]
-        shiny::validate(shiny::need(
-          length(xx) > 1,
-          "Your selected phenotype is incompatible for consensus WGCNA: less than 4 samples available for any given phenotype level. Please select another trait from the 'Consensus by' menu."
-        ))
-        samples <- unique(unlist(lapply(xx, colnames)))
-        phenoData <- pgx$samples[samples, , drop = FALSE]
-
-        ## random noise: avoids ME with NaNs; increase robustness
-        for (i in 1:length(xx)) {
-          mat <- xx[[i]]
-          sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
-          sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
-          xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))
+        shiny::req(splitby %in% colnames(pgx$samples))
+        group <- pgx$samples[,splitby]
+        if (is.numeric(group) && length(unique(group)) > 3) {
+          group <- c("LO", "HI")[1 + (group >= median(group,na.rm=TRUE))]
         }
-
-        progress <- shiny::Progress$new(session, min = 0, max = 1)
-        on.exit(progress$close())
-        progress$set(message = paste("computing consensus WGCNA..."), value = 0.33)
-        pgx.showSmallModal("computing consensus WGCNA...")
+        if(max(nchar(group))>10) {
+          group <- base::abbreviate(toupper(group),4L)
+        }
+        xx <- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[,ii,drop=FALSE])
+      } else {
+        shiny::validate(shiny::need(!is.null(xx), "Your dataset is incompatible for consensus WGCNA."))
+      }
 
         power <- input$power
         if (power == "<auto>") {

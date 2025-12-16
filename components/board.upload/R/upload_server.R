@@ -1055,7 +1055,7 @@ UploadBoard <- function(id,
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
           # upload_datatype(NULL)  ## not good! crash on new upload
-          # upload_organism(NULL)
+          upload_organism(input$selected_organism)
           upload_name(NULL)
           upload_description(NULL)
           show_comparison_builder(TRUE)
@@ -1304,7 +1304,8 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       is.olink = is.olink,
       is.count = TRUE,
-      height = height
+      height = height,
+      recompute_pgx = recompute_pgx
     )
 
     sc_normalized <- upload_module_normalizationSC_server(
@@ -1375,7 +1376,8 @@ UploadBoard <- function(id,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
-      probetype = probetype
+      probetype = probetype,
+      recompute_pgx = recompute_pgx
     )
 
     ## ------------------------------------------------

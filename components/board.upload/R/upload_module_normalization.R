@@ -23,7 +23,8 @@ upload_module_normalization_server <- function(
   upload_datatype,
   is.olink,
   is.count = FALSE,
-  height = 720
+  height = 720,
+  recompute_pgx = NULL
 ) {
   shiny::moduleServer(
     id,
@@ -69,8 +70,8 @@ upload_module_normalization_server <- function(
           counts[which(counts == 0)] <- NA
         }
 
-        is.multiomics <- playbase::is.multiomics(rownames(counts))
-        if (is.multiomics) {
+        is.mox <- playbase::is.multiomics(rownames(counts))
+        if (is.mox) {
           X <- counts
           dtypes <- unique(sub(":.*", "", rownames(X)))
           for (i in 1:length(dtypes)) {
@@ -120,10 +121,15 @@ upload_module_normalization_server <- function(
 
         ## Impute if required
         if (any(is.na(X)) & input$impute) {
-          X <- playbase::imputeMissing(X, method = input$impute_method)
+          if (is.mox) {
+            X <- playbase::imputeMissing.mox(X , method = input$impute_method)
+          } else {
+            X <- playbase::imputeMissing(X , method = input$impute_method)
+          }
         }
-
+        
         return(list(counts = counts, X = X, prior = prior))
+        
       })
 
       ## Normalize
@@ -157,10 +163,17 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
+        is.mox <- playbase::is.multiomics(rownames(counts))
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
           dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+          if (sum(is.na(X)) > 0) {
+            if (is.mox) {
+              X <- playbase::imputeMissing.mox(X, method = "SVD2")
+            } else {
+              X <- playbase::imputeMissing(X, method = "SVD2")
+            }
+          }
           res <- playbase::detectOutlierSamples(X, plot = FALSE)
           is.outlier <- (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
@@ -188,15 +201,30 @@ upload_module_normalization_server <- function(
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
-
+        
         ## Average (if any dups) for BC overview
         dups <- sum(duplicated(rownames(X0)))
         if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = FALSE)
         dups <- sum(duplicated(rownames(X1)))
         if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
 
-        if (sum(is.na(X0)) > 0) X0 <- playbase::imputeMissing(X0, method = "SVD2")
-        if (sum(is.na(X1)) > 0) X1 <- playbase::imputeMissing(X1, method = "SVD2")
+        is.mox <- playbase::is.multiomics(rownames(X0))
+
+        if (sum(is.na(X0)) > 0) {
+          if (is.mox) {
+            X0 <- playbase::imputeMissing.mox(X0, method = "SVD2")
+          } else {
+            X0 <- playbase::imputeMissing(X0, method = "SVD2")
+          }
+        }        
+
+        if (sum(is.na(X1)) > 0) {
+          if (is.mox) {
+            X1 <- playbase::imputeMissing.mox(X1, method = "SVD2")
+          } else {
+            X1 <- playbase::imputeMissing(X1, method = "SVD2")
+          }
+        }
 
         kk <- intersect(colnames(X1), colnames(X0))
         kk <- intersect(kk, rownames(samples))
@@ -250,7 +278,16 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+          is.mox <- playbase::is.multiomics(rownames(X))
+
+          if (sum(is.na(X)) > 0) {
+            if (is.mox) {
+              X <- playbase::imputeMissing.mox(X, method = "SVD2")
+            } else {
+              X <- playbase::imputeMissing(X, method = "SVD2")
+            }
+          }
+
           out <- playbase::detectOutlierSamples(X, plot = FALSE)
 
           scaledX <- playbase::double_center_scale_fast(X)
@@ -498,7 +535,14 @@ upload_module_normalization_server <- function(
               if (input$impute) X3 <- log2(imputedX()$counts + imputedX()$prior)
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
-              for (i in 1:length(mm)) imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
+              is.mox <- playbase::is.multiomics(rownames(X3))
+              for (i in 1:length(mm)) {
+                if (is.mox) {
+                  imp[[mm[i]]] <- playbase::imputeMissing.mox(X3, mm[i])
+                } else {
+                  imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
+                }
+              }
               scaled.imp <- lapply(imp, function(x) playbase::double_center_scale_fast(x))
               par(mfrow = c(2, 2), mar = c(4, 3, 2, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
               cex1 <- cut(ncol(X3),
@@ -605,6 +649,7 @@ upload_module_normalization_server <- function(
       }
 
       plot_all_methods <- function() {
+
         out.res <- results_outlier_methods()
         res <- results_correction_methods()
         shiny::req(res)
@@ -624,24 +669,51 @@ upload_module_normalization_server <- function(
 
         pheno <- res$pheno
         xdim <- length(pheno)
-        cex1 <- cut(xdim,
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
+        breaks <- c(0, 40, 100, 250, 1000, 999999)
+        labs <- c(1, 0.85, 0.7, 0.55, 0.4)
+        cex1 <- cut(xdim, breaks, labs)
         cex1 <- 2.5 * as.numeric(as.character(cex1))
-        par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(1.7, 0.4, 0), tcl = -0.1)
+
+        cols=NULL; ncol=length(col1)
+        col1a <- as.character(unname(col1))
+        c1 <- all(!is.na(as.numeric(col1a))) 
+        c2 <- all(grepl("[0-9]", col1a))
+        is.num <- (c1 & c2)
+        if (is.num) {
+          col1 <- as.numeric(col1a[!is.na(col1a)]);
+          pal <- colorRampPalette(c("gray", "black"))(ncol)
+          cols <- pal[cut(col1, breaks = ncol, include.lowest = TRUE)]
+        }
+        color <- if (all(!is.null(cols))) cols else col1
+
+        if (is.num) {
+          par(mfrow = c(2, 4), mar = c(3, 3, 2, 1), mgp = c(2, 0.4, 0), tcl = -0.1)
+        } else {        
+          par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(2, 0.4, 0), tcl = -0.1)
+          cex.axis = 1; cex.lab = 1; cex.main = 1.2
+        }
+
         for (m in methods) {
           if (m %in% names(pos.list)) {
-            plot(pos.list[[m]], col = col1, cex = cex1, pch = 20, las = 1)
+            plot(pos.list[[m]], col = color, cex = cex1,
+              pch = 20, las = 1, xlab = "PCA_1", ylab = "PCA_2")
           } else {
             plot.new()
             text(0.45, 0.5, "method failed")
           }
           title(m, cex.main = 1.5)
         }
+
+        if (is.num) {
+          plot.new()
+          fields::image.plot(legend.only = TRUE, col = pal, zlim = range(col1),
+            legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1))
+        }
+
       }
 
       plot_before_after <- function() {
+
         out.res <- results_outlier_methods()
         res <- results_correction_methods()
         samples <- r_samples()
@@ -656,13 +728,10 @@ upload_module_normalization_server <- function(
           text(0.45, 0.5, "method failed")
           return(NULL)
         }
-
-        if (!input$batchcorrect) {
-          pos1 <- pos0
-        } else {
-          pos1 <- res$pos[[method]]
-        }
-
+        
+        pos1 <- res$pos[[method]]
+        if (!input$batchcorrect) pos1 <- pos0
+        
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, , drop = FALSE]
         pos1 <- pos1[kk, , drop = FALSE]
@@ -673,32 +742,63 @@ upload_module_normalization_server <- function(
         colorby_var <- intersect(colorby_var, colnames(samples))
         samples <- samples[rownames(pos0), , drop = FALSE]
         col1 <- factor(samples[, colorby_var])
-        cex1 <- cut(nrow(pos1),
-          breaks = c(0, 40, 100, 250, 1000, 999999),
-          c(1, 0.85, 0.7, 0.55, 0.4)
-        )
+        breaks <- c(0, 40, 100, 250, 1000, 999999)
+        labs <- c(1, 0.85, 0.7, 0.55, 0.4)
+        cex1 <- cut(nrow(pos1), breaks, labs)
         cex1 <- 2.7 * as.numeric(as.character(cex1))
-        par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.4, 0), tcl = -0.1)
+        
+        cols=NULL; ncol=length(col1)
+        col1a <- as.character(unname(col1))
+        c1 <- all(!is.na(as.numeric(col1a))) 
+        c2 <- all(grepl("[0-9]", col1a))
+        is.num <- (c1 & c2)
+        if (is.num) {
+          col1 <- as.numeric(col1a[!is.na(col1a)]);
+          pal <- colorRampPalette(c("gray", "black"))(ncol)
+          cols <- pal[cut(col1, breaks = ncol, include.lowest = TRUE)]
+        }
+        color <- if (all(!is.null(cols))) cols else col1
+        
+        if (is.num) {
+          layout(matrix(c(1, 2, 3), ncol = 3), widths = c(4, 4, 2))
+          cex.axis = 1.4; cex.lab = 1.2; cex.main = 1.7
+        } else {        
+          par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.4, 0), tcl = -0.1)
+          cex.axis = 1; cex.lab = 1; cex.main = 1.2
+        }
+
+        if (is.num)
+          par(mar = c(3.4, 3.5, 2, 0.1), mgp = c(2.3, 0.4, 0), tcl = -0.1)        
         plot(pos0,
-          col = col1, pch = 20, cex = cex1, las = 1,
-          main = "uncorrected",
+          col = color, pch = 20, cex = cex1, las = 1,
+          cex.axis = cex.axis, cex.lab = cex.lab,
+          main = "uncorrected", cex.main = cex.main,
           xlab = paste0("PC1 (", round(pos0.varexp[1], 2), "%)"),
-          ylab = paste0("PC2 (", round(pos0.varexp[2], 2), "%)")
-        )
+          ylab = paste0("PC2 (", round(pos0.varexp[2], 2), "%)"))
+
+        if (is.num)
+          par(mar = c(3.4, 4.5, 2, 0.1), mgp = c(2.4, 0.4, 0), tcl = -0.1)
         plot(pos1,
-          col = col1, pch = 20, cex = cex1, las = 1,
-          main = method,
+          col = color, pch = 20, cex = cex1, las = 1,
+          cex.axis = cex.axis, cex.lab = cex.lab,
+          main = method, cex.main = cex.main,
           xlab = paste0("PC1 (", round(pos1.varexp[[method]][1], 2), "%)"),
-          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2], 2), "%)")
-        )
+          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2], 2), "%)"))
+
+        if (is.num) {
+          plot.new(); par(mar=c(3,3,3,4.8))  
+          fields::image.plot(legend.only = TRUE, col = pal, zlim = range(col1),
+            legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1))
+        }
+
       }
 
       ## ------------------------------------------------------------------
       ## Plot UI
       ## ------------------------------------------------------------------
-
+      
       getBatchParams <- eventReactive(
-        {
+      {
           list(r_counts(), r_samples(), r_contrasts())
         },
         {
@@ -735,6 +835,65 @@ upload_module_normalization_server <- function(
         ## reactive
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
+
+        ## -----------------------------------------------------------------
+        ## Get default values from recompute_pgx if available
+        ## -----------------------------------------------------------------
+        pgx <- recompute_pgx()
+        pgx_settings <- if (!is.null(pgx)) pgx$settings else NULL
+
+        ## Imputation defaults
+        default_zero_as_na <- FALSE
+        default_impute <- DEFAULTS$qc$impute
+        default_impute_method <- "SVD2"
+        if (!is.null(pgx_settings$imputation_method) && is.list(pgx_settings$imputation_method)) {
+          imp <- pgx_settings$imputation_method
+          if (!is.null(imp$zero_as_na)) default_zero_as_na <- imp$zero_as_na
+          if (!is.null(imp$imputation)) {
+            default_impute <- (imp$imputation != "no_imputation")
+            if (default_impute) default_impute_method <- imp$imputation
+          }
+        }
+
+        ## Normalization defaults
+        default_normalize <- TRUE
+        default_norm_method <- 1
+        if (!is.null(pgx_settings$norm_method)) {
+          if (pgx_settings$norm_method == "skip_normalization") {
+            default_normalize <- FALSE
+          } else {
+            default_normalize <- TRUE
+            default_norm_method <- pgx_settings$norm_method
+          }
+        }
+
+        ## Outlier removal defaults
+        default_remove_outliers <- FALSE
+        default_outlier_threshold <- 6
+        if (!is.null(pgx_settings$remove_outliers)) {
+          ro <- pgx_settings$remove_outliers
+          if (is.character(ro) && ro == "no_outlier_removal") {
+            default_remove_outliers <- FALSE
+          } else if (is.numeric(ro)) {
+            default_remove_outliers <- TRUE
+            default_outlier_threshold <- ro
+          }
+        }
+
+        ## Batch correction defaults
+        default_batchcorrect <- FALSE
+        default_bec_method <- "SVA"
+        default_bec_param <- batch_params[1]
+        if (!is.null(pgx_settings$bc_method)) {
+          bc <- pgx_settings$bc_method
+          if (is.character(bc) && bc == "no_batch_correct") {
+            default_batchcorrect <- FALSE
+          } else if (is.list(bc)) {
+            default_batchcorrect <- TRUE
+            if (!is.null(bc$method)) default_bec_method <- bc$method
+            if (!is.null(bc$param)) default_bec_param <- bc$param
+          }
+        }
 
         score.infotext <-
           "Outliers markedly deviate from the vast majority of samples. Outliers could be caused by technical factors and negatively affect data analysis. Here, outliers are identified and marked for removal should you wish so."
@@ -796,7 +955,7 @@ upload_module_normalization_server <- function(
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
-                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = FALSE),
+                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na),
                 shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
                 shiny::conditionalPanel("input.filtermissing == true",
                   ns = ns,
@@ -808,12 +967,12 @@ upload_module_normalization_server <- function(
                     selected = 0.2
                   )
                 ),
-                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = DEFAULTS$qc$impute),
+                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = default_impute),
                 shiny::conditionalPanel("input.impute == true",
                   ns = ns,
                   shiny::selectInput(ns("impute_method"), NULL,
                     choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
-                    selected = "SVD2"
+                    selected = default_impute_method
                   )
                 ),
                 br()
@@ -827,7 +986,7 @@ upload_module_normalization_server <- function(
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
-                shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = TRUE),
+                shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = default_normalize),
                 shiny::conditionalPanel(
                   "input.normalize == true",
                   ns = ns,
@@ -850,7 +1009,7 @@ upload_module_normalization_server <- function(
                         "maxMedian", "maxSum", "reference"
                       )
                     },
-                    selected = 1
+                    selected = default_norm_method
                   ),
                   shiny::conditionalPanel(
                     "input.normalization_method == 'reference'",
@@ -870,10 +1029,10 @@ upload_module_normalization_server <- function(
               bslib::accordion_panel(
                 title = "3. Remove outliers",
                 shiny::p("Detect and remove outlier samples."),
-                shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = FALSE),
+                shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = default_remove_outliers),
                 shiny::conditionalPanel("input.remove_outliers == true",
                   ns = ns,
-                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, 6, 1)
+                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, default_outlier_threshold, 1)
                 ),
                 br()
               ),
@@ -888,7 +1047,7 @@ upload_module_normalization_server <- function(
                 ),
                 shiny::checkboxInput(ns("batchcorrect"),
                   label = "Remove batch effects",
-                  value = FALSE
+                  value = default_batchcorrect
                 ),
                 shiny::conditionalPanel(
                   "input.batchcorrect == true",
@@ -897,7 +1056,7 @@ upload_module_normalization_server <- function(
                     ns("bec_method"),
                     label = "Select method:",
                     choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
-                    selected = "SVA"
+                    selected = default_bec_method
                   ),
                   shiny::conditionalPanel(
                     "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
@@ -906,14 +1065,15 @@ upload_module_normalization_server <- function(
                       ns("bec_param"),
                       label = "Batch parameter:",
                       choices = batch_params, ## reactive
-                      selected = batch_params[1],
+                      selected = default_bec_param,
                       multiple = TRUE,
                       options = list(placeholder = "Select...")
                     ),
                     shiny::br()
                   )
                 ),
-                br()
+                br(),
+                shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
               )
             ),
             br()
@@ -1057,7 +1217,13 @@ upload_module_normalization_server <- function(
       })
 
       bc_method <- reactive({
-        ll <- list(method = input$bec_method, param = input$bec_param)
+        param <- input$bec_param
+        ## Remove <autodetect> if other params are selected
+        if ("<autodetect>" %in% param && length(param) > 1) {
+          param <- setdiff(param, "<autodetect>")
+          shiny::updateSelectizeInput(session, "bec_param", selected = param)
+        }
+        ll <- list(method = input$bec_method, param = param)
         if (input$batchcorrect == FALSE) ll <- "no_batch_correct"
         return(ll)
       })
