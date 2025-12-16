@@ -4,20 +4,21 @@
 ##
 
 consensusWGCNA_plot_traitsignificance_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(    
+  options <- shiny::tagList(
     shiny::selectInput(
       inputId = ns("ntop"),
       label = "Number of plots",
-      choices = c(1,4,6,9,12,16),
+      choices = c(1, 4, 6, 9, 12, 16),
       selected = 12
     )
   )
@@ -37,12 +38,9 @@ consensusWGCNA_plot_traitsignificance_ui <- function(
 
 consensusWGCNA_plot_traitsignificance_server <- function(id,
                                                          rwgcna,
-                                                         rtrait
-                                                         ) {
+                                                         rtrait) {
   moduleServer(id, function(input, output, session) {
-    
-    plot.RENDER <- function(format=1) {
-
+    plot.RENDER <- function(format = 1) {
       res <- rwgcna()
       trait <- rtrait()
 
@@ -55,30 +53,24 @@ consensusWGCNA_plot_traitsignificance_server <- function(id,
         trait = trait,
         setpar = format
       )
-      
     }
 
     plot1 <- function() {
-        plot.RENDER(format=1)
+      plot.RENDER(format = 1)
     }
 
     plot2 <- function() {
-        plot.RENDER(format=2)
-    }    
-    
+      plot.RENDER(format = 2)
+    }
+
     PlotModuleServer(
       "plot",
       func = plot1,
-      func2 = plot2,      
+      func2 = plot2,
       pdf.width = 8,
       pdf.height = 12,
       res = c(85, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

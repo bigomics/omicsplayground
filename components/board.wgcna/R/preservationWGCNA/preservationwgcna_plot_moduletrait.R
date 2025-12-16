@@ -4,21 +4,22 @@
 ##
 
 preservationWGCNA_plot_moduletrait_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(    
+  options <- shiny::tagList(
     shiny::checkboxInput(ns("weighted"), "Weight by preservation", FALSE),
     shiny::selectInput(
       inputId = ns("sortby"),
       label = "Sort modules by",
-      choices = c("clust","name","zsummary"),
+      choices = c("clust", "name", "zsummary"),
       selected = "clust"
     ),
     shiny::checkboxInput(ns("largemargin"), "Increase margin", FALSE),
@@ -38,16 +39,17 @@ preservationWGCNA_plot_moduletrait_ui <- function(
 }
 
 preservationWGCNA_plot_moduletrait_barplot_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(    
+  options <- shiny::tagList(
     shiny::checkboxInput(ns("colored"), "Colored", FALSE)
   )
 
@@ -67,34 +69,32 @@ preservationWGCNA_plot_moduletrait_barplot_ui <- function(
 
 preservationWGCNA_plot_moduletrait_server <- function(id,
                                                       rwgcna,
-                                                      rtrait
-                                                      ) {
+                                                      rtrait) {
   moduleServer(id, function(input, output, session) {
-
-    ##----------------------------------------------------
+    ## ----------------------------------------------------
     ## Heatmap
-    ##----------------------------------------------------
+    ## ----------------------------------------------------
     heatmap.RENDER <- function() {
       res <- rwgcna()
       shiny::req(res)
 
-      subplots = c("zsummary","consmt")
-      if(input$weighted) subplots = c("zsummary","wt.consmt")
-      
-      par(mfrow=c(1,2), mar=c(4,9,3,2))
-      if(input$largemargin) {
-        par(mar=c(10,9,3,2))
+      subplots <- c("zsummary", "consmt")
+      if (input$weighted) subplots <- c("zsummary", "wt.consmt")
+
+      par(mfrow = c(1, 2), mar = c(4, 9, 3, 2))
+      if (input$largemargin) {
+        par(mar = c(10, 9, 3, 2))
       }
-        
+
       playbase::wgcna.plotPreservationModuleTraits(
         res,
         subplots = subplots,
-        order.by = input$sortby,        
+        order.by = input$sortby,
         setpar = FALSE,
         rm.na = TRUE
-      ) 
+      )
     }
-    
+
     PlotModuleServer(
       "heatmap",
       func = heatmap.RENDER,
@@ -104,16 +104,16 @@ preservationWGCNA_plot_moduletrait_server <- function(id,
       add.watermark = FALSE
     )
 
-    ##----------------------------------------------------
+    ## ----------------------------------------------------
     ## Barplot
-    ##----------------------------------------------------
+    ## ----------------------------------------------------
     barplot.RENDER <- function() {
       res <- rwgcna()
       trait <- rtrait()
       shiny::req(res)
       shiny::req(trait)
-      
-      par(mfrow=c(1,1), mar=c(8,4,2.5,1))
+
+      par(mfrow = c(1, 1), mar = c(8, 4, 2.5, 1))
       playbase::wgcna.plotTraitCorrelationBarPlots(
         res,
         trait = trait,
@@ -123,7 +123,7 @@ preservationWGCNA_plot_moduletrait_server <- function(id,
         setpar = FALSE
       )
     }
-    
+
     PlotModuleServer(
       "barplot",
       func = barplot.RENDER,
@@ -132,10 +132,5 @@ preservationWGCNA_plot_moduletrait_server <- function(id,
       res = c(72, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

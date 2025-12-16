@@ -39,20 +39,20 @@ ConsensusWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Dendrograms" = list(disable = c("trait","module")),
-      "Sample Clustering" = list(disable = c("trait","module")),
+      "Dendrograms" = list(disable = c("trait", "module")),
+      "Sample Clustering" = list(disable = c("trait", "module")),
       "Module-Trait" = list(disable = c("module")),
       "Feature Table" = list(disable = c())
     )
 
-    shiny::observeEvent( input$tabs, {
+    shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
-   
+
     shiny::observe({
       cons <- r_wgcna()
       shiny::validate(shiny::need(!is.null(cons), "Please compute"))
@@ -183,25 +183,29 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       module1 <- all_modules[[1]][1]
       updateSelectInput(session, "module", choices = sort(all_modules),
         selected = module1)
-
-      #traits <- colnames(cons$datTraits)
-      traits <- colnames(cons$stats[[1]][['moduleTraitCor']])
-      updateSelectInput(session, "trait", choices = sort(traits),
-        selected = traits[1])
+      
+      # traits <- colnames(cons$datTraits)
+      traits <- colnames(cons$stats[[1]][["moduleTraitCor"]])
+      updateSelectInput(session, "trait",
+        choices = sort(traits),
+        selected = traits[1]
+      )
       
       return(cons)
-    }, ignoreNULL = FALSE)
+    },
+    ignoreNULL = FALSE
+    )
 
 
     ## ==========================================================================
     ## ========================== BOARD FUNCTIONS ===============================
     ## ==========================================================================
 
-    
+
     ## ==========================================================================
     ## =========================== MODULES ======================================
     ## ==========================================================================
-        
+
     consensusWGCNA_plot_dendrograms_server(
       id = "consensusWGCNADendro",
       mwgcna = r_wgcna
@@ -227,12 +231,12 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       mwgcna = r_wgcna,
       r_annot = reactive(pgx$genes),
       r_trait = reactive(input$trait),
-      r_module = reactive(input$module)      
+      r_module = reactive(input$module)
     )
 
     consensusWGCNA_table_enrichment_server(
       id = "consensusWGCNAEnrichment",
-      mwgcna = r_wgcna,      
+      mwgcna = r_wgcna,
       r_module = reactive(input$module)
     )
 
@@ -240,13 +244,13 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       id = "consensusWGCNAPreservation",
       mwgcna = r_wgcna
     )
-    
+
     # Enrichment plot
     wgcna_html_module_summary_server(
       "consensusWGCNAmoduleSummary",
       wgcna = r_wgcna,
       multi = FALSE,
-      r_module = shiny::reactive(input$module),      
+      r_module = shiny::reactive(input$module),
       watermark = WATERMARK
     )
 

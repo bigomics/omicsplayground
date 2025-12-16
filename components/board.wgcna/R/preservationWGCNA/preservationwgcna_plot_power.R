@@ -4,13 +4,14 @@
 ##
 
 preservationWGCNA_plot_power_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -35,24 +36,21 @@ preservationWGCNA_plot_power_ui <- function(
 }
 
 preservationWGCNA_plot_power_server <- function(id,
-                                               mwgcna,
-                                               r_layers
-                                               ) {
+                                                mwgcna,
+                                                r_layers) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
-
       cons <- mwgcna()
       shiny::req(cons)
 
       nw <- length(cons$datExpr)
       plots <- c("sft.modelfit", "mean.k")
-      if(input$showiqr) plots <- c(plots,"dendro.IQR")
+      if (input$showiqr) plots <- c(plots, "dendro.IQR")
 
-      par(mfrow=c(nw, length(plots)))
-      par(mar=c(5,4,3,1), mgp=c(2.5,0.8,0))      
-      i=1
-      for(i in 1:length(cons$datExpr)) {
+      par(mfrow = c(nw, length(plots)))
+      par(mar = c(5, 4, 3, 1), mgp = c(2.5, 0.8, 0))
+      i <- 1
+      for (i in 1:length(cons$datExpr)) {
         playbase::wgcna.plotPowerAnalysis(
           cons$datExpr[[i]],
           maxpower = 25,
@@ -62,9 +60,8 @@ preservationWGCNA_plot_power_server <- function(id,
           main = toupper(names(cons$datExpr)[i])
         )
       }
-
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -73,9 +70,5 @@ preservationWGCNA_plot_power_server <- function(id,
       res = c(90, 130),
       add.watermark = FALSE
     )
-    
   })
 }
-
-
-

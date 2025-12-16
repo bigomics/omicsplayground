@@ -4,13 +4,14 @@
 ##
 
 multiwgcna_plot_lasagna_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -38,28 +39,25 @@ multiwgcna_plot_lasagna_ui <- function(
 multiwgcna_plot_lasagna_inputs <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::checkboxInput(ns("consensus"),"positive path",FALSE),              
-    shiny::checkboxInput(ns("norm_edges"),"normalize edges",TRUE),
-    shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
-    shiny::checkboxInput(ns("prune"),"Prune nodes ",FALSE),
-    shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05)
+    shiny::checkboxInput(ns("consensus"), "positive path", FALSE),
+    shiny::checkboxInput(ns("norm_edges"), "normalize edges", TRUE),
+    shiny::checkboxInput(ns("sp_weight"), "SP weighting", FALSE),
+    shiny::checkboxInput(ns("prune"), "Prune nodes ", FALSE),
+    shiny::sliderInput(ns("minrho"), "Edge threshold:", 0, 0.95, 0.5, 0.05)
   )
 }
 
 multiwgcna_plot_lasagna_server <- function(id,
                                            mwgcna,
                                            r_phenotype = reactive(NULL),
-                                           r_layers = reactive(NULL)
-                                           ) {
+                                           r_layers = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-
     lasagna_model <- reactive({
-      
       wgcna <- mwgcna()
 
       ## Get eigengene matrices
       ww <- lapply(wgcna, function(w) t(w$net$MEs))
-      ww <- lapply(ww, function(w) w[!grepl("[A-Z]{2}grey$",rownames(w)),,drop=FALSE])
+      ww <- lapply(ww, function(w) w[!grepl("[A-Z]{2}grey$", rownames(w)), , drop = FALSE])
 
       sel.layers <- r_layers()
       sel.layers <- intersect(sel.layers, names(ww))
@@ -70,10 +68,10 @@ multiwgcna_plot_lasagna_server <- function(id,
         X = ww,
         samples = wgcna[[1]]$datTraits
       )
-      progress <- shiny::Progress$new(session, min=0, max=1)
+      progress <- shiny::Progress$new(session, min = 0, max = 1)
       on.exit(progress$close())
       progress$set(message = paste("creating Lasagna model..."), value = 0.33)
-      
+
       ## Create lasagna model
       obj <- playbase::lasagna.create_model(
         data2,
@@ -89,12 +87,11 @@ multiwgcna_plot_lasagna_server <- function(id,
       obj
     })
 
-    
-    plot.RENDER <- function() {
 
+    plot.RENDER <- function() {
       obj <- lasagna_model()
-      
-      pheno = colnames(obj$Y)[1]
+
+      pheno <- colnames(obj$Y)[1]
       pheno <- r_phenotype()
       shiny::req(!is.null(pheno))
 
@@ -103,7 +100,7 @@ multiwgcna_plot_lasagna_server <- function(id,
       min.rho <- input$minrho
       consensus <- input$consensus
       normalize.edges <- input$norm_edges
-      
+
       ## 'solve' model
       graph <- playbase::lasagna.solve(
         obj, pheno,
@@ -111,8 +108,9 @@ multiwgcna_plot_lasagna_server <- function(id,
         max_edges = 1000,
         value = "logFC",
         sp.weight = sp.weight,
-        prune = input$prune)
-      
+        prune = input$prune
+      )
+
       ## prune graph for plotting
       ## subgraph <- playbase::lasagna.prune_graph(
       ##   graph,
@@ -125,8 +123,8 @@ multiwgcna_plot_lasagna_server <- function(id,
       ##   prune = FALSE
       ## )
       ## subgraph
-      
-      par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
+
+      par(mfrow = c(1, 1), mar = c(1, 1, 1, 1) * 0)
       playbase::plotMultiPartiteGraph2(
         graph,
         min.rho = min.rho,
@@ -137,15 +135,14 @@ multiwgcna_plot_lasagna_server <- function(id,
         edge.cex = 1.1,
         edge.alpha = 0.3,
         edge.sign = ifelse(consensus, "consensus", "both"),
-        edge.type = ifelse(input$showintra, "both2", "inter"),  
+        edge.type = ifelse(input$showintra, "both2", "inter"),
         yheight = 3.2,
         normalize.edges = normalize.edges,
         strip.prefix = TRUE,
         prune = input$prune
-      ) 
-
+      )
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -154,10 +151,5 @@ multiwgcna_plot_lasagna_server <- function(id,
       res = c(80, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

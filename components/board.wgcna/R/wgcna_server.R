@@ -48,7 +48,6 @@ WgcnaBoard <- function(id, pgx) {
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-    
 
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
@@ -61,7 +60,6 @@ WgcnaBoard <- function(id, pgx) {
       progress$set(message = "Calculating WGCNA...", value = 0)
 
       message("[WGCNA:compute_wgcna] >>> Calculating WGCNA...")
-      
       out <- playbase::pgx.wgcna(
         pgx = pgx,
         ngenes = as.integer(input$ngenes),
@@ -96,13 +94,15 @@ WgcnaBoard <- function(id, pgx) {
       out
     })
 
-    shiny::observeEvent( input$compute, {
-      message("[wgcna] >>> COMPUTE2")
-      wgcna( compute_wgcna() )
-    },
-    ignoreInit = TRUE)
-    
-    shiny::observeEvent( wgcna(), {
+    shiny::observeEvent(input$compute,
+      {
+        message("[wgcna] >>> COMPUTE2")
+        wgcna(compute_wgcna())
+      },
+      ignoreInit = TRUE
+    )
+
+    shiny::observeEvent(wgcna(), {
       ## update Inputs
       me <- sort(names(wgcna()$me.genes))
       shiny::updateSelectInput(session, "selected_module",
@@ -288,7 +288,7 @@ WgcnaBoard <- function(id, pgx) {
       ##pgx = pgx,
       watermark = WATERMARK
     )
-    
+
     # Module enrichment
     enrichTableModule <- wgcna_table_enrichment_server(
       "enrichTable",
@@ -301,10 +301,10 @@ WgcnaBoard <- function(id, pgx) {
       "moduleSummary",
       wgcna = wgcna,
       multi = FALSE,
-      r_module = shiny::reactive(input$selected_module),      
+      r_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
-    
+
     return(NULL)
   })
 } ## end of Board

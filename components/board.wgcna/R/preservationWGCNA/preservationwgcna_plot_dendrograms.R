@@ -4,19 +4,25 @@
 ##
 
 preservationWGCNA_plot_dendrograms_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
-  
+
   options <- shiny::tagList(
     shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show traits",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
       value = TRUE
     )
   )
@@ -35,24 +41,22 @@ preservationWGCNA_plot_dendrograms_ui <- function(
 }
 
 preservationWGCNA_plot_dendrograms_server <- function(id,
-                                                      rwgcna
-                                                      ) {
+                                                      rwgcna) {
   moduleServer(id, function(input, output, session) {
-        
     plot.RENDER <- function() {
-
-      res <- rwgcna()      
+      res <- rwgcna()
       shiny::validate(shiny::need(!is.null(res), "Please compute"))
-      
+
       playbase::wgcna.plotDendroAndTraitCorrelation_multi(
         res$layers,
         show.traits = input$showtraits,
+        show.contrasts = input$showcontrasts,
         marAll = c(1, 10, 3, 0.2),
         colorHeightMax = 0.75
       )
       
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -61,10 +65,5 @@ preservationWGCNA_plot_dendrograms_server <- function(id,
       res = c(90, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

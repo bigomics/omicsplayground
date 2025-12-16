@@ -4,15 +4,16 @@
 ##
 
 multiwgcna_table_enrichment_ui <- function(
-    id,
-    label = "a",
-    title = "Title",
-    info.text = "Info",
-    caption = "Caption",
-    height = 400,
-    width = 400 ) {
+  id,
+  label = "a",
+  title = "Title",
+  info.text = "Info",
+  caption = "Caption",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
-  
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
@@ -26,40 +27,36 @@ multiwgcna_table_enrichment_ui <- function(
 
 multiwgcna_table_enrichment_server <- function(id,
                                                mwgcna,
-                                               r_module = reactive(NULL)
-                                               )
-{
+                                               r_module = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-
     table_df <- function() {
-      
       wgcna <- mwgcna()
       module <- r_module()
-      shiny::req(module)      
-      
-      df <- lapply( wgcna, function(w) w$gsea )
+      shiny::req(module)
+
+      df <- lapply(wgcna, function(w) w$gsea)
       names(df) <- NULL
-      df <- unlist(df, recursive=FALSE)
-      df <- df[ names(df) %in% module ]
+      df <- unlist(df, recursive = FALSE)
+      df <- df[names(df) %in% module]
       df <- do.call(rbind, df)
       return(df)
     }
-    
-    render_table <- function(full=TRUE) {
+
+    render_table <- function(full = TRUE) {
       df <- table_df()
       shiny::req(df)
-      ##df$module <- factor(df$module)
+      ## df$module <- factor(df$module)
       df$module <- NULL ## don't show
-      
-      if(!full) {
-        sel <- c("geneset","module","score","q.value","overlap")
+
+      if (!full) {
+        sel <- c("geneset", "module", "score", "q.value", "overlap")
         sel <- intersect(sel, colnames(df))
-        df <- df[,sel]
+        df <- df[, sel]
       }
-      
+
       ## set correct types for filter
       numeric.cols <- which(sapply(df, class) == "numeric")
-      
+
       dt <- DT::datatable(
         df,
         rownames = FALSE, #
@@ -67,8 +64,8 @@ multiwgcna_table_enrichment_server <- function(id,
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
-        plugins = c("scrollResize","ellipsis"),
-        #filter = 'top',
+        plugins = c("scrollResize", "ellipsis"),
+        # filter = 'top',
         options = list(
           dom = "lfrtip", #
           scrollX = TRUE, #
@@ -76,23 +73,23 @@ multiwgcna_table_enrichment_server <- function(id,
           scroller = TRUE,
           scrollResize = TRUE,
           deferRender = TRUE,
-          autoWidth = TRUE,          
+          autoWidth = TRUE,
           columnDefs = list(list(
             targets = c(0), ## without rownames column 1 is target 0
             render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
-          ))          
+          ))
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-      
-      if(0) {
+
+      if (0) {
         dt <- dt %>%
           DT::formatStyle(
             "score",
             background = color_from_middle(df$score, "lightblue", "#f5aeae"),
             backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-          backgroundPosition = "center"
+            backgroundPosition = "center"
           )
       }
 
@@ -100,13 +97,13 @@ multiwgcna_table_enrichment_server <- function(id,
     }
 
     table.RENDER <- function() {
-      render_table(full=FALSE)
+      render_table(full = FALSE)
     }
 
     table.RENDER2 <- function() {
-      render_table(full=TRUE)
-    }    
-    
+      render_table(full = TRUE)
+    }
+
     table <- TableModuleServer(
       "table",
       func = table.RENDER,

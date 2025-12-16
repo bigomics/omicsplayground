@@ -4,18 +4,21 @@
 ##
 
 preservationWGCNA_plot_modulenetwork_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
-    shiny::radioButtons(ns("plottype"), "Plot type:", choices=c("graph","heatmap"),
-      selected="graph"),
+    shiny::radioButtons(ns("plottype"), "Plot type:",
+      choices = c("graph", "heatmap"),
+      selected = "graph"
+    ),
     shiny::selectInput(
       inputId = ns("numgenes"),
       label = "Nr. of genes:",
@@ -28,7 +31,7 @@ preservationWGCNA_plot_modulenetwork_ui <- function(
       shiny::sliderInput(
         inputId = ns("rhograph"),
         label = "Graph threshold:",
-        min=0.5, max=1, value=0.95, step=0.01
+        min = 0.5, max = 1, value = 0.95, step = 0.01
       )
     ),
     shiny::conditionalPanel(
@@ -37,12 +40,12 @@ preservationWGCNA_plot_modulenetwork_ui <- function(
       shiny::sliderInput(
         inputId = ns("rhoheatmap"),
         label = "Heatmap threshold:",
-        min=0.1, max=1, value=0.3, step=0.05
+        min = 0.1, max = 1, value = 0.3, step = 0.05
       ),
       shiny::sliderInput(
         inputId = ns("rgamma"),
         label = "Heatmap gamma:",
-        min=1, max=12, value=3, step=1
+        min = 1, max = 12, value = 3, step = 1
       )
     )
   )
@@ -62,40 +65,38 @@ preservationWGCNA_plot_modulenetwork_ui <- function(
 
 preservationWGCNA_plot_modulenetwork_server <- function(id,
                                                         rwgcna,
-                                                        rmodule
-                                                        ) {
+                                                        rmodule) {
   moduleServer(id, function(input, output, session) {
-    
-    renderPlot <- function(format=0) {
+    renderPlot <- function(format = 0) {
       res <- rwgcna()
       shiny::req(res)
 
       module <- rmodule()
       shiny::req(module)
 
-      n <- length(res$layers) 
-      shiny::validate(shiny::need(n>0, "Please select plot"))
-      
+      n <- length(res$layers)
+      shiny::validate(shiny::need(n > 0, "Please select plot"))
+
       nr <- ceiling(sqrt(n))
       nc <- ceiling(n / nr)
-      par(mfrow=c(nr,nc))
-      if(format==1) par(mfrow=c(nc,nr))
-      
+      par(mfrow = c(nr, nc))
+      if (format == 1) par(mfrow = c(nc, nr))
+
       net <- res$layers[[1]]
       shiny::req(module %in% names(net$me.genes))
       genes <- net$me.genes[[module]]
 
       numgenes <- as.integer(input$numgenes)
-      if(length(genes) > numgenes) {
-        ##mm <- net$stats[['moduleMembership']][genes,module]
-        mm <- matrixStats::colSds(net$datExpr[,genes])
+      if (length(genes) > numgenes) {
+        ## mm <- net$stats[['moduleMembership']][genes,module]
+        mm <- matrixStats::colSds(net$datExpr[, genes])
         genes <- head(genes[order(-mm)], numgenes)
       }
-      
-      if(input$plottype == "graph") {
-        par(mar=c(0,0,3,0))
-        k=1
-        for(k in 1:length(res$layers)) {
+
+      if (input$plottype == "graph") {
+        par(mar = c(0, 0, 3, 0))
+        k <- 1
+        for (k in 1:length(res$layers)) {
           playbase::wgcna.plotGeneNetwork(
             res$layers[[k]],
             sort(genes),
@@ -103,18 +104,18 @@ preservationWGCNA_plot_modulenetwork_server <- function(id,
             min.rho = as.numeric(input$rhograph),
             edge.alpha = 0.3
           )
-          title( names(res$layers)[k], line=1, cex.main=1.3)
-          title( paste(module,"module"), line=0, cex.main=1, font.main=1)  
+          title(names(res$layers)[k], line = 1, cex.main = 1.3)
+          title(paste(module, "module"), line = 0, cex.main = 1, font.main = 1)
         }
       }
-      
-      if(input$plottype == "heatmap") {      
-        R <- cor(res$layers[[1]]$datExpr[,genes])
-        ii <- hclust(as.dist(1-R), method="average")$order
+
+      if (input$plottype == "heatmap") {
+        R <- cor(res$layers[[1]]$datExpr[, genes])
+        ii <- hclust(as.dist(1 - R), method = "average")$order
         genes <- genes[ii]
-        par(mar=c(3,3,3,8))
-        k=1
-        for(k in 1:length(res$layers)) {
+        par(mar = c(3, 3, 3, 8))
+        k <- 1
+        for (k in 1:length(res$layers)) {
           w <- res$layers[[k]]
           playbase::wgcna.plotModuleHeatmap(
             w,
@@ -127,18 +128,18 @@ preservationWGCNA_plot_modulenetwork_server <- function(id,
             cluster = FALSE,
             main = ""
           )
-          title( names(res$layers)[k], line=0.9, cex.main=1.3)  
+          title(names(res$layers)[k], line = 0.9, cex.main = 1.3)
         }
       }
     }
 
     render1 <- function() {
-      renderPlot(format=0)
+      renderPlot(format = 0)
     }
     render2 <- function() {
-      renderPlot(format=1)
+      renderPlot(format = 1)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = render1,
@@ -148,10 +149,5 @@ preservationWGCNA_plot_modulenetwork_server <- function(id,
       res = c(75, 100),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

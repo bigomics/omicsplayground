@@ -273,7 +273,7 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics","WGCNA"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
@@ -324,7 +324,7 @@ i18n$set_translation_language("RNA-seq")
 ## Filter LLM models with available models, add all local models(?)
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
-#opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+# opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")

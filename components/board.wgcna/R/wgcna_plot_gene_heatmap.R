@@ -16,9 +16,10 @@ wgcna_plot_gene_heatmap_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxGroupInput(ns("pheno"), "Show phenotype:",
-      choices=NULL, inline=TRUE)    
+      choices = NULL, inline = TRUE
+    )
   )
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -39,22 +40,21 @@ wgcna_plot_gene_heatmap_server <- function(id,
                                            enrichTable,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    observeEvent( pgx$samples, {
+    observeEvent(pgx$samples, {
       shiny::updateCheckboxGroupInput(session, "pheno",
         choices = colnames(pgx$samples),
-        selected = head(colnames(pgx$samples),8)
+        selected = head(colnames(pgx$samples), 8)
       )
     })
 
     get_data <- function() {
       wgcna <- wgcna()
-      
+
       sel <- enrichTable$rows_selected()
-      if(length(sel) > 0) {
+      if (length(sel) > 0) {
         data <- enrichTable$data()
         maintxt <- data$geneset[sel]
-        maintxt <- sub(".*:","",maintxt)
+        maintxt <- sub(".*:", "", maintxt)
         gg <- strsplit(data$genes[sel], split = "\\|")[[1]]
         pp <- playbase::map_probes(pgx$genes, gg)
         pp <- intersect(pp, rownames(pgx$X))
@@ -63,9 +63,9 @@ wgcna_plot_gene_heatmap_server <- function(id,
         gg <- wgcna$me.genes[[mod]]
         pp <- playbase::map_probes(pgx$genes, gg)
         pp <- intersect(pp, rownames(pgx$X))
-        maintxt <- paste( mod, " (top SD)")
+        maintxt <- paste(mod, " (top SD)")
       }
-      
+
       df <- pgx$X[pp, , drop = FALSE]
       shiny::validate(shiny::need(nrow(df) > 1, "Geneset should contain at least two genes to plot a heatmap."))
       rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
@@ -73,17 +73,16 @@ wgcna_plot_gene_heatmap_server <- function(id,
       # pgx <- pgx.load("~/Playground/omicsplayground/data/multi-liver2.pgx")
       sel <- input$pheno
       shiny::req(sel)
-      annot <- pgx$samples[,sel,drop=FALSE]
-      
+      annot <- pgx$samples[, sel, drop = FALSE]
+
       list(df = df, annot = annot, main = maintxt)
     }
-    
-    render_plot <- function(nmax, maxlen, show_legend, show_colnames) {
 
+    render_plot <- function(nmax, maxlen, show_legend, show_colnames) {
       res <- get_data()
       df <- res$df
       annot <- res$annot
-      
+
       playbase::gx.splitmap(
         df,
         nmax = nmax,

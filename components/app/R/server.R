@@ -172,10 +172,8 @@ app_server <- function(input, output, session) {
     enable_beta = shiny::reactive(input$enable_beta),
     enable_info = shiny::reactive(input$enable_info)
   )
-  
-  ## observe and set global User options
-  setUserOption(session,'hello', 'world!')
 
+  ## observe and set global User options
   shiny::observeEvent( input$enable_llm, {
     model <- input$llm_model
     if(input$enable_llm) {
@@ -521,11 +519,10 @@ app_server <- function(input, output, session) {
     wgcna = 0
   )
   observeEvent(input$nav, {
+    dbg("[SERVER] input$nav =", input$nav)
 
-    dbg("[SERVER] input$nav =" ,input$nav)
-    
     if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") &&
-          loaded$clustering == 0) {
+      loaded$clustering == 0) {
       info("[SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -534,7 +531,7 @@ app_server <- function(input, output, session) {
       tab_control()
     }
     if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") &&
-          loaded$expression == 0) {
+      loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Expression module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -543,7 +540,7 @@ app_server <- function(input, output, session) {
       tab_control()
     }
     if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") &&
-          loaded$enrichment == 0) {
+      loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -560,7 +557,7 @@ app_server <- function(input, output, session) {
       tab_control()
     }
     if (input$nav %in% c("drug-tab", "tcga-tab", "cell-tab", "pcsf-tab") &&
-          loaded$systems == 0) {
+      loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -568,8 +565,10 @@ app_server <- function(input, output, session) {
       loaded$systems <- 1
       tab_control()
     }
-    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
-      "deepnet-tab") && loaded$multiomics == 0) {
+    if (input$nav %in% c(
+      "mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
+      "deepnet-tab"
+    ) && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -577,8 +576,10 @@ app_server <- function(input, output, session) {
       loaded$multiomics <- 1
       tab_control()
     }
-    if (input$nav %in% c("wgcna-tab","mwgcna-tab","consensus-tab",
-      "preservation-tab") && loaded$wgcna == 0) {
+    if (input$nav %in% c(
+      "wgcna-tab", "mwgcna-tab", "consensus-tab",
+      "preservation-tab"
+    ) && loaded$wgcna == 0) {
       info("[UI:SERVER] reacted: calling WGCNA module")
       mod <- MODULE.wgcna
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -586,8 +587,6 @@ app_server <- function(input, output, session) {
       loaded$wgcna <- 1
       tab_control()
     }
-
-    
   })
 
 
@@ -786,12 +785,12 @@ app_server <- function(input, output, session) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta)        
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta)
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-    
+
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
 
@@ -822,7 +821,6 @@ app_server <- function(input, output, session) {
       bigdash.hideTab(session, "wordcloud-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
-    
   }
 
   ## -------------------------------------------------------------

@@ -4,13 +4,14 @@
 ##
 
 preservationWGCNA_plot_summaries_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -26,22 +27,18 @@ preservationWGCNA_plot_summaries_ui <- function(
 }
 
 preservationWGCNA_plot_summaries_server <- function(id,
-                                                    rwgcna
-                                                    ) {
+                                                    rwgcna) {
   moduleServer(id, function(input, output, session) {
-    
     plot.RENDER <- function() {
-
       res <- rwgcna()
       shiny::req(res)
 
       nsets <- ncol(res$Zsummary)
-      nr <- ceiling(sqrt(nsets*3))
-      par(mfrow=c(nr,nr), mar=c(5,5,4,1)) 
-      playbase::wgcna.plotPreservationSummaries(res, setpar=FALSE)
-
+      nr <- ceiling(sqrt(nsets * 3))
+      par(mfrow = c(nr, nr), mar = c(5, 5, 4, 1))
+      playbase::wgcna.plotPreservationSummaries(res, setpar = FALSE)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -50,9 +47,5 @@ preservationWGCNA_plot_summaries_server <- function(id,
       res = c(80, 100),
       add.watermark = FALSE
     )
-    
   })
 }
-
-
-

@@ -39,113 +39,117 @@ PreservationWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Dendrograms" = list(disable = c("module","trait")),
-      "Module Overlap" = list(disable = c("module","trait")),
+      "Dendrograms" = list(disable = c("module", "trait")),
+      "Module Overlap" = list(disable = c("module", "trait")),
       "Module-Trait" = list(disable = c("module")),
-      "Feature Table" = list(disable = c(), enable = c("module","trait"))
+      "Feature Table" = list(disable = c(), enable = c("module", "trait"))
     )
 
-    shiny::observeEvent( input$tabs, {
-      ##dbg("[PreservationWGCNA_Board] input$tabs = ", input$tabs)
+    shiny::observeEvent(input$tabs, {
+      ## dbg("[PreservationWGCNA_Board] input$tabs = ", input$tabs)
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
-   
 
-    shiny::observeEvent( list(pgx$X, pgx$samples), {
+
+    shiny::observeEvent(list(pgx$X, pgx$samples), {
       splitpheno <- colnames(pgx$samples)
-      shiny::updateSelectInput(session, "splitpheno", choices = splitpheno,
-        selected = splitpheno[1])
+      shiny::updateSelectInput(session, "splitpheno",
+        choices = splitpheno,
+        selected = splitpheno[1]
+      )
     })
-    
-    
-    r_wgcna <- shiny::eventReactive( {
-      list( input$compute, pgx$X ) 
-    }, {
 
-      shiny::req(pgx$X)
-      shiny::req(input$splitpheno)
 
-      dbg("[PreservationWGCNA_Board] input.compute = ", input$compute)
-      dbg("[PreservationWGCNA_Board] input.tabs = ", input$tabs)
-      shiny::req(input$compute) ## refute first call     
-      
-      pheno="activated"
-      samples <- pgx$samples
-      contrasts <- pgx$contrasts
-      
-      pheno <- input$splitpheno
-      if( is.null(pheno) || pheno == '') {
-        pheno <- colnames(samples)[1]
-      }
-      shiny::req(pheno %in% colnames(samples))
+    r_wgcna <- shiny::eventReactive(
+      {
+        list(input$compute, pgx$X)
+      },
+      {
+        shiny::req(pgx$X)
+        shiny::req(input$splitpheno)
+        shiny::req(input$compute) ## refute first call     
+        
+        pheno="activated"
+        samples <- pgx$samples
+        contrasts <- pgx$contrasts
+        
+        pheno <- input$splitpheno
+        if( is.null(pheno) || pheno == '') {
+          pheno <- colnames(samples)[1]
+        }
+        shiny::req(pheno %in% colnames(samples))
+        
+        group <- samples[,pheno]
+        if(is.numeric(group) && length(unique(group)) > 3) {
+          group <- c("LO", "HI")[1 + (group >= median(group,na.rm=TRUE))]
+        }
+        group <- base::abbreviate(toupper(group),2L)
+        exprList<- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[,ii,drop=FALSE])
+        
+        progress <- shiny::Progress$new(session, min=0, max=1)
+        on.exit(progress$close())
+        progress$set(message = paste("computing preservation WGCNA..."), value = 0.33)
+        pgx.showSmallModal("computing preservation WGCNA...")
+        
+        power <- input$power
+        if(power == "<auto>") {
+          power <- NULL
+        } else {
+          power <- as.numeric(power)
+        }
+        
+        ## This runs preservation WGCNA on an expression list
+        #ngenes=2000;minModuleSize=20;deepSplit=2
+        ngenes = as.integer(input$ngenes)
+        minModuleSize = as.integer(input$minmodsize)
+        deepSplit = as.integer(input$deepsplit)
+        
+        res <- playbase::wgcna.runPreservationWGCNA(
+          exprList,
+          samples,
+          contrasts = contrasts,
+          GMT = pgx$GMT,
+          annot = pgx$genes,
+          reference = 1,
+          add.merged = FALSE,
+          compute.stats = TRUE,
+          compute.enrichment = TRUE
+        ) 
+        
+        shiny::removeModal()
+        
+        all_modules <- rownames(res$modTraits[[1]])
+        module1 <- all_modules[1]
+        updateSelectInput(session, "module", choices = sort(all_modules),
+          selected = module1)
 
-      group <- samples[,pheno]
-      if(is.numeric(group) && length(unique(group)) > 3) {
-        group <- c("LO", "HI")[1 + (group >= median(group,na.rm=TRUE))]
-      }
-      group <- base::abbreviate(toupper(group),2L)
-      exprList<- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[,ii,drop=FALSE])
-            
-      progress <- shiny::Progress$new(session, min=0, max=1)
-      on.exit(progress$close())
-      progress$set(message = paste("computing preservation WGCNA..."), value = 0.33)
-      pgx.showSmallModal("computing preservation WGCNA...")
-      
-      power <- input$power
-      if(power == "<auto>") {
-        power <- NULL
-      } else {
-        power <- as.numeric(power)
-      }
-      
-      ## This runs preservation WGCNA on an expression list
-      #ngenes=2000;minModuleSize=20;deepSplit=2
-      ngenes = as.integer(input$ngenes)
-      minModuleSize = as.integer(input$minmodsize)
-      deepSplit = as.integer(input$deepsplit)
-      
-      res <- playbase::wgcna.runPreservationWGCNA(
-        exprList,
-        samples,
-        contrasts = contrasts,
-        GMT = pgx$GMT,
-        annot = pgx$genes,
-        reference = 1,
-        add.merged = FALSE,
-        compute.stats = TRUE,
-        compute.enrichment = TRUE
-      ) 
-      
-      shiny::removeModal()
-     
-      all_modules <- rownames(res$modTraits[[1]])
-      module1 <- all_modules[1]
-      updateSelectInput(session, "module", choices = sort(all_modules),
-        selected = module1)
+        ## all_traits <- colnames(res$zlist[[1]])
+        all_traits <- colnames(res$modTraits[[1]])
+        trait1 <- all_traits[1]
+        updateSelectInput(session, "trait",
+          choices = sort(all_traits),
+          selected = trait1
+        )
 
-      ##all_traits <- colnames(res$zlist[[1]])
-      all_traits <- colnames(res$modTraits[[1]])
-      trait1 <- all_traits[1]
-      updateSelectInput(session, "trait", choices = sort(all_traits),
-        selected = trait1)
-      
-      return(res)
-    }, ignoreNULL=TRUE )
+        return(res)
+      },
+      ignoreNULL = TRUE
+    )
 
 
     ## ==========================================================================
     ## ========================== BOARD FUNCTIONS ===============================
     ## ==========================================================================
 
-    
+
     ## ==========================================================================
     ## =========================== MODULES ======================================
     ## ==========================================================================
-        
+
     preservationWGCNA_plot_dendrograms_server(
       id = "preservationWGCNADendro",
       rwgcna = r_wgcna
@@ -165,7 +169,7 @@ PreservationWGCNA_Board <- function(id, pgx) {
       "preservationWGCNAEigenNetwork",
       rwgcna = r_wgcna
     )
-    
+
     preservationWGCNA_plot_moduletrait_server(
       "preservationWGCNAModuleTrait",
       rwgcna = r_wgcna,
@@ -189,15 +193,15 @@ PreservationWGCNA_Board <- function(id, pgx) {
       rwgcna = r_wgcna,
       rannot = reactive(pgx$genes),
       rtrait = reactive(input$trait),
-      rmodule = reactive(input$module)      
+      rmodule = reactive(input$module)
     )
 
     preservationWGCNA_table_enrichment_server(
       id = "preservationWGCNAEnrichment",
-      rwgcna = r_wgcna,      
+      rwgcna = r_wgcna,
       rmodule = reactive(input$module)
     )
-    
+
     return(NULL)
   })
 } ## end of Board

@@ -4,15 +4,16 @@
 ##
 
 consensusWGCNA_table_enrichment_ui <- function(
-    id,
-    label = "a",
-    title = "Title",
-    info.text = "Info",
-    caption = "Caption",
-    height = 400,
-    width = 400 ) {
+  id,
+  label = "a",
+  title = "Title",
+  info.text = "Info",
+  caption = "Caption",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
-  
+
   TableModuleUI(
     ns("table"),
     info.text = info.text,
@@ -25,38 +26,34 @@ consensusWGCNA_table_enrichment_ui <- function(
 }
 
 consensusWGCNA_table_enrichment_server <- function(id,
-                                               mwgcna,
-                                               r_module = reactive(NULL)
-                                               )
-{
+                                                   mwgcna,
+                                                   r_module = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-
     table_df <- function() {
-      
       cons <- mwgcna()
       module <- r_module()
-      shiny::req(module)      
-      
+      shiny::req(module)
+
       df <- cons$gsea[[module]]
       return(df)
     }
-    
-    render_table <- function(full=TRUE, ellipsis.len=80) {
+
+    render_table <- function(full = TRUE, ellipsis.len = 80) {
       df <- table_df()
       shiny::req(df)
-      ##df$module <- factor(df$module)
+      ## df$module <- factor(df$module)
       df$module <- NULL ## don't show
-      
-      if(!full) {
-        sel <- c("geneset","module","score","q.value","overlap")
+
+      if (!full) {
+        sel <- c("geneset", "module", "score", "q.value", "overlap")
         sel <- intersect(sel, colnames(df))
-        df <- df[,sel]
+        df <- df[, sel]
       }
-      
+
       ## set correct types for filter
       numeric.cols <- which(sapply(df, class) == "numeric")
-      js.ellipsis <- paste0("$.fn.dataTable.render.ellipsis( ",ellipsis.len,", false )")
-      
+      js.ellipsis <- paste0("$.fn.dataTable.render.ellipsis( ", ellipsis.len, ", false )")
+
       dt <- DT::datatable(
         df,
         rownames = FALSE, #
@@ -64,8 +61,8 @@ consensusWGCNA_table_enrichment_server <- function(id,
         selection = list(mode = "single", target = "row", selected = NULL),
         class = "compact cell-border stripe hover",
         fillContainer = TRUE,
-        plugins = c("scrollResize","ellipsis"),
-        #filter = 'top',
+        plugins = c("scrollResize", "ellipsis"),
+        # filter = 'top',
         options = list(
           dom = "lfrtip", #
           scrollX = TRUE, #
@@ -73,23 +70,23 @@ consensusWGCNA_table_enrichment_server <- function(id,
           scroller = TRUE,
           scrollResize = TRUE,
           deferRender = TRUE,
-          autoWidth = TRUE,          
+          autoWidth = TRUE,
           columnDefs = list(list(
             targets = c(0), ## without rownames column 1 is target 0
             render = DT::JS(js.ellipsis)
-          ))          
+          ))
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-      
-      if(0) {
+
+      if (0) {
         dt <- dt %>%
           DT::formatStyle(
             "score",
             background = color_from_middle(df$score, "lightblue", "#f5aeae"),
             backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-          backgroundPosition = "center"
+            backgroundPosition = "center"
           )
       }
 
@@ -97,13 +94,13 @@ consensusWGCNA_table_enrichment_server <- function(id,
     }
 
     table.RENDER <- function() {
-      render_table(full=FALSE, ellipsis.len=50)
+      render_table(full = FALSE, ellipsis.len = 50)
     }
 
     table.RENDER2 <- function() {
-      render_table(full=TRUE, ellipsis.len=100)
-    }    
-    
+      render_table(full = TRUE, ellipsis.len = 100)
+    }
+
     table <- TableModuleServer(
       "table",
       func = table.RENDER,

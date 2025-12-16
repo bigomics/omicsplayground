@@ -16,7 +16,8 @@ wgcna_plot_geneset_heatmap_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxGroupInput(ns("pheno"), "Show phenotype:",
-      choices=NULL, inline=TRUE)    
+      choices = NULL, inline = TRUE
+    )
   )
 
   PlotModuleUI(
@@ -38,11 +39,10 @@ wgcna_plot_geneset_heatmap_server <- function(id,
                                               enrichTable,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
-    observeEvent( pgx$samples, {
+    observeEvent(pgx$samples, {
       shiny::updateCheckboxGroupInput(session, "pheno",
         choices = colnames(pgx$samples),
-        selected = head(colnames(pgx$samples),8)
+        selected = head(colnames(pgx$samples), 8)
       )
     })
 
@@ -72,8 +72,8 @@ wgcna_plot_geneset_heatmap_server <- function(id,
       sel <- input$pheno
       shiny::req(sel)
       sel <- intersect(sel, colnames(annot))
-      annot <- annot[,sel,drop=FALSE]
-      
+      annot <- annot[, sel, drop = FALSE]
+
       playbase::gx.splitmap(
         gsetX,
         nmax = 9999,
@@ -85,16 +85,15 @@ wgcna_plot_geneset_heatmap_server <- function(id,
         main = mod,
         verbose = 2
       )
-
     }
 
     plot.RENDER <- function() {
-      plot_heatmap(n=20, maxlen=80)
+      plot_heatmap(n = 20, maxlen = 80)
     }
     plot.RENDER2 <- function() {
-      plot_heatmap(n=40, maxlen=240)
+      plot_heatmap(n = 40, maxlen = 240)
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,

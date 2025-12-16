@@ -4,13 +4,14 @@
 ##
 
 wgcna_html_module_summary_ui <- function(
-    id,
-    label = "",
-    title = "",
-    info.text = "",
-    caption = "",
-    height,
-    width) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- tagList(
@@ -52,18 +53,18 @@ wgcna_html_module_summary_server <- function(id,
     get_summary <- function() {
       wgcna <- wgcna()
       module <- r_module()
-      shiny::req(wgcna)      
+      shiny::req(wgcna)
       res <- "Summary not available"
 
-      if(multi) {
-        summaries <- lapply(wgcna,function(w) names(w$summary))
+      if (multi) {
+        summaries <- lapply(wgcna, function(w) names(w$summary))
         has.summary <- any(sapply(summaries, function(s) module %in% s))
-        if(has.summary) {
+        if (has.summary) {
           k <- which(sapply(summaries, function(s) module %in% s))
           res <- wgcna[[k]]$summary[[module]]
         }
       } else {
-        if("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
+        if ("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
           res <- wgcna$summary[[module]]
         }
       }
@@ -143,7 +144,7 @@ wgcna_html_module_summary_server <- function(id,
       res <- contents_text()
       shiny::div( shiny::HTML(res), style="font-size:22px;" )
     }
-    
+
     PlotModuleServer(
       "text",
       plotlib = "generic",
@@ -156,7 +157,5 @@ wgcna_html_module_summary_server <- function(id,
       res = c(75, 100),
       add.watermark = watermark
     )
-
-
   })
 }
