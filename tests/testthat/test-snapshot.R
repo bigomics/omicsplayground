@@ -56,11 +56,11 @@ test_that("example data loads with no error",{
     pgx_file <- tools::file_path_sans_ext(basename(pgx_file))
     if(board == "enrichment") {
       App$set_inputs("enrichment-gs_fdr" = 1)
-      App$wait_for_idle(duration = 10000, timeout = 50000)
+      App$wait_for_idle(duration = 3000, timeout = 100000)
     }
     if(board == "biomarker") {
       App$run_js("$('#biomarker-pdx_runbutton').click(); ")
-      App$wait_for_idle(duration = 10000, timeout = 50000)
+      App$wait_for_idle(duration = 3000, timeout = 100000)
     }
     if(board == "expression") {
       App$run_js("$('#expression-genetable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
