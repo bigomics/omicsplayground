@@ -460,7 +460,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
 
       addsplitgene <- function(gg) {
-        if (do.split && splitvar %in% rownames(pgx$X)) {
+        if (do.split && splitvar %in% rownames(pgx$X) && splitby != "phenotype") {
           gg <- unique(c(splitvar, gg))
         }
         return(gg)
