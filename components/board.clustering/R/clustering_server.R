@@ -325,7 +325,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
       shiny::validate(shiny::need(
-        ncol(zx) > 0, "Filtering too restrictive. Please change 'Filter samples' settings."
+        ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
       ))
 
       flt <- list(
@@ -715,6 +715,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       rownames(rho) <- sub(".*:", "", rownames(ref))
 
       if (nrow(ref) > 0) {
+        browser()
         for (i in 1:length(idxx)) {
           gg <- rownames(zx)[which(idx == idxx[i])]
           aa <- t(X[gg, samples, drop = FALSE])
