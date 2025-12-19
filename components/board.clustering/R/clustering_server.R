@@ -460,7 +460,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
 
       addsplitgene <- function(gg) {
-        if (do.split && splitvar %in% rownames(pgx$X) && splitby != "phenotype") {
+        if (do.split && splitvar %in% rownames(pgx$X)) {
           gg <- unique(c(splitvar, gg))
         }
         return(gg)
@@ -727,31 +727,30 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
 
       if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
-        table(idx)
-        grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
-        gmt <- playbase::getGSETS_playbase(sub("_", ":", rownames(rho)))
+        symbol <- pgx$genes[rownames(zx),"symbol"]
+        grp <- tapply(symbol, idx, list) 
+        G <- pgx$GMT[,rownames(ref)]
+        colnames(G) <- rownames(rho)        
         bg.genes <- toupper(rownames(X))
         P <- c()
         for (i in 1:ncol(rho)) {
           k <- colnames(rho)[i]
           res <- playbase::gset.fisher(
-            grp[[k]], gmt,
+            grp[[k]],
+            G,
             fdr = 1, min.genes = 0, max.genes = Inf,
             background = bg.genes
           )
+          res <- res[rownames(rho),]
           r <- res[, "odd.ratio"]
           odd.prob <- r / (1 + r)
           P <- cbind(P, odd.prob)
         }
-        colnames(P) <- colnames(rho)
-        rownames(P) <- sub(":", "_", names(gmt))
-        rho <- rho[rownames(P), ]
         rho <- rho * (P / max(P))
       }
 
       return(rho)
     })
-
 
     selected_samples <- reactive({
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
