@@ -28,7 +28,6 @@ WgcnaInputs <- function(id) {
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 20
           ),
-          shiny::checkboxInput(ns("useLLM"), "AI summary", FALSE),
           shiny::br(),
           shiny::actionButton(
             ns("compute"), "Recompute!",
@@ -235,14 +234,6 @@ WgcnaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              ## wgcna_plot_module_heatmap_ui(
-              ##   ns("moduleheatmap"),
-              ##   title = "(d) Module heatmap",
-              ##   info.text = "Heatmap of genes, or top genes, in the selected module.",
-              ##   caption = "Heatmap of genes, or top genes, in the selected module.",
-              ##   height = c("100%", TABLE_HEIGHT_MODAL),
-              ##   width = c("auto", "100%")
-              ## ),
               wgcna_table_genes_ui(
                 ns("geneTable"),
                 title = "(d) Significance table",
@@ -251,16 +242,6 @@ WgcnaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              ## wgcna_plot_module_membership_ui(
-              ##   ns("modulemembership"),
-              ##   title = "(e) Module membership",
-              ##   info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
-              ##   caption = "For each module, we also define
-              ##   a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene
-              ##   expression profile. This allows us to quantify the similarity of all genes to every module.",
-              ##   height = c("100%", TABLE_HEIGHT_MODAL),
-              ##   width = c("auto", "100%")
-              ## ),
               wgcna_plot_membership_v_trait_ui(
                 ns("memberTrait"),
                 title = "(e) Gene significance",
@@ -306,11 +287,11 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            wgcna_plot_enrichment_ui(
-              ns("enrichPlot"),
-              title = "(d) Top enriched genesets",
-              info.text = "Functional enrichment of the selected module.",
-              caption = "Module enrichment plot of top most enriched genesets.",
+            wgcna_plot_topgenes_ui(
+              ns("topgenesPlot"),
+              title = "(d) Gene frequency",
+              info.text = "Gene frequency in top enriched genesets.",
+              caption = "Gene frequency in top enriched genesets",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )

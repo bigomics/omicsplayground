@@ -16,8 +16,18 @@ consensusWGCNA_plot_sampletree_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(
+      inputId = ns("showme"),
+      label = "Show eigengenes",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show traits",
+      value = FALSE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
       value = FALSE
     )
   )
@@ -52,7 +62,10 @@ consensusWGCNA_plot_sampletree_server <- function(id,
           cons,
           i,
           main = toupper(names(cons$datExpr)[i]),
-          what = what,
+          ## what = what,   ## DEPRECATED!!!
+          show.me = input$showme,
+          show.traits = input$showtraits,
+          show.contrasts = input$showcontrasts,
           marAll = c(1.2, 10, 2, 0.3),
           clust.expr = TRUE,
           setLayout = FALSE

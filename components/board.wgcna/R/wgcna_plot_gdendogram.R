@@ -17,7 +17,8 @@ wgcna_plot_gdendogram_ui <- function(
 
 
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("showtrait"), "Show trait correlation", FALSE)
+    shiny::checkboxInput(ns("showtrait"), "Show traits", FALSE),
+    shiny::checkboxInput(ns("showcontrasts"), "Show contrasts", FALSE)
   )
 
   PlotModuleUI(
@@ -43,6 +44,7 @@ wgcna_plot_gdendogram_server <- function(id,
       playbase::wgcna.plotDendroAndColors(
         res,
         show.traits = input$showtrait,
+        show.contrasts = input$showcontrasts,
         marAll = c(0.4, 5, 1, 0.2),
         main = ""
       )
