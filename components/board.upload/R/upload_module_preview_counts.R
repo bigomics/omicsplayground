@@ -519,7 +519,7 @@ upload_table_preview_counts_server <- function(id,
     })
 
     output$histogram <- renderPlot({
-      counts <- as.matrix(uploaded$counts.csv)
+      counts <- uploaded$counts.csv
       shiny::req(counts)
       xx <- counts
       if (!is_logscale()) {
@@ -654,18 +654,22 @@ upload_table_preview_counts_server <- function(id,
               }
               )
             }
-          } else {
+          } else if (upload_datatype() == "proteomics" && !is.olink()) {
             df <- tryCatch({ playbase::read_spectronaut(datafile) }, error = function(w) { NULL } )
-            char.cols <- which(sapply(df, class) == "character")
-            if (length(char.cols) > 0) {
-              uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
-              df <- df[, colnames(df) != names(char.cols), drop = FALSE]
-            }
-            if (is.null(df)) {
+            if (!is.null(df)) {
+              char.cols <- which(sapply(df, class) == "character")
+              if (length(char.cols) > 0) {
+                uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
+                df <- df[, colnames(df) != names(char.cols), drop = FALSE]
+                df <- as.matrix(df)
+              }
+            } else {
               df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
             }
+          } else {
+            df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
           }
-        }        
+        }
       } else {
         df <- tryCatch(
         {
@@ -681,7 +685,7 @@ upload_table_preview_counts_server <- function(id,
       if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
-        uploaded$counts.csv <- as.matrix(df)
+        uploaded$counts.csv <- df
         if (is.null(uploaded$annot.csv)) {
           uploaded$annot.csv <- if (file.ext != "h5") playbase::read_annot(datafile) else NULL
         }
