@@ -655,16 +655,17 @@ upload_table_preview_counts_server <- function(id,
               )
             }
           } else if (upload_datatype() == "proteomics" && !is.olink()) {
-            df <- tryCatch({ playbase::read_spectronaut(datafile) }, error = function(w) { NULL } )
-            if (!is.null(df)) {
-              char.cols <- which(sapply(df, class) == "character")
-              if (length(char.cols) > 0) {
-                uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
-                df <- df[, colnames(df) != names(char.cols), drop = FALSE]
-                df <- as.matrix(df)
+            df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
+            if (is.null(df)) {
+              df <- tryCatch({ playbase::read_spectronaut(datafile) }, error = function(w) { NULL } )
+              if (!is.null(df)) {
+                char.cols <- which(sapply(df, class) == "character")
+                if (length(char.cols) > 0) {
+                  uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
+                  df <- df[, colnames(df) != names(char.cols), drop = FALSE]
+                  df <- as.matrix(df)
+                }
               }
-            } else {
-              df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
             }
           } else {
             df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
@@ -680,7 +681,8 @@ upload_table_preview_counts_server <- function(id,
         }
         )
       }
-
+      
+      
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
