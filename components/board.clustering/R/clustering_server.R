@@ -715,7 +715,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       rownames(rho) <- sub(".*:", "", rownames(ref))
 
       if (nrow(ref) > 0) {
-        browser()
         for (i in 1:length(idxx)) {
           gg <- rownames(zx)[which(idx == idxx[i])]
           aa <- t(X[gg, samples, drop = FALSE])
@@ -725,30 +724,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           rho[, i] <- colMeans(rr, na.rm = TRUE)
         }
       }
-
-      if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
-        symbol <- pgx$genes[rownames(zx),"symbol"]
-        grp <- tapply(symbol, idx, list) 
-        G <- pgx$GMT[,rownames(ref)]
-        colnames(G) <- rownames(rho)        
-        bg.genes <- toupper(rownames(X))
-        P <- c()
-        for (i in 1:ncol(rho)) {
-          k <- colnames(rho)[i]
-          res <- playbase::gset.fisher(
-            grp[[k]],
-            G,
-            fdr = 1, min.genes = 0, max.genes = Inf,
-            background = bg.genes
-          )
-          res <- res[rownames(rho),]
-          r <- res[, "odd.ratio"]
-          odd.prob <- r / (1 + r)
-          P <- cbind(P, odd.prob)
-        }
-        rho <- rho * (P / max(P))
-      }
-
+      
       return(rho)
     })
 
