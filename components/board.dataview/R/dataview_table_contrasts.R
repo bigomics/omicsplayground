@@ -62,7 +62,20 @@ dataview_table_contrasts_server <- function(id,
         dt <- pgx$model.parameters$exp.matrix[samples, , drop = FALSE]
       }
       dt <- sign(dt)
-      dt[dt == 0] <- NA
+
+      # We have pgx$contrasts, however this works also for old pgx files +
+      # for ctbygroup == "group" we need to do this conversion anyway,
+      # so we do it for all cases.
+      cm <- dt
+      result <- matrix("", nrow = nrow(cm), ncol = ncol(cm),
+                       dimnames = dimnames(cm))
+      for (col in colnames(cm)) {
+        treatment <- sub("_vs_.*", "", col)
+        control <- sub(".*_vs_", "", col)
+        result[cm[, col] == -1, col] <- control
+        result[cm[, col] == 1, col] <- treatment
+      }
+      dt <- result
       dt
     }) ## %>% bindCache(pgx$Y, r.samples(), ctbygroup)
 
@@ -102,7 +115,20 @@ dataview_table_contrasts_server <- function(id,
         ) %>%
         DT::formatStyle(
           columns = colnames(dt),
-          background = color_from_middle(c(-1, 1), omics_colors("orange"), omics_colors("brand_blue")),
+          backgroundColor = DT::styleEqual(
+            levels = {
+              all_labels <- unique(as.vector(dt))
+              all_labels[all_labels != ""]
+            },
+            values = {
+              all_labels <- unique(as.vector(dt))
+              all_labels <- all_labels[all_labels != ""]
+              controls <- unique(sub(".*\nvs ", "", colnames(dt)))
+              ifelse(all_labels %in% controls,
+                     omics_colors("orange"),
+                     omics_colors("brand_blue"))
+            }
+          ),
           backgroundSize = "98% 88%",
           backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
