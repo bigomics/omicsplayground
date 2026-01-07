@@ -8,18 +8,12 @@ lasagna_multipartite_nodes_table_ui <- function(id,
 
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(
-    shiny::radioButtons(ns("labeltype"), "Label type:",
-      c("feature", "symbol", "title"), selected = "feature", inline = TRUE)
-  )
-
   TableModuleUI(
     ns("table"),
     info.text = info.text,
     width = width,    
     height = height,
     title = title,
-    options = options,
     caption = caption,
     label = label
   )
@@ -90,15 +84,8 @@ lasagna_multipartite_nodes_table_server <- function(id,
         ff0 <- ff0[-hh]
       }
 
-      if (input$labeltype == "feature") ff <- c(ff0, phenos)
-      jj <- match(ff0, pgx$genes$feature)
-      if (input$labeltype == "symbol") {
-        ff <- c(pgx$genes$symbol[jj], phenos)
-      } else if (input$labeltype == "title") {
-        ff <- c(pgx$genes$gene_title[jj], phenos)
-      }      
-      nas <- which(is.na(ff))
-      if (any(nas)) ff[nas] <- rownames(dt)[nas]
+      labels <- playbase::probe2symbol(ff0, pgx$genes, "gene_name", fill_na = TRUE)
+      ff <- c(labels, phenos)
       dt$label <- ff
       
       DTable <- DT::datatable(
