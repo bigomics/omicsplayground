@@ -1,41 +1,38 @@
 lasagna_multipartite_nodes_table_ui <- function(id,
-                                               label = "",
-                                               title = "",
-                                               info.text = "",
-                                               caption = "",
-                                               height = 400,
-                                               width = 400) {
-
+                                                label = "",
+                                                title = "",
+                                                info.text = "",
+                                                caption = "",
+                                                height = 400,
+                                                width = 400) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
     ns("table"),
     info.text = info.text,
-    width = width,    
+    width = width,
     height = height,
     title = title,
     caption = caption,
     label = label
   )
-
 }
 
 lasagna_multipartite_nodes_table_server <- function(id,
                                                     data,
                                                     pgx,
                                                     scrollY = "auto") {
-
   moduleServer(id, function(input, output, session) {
-
-    table_data <- shiny::reactive({      
-      
+    table_data <- shiny::reactive({
       res <- data()
       shiny::req(res)
       G <- visNetwork::toVisNetworkData(res$graph)
-      
-      shiny::validate(shiny::need("nodes" %in% names(G),
-        "Missing nodes from LASAGNA multipartite data!"))
-      
+
+      shiny::validate(shiny::need(
+        "nodes" %in% names(G),
+        "Missing nodes from LASAGNA multipartite data!"
+      ))
+
       N <- G$nodes
       phenos <- NULL
       hh <- grep("PHENO:", rownames(N))
@@ -45,9 +42,11 @@ lasagna_multipartite_nodes_table_server <- function(id,
 
       layers <- unique(as.character(N$layer))
       layers <- layers[which(layers != "PHENO")]
-      N <- do.call(rbind,
-        lapply(layers, function(l) { N0=N[N$layer==l, , drop = FALSE];
-          N0=N0[order(N0$fc, decreasing = TRUE), , drop = FALSE]
+      N <- do.call(
+        rbind,
+        lapply(layers, function(l) {
+          N0 <- N[N$layer == l, , drop = FALSE]
+          N0 <- N0[order(N0$fc, decreasing = TRUE), , drop = FALSE]
         })
       )
       N <- rbind(N, phenos)
@@ -58,21 +57,21 @@ lasagna_multipartite_nodes_table_server <- function(id,
 
       N <- N[, colnames(N) != "value", drop = FALSE]
       if (all(c("id", "label") %in% colnames(N))) {
-        if (isTRUE(all.equal(N$id, N$label)))         
+        if (isTRUE(all.equal(N$id, N$label))) {
           N <- N[, colnames(N) != "id", drop = FALSE]
+        }
       }
       kk <- c("label", "layer", "log2FC", "rho")
       kk <- intersect(kk, colnames(N))
       N <- N[, kk, drop = FALSE]
-      
-      rm(res, G, layers, LL); gc()
+
+      rm(res, G, layers, LL)
+      gc()
 
       return(N)
-
     })
-    
-    table.RENDER <- function(full = TRUE) {
 
+    table.RENDER <- function(full = TRUE) {
       dt <- table_data()
       shiny::req(dt)
 
@@ -87,7 +86,7 @@ lasagna_multipartite_nodes_table_server <- function(id,
       labels <- playbase::probe2symbol(ff0, pgx$genes, "gene_name", fill_na = TRUE)
       ff <- c(labels, phenos)
       dt$label <- ff
-      
+
       DTable <- DT::datatable(
         dt,
         rownames = FALSE,
@@ -107,20 +106,19 @@ lasagna_multipartite_nodes_table_server <- function(id,
         )
       ) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
-      
-      return(DTable)
 
+      return(DTable)
     }
-    
-    table.RENDER2 <- shiny::reactive({ return(table.RENDER()) })
-    
+
+    table.RENDER2 <- shiny::reactive({
+      return(table.RENDER())
+    })
+
     TableModuleServer(
       "table",
       func = table.RENDER,
       func2 = table.RENDER2,
       selector = "none"
     )
-
   })
-
 }

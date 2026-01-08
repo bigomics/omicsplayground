@@ -43,10 +43,6 @@ mofa_plot_lasagna_partite_ui <- function(
 }
 
 
-
-
-
-
 mofa_plot_lasagna_partite_server <- function(id,
                                              data,
                                              pgx,

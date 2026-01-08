@@ -6,9 +6,9 @@
 ConsensusWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("splitby"), "Consensus by:", choices=NULL),
-    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices=NULL, multiple=FALSE)),
-    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices=NULL)),
+    shiny::selectInput(ns("splitby"), "Consensus by:", choices = NULL),
+    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)),
+    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices = NULL)),
     shiny::br(),
     shiny::actionButton(ns("compute"), "Compute", size = "xs", icon = icon("refresh")),
     shiny::br(),

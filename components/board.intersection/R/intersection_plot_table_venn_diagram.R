@@ -151,13 +151,13 @@ intersection_plot_venn_diagram_server <- function(id,
           x_up <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x > 0)], x[which(x > 0)]))
           x_down <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x < 0)], x[which(x < 0)]))
 
-          if(length(x_up) != 0) {
+          if (length(x_up) != 0) {
             count_up <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_up))$count
           } else {
             count_up <- 0
           }
 
-          if(length(x_down) != 0) {
+          if (length(x_down) != 0) {
             count_down <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_down))$count
           } else {
             count_down <- 0

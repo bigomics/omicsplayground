@@ -54,7 +54,7 @@ wgcna_plot_gclustering_server <- function(id,
           main = "",
           method = "clust",
           annot = pgx$genes
-          #set.par = FALSE
+          # set.par = FALSE
         )
       }
     }

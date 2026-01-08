@@ -74,7 +74,9 @@ upload_module_computepgx_server <- function(
           gx_methods <- colnames(pgx$gx.meta$meta[[1]]$fc)
           available_methods <- GENETEST.METHODS()
           mm <- intersect(gx_methods, available_methods)
-          if (length(mm) > 0) return(mm)
+          if (length(mm) > 0) {
+            return(mm)
+          }
         }
 
         ## Default selection based on datatype
@@ -114,7 +116,9 @@ upload_module_computepgx_server <- function(
           available_methods <- GENESET.METHODS()
           method_values <- unname(available_methods)
           mm <- intersect(gset_methods, method_values)
-          if (length(mm) > 0) return(mm)
+          if (length(mm) > 0) {
+            return(mm)
+          }
         }
 
         ## Default selection based on datatype
@@ -153,7 +157,9 @@ upload_module_computepgx_server <- function(
             available_methods <- EXTRA.METHODS()
             method_values <- unname(available_methods)
             mm <- intersect(present_extra, method_values)
-            if (length(mm) > 0) return(mm)
+            if (length(mm) > 0) {
+              return(mm)
+            }
           } else {
             return(character(0))
           }
@@ -191,8 +197,8 @@ upload_module_computepgx_server <- function(
           }
           ## Return if we found any settings
           if (!is.null(pgx$settings$filter.genes) ||
-              !is.null(pgx$settings$only.known) ||
-              !is.null(pgx$settings$convert.hugo)) {
+            !is.null(pgx$settings$only.known) ||
+            !is.null(pgx$settings$convert.hugo)) {
             return(selected_filters)
           }
         }
