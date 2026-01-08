@@ -1130,6 +1130,14 @@ upload_module_computepgx_server <- function(
               if (!auth$email == "") {
                 gmail_creds <- file.path(ETC, "gmail_creds")
                 ds_name <- paste0("<b>", PROCESS_LIST[[i]]$dataset_name, "</b>")
+                # We now send success message to user from the shiny app,
+                # because the process only runs if the app is alive, so
+                # there is no need to send the message from the process.
+                sendSuccessMessageToUser(
+                  user_email = auth$email,
+                  pgx_name = ds_name,
+                  path_to_creds = gmail_creds
+                )
               }
               raw_dir(NULL)
             } else {

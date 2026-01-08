@@ -85,7 +85,7 @@ biomarker_plot_heatmap_server <- function(id,
         } else {
           kk <- colnames(res$X)
         }
-        X <- pgx$X[gg, kk]
+        X <- pgx$X[gg, kk, drop = FALSE]
         ## X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
         splitx <- NULL
         ct <- pdx_predicted()

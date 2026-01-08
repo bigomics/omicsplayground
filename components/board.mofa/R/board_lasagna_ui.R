@@ -125,7 +125,8 @@ LasagnaUI <- function(id) {
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
             col_widths = 12,
-            height = "calc(100vh - 180px)",
+            #height = "calc(100vh - 180px)",
+            row_heights = c(3,2),
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
               title = "Multi-partite graph",
@@ -134,25 +135,25 @@ LasagnaUI <- function(id) {
               info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = "100%"
-            )
-          ),
-          bslib::layout_columns(
-            width = 6,
-            lasagna_multipartite_nodes_table_ui(
-              ns("multipartite_nodes_table"),
-              title = "Multipartite nodes",
-              info.text = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph. Optionally, nodes' identifiers can be reported as official feature symbol (if known) or full feature title (if known).",
-              caption = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph.",
-              height = c("50%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
             ),
-            lasagna_multipartite_edges_table_ui(
-              ns("multipartite_edges_table"),
-              title = "Multipartite edges",
-              info.text = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
-              caption = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
-              height = c("50%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+            bslib::layout_columns(
+              width = 6,
+              lasagna_multipartite_nodes_table_ui(
+                ns("multipartite_nodes_table"),
+                title = "Node information",
+                info.text = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph. Optionally, nodes' identifiers can be reported as official feature symbol (if known) or full feature title (if known).",
+                caption = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              lasagna_multipartite_edges_table_ui(
+                ns("multipartite_edges_table"),
+                title = "Edge information",
+                info.text = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
+                caption = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
             )
           )
         )

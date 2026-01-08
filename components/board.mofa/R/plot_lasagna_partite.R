@@ -21,13 +21,9 @@ mofa_plot_lasagna_partite_ui <- function(
     shiny::checkboxInput(ns("showintra"), "show intra-correlation"),
     shiny::checkboxInput(ns("prune"), "prune nodes"),
     shiny::hr(),
-    shiny::sliderInput(ns("xdist"), "Layer spacing:", 0.2, 2, 2, 0.1),
+    shiny::sliderInput(ns("xdist"), "Layer spacing:", 0.2, 5, 2, 0.1),
     shiny::hr(),
-    shiny::radioButtons(ns("labeltype"), "Label type:",
-      c("feature", "symbol", "title"),
-      selected = "feature", inline = TRUE
-    ),
-    shiny::checkboxInput(ns("strip_prefix"), "strip prefix", TRUE)
+    shiny::checkboxInput(ns("strip_prefix"), "Strip prefix", TRUE)
   )
 
   PlotModuleUI(
@@ -65,16 +61,9 @@ mofa_plot_lasagna_partite_server <- function(id,
       res <- data()
       shiny::req(res)
 
-      labtype <- input$labeltype
-      if (labtype == "title") {
-        labels <- paste0(
-          pgx$genes[, "gene_title"],
-          " (", pgx$genes[, "symbol"], ")"
-        )
-      } else {
-        labels <- pgx$genes[, labtype] ## user reactive
-      }
-      names(labels) <- rownames(pgx$genes)
+      features <- rownames(pgx$genes)
+      labels <- playbase::probe2symbol(features, pgx$genes, "gene_name", fill_na = TRUE)
+      names(labels) <- features
 
       graph <- res$graph
       layers <- setdiff(res$layers, c("SOURCE", "SINK"))

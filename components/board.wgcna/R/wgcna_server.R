@@ -49,24 +49,6 @@ WgcnaBoard <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    shiny::observeEvent(input$useLLM, {
-      if (input$useLLM) {
-        model <- getUserOption(session, "llm_model")
-        dbg("[WgcnaBoard] input$useLLM => model = ", model)
-        if (is.null(model) || model == "") {
-          shinyalert::shinyalert(
-            "ERROR",
-            "No LLM server available. Please check your settings."
-          )
-          return(NULL)
-        }
-        shinyalert::shinyalert(
-          "WARNING",
-          "Using LLM might expose some of your data to external LLM servers."
-        )
-      }
-    })
-
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
@@ -78,11 +60,6 @@ WgcnaBoard <- function(id, pgx) {
       progress$set(message = "Calculating WGCNA...", value = 0)
 
       message("[WGCNA:compute_wgcna] >>> Calculating WGCNA...")
-
-      # ai_model = opt$LLM_MODEL
-      ai_model <- getUserOption(session, "llm_model")
-      message("[WGCNA:compute_wgcna] ai_model = ", ai_model)
-
       out <- playbase::pgx.wgcna(
         pgx = pgx,
         ngenes = as.integer(input$ngenes),
@@ -91,7 +68,7 @@ WgcnaBoard <- function(id, pgx) {
         power = as.numeric(input$power),
         numericlabels = FALSE,
         summary = TRUE,
-        ai_model = ifelse(input$useLLM, ai_model, ""),
+        ai_model = NULL,
         progress = progress
       )
       shiny::removeModal()
@@ -305,10 +282,10 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Enrichment plot
-    wgcna_plot_enrichment_server(
-      "enrichPlot",
+    wgcna_plot_topgenes_server(
+      "topgenesPlot",
       enrichTable = enrichTableModule,
-      pgx = pgx,
+      ##pgx = pgx,
       watermark = WATERMARK
     )
 
