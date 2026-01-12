@@ -974,10 +974,6 @@ upload_module_computepgx_server <- function(
           regress_ribo = ifelse("Ribosomal expression" %in% covariates, TRUE, FALSE),
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
-
-        dbg("---------------------M1: ", is.null(covariates))
-        dbg("---------------------M2: ", input$covariates)
-        dbg("---------------------M3: ", length(covariates))
         
         ## Define create_pgx function arguments
         params <- list(
