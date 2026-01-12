@@ -961,7 +961,8 @@ upload_module_computepgx_server <- function(
         if (!any(mt_threshold)) mt_threshold <- FALSE
         hb_threshold <- sc_compute_settings()$hb_threshold
         if (!any(hb_threshold)) hb_threshold <- FALSE
-        covariates <- as.character(input$regress_covariates)
+        covariates <- input$regress_covariates 
+        if (!is.null(covariates)) covariates <- as.character(covariates)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -1008,8 +1009,8 @@ upload_module_computepgx_server <- function(
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
           batch.correct.method = batch.correct.method,
-          batch.pars <- batch.pars,
-          covariates <- covariates, ## NEW
+          batch.pars = batch.pars,
+          covariates = covariates, ## NEW
           ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
@@ -1033,7 +1034,7 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-
+        
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
