@@ -476,7 +476,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
-        NPCA <- 5
+        NPCA <- min(5, ncol(zx) - 1)
         svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
