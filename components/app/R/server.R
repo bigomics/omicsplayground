@@ -174,7 +174,7 @@ app_server <- function(input, output, session) {
   )
 
   ## observe and set global User options
-  shiny::observeEvent( input$enable_llm, {
+  shiny::observeEvent( input$enable_llmXXX, {
     model <- input$llm_model
     if(input$enable_llm) {
       if(is.null(model) || model=="") {
@@ -197,7 +197,7 @@ app_server <- function(input, output, session) {
       dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
       setUserOption(session,'llm_model', input$llm_model)
     } else {
-      dbg("[MAIN] AI/LLM diabled")
+      dbg("[MAIN] AI/LLM disabled")
       setUserOption(session,'llm_model', '')      
     }
   })
