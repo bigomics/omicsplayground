@@ -173,23 +173,6 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info)
   )
 
-  ## observe and set global User options
-  shiny::observeEvent( input$enable_llmXXX, {
-    model <- input$llm_model
-    if(input$enable_llm) {
-      if(is.null(model) || model=="") {
-        shinyalert::shinyalert("ERROR",
-          "No LLM server available. Please check your settings.")
-        return(NULL)
-      }
-      shinyalert::shinyalert("WARNING",
-        "Using LLM might expose some of your data to external LLM servers.",
-        closeOnClickOutside = TRUE
-        #showCancelButton = TRUE
-      )
-    }
-  })
-
   shiny::observeEvent({
     list( input$enable_llm, input$llm_model)
   }, {
